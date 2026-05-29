@@ -3149,10 +3149,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
                         // processed twice in ReceivedBlockTransactions(), it may be re-added to
                         // setBlockIndexCandidates with a modified nSequenceId, breaking ordering
                         // guarantees and leading to undefined behavior.
-                        auto range = m_blockman.m_blocks_unlinked.equal_range(pindexFailed->pprev);
-                        if (!std::any_of(range.first, range.second, [&](const auto& p) { return p.second == pindexFailed; })) {
-                            m_blockman.m_blocks_unlinked.emplace(pindexFailed->pprev, pindexFailed);
-                        }
+                        m_blockman.AddUnlinkedBlock(pindexFailed);
                     }
                     setBlockIndexCandidates.erase(pindexFailed);
                 }
@@ -3816,7 +3813,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
         }
     } else {
         if (pindexNew->pprev && pindexNew->pprev->IsValid(BLOCK_VALID_TREE)) {
-            m_blockman.m_blocks_unlinked.insert(std::make_pair(pindexNew->pprev, pindexNew));
+            m_blockman.AddUnlinkedBlock(pindexNew);
         }
     }
 }
