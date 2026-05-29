@@ -123,11 +123,11 @@
             owner = "willcl-ark";
             repo = "flamegraph";
             rev = "bitcoin-core";
-            sha256 = "sha256-DSTJWpidR6KJvGH9nyeB6rEV8gsrH+SEEI4G/hB1elg=";
+            sha256 = "sha256-+IMEkDhObvgsTS+bJlqvUenNVB+ojxXtiYR8bp0QbYs=";
           };
 
           doCheck = false;
-          cargoHash = "sha256-d6S0vS3rWz7NpBq2a73LfTletk4ItF3GTzN9tbzU/4M=";
+          cargoHash = "sha256-WRzxUrImIxv67x/JTjhgi0Vw3SX9tsnoIsvgtm7p6gc=";
 
           nativeBuildInputs = pkgs.lib.optionals stdenv.hostPlatform.isLinux [pkgs.makeWrapper];
           buildInputs = pkgs.lib.optionals stdenv.hostPlatform.isDarwin [
