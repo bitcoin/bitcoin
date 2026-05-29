@@ -925,6 +925,11 @@ private:
      */
     std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
 
+    /** Maximum number of inbound reconciliation peers. */
+    static constexpr int MAX_INBOUND_RECONCILIATION_PEERS{30};
+    /** Number of inbound reconciliation peers. */
+    std::atomic<int> m_inbound_reconciliation_peers{0};
+
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
@@ -1808,7 +1813,13 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         LOCK(m_tx_download_mutex);
         m_txdownloadman.DisconnectedPeer(nodeid);
     }
-    if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_txreconciliation) {
+        const bool was_offered = m_txreconciliation->ForgetPeer(nodeid);
+        if (node.IsInboundConn() && was_offered) {
+            --m_inbound_reconciliation_peers;
+            assert(m_inbound_reconciliation_peers >= 0);
+        }
+    }
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
@@ -1823,6 +1834,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_num_preferred_download_peers == 0);
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
+        assert(m_inbound_reconciliation_peers == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
     }
     } // cs_main
@@ -3984,12 +3996,17 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // - this is not a block-relay-only connection and not a feeler
             // - this is not an addr fetch connection;
             // - we are not in -blocksonly mode.
+            // - and we still have space for inbound reconciliation peers;
             const auto* tx_relay = peer.GetTxRelay();
+            const bool offer_reconciliation =
+                !pfrom.IsAddrFetchConn() &&
+                (!pfrom.IsInboundConn() || m_inbound_reconciliation_peers < MAX_INBOUND_RECONCILIATION_PEERS);
             if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
-                !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
+                offer_reconciliation && !m_opts.ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
                 MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
                                    node::TXRECONCILIATION_VERSION, recon_salt);
+                if (pfrom.IsInboundConn()) ++m_inbound_reconciliation_peers;
             }
         }
 
@@ -4139,7 +4156,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 // We could have optimistically pre-registered/registered the peer. In that case,
                 // we should forget about the reconciliation state here if this wasn't followed
                 // by WTXIDRELAY (since WTXIDRELAY can't be announced later).
-                m_txreconciliation->ForgetPeer(pfrom.GetId());
+                const bool was_offered = m_txreconciliation->ForgetPeer(pfrom.GetId());
+                if (pfrom.IsInboundConn() && was_offered) {
+                    --m_inbound_reconciliation_peers;
+                    assert(m_inbound_reconciliation_peers >= 0);
+                }
             }
         }
 
