@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <compare>
 #include <string>
 
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}

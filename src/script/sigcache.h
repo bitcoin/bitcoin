@@ -10,13 +10,15 @@
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
 #include <script/interpreter.h>
-#include <span.h>
 #include <uint256.h>
-#include <util/byte_units.h>
+// IWYU incorrectly suggests removing this header.
+// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
+#include <util/byte_units.h> // IWYU pragma: keep
 #include <util/hasher.h>
 
 #include <cstddef>
 #include <shared_mutex>
+#include <span>
 #include <vector>
 
 class CPubKey;

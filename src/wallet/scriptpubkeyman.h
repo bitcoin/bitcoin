@@ -16,6 +16,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
 #include <util/time.h>
@@ -27,6 +28,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 enum class OutputType;
 

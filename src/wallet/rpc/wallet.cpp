@@ -5,6 +5,9 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <wallet/rpc/wallet.h>
+
+#include <coins.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/server.h>
@@ -14,7 +17,6 @@
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
-#include <wallet/rpc/wallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 

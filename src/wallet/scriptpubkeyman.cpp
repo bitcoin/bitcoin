@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/scriptpubkeyman.h>
+
+#include <coins.h>
 #include <hash.h>
 #include <key_io.h>
 #include <node/types.h>
@@ -17,7 +20,6 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <wallet/scriptpubkeyman.h>
 
 #include <optional>
 
