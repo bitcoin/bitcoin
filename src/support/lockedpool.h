@@ -150,6 +150,7 @@ public:
         size_t locked;
         size_t chunks_used;
         size_t chunks_free;
+        size_t arena_count;
     };
 
     /** Create a new LockedPool. This takes ownership of the MemoryPageLocker,

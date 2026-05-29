@@ -60,6 +60,7 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_greater_than_or_equal(memory['locked'], 0)
         assert_greater_than(memory['chunks_used'], 0)
         assert_greater_than(memory['chunks_free'], 0)
+        assert_greater_than(memory['arena_count'], 0)
         assert_equal(memory['used'] + memory['free'], memory['total'])
 
         self.log.info("test mallocinfo")

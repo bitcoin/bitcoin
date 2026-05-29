@@ -120,6 +120,7 @@ static UniValue RPCLockedMemoryInfo()
     obj.pushKV("locked", stats.locked);
     obj.pushKV("chunks_used", stats.chunks_used);
     obj.pushKV("chunks_free", stats.chunks_free);
+    obj.pushKV("arena_count", stats.arena_count);
     return obj;
 }
 
@@ -166,6 +167,7 @@ static RPCMethod getmemoryinfo()
                                 {RPCResult::Type::NUM, "locked", "Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk."},
                                 {RPCResult::Type::NUM, "chunks_used", "Number allocated chunks"},
                                 {RPCResult::Type::NUM, "chunks_free", "Number unused chunks"},
+                                {RPCResult::Type::NUM, "arena_count", "Number allocated arenas"},
                             }},
                         }
                     },

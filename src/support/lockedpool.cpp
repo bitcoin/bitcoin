@@ -320,7 +320,7 @@ void LockedPool::free(void *ptr)
 LockedPool::Stats LockedPool::stats() const
 {
     std::lock_guard<std::mutex> lock(mutex);
-    LockedPool::Stats r{0, 0, 0, cumulative_bytes_locked, 0, 0};
+    LockedPool::Stats r{0, 0, 0, cumulative_bytes_locked, 0, 0, arenas.size()};
     for (const auto &arena: arenas) {
         Arena::Stats i = arena.stats();
         r.used += i.used;
