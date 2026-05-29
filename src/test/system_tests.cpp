@@ -3,8 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <common/run_command.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>

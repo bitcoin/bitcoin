@@ -34,6 +34,7 @@ if(ENABLE_WALLET)
       wallettests.cpp
       ../../wallet/test/wallet_test_fixture.cpp
   )
+  target_compile_definitions(test_bitcoin-qt PRIVATE ENABLE_WALLET)
 endif()
 
 add_test(NAME test_bitcoin-qt
