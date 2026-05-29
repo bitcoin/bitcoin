@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
-#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -269,7 +268,7 @@ static bool HasTaprootScriptPath(const SigningProvider& provider, const std::vec
     return provider.GetTaprootSpendData(XOnlyPubKey(output_key), spenddata) && !spenddata.scripts.empty();
 }
 
-static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
 {
     std::vector<std::vector<unsigned char>> solutions;
     TxoutType type = Solver(input, solutions);
@@ -548,12 +547,18 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
         // Very unlikely we'd be spending a witness unknown output, but if we are trying to pay a
         // silent payments v0 address, this can't be included
-        if (silent_payments && type == TxoutType::WITNESS_UNKNOWN) continue;
+        if (silent_payments && type == TxoutType::WITNESS_UNKNOWN) {
+            result.skipped_silent_payments_ineligible = true;
+            continue;
+        }
         // If we have scriptpath spend data for the taproot output, just skip it for now. Only keypath
         // spends can be used with silent payments and at this point we don't know if the keypath or script path is going to be used
         // so if there's even a chance the script path will be used, better to skip the output for now.
         // Without a provider, it is unknown whether there is script path spend data, so skip it too.
-        if (silent_payments && type == TxoutType::WITNESS_V1_TAPROOT && (!provider || HasTaprootScriptPath(*provider, script_solutions[0]))) continue;
+        if (silent_payments && type == TxoutType::WITNESS_V1_TAPROOT && (!provider || HasTaprootScriptPath(*provider, script_solutions[0]))) {
+            result.skipped_silent_payments_ineligible = true;
+            continue;
+        }
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
