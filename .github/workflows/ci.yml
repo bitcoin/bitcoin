@@ -57,7 +57,7 @@ jobs:
   test-each-commit:
     name: 'test ancestor commits'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-latest' }}
     env:
       TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port range to avoid colliding with other CI services.
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
@@ -325,7 +325,7 @@ jobs:
   windows-cross:
     name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
     needs: [runners, record-frozen-commit]
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     strategy:
@@ -448,7 +448,7 @@ jobs:
         include:
           - name: 'iwyu'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_iwyu.sh'
 
@@ -467,73 +467,73 @@ jobs:
 
           - name: 'macOS-cross to arm64'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross.sh'
 
           - name: 'macOS-cross to x86_64'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
           - name: 'FreeBSD Cross'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_freebsd_cross.sh'
 
           - name: 'No wallet'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_nowallet.sh'
 
           - name: 'i686, no IPC'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
 
           - name: 'fuzzer,address,undefined,integer'
             warp-runner: 'warp-ubuntu-latest-x64-16x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 240
             file-env: './ci/test/00_setup_env_native_fuzz.sh'
 
           - name: 'previous releases'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_previous_releases.sh'
 
           - name: 'Alpine (musl)'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_alpine_musl.sh'
 
           - name: 'tidy'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tidy.sh'
 
           - name: 'TSan'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tsan.sh'
 
           - name: 'MSan, fuzz'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 150
             file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
 
           - name: 'MSan'
             warp-runner: 'warp-ubuntu-latest-x64-16x'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_msan.sh'
 
@@ -576,7 +576,7 @@ jobs:
   lint:
     name: 'lint'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 20
     env:
