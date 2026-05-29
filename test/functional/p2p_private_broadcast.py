@@ -15,6 +15,7 @@ from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
     P2P_VERSION,
+    start_p2p_listener,
 )
 from test_framework.messages import (
     CAddress,
@@ -221,22 +222,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                     listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
                     listener.peer_connect_send_version(services=P2P_SERVICES)
 
-                    def on_listen_done(addr, port):
-                        nonlocal actual_to_addr
-                        nonlocal actual_to_port
-                        actual_to_addr = addr
-                        actual_to_port = port
-
-                    # Use port=0 to let the OS assign an available port. This
-                    # avoids "address already in use" errors when tests run
-                    # concurrently or ports are still in TIME_WAIT state.
-                    self.network_thread.listen(
-                        addr="127.0.0.1",
-                        port=0,
-                        p2p=listener,
-                        callback=on_listen_done)
-                    # Wait until the callback has been called.
-                    self.wait_until(lambda: actual_to_port != 0)
+                    actual_to_addr, actual_to_port = start_p2p_listener(self.network_thread, listener)
 
                 self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} ({conn_type}) for "
                                f"{format_addr_port(requested_to_addr, requested_to_port)} to "
