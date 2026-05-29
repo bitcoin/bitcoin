@@ -973,3 +973,27 @@ class P2PTxInvStore(P2PInterface):
         self.wait_until(lambda: set(self.tx_invs_received.keys()) == set([int(tx, 16) for tx in txns]), timeout=timeout)
         # Flush messages and wait for the getdatas to be processed
         self.sync_with_ping()
+
+def start_p2p_listener(network_thread, listener):
+    listen_addr = ""
+    listen_port = 0
+
+    def on_listen_done(addr, port):
+        nonlocal listen_addr
+        nonlocal listen_port
+        listen_addr = addr
+        listen_port = port
+
+    # Use port=0 to let the OS assign an available port. This
+    # avoids "address already in use" errors when tests run
+    # concurrently or ports are still in TIME_WAIT state.
+    network_thread.listen(
+        addr="127.0.0.1",
+        port=0,
+        p2p=listener,
+        callback=on_listen_done)
+
+    # Wait until the callback has been called.
+    wait_until_helper_internal(lambda: listen_port != 0)
+
+    return listen_addr, listen_port
