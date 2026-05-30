@@ -27,3 +27,7 @@ target/
 /guix-build-*
 
 /ci/scratch/
+
+dist/
+bitcoin-*.zip
+bitcoin-*-setup-*.exe
