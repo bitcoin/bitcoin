@@ -2,10 +2,7 @@
 export LC_ALL=C
 set -e -o pipefail
 
-# shellcheck source=contrib/shell/realpath.bash
 source contrib/shell/realpath.bash
-
-# shellcheck source=contrib/shell/git-utils.bash
 source contrib/shell/git-utils.bash
 
 ################
@@ -80,6 +77,34 @@ time-machine() {
                       -- "$@"
 }
 
+# Usage: distsrc_for_host HOST [SUFFIX] [BASE]
+#
+#   HOST: The current platform triple we're building for
+#   SUFFIX: Optional. If provided, appended to the directory name as "-SUFFIX"
+#   BASE: Optional. If provided, replaces ${DISTSRC_BASE}
+#
+distsrc_for_host() {
+    echo "${3:-${DISTSRC_BASE}}/distsrc-${VERSION}-${1}${2:+-${2}}"
+}
+
+# Usage: outdir_for_host HOST [SUFFIX] [BASE]
+#
+#   HOST: The current platform triple we're building for
+#   SUFFIX: Optional. If provided, appended to the directory name as "-SUFFIX"
+#   BASE: Optional. If provided, replaces ${OUTDIR_BASE}
+#
+outdir_for_host() {
+    echo "${3:-${OUTDIR_BASE}}/${1}${2:+-${2}}"
+}
+
+# Usage: profiledir_for_host HOST [SUFFIX]
+#
+#   HOST: The current platform triple we're building for
+#   SUFFIX: Optional. If provided, appended to the directory name as "-SUFFIX"
+#
+profiledir_for_host() {
+    echo "${PROFILES_BASE}/${1}${2:+-${2}}"
+}
 
 ################
 # Set common variables
