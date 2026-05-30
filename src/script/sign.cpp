@@ -174,7 +174,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     if (part_pubnonce_it == pubnonces.end()) return false;
     uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash, part_pubnonce_it->second);
     std::optional<std::reference_wrapper<MuSig2SecNonce>> secnonce = provider.GetMuSig2SecNonce(session_id);
-    if (!secnonce || !secnonce->get().IsValid()) return false;
+    if (!secnonce) return false;
 
     // Compute the sig
     std::optional<uint256> sig = ::CreateMuSig2PartialSig(*sighash, key, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
