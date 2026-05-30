@@ -84,7 +84,17 @@ $(package)_config_opts += -prefix $(host_prefix)
 $(package)_config_opts += -qt-doubleconversion
 $(package)_config_opts += -qt-harfbuzz
 ifneq ($(host),$(build))
+# On native Windows (MSYS2, MSYS_STAGING=1), the toolchain CMake is a native
+# Windows binary that does not understand MSYS "/c/..." paths. Qt's configure
+# passes -qt-host-path straight through to -DQT_HOST_PATH, and the cross build
+# then runs IS_DIRECTORY on it; an MSYS path fails that check with
+# "You need to set QT_HOST_PATH to cross compile Qt." Convert to a Windows
+# path (C:/...) so CMake resolves it. No-op (plain value) off MSYS_STAGING.
+ifneq ($(MSYS_STAGING),)
+$(package)_config_opts += -qt-host-path $(shell cygpath -m '$(build_prefix)')
+else
 $(package)_config_opts += -qt-host-path $(build_prefix)
+endif
 endif
 $(package)_config_opts += -qt-libpng
 $(package)_config_opts += -qt-pcre
@@ -169,7 +179,12 @@ $(package)_config_env += CXX="$$($(package)_cxx)"
 $(package)_config_env_darwin := OBJC="$$($(package)_cc)"
 $(package)_config_env_darwin += OBJCXX="$$($(package)_cxx)"
 
+ifneq ($(MSYS_STAGING),)
+# Native Windows CMake needs a Windows path here too (see -qt-host-path above).
+$(package)_cmake_opts := -DCMAKE_PREFIX_PATH=$(shell cygpath -m '$(host_prefix)')
+else
 $(package)_cmake_opts := -DCMAKE_PREFIX_PATH=$(host_prefix)
+endif
 $(package)_cmake_opts += -DQT_FEATURE_cxx20=ON
 $(package)_cmake_opts += -DQT_GENERATE_SBOM=OFF
 ifneq ($(V),)

@@ -30,6 +30,21 @@ define $(package)_build_cmds
   $(MAKE) libsqlite3.a
 endef
 
+ifneq ($(MSYS_STAGING),)
+# On native Windows (MSYS2), sqlite's autosetup canonicalizes --prefix to a
+# Windows path (C:/...). sqlite's generated Makefile then lists the install
+# directories ($(DESTDIR)$(libdir) etc.) as bare rule targets; the drive-letter
+# colon makes GNU make read them as "multiple target patterns" and abort with
+#   Makefile:87: *** multiple target patterns.  Stop.
+# We only need the static lib and the public headers, so install them by hand
+# into the canonical staging prefix and skip the broken `make install` rules.
+define $(package)_stage_cmds
+  mkdir -p $($(package)_staging_prefix_dir)/lib $($(package)_staging_prefix_dir)/include && \
+  cp -f libsqlite3.a $($(package)_staging_prefix_dir)/lib/ && \
+  cp -f sqlite3.h sqlite3ext.h $($(package)_staging_prefix_dir)/include/
+endef
+else
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install-headers install-lib
 endef
+endif

@@ -1,3 +1,31 @@
+# On native Windows (MSYS2), CMake's DESTDIR install drops the leading
+# "/<drive>" component of the install prefix during MSYS->Windows path
+# conversion, so a package configured with prefix "/c/.../<host>" and staged
+# with "make DESTDIR=<staging> install" lands at "<staging>/.../<host>" instead
+# of "<staging>/c/.../<host>" where the rest of the depends staging bookkeeping
+# (postprocess, cache) looks. Autotools/b2 use plain shell concatenation and are
+# not affected. This helper, run right after each package's stage_cmds, detects
+# the drive-stripped tree and moves it back to the canonical location so all
+# packages stage consistently. It is a no-op unless MSYS_STAGING=1 is set, so
+# non-Windows builds are completely unaffected. $(1)=staging_dir, $(2)=prefix.
+# See doc/build-windows-msys2.md.
+ifneq ($(MSYS_STAGING),)
+define normalize_msys_staging
+	stripped="$(1)$$$$(echo '$(2)' | sed -E 's#^/[A-Za-z]/#/#')"; \
+	canonical="$(1)$(2)"; \
+	if [ "$$$$stripped" != "$$$$canonical" ] && [ -d "$$$$stripped" ]; then \
+	  echo "MSYS_STAGING: relocating $$$$stripped -> $$$$canonical"; \
+	  mkdir -p "$$$$canonical"; \
+	  cp -a "$$$$stripped/." "$$$$canonical/"; \
+	  rm -rf "$$$$stripped"; \
+	fi
+endef
+else
+define normalize_msys_staging
+	true
+endef
+endif
+
 define int_vars
 #Set defaults for vars which may be overridden per-package
 $(1)_cc=$$($$($(1)_type)_CC)
@@ -275,6 +303,7 @@ $($(1)_staged): | $($(1)_built)
 	echo Staging $(1)...
 	mkdir -p $($(1)_staging_dir)/$(host_prefix)
 	+{ cd $($(1)_build_dir); export $($(1)_stage_env); $($(1)_stage_cmds); } $$($(1)_logging)
+	$(call normalize_msys_staging,$($(1)_staging_dir),$(host_prefix))
 	rm -rf $($(1)_extract_dir)
 	touch $$@
 $($(1)_postprocessed): | $($(1)_staged)
