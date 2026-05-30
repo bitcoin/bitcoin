@@ -171,6 +171,19 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Invalid port provided in -rpcport: 0", self.nodes[0].cli("-rpcport=0").echo)
         assert_raises_process_error(1, "Invalid port provided in -rpcport: 65536", self.nodes[0].cli("-rpcport=65536").echo)
 
+        self.log.info("Test -rpcmaxresponsesize")
+        assert_raises_process_error(
+            1,
+            "HTTP response exceeds maximum size",
+            self.nodes[0].cli("-rpcmaxresponsesize=100").getblockchaininfo,
+        )
+        assert_raises_process_error(
+            1,
+            "Invalid -rpcmaxresponsesize: foo",
+            self.nodes[0].cli("-rpcmaxresponsesize=foo").getblockchaininfo,
+        )
+        self.nodes[0].cli.getblockchaininfo()
+
         self.log.info("Test port usage preferences")
         node_rpc_port = rpc_port(self.nodes[0].index)
         # Prevent bitcoin-cli from using existing rpcport in conf
