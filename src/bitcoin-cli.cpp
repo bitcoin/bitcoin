@@ -22,6 +22,7 @@
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <serialize.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/chaintype.h>
@@ -63,6 +64,8 @@ const TranslateFn G_TRANSLATION_FUN{nullptr};
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static constexpr const char* DEFAULT_RPC_REQ_ID{"1"};
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
+//! Default cap on total HTTP response size (status line, headers, body, trailers), in bytes. 0 disables the limit.
+static constexpr size_t DEFAULT_RPC_MAX_RESPONSE_SIZE{MAX_SIZE};
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
@@ -166,6 +169,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcid=<id>", strprintf("Set a custom JSON-RPC request ID string (default: %s)", DEFAULT_RPC_REQ_ID), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. Not implemented for IPC connections (see -ipcconnect). (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcmaxresponsesize=<n>", strprintf("Maximum total HTTP response size in bytes (status line, headers, body, and trailers), or 0 for no limit. Not implemented for IPC connections (see -ipcconnect). (default: %d)", DEFAULT_RPC_MAX_RESPONSE_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -836,7 +840,7 @@ static std::optional<UniValue> CallIPC(BaseRequestHandler* rh, const std::string
 class HTTPClient
 {
 public:
-    static HTTPClient Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout);
+    static HTTPClient Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout, size_t max_response_size);
 
     HTTPResponse Post(const std::string& endpoint,
                       std::span<const std::pair<std::string, std::string>> headers,
@@ -849,15 +853,24 @@ private:
     std::unique_ptr<Sock> m_socket;
     std::string m_host;
     std::chrono::seconds m_timeout;
+    size_t m_max_response_size;
 
-    HTTPClient(std::unique_ptr<Sock>&& socket, const std::string& host, std::chrono::seconds timeout)
-        : m_socket(std::move(socket)), m_host(host), m_timeout(timeout) {}
+    HTTPClient(std::unique_ptr<Sock>&& socket, const std::string& host, std::chrono::seconds timeout, size_t max_response_size)
+        : m_socket(std::move(socket)), m_host(host), m_timeout(timeout), m_max_response_size(max_response_size) {}
+    void CheckResponseSize(size_t response_size) const;
     bool SendRequest(std::string_view request);
     HTTPResponse ReadResponse();
     std::optional<std::string> Recv(std::chrono::time_point<std::chrono::steady_clock> deadline);
 };
 
-HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout)
+void HTTPClient::CheckResponseSize(const size_t response_size) const
+{
+    if (m_max_response_size > 0 && response_size > m_max_response_size) {
+        throw HTTPError{strprintf("HTTP response exceeds maximum size (%s bytes)", util::ToString(m_max_response_size))};
+    }
+}
+
+HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout, const size_t max_response_size)
 {
     std::vector<CService> services = Lookup(host, port, /*fAllowLookup=*/true, /*nMaxSolutions=*/256);
     if (services.empty()) {
@@ -870,7 +883,7 @@ HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chro
         if (time_left.count() <= 0) break;
 
         auto sock = ConnectDirectly(service, /*manual_connection=*/true, time_left);
-        if (sock) return HTTPClient{std::move(sock), host, timeout};
+        if (sock) return HTTPClient{std::move(sock), host, timeout, max_response_size};
     }
 
     throw CConnectionFailed{"Could not connect to the server"};
@@ -939,13 +952,19 @@ HTTPResponse HTTPClient::ReadResponse()
     HTTPResponse response;
     std::string buffer;
     const auto deadline{std::chrono::steady_clock::now() + m_timeout};
+    size_t response_size{0};
+    const auto append_received = [&](std::string& dest, const std::string& chunk) {
+        CheckResponseSize(response_size + chunk.size());
+        response_size += chunk.size();
+        dest.append(chunk);
+    };
 
     // Read data until we have complete headers
     size_t headers_end = 0;
 
     while (headers_end == 0) {
         if (auto result{Recv(deadline)}) {
-            buffer.append(*result);
+            append_received(buffer, *result);
         } else {
             std::this_thread::yield();
             continue;
@@ -1010,6 +1029,13 @@ HTTPResponse HTTPClient::ReadResponse()
     // Remove headers data from buffer, so only initial body data remains
     buffer.erase(0, headers_end);
 
+    if (!chunked && content_length > 0 && m_max_response_size > 0) {
+        const size_t header_size{response_size - buffer.size()};
+        if (header_size + content_length > m_max_response_size) {
+            throw HTTPError{"HTTP response exceeds maximum size"};
+        }
+    }
+
     // Read remaining body
     if (chunked) {
         // Handle chunked transfer encoding
@@ -1045,7 +1071,7 @@ HTTPResponse HTTPClient::ReadResponse()
                         if (crlf_pos == std::string::npos) {
                             // Need more data
                             if (auto result{Recv(deadline)}) {
-                                buffer.append(*result);
+                                append_received(buffer, *result);
                             } else {
                                 std::this_thread::yield();
                             }
@@ -1062,6 +1088,9 @@ HTTPResponse HTTPClient::ReadResponse()
                 if (*chunk_size > std::numeric_limits<size_t>::max() - chunk_start - 2) {
                     throw HTTPError{"Chunk size too large"};
                 }
+                if (m_max_response_size > 0 && *chunk_size > m_max_response_size - response_size) {
+                    throw HTTPError{"HTTP response exceeds maximum size"};
+                }
                 size_t chunk_end = chunk_start + *chunk_size + 2; // +2 for trailing CRLF
 
                 if (buffer.size() >= chunk_end) {
@@ -1077,7 +1106,7 @@ HTTPResponse HTTPClient::ReadResponse()
             // Need more data
             while (true) {
                 if (auto result{Recv(deadline)}) {
-                    buffer.append(*result);
+                    append_received(buffer, *result);
                     break;
                 } else {
                     std::this_thread::yield();
@@ -1090,7 +1119,7 @@ HTTPResponse HTTPClient::ReadResponse()
         // Fixed content length
         while (buffer.size() < content_length) {
             if (auto result{Recv(deadline)}) {
-                buffer.append(*result);
+                append_received(buffer, *result);
             } else {
                 std::this_thread::yield();
             }
@@ -1106,7 +1135,7 @@ HTTPResponse HTTPClient::ReadResponse()
         try {
             while (true) {
                 if (auto result{Recv(deadline)}) {
-                    buffer.append(*result);
+                    append_received(buffer, *result);
                 } else {
                     std::this_thread::yield();
                 }
@@ -1206,6 +1235,15 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         timeout_duration = std::chrono::years(5);
     }
 
+    size_t max_response_size{DEFAULT_RPC_MAX_RESPONSE_SIZE};
+    if (gArgs.IsArgSet("-rpcmaxresponsesize")) {
+        const auto arg{gArgs.GetArg("-rpcmaxresponsesize")};
+        if (!arg) throw std::runtime_error("Invalid -rpcmaxresponsesize");
+        const auto parsed{ToIntegral<size_t>(*arg)};
+        if (!parsed) throw std::runtime_error(strprintf("Invalid -rpcmaxresponsesize: %s", *arg));
+        max_response_size = *parsed;
+    }
+
     // Get credentials
     std::string rpc_credentials;
     std::optional<AuthCookieResult> auth_cookie_result;
@@ -1224,7 +1262,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     HTTPResponse response;
     try {
-        HTTPClient client{HTTPClient::Connect(host, port, timeout_duration)};
+        HTTPClient client{HTTPClient::Connect(host, port, timeout_duration, max_response_size)};
         response = client.Post(endpoint, headers, strRequest);
     } catch (const CConnectionFailed& e) {
         const std::string formatted_error{*e.what() ? strprintf(" (%s)", e.what()) : ""};
