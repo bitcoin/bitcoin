@@ -12,7 +12,7 @@
 
 ;; python-lief and nsis-x86_64 transitively pull in packages whose
 ;; tests fail when building natively on riscv64:
-;; - python-lief: python-psutil, python-pytest-xprocess, python-sh
+;; - python-lief: python-psutil, python-pytest-xprocess
 ;; - nsis-x86_64: python-psutil
 (define (package-without-tests p)
   (package
@@ -24,8 +24,7 @@
 (define python-lief-no-riscv64-failing-tests
   ((package-input-rewriting/spec
     `(("python-psutil" . ,package-without-tests)
-      ("python-pytest-xprocess" . ,package-without-tests)
-      ("python-sh" . ,package-without-tests)))
+      ("python-pytest-xprocess" . ,package-without-tests)))
    python-lief))
 
 (define nsis-x86_64-no-riscv64-failing-tests
@@ -42,7 +41,7 @@
         ;; Packaging scripts
         python-minimal ;; 3.12
         ;; Tests
-        python-lief-no-riscv64-failing-tests) ;; 0.17.6
+        python-lief-no-riscv64-failing-tests) ;; 1.0.0
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list nsis-x86_64-no-riscv64-failing-tests
