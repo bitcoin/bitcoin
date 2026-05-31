@@ -14,7 +14,7 @@
         ;; Build tools
         ninja
         ;; Packaging scripts
-        python-minimal ;; (3.11)
+        python-minimal ;; (3.12)
         ;; Tests
         python-lief)
   (let ((target (getenv "HOST")))
