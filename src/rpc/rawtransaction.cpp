@@ -125,7 +125,7 @@ static std::vector<RPCArg> CreateTxDoc()
 
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, const common::PSBTFillOptions& options)
 {
     // Unserialize the transactions
     util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(psbt_string);
@@ -196,7 +196,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
         // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
-        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize}, /*out_sigdata=*/nullptr) == common::PSBTError::SIGHASH_MISMATCH) {
+        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, options, /*out_sigdata=*/nullptr) == common::PSBTError::SIGHASH_MISMATCH) {
             throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
         }
     }
@@ -1849,8 +1849,7 @@ static RPCMethod utxoupdatepsbt()
         request.params[0].get_str(),
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/true, /*hide_origin=*/false),
-        /*sighash_type=*/std::nullopt,
-        /*finalize=*/false);
+        {.sign = false, .finalize = false});
 
     DataStream ssTx{};
     ssTx << psbtx;
@@ -2077,7 +2076,7 @@ RPCMethod descriptorprocesspsbt()
     return RPCMethod{
         "descriptorprocesspsbt",
         "Update all segwit inputs in a PSBT with information from output descriptors, the UTXO set or the mempool. \n"
-                "Then, sign the inputs we are able to with information from the output descriptors. ",
+                "Then, optionally sign the inputs we are able to with information from the output descriptors. ",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
                     {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of either strings or objects", {
@@ -2097,6 +2096,7 @@ RPCMethod descriptorprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2123,13 +2123,13 @@ RPCMethod descriptorprocesspsbt()
     std::optional<int> sighash_type = ParseSighashString(request.params[2]);
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    bool sign = request.params[5].isNull() ? true : request.params[5].get_bool();
 
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),
         request.context,
-        HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
-        sighash_type,
-        finalize);
+        HidingSigningProvider(&provider, /*hide_secret=*/!sign, !bip32derivs),
+        {.sign = sign, .sighash_type = sighash_type, .finalize = finalize, .bip32_derivs = bip32derivs});
 
     // Check whether or not all of the inputs are now signed
     bool complete = true;
