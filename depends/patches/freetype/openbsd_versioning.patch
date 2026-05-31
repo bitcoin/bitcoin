@@ -1,0 +1,31 @@
+[cmake] Fix shared library versioning on OpenBSD.
+
+This emulates Libtool to make sure Libtool and CMake agree on the ABI
+version. Specifically, for OpenBSD, `builds/unix/configure` defines
+`version_type=sunos` and skips defining `soname_spec`.
+
+See upstream MR: https://gitlab.freedesktop.org/freetype/freetype/-/merge_requests/433.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -458,9 +458,17 @@ if (WIN32)
+ endif ()
+ 
+ if (BUILD_SHARED_LIBS)
+-  set_target_properties(freetype PROPERTIES
+-    VERSION ${LIBRARY_VERSION}
+-    SOVERSION ${LIBRARY_SOVERSION})
++  if (CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
++    # For OpenBSD, libtool follows `sunos` version type.
++    set_target_properties(freetype PROPERTIES
++      # libtool does not define its internal `soname_spec` variable
++      # for OpenBSD. So skipping the SOVERSION option.
++      VERSION ${LIBTOOL_CURRENT}.${LIBTOOL_REVISION})
++  else ()
++    set_target_properties(freetype PROPERTIES
++      VERSION ${LIBRARY_VERSION}
++      SOVERSION ${LIBRARY_SOVERSION})
++  endif ()
+ endif ()
+ 
+ # Pick up ftconfig.h and ftoption.h generated above, first.

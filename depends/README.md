@@ -53,6 +53,10 @@ To build dependencies for the current arch+OS:
 
     pkg_add bash cmake curl gmake gtar
 
+Skip the following packages if you don't intend to use the GUI and will build with [`NO_QT=1`](#dependency-options):
+
+    pkg_add bison ninja
+
 To build dependencies for the current arch+OS:
 
     gmake
