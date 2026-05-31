@@ -421,7 +421,7 @@ class MiniWallet:
 
 def getnewdestination(address_type='bech32m'):
     """Generate a random destination of the specified type and return the
-       corresponding public key, scriptPubKey and address. Supported types are
+       corresponding key pair, scriptPubKey and address. Supported types are
        'legacy', 'p2sh-segwit', 'bech32' and 'bech32m'. Can be used when a random
        destination is needed, but no compiled wallet is available (e.g. as
        replacement to the getnewaddress/getaddressinfo RPCs)."""
@@ -442,4 +442,4 @@ def getnewdestination(address_type='bech32m'):
         address = output_key_to_p2tr(pubkey)
     else:
         assert False
-    return pubkey, scriptpubkey, address
+    return (key, pubkey), scriptpubkey, address
