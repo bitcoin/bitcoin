@@ -1400,6 +1400,20 @@ class PSBTTest(BitcoinTestFramework):
         # If psbt not finalized, test that result does not have hex
         assert "hex" not in processed_psbt
 
+        # Test that sign=false updates descriptor metadata without adding signatures or final scripts
+        processed_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs=True,
+            finalize=True,
+            sign=False,
+        )
+        decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'bip32_derivs'])
+        assert_equal(processed_psbt['complete'], False)
+        assert "hex" not in processed_psbt
+
         processed_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=False, finalize=True)
         decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'final_scriptwitness'])
