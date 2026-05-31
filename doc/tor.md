@@ -101,6 +101,16 @@ it requires a Tor connection to work. It can be explicitly disabled with
 `-listenonion=0`. If it is not disabled, it can be configured using the
 `-torcontrol` and `-torpassword` settings.
 
+**Note:** If `-bind` is used to specify listening addresses, Bitcoin Core will
+only create the dedicated Tor socket at `127.0.0.1:8334` if it is explicitly
+included in the `-bind` list (e.g. `-bind=127.0.0.1:8334=onion`). Without it,
+the onion service is routed to the public IPv4 port instead, and Bitcoin Core
+cannot distinguish incoming Tor connections from regular IPv4 connections.
+This means `-netinfo` and `getnetworkinfo` will report Tor inbound connections
+as IPv4. To avoid this, either include `-bind=127.0.0.1:8334=onion` alongside
+your other `-bind` entries, or disable the automatic onion service with
+`-listenonion=0`.
+
 To see verbose Tor information in the bitcoind debug log, pass `-debug=tor`.
 
 ### Control Port
