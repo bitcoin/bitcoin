@@ -575,6 +575,9 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         }
 
         if (options.exists("replaceable")) {
+            if (!wallet.chain().rpcEnableDeprecated("bip125")) {
+                throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+            }
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
 
