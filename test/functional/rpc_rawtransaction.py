@@ -17,7 +17,6 @@ from decimal import Decimal
 from itertools import product
 
 from test_framework.messages import (
-    MAX_BIP125_RBF_SEQUENCE,
     COIN,
     TX_MAX_STANDARD_VERSION,
     TX_MIN_STANDARD_VERSION,
@@ -259,8 +258,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 2, 3, 'foo')
 
         # Test `createrawtransaction` invalid version parameters
-        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, False, TX_MIN_STANDARD_VERSION - 1)
-        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, False, TX_MAX_STANDARD_VERSION + 1)
+        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, None, TX_MIN_STANDARD_VERSION - 1)
+        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, None, TX_MAX_STANDARD_VERSION + 1)
 
         # Test `createrawtransaction` invalid `inputs`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type array", self.nodes[0].createrawtransaction, 'foo', {})
@@ -303,10 +302,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data", self.nodes[0].createrawtransaction, [], multidict([("data", 'aa'), ("data", "bb")]))
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair must contain exactly one key", self.nodes[0].createrawtransaction, [], [{'a': 1, 'b': 2}])
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair not an object as expected", self.nodes[0].createrawtransaction, [], [['key-value pair1'], ['2']])
-
-        # Test `createrawtransaction` mismatch between sequence number(s) and `replaceable` option
-        assert_raises_rpc_error(-8, "Invalid parameter combination: Sequence number(s) contradict replaceable option",
-                                self.nodes[0].createrawtransaction, [{'txid': TXID, 'vout': 0, 'sequence': MAX_BIP125_RBF_SEQUENCE+1}], {}, 0, True)
 
         # Test `createrawtransaction` invalid `locktime`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].createrawtransaction, [], {}, 'foo')

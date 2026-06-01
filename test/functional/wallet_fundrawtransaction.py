@@ -1474,7 +1474,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.log.info("Crafting TX using an unconfirmed input")
         target_address = self.nodes[2].getnewaddress()
-        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, True)
+        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0)
         funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconf': 0})['hex']
 
         # Make sure we only had the one input
