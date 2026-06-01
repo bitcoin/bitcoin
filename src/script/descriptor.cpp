@@ -1666,7 +1666,11 @@ public:
             if (!m_pubkeys[key]->ToNormalizedString(*m_arg, ret, m_cache)) return {};
             break;
         case DescriptorImpl::StringType::COMPAT:
-            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::COMPAT);
+            // For backwards compatibility, we do not pass StringType::COMPAT.
+            // Prior to 31.0, COMPAT was not provided, so PUBLIC was in use. From this string,
+            // DescriptorSPKM IDs were computed from this string, so the incorrect behavior
+            // must be preserved for wallets with Miniscript descriptors to be loaded
+            ret = m_pubkeys[key]->ToString();
             break;
         }
         return ret;
