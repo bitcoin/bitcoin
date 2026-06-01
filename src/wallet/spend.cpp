@@ -1297,7 +1297,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // The sequence number is set to non-maxint so that DiscourageFeeSniping
     // works.
     //
-    // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
+    // (DEPRECATED) BIP125 defines opt-in RBF as any nSequence < maxint-1, so
     // we use the highest possible value in that range (maxint-2)
     // to avoid conflicting with other possible uses of nSequence,
     // and in the spirit of "smallest possible change from prior

@@ -656,7 +656,7 @@ def test_rebumping_not_replaceable(self, rbf_node, dest_address):
     bumped = rbf_node.bumpfee(rbfid, fee_rate=ECONOMICAL, replaceable=False)
     check_sequence(bumped, MAX_SEQUENCE_NONFINAL)
     bumped = rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
-    check_sequence(bumped, MAX_BIP125_RBF_SEQUENCE)
+    check_sequence(bumped, MAX_SEQUENCE_NONFINAL)
 
     self.clear_mempool()
 

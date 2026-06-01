@@ -223,8 +223,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         // Fee rates in sat/vB cannot represent more than 3 significant digits.
         cc.m_feerate = CFeeRate{AmountFromValue(fee_rate, /*decimals=*/3)};
         if (override_min_fee) cc.fOverrideFeeRate = true;
-        // Default RBF to true for explicit fee_rate, if unset.
-        if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = true;
+        if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = false;
         return;
     }
     if (!estimate_mode.isNull() && !FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
@@ -986,8 +985,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
                              "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
                              "Must be at least " + incremental_fee + " higher than the current transaction fee rate.\n"
                              "WARNING: before version 0.21, fee_rate was in " + CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true},
-                             "Whether the new transaction should be\n"
+                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{false},
+                             "(DEPRECATED) Whether the new transaction should be\n"
                              "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
                              "be set to 0xfffffffd. If false, any input sequence numbers in the\n"
                              "transaction will be set to 0xfffffffe\n"
@@ -1043,7 +1042,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
     CCoinControl coin_control;
     // optional parameters
-    coin_control.m_signal_bip125_rbf = true;
+    coin_control.m_signal_bip125_rbf = false;
     std::vector<CTxOut> outputs;
 
     std::optional<uint32_t> original_change_index;
@@ -1071,8 +1070,10 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
         auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
 
-        if (options.exists("replaceable")) {
-            coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
+        if (pwallet->chain().rpcEnableDeprecated("bip125")) {
+            if (options.exists("replaceable")) {
+                coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
+            }
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
