@@ -1127,12 +1127,6 @@ bool DescriptorScriptPubKeyMan::TopUp_(unsigned int size)
     return res;
 }
 
-bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int size)
-{
-    LOCK(cs_desc_man);
-    return TopUpWithDB_(batch, size);
-}
-
 bool DescriptorScriptPubKeyMan::TopUpWithDB_(WalletBatch& batch, unsigned int size)
 {
     AssertLockHeld(cs_desc_man);
