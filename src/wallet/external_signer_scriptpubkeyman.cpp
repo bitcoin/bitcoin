@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <common/args.h>
 #include <common/system.h>
 #include <external_signer.h>
 #include <node/types.h>
@@ -21,12 +19,15 @@
 using common::PSBTError;
 
 namespace wallet {
-std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys, const std::string& external_signer_command, const std::string& external_signer_chain)
 {
-    return std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, id, descriptor, keypool_size, keys, ckeys));
+    auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, id, descriptor, keypool_size, keys, ckeys));
+    spkm->m_external_signer_command = external_signer_command;
+    spkm->m_external_signer_chain = external_signer_chain;
+    return spkm;
 }
 
-std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc)
+std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc, const std::string& external_signer_command, const std::string& external_signer_chain)
 {
     int64_t creation_time = GetTime();
 
@@ -34,6 +35,8 @@ std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::Cr
     WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
 
     auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, w_desc, keypool_size));
+    spkm->m_external_signer_command = external_signer_command;
+    spkm->m_external_signer_chain = external_signer_chain;
 
     LOCK(spkm->cs_desc_man);
     assert(storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -51,11 +54,11 @@ std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::Cr
     return spkm;
 }
 
- util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner() {
-    const std::string command = gArgs.GetArg("-signer", "");
+util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner(const std::string& command, const std::string& chain)
+{
     if (command == "") return util::Error{Untranslated("restart bitcoind with -signer=<cmd>")};
     std::vector<ExternalSigner> signers;
-    ExternalSigner::Enumerate(command, signers, Params().GetChainTypeString());
+    ExternalSigner::Enumerate(command, signers, chain);
     if (signers.empty()) return util::Error{Untranslated("No external signers found")};
     // TODO: add fingerprint argument instead of failing in case of multiple signers.
     if (signers.size() > 1) return util::Error{Untranslated("More than one external signer found. Please connect only one at a time.")};
@@ -98,7 +101,7 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     }
     if (complete) return {};
 
-    auto signer{GetExternalSigner()};
+    auto signer{GetExternalSigner(m_external_signer_command, m_external_signer_chain)};
     if (!signer) {
         LogWarning("%s", util::ErrorString(signer).original);
         return PSBTError::EXTERNAL_SIGNER_NOT_FOUND;
