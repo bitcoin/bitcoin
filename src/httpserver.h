@@ -137,14 +137,10 @@ struct HTTPVersion {
     /// @}
 };
 
-
-class HTTPResponse
-{
-public:
-    HTTPVersion m_version;
-
-    HTTPStatusCode m_status{HTTP_INTERNAL_SERVER_ERROR};
-    HTTPHeaders m_headers;
+struct HTTPResponse {
+    HTTPVersion version;
+    HTTPStatusCode status{HTTP_INTERNAL_SERVER_ERROR};
+    HTTPHeaders headers;
 
     std::string StringifyHeaders() const;
 };

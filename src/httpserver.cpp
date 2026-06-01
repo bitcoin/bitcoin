@@ -370,11 +370,11 @@ std::string HTTPHeaders::Stringify() const
 std::string HTTPResponse::StringifyHeaders() const
 {
     return strprintf("HTTP/%d.%d %d %s\r\n%s",
-                     m_version.major,
-                     m_version.minor,
-                     m_status,
-                     HTTPStatusReasonString(m_status),
-                     m_headers.Stringify());
+                     version.major,
+                     version.minor,
+                     status,
+                     HTTPStatusReasonString(status),
+                     headers.Stringify());
 }
 
 bool HTTPRequest::LoadControlData(LineReader& reader)
@@ -539,13 +539,13 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     HTTPResponse res;
 
     // Some response headers are determined in advance and stored in the request
-    res.m_headers = std::move(m_response_headers);
+    res.headers = std::move(m_response_headers);
 
     // Response version matches request version
-    res.m_version = m_version;
+    res.version = m_version;
 
     // Add response code
-    res.m_status = status;
+    res.status = status;
 
     // See libevent evhttp_response_needs_body()
     // Response headers are different if no body is needed
@@ -561,7 +561,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         if (m_version.minor == 0) {
             auto connection_header{m_headers.FindFirst("Connection")};
             if (connection_header && ToLower(connection_header.value()) == "keep-alive") {
-                res.m_headers.Write("Connection", "keep-alive");
+                res.headers.Write("Connection", "keep-alive");
                 keep_alive = true;
                 // HTTP/1.0 connections are closed by default so EOF is sufficient
                 // to indicate end of the body. Adding Content-Length a special case.
@@ -572,7 +572,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // HTTP/1.1
         if (m_version.minor >= 1) {
             const int64_t now_seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
-            res.m_headers.Write("Date", FormatRFC1123DateTime(now_seconds));
+            res.headers.Write("Date", FormatRFC1123DateTime(now_seconds));
 
             // HTTP/1.1 connections are kept alive by default and always require Content-Length.
             if (needs_body) needs_content_length = true;
@@ -583,20 +583,20 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     }
 
     if (needs_content_length) {
-        res.m_headers.Write("Content-Length", util::ToString(reply_body.size()));
+        res.headers.Write("Content-Length", util::ToString(reply_body.size()));
     }
 
-    if (needs_body && !res.m_headers.FindFirst("Content-Type")) {
+    if (needs_body && !res.headers.FindFirst("Content-Type")) {
         // Default type from libevent evhttp_new_object()
-        res.m_headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
+        res.headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
     }
 
     auto connection_header{m_headers.FindFirst("Connection")};
     if (connection_header && ToLower(connection_header.value()) == "close") {
         // Might not exist already but we need to replace it, not append to it
-        res.m_headers.RemoveAll("Connection");
+        res.headers.RemoveAll("Connection");
 
-        res.m_headers.Write("Connection", "close");
+        res.headers.Write("Connection", "close");
         keep_alive = false;
     }
 

@@ -188,9 +188,9 @@ BOOST_AUTO_TEST_CASE(http_response_tests)
     // Response points to headers which already exist because some of them
     // are set before we even know what the response will be.
     HTTPResponse res;
-    res.m_version = {.major = 1, .minor = 1};
-    res.m_status = HTTP_OK;
-    res.m_headers = std::move(headers);
+    res.version = {.major = 1, .minor = 1};
+    res.status = HTTP_OK;
+    res.headers = std::move(headers);
     BOOST_CHECK_EQUAL(
         res.StringifyHeaders(),
         "HTTP/1.1 200 OK\r\n"
