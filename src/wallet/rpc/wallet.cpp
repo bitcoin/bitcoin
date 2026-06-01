@@ -698,7 +698,6 @@ RPCMethod gethdkeys()
             for (auto* spkm : spkms) {
                 auto* desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
                 CHECK_NONFATAL(desc_spkm);
-                LOCK(desc_spkm->cs_desc_man);
                 WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
 
                 // Retrieve the pubkeys from the descriptor
@@ -905,10 +904,10 @@ RPCMethod addhdkey()
 
             UniValue response(UniValue::VOBJ);
             const DescriptorScriptPubKeyMan& desc_spkm = spkm->get();
-            LOCK(desc_spkm.cs_desc_man);
             std::set<CPubKey> pubkeys;
             std::set<CExtPubKey> extpubs;
-            desc_spkm.GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+            const auto wallet_descriptor{desc_spkm.GetWalletDescriptor()};
+            wallet_descriptor.descriptor->GetPubKeys(pubkeys, extpubs);
             CHECK_NONFATAL(pubkeys.size() == 0);
             CHECK_NONFATAL(extpubs.size() == 1);
             response.pushKV("xpub", EncodeExtPubKey(*extpubs.begin()));

@@ -157,7 +157,6 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
             },
             [&] {
-                LOCK(spk_manager->cs_desc_man);
                 auto wallet_desc{spk_manager->GetWalletDescriptor()};
                 if (wallet_desc.descriptor->IsSingleType()) {
                     auto output_type{wallet_desc.descriptor->GetOutputType()};
