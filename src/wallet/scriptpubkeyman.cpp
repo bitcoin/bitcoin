@@ -1199,7 +1199,10 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
+// The declaration uses LOCKS_EXCLUDED for calls on newly-created SPKMs.
+// The definition uses EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man) so clang can
+// verify that this self-locking method takes the mutex only after entry.
+void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
 {
     LOCK(cs_desc_man);
     Assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -1226,7 +1229,7 @@ void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
     m_storage.UnsetBlankWalletFlag(batch);
 }
 
-void DescriptorScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, WalletDescriptor descriptor)
+void DescriptorScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, WalletDescriptor descriptor) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
 {
     LOCK(cs_desc_man);
     m_wallet_descriptor = std::move(descriptor);
@@ -1656,7 +1659,7 @@ util::Result<void> DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescr
     return {};
 }
 
-void DescriptorScriptPubKeyMan::UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider)
+void DescriptorScriptPubKeyMan::UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
 {
     LOCK(cs_desc_man);
     UpdateWithSigningProvider_(batch, signing_provider);

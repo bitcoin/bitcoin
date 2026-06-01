@@ -15,6 +15,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <sync.h>
 #include <util/btcsignals.h>
 #include <util/hasher.h>
 #include <util/log.h>
@@ -278,6 +279,8 @@ private:
     using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
     using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
 
+    mutable Mutex cs_desc_man;
+
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
@@ -319,23 +322,29 @@ private:
     // Cached FlatSigningProviders to avoid regenerating them each time they are needed.
     mutable std::map<int32_t, FlatSigningProvider> m_map_signing_providers;
     // Fetch the SigningProvider for the given script and optionally include private keys
-    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const;
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    void Load();
+    void Load() EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
     util::Result<CTxDestination> GetNewDestination_(OutputType type) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     bool TopUp_(unsigned int size = 0) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     bool TopUpWithDB_(WalletBatch& batch, unsigned int size = 0) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
-    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
-    void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider);
+    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    // Called immediately after constructing a new SPKM. Use LOCKS_EXCLUDED
+    // instead of EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man) because clang cannot
+    // prove at this call that the new object's mutex is not already held.
+    void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) LOCKS_EXCLUDED(cs_desc_man);
     void UpdateWithSigningProvider_(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     bool HasWalletDescriptor_(const WalletDescriptor& desc) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     bool CanUpdateToWalletDescriptor_(const WalletDescriptor& descriptor, std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     //! Setup descriptors based on the given CExtKey
-    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
+    // Called immediately after constructing a new SPKM.
+    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal) LOCKS_EXCLUDED(cs_desc_man);
+
+    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
 protected:
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
@@ -346,12 +355,11 @@ protected:
         m_keypool_size(keypool_size)
     {}
 
-    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
-
     //! Same as 'TopUp' but designed for use within a batch transaction context
-    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
+    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    void SetupDescriptor(WalletBatch& batch, WalletDescriptor descriptor);
+    // Called immediately after constructing a new SPKM.
+    void SetupDescriptor(WalletBatch& batch, WalletDescriptor descriptor) LOCKS_EXCLUDED(cs_desc_man);
 
 public:
     static std::unique_ptr<DescriptorScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
@@ -359,67 +367,65 @@ public:
     static std::unique_ptr<DescriptorScriptPubKeyMan> CreateFromMigration(WalletStorage& storage, WalletBatch& batch, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     static std::unique_ptr<DescriptorScriptPubKeyMan> GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal);
 
-    mutable RecursiveMutex cs_desc_man;
+    util::Result<CTxDestination> GetNewDestination(OutputType type) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    bool IsMine(const CScript& script) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    util::Result<CTxDestination> GetNewDestination(OutputType type) override;
-    bool IsMine(const CScript& script) const override;
+    bool CheckDecryptionKey(const CKeyingMaterial& master_key) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
-    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
-
-    util::Result<CTxDestination> GetReservedDestination(OutputType type, bool internal, int64_t& index) override;
-    void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
+    util::Result<CTxDestination> GetReservedDestination(OutputType type, bool internal, int64_t& index) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
     // and is used to expand the descriptor in GetNewDestination. DescriptorScriptPubKeyMan relies
     // more on ephemeral data than LegacyScriptPubKeyMan. For wallets using unhardened derivation
     // (with or without private keys), the "keypool" is a single xpub.
-    bool TopUp(unsigned int size = 0) override;
+    bool TopUp(unsigned int size = 0) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+    std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool IsHDEnabled() const override;
+    bool IsHDEnabled() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool HavePrivateKeys() const override;
-    bool HasPrivKey(const CKeyID& keyid) const;
+    bool HavePrivateKeys() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
     //! Retrieve the particular key if it is available. Returns nullopt if the key is not in the wallet, or if the wallet is locked.
-    std::optional<CKey> GetKey(const CKeyID& keyid) const;
-    bool HaveCryptedKeys() const override;
+    std::optional<CKey> GetKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    bool HaveCryptedKeys() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    unsigned int GetKeyPoolSize() const override;
+    unsigned int GetKeyPoolSize() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    int64_t GetTimeFirstKey() const override;
+    int64_t GetTimeFirstKey() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const override;
+    std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool CanGetAddresses(bool internal = false) const override;
+    bool CanGetAddresses(bool internal = false) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+    bool CanProvide(const CScript& script, SignatureData& sigdata) override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
     // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
-    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
-    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
-    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const override;
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    uint256 GetID() const override;
+    uint256 GetID() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    bool HasWalletDescriptor(const WalletDescriptor& desc) const;
-    util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider);
-    bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);
-    void WriteDescriptor();
+    bool HasWalletDescriptor(const WalletDescriptor& desc) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    void WriteDescriptor() EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    WalletDescriptor GetWalletDescriptor() const;
-    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
-    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
-    int32_t GetEndRange() const;
+    WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
+    int32_t GetEndRange() const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const;
+    [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 
-    void UpgradeDescriptorCache();
+    void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man);
 };
 
 /** struct containing information needed for migrating legacy wallets to descriptor wallets */
