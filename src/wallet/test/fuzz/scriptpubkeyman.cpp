@@ -115,11 +115,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
         if (!wallet_desc.has_value()) {
             return;
         }
-        std::string error;
-        if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
-            auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-            if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
-        }
+        LOCK(wallet.cs_wallet);
+        (void)spk_manager->UpdateWalletDescriptor(wallet_desc->first, wallet_desc->second);
     }
 
     bool good_data{true};
