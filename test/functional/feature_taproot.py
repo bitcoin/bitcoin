@@ -99,6 +99,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
 )
+from test_framework.wallet import NodeSigner
 from test_framework.wallet_util import generate_keypair
 from test_framework.key import (
     generate_privkey,
@@ -1409,9 +1410,6 @@ class TaprootTest(BitcoinTestFramework):
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -1468,18 +1466,16 @@ class TaprootTest(BitcoinTestFramework):
         host_spks = []
         host_pubkeys = []
         for i in range(16):
-            addr = node.getnewaddress(address_type=random.choice(["legacy", "p2sh-segwit", "bech32"]))
-            info = node.getaddressinfo(addr)
-            spk = bytes.fromhex(info['scriptPubKey'])
+            pubkey, spk, _ = self.nodesigner.getnewaddress(address_type=random.choice(["legacy", "p2sh-segwit", "bech32"]))
             host_spks.append(spk)
-            host_pubkeys.append(bytes.fromhex(info['pubkey']))
+            host_pubkeys.append(pubkey)
 
         self.init_blockinfo(node)
 
         # Create transactions spending up to 50 of the wallet's inputs, with one output for each spender, and
         # one change output at the end. The transaction is constructed on the Python side to enable
-        # having multiple outputs to the same address and outputs with no assigned address. The wallet
-        # is then asked to sign it through signrawtransactionwithwallet, and then added to a block on the
+        # having multiple outputs to the same address and outputs with no assigned address. The node
+        # is then asked to sign it through signrawtransactionwithkey, and then added to a block on the
         # Python side (to bypass standardness rules).
         self.log.info("- Creating test UTXOs...")
         random.shuffle(spenders)
@@ -1492,7 +1488,7 @@ class TaprootTest(BitcoinTestFramework):
 
             fund_tx = CTransaction()
             # Add the 50 highest-value inputs
-            unspents = node.listunspent()
+            unspents = self.nodesigner.listunspent()
             random.shuffle(unspents)
             unspents.sort(key=lambda x: int(x["amount"] * 100000000), reverse=True)
             if len(unspents) > 50:
@@ -1515,8 +1511,8 @@ class TaprootTest(BitcoinTestFramework):
                 fund_tx.vout.append(CTxOut(amount, spenders[done + i].script))
             # Add change
             fund_tx.vout.append(CTxOut(balance - 10000, random.choice(host_spks)))
-            # Ask the wallet to sign
-            fund_tx = tx_from_hex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"])
+            # Ask the node to sign
+            fund_tx = tx_from_hex(self.nodesigner.signrawtransaction(fund_tx.serialize().hex(), unspents)["hex"])
             # Construct UTXOData entries
             for i in range(count_this_tx):
                 utxodata = UTXOData(outpoint=COutPoint(fund_tx.txid_int, i), output=fund_tx.vout[i], spender=spenders[done])
@@ -1668,7 +1664,7 @@ class TaprootTest(BitcoinTestFramework):
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getblockcount(), 1)
-        self.generate(self.nodes[0], COINBASE_MATURITY)
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY, self.nodesigner.getnewaddress()[2])
 
         SEED = 317
         VALID_LEAF_VERS = list(range(0xc0, 0x100, 2)) + [0x66, 0x7e, 0x80, 0x84, 0x96, 0x98, 0xba, 0xbc, 0xbe]
@@ -1879,6 +1875,7 @@ class TaprootTest(BitcoinTestFramework):
             print(json.dumps(tests, indent=4, sort_keys=False))
 
     def run_test(self):
+        self.nodesigner = NodeSigner(self.nodes[0])
         self.gen_test_vectors()
 
         self.log.info("Post-activation tests...")
