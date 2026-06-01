@@ -306,6 +306,7 @@ private:
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool HavePrivateKeys_() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     // Cached FlatSigningProviders to avoid regenerating them each time they are needed.
     mutable std::map<int32_t, FlatSigningProvider> m_map_signing_providers;
@@ -316,7 +317,14 @@ private:
 
     void Load();
 
-    void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    util::Result<CTxDestination> GetNewDestination_(OutputType type) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool CanGetAddresses_() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool TopUp_(unsigned int size = 0) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool TopUpWithDB_(WalletBatch& batch, unsigned int size = 0) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider);
+    void UpdateWithSigningProvider_(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool HasWalletDescriptor_(const WalletDescriptor& desc) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool CanUpdateToWalletDescriptor_(const WalletDescriptor& descriptor, std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
 protected:
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
@@ -337,6 +345,8 @@ protected:
 
     //! Same as 'TopUp' but designed for use within a batch transaction context
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
+
+    void SetupDescriptor(WalletBatch& batch);
 
 public:
     static std::unique_ptr<DescriptorScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
@@ -366,9 +376,9 @@ public:
     bool IsHDEnabled() const override;
 
     bool HavePrivateKeys() const override;
-    bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool HasPrivKey(const CKeyID& keyid) const;
     //! Retrieve the particular key if it is available. Returns nullopt if the key is not in the wallet, or if the wallet is locked.
-    std::optional<CKey> GetKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    std::optional<CKey> GetKey(const CKeyID& keyid) const;
     bool HaveCryptedKeys() const override;
 
     unsigned int GetKeyPoolSize() const override;
@@ -397,7 +407,7 @@ public:
     bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);
     void WriteDescriptor();
 
-    WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    WalletDescriptor GetWalletDescriptor() const;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
     int32_t GetEndRange() const;
