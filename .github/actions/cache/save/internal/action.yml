@@ -1,0 +1,28 @@
+name: 'Cache Save'
+description: 'Save a cache with WarpBuild on Warp runners and GitHub Actions cache otherwise'
+inputs:
+  path:
+    description: 'A list of files, directories, and wildcard patterns to cache'
+    required: true
+  key:
+    description: 'An explicit key for saving the cache'
+    required: true
+  provider:
+    description: 'The cache provider to use'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Save cache with WarpBuild
+      if: ${{ inputs.provider == 'warp' }}
+      uses: WarpBuilds/cache/save@v1
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+
+    - name: Save cache with GitHub Actions
+      if: ${{ inputs.provider == 'gha' }}
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
