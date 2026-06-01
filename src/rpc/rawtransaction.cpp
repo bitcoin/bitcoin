@@ -117,7 +117,7 @@ static std::vector<RPCArg> CreateTxDoc()
             },
          RPCArgOptions{.skip_type_check = true}},
         {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
-        {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true}, "Marks this transaction as BIP125-replaceable.\n"
+        {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true}, "(DEPRECATED) Marks this transaction as BIP125-replaceable.\n"
                 "Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible."},
         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_RAWTX_VERSION}, "Transaction version"},
     };
@@ -387,6 +387,9 @@ static RPCMethod createrawtransaction()
 {
     std::optional<bool> rbf;
     if (!request.params[3].isNull()) {
+        if (!IsDeprecatedRPCEnabled("bip125")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+        }
         rbf = request.params[3].get_bool();
     }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, self.Arg<uint32_t>("version"));
@@ -1712,6 +1715,9 @@ static RPCMethod createpsbt()
 {
     std::optional<bool> rbf;
     if (!request.params[3].isNull()) {
+        if (!IsDeprecatedRPCEnabled("bip125")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+        }
         rbf = request.params[3].get_bool();
     }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, self.Arg<uint32_t>("version"));

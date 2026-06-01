@@ -41,7 +41,7 @@ def create_transactions(node, address, amt, fees):
         # prevent 0 change output
         if ins_total > amt + fee:
             outputs[node.getrawchangeaddress()] = ins_total - amt - fee
-        raw_tx = node.createrawtransaction(inputs, outputs, 0, True)
+        raw_tx = node.createrawtransaction(inputs, outputs, 0)
         raw_tx = node.signrawtransactionwithwallet(raw_tx)
         assert_equal(raw_tx['complete'], True)
         txs.append(raw_tx)
