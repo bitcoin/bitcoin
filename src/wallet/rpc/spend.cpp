@@ -255,7 +255,7 @@ RPCMethod sendtoaddress()
                                          "transaction, just kept in your wallet."},
                     {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "The fee will be deducted from the amount being sent.\n"
                                          "The recipient will receive less bitcoins than you enter in the amount field."},
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
+                    {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "(DEPRECATED) Signal that this transaction can be replaced by a transaction (BIP 125)"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
                       + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
@@ -309,6 +309,9 @@ RPCMethod sendtoaddress()
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
+        if (!pwallet->chain().rpcEnableDeprecated("bip125")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+        }
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
@@ -362,7 +365,7 @@ RPCMethod sendmany()
                             {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Subtract fee from this address"},
                         },
                     },
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
+                    {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "(DEPRECATED) Signal that this transaction can be replaced by a transaction (BIP 125)"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
                       + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
@@ -415,6 +418,9 @@ RPCMethod sendmany()
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
+        if (!pwallet->chain().rpcEnableDeprecated("bip125")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+        }
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
