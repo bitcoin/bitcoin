@@ -569,8 +569,10 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 coinControl.fOverrideFeeRate = true;
             }
 
-            if (options.exists("replaceable")) {
-                coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
+            if (wallet.chain().rpcEnableDeprecated("bip125")) {
+                if (options.exists("replaceable")) {
+                    coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
+                }
             }
 
             if (options.exists("minconf")) {
@@ -1773,8 +1775,12 @@ RPCMethod walletcreatefundedpsbt()
     CCoinControl coin_control;
     coin_control.m_version = self.Arg<uint32_t>("version");
 
-    const UniValue &replaceable_arg = options["replaceable"];
-    const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
+    bool rbf{wallet.m_signal_rbf};
+    if (pwallet->chain().rpcEnableDeprecated("bip125")) {
+        if (options.exists("replaceable")) {
+            rbf = options["replaceable"].get_bool();
+        }
+    }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, coin_control.m_version);
     UniValue outputs(UniValue::VOBJ);
     outputs = NormalizeOutputs(request.params[1]);
