@@ -43,7 +43,7 @@ connected to a handful of nodes.
 Forwarding transactions to peers increases the P2P traffic. To only sync blocks
 with other peers, you can disable transaction relay.
 
-Be reminded of the effects of this setting.
+Note the following effects of this setting:
 
 - Fee estimation will no longer work.
 - It sets the flag "-walletbroadcast" to be "0", only if it is currently unset.
