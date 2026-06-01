@@ -34,11 +34,12 @@ LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 9
+        self.num_nodes = 10
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v31.0
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v30.2
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v24.0.1
@@ -57,6 +58,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            310000,
             300200,
             250000,
             240001,
@@ -288,6 +290,14 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     continue
                 # Also try to reopen on master after opening on old
                 for n in [node, node_master]:
+                    # 31.0 has a descriptor id calculation incompatibility.
+                    # Miniscript descriptors imported into node versions other than 31.0 will
+                    # result in wallets that cannot be loaded into 31.0.
+                    # These wallets will emit a "Wallet corrupted" error.
+                    if wallet_name == "miniscript" and n.version == 310000:
+                        assert_raises_rpc_error(-4, "Wallet corrupted", n.loadwallet, wallet_name)
+                        continue
+
                     n.loadwallet(wallet_name)
                     wallet = n.get_wallet_rpc(wallet_name)
                     info = wallet.getwalletinfo()

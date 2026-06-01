@@ -100,6 +100,15 @@ SHA256_SUMS = {
     "99d5cee9b9c37be506396c30837a4b98e320bfea71c474d6120a7e8eb6075c7b": {"tag": "v30.2", "archive": "bitcoin-30.2-x86_64-apple-darwin.tar.gz"},
     "6aa7bb4feb699c4c6262dd23e4004191f6df7f373b5d5978b5bcdd4bb72f75d8": {"tag": "v30.2", "archive": "bitcoin-30.2-x86_64-linux-gnu.tar.gz"},
     "0d7e1f16f8823aa26d29b44855ff6dbac11c03d75631a6c1d2ea5fab3a84fdf8": {"tag": "v30.2", "archive": "bitcoin-30.2-win64.zip"},
+
+    "4de1d568dedd48604f75132421bc0abeca432639589b49a3909c81db3a813112": {"tag": "v31.0", "archive": "bitcoin-31.0-aarch64-linux-gnu.tar.gz"},
+    "8c19d007bfc73502625095ea4073af3a98ceb722d500556ab173bac5bcadd0d6": {"tag": "v31.0", "archive": "bitcoin-31.0-arm-linux-gnueabihf.tar.gz"},
+    "a2d7a13b4da53d4a3e4c517f3a0269e2429813417bb320d3b268993cfdc545d0": {"tag": "v31.0", "archive": "bitcoin-31.0-arm64-apple-darwin.tar.gz"},
+    "1d9c865aa0ccf675fc068e79d9fa57a5a70b59132fca38bb322a7d44ce2f0ff2": {"tag": "v31.0", "archive": "bitcoin-31.0-powerpc64-linux-gnu.tar.gz"},
+    "7ece4ea365bba9b2008b27f0717ef6a518598a572edaa2815e775faadc53c136": {"tag": "v31.0", "archive": "bitcoin-31.0-riscv64-linux-gnu.tar.gz"},
+    "56824dd705bc2a3b22d42e8aa02ed53498d491ff7c2c8aa96831333871887ead": {"tag": "v31.0", "archive": "bitcoin-31.0-x86_64-apple-darwin.tar.gz"},
+    "d3e4c58a35b1d0a97a457462c94f55501ad167c660c245cb1ffa565641c65074": {"tag": "v31.0", "archive": "bitcoin-31.0-x86_64-linux-gnu.tar.gz"},
+    "82fd2c504a0f20a31d4d13bd407783d6fc7bf17622d0ce85228a9b92694e03f0": {"tag": "v31.0", "archive": "bitcoin-31.0-win64.zip"},
 }
 
 
