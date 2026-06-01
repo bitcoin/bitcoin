@@ -435,7 +435,7 @@ class SendallTest(BitcoinTestFramework):
     def sendall_anti_fee_sniping(self):
         self.log.info("Testing sendall does anti-fee-sniping when locktime is not specified")
         self.add_utxos([10,11])
-        tx_from_wallet = self.test_sendall_success(sendall_args = [self.remainder_target], options={"replaceable":False})
+        tx_from_wallet = self.test_sendall_success(sendall_args = [self.remainder_target])
 
         # the locktime should be within 100 blocks of the
         # block height

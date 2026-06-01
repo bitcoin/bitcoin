@@ -439,7 +439,7 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
         {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
           + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used")), RPCArgOptions{.also_positional = true}},
         {
-            "replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125-replaceable.\n"
+            "replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "(DEPRECATED) Marks this transaction as BIP125-replaceable.\n"
             "Allows this transaction to be replaced by a transaction with higher fees"
         },
     };
@@ -1442,7 +1442,13 @@ RPCMethod sendall()
                 coin_control.m_max_tx_weight = MAX_STANDARD_TX_WEIGHT;
             }
 
-            const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
+            bool rbf{pwallet->m_signal_rbf};
+            if (options.exists("replaceable")) {
+                if (!pwallet->chain().rpcEnableDeprecated("bip125")) {
+                    throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+                }
+                rbf = options["replaceable"].get_bool();
+            }
 
             FeeCalculation fee_calc_out;
             CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out)};
