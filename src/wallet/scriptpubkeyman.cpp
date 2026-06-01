@@ -21,6 +21,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <exception>
 #include <optional>
 
 using common::PSBTError;
@@ -869,69 +870,48 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNe
 
     auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, desc, keypool_size));
 
-    LOCK(spkm->cs_desc_man);
-    Assert(spkm->m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
-    // Store the master private key, and descriptor
-    if (!spkm->AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
-    }
-    if (!batch.WriteDescriptor(spkm->GetID(), spkm->m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
-    }
-
-    // Set m_decryption_thoroughly_checked for encrypted wallets
-    if (spkm->m_storage.HasEncryptionKeys()) {
-        spkm->m_decryption_thoroughly_checked = true;
-    }
-
-    // TopUp
-    spkm->TopUpWithDB_(batch);
-
-    spkm->m_storage.UnsetBlankWalletFlag(batch);
+    spkm->SetupDescriptorGeneration(batch, master_key);
     return spkm;
 }
 
 void DescriptorScriptPubKeyMan::IncIndex()
 {
     AssertLockHeld(cs_desc_man);
-
-    const auto old_can = CanGetAddresses_();
     m_wallet_descriptor.IncNext();
-    const auto new_can = CanGetAddresses_();
-    if (old_can != new_can) {
-        NotifyCanGetAddressesChanged();
-    }
 }
 
 void DescriptorScriptPubKeyMan::DecIndex()
 {
     AssertLockHeld(cs_desc_man);
-
-    const auto old_can = CanGetAddresses_();
     m_wallet_descriptor.DecNext();
-    const auto new_can = CanGetAddresses_();
-    if (old_can != new_can) {
-        NotifyCanGetAddressesChanged();
-    }
 }
 
 void DescriptorScriptPubKeyMan::SetRangeEnd(int32_t end)
 {
     AssertLockHeld(cs_desc_man);
-
-    const auto old_can = CanGetAddresses_();
     m_wallet_descriptor.SetEnd(end);
-    const auto new_can = CanGetAddresses_();
-    if (old_can != new_can) {
-        NotifyCanGetAddressesChanged();
-    }
 }
 
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
-    LOCK(cs_desc_man);
-    return GetNewDestination_(type);
+    bool changed;
+    std::optional<util::Result<CTxDestination>> result;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            result.emplace(GetNewDestination_(type));
+        } catch (...) {
+            // An operation can change availability before throwing. Notify after
+            // unlocking, then propagate the exception.
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
+    return std::move(*result);
 }
 
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination_(const OutputType type)
@@ -1035,20 +1015,45 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
 
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index)
 {
-    LOCK(cs_desc_man);
-    auto dest{GetNewDestination_(type)};
-    if (dest) index = m_wallet_descriptor.GetNext() - 1;
-    return dest;
+    bool changed;
+    std::optional<util::Result<CTxDestination>> result;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            result.emplace(GetNewDestination_(type));
+            if (*result) index = m_wallet_descriptor.GetNext() - 1;
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
+    return std::move(*result);
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
 {
-    LOCK(cs_desc_man);
-    // Only return when the index was the most recent
-    if (m_wallet_descriptor.GetNext() - 1 == index) {
-        DecIndex();
+    bool changed;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            // Only return when the index was the most recent
+            if (m_wallet_descriptor.GetNext() - 1 == index) {
+                DecIndex();
+            }
+            WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
     }
-    WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
 }
 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
@@ -1102,8 +1107,22 @@ std::optional<CKey> DescriptorScriptPubKeyMan::GetKey(const CKeyID& keyid) const
 
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 {
-    LOCK(cs_desc_man);
-    return TopUp_(size);
+    bool changed;
+    bool result{false};
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            result = TopUp_(size);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
+    return result;
 }
 
 bool DescriptorScriptPubKeyMan::TopUp_(unsigned int size)
@@ -1118,8 +1137,22 @@ bool DescriptorScriptPubKeyMan::TopUp_(unsigned int size)
 
 bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int size)
 {
-    LOCK(cs_desc_man);
-    return TopUpWithDB_(batch, size);
+    bool changed;
+    bool result{false};
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            result = TopUpWithDB_(batch, size);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
+    return result;
 }
 
 bool DescriptorScriptPubKeyMan::TopUpWithDB_(WalletBatch& batch, unsigned int size)
@@ -1186,30 +1219,41 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB_(WalletBatch& batch, unsigned int si
 
 std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 {
-    LOCK(cs_desc_man);
+    bool changed;
     std::vector<WalletDestination> result;
-    auto script_it = m_map_script_pub_keys.find(script);
-    if (script_it != m_map_script_pub_keys.end()) {
-        int32_t index = script_it->second;
-        if (index >= m_wallet_descriptor.GetNext()) {
-            WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
-            auto out_keys = std::make_unique<FlatSigningProvider>();
-            std::vector<CScript> scripts_temp;
-            while (index >= m_wallet_descriptor.GetNext()) {
-                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
-                    throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor from cache");
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            auto script_it = m_map_script_pub_keys.find(script);
+            if (script_it != m_map_script_pub_keys.end()) {
+                int32_t index = script_it->second;
+                if (index >= m_wallet_descriptor.GetNext()) {
+                    WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
+                    auto out_keys = std::make_unique<FlatSigningProvider>();
+                    std::vector<CScript> scripts_temp;
+                    while (index >= m_wallet_descriptor.GetNext()) {
+                        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
+                            throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor from cache");
+                        }
+                        CTxDestination dest;
+                        ExtractDestination(scripts_temp[0], dest);
+                        result.push_back({dest, std::nullopt});
+                        IncIndex();
+                    }
                 }
-                CTxDestination dest;
-                ExtractDestination(scripts_temp[0], dest);
-                result.push_back({dest, std::nullopt});
-                IncIndex();
+                if (!TopUp_()) {
+                    WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+                }
             }
+        } catch (...) {
+            exception = std::current_exception();
         }
-        if (!TopUp_()) {
-            WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
-        }
+        changed = before != CanGetAddresses_();
     }
-
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
     return result;
 }
 
@@ -1245,13 +1289,61 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-void DescriptorScriptPubKeyMan::SetupDescriptor(WalletBatch& batch)
+void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
 {
-    LOCK(cs_desc_man);
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    bool changed;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            Assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+            // Store the master private key, and descriptor
+            if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+                throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
+            }
+            if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+                throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+            }
+
+            // Set m_decryption_thoroughly_checked for encrypted wallets
+            if (m_storage.HasEncryptionKeys()) {
+                m_decryption_thoroughly_checked = true;
+            }
+
+            // TopUp
+            TopUpWithDB_(batch);
+
+            m_storage.UnsetBlankWalletFlag(batch);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
     }
-    TopUpWithDB_(batch);
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
+}
+
+void DescriptorScriptPubKeyMan::SetupDescriptor(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
+{
+    bool changed;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+                throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+            }
+            TopUpWithDB_(batch);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
@@ -1662,27 +1754,51 @@ void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
 
 util::Result<void> DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider)
 {
-    LOCK(cs_desc_man);
-    std::string error;
-    if (!CanUpdateToWalletDescriptor_(descriptor, error)) {
-        return util::Error{Untranslated(std::move(error))};
+    bool changed;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        std::string error;
+        if (!CanUpdateToWalletDescriptor_(descriptor, error)) {
+            return util::Error{Untranslated(std::move(error))};
+        }
+
+        const bool before = CanGetAddresses_();
+        try {
+            m_map_pubkeys.clear();
+            m_map_script_pub_keys.clear();
+            m_max_cached_index = -1;
+            m_wallet_descriptor.UpdateFrom(descriptor);
+
+            WalletBatch batch(m_storage.GetDatabase());
+            UpdateWithSigningProvider_(batch, provider);
+            NotifyFirstKeyTimeChanged(this, m_wallet_descriptor.creation_time);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
     }
-
-    m_map_pubkeys.clear();
-    m_map_script_pub_keys.clear();
-    m_max_cached_index = -1;
-    m_wallet_descriptor.UpdateFrom(descriptor);
-
-    WalletBatch batch(m_storage.GetDatabase());
-    UpdateWithSigningProvider_(batch, provider);
-    NotifyFirstKeyTimeChanged(this, m_wallet_descriptor.creation_time);
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
     return {};
 }
 
-void DescriptorScriptPubKeyMan::UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider)
+void DescriptorScriptPubKeyMan::UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(!cs_desc_man)
 {
-    LOCK(cs_desc_man);
-    UpdateWithSigningProvider_(batch, signing_provider);
+    bool changed;
+    std::exception_ptr exception;
+    {
+        LOCK(cs_desc_man);
+        const bool before = CanGetAddresses_();
+        try {
+            UpdateWithSigningProvider_(batch, signing_provider);
+        } catch (...) {
+            exception = std::current_exception();
+        }
+        changed = before != CanGetAddresses_();
+    }
+    if (changed) NotifyCanGetAddressesChanged();
+    if (exception) std::rethrow_exception(exception);
 }
 
 void DescriptorScriptPubKeyMan::UpdateWithSigningProvider_(WalletBatch& batch, const FlatSigningProvider& signing_provider)
