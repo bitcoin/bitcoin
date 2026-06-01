@@ -257,10 +257,10 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
 
     bool add_inactive_hd_chain{fuzzed_data_provider.ConsumeBool() && !keys.empty()};
     if (add_inactive_hd_chain) {
-        hd_key = PickValue(fuzzed_data_provider, keys);
+        CKey inactive_hd_key = PickValue(fuzzed_data_provider, keys);
         hd_chain.nVersion = fuzzed_data_provider.ConsumeBool() ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
-        bool dup_chain = hd_chain.seed_id == hd_key.GetPubKey().GetID();
-        hd_chain.seed_id = hd_key.GetPubKey().GetID();
+        bool dup_chain = hd_key.IsValid() && std::equal(hd_key.begin(), hd_key.end(), inactive_hd_key.begin());
+        hd_chain.seed_id = inactive_hd_key.GetPubKey().GetID();
         legacy_data.AddInactiveHDChain(hd_chain);
         if (!dup_chain) added_chains++;
     }

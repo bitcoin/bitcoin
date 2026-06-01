@@ -628,19 +628,28 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
     bool can_support_hd_split_feature = m_hd_chain.nVersion >= CHDChain::VERSION_HD_CHAIN_SPLIT;
 
+    std::set<CExtPubKey> master_xpubs;
     for (const CHDChain& chain : chains) {
+        if (chain.seed_id.IsNull()) continue;
+
+        // Get the master xprv
+        CKey seed_key;
+        if (!GetKey(chain.seed_id, seed_key)) {
+            assert(false);
+        }
+        CExtKey master_key;
+        master_key.SetSeed(seed_key);
+
+        // Get the xpub and verify that we haven't already seen this xpub before
+        CExtPubKey master_xpub = master_key.Neuter();
+        const auto& [_, inserted] = master_xpubs.insert(master_xpub);
+        if (!inserted) continue;
+
         for (int i = 0; i < 2; ++i) {
             // Skip if doing internal chain and split chain is not supported
-            if (chain.seed_id.IsNull() || (i == 1 && !can_support_hd_split_feature)) {
+            if (i == 1 && !can_support_hd_split_feature) {
                 continue;
             }
-            // Get the master xprv
-            CKey seed_key;
-            if (!GetKey(chain.seed_id, seed_key)) {
-                assert(false);
-            }
-            CExtKey master_key;
-            master_key.SetSeed(seed_key);
 
             // Make the combo descriptor
             std::string xpub = EncodeExtPubKey(master_key.Neuter());
