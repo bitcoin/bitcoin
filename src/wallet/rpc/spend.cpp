@@ -1279,7 +1279,13 @@ RPCMethod send()
             PreventOutdatedOptions(options);
 
 
-            bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
+            bool rbf{pwallet->m_signal_rbf};
+            if (options.exists("replaceable")) {
+                if (!pwallet->chain().rpcEnableDeprecated("bip125")) {
+                    throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+                }
+                rbf = options["replaceable"].get_bool();
+            }
             UniValue outputs(UniValue::VOBJ);
             outputs = NormalizeOutputs(request.params[0]);
             std::vector<CRecipient> recipients = CreateRecipients(
