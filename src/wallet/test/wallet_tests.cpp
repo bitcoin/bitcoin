@@ -267,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(add_descriptor_key_database_failure, EncryptionFailureSe
         CKey key{GenerateRandomKey()};
         // Add a public descriptor first so the private-key update exercises an existing live manager
         auto* spkm{CreateDescriptor(*wallet, strprintf("combo(%s)", HexStr(key.GetPubKey())), /*success=*/true)};
-        WalletDescriptor descriptor{WITH_LOCK(spkm->cs_desc_man, return spkm->GetWalletDescriptor())};
+        WalletDescriptor descriptor{spkm->GetWalletDescriptor()};
         FlatSigningProvider provider;
         provider.keys.emplace(key.GetPubKey().GetID(), key);
         auto add_key{[&] {

@@ -344,9 +344,6 @@ protected:
     void DecIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     void SetRangeEnd(int32_t end) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    //! Same as 'TopUp' but designed for use within a batch transaction context
-    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
-
     void SetupDescriptor(WalletBatch& batch);
 
 public:
