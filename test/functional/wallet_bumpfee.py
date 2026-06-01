@@ -22,7 +22,6 @@ from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
-    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -99,7 +98,6 @@ class BumpFeeTest(BitcoinTestFramework):
         test_dust_to_fee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
-        test_rebumping_not_replaceable(self, rbf_node, dest_address)
         test_bumpfee_already_spent(self, rbf_node, dest_address)
         test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address)
         test_bumpfee_metadata(self, rbf_node, dest_address)
@@ -643,25 +641,6 @@ def test_rebumping(self, rbf_node, dest_address):
                             rbf_node.bumpfee, rbfid, fee_rate=NORMAL)
     rbf_node.bumpfee(bumped["txid"], fee_rate=NORMAL)
     self.clear_mempool()
-
-
-def test_rebumping_not_replaceable(self, rbf_node, dest_address):
-    self.log.info("Test that re-bumping non-replaceable passes")
-    rbfid = spend_one_input(rbf_node, dest_address)
-
-    def check_sequence(tx, seq_in):
-        tx = rbf_node.getrawtransaction(tx["txid"])
-        tx = rbf_node.decoderawtransaction(tx)
-        seq = [i["sequence"] for i in tx["vin"]]
-        assert_equal(seq, [seq_in])
-
-    bumped = rbf_node.bumpfee(rbfid, fee_rate=ECONOMICAL, replaceable=False)
-    check_sequence(bumped, MAX_SEQUENCE_NONFINAL)
-    bumped = rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
-    check_sequence(bumped, MAX_BIP125_RBF_SEQUENCE)
-
-    self.clear_mempool()
-
 
 def test_bumpfee_already_spent(self, rbf_node, dest_address):
     self.log.info('Test that bumping tx with already spent coin fails')

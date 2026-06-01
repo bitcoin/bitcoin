@@ -990,8 +990,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
                              "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
                              "Must be at least " + incremental_fee + " higher than the current transaction fee rate.\n"
                              "WARNING: before version 0.21, fee_rate was in " + CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true},
-                             "Whether the new transaction should be\n"
+                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_WALLET_RBF},
+                             "(DEPRECATED) Whether the new transaction should be\n"
                              "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
                              "be set to 0xfffffffd. If false, any input sequence numbers in the\n"
                              "transaction will be set to 0xfffffffe\n"
@@ -1076,6 +1076,9 @@ static RPCMethod bumpfee_helper(std::string method_name)
         auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
 
         if (options.exists("replaceable")) {
+            if (!pwallet->chain().rpcEnableDeprecated("bip125")) {
+                throw JSONRPCError(RPC_METHOD_DEPRECATED, "Deprecated \"replaceable\" argument passed. Run with -deprecatedrpc=bip125 startup option to use it.");
+            }
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
