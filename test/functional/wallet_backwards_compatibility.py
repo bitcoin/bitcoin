@@ -34,11 +34,12 @@ LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 8
+        self.num_nodes = 9
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v30.2
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v24.0.1
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v23.0
@@ -56,6 +57,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            300200,
             250000,
             240001,
             230000,
@@ -197,7 +199,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v21 = self.nodes[self.num_nodes - 2]
         node_v20 = self.nodes[self.num_nodes - 1] # bdb only
 
-        legacy_nodes = self.nodes[2:] # Nodes that support legacy wallets
+        previous_nodes = self.nodes[2:] # All previous version nodes
+        legacy_nodes = self.nodes[-6:] # Nodes that support legacy wallets
         descriptors_nodes = self.nodes[2:-1] # Nodes that support descriptor wallets
 
         self.generatetoaddress(node_miner, COINBASE_MATURITY + 1, node_miner.getnewaddress())
@@ -251,13 +254,20 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled']
         assert_equal(info['keypoolsize'], 0)
 
+        node_master.createwallet(wallet_name="miniscript")
+        wallet = node_master.get_wallet_rpc("miniscript")
+        miniscript_desc = descsum_create("wsh(or_b(pk([deadbeef/0h/1h/2h]tprv8ZgxMBicQKsPerQj6m35no46amfKQdjY7AhLnmatHYXs8S4MTgeZYkWAn4edSGwwL3vkSiiGqSZQrmy5D3P5gBoqgvYP2fCUpBwbKTMTAkL/3h/*),s:pk([beefdead/4h/5h]tpubD6NzVbkrYhZ4YU9vM1s53UhD75UyJatx8EMzMZ3VUjR2FciNfLLkAw6a4pWACChzobTseNqdWk4G7ZdBqRDLtLSACKykTScmqibb1ZrCvJu/6/7/*)))")
+        res = wallet.importdescriptors([{"desc": miniscript_desc, "timestamp":"now"}])
+        assert_equal(res[0]["success"], True)
+
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = node_master.wallets_path
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_master.unloadwallet("w3")
+        node_master.unloadwallet("miniscript")
 
-        for node in legacy_nodes:
+        for node in previous_nodes:
             # Copy wallets to previous version
             for wallet in os.listdir(node_master_wallets_dir):
                 dest = node.wallets_path / wallet
@@ -269,9 +279,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # since we can no longer create legacy wallets.
         for node in descriptors_nodes:
             self.log.info(f"- {node.version}")
-            for wallet_name in ["w1", "w2", "w3"]:
+            for wallet_name in ["w1", "w2", "w3", "miniscript"]:
                 if self.major_version_less_than(node, 22) and wallet_name == "w1":
                     # Descriptor wallets created after 0.21 have taproot descriptors which 0.21 does not support, tested below
+                    continue
+                if self.major_version_less_than(node, 24) and wallet_name == "miniscript":
+                    # Miniscript was introduced in 24.0
                     continue
                 # Also try to reopen on master after opening on old
                 for n in [node, node_master]:
@@ -296,9 +309,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     elif wallet_name == "w2":
                         assert_equal(info['private_keys_enabled'], False)
                         assert_equal(info['keypoolsize'], 0)
-                    else:
+                    elif wallet_name == "w3":
                         assert_equal(info['private_keys_enabled'], True)
                         assert_equal(info['keypoolsize'], 0)
+                    elif wallet_name == "miniscript":
+                        for desc in wallet.listdescriptors()["descriptors"]:
+                            if desc["desc"].startswith("wsh(or_b(pk"):
+                                break
+                        else:
+                            assert False, "Did not find miniscript descriptor"
 
                     # Copy back to master
                     wallet.unloadwallet()
@@ -333,6 +352,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             hdkeypath = addr_info["hdkeypath"].replace("'", "h")
             pubkey = addr_info["pubkey"]
 
+            if self.major_version_at_least(node, 24):
+                res = wallet_prev.importdescriptors([{"desc": miniscript_desc, "timestamp":"now"}])
+                assert_equal(res[0]["success"], True)
+
             # Make a backup of the wallet file
             backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
             wallet_prev.backupwallet(backup_path)
@@ -356,6 +379,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             info = wallet.getaddressinfo(address)
             descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
             assert_equal(info["desc"], descsum_create(descriptor))
+
+            if self.major_version_at_least(node, 24):
+                for desc in wallet.listdescriptors()["descriptors"]:
+                    if desc["desc"].startswith("wsh(or_b(pk"):
+                        break
+                else:
+                    assert False, "Did not find miniscript descriptor"
 
             # Make backup so the wallet can be copied back to old node
             down_wallet_name = f"re_down_{node.version}"
