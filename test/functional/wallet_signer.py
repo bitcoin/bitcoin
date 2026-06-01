@@ -242,7 +242,8 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Try to spend
         dest = hww.getrawchangeaddress()
-        assert_raises_rpc_error(-25, "External signer not found", hww.send, outputs=[{dest:0.5}])
+        with self.nodes[1].assert_debug_log(["No external signers found"]):
+            assert_raises_rpc_error(-25, "External signer not found", hww.send, outputs=[{dest:0.5}])
 
     def test_invalid_signer(self):
         self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
