@@ -1273,7 +1273,12 @@ RPCMethod send()
             PreventOutdatedOptions(options);
 
 
-            bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
+            bool rbf{pwallet->m_signal_rbf};
+            if (pwallet->chain().rpcEnableDeprecated("bip125")) {
+                if (options.exists("replaceable")) {
+                    rbf = options["replaceable"].get_bool();
+                }
+            }
             UniValue outputs(UniValue::VOBJ);
             outputs = NormalizeOutputs(request.params[0]);
             std::vector<CRecipient> recipients = CreateRecipients(
