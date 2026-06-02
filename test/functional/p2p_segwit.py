@@ -12,7 +12,6 @@ from test_framework.blocktools import (
     create_block,
 )
 from test_framework.messages import (
-    MAX_BIP125_RBF_SEQUENCE,
     CBlockHeader,
     CInv,
     COutPoint,
@@ -577,7 +576,6 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint(p2sh_tx.txid_int, 0), CScript([witness_script]))]
         tx.vout = [CTxOut(p2sh_tx.vout[0].nValue - 10000, script_pubkey)]
         tx.vout.append(CTxOut(8000, script_pubkey))  # Might burn this later
-        tx.vin[0].nSequence = MAX_BIP125_RBF_SEQUENCE  # Just to have the option to bump this tx from the mempool
 
         # This is always accepted, since the mempool policy is to consider segwit as always active
         # and thus allow segwit outputs

@@ -7,7 +7,7 @@
 from decimal import Decimal
 
 from test_framework.messages import (
-    MAX_BIP125_RBF_SEQUENCE,
+    MAX_SEQUENCE_NONFINAL,
     COIN,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -541,7 +541,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         optout_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
-            sequence=MAX_BIP125_RBF_SEQUENCE + 1,
+            sequence=MAX_SEQUENCE_NONFINAL,
             fee_rate=Decimal('0.01'),
         )
         assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])

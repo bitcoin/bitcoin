@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from test_framework.messages import (
     COIN,
-    MAX_BIP125_RBF_SEQUENCE,
+    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mempool_util import fill_mempool
@@ -54,7 +54,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result = self.wallet.create_self_transfer(
             fee=parent_fee,
             utxo_to_spend=parent_coin,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         num_child_outputs = 10 if heavy_child else 1
@@ -62,7 +62,7 @@ class PackageRBFTest(BitcoinTestFramework):
             utxos_to_spend=[parent_result["new_utxo"]],
             num_outputs=num_child_outputs,
             fee_per_output=int(child_fee * COIN // num_child_outputs),
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
         package_hex = [parent_result["hex"], child_result["hex"]]
         package_txns = [parent_result["tx"], child_result["tx"]]
@@ -71,7 +71,7 @@ class PackageRBFTest(BitcoinTestFramework):
     def run_test(self):
         # Counter used to count the number of times we constructed packages. Since we're constructing parent transactions with the same
         # coins (to create conflicts), and perhaps giving them the same fee, we might accidentally just create the same transaction again.
-        # To prevent this, set nSequences to MAX_BIP125_RBF_SEQUENCE - self.ctr.
+        # To prevent this, set nSequences to MAX_SEQUENCE_NONFINAL - self.ctr.
         self.ctr = 0
 
         self.log.info("Generate blocks to create UTXOs")
@@ -258,7 +258,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result1 = self.wallet.create_self_transfer(
             fee=DEFAULT_FEE,
             utxo_to_spend=coin,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         coin2 = self.coins.pop()
@@ -269,7 +269,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result2 = self.wallet.create_self_transfer(
             fee=DEFAULT_FEE,
             utxo_to_spend=coin2,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         # Child that spends both, violating cluster size rule due
@@ -278,7 +278,7 @@ class PackageRBFTest(BitcoinTestFramework):
         child_result = self.wallet.create_self_transfer_multi(
             fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
             utxos_to_spend=[parent_result1["new_utxo"], parent_result2["new_utxo"]],
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         package_hex2 = [parent_result1["hex"], parent_result2["hex"], child_result["hex"]]
@@ -310,7 +310,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result1 = self.wallet.create_self_transfer(
             fee=DEFAULT_FEE,
             utxo_to_spend=coin1,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         # Double-spends the second package
@@ -318,7 +318,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result2 = self.wallet.create_self_transfer(
             fee=DEFAULT_FEE,
             utxo_to_spend=coin2,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         # Child that spends both, violating cluster size rule due
@@ -327,7 +327,7 @@ class PackageRBFTest(BitcoinTestFramework):
         child_result = self.wallet.create_self_transfer_multi(
             fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
             utxos_to_spend=[parent_result1["new_utxo"], parent_result2["new_utxo"]],
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         package_hex3 = [parent_result1["hex"], parent_result2["hex"], child_result["hex"]]
@@ -396,7 +396,7 @@ class PackageRBFTest(BitcoinTestFramework):
         grandparent_result = self.wallet.create_self_transfer(
             fee=DEFAULT_FEE,
             utxo_to_spend=coin,
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         node.sendrawtransaction(grandparent_result["hex"])
@@ -408,7 +408,7 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_result = self.wallet.create_self_transfer(
             fee_rate=minrelayfeerate,
             utxo_to_spend=grandparent_result["new_utxo"],
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
         # Last tx double-spends grandparent's coin,
         # which is not inside the current package
@@ -416,7 +416,7 @@ class PackageRBFTest(BitcoinTestFramework):
         child_result = self.wallet.create_self_transfer_multi(
             fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
             utxos_to_spend=[parent_result["new_utxo"], coin],
-            sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
+            sequence=MAX_SEQUENCE_NONFINAL - self.ctr,
         )
 
         pkg_result = node.submitpackage([parent_result["hex"], child_result["hex"]])

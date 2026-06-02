@@ -12,7 +12,6 @@ from test_framework.mempool_util import (
     fill_mempool,
 )
 from test_framework.messages import (
-    MAX_BIP125_RBF_SEQUENCE,
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
@@ -296,7 +295,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         coin = self.wallet.get_utxo()
         fee = Decimal("0.00125000")
-        replaceable_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = fee)
+        replaceable_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, fee = fee)
         testres_replaceable = node.testmempoolaccept([replaceable_tx["hex"]])[0]
         assert_equal(testres_replaceable["txid"], replaceable_tx["txid"])
         assert_equal(testres_replaceable["wtxid"], replaceable_tx["wtxid"])
@@ -307,7 +306,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_replaceable["fees"]["effective-includes"], [replaceable_tx["wtxid"]])
 
         # Replacement transaction is identical except has double the fee
-        replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = 2 * fee)
+        replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, fee = 2 * fee)
         testres_rbf_conflicting = node.testmempoolaccept([replaceable_tx["hex"], replacement_tx["hex"]])
         assert_equal(testres_rbf_conflicting, [
             {"txid": replaceable_tx["txid"], "wtxid": replaceable_tx["wtxid"], "package-error": "conflict-in-package"},

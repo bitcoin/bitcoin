@@ -24,7 +24,7 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     CTxInWitness,
-    MAX_BIP125_RBF_SEQUENCE,
+    MAX_SEQUENCE_NONFINAL,
     MSG_WTX,
     msg_inv,
     msg_tx,
@@ -610,7 +610,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # To avoid creating transactions with the same txid (can happen if we set the same feerate
         # and reuse the same input as a previous transaction that wasn't successfully submitted),
         # we give each subtest a different nSequence for its transactions.
-        self.sequence = MAX_BIP125_RBF_SEQUENCE
+        self.sequence = MAX_SEQUENCE_NONFINAL
 
         self.wallet = MiniWallet(node)
         self.wallet_nonsegwit = MiniWallet(node, mode=MiniWalletMode.RAW_P2PK)
