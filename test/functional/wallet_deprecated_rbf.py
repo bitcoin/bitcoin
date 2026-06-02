@@ -3,9 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of wallet RBF RPCs and startup options."""
-from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error
 from test_framework.test_framework import BitcoinTestFramework
+
+MAX_BIP125_RBF_SEQUENCE = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 
 '''
 This test exercises the deprecatedrpc=bip125 flag and deprecated -walletrbf options

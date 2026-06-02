@@ -19,7 +19,6 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
 from test_framework.messages import (
-    MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -355,8 +354,7 @@ def test_segwit_bumpfee_succeeds(self, node, dest_address):
 
     rbfraw = node.createrawtransaction([{
         'txid': segwitid,
-        'vout': 0,
-        "sequence": MAX_BIP125_RBF_SEQUENCE
+        'vout': 0
     }], {dest_address: Decimal("0.0005"),
          node.getrawchangeaddress(): Decimal("0.0003")})
     rbfsigned = node.signrawtransactionwithwallet(rbfraw)
@@ -386,8 +384,7 @@ def test_notmine_bumpfee(self, node, peer_node, dest_address):
     inputs = [{
         "txid": utxo["txid"],
         "vout": utxo["vout"],
-        "address": utxo["address"],
-        "sequence": MAX_BIP125_RBF_SEQUENCE
+        "address": utxo["address"]
     } for utxo in utxos]
     output_val = sum(utxo["amount"] for utxo in utxos) - fee
     rawtx = node.createrawtransaction(inputs, {dest_address: output_val})
@@ -754,8 +751,7 @@ def test_change_script_match(self, node, dest_address):
 
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000"), data=None):
-    tx_input = dict(
-        sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
+    tx_input = dict(**next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
     destinations = {dest_address: Decimal("0.00050000")}
     if change_size > 0:
         destinations[node.getrawchangeaddress()] = change_size

@@ -8,7 +8,6 @@ from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
     assert_equal,
@@ -376,8 +375,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         spending_node = self.nodes[2]
         dest_address = spending_node.getnewaddress()
 
-        tx_input = dict(
-            sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in spending_node.listunspent()))
+        tx_input = dict(**next(u for u in spending_node.listunspent()))
         rawtx = spending_node.createrawtransaction(
             [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
                          spending_node.getrawchangeaddress(): Decimal("0.00050000")})
