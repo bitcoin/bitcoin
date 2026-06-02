@@ -330,7 +330,7 @@ protected:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
         : ScriptPubKeyMan(storage),
         m_keypool_size(keypool_size),
-        m_id(DescriptorID(*descriptor.descriptor)),
+        m_id(CompatDescriptorHash(*descriptor.descriptor)),
         m_wallet_descriptor(descriptor)
     {}
 

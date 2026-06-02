@@ -2984,7 +2984,7 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
     return InferScript(script, ParseScriptContext::TOP, provider);
 }
 
-uint256 DescriptorID(const Descriptor& desc)
+uint256 CompatDescriptorHash(const Descriptor& desc)
 {
     std::string desc_str = desc.ToString(/*compat_format=*/true);
     uint256 id;
