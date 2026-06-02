@@ -16,14 +16,7 @@ namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
 private:
-    //! Create an ExternalSPKM from existing wallet data
-    ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
-        : DescriptorScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys)
-    {}
-
-    ExternalSignerScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
-        : DescriptorScriptPubKeyMan(storage, keypool_size)
-    {}
+    using DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan;
 
 public:
     static std::unique_ptr<ExternalSignerScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
