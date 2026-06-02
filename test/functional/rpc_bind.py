@@ -109,7 +109,7 @@ class RPCBindTest(BitcoinTestFramework):
             raise AssertionError("all_interfaces() returned no IPv4 interfaces")
         self.non_loopback_ip = None
         for name,ip in interfaces:
-            if ip != '127.0.0.1':
+            if not ip.startswith('127.'):
                 self.non_loopback_ip = ip
                 break
         if self.non_loopback_ip is None and self.options.run_nonloopback:
