@@ -866,8 +866,30 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::LoadFromSt
 
 std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
 {
-    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, keypool_size));
-    spkm->SetupDescriptorGeneration(batch, master_key, addr_type, internal);
+    WalletDescriptor desc = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
+
+    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, desc, keypool_size));
+
+    LOCK(spkm->cs_desc_man);
+    Assert(spkm->m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    // Store the master private key, and descriptor
+    if (!spkm->AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
+    }
+    if (!batch.WriteDescriptor(spkm->GetID(), spkm->m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+
+    // Set m_decryption_thoroughly_checked for encrypted wallets
+    if (spkm->m_storage.HasEncryptionKeys()) {
+        spkm->m_decryption_thoroughly_checked = true;
+    }
+
+    // TopUp
+    spkm->TopUpWithDB(batch);
+
+    spkm->m_storage.UnsetBlankWalletFlag(batch);
     return spkm;
 }
 
@@ -1180,33 +1202,6 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
         m_map_keys[pubkey.GetID()] = key;
         return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey());
     }
-}
-
-void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
-{
-    LOCK(cs_desc_man);
-    Assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-    Assert(!m_wallet_descriptor.descriptor);
-
-    m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
-
-    // Store the master private key, and descriptor
-    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
-    }
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
-    }
-
-    // Set m_decryption_thoroughly_checked for encrypted wallets
-    if (m_storage.HasEncryptionKeys()) {
-        m_decryption_thoroughly_checked = true;
-    }
-
-    // TopUp
-    TopUpWithDB(batch);
-
-    m_storage.UnsetBlankWalletFlag(batch);
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
