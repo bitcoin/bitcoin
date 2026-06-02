@@ -458,7 +458,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             # This tests behavior when ENABLE_IPC is off. When it is on,
             # behavior is checked by the interface_ipc_cli.py test.
             self.log.info("Test bitcoin-cli -ipcconnect triggers error if not built with IPC support")
-            args = [self.binary_paths.bitcoincli, "-ipcconnect=unix", "-getinfo"]
+            # node.cli.options includes -rpcconnect which can't be combined with -ipcconnect, so pass just -datadir directly to keep bitcoin-cli on the test's bitcoin.conf
+            args = self.nodes[0].binaries.valgrind_cmd + [self.nodes[0].binaries.paths.bitcoincli, f"-datadir={self.nodes[0].datadir_path}", "-ipcconnect=unix", "-getinfo"]
             result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             assert_equal(result.stdout, "error: bitcoin-cli was not built with IPC support\n")
             assert_equal(result.stderr, None)
