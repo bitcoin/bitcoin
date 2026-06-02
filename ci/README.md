@@ -87,8 +87,10 @@ To configure the primary repository, follow these steps:
 4. Permit the following actions to run:
    1. actions/cache/restore@\*
    1. actions/cache/save@\*
-   1. docker/setup-buildx-action@\*
    1. actions/github-script@\*
+   1. docker/setup-buildx-action@\*
+   1. warpbuilds/cache/restore@\*
+   1. warpbuilds/cache/save@\*
 
 ### Forked repositories
 

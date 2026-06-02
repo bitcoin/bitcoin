@@ -357,7 +357,9 @@ jobs:
 
       - name: Restore caches
         id: restore-cache
-        uses: ./.github/actions/restore-caches
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ needs.runners.outputs.provider }}
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
@@ -366,7 +368,9 @@ jobs:
         run: ./ci/test_run_all.sh
 
       - name: Save caches
-        uses: ./.github/actions/save-caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ needs.runners.outputs.provider }}
 
       - name: Upload built executables
         uses: actions/upload-artifact@v7
@@ -547,7 +551,9 @@ jobs:
 
       - name: Restore caches
         id: restore-cache
-        uses: ./.github/actions/restore-caches
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
@@ -571,7 +577,9 @@ jobs:
         run: ./ci/test_run_all.sh
 
       - name: Save caches
-        uses: ./.github/actions/save-caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
   lint:
     name: 'lint'
