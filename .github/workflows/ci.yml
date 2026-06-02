@@ -19,7 +19,6 @@ concurrency:
 
 env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  REPO_USE_WARP_RUNNERS: 'bitcoin/bitcoin' # Use warp runners for this repo, instead of falling back to the slow GHA runners
 
 defaults:
   run:
@@ -28,26 +27,9 @@ defaults:
     shell: bash
 
 jobs:
-  runners:
-    name: 'determine runners'
-    runs-on: ubuntu-latest
-    outputs:
-      provider: ${{ steps.runners.outputs.provider }}
-    steps:
-      - id: runners
-        run: |
-          if [[ "${REPO_USE_WARP_RUNNERS}" == "${{ github.repository }}" ]]; then
-            echo "provider=warp" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Runner Selection::Using Warp Runners"
-          else
-            echo "provider=gha" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Runner Selection::Using GitHub-hosted runners"
-          fi
-
   test-each-commit:
     name: 'test each commit'
-    needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-latest' }}
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
@@ -328,8 +310,7 @@ jobs:
 
   windows-cross:
     name: 'Linux->Windows cross, no tests'
-    needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
@@ -445,8 +426,7 @@ jobs:
 
   ci-matrix:
     name: ${{ matrix.name }}
-    needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && matrix.warp-runner || matrix.fallback-runner }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
@@ -559,8 +539,7 @@ jobs:
 
   lint:
     name: 'lint'
-    needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'warp' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 20
     env:
