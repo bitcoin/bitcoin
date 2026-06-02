@@ -125,10 +125,10 @@ bool MuSig2SecNonce::IsValid()
     return m_impl->IsValid();
 }
 
-uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash)
+uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash, const std::vector<uint8_t>& pubnonce)
 {
     HashWriter hasher;
-    hasher << script_pubkey << part_pubkey << sighash;
+    hasher << script_pubkey << part_pubkey << sighash << pubnonce;
     return hasher.GetSHA256();
 }
 

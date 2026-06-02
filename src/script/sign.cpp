@@ -137,7 +137,7 @@ std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const
     if (out.empty()) return {};
 
     // Store the secnonce in the SigningProvider
-    provider.SetMuSig2SecNonce(MuSig2SessionID(script_pubkey, part_pubkey, *sighash), std::move(secnonce));
+    provider.SetMuSig2SecNonce(MuSig2SessionID(script_pubkey, part_pubkey, *sighash, out), std::move(secnonce));
 
     return out;
 }
@@ -170,7 +170,9 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     if (!sighash.has_value()) return false;
 
     // Retrieve the secnonce
-    uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash);
+    auto part_pubnonce_it = pubnonces.find(part_pubkey);
+    if (part_pubnonce_it == pubnonces.end()) return false;
+    uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash, part_pubnonce_it->second);
     std::optional<std::reference_wrapper<MuSig2SecNonce>> secnonce = provider.GetMuSig2SecNonce(session_id);
     if (!secnonce || !secnonce->get().IsValid()) return false;
 
