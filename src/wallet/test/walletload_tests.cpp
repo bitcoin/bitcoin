@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <key.h>
+#include <script/descriptor.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <test/util/common.h>
@@ -88,6 +90,49 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
         BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::CORRUPT);
         BOOST_CHECK(found); // The error must be logged
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingSetup)
+{
+    // A cache record whose serialized xpub is shorter than BIP32_EXTKEY_SIZE must be
+    // rejected as corruption, otherwise CExtPubKey::Decode() reads past the buffer.
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+
+    const std::string desc_str = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
+    FlatSigningProvider keys;
+    std::string parse_error;
+    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_error, /*require_checksum=*/true);
+    BOOST_REQUIRE_MESSAGE(descs.size() == 1, parse_error);
+    std::shared_ptr<Descriptor> descriptor = std::move(descs.at(0));
+    const uint256 desc_id = DescriptorID(*descriptor);
+
+    auto make_db_with_short_cache_xpub = [&](const std::string& cache_type) {
+        std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
+        {
+            WalletBatch batch(*database);
+            WalletDescriptor wallet_descriptor(descriptor, 0, 0, 0, 0);
+            BOOST_CHECK(batch.WriteDescriptor(desc_id, wallet_descriptor));
+        }
+        const std::vector<unsigned char> short_xpub(BIP32_EXTKEY_SIZE - 1, 0);
+        std::unique_ptr<DatabaseBatch> raw = database->MakeBatch();
+        BOOST_CHECK(raw->Write(std::make_pair(std::make_pair(cache_type, desc_id), uint32_t{0}), short_xpub));
+        return database;
+    };
+
+    {
+        std::unique_ptr<WalletDatabase> database = make_db_with_short_cache_xpub("walletdescriptorcache");
+        ASSERT_DEBUG_LOG("descriptor cache xpub has invalid size");
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::CORRUPT);
+    }
+
+    {
+        std::unique_ptr<WalletDatabase> database = make_db_with_short_cache_xpub("walletdescriptorlhcache");
+        ASSERT_DEBUG_LOG("descriptor last hardened cache xpub has invalid size");
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::CORRUPT);
     }
 }
 
