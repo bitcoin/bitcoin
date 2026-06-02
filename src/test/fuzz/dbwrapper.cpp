@@ -152,6 +152,22 @@ void VerifyIterator(CDBWrapper& dbw, const Oracle& oracle,
     assert(oracle_it == oracle.end());
 }
 
+/** Build randomized DBParams from the fuzz input, shared by all targets. */
+DBParams ConsumeDBParams(FuzzedDataProvider& provider, leveldb::Env* testing_env,
+                         bool obfuscate, DBOptions options = {})
+{
+    return DBParams{
+        .path = "dbwrapper_fuzz",
+        .cache_bytes = provider.ConsumeIntegralInRange<size_t>(64 << 10, 1_MiB),
+        .obfuscate = obfuscate,
+        .options = options,
+        .testing_env = testing_env,
+        .max_file_size = provider.ConsumeBool()
+            ? DBWRAPPER_MAX_FILE_SIZE
+            : provider.ConsumeIntegralInRange<size_t>(1_MiB, 4_MiB),
+    };
+}
+
 template <typename DrainWorkFn, typename RunOneFn>
 void TestDbWrapper(FuzzedDataProvider& provider,
                       leveldb::Env* testing_env,
@@ -164,16 +180,7 @@ void TestDbWrapper(FuzzedDataProvider& provider,
     const bool obfuscate{provider.ConsumeBool()};
 
     const auto make_db{[&](DBOptions options = {}) {
-        return std::make_unique<CDBWrapper>(DBParams{
-            .path = "dbwrapper_fuzz",
-            .cache_bytes = provider.ConsumeIntegralInRange<size_t>(64 << 10, 1_MiB),
-            .obfuscate = obfuscate,
-            .options = options,
-            .testing_env = testing_env,
-            .max_file_size = provider.ConsumeBool()
-                ? DBWRAPPER_MAX_FILE_SIZE
-                : provider.ConsumeIntegralInRange<size_t>(1_MiB, 4_MiB),
-        });
+        return std::make_unique<CDBWrapper>(ConsumeDBParams(provider, testing_env, obfuscate, options));
     }};
     std::unique_ptr<CDBWrapper> dbw{make_db()};
 
