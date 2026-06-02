@@ -772,11 +772,6 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             return DBErrors::UNKNOWN_DESCRIPTOR;
         }
 
-        if (id != desc.id) {
-            strErr = "The descriptor ID calculated by the wallet differs from the one in DB";
-            return DBErrors::CORRUPT;
-        }
-
         DescriptorCache cache;
 
         // Get key cache for this descriptor

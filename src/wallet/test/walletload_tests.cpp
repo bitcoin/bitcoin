@@ -65,16 +65,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     }
 
     // Test 2
-    // Now write a valid descriptor with an invalid ID.
-    // As the software produces another ID for the descriptor, the loading process must be aborted.
+    // Now write a valid descriptor with a different ID which must be accepted
     database = CreateMockableWalletDatabase();
-
-    // Verify the error
-    bool found = false;
-    DebugLogHelper logHelper("The descriptor ID calculated by the wallet differs from the one in DB", [&](const std::string* s) {
-        found = true;
-        return false;
-    });
 
     {
         // Write valid descriptor with invalid ID
@@ -87,8 +79,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Now try to load the wallet and verify the error.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::CORRUPT);
-        BOOST_CHECK(found); // The error must be logged
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::LOAD_OK);
     }
 }
 
