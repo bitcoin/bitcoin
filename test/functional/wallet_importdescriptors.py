@@ -345,11 +345,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info("Test can import same descriptor with public key twice")
+        list_descs = w1.listdescriptors()
         self.test_importdesc(import_request, success=True)
+        assert_equal(list_descs, w1.listdescriptors())
 
         self.log.info("Test can update descriptor label")
         self.test_importdesc({**import_request, "label": "Updated label"}, success=True)
         test_address(w1, key.p2pkh_addr, solvable=True, ismine=True, labels=["Updated label"])
+        assert_equal(list_descs, w1.listdescriptors())
 
         self.log.info("Internal addresses cannot have labels")
         self.test_importdesc({**import_request, "internal": True},
@@ -615,7 +618,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Check we can change next_index")
         # go back and forth with next_index
         for i in [4, 0, 2, 1, 3]:
-            self.test_importdesc({'desc': descsum_create('wpkh([80002067/0h/0h]' + xpub + '/*)'),
+            # Sometimes use h, sometimes use ' for hardened indicator
+            hard = "'" if i & 2 == 0 else "h"
+            self.test_importdesc({'desc': descsum_create(f'wpkh([80002067/0{hard}/0{hard}]' + xpub + '/*)'),
                                   'active': True,
                                   'range': [0, 9],
                                   'next_index': i,
