@@ -64,8 +64,11 @@ fi
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-22.1.7" /llvm-project
 
+# LLVM is configured with LIBCXXABI_USE_LLVM_UNWINDER=OFF,
+# because libunwind doesn't handle exceptions under MSAN.
+# https://github.com/llvm/llvm-project/issues/84348
   cmake -G Ninja -B /cxx_build/ \
-    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_USE_SANITIZER="${USE_INSTRUMENTED_LIBCPP}" \
     -DCMAKE_C_COMPILER=clang \
