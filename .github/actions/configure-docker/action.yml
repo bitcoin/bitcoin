@@ -1,7 +1,7 @@
 name: 'Configure Docker'
 description: 'Set up Docker build driver and configure build cache args'
 inputs:
-  use-cirrus:
+  use-warp:
     description: 'Use cirrus cache'
     required: true
 runs:
@@ -35,12 +35,7 @@ runs:
         # Docker will check for variables $ACTIONS_CACHE_URL, $ACTIONS_RESULTS_URL and $ACTIONS_RUNTIME_TOKEN
         # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
 
-        # Use cirrus cache host
-        if [[ ${{ inputs.use-cirrus }} == 'true' ]]; then
-          url_args="url=${CIRRUS_CACHE_HOST},url_v2=${CIRRUS_CACHE_HOST}"
-        else
-          url_args=""
-        fi
+        url_args=""
 
         # Always optimistically --cache‑from in case a cache blob exists
         args=(--cache-from "type=gha${url_args:+,${url_args}},scope=${CONTAINER_NAME}")
