@@ -40,11 +40,21 @@ unsupported systems.
 Notable changes
 ===============
 
+
+### Validation
+
+- #35209 validation: correct lifetime of precomputed tx data
+
+### Leveldb
+
+- #61(bitcoin-core/leveldb): Disable seek compaction
+
 ### Wallet
 
 - #34358 wallet: fix removeprunedfunds bug with conflicting transactions
 - #34870 wallet: feebumper, fix crash when combined bump fee is unavailable
 - #34888 wallet: fix amount computed as boolean in coin selection
+- #35228 wallet: use outpoint when estimating input size
 
 ### Net
 
@@ -62,6 +72,7 @@ Notable changes
 
 ### Build
 
+- #34228 depends: Unset SOURCE_DATE_EPOCH in gen_id script
 - #34281 build: Temporarily remove confusing and brittle -fdebug-prefix-map
 - #34554 build: avoid exporting secp256k1 symbols
 - #34627 guix: use a temporary file over sponge, drop moreutils
@@ -97,6 +108,7 @@ Notable changes
 - #34702 doc: Fix fee field in getblock RPC result
 - #34706 doc: Improve dependencies.md IPC documentation
 - #34789 doc: update build guides pre v31
+- #35283 doc: mention -DWITH_ZMQ=ON in BSD build guides
 
 ### CI
 
@@ -107,6 +119,8 @@ Notable changes
 - #34802 ci: Bump GHA actions versions
 - #34815 ci: bump cirruslabs actions versions
 - #35202 ci: restore sockets in i686, no IPC job
+- #35378 ci: switch runners from cirrus to warpbuild
+- #35408 ci: 35378 followups
 
 ### Misc
 
@@ -118,6 +132,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - ANAVHEOBA
+- andrewtoth
 - brunoerg
 - Cory Fields
 - Daniel Pfeifer
@@ -126,6 +141,7 @@ Thanks to everyone who directly contributed to this release:
 - furszy
 - Hennadii Stepanov
 - jayvaliya
+- junbyjun1238
 - kevkevinpal
 - Lőrinc
 - m3dwards

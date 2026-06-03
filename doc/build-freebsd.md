@@ -64,7 +64,7 @@ Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` 
 #### Notifications
 ###### ZeroMQ
 
-Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+Bitcoin Core can provide notifications via ZeroMQ. To compile ZMQ support, install the following dependency and pass `-DWITH_ZMQ=ON` when configuring.
 ```bash
 pkg install libzmq4
 ```
