@@ -1,9 +1,9 @@
-v30.x Release Notes
+v30.3rc1 Release Notes
 ===================
 
-Bitcoin Core version v30.x is now available from:
+Bitcoin Core version v30.3rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.3/test.rc1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,10 +40,14 @@ unsupported systems.
 Notable changes
 ===============
 
+This release fixes an issue where the chainstate database would repeatedly
+rewrite large portions of itself, causing excessive disk reads and writes
+during normal operation.
 
 ### Validation
 
 - #35209 validation: correct lifetime of precomputed tx data
+- #35465 coins: compact chainstate regularly
 
 ### Leveldb
 
@@ -92,6 +96,7 @@ Notable changes
 - #34608 test: Fix broken --valgrind handling after bitcoin wrapper
 - #34690 test: Add missing timeout_factor to zmq socket
 - #34869 tests: applied PYTHON_GIL to the env for every test
+- #34918 fuzz: [refactor] Remove unused g_setup pointers
 - #35080 test: Add missing self.options.timeout_factor scale in tool_bitcoin_chainstate.py
 
 ### Util
