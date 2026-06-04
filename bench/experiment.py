@@ -12,7 +12,11 @@ from .analyze import AnalyzePhase
 from .artifact_store import ArtifactStore, RunArtifactRecord
 from .benchmark import BenchmarkPhase, BenchmarkResult
 from .build import BuildPhase, BuiltBinary
-from .config import Config, build_config
+from .environment import (
+    BenchmarkEnvironment,
+    BuildEnvironment,
+    ExperimentEnvironment,
+)
 from .flamegraph import DifferentialFlamegraphPhase
 from .run_spec import RunSpec
 
@@ -408,11 +412,11 @@ class ExperimentRunner:
 
     def __init__(
         self,
-        config: Config,
+        environment: ExperimentEnvironment,
         capabilities: Any,
         repo_path: Path | None = None,
     ):
-        self.config = config
+        self.environment = environment
         self.capabilities = capabilities
         self.repo_path = repo_path or Path.cwd()
 
@@ -420,8 +424,6 @@ class ExperimentRunner:
         self,
         experiment: Experiment,
         datadir: Path | None,
-        output_dir: Path,
-        binaries_dir: Path,
         tmp_dir: Path | None = None,
         subject_names: list[str] | None = None,
         profile_names: list[str] | None = None,
@@ -437,15 +439,19 @@ class ExperimentRunner:
                 f"  Comparisons: {', '.join(c.name for c in plan.comparisons)}"
             )
 
-        if self.config.dry_run:
-            self._log_plan(plan, output_dir, binaries_dir)
-            return ExperimentResult(output_dir=output_dir, runs={}, comparisons=[])
+        if self.environment.dry_run:
+            self._log_plan(plan)
+            return ExperimentResult(
+                output_dir=self.environment.output_dir,
+                runs={},
+                comparisons=[],
+            )
 
-        output_dir.mkdir(parents=True, exist_ok=True)
-        binaries_dir.mkdir(parents=True, exist_ok=True)
-        artifact_store = ArtifactStore(output_dir)
+        self.environment.output_dir.mkdir(parents=True, exist_ok=True)
+        self.environment.binaries_dir.mkdir(parents=True, exist_ok=True)
+        artifact_store = ArtifactStore(self.environment.output_dir)
 
-        binaries = self._resolve_binaries(plan.build_tasks, binaries_dir)
+        binaries = self._resolve_binaries(plan.build_tasks)
         runs: dict[tuple[str, str], RunArtifact] = {}
 
         for task in plan.run_tasks:
@@ -474,16 +480,21 @@ class ExperimentRunner:
         )
 
         return ExperimentResult(
-            output_dir=output_dir,
+            output_dir=self.environment.output_dir,
             runs=runs,
             comparisons=generated,
         )
 
     def _resolve_binaries(
-        self, build_tasks: list[BuildTask], binaries_dir: Path
+        self, build_tasks: list[BuildTask]
     ) -> dict[str, BuiltBinary]:
         """Build commit subjects and collect binary subjects."""
-        build_phase = BuildPhase(self.config, self.capabilities, self.repo_path)
+        build_environment = BuildEnvironment(
+            binaries_dir=self.environment.binaries_dir,
+            skip_existing=self.environment.skip_existing,
+            dry_run=self.environment.dry_run,
+        )
+        build_phase = BuildPhase(build_environment, self.capabilities, self.repo_path)
         binaries: dict[str, BuiltBinary] = {}
 
         for task in build_tasks:
@@ -491,7 +502,6 @@ class ExperimentRunner:
             if subject.commit:
                 build_result = build_phase.run(
                     f"{subject.commit}:{subject.name}",
-                    output_dir=binaries_dir,
                 )
                 binaries[subject.name] = build_result.binary
             elif subject.binary:
@@ -522,19 +532,19 @@ class ExperimentRunner:
 
         run_spec = experiment.run_spec_for(profile)
         benchmark_datadir = None if experiment.full_ibd else datadir
-        config = self._config_for(
-            profile=profile,
-            runs=run_spec.runs,
+        errors = self._validate_run(
+            run_spec=run_spec,
             datadir=benchmark_datadir,
-            tmp_datadir=run_tmp_dir,
-            output_dir=run_output_dir,
         )
-
-        errors = config.validate()
         if errors:
             raise ValueError("Invalid run config:\n" + "\n".join(errors))
 
-        phase = BenchmarkPhase(config, self.capabilities, run_spec)
+        benchmark_environment = BenchmarkEnvironment(
+            tmp_datadir=run_tmp_dir,
+            no_cache_drop=self.environment.no_cache_drop,
+            dry_run=self.environment.dry_run,
+        )
+        phase = BenchmarkPhase(benchmark_environment, self.capabilities, run_spec)
         result = phase.run(
             binary=(run_name, binary.path),
             datadir=benchmark_datadir,
@@ -615,29 +625,22 @@ class ExperimentRunner:
             folded_stacks=artifact.result.folded_stacks,
         )
 
-    def _config_for(
+    def _validate_run(
         self,
-        profile: Profile,
-        runs: int,
+        run_spec: RunSpec,
         datadir: Path | None,
-        tmp_datadir: Path,
-        output_dir: Path,
-    ) -> Config:
-        """Build low-level Config for one run."""
-        return build_config(
-            cli_args={
-                "datadir": str(datadir) if datadir else None,
-                "tmp_datadir": str(tmp_datadir),
-                "output_dir": str(output_dir),
-                "no_cache_drop": self.config.no_cache_drop,
-                "dry_run": self.config.dry_run,
-                "verbose": self.config.verbose,
-                "runs": runs,
-                "dbcache": profile.dbcache,
-                "instrumented": profile.instrumentation,
-            },
-            profile=self.config.profile,
-        )
+    ) -> list[str]:
+        """Validate one concrete run."""
+        errors = []
+        if datadir is not None and not datadir.exists():
+            errors.append(f"datadir does not exist: {datadir}")
+        if run_spec.dbcache < 1:
+            errors.append("dbcache must be positive")
+        if run_spec.runs < 1:
+            errors.append("runs must be positive")
+        if run_spec.start_height < 0:
+            errors.append("start_height must not be negative")
+        return errors
 
     def _outputs_for(self, experiment: Experiment, profile: Profile) -> list[str]:
         """Return profile outputs with experiment defaults applied."""
@@ -646,12 +649,13 @@ class ExperimentRunner:
     def _log_plan(
         self,
         plan: ExperimentPlan,
-        output_dir: Path,
-        binaries_dir: Path,
     ) -> None:
         """Log the tasks that would run."""
-        logger.info("[DRY RUN] Would write outputs to: %s", output_dir)
-        logger.info("[DRY RUN] Would write binaries to: %s", binaries_dir)
+        logger.info("[DRY RUN] Would write outputs to: %s", self.environment.output_dir)
+        logger.info(
+            "[DRY RUN] Would write binaries to: %s",
+            self.environment.binaries_dir,
+        )
         for task in plan.build_tasks:
             subject = task.subject
             if subject.commit:

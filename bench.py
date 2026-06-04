@@ -47,6 +47,7 @@ logger = logging.getLogger(__name__)
 def cmd_build(args: argparse.Namespace) -> int:
     """Build bitcoind at a commit."""
     from bench.build import BuildPhase
+    from bench.environment import BuildEnvironment
 
     capabilities = detect_capabilities()
     config = build_config(
@@ -63,7 +64,8 @@ def cmd_build(args: argparse.Namespace) -> int:
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    phase = BuildPhase(config, capabilities)
+    environment = BuildEnvironment.from_config(config)
+    phase = BuildPhase(environment, capabilities)
 
     try:
         result = phase.run(
@@ -235,6 +237,7 @@ def cmd_nightly(args: argparse.Namespace) -> int:
 def cmd_experiment(args: argparse.Namespace) -> int:
     """Run an experiment manifest."""
     from bench.experiment import Experiment, ExperimentRunner
+    from bench.environment import ExperimentEnvironment
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -255,12 +258,11 @@ def cmd_experiment(args: argparse.Namespace) -> int:
 
     try:
         experiment = Experiment.from_toml(Path(args.manifest))
-        runner = ExperimentRunner(config, capabilities)
+        environment = ExperimentEnvironment.from_config(config)
+        runner = ExperimentRunner(environment, capabilities)
         result = runner.run(
             experiment=experiment,
             datadir=Path(args.datadir) if args.datadir else None,
-            output_dir=Path(config.output_dir),
-            binaries_dir=Path(config.binaries_dir),
             tmp_dir=Path(args.tmp_dir) if args.tmp_dir else None,
             subject_names=args.subject_name,
             profile_names=args.profile_name,

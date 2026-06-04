@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .capabilities import Capabilities
-    from .config import Config
 
+from .environment import BuildEnvironment
 from .utils import GitState, git_checkout, git_rev_parse
 
 logger = logging.getLogger(__name__)
@@ -50,11 +50,11 @@ class BuildPhase:
 
     def __init__(
         self,
-        config: Config,
+        environment: BuildEnvironment,
         capabilities: Capabilities,
         repo_path: Path | None = None,
     ):
-        self.config = config
+        self.environment = environment
         self.capabilities = capabilities
         self.repo_path = repo_path or Path.cwd()
 
@@ -77,7 +77,7 @@ class BuildPhase:
         if errors:
             raise RuntimeError("Build prerequisites not met:\n" + "\n".join(errors))
 
-        output_dir = output_dir or Path(self.config.binaries_dir)
+        output_dir = output_dir or self.environment.binaries_dir
 
         # Parse commit spec and resolve to full hash
         commit, name = parse_commit_spec(commit_spec)
@@ -97,8 +97,14 @@ class BuildPhase:
         binary_path = binary_dir / "bitcoind"
 
         # Check if we can skip existing build
-        if self.config.skip_existing and binary_path.exists():
+        if self.environment.skip_existing and binary_path.exists():
             logger.info(f"  Skipping {name} - binary exists")
+            return BuildResult(
+                binary=BuiltBinary(name=name, path=binary_path, commit=commit_hash)
+            )
+
+        if self.environment.dry_run:
+            self._build_commit(name, commit_hash, binary_path)
             return BuildResult(
                 binary=BuiltBinary(name=name, path=binary_path, commit=commit_hash)
             )
@@ -121,7 +127,7 @@ class BuildPhase:
         """Build bitcoind for a commit."""
         logger.info(f"Building {name} ({commit[:12]})")
 
-        if self.config.dry_run:
+        if self.environment.dry_run:
             logger.info(f"  [DRY RUN] Would build {commit[:12]} -> {output_path}")
             return
 

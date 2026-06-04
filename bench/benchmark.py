@@ -12,12 +12,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .environment import BenchmarkEnvironment
 from .patchelf import ensure_binary_runnable
 from .run_spec import RunSpec
 
 if TYPE_CHECKING:
     from .capabilities import Capabilities
-    from .config import Config
 
 
 logger = logging.getLogger(__name__)
@@ -62,11 +62,11 @@ class BenchmarkPhase:
 
     def __init__(
         self,
-        config: Config,
+        environment: BenchmarkEnvironment,
         capabilities: Capabilities,
         run_spec: RunSpec,
     ):
-        self.config = config
+        self.environment = environment
         self.capabilities = capabilities
         self.run_spec = run_spec
         self._temp_scripts: list[Path] = []
@@ -115,7 +115,7 @@ class BenchmarkPhase:
 
         # Setup directories
         output_dir.mkdir(parents=True, exist_ok=True)
-        tmp_datadir = Path(self.config.tmp_datadir)
+        tmp_datadir = self.environment.tmp_datadir
         tmp_datadir.mkdir(parents=True, exist_ok=True)
 
         results_file = output_dir / "results.json"
@@ -161,7 +161,7 @@ class BenchmarkPhase:
             )
             logger.info(f"Command to benchmark: {bitcoind_cmd}")
 
-            if self.config.dry_run:
+            if self.environment.dry_run:
                 logger.info(f"[DRY RUN] Would run: {' '.join(cmd)}")
                 return BenchmarkResult(
                     results_file=results_file,
@@ -261,7 +261,7 @@ class BenchmarkPhase:
             commands.append(f'cp -r "{original_datadir}"/* "{tmp_datadir}"')
 
         # Drop caches if available
-        if self.capabilities.can_drop_caches and not self.config.no_cache_drop:
+        if self.capabilities.can_drop_caches and not self.environment.no_cache_drop:
             commands.append(self.capabilities.drop_caches_path)
 
         # Clean debug logs
