@@ -195,13 +195,19 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                     conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
                 }
 
+                std::optional<Proxy> proxy_override;
+                if (conn_type == ConnectionType::PRIVATE_BROADCAST || fuzzed_data_provider.ConsumeBool()) {
+                    proxy_override.emplace(ConsumeService(fuzzed_data_provider));
+                }
+
                 connman.OpenNetworkConnection(
                     /*addrConnect=*/random_address,
                     /*fCountFailure=*/fuzzed_data_provider.ConsumeBool(),
                     /*grant_outbound=*/{},
                     /*pszDest=*/fuzzed_data_provider.ConsumeBool() ? nullptr : random_string.c_str(),
                     /*conn_type=*/conn_type,
-                    /*use_v2transport=*/fuzzed_data_provider.ConsumeBool());
+                    /*use_v2transport=*/fuzzed_data_provider.ConsumeBool(),
+                    /*proxy_override=*/proxy_override);
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());

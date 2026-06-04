@@ -669,6 +669,7 @@ public:
 struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    std::optional<Proxy> proxy_override = {};
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
@@ -711,6 +712,10 @@ public:
     std::atomic<NodeClock::time_point> m_last_recv{NodeClock::epoch};
     //! Unix epoch time at peer connection
     const NodeClock::time_point m_connected;
+
+    //! Proxy to use regardless of global proxy settings if reconnecting to this node.
+    const std::optional<Proxy> m_proxy_override;
+
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -1186,7 +1191,7 @@ public:
                                const char* pszDest,
                                ConnectionType conn_type,
                                bool use_v2transport,
-                               const std::optional<Proxy>& proxy_override = std::nullopt)
+                               const std::optional<Proxy>& proxy_override)
         EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_unused_i2p_sessions_mutex);
 
     /// Group of private broadcast related members.
@@ -1802,6 +1807,7 @@ private:
     /** Struct for entries in m_reconnections. */
     struct ReconnectionInfo
     {
+        std::optional<Proxy> proxy_override;
         CAddress addr_connect;
         CountingSemaphoreGrant<> grant;
         std::string destination;

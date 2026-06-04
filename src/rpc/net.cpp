@@ -358,7 +358,13 @@ static RPCMethod addnode()
     if (command == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, std::string{node_arg}.c_str(), ConnectionType::MANUAL, use_v2transport);
+        connman.OpenNetworkConnection(/*addrConnect=*/addr,
+                                      /*fCountFailure=*/false,
+                                      /*grant_outbound=*/{},
+                                      /*pszDest=*/std::string{node_arg}.c_str(),
+                                      /*conn_type=*/ConnectionType::MANUAL,
+                                      /*use_v2transport=*/use_v2transport,
+                                      /*proxy_override=*/std::nullopt);
         return UniValue::VNULL;
     }
 
