@@ -54,7 +54,7 @@ static CAmount CreateCoins(FuzzedDataProvider& fuzzed_data_provider, std::vector
     {
         const int n_input{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)};
         const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 10000)};
-        const CAmount amount{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+        const CAmount amount{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY)};
         if (total_balance + amount >= MAX_MONEY) {
             break;
         }
@@ -84,7 +84,7 @@ FUZZ_TARGET(coin_grinder)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<COutput> utxo_pool;
 
-    const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+    const CAmount target{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY)};
 
     FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
     CoinSelectionParams coin_params{fast_random_context};
@@ -106,7 +106,7 @@ FUZZ_TARGET(coin_grinder)
     {
         const int n_input{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)};
         const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 10000)};
-        const CAmount amount{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+        const CAmount amount{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY)};
         if (total_balance + amount >= MAX_MONEY) {
             break;
         }
@@ -159,7 +159,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
         // Only make UTXOs with positive effective value
         const CAmount input_fee = coin_params.m_effective_feerate.GetFee(n_input_bytes);
         // Ensure that each UTXO has at least an effective value of 1 sat
-        const CAmount eff_value{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY + group_pos.size() - max_spendable - max_output_groups)};
+        const CAmount eff_value{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY + CAmount(group_pos.size()) - max_spendable - CAmount{max_output_groups})};
         const CAmount amount{eff_value + input_fee};
         std::vector<COutput> temp_utxo_pool;
 
@@ -174,7 +174,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
     assert(num_groups <= max_output_groups);
 
     // Only choose targets below max_spendable
-    const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, std::max(CAmount{1}, max_spendable - coin_params.m_min_change_target))};
+    const CAmount target{ConsumeMoney(fuzzed_data_provider, 1_sats, std::max(1_sats, max_spendable - coin_params.m_min_change_target))};
 
     // Brute force optimal solution
     CAmount best_amount{MAX_MONEY};
@@ -256,7 +256,7 @@ FUZZ_TARGET(bnb_finds_min_waste)
         const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 20'000)};
         const CAmount input_fee = coin_params.m_effective_feerate.GetFee(n_input_bytes);
         // Ensure that each UTXO has at least an effective value of 1 sat
-        const CAmount eff_value{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY + group_pos.size() - max_spendable - max_output_groups)};
+        const CAmount eff_value{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY + CAmount(group_pos.size()) - max_spendable - CAmount{max_output_groups})};
         const CAmount amount{eff_value + input_fee};
         std::vector<COutput> temp_utxo_pool;
 
@@ -271,7 +271,7 @@ FUZZ_TARGET(bnb_finds_min_waste)
     assert(num_groups <= max_output_groups);
 
     // Only choose targets below max_spendable
-    const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, std::max(CAmount{1}, max_spendable - coin_params.m_cost_of_change))};
+    const CAmount target{ConsumeMoney(fuzzed_data_provider, 1_sats, std::max(1_sats, max_spendable - coin_params.m_cost_of_change))};
 
     // Brute force optimal solution (lowest waste, but cannot be superset of another solution)
     std::vector<uint32_t> solutions;
@@ -358,8 +358,8 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
     const CFeeRate long_term_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CFeeRate effective_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     // Discard feerate must be at least dust relay feerate
-    const CFeeRate discard_fee_rate{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(DUST_RELAY_TX_FEE, COIN)};
-    const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+    const CFeeRate discard_fee_rate{ConsumeMoney(fuzzed_data_provider, DUST_RELAY_TX_FEE, COIN)};
+    const CAmount target{ConsumeMoney(fuzzed_data_provider, 1_sats, MAX_MONEY)};
     const bool subtract_fee_outputs{fuzzed_data_provider.ConsumeBool()};
 
     FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
