@@ -241,6 +241,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
         BOOST_CHECK(s.command_line_options.at("ccc").back().get_str() == "multiple");
     });
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
+
+#ifdef WIN32
+    const char* argv_windows_test[] = {"-ignored", "f", "/D=windows"};
+    BOOST_CHECK(testArgs.ParseParameters(3, argv_windows_test, error));
+    BOOST_CHECK(testArgs.IsArgSet("-d"));
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-d", ""), "windows");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseInvalidParameters)

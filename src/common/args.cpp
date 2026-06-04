@@ -254,6 +254,11 @@ bool ArgsManager::ProcessOptionKey(std::string& key,
     std::string original_input{key};
     if (val) original_input += "=" + *val;
 
+#ifdef WIN32
+    key = ToLower(key);
+    if (!key.empty() && key[0] == '/') key[0] = '-';
+#endif
+
     NormalizeKey(key, double_dash);
 
     // ---- 1. special named-RPC handling ----
@@ -337,8 +342,8 @@ bool ArgsManager::HandleCommand(const char* const argv[], int& i, int argc, std:
     while (++i < argc) {
         const char* arg = argv[i];
 
-        if (arg[0] == '-') {
-            // dash → might be a command option
+        if (IsSwitchChar(arg[0])) {
+            // switch char → might be a command option
             if (!HandleCommandOption(arg, error)) {
                 return false;
             }
