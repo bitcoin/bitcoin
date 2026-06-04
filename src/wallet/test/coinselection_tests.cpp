@@ -82,7 +82,8 @@ static void AddCoins(std::vector<OutputGroup>& utxo_pool, std::vector<CAmount> c
 }
 
 /** Make multiple coins that share the same effective value */
-static void AddDuplicateCoins(std::vector<OutputGroup>& utxo_pool, int count, int amount, CoinSelectionParams cs_params = default_cs_params) {
+static void AddDuplicateCoins(std::vector<OutputGroup>& utxo_pool, int count, CAmount amount, CoinSelectionParams cs_params = default_cs_params)
+{
     for (int i = 0 ; i < count; ++i) {
         utxo_pool.push_back(MakeCoin(amount, true, cs_params));
     }
