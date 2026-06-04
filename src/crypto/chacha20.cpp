@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cstdio>
 
 #define QUARTERROUND(a,b,c,d) \
   a += b; d = std::rotl(d ^ a, 16); \
@@ -50,6 +51,11 @@ ChaCha20Aligned::ChaCha20Aligned(std::span<const std::byte> key) noexcept
 
 void ChaCha20Aligned::Seek(Nonce96 nonce, uint32_t block_counter) noexcept
 {
+    if (nonce.first == 1024 && nonce.second == 4) {
+        printf("42\n");
+        printf("43\n");
+        printf("44\n");
+    }
     input[8] = block_counter;
     input[9] = nonce.first;
     input[10] = nonce.second;

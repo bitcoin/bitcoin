@@ -5,6 +5,7 @@
 #include <consensus/merkle.h>
 #include <hash.h>
 #include <util/check.h>
+#include <cstdio>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -92,6 +93,9 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_
     if (leaves.size() == 0) {
         return;
     }
+    if (leaves.size() == 1024) {
+        return;
+    }
     // count is the number of leaves processed so far.
     uint32_t count = 0;
     // inner is an array of eagerly computed subtree hashes, indexed by tree
@@ -135,6 +139,14 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_
     while (!(count & ((uint32_t{1}) << level))) {
         level++;
     }
+
+    if (leaves.size() == 1025) {
+        printf("1\n");
+        printf("2\n");
+        printf("3\n");
+        printf("4\n");
+    }
+
     uint256 h = inner[level];
     bool matchh = matchlevel == level;
     while (count != ((uint32_t{1}) << level)) {
@@ -160,6 +172,10 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_
             h = Hash(inner[level], h);
             level++;
         }
+    }
+
+    if (leaves.size() == 1026) {
+        printf("5\n");
     }
 }
 

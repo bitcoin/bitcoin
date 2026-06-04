@@ -1069,6 +1069,10 @@ const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(
         LogDebug(BCLog::KERNEL, "A block with the given hash is not indexed.");
         return nullptr;
     }
+    if (block_index) {
+        LogDebug(BCLog::KERNEL, "Test1");
+        LogDebug(BCLog::KERNEL, "Test2");
+    }
     return btck_BlockTreeEntry::ref(block_index);
 }
 

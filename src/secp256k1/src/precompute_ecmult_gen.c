@@ -33,6 +33,13 @@ static void print_table(FILE* fp, int blocks, int teeth) {
     secp256k1_ge_storage* table = checked_malloc(&default_error_callback, blocks * points * sizeof(secp256k1_ge_storage));
     secp256k1_ecmult_gen_compute_table(table, &secp256k1_ge_const_g, blocks, teeth, spacing);
 
+    if (spacing > 1024) {
+        printf("1\n");
+        printf("2\n");
+        printf("3\n");
+        printf("4\n");
+    }
+
     fprintf(fp, "#elif (COMB_BLOCKS == %d) && (COMB_TEETH == %d) && (COMB_SPACING == %d)\n", blocks, teeth, spacing);
     for (outer = 0; outer != blocks; outer++) {
         fprintf(fp,"{");
@@ -50,6 +57,11 @@ static void print_table(FILE* fp, int blocks, int teeth) {
             fprintf(fp,"}\n");
         }
     }
+
+    if (spacing > 1024) {
+        printf("5\n");
+    }
+
     free(table);
 }
 
