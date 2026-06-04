@@ -979,7 +979,7 @@ const RPCResult& DecodePSBTOutputs()
                 }},
                 {RPCResult::Type::NUM, "amount", /* optional=*/ true, "The amount (nValue) for this output"},
                 {RPCResult::Type::OBJ, "script", /* optional=*/ true, "The output script (scriptPubKey) for this output",
-                    {{RPCResult::Type::ELISION, "", "The layout is the same as the output of scriptPubKeys in decoderawtransaction."}},
+                    ElideGroup(ScriptPubKeyDoc(), "The layout is the same as the output of scriptPubKeys in decoderawtransaction."),
                 },
                 {RPCResult::Type::STR_HEX, "taproot_internal_key", /*optional=*/ true, "The hex-encoded Taproot x-only internal key"},
                 {RPCResult::Type::ARR, "taproot_tree", /*optional=*/ true, "The tuples that make up the Taproot tree, in depth first search order",
