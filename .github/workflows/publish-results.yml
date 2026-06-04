@@ -20,12 +20,12 @@ jobs:
       result-url: ${{ steps.generate.outputs.result-url }}
       pages-commit: ${{ steps.push-pages.outputs.pages-commit }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: gh-pages
 
       - name: Checkout benchcoin tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: master
           path: benchcoin-tools

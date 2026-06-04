@@ -11,7 +11,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 50  # Need history for merge-base
 
@@ -41,7 +41,7 @@ jobs:
             $BENCHCOIN_SHA:master
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nightly-binaries
           path: ${{ runner.temp }}/binaries/
@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "$BITCOIN_SHA" > ${{ runner.temp }}/commit.txt
           echo "$COMMIT_DATE" > ${{ runner.temp }}/commit-date.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: commit-info
           path: |
@@ -66,7 +66,7 @@ jobs:
           " > ${{ runner.temp }}/machine-specs.json
 
       - name: Upload machine specs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: machine-specs
           path: ${{ runner.temp }}/machine-specs.json
@@ -79,12 +79,12 @@ jobs:
       ORIGINAL_DATADIR: /data/pruned-840k
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: nightly-binaries
           path: ${{ runner.temp }}/binaries
@@ -104,13 +104,13 @@ jobs:
             master:${{ runner.temp }}/binaries/master/bitcoind
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: result-nightly-450
           path: ${{ runner.temp }}/output/results.json
 
       - name: Upload debug logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: debug-logs-nightly-450
           path: ${{ runner.temp }}/output/*-debug.log
@@ -124,12 +124,12 @@ jobs:
       ORIGINAL_DATADIR: /data/pruned-840k
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: nightly-binaries
           path: ${{ runner.temp }}/binaries
@@ -149,13 +149,13 @@ jobs:
             master:${{ runner.temp }}/binaries/master/bitcoind
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: result-nightly-32000
           path: ${{ runner.temp }}/output/results.json
 
       - name: Upload debug logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: debug-logs-nightly-32000
           path: ${{ runner.temp }}/output/*-debug.log
@@ -168,36 +168,36 @@ jobs:
       contents: write
     steps:
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: gh-pages
 
       - name: Checkout benchcoin tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: master
           path: benchcoin-tools
 
       - name: Download commit info
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: commit-info
           path: ./commit-info
 
       - name: Download 450 results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: result-nightly-450
           path: ./nightly-450-results
 
       - name: Download 32000 results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: result-nightly-32000
           path: ./nightly-32000-results
 
       - name: Download machine specs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: machine-specs
           path: ./machine-specs

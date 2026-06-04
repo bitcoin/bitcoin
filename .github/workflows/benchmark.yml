@@ -9,7 +9,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -22,7 +22,7 @@ jobs:
             ${HEAD_SHA}:pr
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bitcoind-binaries
           path: ${{ runner.temp }}/binaries/
@@ -39,12 +39,12 @@ jobs:
       ORIGINAL_DATADIR: /data/pruned-840k
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: bitcoind-binaries
           path: ${{ runner.temp }}/binaries
@@ -64,20 +64,20 @@ jobs:
             pr:${{ runner.temp }}/binaries/pr/bitcoind
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: result-${{ matrix.name }}
           path: ${{ runner.temp }}/output/results.json
 
       - name: Upload flamegraphs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flamegraph-${{ matrix.name }}
           path: ${{ runner.temp }}/output/*-flamegraph.svg
           if-no-files-found: ignore
 
       - name: Upload debug logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: debug-logs-${{ matrix.name }}
           path: ${{ runner.temp }}/output/*-debug.log
@@ -93,7 +93,7 @@ jobs:
           echo "$RUNNER_CONTEXT" > ${{ runner.temp }}/contexts/runner.json
 
       - name: Upload context metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: run-metadata-${{ matrix.name }}
           path: ${{ runner.temp }}/contexts/
@@ -109,12 +109,12 @@ jobs:
       ORIGINAL_DATADIR: /data/pruned-840k
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: bitcoind-binaries
           path: ${{ runner.temp }}/binaries
@@ -134,20 +134,20 @@ jobs:
             pr:${{ runner.temp }}/binaries/pr/bitcoind
 
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: result-noav-${{ matrix.name }}
           path: ${{ runner.temp }}/output/results.json
 
       - name: Upload flamegraphs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flamegraph-noav-${{ matrix.name }}
           path: ${{ runner.temp }}/output/*-flamegraph.svg
           if-no-files-found: ignore
 
       - name: Upload debug logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: debug-logs-noav-${{ matrix.name }}
           path: ${{ runner.temp }}/output/*-debug.log
@@ -163,7 +163,7 @@ jobs:
           echo "$RUNNER_CONTEXT" > ${{ runner.temp }}/contexts/runner.json
 
       - name: Upload context metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: run-metadata-noav-${{ matrix.name }}
           path: ${{ runner.temp }}/contexts/
