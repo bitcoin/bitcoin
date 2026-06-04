@@ -38,7 +38,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
     const auto& node = g_setup->m_node;
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
     ArgsManager& args = *node.args;
-    args.ForceSetArg("-dustrelayfee", ToString(fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY)));
+    args.ForceSetArg("-dustrelayfee", ToString(ConsumeMoney(fuzzed_data_provider)));
     FuzzedWallet fuzzed_wallet{
         *g_setup->m_node.chain,
         "fuzzed_wallet_a",
