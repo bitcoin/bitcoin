@@ -15,6 +15,7 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -68,9 +69,9 @@ BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
     return benchmarks_map;
 }
 
-BenchRunner::BenchRunner(std::string name, BenchFunction func)
+BenchRunner::BenchRunner(std::string_view name, BenchFunction func)
 {
-    Assert(benchmarks().try_emplace(std::move(name), std::move(func)).second);
+    Assert(benchmarks().try_emplace(std::string{name}, std::move(func)).second);
 }
 
 void BenchRunner::RunAll(const Args& args)

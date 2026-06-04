@@ -13,6 +13,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /*
@@ -58,7 +59,7 @@ class BenchRunner
     static BenchmarkMap& benchmarks();
 
 public:
-    BenchRunner(std::string name, BenchFunction func);
+    BenchRunner(std::string_view name, BenchFunction func);
 
     static void RunAll(const Args& args);
 };
