@@ -57,6 +57,7 @@ struct test_only_CheckFailuresAreExceptionsNotAborts {
 };
 
 std::string StrFormatInternalBug(std::string_view msg, const std::source_location& loc);
+std::string StrFormatFailedCheck(std::string_view assertion);
 
 class NonFatalCheckError : public std::runtime_error
 {
@@ -73,9 +74,9 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& lo
 {
     if (!val) {
         if constexpr (G_ABORT_ON_FAILED_ASSUME) {
-            assertion_fail(loc, assertion);
+            assertion_fail(loc, StrFormatFailedCheck(assertion));
         }
-        throw NonFatalCheckError{assertion, loc};
+        throw NonFatalCheckError{StrFormatFailedCheck(assertion), loc};
     }
     return std::forward<T>(val);
 }
@@ -90,7 +91,7 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 {
     if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
-            assertion_fail(loc, assertion);
+            assertion_fail(loc, StrFormatFailedCheck(assertion));
         }
     }
     return std::forward<T>(val);
