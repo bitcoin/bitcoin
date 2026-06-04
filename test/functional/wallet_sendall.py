@@ -18,12 +18,11 @@ from test_framework.util import (
 # Decorator to reset activewallet to zero utxos
 def cleanup(func):
     def wrapper(self):
-        try:
-            func(self)
-        finally:
-            if 0 < self.wallet.getbalances()["mine"]["trusted"]:
-                self.wallet.sendall([self.remainder_target])
-            assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
+        func(self)
+
+        if 0 < self.wallet.getbalances()["mine"]["trusted"]:
+            self.wallet.sendall([self.remainder_target])
+        assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
     return wrapper
 
 class SendallTest(BitcoinTestFramework):

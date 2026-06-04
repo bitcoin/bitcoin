@@ -38,28 +38,27 @@ from test_framework.mempool_util import (
 # sweep alice and bob's wallets and clear the mempool
 def cleanup(func):
     def wrapper(self, *args):
-        try:
-            self.generate(self.nodes[0], 1)
-            func(self, *args)
-        finally:
-            self.generate(self.nodes[0], 1)
-            for wallet in [self.alice, self.bob]:
-                txs = set(tx["txid"] for tx in wallet.listtransactions("*", 1000) if tx["confirmations"] == 0 and not tx["abandoned"])
-                for tx in txs:
-                    wallet.abandontransaction(tx)
-                try:
-                    wallet.sendall([self.charlie.getnewaddress()])
-                except JSONRPCException as e:
-                    assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
-            self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1)
+        func(self, *args)
 
-            for wallet in [self.alice, self.bob]:
-                balance = wallet.getbalances()["mine"]
-                for balance_type in ["untrusted_pending", "trusted", "immature", "nonmempool"]:
-                    assert_equal(balance[balance_type], 0)
+        self.generate(self.nodes[0], 1)
+        for wallet in [self.alice, self.bob]:
+            txs = set(tx["txid"] for tx in wallet.listtransactions("*", 1000) if tx["confirmations"] == 0 and not tx["abandoned"])
+            for tx in txs:
+                wallet.abandontransaction(tx)
+            try:
+                wallet.sendall([self.charlie.getnewaddress()])
+            except JSONRPCException as e:
+                assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
+        self.generate(self.nodes[0], 1)
 
-            assert_equal(self.alice.getrawmempool(), [])
-            assert_equal(self.bob.getrawmempool(), [])
+        for wallet in [self.alice, self.bob]:
+            balance = wallet.getbalances()["mine"]
+            for balance_type in ["untrusted_pending", "trusted", "immature", "nonmempool"]:
+                assert_equal(balance[balance_type], 0)
+
+        assert_equal(self.alice.getrawmempool(), [])
+        assert_equal(self.bob.getrawmempool(), [])
 
     return wrapper
 
