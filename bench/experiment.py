@@ -272,6 +272,7 @@ class RunArtifact:
 
     subject: Subject
     profile: Profile
+    profile_config: dict[str, Any]
     binary: Path
     output_dir: Path
     result: BenchmarkResult
@@ -579,6 +580,7 @@ class ExperimentRunner:
         return RunArtifact(
             subject=subject,
             profile=profile,
+            profile_config=run_spec.to_dict(),
             binary=binary.path,
             output_dir=run_output_dir,
             result=result,
@@ -631,6 +633,7 @@ class ExperimentRunner:
         return RunArtifactRecord(
             subject=artifact.subject.name,
             profile=artifact.profile.name,
+            config=artifact.profile_config,
             output_dir=artifact.output_dir,
             results_file=artifact.result.results_file,
             debug_log=artifact.result.debug_log,

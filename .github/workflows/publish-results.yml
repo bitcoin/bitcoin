@@ -71,27 +71,7 @@ jobs:
             --update-index \
             "./results/pr-${PR_NUMBER}/${RUN_ID}"
 
-          # Build comparison summary for PR comment
-          if [ -f "./nightly-history.json" ]; then
-            COMPARISON=$(jq -r '
-              if .nightly_comparison then
-                .nightly_comparison | to_entries | map(
-                  "\(.key) MB: \(.value.pr_mean / 60 | floor) min" +
-                  if .value.nightly_mean then
-                    " (nightly median of \(.value.nightly_count): \(.value.nightly_mean / 60 | floor) min, \(.value.nightly_date_range)) → " +
-                    if .value.speedup_percent > 0 then "+\(.value.speedup_percent)% faster"
-                    elif .value.speedup_percent < 0 then "\(.value.speedup_percent)% slower"
-                    else "same"
-                    end
-                  else " (no nightly baseline)"
-                  end
-                ) | join("\n- ")
-              else "No comparison data available"
-              end
-            ' "./results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
-          else
-            COMPARISON="No nightly history available for comparison"
-          fi
+          COMPARISON=$(cat "./results/pr-${PR_NUMBER}/${RUN_ID}/summary.txt")
           echo "comparison<<EOF" >> $GITHUB_OUTPUT
           echo "${COMPARISON}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

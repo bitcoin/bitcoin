@@ -14,6 +14,7 @@ class RunArtifactRecord:
 
     subject: str
     profile: str
+    config: dict[str, Any]
     output_dir: Path
     results_file: Path
     debug_log: Path | None = None
@@ -73,6 +74,7 @@ class ArtifactStore:
         result: dict[str, Any] = {
             "subject": record.subject,
             "profile": record.profile,
+            "config": record.config,
             "output_dir": self._relative(record.output_dir),
             "results_file": self._relative(record.results_file),
         }

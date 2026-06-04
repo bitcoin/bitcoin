@@ -94,6 +94,7 @@ class BenchmarkRun:
     """Parsed benchmark run data."""
 
     profile: str
+    config: dict[str, Any]
     command: str
     mean: float
     stddev: float | None
@@ -109,6 +110,73 @@ class ReportResult:
     output_dir: Path
     index_file: Path
     speedups: dict[str, float]
+    summary_file: Path | None = None
+
+
+def _dbcache_from_config(config: dict[str, Any]) -> int:
+    """Return dbcache from a run config snapshot."""
+    return int(config.get("bitcoind", {}).get("dbcache", 0))
+
+
+def _instrumentation_from_config(config: dict[str, Any]) -> str:
+    """Return instrumentation mode from a run config snapshot."""
+    return str(config.get("instrumentation", "uninstrumented"))
+
+
+def _config_from_profile_name(profile: str) -> dict[str, Any]:
+    """Build a best-effort config for single-directory report mode."""
+    dbcache, instrumentation = parse_profile_name(profile)
+    return {
+        "instrumentation": instrumentation,
+        "bitcoind": {"dbcache": dbcache},
+    }
+
+
+def _format_config_snapshot(config: dict[str, Any]) -> str:
+    """Format a run config snapshot for display."""
+    return format_config_display(
+        _dbcache_from_config(config),
+        instrumentation=_instrumentation_from_config(config),
+    )
+
+
+def _summary_config_label(config: dict[str, Any]) -> str:
+    """Format a compact config label for PR comments."""
+    return f"{_dbcache_from_config(config)} MB"
+
+
+def format_comparison_summary(
+    nightly_comparison: dict[str, dict[str, Any]],
+    has_nightly_history: bool,
+) -> str:
+    """Format the PR comment summary owned by the report module."""
+    if not has_nightly_history:
+        return "No nightly history available for comparison"
+    if not nightly_comparison:
+        return "No comparison data available"
+
+    lines = []
+    for _, data in sorted(nightly_comparison.items()):
+        config = data["config"]
+        line = f"{_summary_config_label(config)}: {int(data['pr_mean'] / 60)} min"
+        if data.get("nightly_mean"):
+            line += (
+                f" (nightly median of {data['nightly_count']}: "
+                f"{int(data['nightly_mean'] / 60)} min, "
+                f"{data['nightly_date_range']}) -> "
+            )
+            speedup = data.get("speedup_percent")
+            if speedup is not None and speedup > 0:
+                line += f"+{speedup}% faster"
+            elif speedup is not None and speedup < 0:
+                line += f"{speedup}% slower"
+            else:
+                line += "same"
+        else:
+            line += " (no nightly baseline)"
+        lines.append(line)
+
+    return "\n- ".join(lines)
 
 
 class ReportGenerator:
@@ -142,6 +210,7 @@ class ReportGenerator:
 
         for run_record in manifest.get("runs", []):
             profile = run_record["profile"]
+            config = run_record["config"]
             results_file = experiment_dir / run_record["results_file"]
             if not results_file.exists():
                 logger.warning(
@@ -158,6 +227,7 @@ class ReportGenerator:
                 all_runs.append(
                     BenchmarkRun(
                         profile=profile,
+                        config=config,
                         command=result.get("command", ""),
                         mean=result.get("mean", 0),
                         stddev=result.get("stddev"),
@@ -195,6 +265,7 @@ class ReportGenerator:
             "results": [
                 {
                     "profile": run.profile,
+                    "config": run.config,
                     "command": run.command,
                     "mean": run.mean,
                     "stddev": run.stddev,
@@ -210,6 +281,15 @@ class ReportGenerator:
         results_file = output_dir / "results.json"
         results_file.write_text(json.dumps(combined_results, indent=2))
 
+        summary_file = output_dir / "summary.txt"
+        summary_file.write_text(
+            format_comparison_summary(
+                nightly_comparison,
+                has_nightly_history=self.nightly_history is not None,
+            )
+            + "\n"
+        )
+
         speedups = {
             config: data["speedup_percent"]
             for config, data in nightly_comparison.items()
@@ -220,6 +300,7 @@ class ReportGenerator:
             output_dir=output_dir,
             index_file=index_file,
             speedups=speedups,
+            summary_file=summary_file,
         )
 
     def generate(
@@ -312,6 +393,8 @@ class ReportGenerator:
             runs.append(
                 BenchmarkRun(
                     profile=result.get("profile", "default"),
+                    config=result.get("config")
+                    or _config_from_profile_name(result.get("profile", "default")),
                     command=result.get("command", ""),
                     mean=result.get("mean", 0),
                     stddev=result.get("stddev"),
@@ -354,23 +437,19 @@ class ReportGenerator:
             logger.warning("No nightly history available for comparison")
             return comparison
 
-        # Group runs by profile/config, only uninstrumented
+        # Group runs by config snapshot, only uninstrumented
         for run in runs:
-            profile = run.profile
-
-            # Skip instrumented configs
-            if profile.endswith("-true") or profile.endswith("-instrumented"):
+            if _instrumentation_from_config(run.config) != "uninstrumented":
                 continue
 
-            # Extract base config name (e.g. "450-uninstrumented" -> "450")
-            config = profile.replace("-false", "").replace("-uninstrumented", "")
+            config = str(_dbcache_from_config(run.config))
 
             # Get PR result mean
             pr_mean = run.mean
             pr_stddev = run.stddev
 
             # Get median of recent nightly results for this config
-            result = self.nightly_history.get_recent_median(config, n=7)
+            result = self.nightly_history.get_recent_median(run.config, n=7)
 
             if result:
                 nightly_median, recent_results = result
@@ -384,6 +463,7 @@ class ReportGenerator:
                 latest = recent_results[-1]
 
                 comparison[config] = {
+                    "config": run.config,
                     "pr_mean": pr_mean,
                     "pr_stddev": pr_stddev,
                     "pr_commit": commit,
@@ -397,6 +477,7 @@ class ReportGenerator:
             else:
                 # No nightly data, just record PR result
                 comparison[config] = {
+                    "config": run.config,
                     "pr_mean": pr_mean,
                     "pr_stddev": pr_stddev,
                     "pr_commit": commit,
@@ -456,14 +537,9 @@ class ReportGenerator:
 
         runs_data = []
         for run in sorted_runs:
-            dbcache, instrumentation = parse_profile_name(run.profile)
-            config_display = format_config_display(
-                dbcache,
-                instrumentation=instrumentation,
-            )
             runs_data.append(
                 {
-                    "config_display": config_display,
+                    "config_display": _format_config_snapshot(run.config),
                     "mean": run.mean,
                     "stddev": run.stddev,
                     "user": run.user,
@@ -512,14 +588,9 @@ class ReportGenerator:
         pr_chart_data = []
 
         for config, data in sorted(nightly_comparison.items()):
-            try:
-                dbcache = int(config)
-            except ValueError:
-                dbcache = 0
-
             result[config] = {
                 **data,
-                "config_display": format_config_display(dbcache),
+                "config_display": _format_config_snapshot(data["config"]),
             }
 
             if data.get("nightly_mean"):

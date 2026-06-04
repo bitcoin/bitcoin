@@ -146,11 +146,9 @@ python3 bench.py report \
 Manage nightly benchmark history:
 
 ```bash
-# Append a result
-python3 bench.py nightly --history-file history.json append \
-    results.json COMMIT 450 \
-    --experiment-config bench/experiments/nightly.toml \
-    --profile-name 450 \
+# Append experiment results
+python3 bench.py nightly --history-file history.json append-experiment \
+    ./experiment-output COMMIT \
     --machine-specs machine-specs.json
 
 # Generate chart

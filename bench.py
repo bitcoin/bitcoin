@@ -9,7 +9,7 @@ Usage:
     bench.py build COMMIT            Build bitcoind at a commit
     bench.py analyze COMMIT LOGFILE  Generate plots from debug.log
     bench.py report OUTPUT           Generate HTML report with nightly comparison
-    bench.py nightly append ...      Append result to nightly history
+    bench.py nightly append-experiment ... Append experiment output to nightly history
     bench.py nightly chart ...       Generate nightly chart HTML
 
 Examples:
@@ -23,7 +23,7 @@ Examples:
     bench.py report --experiment-output ./experiment-output --nightly-history ./nightly-history.json ./output
 
     # Append nightly result and regenerate chart
-    bench.py nightly append results.json abc123 450 --experiment-config bench/experiments/nightly.toml --profile-name 450
+    bench.py nightly append-experiment ./experiment-output abc123
     bench.py nightly chart ./index.html
 """
 
@@ -186,7 +186,10 @@ def cmd_nightly(args: argparse.Namespace) -> int:
         logging.getLogger().setLevel(logging.DEBUG)
 
     if not args.nightly_command:
-        logger.error("No nightly subcommand specified. Use 'append' or 'chart'.")
+        logger.error(
+            "No nightly subcommand specified. Use 'append', "
+            "'append-experiment', or 'chart'."
+        )
         return 1
 
     history_file = Path(args.history_file)
@@ -212,6 +215,19 @@ def cmd_nightly(args: argparse.Namespace) -> int:
                 trigger=args.trigger,
             )
             logger.info(f"Appended result to {history_file}")
+        elif args.nightly_command == "append-experiment":
+            machine_specs_file = (
+                Path(args.machine_specs) if args.machine_specs else None
+            )
+            count = phase.append_experiment(
+                experiment_dir=Path(args.experiment_dir),
+                commit=args.commit,
+                date_str=args.date,
+                machine_specs_file=machine_specs_file,
+                run_date=args.run_date or "",
+                trigger=args.trigger,
+            )
+            logger.info(f"Appended {count} experiment result(s) to {history_file}")
         elif args.nightly_command == "chart":
             phase.chart(output_file=Path(args.output_file))
             logger.info(f"Generated chart at {args.output_file}")
@@ -463,6 +479,44 @@ def main() -> int:
         help="Date when benchmark was executed (default: today). Stored for reference.",
     )
     nightly_append.add_argument(
+        "--trigger",
+        default="scheduled",
+        choices=["scheduled", "manual"],
+        help="How the benchmark was triggered (default: scheduled). "
+        "Scheduled runs dedup by commit; manual runs are always kept.",
+    )
+
+    # nightly append-experiment
+    nightly_append_experiment = nightly_subparsers.add_parser(
+        "append-experiment",
+        help="Append experiment output to the nightly history",
+        description="Read artifacts.json from an experiment output directory and "
+        "append every run result to the nightly history.",
+    )
+    nightly_append_experiment.add_argument(
+        "experiment_dir",
+        help="Experiment output directory containing artifacts.json",
+    )
+    nightly_append_experiment.add_argument(
+        "commit",
+        help="Git commit hash",
+    )
+    nightly_append_experiment.add_argument(
+        "--date",
+        metavar="YYYY-MM-DD",
+        help="Date for this result (default: today)",
+    )
+    nightly_append_experiment.add_argument(
+        "--machine-specs",
+        metavar="PATH",
+        help="Path to pre-captured machine specs JSON (default: detect current machine)",
+    )
+    nightly_append_experiment.add_argument(
+        "--run-date",
+        metavar="YYYY-MM-DD",
+        help="Date when benchmark was executed (default: today). Stored for reference.",
+    )
+    nightly_append_experiment.add_argument(
         "--trigger",
         default="scheduled",
         choices=["scheduled", "manual"],

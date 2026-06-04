@@ -16,6 +16,16 @@ logger = logging.getLogger(__name__)
 NUM_COLORS = 10
 
 
+def _dbcache_from_config(config: dict[str, Any]) -> int:
+    """Return dbcache from a run config snapshot."""
+    return int(config.get("bitcoind", {}).get("dbcache", 0))
+
+
+def _instrumentation_from_config(config: dict[str, Any]) -> str:
+    """Return instrumentation mode from a run config snapshot."""
+    return str(config.get("instrumentation", "uninstrumented"))
+
+
 def series_color_index(key: str) -> int:
     """Compute deterministic color index from series key using MD5."""
     hash_bytes = hashlib.md5(key.encode()).digest()
@@ -272,16 +282,19 @@ class NightlyHistory:
                     and existing.date == result.date
                     and existing.commit == result.commit
                     and existing.dbcache == result.dbcache
+                    and existing.instrumentation == result.instrumentation
                 ):
                     logger.warning(
-                        f"Replacing scheduled result for {result.date} {result.commit[:8]} dbcache={result.dbcache}"
+                        f"Replacing scheduled result for {result.date} "
+                        f"{result.commit[:8]} dbcache={result.dbcache} "
+                        f"{result.instrumentation}"
                     )
                     self.results.remove(existing)
                     break
 
         self.results.append(result)
-        # Sort by date, then dbcache
-        self.results.sort(key=lambda r: (r.date, r.dbcache))
+        # Sort by date, then config identity
+        self.results.sort(key=lambda r: (r.date, r.dbcache, r.instrumentation))
         logger.info(
             f"Appended result: {result.date} {result.commit[:8]} dbcache={result.dbcache} {result.mean:.1f}s"
         )
@@ -309,17 +322,24 @@ class NightlyHistory:
         return matching[-1]
 
     def get_recent_median(
-        self, dbcache: int | str, n: int = 7
+        self, config: dict[str, Any] | int | str, n: int = 7
     ) -> tuple[float, list[NightlyResult]] | None:
         """Get the median mean of the most recent N scheduled results for a dbcache config.
 
         Args:
-            dbcache: DB cache size in MB (int) or config name like '450', '32000'
+            config: Run config snapshot, DB cache size, or config name.
             n: Number of recent results to average
 
         Returns:
             Tuple of (median_mean, list_of_results_used), or None if no results found
         """
+        instrumentation = "uninstrumented"
+        if isinstance(config, dict):
+            dbcache = _dbcache_from_config(config)
+            instrumentation = _instrumentation_from_config(config)
+        else:
+            dbcache = config
+
         if isinstance(dbcache, str):
             try:
                 dbcache = int(dbcache)
@@ -329,7 +349,9 @@ class NightlyHistory:
         matching = [
             r
             for r in self.results
-            if r.dbcache == dbcache and r.trigger == "scheduled"
+            if r.dbcache == dbcache
+            and r.instrumentation == instrumentation
+            and r.trigger == "scheduled"
         ]
         if not matching:
             return None
@@ -446,6 +468,16 @@ class NightlyPhase:
     def __init__(self, history_file: Path):
         self.history_file = history_file
 
+    def _machine_specs(self, machine_specs_file: Path | None) -> dict[str, Any]:
+        """Load or detect machine specs for nightly history entries."""
+        if machine_specs_file:
+            logger.info(f"Using pre-captured machine specs from {machine_specs_file}")
+            return json.loads(machine_specs_file.read_text())
+
+        from bench.machine import get_machine_specs
+
+        return get_machine_specs().to_dict()
+
     def append(
         self,
         results_file: Path,
@@ -473,15 +505,7 @@ class NightlyPhase:
             run_date: When the benchmark was executed (YYYY-MM-DD), for reference
         """
         history = NightlyHistory(self.history_file)
-
-        # Get machine specs from file if provided, otherwise detect current machine
-        if machine_specs_file:
-            machine_specs = json.loads(machine_specs_file.read_text())
-            logger.info(f"Using pre-captured machine specs from {machine_specs_file}")
-        else:
-            from bench.machine import get_machine_specs
-
-            machine_specs = get_machine_specs().to_dict()
+        machine_specs = self._machine_specs(machine_specs_file)
 
         # Build benchmark config snapshot for history grouping.
         if experiment_config_file:
@@ -510,6 +534,44 @@ class NightlyPhase:
             trigger=trigger,
         )
         history.save()
+
+    def append_experiment(
+        self,
+        experiment_dir: Path,
+        commit: str,
+        date_str: str | None = None,
+        machine_specs_file: Path | None = None,
+        run_date: str = "",
+        trigger: str = "scheduled",
+    ) -> int:
+        """Append all run results from an experiment artifact manifest."""
+        from bench.artifact_store import ArtifactStore
+
+        store = ArtifactStore(experiment_dir)
+        manifest = store.load_manifest()
+        history = NightlyHistory(self.history_file)
+        machine_specs = self._machine_specs(machine_specs_file)
+
+        appended = 0
+        for run_record in manifest.get("runs", []):
+            config = run_record["config"]
+            results_file = experiment_dir / run_record["results_file"]
+            history.append_from_results_json(
+                results_file=results_file,
+                commit=commit,
+                config_snapshot=config,
+                machine_specs=machine_specs,
+                date_str=date_str,
+                run_date=run_date,
+                trigger=trigger,
+            )
+            appended += 1
+
+        if appended == 0:
+            raise ValueError(f"No run artifacts found in {store.manifest_path}")
+
+        history.save()
+        return appended
 
     def chart(self, output_file: Path) -> None:
         """Generate the nightly chart HTML.
