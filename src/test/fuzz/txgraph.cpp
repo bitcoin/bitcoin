@@ -177,7 +177,7 @@ struct SimTxGraph
     }
 
     /** Modify the transaction fee of a ref, if it exists. */
-    void SetTransactionFee(TxGraph::Ref* ref, int64_t fee)
+    void SetTransactionFee(TxGraph::Ref* ref, CAmount fee)
     {
         auto pos = Find(ref);
         if (pos == MISSING) return;
