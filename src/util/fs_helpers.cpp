@@ -223,16 +223,22 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
 #endif
     // Fallback version
     // TODO: just write one byte per block
-    static const char buf[65536] = {};
-    if (fseek(file, offset, SEEK_SET)) {
+    if (fseeko(file, 0, SEEK_END) != 0) {
         return;
     }
-    while (length > 0) {
-        unsigned int now = 65536;
-        if (length < now)
-            now = length;
-        fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
-        length -= now;
+    off_t file_size{ftello(file)};
+    if (file_size < 0) {
+        return;
+    }
+    off_t end_pos{static_cast<off_t>(offset) + length};
+    if (end_pos > file_size) {
+        static const uint8_t buf[65536] = {};
+        off_t remaining{end_pos - file_size};
+        while (remaining > 0) {
+            off_t chunk{(remaining < 65536) ? remaining : 65536};
+            fwrite(buf, 1, static_cast<size_t>(chunk), file); // allowed to fail; this function is advisory anyway
+            remaining -= chunk;
+        }
     }
 #endif
 }
