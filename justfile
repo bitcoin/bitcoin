@@ -9,48 +9,46 @@ default:
 
 # Test instrumented run using signet (includes report generation)
 [group('local')]
-test-instrumented commit datadir:
-    nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
-    nix develop --command python3 bench.py --profile quick run \
-        --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-instrumented \
+test-instrumented datadir:
+    nix develop --command python3 bench.py --profile quick experiment run \
+        bench/experiments/test-signet.toml \
+        --subject-name head \
+        --profile-name 450-instrumented \
         --datadir {{ datadir }} \
-        pr:./binaries/pr/bitcoind
+        --binaries-dir ./binaries \
+        --skip-existing
     nix develop --command python3 bench.py report bench-output/ bench-output/
 
 # Test uninstrumented run using signet
 [group('local')]
-test-uninstrumented commit datadir:
-    nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
-    nix develop --command python3 bench.py --profile quick run \
-        --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-uninstrumented \
+test-uninstrumented datadir:
+    nix develop --command python3 bench.py --profile quick experiment run \
+        bench/experiments/test-signet.toml \
+        --subject-name head \
+        --profile-name 450-uninstrumented \
         --datadir {{ datadir }} \
-        pr:./binaries/pr/bitcoind
+        --binaries-dir ./binaries \
+        --skip-existing
 
 # Full benchmark with instrumentation (flamegraphs + plots)
 [group('local')]
-instrumented commit datadir:
-    python3 bench.py build {{ commit }}:pr
-    python3 bench.py run \
-        --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-instrumented \
+instrumented datadir:
+    python3 bench.py experiment run \
+        bench/experiments/pr.toml \
+        --subject-name head \
+        --profile-name 450-instrumented \
         --datadir {{ datadir }} \
-        pr:./binaries/pr/bitcoind
+        --skip-existing
 
 # Just build a binary (useful for incremental testing)
 [group('local')]
 build commit:
     python3 bench.py build {{ commit }}
 
-# Run benchmark with pre-built binary
+# Run the default PR-style experiment
 [group('local')]
-run datadir binary:
-    python3 bench.py run \
-        --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-uninstrumented \
-        --datadir {{ datadir }} \
-        {{ binary }}
+run datadir:
+    python3 bench.py experiment run bench/experiments/pr.toml --datadir {{ datadir }}
 
 # Generate plots from a debug.log file
 [group('local')]
@@ -72,21 +70,16 @@ report input_dir output_dir nightly_history="":
 # CI commands (called by GitHub Actions)
 # ============================================================================
 
-# Build binary for CI
+# Run experiment for CI
 [group('ci')]
-ci-build commit binaries_dir:
-    python3 bench.py build -o {{ binaries_dir }} {{ commit }}:pr
-
-# Run benchmark for CI
-[group('ci')]
-ci-run benchmark_config matrix_entry datadir tmp_datadir output_dir binaries_dir:
-    python3 bench.py run \
-        --benchmark-config {{ benchmark_config }} \
-        --matrix-entry {{ matrix_entry }} \
+ci-run experiment datadir tmp_dir output_dir binaries_dir:
+    python3 bench.py experiment run \
+        {{ experiment }} \
         --datadir {{ datadir }} \
-        --tmp-datadir {{ tmp_datadir }} \
+        --tmp-dir {{ tmp_dir }} \
         --output-dir {{ output_dir }} \
-        pr:{{ binaries_dir }}/pr/bitcoind
+        --binaries-dir {{ binaries_dir }} \
+        --skip-existing
 
 # ============================================================================
 # Git helpers

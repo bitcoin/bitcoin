@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .patchelf import ensure_binary_runnable
+from .run_spec import RunSpec
 
 if TYPE_CHECKING:
-    from .benchmark_config import BenchmarkConfig
     from .capabilities import Capabilities
     from .config import Config
 
@@ -64,17 +64,17 @@ class BenchmarkPhase:
         self,
         config: Config,
         capabilities: Capabilities,
-        benchmark_config: BenchmarkConfig | None = None,
+        run_spec: RunSpec,
     ):
         self.config = config
         self.capabilities = capabilities
-        self.benchmark_config = benchmark_config
+        self.run_spec = run_spec
         self._temp_scripts: list[Path] = []
 
     @property
     def is_instrumented(self) -> bool:
         """Whether this benchmark run is instrumented (flamegraphs, debug logs)."""
-        return self.config.is_instrumented
+        return self.run_spec.is_instrumented
 
     def run(
         self,
@@ -105,7 +105,7 @@ class BenchmarkPhase:
             )
 
         # Check prerequisites
-        errors = self.capabilities.check_for_run(self.config.instrumented)
+        errors = self.capabilities.check_for_run(self.run_spec.instrumentation)
         if errors:
             raise RuntimeError("Benchmark prerequisites not met:\n" + "\n".join(errors))
 
@@ -128,11 +128,11 @@ class BenchmarkPhase:
         else:
             logger.info("  Mode: Fresh sync (no source datadir)")
         logger.info(f"  Binary: {name} at {binary_path}")
-        logger.info(f"  Instrumented: {self.config.instrumented}")
-        logger.info(f"  Runs: {self.config.runs}")
-        logger.info(f"  dbcache: {self.config.dbcache}")
-        if self.benchmark_config:
-            logger.info(f"  Config: {self.benchmark_config.source_file}")
+        logger.info(f"  Instrumented: {self.run_spec.instrumentation}")
+        logger.info(f"  Runs: {self.run_spec.runs}")
+        logger.info(f"  dbcache: {self.run_spec.dbcache}")
+        if self.run_spec.source_file:
+            logger.info(f"  Config: {self.run_spec.source_file}")
 
         try:
             # Create hook scripts for hyperfine
@@ -165,7 +165,7 @@ class BenchmarkPhase:
                 logger.info(f"[DRY RUN] Would run: {' '.join(cmd)}")
                 return BenchmarkResult(
                     results_file=results_file,
-                    instrumented=self.config.instrumented,
+                    instrumented=self.run_spec.instrumentation,
                     name=name,
                 )
 
@@ -177,7 +177,7 @@ class BenchmarkPhase:
             # Collect result
             result = BenchmarkResult(
                 results_file=results_file,
-                instrumented=self.config.instrumented,
+                instrumented=self.run_spec.instrumentation,
                 name=name,
             )
 
@@ -290,9 +290,6 @@ class BenchmarkPhase:
         name: str,
     ) -> str:
         """Build the bitcoind command string for hyperfine."""
-        if not self.benchmark_config:
-            raise ValueError("benchmark_config is required")
-
         parts = []
 
         # Add perf wrapper for instrumented mode. Derived artifacts are produced
@@ -311,17 +308,17 @@ class BenchmarkPhase:
         parts.append(f"-datadir={shlex.quote(str(tmp_datadir))}")
 
         # Add dbcache from matrix entry
-        parts.append(f"-dbcache={self.config.dbcache}")
+        parts.append(f"-dbcache={self.run_spec.dbcache}")
 
         # Add all bitcoind args from benchmark config
-        for key, value in self.benchmark_config.bitcoind_args.items():
-            formatted = self.benchmark_config._format_bitcoind_arg(key, value)
+        for key, value in self.run_spec.bitcoind_args.items():
+            formatted = self.run_spec.format_bitcoind_arg(key, value)
             if formatted:
                 parts.append(formatted)
 
         # Debug flags for instrumented mode
-        if self.is_instrumented and self.benchmark_config.instrumented_debug:
-            for flag in self.benchmark_config.instrumented_debug:
+        if self.is_instrumented and self.run_spec.instrumented_debug:
+            for flag in self.run_spec.instrumented_debug:
                 parts.append(f"-debug={flag}")
 
         return " ".join(parts)
@@ -344,7 +341,7 @@ class BenchmarkPhase:
             f"--setup={setup_script}",
             f"--prepare={prepare_script}",
             f"--cleanup={cleanup_script}",
-            f"--runs={self.config.runs}",
+            f"--runs={self.run_spec.runs}",
             f"--export-json={results_file}",
             "--show-output",
             f"--command-name={name}",

@@ -7,7 +7,6 @@ performance. PR results are compared against nightly baseline data.
 Usage:
     bench.py experiment run MANIFEST Run a declarative benchmark experiment
     bench.py build COMMIT            Build bitcoind at a commit
-    bench.py run NAME:BINARY         Benchmark a binary
     bench.py analyze COMMIT LOGFILE  Generate plots from debug.log
     bench.py report OUTPUT           Generate HTML report with nightly comparison
     bench.py nightly append ...      Append result to nightly history
@@ -20,14 +19,11 @@ Examples:
     # Build at HEAD
     bench.py build HEAD:pr
 
-    # Benchmark built binary
-    bench.py run pr:./binaries/pr/bitcoind --datadir /data
-
     # Generate HTML report with nightly comparison
     bench.py report --network 450-uninstrumented:./results --nightly-history ./nightly-history.json ./output
 
     # Append nightly result and regenerate chart
-    bench.py nightly append results.json abc123 450 --benchmark-config bench/configs/nightly.toml
+    bench.py nightly append results.json abc123 450 --experiment-config bench/experiments/nightly.toml --profile-name 450
     bench.py nightly chart ./index.html
 """
 
@@ -78,117 +74,6 @@ def cmd_build(args: argparse.Namespace) -> int:
         return 0
     except Exception as e:
         logger.error(f"Build failed: {e}")
-        return 1
-
-
-def cmd_run(args: argparse.Namespace) -> int:
-    """Run benchmark on a binary."""
-    from bench.benchmark import BenchmarkPhase, parse_binary_spec
-    from bench.benchmark_config import BenchmarkConfig
-
-    capabilities = detect_capabilities()
-
-    # Load benchmark config
-    benchmark_config = BenchmarkConfig.from_toml(Path(args.benchmark_config))
-
-    # Validate benchmark config
-    errors = benchmark_config.validate()
-    if errors:
-        for error in errors:
-            logger.error(f"Config error: {error}")
-        return 1
-
-    # Get matrix entry
-    matrix_entry = benchmark_config.get_matrix_entry(args.matrix_entry)
-    if not matrix_entry:
-        available = benchmark_config.get_matrix_names()
-        logger.error(
-            f"Matrix entry '{args.matrix_entry}' not found. "
-            f"Available: {', '.join(available)}"
-        )
-        return 1
-    logger.info(f"Using matrix entry: {matrix_entry}")
-
-    # In full IBD mode, ignore datadir (sync from genesis)
-    datadir = None if benchmark_config.full_ibd else args.datadir
-
-    # Build config with CLI args and benchmark config values
-    cli_args: dict = {
-        "datadir": datadir,
-        "tmp_datadir": args.tmp_datadir,
-        "output_dir": args.output_dir,
-        "no_cache_drop": args.no_cache_drop,
-        "dry_run": args.dry_run,
-        "verbose": args.verbose,
-        "runs": benchmark_config.runs,
-    }
-
-    # Apply matrix entry values
-    if "dbcache" in matrix_entry:
-        cli_args["dbcache"] = matrix_entry["dbcache"]
-    if "instrumentation" in matrix_entry:
-        cli_args["instrumented"] = matrix_entry["instrumentation"]
-
-    config = build_config(
-        cli_args=cli_args,
-        config_file=Path(args.config) if args.config else None,
-        profile=args.profile,
-    )
-
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    errors = config.validate()
-    if errors:
-        for error in errors:
-            logger.error(error)
-        return 1
-
-    # Parse binary spec
-    try:
-        binary = parse_binary_spec(args.binary)
-    except ValueError as e:
-        logger.error(str(e))
-        return 1
-
-    # Validate binary exists
-    name, path = binary
-    if not path.exists():
-        logger.error(f"Binary not found: {path} ({name})")
-        return 1
-
-    phase = BenchmarkPhase(config, capabilities, benchmark_config)
-    output_dir = Path(config.output_dir)
-
-    try:
-        result = phase.run(
-            binary=binary,
-            datadir=Path(config.datadir) if config.datadir else None,
-            output_dir=output_dir,
-        )
-        logger.info(f"Results saved to: {result.results_file}")
-
-        # For instrumented runs, also generate plots
-        if config.instrumented == "instrumented" and result.debug_log:
-            from bench.analyze import AnalyzePhase
-
-            analyze_phase = AnalyzePhase()
-            try:
-                analyze_phase.run(
-                    commit=result.name,
-                    log_file=result.debug_log,
-                    output_dir=output_dir / "plots",
-                )
-            except Exception as e:
-                logger.warning(f"Analysis failed: {e}")
-
-        return 0
-    except Exception as e:
-        logger.error(f"Benchmark failed: {e}")
-        if args.verbose:
-            import traceback
-
-            traceback.print_exc()
         return 1
 
 
@@ -316,9 +201,6 @@ def cmd_nightly(args: argparse.Namespace) -> int:
 
     try:
         if args.nightly_command == "append":
-            benchmark_config_file = (
-                Path(args.benchmark_config) if args.benchmark_config else None
-            )
             machine_specs_file = (
                 Path(args.machine_specs) if args.machine_specs else None
             )
@@ -327,7 +209,10 @@ def cmd_nightly(args: argparse.Namespace) -> int:
                 commit=args.commit,
                 dbcache=args.dbcache,
                 date_str=args.date,
-                benchmark_config_file=benchmark_config_file,
+                experiment_config_file=Path(args.experiment_config)
+                if args.experiment_config
+                else None,
+                profile_name=args.profile_name,
                 instrumentation=args.instrumentation,
                 machine_specs_file=machine_specs_file,
                 run_date=args.run_date or "",
@@ -452,52 +337,6 @@ def main() -> int:
     )
     build_parser.set_defaults(func=cmd_build)
 
-    # Run command
-    run_parser = subparsers.add_parser(
-        "run",
-        help="Run benchmark on a binary",
-        description="Benchmark a bitcoind binary using hyperfine.",
-    )
-    run_parser.add_argument(
-        "binary",
-        metavar="NAME:PATH",
-        help="Binary to benchmark. Format: NAME:PATH (e.g., pr:./binaries/pr/bitcoind)",
-    )
-    run_parser.add_argument(
-        "--datadir",
-        metavar="PATH",
-        help="Source datadir with blockchain snapshot (omit for fresh sync)",
-    )
-    run_parser.add_argument(
-        "--tmp-datadir",
-        metavar="PATH",
-        help="Temp datadir for benchmark runs",
-    )
-    run_parser.add_argument(
-        "-o",
-        "--output-dir",
-        metavar="PATH",
-        help="Output directory for results (default: ./bench-output)",
-    )
-    run_parser.add_argument(
-        "--no-cache-drop",
-        action="store_true",
-        help="Skip cache dropping between runs",
-    )
-    run_parser.add_argument(
-        "--benchmark-config",
-        required=True,
-        metavar="PATH",
-        help="Benchmark config TOML file (e.g., bench/configs/pr.toml)",
-    )
-    run_parser.add_argument(
-        "--matrix-entry",
-        required=True,
-        metavar="NAME",
-        help="Matrix entry to run (e.g., '450-uninstrumented', '32000-instrumented')",
-    )
-    run_parser.set_defaults(func=cmd_run)
-
     # Analyze command
     analyze_parser = subparsers.add_parser(
         "analyze", help="Generate plots from debug.log"
@@ -607,9 +446,14 @@ def main() -> int:
         help="Date for this result (default: today)",
     )
     nightly_append.add_argument(
-        "--benchmark-config",
+        "--experiment-config",
         metavar="PATH",
-        help="Benchmark config TOML file to store with results",
+        help="Experiment TOML file to store with results",
+    )
+    nightly_append.add_argument(
+        "--profile-name",
+        metavar="NAME",
+        help="Profile name from --experiment-config",
     )
     nightly_append.add_argument(
         "--instrumentation",

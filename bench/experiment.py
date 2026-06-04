@@ -10,10 +10,10 @@ from typing import Any
 
 from .analyze import AnalyzePhase
 from .benchmark import BenchmarkPhase, BenchmarkResult
-from .benchmark_config import BenchmarkConfig
 from .build import BuildPhase, BuiltBinary
 from .config import Config, build_config
 from .flamegraph import DifferentialFlamegraphPhase
+from .run_spec import RunSpec
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +235,31 @@ class Experiment:
             return comparison.profiles
         return [profile.name for profile in self.profiles]
 
+    def run_spec_for(self, profile: Profile) -> RunSpec:
+        """Build the concrete run spec for a profile."""
+        bitcoind_args = {**self.bitcoind_args, **profile.bitcoind_args}
+        debug = (
+            profile.debug if profile.debug is not None else self.instrumented_debug
+        )
+
+        return RunSpec(
+            full_ibd=self.full_ibd,
+            start_height=self.start_height,
+            runs=profile.runs or self.runs,
+            dbcache=profile.dbcache,
+            instrumentation=profile.instrumentation,
+            bitcoind_args=bitcoind_args,
+            instrumented_debug=debug,
+            source_file=self.source_file,
+        )
+
+    def config_for_profile(self, profile_name: str) -> dict[str, Any]:
+        """Return a serializable config snapshot for a profile."""
+        for profile in self.profiles:
+            if profile.name == profile_name:
+                return self.run_spec_for(profile).to_dict()
+        raise ValueError(f"unknown profile: {profile_name}")
+
 
 @dataclass
 class RunArtifact:
@@ -377,11 +402,11 @@ class ExperimentRunner:
             else run_output_dir / "tmp-datadir"
         )
 
-        benchmark_config = self._benchmark_config_for(experiment, profile)
+        run_spec = experiment.run_spec_for(profile)
         benchmark_datadir = None if experiment.full_ibd else datadir
         config = self._config_for(
             profile=profile,
-            runs=benchmark_config.runs,
+            runs=run_spec.runs,
             datadir=benchmark_datadir,
             tmp_datadir=run_tmp_dir,
             output_dir=run_output_dir,
@@ -391,7 +416,7 @@ class ExperimentRunner:
         if errors:
             raise ValueError("Invalid run config:\n" + "\n".join(errors))
 
-        phase = BenchmarkPhase(config, self.capabilities, benchmark_config)
+        phase = BenchmarkPhase(config, self.capabilities, run_spec)
         result = phase.run(
             binary=(run_name, binary.path),
             datadir=benchmark_datadir,
@@ -498,25 +523,6 @@ class ExperimentRunner:
             selected.append(comparison)
 
         return selected
-
-    def _benchmark_config_for(
-        self, experiment: Experiment, profile: Profile
-    ) -> BenchmarkConfig:
-        """Build a BenchmarkConfig for one profile."""
-        bitcoind_args = {**experiment.bitcoind_args, **profile.bitcoind_args}
-        debug = (
-            profile.debug if profile.debug is not None else experiment.instrumented_debug
-        )
-
-        return BenchmarkConfig(
-            full_ibd=experiment.full_ibd,
-            start_height=experiment.start_height,
-            runs=profile.runs or experiment.runs,
-            matrix={},
-            bitcoind_args=bitcoind_args,
-            instrumented_debug=debug,
-            source_file=experiment.source_file,
-        )
 
     def _config_for(
         self,

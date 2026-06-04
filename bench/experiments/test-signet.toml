@@ -1,0 +1,36 @@
+# Signet smoke-test experiment.
+#
+# Usage:
+#   bench.py experiment run bench/experiments/test-signet.toml \
+#     --datadir /path/to/signet-datadir --profile quick
+
+[experiment]
+name = "test-signet"
+outputs = ["results", "debug-plots"]
+
+[benchmark]
+start_height = 0
+runs = 1
+
+[bitcoind]
+stopatheight = 1500
+chain = "signet"
+daemon = false
+printtoconsole = false
+
+[bitcoind.instrumented]
+debug = ["coindb", "leveldb", "bench", "validation"]
+
+[[subjects]]
+name = "head"
+commit = "HEAD"
+
+[[profiles]]
+name = "450-uninstrumented"
+dbcache = 450
+instrumentation = false
+
+[[profiles]]
+name = "450-instrumented"
+dbcache = 450
+instrumentation = true

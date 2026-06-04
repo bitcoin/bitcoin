@@ -142,7 +142,8 @@ jobs:
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
             --trigger "$TRIGGER" \
-            --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
+            --experiment-config benchcoin-tools/bench/experiments/nightly.toml \
+            --profile-name 450 \
             --machine-specs ./machine-specs/machine-specs.json
 
           # Append 32000 (large dbcache) result
@@ -155,7 +156,8 @@ jobs:
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
             --trigger "$TRIGGER" \
-            --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
+            --experiment-config benchcoin-tools/bench/experiments/nightly.toml \
+            --profile-name 32000 \
             --machine-specs ./machine-specs/machine-specs.json
 
       - name: Generate chart

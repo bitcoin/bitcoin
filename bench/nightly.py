@@ -372,7 +372,7 @@ class NightlyHistory:
         self,
         results_file: Path,
         commit: str,
-        benchmark_config: dict[str, Any],
+        config_snapshot: dict[str, Any],
         machine_specs: dict[str, Any],
         date_str: str | None = None,
         run_date: str = "",
@@ -383,7 +383,7 @@ class NightlyHistory:
         Args:
             results_file: Path to hyperfine results.json
             commit: Git commit hash
-            benchmark_config: Full benchmark config dict (includes bitcoind.dbcache)
+            config_snapshot: Full run config dict (includes bitcoind.dbcache)
             machine_specs: Machine specs dict
             date_str: Commit date string (YYYY-MM-DD), defaults to today
             run_date: When the benchmark was executed (YYYY-MM-DD), for reference
@@ -415,7 +415,7 @@ class NightlyHistory:
             mean=mean,
             stddev=stddev if stddev else 0,
             runs=runs,
-            config=benchmark_config,
+            config=config_snapshot,
             machine=machine_specs,
             run_date=run_date,
             trigger=trigger,
@@ -452,7 +452,8 @@ class NightlyPhase:
         commit: str,
         dbcache: int,
         date_str: str | None = None,
-        benchmark_config_file: Path | None = None,
+        experiment_config_file: Path | None = None,
+        profile_name: str | None = None,
         instrumentation: str = "uninstrumented",
         machine_specs_file: Path | None = None,
         run_date: str = "",
@@ -465,13 +466,12 @@ class NightlyPhase:
             commit: Git commit hash
             dbcache: DB cache size in MB
             date_str: Commit date string (YYYY-MM-DD), defaults to today
-            benchmark_config_file: Path to benchmark config TOML
+            experiment_config_file: Path to experiment TOML
+            profile_name: Profile name from the experiment TOML
             instrumentation: Instrumentation mode ('uninstrumented' or 'instrumented')
             machine_specs_file: Path to pre-captured machine specs JSON (optional)
             run_date: When the benchmark was executed (YYYY-MM-DD), for reference
         """
-        from bench.benchmark_config import BenchmarkConfig
-
         history = NightlyHistory(self.history_file)
 
         # Get machine specs from file if provided, otherwise detect current machine
@@ -483,10 +483,14 @@ class NightlyPhase:
 
             machine_specs = get_machine_specs().to_dict()
 
-        # Build benchmark config dict
-        if benchmark_config_file:
-            benchmark_config = BenchmarkConfig.from_toml(benchmark_config_file)
-            config_dict = benchmark_config.to_dict()
+        # Build benchmark config snapshot for history grouping.
+        if experiment_config_file:
+            from bench.experiment import Experiment
+
+            if not profile_name:
+                raise ValueError("--profile-name is required with --experiment-config")
+            experiment = Experiment.from_toml(experiment_config_file)
+            config_dict = experiment.config_for_profile(profile_name)
         else:
             config_dict = {}
 
@@ -499,7 +503,7 @@ class NightlyPhase:
         history.append_from_results_json(
             results_file=results_file,
             commit=commit,
-            benchmark_config=config_dict,
+            config_snapshot=config_dict,
             machine_specs=machine_specs,
             date_str=date_str,
             run_date=run_date,

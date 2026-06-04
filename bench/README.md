@@ -6,13 +6,11 @@ A CLI for benchmarking Bitcoin Core IBD (Initial Block Download).
 
 ```bash
 # Quick smoke test on signet (requires nix)
-nix develop --command python3 bench.py build HEAD:test
-nix develop --command python3 bench.py run \
-    --benchmark-config bench/configs/test-signet.toml \
-    --matrix-entry 450 \
+nix develop --command python3 bench.py experiment run \
+    bench/experiments/test-signet.toml \
+    --profile-name 450-uninstrumented \
     --datadir /path/to/signet-datadir \
-    --output-dir ./output \
-    test:./binaries/test/bitcoind
+    --output-dir ./output
 
 # Declarative PR-style experiment
 nix develop --command python3 bench.py experiment run \
@@ -21,7 +19,7 @@ nix develop --command python3 bench.py experiment run \
     --output-dir ./output
 
 # Or use just
-just test-uninstrumented HEAD /path/to/signet-datadir
+just test-uninstrumented /path/to/signet-datadir
 ```
 
 ## Requirements
@@ -46,7 +44,6 @@ Global Options:
 Commands:
   experiment Run a declarative experiment manifest
   build     Build bitcoind at a commit
-  run       Run benchmark (requires pre-built binary + TOML config)
   analyze   Generate plots from debug.log
   report    Generate HTML report
   nightly   Manage nightly history + generate chart
@@ -118,27 +115,6 @@ python3 bench.py build -o /tmp/bins abc123:test
 python3 bench.py build --skip-existing HEAD:pr
 ```
 
-### run
-
-Run a benchmark using a TOML config and matrix entry:
-
-```bash
-python3 bench.py run \
-    --benchmark-config bench/configs/pr.toml \
-    --matrix-entry 450-uninstrumented \
-    --datadir /data/pruned-840k \
-    --output-dir ./output \
-    pr:./binaries/pr/bitcoind
-```
-
-Options:
-- `--benchmark-config PATH` - TOML config file (required)
-- `--matrix-entry NAME` - Matrix entry to run (required)
-- `--datadir PATH` - Blockchain datadir snapshot to copy for each run
-- `--tmp-datadir PATH` - Working directory for benchmark runs
-- `-o, --output-dir PATH` - Output directory for results
-- `--no-cache-drop` - Skip clearing page cache between runs
-
 ### analyze
 
 Generate plots from a debug.log file:
@@ -174,7 +150,8 @@ Manage nightly benchmark history:
 # Append a result
 python3 bench.py nightly --history-file history.json append \
     results.json COMMIT 450 \
-    --benchmark-config bench/configs/nightly.toml \
+    --experiment-config bench/experiments/nightly.toml \
+    --profile-name 450 \
     --machine-specs machine-specs.json
 
 # Generate chart
@@ -188,41 +165,18 @@ Experiments are driven by TOML files in `bench/experiments/`:
 | File | Subjects | Profiles | Use Case |
 |------|----------|----------|----------|
 | `pr.toml` | `HEAD` | 450/32000 x uninstrumented/instrumented | PR-style benchmark |
+| `nightly.toml` | `HEAD` | 450/32000 uninstrumented | Nightly baseline |
 | `differential-flamegraph.toml` | before/after commits | 450/32000 instrumented | Differential flamegraphs |
-
-## Low-Level Benchmark Configs
-
-Benchmarks are driven by TOML config files in `bench/configs/`:
-
-| File | Chain | Matrix Entries | Use Case |
-|------|-------|----------------|----------|
-| `pr.toml` | mainnet | 450/32000 x uninstrumented/instrumented | PR comparison |
-| `nightly.toml` | mainnet | 450, 32000 | Nightly baseline |
 | `test-signet.toml` | signet | 450 | Quick local smoke test |
-
-Configs use `start_height = 840000` (resuming from a pruned snapshot) with `runs = 2` (except signet which starts from 0 with `runs = 1`).
-
-### Matrix Expansion
-
-The `[bitcoind.matrix]` section defines parameter axes. Their cartesian product generates named entries:
-
-```toml
-[bitcoind.matrix]
-dbcache = [450, 32000]
-instrumentation = ["uninstrumented", "instrumented"]
-# Produces: 450-uninstrumented, 450-instrumented, 32000-uninstrumented, 32000-instrumented
-```
-
-Select one with `--matrix-entry`.
 
 ## Justfile Recipes
 
 ```bash
-just test-instrumented HEAD /path/to/datadir    # Signet smoke test with flamegraphs
-just test-uninstrumented HEAD /path/to/datadir  # Signet smoke test without profiling
-just instrumented HEAD /path/to/datadir         # Full instrumented benchmark
+just test-instrumented /path/to/datadir    # Signet smoke test with flamegraphs
+just test-uninstrumented /path/to/datadir  # Signet smoke test without profiling
+just instrumented /path/to/datadir         # Full instrumented benchmark
 just build HEAD:pr                              # Build only
-just run /path/to/datadir pr:./binaries/pr/bitcoind  # Run with pre-built binary
+just run /path/to/datadir                       # Run PR-style experiment
 just analyze COMMIT debug.log ./plots
 just report ./input ./output --nightly-history ./nightly-history.json
 ```
@@ -234,7 +188,6 @@ bench.py              CLI entry point (argparse)
 bench/
 ├── experiment.py     Experiment manifests, planning, execution, derivations
 ├── config.py         Layered configuration (TOML + env + CLI)
-├── benchmark_config.py  TOML config loader + matrix expansion
 ├── capabilities.py   System capability detection
 ├── build.py          Build phase (nix build)
 ├── benchmark.py      Benchmark phase (hyperfine)
@@ -268,7 +221,7 @@ The benchmark phase generates shell scripts for hyperfine hooks:
 
 ### Instrumented Mode
 
-When `instrumentation = "instrumented"` in the matrix:
+When `instrumentation = "instrumented"` in a profile:
 
 1. Runs bitcoind under `perf record`
 2. Enables debug logging: `coindb`, `leveldb`, `bench`, `validation`
