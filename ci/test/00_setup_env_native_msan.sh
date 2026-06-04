@@ -15,7 +15,7 @@ export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
 
 export CONTAINER_NAME="ci_native_msan"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} llvm-${APT_LLVM_V}-dev libclang-${APT_LLVM_V}-dev libclang-rt-${APT_LLVM_V}-dev python3-pip"
-export PIP_PACKAGES="--break-system-packages pycapnp"
+export PIP_PACKAGES="--break-system-packages pycapnp pyzmq"
 export DEP_OPTS="DEBUG=1 NO_QT=1 CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
