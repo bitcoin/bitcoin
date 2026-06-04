@@ -133,10 +133,9 @@ Generate an HTML report from benchmark results:
 # Single directory
 python3 bench.py report ./bench-output ./report
 
-# Multi-network (CI mode)
+# Experiment output (CI mode)
 python3 bench.py report \
-    --network 450-uninstrumented:./results/450 \
-    --network 32000-uninstrumented:./results/32000 \
+    --experiment-output ./experiment-output \
     --nightly-history ./nightly-history.json \
     --pr-number 123 --run-id abc \
     ./output

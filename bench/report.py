@@ -29,7 +29,6 @@ def format_config_display(
     dbcache: int,
     machine_id: str | None = None,
     instrumentation: str | None = None,
-    noassumevalid: bool = False,
 ) -> str:
     """Format config for display.
 
@@ -37,7 +36,6 @@ def format_config_display(
         dbcache: DB cache size in MB
         machine_id: Machine ID (e.g., "amd64", "arm64")
         instrumentation: Instrumentation mode (e.g., "instrumented", "uninstrumented")
-        noassumevalid: Whether assumevalid=0 was used
 
     Returns:
         Display string like "dbcache=450MB (amd64, instrumented)"
@@ -47,8 +45,6 @@ def format_config_display(
         'dbcache=450MB'
         >>> format_config_display(32000, "amd64")
         'dbcache=32GB (amd64)'
-        >>> format_config_display(450, noassumevalid=True)
-        'dbcache=450MB (assumevalid=0)'
     """
     # Format dbcache with unit
     if dbcache >= 1000:
@@ -62,50 +58,42 @@ def format_config_display(
         parts.append(machine_id)
     if instrumentation and instrumentation != "uninstrumented":
         parts.append(instrumentation)
-    if noassumevalid:
-        parts.append("assumevalid=0")
 
     if parts:
         return f"dbcache={cache_str} ({', '.join(parts)})"
     return f"dbcache={cache_str}"
 
 
-def parse_network_name(network: str) -> tuple[int, str, bool]:
-    """Parse a network/config name to extract dbcache, instrumentation, and noassumevalid.
+def parse_profile_name(profile: str) -> tuple[int, str]:
+    """Parse a profile name to extract dbcache and instrumentation.
 
     Args:
-        network: Network name like "450-uninstrumented", "noav-32000-uninstrumented", "450"
+        profile: Profile name like "450-uninstrumented" or "450"
 
     Returns:
-        Tuple of (dbcache_int, instrumentation_str, noassumevalid_bool)
+        Tuple of (dbcache_int, instrumentation_str)
 
     Examples:
-        >>> parse_network_name("450-uninstrumented")
-        (450, 'uninstrumented', False)
-        >>> parse_network_name("noav-32000-uninstrumented")
-        (32000, 'uninstrumented', True)
-        >>> parse_network_name("450")
-        (450, 'uninstrumented', False)
+        >>> parse_profile_name("450-uninstrumented")
+        (450, 'uninstrumented')
+        >>> parse_profile_name("450")
+        (450, 'uninstrumented')
     """
-    noassumevalid = network.startswith("noav-")
-    if noassumevalid:
-        network = network[len("noav-"):]
-
-    parts = network.split("-")
+    parts = profile.split("-")
     try:
         dbcache = int(parts[0])
     except ValueError:
         dbcache = 0
 
     instrumentation = parts[1] if len(parts) > 1 else "uninstrumented"
-    return dbcache, instrumentation, noassumevalid
+    return dbcache, instrumentation
 
 
 @dataclass
 class BenchmarkRun:
     """Parsed benchmark run data."""
 
-    network: str
+    profile: str
     command: str
     mean: float
     stddev: float | None
@@ -134,48 +122,42 @@ class ReportGenerator:
         self.repo_url = repo_url
         self.nightly_history = nightly_history
 
-    def generate_multi_network(
+    def generate_experiment(
         self,
-        network_dirs: dict[str, Path],
+        experiment_dir: Path,
         output_dir: Path,
         title: str = "Benchmark Results",
         pr_number: str | None = None,
         run_id: str | None = None,
         commit: str | None = None,
     ) -> ReportResult:
-        """Generate HTML report from multiple network benchmark results.
+        """Generate HTML report from an experiment artifact manifest."""
+        manifest_file = experiment_dir / "artifacts.json"
+        if not manifest_file.exists():
+            raise FileNotFoundError(f"artifacts.json not found in {experiment_dir}")
 
-        Args:
-            network_dirs: Dict mapping network name to directory containing results.json
-            output_dir: Where to write the HTML report
-            title: Title for the report
-            pr_number: PR number (for CI reports)
-            run_id: Run ID (for CI reports)
-            commit: Commit hash for PR (used in chart)
-
-        Returns:
-            ReportResult with paths and speedup data
-        """
         output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Combine results from all networks
+        manifest = json.loads(manifest_file.read_text())
         all_runs: list[BenchmarkRun] = []
-        for network, input_dir in network_dirs.items():
-            results_file = input_dir / "results.json"
+
+        for run_record in manifest.get("runs", []):
+            profile = run_record["profile"]
+            results_file = experiment_dir / run_record["results_file"]
             if not results_file.exists():
                 logger.warning(
-                    f"results.json not found in {input_dir} for network {network}"
+                    "results.json not found for profile %s at %s",
+                    profile,
+                    results_file,
                 )
                 continue
 
             with open(results_file) as f:
                 data = json.load(f)
 
-            # Parse and add network to each run
             for result in data.get("results", []):
                 all_runs.append(
                     BenchmarkRun(
-                        network=network,
+                        profile=profile,
                         command=result.get("command", ""),
                         mean=result.get("mean", 0),
                         stddev=result.get("stddev"),
@@ -185,21 +167,16 @@ class ReportGenerator:
                     )
                 )
 
-            # Copy artifacts from this network
-            self._copy_network_artifacts(network, input_dir, output_dir)
+            self._copy_manifest_artifacts(run_record, experiment_dir, output_dir)
 
         if not all_runs:
-            raise ValueError("No benchmark results found in any network directory")
+            raise ValueError("No benchmark results found in experiment manifest")
 
-        # Calculate nightly comparison (for uninstrumented configs only)
         nightly_comparison = self._calculate_nightly_comparison(all_runs, commit)
-
-        # Build title with PR/run info if provided
         full_title = title
         if pr_number and run_id:
             full_title = f"PR #{pr_number} - Run {run_id}"
 
-        # Generate HTML
         html = self._generate_html(
             all_runs,
             nightly_comparison,
@@ -210,16 +187,14 @@ class ReportGenerator:
             run_id,
         )
 
-        # Write report
         index_file = output_dir / "index.html"
         index_file.write_text(html)
         logger.info(f"Generated report: {index_file}")
 
-        # Write combined results.json with nightly comparison
         combined_results: dict[str, Any] = {
             "results": [
                 {
-                    "network": run.network,
+                    "profile": run.profile,
                     "command": run.command,
                     "mean": run.mean,
                     "stddev": run.stddev,
@@ -235,7 +210,6 @@ class ReportGenerator:
         results_file = output_dir / "results.json"
         results_file.write_text(json.dumps(combined_results, indent=2))
 
-        # Return speedups derived from nightly comparison for backwards compatibility
         speedups = {
             config: data["speedup_percent"]
             for config, data in nightly_comparison.items()
@@ -337,7 +311,7 @@ class ReportGenerator:
         for result in results:
             runs.append(
                 BenchmarkRun(
-                    network=result.get("network", "default"),
+                    profile=result.get("profile", "default"),
                     command=result.get("command", ""),
                     mean=result.get("mean", 0),
                     stddev=result.get("stddev"),
@@ -380,16 +354,16 @@ class ReportGenerator:
             logger.warning("No nightly history available for comparison")
             return comparison
 
-        # Group runs by network/config, only uninstrumented
+        # Group runs by profile/config, only uninstrumented
         for run in runs:
-            network = run.network
+            profile = run.profile
 
             # Skip instrumented configs
-            if network.endswith("-true") or network.endswith("-instrumented"):
+            if profile.endswith("-true") or profile.endswith("-instrumented"):
                 continue
 
-            # Extract base config name (e.g., "450-false" -> "450", "450-uninstrumented" -> "450")
-            config = network.replace("-false", "").replace("-uninstrumented", "")
+            # Extract base config name (e.g. "450-uninstrumented" -> "450")
+            config = profile.replace("-false", "").replace("-uninstrumented", "")
 
             # Get PR result mean
             pr_mean = run.mean
@@ -434,21 +408,28 @@ class ReportGenerator:
 
         return comparison
 
-    def _copy_network_artifacts(
-        self, network: str, input_dir: Path, output_dir: Path
+    def _copy_manifest_artifacts(
+        self,
+        run_record: dict[str, Any],
+        experiment_dir: Path,
+        output_dir: Path,
     ) -> None:
-        """Copy artifacts from a network directory with network prefix."""
-        # Copy flamegraphs with network prefix
-        for svg in input_dir.glob("*-flamegraph.svg"):
-            dest = output_dir / f"{network}-{svg.name}"
-            shutil.copy2(svg, dest)
-            logger.debug(f"Copied {svg.name} as {dest.name}")
+        """Copy artifacts listed in an experiment manifest run record."""
+        profile = run_record["profile"]
+        flamegraph = run_record.get("flamegraph")
+        if flamegraph:
+            source = experiment_dir / flamegraph
+            if source.exists():
+                dest = output_dir / f"{profile}-{source.name}"
+                shutil.copy2(source, dest)
+                logger.debug(f"Copied {source.name} as {dest.name}")
 
-        # Generate plots from debug logs (logs themselves are available as CI artifacts)
-        if HAS_MATPLOTLIB:
-            for log in input_dir.glob("*-debug.log"):
+        debug_log = run_record.get("debug_log")
+        if HAS_MATPLOTLIB and debug_log:
+            log = experiment_dir / debug_log
+            if log.exists():
                 name = log.name.removesuffix("-debug.log")
-                prefix = f"{network}-{name}"
+                prefix = f"{profile}-{name}"
                 plots_dir = output_dir / "plots"
                 plots_dir.mkdir(parents=True, exist_ok=True)
                 try:
@@ -471,13 +452,14 @@ class ReportGenerator:
         run_id: str | None = None,
     ) -> str:
         """Generate the HTML report."""
-        sorted_runs = sorted(runs, key=lambda r: r.network)
+        sorted_runs = sorted(runs, key=lambda r: r.profile)
 
         runs_data = []
         for run in sorted_runs:
-            dbcache, instrumentation, noassumevalid = parse_network_name(run.network)
+            dbcache, instrumentation = parse_profile_name(run.profile)
             config_display = format_config_display(
-                dbcache, instrumentation=instrumentation, noassumevalid=noassumevalid
+                dbcache,
+                instrumentation=instrumentation,
             )
             runs_data.append(
                 {
@@ -530,18 +512,14 @@ class ReportGenerator:
         pr_chart_data = []
 
         for config, data in sorted(nightly_comparison.items()):
-            noassumevalid = config.startswith("noav-")
-            raw = config[len("noav-"):] if noassumevalid else config
             try:
-                dbcache = int(raw)
+                dbcache = int(config)
             except ValueError:
                 dbcache = 0
 
             result[config] = {
                 **data,
-                "config_display": format_config_display(
-                    dbcache, noassumevalid=noassumevalid
-                ),
+                "config_display": format_config_display(dbcache),
             }
 
             if data.get("nightly_mean"):
@@ -572,21 +550,21 @@ class ReportGenerator:
 
         for run in runs:
             name = run.command
-            network = run.network
+            profile = run.profile
 
             flamegraph_name = None
-            network_prefixed = f"{network}-{name}-flamegraph.svg"
+            profile_prefixed = f"{profile}-{name}-flamegraph.svg"
             non_prefixed = f"{name}-flamegraph.svg"
 
-            if (output_dir / network_prefixed).exists():
-                flamegraph_name = network_prefixed
+            if (output_dir / profile_prefixed).exists():
+                flamegraph_name = profile_prefixed
             elif (input_dir / non_prefixed).exists():
                 flamegraph_name = non_prefixed
 
             plots = []
             plots_dir = output_dir / "plots"
             if plots_dir.exists():
-                for prefix in [f"{network}-{name}", name]:
+                for prefix in [f"{profile}-{name}", name]:
                     plot_files = sorted(plots_dir.glob(f"{prefix}-*.png"))
                     if plot_files:
                         plots = [f"plots/{p.name}" for p in plot_files]
@@ -595,7 +573,7 @@ class ReportGenerator:
             if not flamegraph_name and not plots:
                 continue
 
-            display_label = f"{network} - {name}" if network != "default" else name
+            display_label = f"{profile} - {name}" if profile != "default" else name
 
             graphs.append(
                 {
@@ -663,30 +641,23 @@ class ReportPhase:
         """
         return self.generator.generate(input_dir, output_dir, title)
 
-    def run_multi_network(
+    def run_experiment(
         self,
-        network_dirs: dict[str, Path],
+        experiment_dir: Path,
         output_dir: Path,
         title: str = "Benchmark Results",
         pr_number: str | None = None,
         run_id: str | None = None,
         commit: str | None = None,
     ) -> ReportResult:
-        """Generate report from multiple network benchmark results.
-
-        Args:
-            network_dirs: Dict mapping network name to directory containing results.json
-            output_dir: Where to write the HTML report
-            title: Title for the report
-            pr_number: PR number (for CI reports)
-            run_id: Run ID (for CI reports)
-            commit: Commit hash for PR
-
-        Returns:
-            ReportResult with paths and speedup data
-        """
-        return self.generator.generate_multi_network(
-            network_dirs, output_dir, title, pr_number, run_id, commit
+        """Generate report from an experiment artifact manifest."""
+        return self.generator.generate_experiment(
+            experiment_dir=experiment_dir,
+            output_dir=output_dir,
+            title=title,
+            pr_number=pr_number,
+            run_id=run_id,
+            commit=commit,
         )
 
     def update_index(self, results_dir: Path, output_file: Path) -> None:

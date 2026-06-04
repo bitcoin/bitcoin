@@ -20,7 +20,7 @@ Examples:
     bench.py build HEAD:pr
 
     # Generate HTML report with nightly comparison
-    bench.py report --network 450-uninstrumented:./results --nightly-history ./nightly-history.json ./output
+    bench.py report --experiment-output ./experiment-output --nightly-history ./nightly-history.json ./output
 
     # Append nightly result and regenerate chart
     bench.py nightly append results.json abc123 450 --experiment-config bench/experiments/nightly.toml --profile-name 450
@@ -124,24 +124,15 @@ def cmd_report(args: argparse.Namespace) -> int:
     phase = ReportPhase(nightly_history_file=nightly_history_file)
 
     try:
-        # CI multi-network mode
-        if args.networks:
-            network_dirs = {}
-            for spec in args.networks:
-                if ":" not in spec:
-                    logger.error(f"Invalid network spec '{spec}': must be NETWORK:PATH")
-                    return 1
-                network, path = spec.split(":", 1)
-                network_dirs[network] = Path(path)
+        # CI experiment mode
+        if args.experiment_output:
+            experiment_output = Path(args.experiment_output)
+            if not experiment_output.exists():
+                logger.error(f"Experiment output not found: {experiment_output}")
+                return 1
 
-            # Validate directories exist
-            for network, path in network_dirs.items():
-                if not path.exists():
-                    logger.error(f"Network directory not found: {path} ({network})")
-                    return 1
-
-            result = phase.run_multi_network(
-                network_dirs=network_dirs,
+            result = phase.run_experiment(
+                experiment_dir=experiment_output,
                 output_dir=output_dir,
                 title=args.title or "Benchmark Results",
                 pr_number=args.pr_number,
@@ -358,25 +349,23 @@ def main() -> int:
         "report",
         help="Generate HTML report",
         description="Generate HTML report from benchmark results. "
-        "Use --network for multi-network CI reports.",
+        "Use --experiment-output for CI experiment reports.",
     )
     report_parser.add_argument(
         "input_dir",
         nargs="?",
-        help="Directory with results.json (for single-network mode)",
+        help="Directory with results.json (for single-run mode)",
     )
     report_parser.add_argument("output_dir", help="Output directory for report")
     report_parser.add_argument(
         "--title",
         help="Report title",
     )
-    # CI multi-network options
+    # CI experiment options
     report_parser.add_argument(
-        "--network",
-        dest="networks",
-        action="append",
-        metavar="NAME:PATH",
-        help="Network results directory (repeatable, e.g., --network mainnet:./mainnet-results)",
+        "--experiment-output",
+        metavar="PATH",
+        help="Experiment output directory containing artifacts.json",
     )
     report_parser.add_argument(
         "--pr-number",
