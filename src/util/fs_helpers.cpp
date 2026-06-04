@@ -188,11 +188,18 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     // Windows-specific version
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     LARGE_INTEGER nFileSize;
-    int64_t nEndPos = (int64_t)offset + length;
-    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
-    nFileSize.u.HighPart = nEndPos >> 32;
-    SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
-    SetEndOfFile(hFile);
+    if (!GetFileSizeEx(hFile, &nFileSize)) {
+        return;
+    }
+    int64_t nEndPos{static_cast<int64_t>(offset) + length};
+    int64_t nCurrentSize{(int64_t{nFileSize.u.HighPart} << 32) | nFileSize.u.LowPart};
+    if (nEndPos > nCurrentSize) {
+        nFileSize.u.LowPart  = nEndPos & 0xFFFFFFFF;
+        nFileSize.u.HighPart = nEndPos >> 32;
+        if (SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN)) {
+            SetEndOfFile(hFile);
+        }
+    }
 #elif defined(__APPLE__)
     // OSX specific version
     // NOTE: Contrary to other OS versions, the OSX version assumes that
@@ -216,16 +223,20 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
 #endif
     // Fallback version
     // TODO: just write one byte per block
-    static const char buf[65536] = {};
-    if (fseek(file, offset, SEEK_SET)) {
-        return;
-    }
-    while (length > 0) {
-        unsigned int now = 65536;
-        if (length < now)
-            now = length;
-        fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
-        length -= now;
+    if (fseeko(file, 0, SEEK_END) != 0) return;
+    off_t file_size{ftello(file)};
+    if (file_size < 0) return;
+
+    off_t end_pos{static_cast<off_t>(offset) + length};
+    if (end_pos > file_size) {
+        static const uint8_t buf[65536] = {};
+        while (length > 0) {
+            unsigned int now = 65536;
+            if (length < now)
+                now = length;
+            fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
+            length -= now;
+        }
     }
 #endif
 }
