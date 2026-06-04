@@ -188,11 +188,18 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     // Windows-specific version
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     LARGE_INTEGER nFileSize;
-    int64_t nEndPos = (int64_t)offset + length;
-    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
-    nFileSize.u.HighPart = nEndPos >> 32;
-    SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
-    SetEndOfFile(hFile);
+    if (!GetFileSizeEx(hFile, &nFileSize)) {
+        return;
+    }
+    int64_t nEndPos{static_cast<int64_t>(offset) + length};
+    int64_t nCurrentSize{(int64_t{nFileSize.u.HighPart} << 32) | nFileSize.u.LowPart};
+    if (nEndPos > nCurrentSize) {
+        nFileSize.u.LowPart  = nEndPos & 0xFFFFFFFF;
+        nFileSize.u.HighPart = nEndPos >> 32;
+        if (SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN)) {
+            SetEndOfFile(hFile);
+        }
+    }
 #elif defined(__APPLE__)
     // OSX specific version
     // NOTE: Contrary to other OS versions, the OSX version assumes that
