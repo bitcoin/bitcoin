@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .analyze import AnalyzePhase
+from .artifact_store import ArtifactStore, RunArtifactRecord
 from .benchmark import BenchmarkPhase, BenchmarkResult
 from .build import BuildPhase, BuiltBinary
 from .config import Config, build_config
@@ -327,6 +328,7 @@ class ExperimentRunner:
 
         output_dir.mkdir(parents=True, exist_ok=True)
         binaries_dir.mkdir(parents=True, exist_ok=True)
+        artifact_store = ArtifactStore(output_dir)
 
         binaries = self._resolve_binaries(subjects, binaries_dir)
         runs: dict[tuple[str, str], RunArtifact] = {}
@@ -339,7 +341,7 @@ class ExperimentRunner:
                     profile=profile,
                     binary=binaries[subject.name],
                     datadir=datadir,
-                    output_dir=output_dir,
+                    artifact_store=artifact_store,
                     tmp_dir=tmp_dir,
                 )
                 runs[(subject.name, profile.name)] = artifact
@@ -349,7 +351,14 @@ class ExperimentRunner:
             comparisons,
             profiles,
             runs,
-            output_dir,
+            artifact_store,
+        )
+        artifact_store.write_manifest(
+            runs=[
+                self._artifact_record(artifact)
+                for artifact in runs.values()
+            ],
+            comparisons=generated,
         )
 
         return ExperimentResult(
@@ -390,17 +399,13 @@ class ExperimentRunner:
         profile: Profile,
         binary: BuiltBinary,
         datadir: Path | None,
-        output_dir: Path,
+        artifact_store: ArtifactStore,
         tmp_dir: Path | None,
     ) -> RunArtifact:
         """Run one subject/profile pair."""
         run_name = f"{subject.name}-{profile.name}"
-        run_output_dir = output_dir / "runs" / profile.name / subject.name
-        run_tmp_dir = (
-            tmp_dir / profile.name / subject.name
-            if tmp_dir
-            else run_output_dir / "tmp-datadir"
-        )
+        run_output_dir = artifact_store.run_dir(profile.name, subject.name)
+        run_tmp_dir = artifact_store.tmp_datadir(tmp_dir, profile.name, subject.name)
 
         run_spec = experiment.run_spec_for(profile)
         benchmark_datadir = None if experiment.full_ibd else datadir
@@ -448,7 +453,7 @@ class ExperimentRunner:
         comparisons: list[Comparison],
         profiles: list[Profile],
         runs: dict[tuple[str, str], RunArtifact],
-        output_dir: Path,
+        artifact_store: ArtifactStore,
     ) -> list[Path]:
         """Derive comparison artifacts."""
         generated: list[Path] = []
@@ -470,7 +475,10 @@ class ExperimentRunner:
                         "requires instrumented runs with perf.data artifacts"
                     )
 
-                diff_dir = output_dir / "comparisons" / comparison.name / profile_name
+                diff_dir = artifact_store.comparison_dir(
+                    comparison.name,
+                    profile_name,
+                )
                 result = DifferentialFlamegraphPhase(self.capabilities).run(
                     before_perf=before.result.perf_data,
                     after_perf=after.result.perf_data,
@@ -481,6 +489,22 @@ class ExperimentRunner:
                 generated.extend([result.before_svg, result.after_svg])
 
         return generated
+
+    def _artifact_record(
+        self,
+        artifact: RunArtifact,
+    ) -> RunArtifactRecord:
+        """Build manifest metadata for one run."""
+        return RunArtifactRecord(
+            subject=artifact.subject.name,
+            profile=artifact.profile.name,
+            output_dir=artifact.output_dir,
+            results_file=artifact.result.results_file,
+            debug_log=artifact.result.debug_log,
+            flamegraph=artifact.result.flamegraph,
+            perf_data=artifact.result.perf_data,
+            folded_stacks=artifact.result.folded_stacks,
+        )
 
     def _selected_subjects(
         self, experiment: Experiment, names: list[str] | None

@@ -131,12 +131,15 @@ jobs:
       - name: Append results to history
         run: |
           COMMIT=$(cat ./commit-info/commit.txt)
+          MANIFEST=./nightly-experiment-output/artifacts.json
+          RESULT_450=$(jq -r '.runs[] | select(.profile == "450" and .subject == "master") | .results_file' "$MANIFEST")
+          RESULT_32000=$(jq -r '.runs[] | select(.profile == "32000" and .subject == "master") | .results_file' "$MANIFEST")
 
           # Append 450 (default dbcache) result
           nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
             --history-file ./nightly-history.json \
             append \
-            ./nightly-experiment-output/runs/450/master/results.json \
+            "./nightly-experiment-output/${RESULT_450}" \
             "$COMMIT" \
             450 \
             --date "$COMMIT_DATE" \
@@ -150,7 +153,7 @@ jobs:
           nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
             --history-file ./nightly-history.json \
             append \
-            ./nightly-experiment-output/runs/32000/master/results.json \
+            "./nightly-experiment-output/${RESULT_32000}" \
             "$COMMIT" \
             32000 \
             --date "$COMMIT_DATE" \

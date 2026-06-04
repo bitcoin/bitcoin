@@ -11,9 +11,6 @@ jobs:
       actions: read
       contents: write
       checks: read
-    env:
-      # Profile names from bench/experiments/pr.toml
-      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented"
     outputs:
       comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}
@@ -38,14 +35,23 @@ jobs:
 
       - name: Extract artifacts
         run: |
-          for network in ${NETWORKS//,/ }; do
-            run_dir="experiment-output/runs/${network}/head"
+          manifest="experiment-output/artifacts.json"
+          jq -c '.runs[]' "$manifest" | while read -r run; do
+            profile=$(echo "$run" | jq -r '.profile')
+            results_file=$(echo "$run" | jq -r '.results_file')
+            output_dir="${profile}-results"
 
-            if [ -d "$run_dir" ]; then
-              mkdir -p "${network}-results"
-              cp "$run_dir/results.json" "${network}-results/"
-              cp "$run_dir"/*-flamegraph.svg "${network}-results/" 2>/dev/null || true
-              cp "$run_dir"/*-debug.log "${network}-results/" 2>/dev/null || true
+            mkdir -p "$output_dir"
+            cp "experiment-output/${results_file}" "$output_dir/results.json"
+
+            flamegraph=$(echo "$run" | jq -r '.flamegraph // empty')
+            if [ -n "$flamegraph" ]; then
+              cp "experiment-output/${flamegraph}" "$output_dir/"
+            fi
+
+            debug_log=$(echo "$run" | jq -r '.debug_log // empty')
+            if [ -n "$debug_log" ]; then
+              cp "experiment-output/${debug_log}" "$output_dir/"
             fi
           done
 
@@ -77,9 +83,11 @@ jobs:
         run: |
           # Build network arguments
           NETWORK_ARGS=""
-          for network in ${NETWORKS//,/ }; do
-            if [ -d "./${network}-results" ]; then
-              NETWORK_ARGS="${NETWORK_ARGS} --network ${network}:./${network}-results"
+          for results_dir in ./*-results; do
+            if [ -d "$results_dir" ]; then
+              network=${results_dir#./}
+              network=${network%-results}
+              NETWORK_ARGS="${NETWORK_ARGS} --network ${network}:${results_dir}"
             fi
           done
 
