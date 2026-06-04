@@ -273,6 +273,42 @@ class RunArtifact:
     result: BenchmarkResult
 
 
+@dataclass(frozen=True)
+class BuildTask:
+    """A subject binary that must be available before benchmark runs."""
+
+    subject: Subject
+
+
+@dataclass(frozen=True)
+class RunTask:
+    """One concrete subject/profile benchmark run."""
+
+    subject: Subject
+    profile: Profile
+
+
+@dataclass(frozen=True)
+class ComparisonTask:
+    """One concrete derived comparison for a profile."""
+
+    comparison: Comparison
+    profile: Profile
+
+
+@dataclass(frozen=True)
+class ExperimentPlan:
+    """Concrete work selected from an experiment manifest."""
+
+    experiment: Experiment
+    subjects: list[Subject]
+    profiles: list[Profile]
+    comparisons: list[Comparison]
+    build_tasks: list[BuildTask]
+    run_tasks: list[RunTask]
+    comparison_tasks: list[ComparisonTask]
+
+
 @dataclass
 class ExperimentResult:
     """Result of running an experiment."""
@@ -280,6 +316,91 @@ class ExperimentResult:
     output_dir: Path
     runs: dict[tuple[str, str], RunArtifact]
     comparisons: list[Path]
+
+
+class ExperimentPlanner:
+    """Validate and expand an experiment manifest into concrete tasks."""
+
+    def plan(
+        self,
+        experiment: Experiment,
+        subject_names: list[str] | None = None,
+        profile_names: list[str] | None = None,
+    ) -> ExperimentPlan:
+        """Return selected build, run, and comparison tasks."""
+        errors = experiment.validate()
+        if errors:
+            raise ValueError("Invalid experiment:\n" + "\n".join(errors))
+
+        subjects = self._selected_subjects(experiment, subject_names)
+        profiles = self._selected_profiles(experiment, profile_names)
+        comparisons = self._selected_comparisons(experiment, subjects)
+        run_tasks = [
+            RunTask(subject=subject, profile=profile)
+            for subject in subjects
+            for profile in profiles
+        ]
+        comparison_tasks = [
+            ComparisonTask(comparison=comparison, profile=profile)
+            for comparison in comparisons
+            for profile in profiles
+            if profile.name in experiment.profile_names_for(comparison)
+        ]
+
+        return ExperimentPlan(
+            experiment=experiment,
+            subjects=subjects,
+            profiles=profiles,
+            comparisons=comparisons,
+            build_tasks=[BuildTask(subject=subject) for subject in subjects],
+            run_tasks=run_tasks,
+            comparison_tasks=comparison_tasks,
+        )
+
+    def _selected_subjects(
+        self, experiment: Experiment, names: list[str] | None
+    ) -> list[Subject]:
+        """Return subjects selected by optional scheduler filters."""
+        if not names:
+            return experiment.subjects
+
+        selected = [subject for subject in experiment.subjects if subject.name in names]
+        missing = sorted(set(names) - {subject.name for subject in selected})
+        if missing:
+            raise ValueError(f"unknown subject filter(s): {', '.join(missing)}")
+        return selected
+
+    def _selected_profiles(
+        self, experiment: Experiment, names: list[str] | None
+    ) -> list[Profile]:
+        """Return profiles selected by optional scheduler filters."""
+        if not names:
+            return experiment.profiles
+
+        selected = [profile for profile in experiment.profiles if profile.name in names]
+        missing = sorted(set(names) - {profile.name for profile in selected})
+        if missing:
+            raise ValueError(f"unknown profile filter(s): {', '.join(missing)}")
+        return selected
+
+    def _selected_comparisons(
+        self,
+        experiment: Experiment,
+        subjects: list[Subject],
+    ) -> list[Comparison]:
+        """Return comparisons that can be derived from selected runs."""
+        subject_names = {subject.name for subject in subjects}
+        selected = []
+
+        for comparison in experiment.comparisons:
+            if (
+                comparison.before not in subject_names
+                or comparison.after not in subject_names
+            ):
+                continue
+            selected.append(comparison)
+
+        return selected
 
 
 class ExperimentRunner:
@@ -306,50 +427,41 @@ class ExperimentRunner:
         profile_names: list[str] | None = None,
     ) -> ExperimentResult:
         """Build subjects, run profiles, and derive experiment outputs."""
-        errors = experiment.validate()
-        if errors:
-            raise ValueError("Invalid experiment:\n" + "\n".join(errors))
-
-        subjects = self._selected_subjects(experiment, subject_names)
-        profiles = self._selected_profiles(experiment, profile_names)
-        comparisons = self._selected_comparisons(experiment, subjects)
+        plan = ExperimentPlanner().plan(experiment, subject_names, profile_names)
 
         logger.info(f"Experiment: {experiment.name}")
-        logger.info(f"  Subjects: {', '.join(s.name for s in subjects)}")
-        logger.info(f"  Profiles: {', '.join(p.name for p in profiles)}")
-        if comparisons:
+        logger.info(f"  Subjects: {', '.join(s.name for s in plan.subjects)}")
+        logger.info(f"  Profiles: {', '.join(p.name for p in plan.profiles)}")
+        if plan.comparisons:
             logger.info(
-                f"  Comparisons: {', '.join(c.name for c in comparisons)}"
+                f"  Comparisons: {', '.join(c.name for c in plan.comparisons)}"
             )
 
         if self.config.dry_run:
-            self._log_plan(subjects, profiles, comparisons, output_dir, binaries_dir)
+            self._log_plan(plan, output_dir, binaries_dir)
             return ExperimentResult(output_dir=output_dir, runs={}, comparisons=[])
 
         output_dir.mkdir(parents=True, exist_ok=True)
         binaries_dir.mkdir(parents=True, exist_ok=True)
         artifact_store = ArtifactStore(output_dir)
 
-        binaries = self._resolve_binaries(subjects, binaries_dir)
+        binaries = self._resolve_binaries(plan.build_tasks, binaries_dir)
         runs: dict[tuple[str, str], RunArtifact] = {}
 
-        for subject in subjects:
-            for profile in profiles:
-                artifact = self._run_profile(
-                    experiment=experiment,
-                    subject=subject,
-                    profile=profile,
-                    binary=binaries[subject.name],
-                    datadir=datadir,
-                    artifact_store=artifact_store,
-                    tmp_dir=tmp_dir,
-                )
-                runs[(subject.name, profile.name)] = artifact
+        for task in plan.run_tasks:
+            artifact = self._run_profile(
+                experiment=experiment,
+                subject=task.subject,
+                profile=task.profile,
+                binary=binaries[task.subject.name],
+                datadir=datadir,
+                artifact_store=artifact_store,
+                tmp_dir=tmp_dir,
+            )
+            runs[(task.subject.name, task.profile.name)] = artifact
 
         generated = self._derive_comparisons(
-            experiment,
-            comparisons,
-            profiles,
+            plan,
             runs,
             artifact_store,
         )
@@ -368,13 +480,14 @@ class ExperimentRunner:
         )
 
     def _resolve_binaries(
-        self, subjects: list[Subject], binaries_dir: Path
+        self, build_tasks: list[BuildTask], binaries_dir: Path
     ) -> dict[str, BuiltBinary]:
         """Build commit subjects and collect binary subjects."""
         build_phase = BuildPhase(self.config, self.capabilities, self.repo_path)
         binaries: dict[str, BuiltBinary] = {}
 
-        for subject in subjects:
+        for task in build_tasks:
+            subject = task.subject
             if subject.commit:
                 build_result = build_phase.run(
                     f"{subject.commit}:{subject.name}",
@@ -449,44 +562,40 @@ class ExperimentRunner:
 
     def _derive_comparisons(
         self,
-        experiment: Experiment,
-        comparisons: list[Comparison],
-        profiles: list[Profile],
+        plan: ExperimentPlan,
         runs: dict[tuple[str, str], RunArtifact],
         artifact_store: ArtifactStore,
     ) -> list[Path]:
         """Derive comparison artifacts."""
         generated: list[Path] = []
-        selected_profiles = {profile.name for profile in profiles}
 
-        for comparison in comparisons:
-            outputs = comparison.outputs or experiment.outputs
+        for task in plan.comparison_tasks:
+            comparison = task.comparison
+            outputs = comparison.outputs or plan.experiment.outputs
             if "differential-flamegraph" not in outputs:
                 continue
 
-            for profile_name in experiment.profile_names_for(comparison):
-                if profile_name not in selected_profiles:
-                    continue
-                before = runs[(comparison.before, profile_name)]
-                after = runs[(comparison.after, profile_name)]
-                if not before.result.perf_data or not after.result.perf_data:
-                    raise RuntimeError(
-                        f"comparison '{comparison.name}' profile '{profile_name}' "
-                        "requires instrumented runs with perf.data artifacts"
-                    )
+            profile_name = task.profile.name
+            before = runs[(comparison.before, profile_name)]
+            after = runs[(comparison.after, profile_name)]
+            if not before.result.perf_data or not after.result.perf_data:
+                raise RuntimeError(
+                    f"comparison '{comparison.name}' profile '{profile_name}' "
+                    "requires instrumented runs with perf.data artifacts"
+                )
 
-                diff_dir = artifact_store.comparison_dir(
-                    comparison.name,
-                    profile_name,
-                )
-                result = DifferentialFlamegraphPhase(self.capabilities).run(
-                    before_perf=before.result.perf_data,
-                    after_perf=after.result.perf_data,
-                    output_dir=diff_dir,
-                    before_name=before.result.name,
-                    after_name=after.result.name,
-                )
-                generated.extend([result.before_svg, result.after_svg])
+            diff_dir = artifact_store.comparison_dir(
+                comparison.name,
+                profile_name,
+            )
+            result = DifferentialFlamegraphPhase(self.capabilities).run(
+                before_perf=before.result.perf_data,
+                after_perf=after.result.perf_data,
+                output_dir=diff_dir,
+                before_name=before.result.name,
+                after_name=after.result.name,
+            )
+            generated.extend([result.before_svg, result.after_svg])
 
         return generated
 
@@ -505,48 +614,6 @@ class ExperimentRunner:
             perf_data=artifact.result.perf_data,
             folded_stacks=artifact.result.folded_stacks,
         )
-
-    def _selected_subjects(
-        self, experiment: Experiment, names: list[str] | None
-    ) -> list[Subject]:
-        """Return subjects selected by optional scheduler filters."""
-        if not names:
-            return experiment.subjects
-
-        selected = [subject for subject in experiment.subjects if subject.name in names]
-        missing = sorted(set(names) - {subject.name for subject in selected})
-        if missing:
-            raise ValueError(f"unknown subject filter(s): {', '.join(missing)}")
-        return selected
-
-    def _selected_profiles(
-        self, experiment: Experiment, names: list[str] | None
-    ) -> list[Profile]:
-        """Return profiles selected by optional scheduler filters."""
-        if not names:
-            return experiment.profiles
-
-        selected = [profile for profile in experiment.profiles if profile.name in names]
-        missing = sorted(set(names) - {profile.name for profile in selected})
-        if missing:
-            raise ValueError(f"unknown profile filter(s): {', '.join(missing)}")
-        return selected
-
-    def _selected_comparisons(
-        self,
-        experiment: Experiment,
-        subjects: list[Subject],
-    ) -> list[Comparison]:
-        """Return comparisons that can be derived from selected runs."""
-        subject_names = {subject.name for subject in subjects}
-        selected = []
-
-        for comparison in experiment.comparisons:
-            if comparison.before not in subject_names or comparison.after not in subject_names:
-                continue
-            selected.append(comparison)
-
-        return selected
 
     def _config_for(
         self,
@@ -578,16 +645,15 @@ class ExperimentRunner:
 
     def _log_plan(
         self,
-        subjects: list[Subject],
-        profiles: list[Profile],
-        comparisons: list[Comparison],
+        plan: ExperimentPlan,
         output_dir: Path,
         binaries_dir: Path,
     ) -> None:
         """Log the tasks that would run."""
         logger.info("[DRY RUN] Would write outputs to: %s", output_dir)
         logger.info("[DRY RUN] Would write binaries to: %s", binaries_dir)
-        for subject in subjects:
+        for task in plan.build_tasks:
+            subject = task.subject
             if subject.commit:
                 logger.info(
                     "[DRY RUN] Would build subject %s from %s",
@@ -600,12 +666,15 @@ class ExperimentRunner:
                     subject.name,
                     subject.binary,
                 )
-        for subject in subjects:
-            for profile in profiles:
-                logger.info(
-                    "[DRY RUN] Would run %s with profile %s",
-                    subject.name,
-                    profile.name,
-                )
-        for comparison in comparisons:
-            logger.info("[DRY RUN] Would derive comparison %s", comparison.name)
+        for task in plan.run_tasks:
+            logger.info(
+                "[DRY RUN] Would run %s with profile %s",
+                task.subject.name,
+                task.profile.name,
+            )
+        for task in plan.comparison_tasks:
+            logger.info(
+                "[DRY RUN] Would derive comparison %s for profile %s",
+                task.comparison.name,
+                task.profile.name,
+            )
