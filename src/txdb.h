@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 class COutPoint;
@@ -54,6 +55,9 @@ public:
 
     //! Dynamically alter the underlying leveldb cache size.
     void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Return an underlying LevelDB property value, if available.
+    std::optional<std::string> GetDBProperty(const std::string& property);
 };
 
 #endif // BITCOIN_TXDB_H
