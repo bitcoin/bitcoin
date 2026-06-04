@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
+#include <util/feefrac.h>
+
 #include <compare>
 #include <cstdint>
 #include <functional>
@@ -9,8 +12,6 @@
 #include <optional>
 #include <utility>
 #include <vector>
-
-#include <util/feefrac.h>
 
 #ifndef BITCOIN_TXGRAPH_H
 #define BITCOIN_TXGRAPH_H
@@ -99,7 +100,7 @@ public:
     /** Modify the fee of the specified transaction, in both the main graph and the staging
      *  graph if it exists. Wherever the transaction does not exist (or was removed), this has no
      *  effect. */
-    virtual void SetTransactionFee(const Ref& arg, int64_t fee) noexcept = 0;
+    virtual void SetTransactionFee(const Ref& arg, CAmount fee) noexcept = 0;
 
     /** TxGraph is internally lazy, and will not compute many things until they are needed.
      *  Calling DoWork will perform some work now (controlled by max_cost) so that future operations
