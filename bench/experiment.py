@@ -407,6 +407,46 @@ class ExperimentPlanner:
         return selected
 
 
+class SubjectResolver:
+    """Resolve experiment subjects to runnable binaries."""
+
+    def __init__(
+        self,
+        environment: ExperimentEnvironment,
+        capabilities: Any,
+        repo_path: Path,
+    ):
+        self.environment = environment
+        self.capabilities = capabilities
+        self.repo_path = repo_path
+
+    def resolve(self, build_tasks: list[BuildTask]) -> dict[str, BuiltBinary]:
+        """Build commit subjects and collect binary subjects."""
+        build_environment = BuildEnvironment(
+            binaries_dir=self.environment.binaries_dir,
+            skip_existing=self.environment.skip_existing,
+            dry_run=self.environment.dry_run,
+        )
+        build_phase = BuildPhase(build_environment, self.capabilities, self.repo_path)
+        binaries: dict[str, BuiltBinary] = {}
+
+        for task in build_tasks:
+            subject = task.subject
+            if subject.commit:
+                build_result = build_phase.run(f"{subject.commit}:{subject.name}")
+                binaries[subject.name] = build_result.binary
+            elif subject.binary:
+                binaries[subject.name] = BuiltBinary(
+                    name=subject.name,
+                    path=subject.binary,
+                    commit="",
+                )
+            else:
+                raise AssertionError("validated subject has no binary source")
+
+        return binaries
+
+
 class ExperimentRunner:
     """Run an experiment manifest."""
 
@@ -451,7 +491,11 @@ class ExperimentRunner:
         self.environment.binaries_dir.mkdir(parents=True, exist_ok=True)
         artifact_store = ArtifactStore(self.environment.output_dir)
 
-        binaries = self._resolve_binaries(plan.build_tasks)
+        binaries = SubjectResolver(
+            self.environment,
+            self.capabilities,
+            self.repo_path,
+        ).resolve(plan.build_tasks)
         runs: dict[tuple[str, str], RunArtifact] = {}
 
         for task in plan.run_tasks:
@@ -484,36 +528,6 @@ class ExperimentRunner:
             runs=runs,
             comparisons=generated,
         )
-
-    def _resolve_binaries(
-        self, build_tasks: list[BuildTask]
-    ) -> dict[str, BuiltBinary]:
-        """Build commit subjects and collect binary subjects."""
-        build_environment = BuildEnvironment(
-            binaries_dir=self.environment.binaries_dir,
-            skip_existing=self.environment.skip_existing,
-            dry_run=self.environment.dry_run,
-        )
-        build_phase = BuildPhase(build_environment, self.capabilities, self.repo_path)
-        binaries: dict[str, BuiltBinary] = {}
-
-        for task in build_tasks:
-            subject = task.subject
-            if subject.commit:
-                build_result = build_phase.run(
-                    f"{subject.commit}:{subject.name}",
-                )
-                binaries[subject.name] = build_result.binary
-            elif subject.binary:
-                binaries[subject.name] = BuiltBinary(
-                    name=subject.name,
-                    path=subject.binary,
-                    commit="",
-                )
-            else:
-                raise AssertionError("validated subject has no binary source")
-
-        return binaries
 
     def _run_profile(
         self,
