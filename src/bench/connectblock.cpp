@@ -17,13 +17,12 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
 

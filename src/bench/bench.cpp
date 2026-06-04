@@ -7,8 +7,8 @@
 #include <test/util/setup_common.h> // IWYU pragma: keep
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <compare>
 #include <fstream>
 #include <functional>
@@ -18,8 +18,6 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-
-using namespace std::chrono_literals;
 
 /**
  * Retrieves the available test setup command line arguments that may be used

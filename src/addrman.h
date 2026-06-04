@@ -7,17 +7,21 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <netaddress.h>
-#include <netgroup.h>
 #include <protocol.h>
-#include <streams.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+class NetGroupManager;
 
 /** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
 static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};

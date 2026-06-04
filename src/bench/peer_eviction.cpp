@@ -7,8 +7,8 @@
 #include <node/eviction.h>
 #include <random.h>
 #include <test/util/net.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <functional>
 #include <vector>
 

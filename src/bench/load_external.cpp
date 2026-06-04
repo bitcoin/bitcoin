@@ -7,7 +7,6 @@
 #include <chainparams.h>
 #include <flatfile.h>
 #include <node/blockstorage.h>
-#include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -18,8 +17,8 @@
 #include <cstdio>
 #include <map>
 #include <memory>
+#include <span>
 #include <stdexcept>
-#include <vector>
 
 /**
  * The LoadExternalBlockFile() function is used during -reindex and -loadblock.

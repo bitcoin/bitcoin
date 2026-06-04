@@ -4,9 +4,10 @@
 
 #include <bench/bench.h>
 #include <consensus/amount.h>
+#include <consensus/validation.h>
 #include <kernel/cs_main.h>
 #include <policy/ephemeral_policy.h>
-#include <policy/policy.h>
+#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
@@ -15,6 +16,7 @@
 #include <txmempool.h>
 #include <util/check.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>

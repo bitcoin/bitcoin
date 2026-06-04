@@ -3,19 +3,29 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <key.h>
 #include <key_io.h>
-#include <outputtype.h>
 #include <random.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <support/allocators/secure.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <util/time.h>
+#include <util/check.h>
 #include <wallet/context.h>
+#include <wallet/crypter.h>
+#include <wallet/db.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace wallet {
 static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)

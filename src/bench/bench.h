@@ -8,8 +8,8 @@
 #include <bench/nanobench.h> // IWYU pragma: export
 #include <util/fs.h>
 #include <util/macros.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <functional>
 #include <map>
 #include <string>

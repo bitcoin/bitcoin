@@ -5,13 +5,17 @@
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
 #include <consensus/validation.h>
+#include <kernel/chainparams.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <serialize.h>
 #include <streams.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <cassert>
-#include <cstddef>
+#include <memory>
+#include <span>
+#include <vector>
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using

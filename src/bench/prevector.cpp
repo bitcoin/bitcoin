@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <streams.h>
 
+#include <span>
 #include <type_traits>
 #include <vector>
 

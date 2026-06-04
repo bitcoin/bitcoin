@@ -7,8 +7,8 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <string>

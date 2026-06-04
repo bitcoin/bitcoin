@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
 #include <bench/bench.h>
 #include <crypto/poly1305.h>
-#include <span.h>
-#include <util/byte_units.h>
+// IWYU incorrectly suggests removing this header.
+// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
+#include <util/byte_units.h> // IWYU pragma: keep
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 /* Number of bytes to process per iteration */

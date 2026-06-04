@@ -9,15 +9,16 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
-#include <span.h>
 #include <streams.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <cassert>
-#include <cstdint>
 #include <memory>
-#include <vector>
+#include <optional>
+#include <span>
 
 static CBlock CreateTestBlock()
 {

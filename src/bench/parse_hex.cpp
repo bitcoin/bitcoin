@@ -4,11 +4,12 @@
 
 #include <bench/bench.h>
 #include <random.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
-#include <cassert>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <vector>
 
 std::string generateHexString(size_t length) {

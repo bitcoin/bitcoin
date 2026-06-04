@@ -4,9 +4,9 @@
 
 #include <bench/bench.h>
 #include <random.h>
-#include <support/allocators/secure.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/context.h>
@@ -14,7 +14,6 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <memory>
 #include <optional>
 #include <string>

@@ -6,8 +6,10 @@
 #include <consensus/merkle.h>
 #include <random.h>
 #include <uint256.h>
+#include <util/check.h>
 
-#include <cassert>
+#include <initializer_list>
+#include <utility>
 #include <vector>
 
 static void MerkleRoot(benchmark::Bench& bench)
