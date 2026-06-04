@@ -13,7 +13,7 @@ test-instrumented commit datadir:
     nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
     nix develop --command python3 bench.py --profile quick run \
         --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-true \
+        --matrix-entry 450-instrumented \
         --datadir {{ datadir }} \
         pr:./binaries/pr/bitcoind
     nix develop --command python3 bench.py report bench-output/ bench-output/
@@ -24,7 +24,7 @@ test-uninstrumented commit datadir:
     nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
     nix develop --command python3 bench.py --profile quick run \
         --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-false \
+        --matrix-entry 450-uninstrumented \
         --datadir {{ datadir }} \
         pr:./binaries/pr/bitcoind
 
@@ -34,7 +34,7 @@ instrumented commit datadir:
     python3 bench.py build {{ commit }}:pr
     python3 bench.py run \
         --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-true \
+        --matrix-entry 450-instrumented \
         --datadir {{ datadir }} \
         pr:./binaries/pr/bitcoind
 
@@ -48,7 +48,7 @@ build commit:
 run datadir binary:
     python3 bench.py run \
         --benchmark-config bench/configs/pr.toml \
-        --matrix-entry 450-false \
+        --matrix-entry 450-uninstrumented \
         --datadir {{ datadir }} \
         {{ binary }}
 

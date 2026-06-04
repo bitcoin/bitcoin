@@ -12,8 +12,8 @@ jobs:
       contents: write
       checks: read
     env:
-      # Matrix entries from configs/pr.toml + pr-noassumevalid.toml
-      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented,noav-450-uninstrumented,noav-32000-uninstrumented"
+      # Profile names from bench/experiments/pr.toml
+      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented"
     outputs:
       comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}
@@ -39,45 +39,31 @@ jobs:
       - name: Extract artifacts
         run: |
           for network in ${NETWORKS//,/ }; do
-            # Create network-specific directories with results
-            if [ -d "result-${network}" ]; then
+            run_dir="experiment-output/runs/${network}/head"
+
+            if [ -d "$run_dir" ]; then
               mkdir -p "${network}-results"
-              mv "result-${network}/results.json" "${network}-results/"
-            fi
-
-            # Copy flamegraphs into network results directory
-            if [ -d "flamegraph-${network}" ]; then
-              cp -r "flamegraph-${network}"/* "${network}-results/" 2>/dev/null || true
-            fi
-
-            # Copy debug logs into network results directory (needed for plot generation)
-            if [ -d "debug-logs-${network}" ]; then
-              cp -r "debug-logs-${network}"/* "${network}-results/" 2>/dev/null || true
-            fi
-
-            # Keep metadata separate for extraction
-            if [ -d "run-metadata-${network}" ]; then
-              mkdir -p "${network}-metadata"
-              mv "run-metadata-${network}"/* "${network}-metadata/"
+              cp "$run_dir/results.json" "${network}-results/"
+              cp "$run_dir"/*-flamegraph.svg "${network}-results/" 2>/dev/null || true
+              cp "$run_dir"/*-debug.log "${network}-results/" 2>/dev/null || true
             fi
           done
+
+          if [ -d "run-metadata" ]; then
+            mkdir -p run-metadata-extracted
+            mv run-metadata/* run-metadata-extracted/
+          fi
 
       - name: Extract metadata
         id: metadata
         run: |
-          # Find PR number, run ID, and commit from any available metadata
-          for network in ${NETWORKS//,/ }; do
-            if [ -f "${network}-metadata/github.json" ]; then
-              PR_NUMBER=$(jq -r '.event.pull_request.number // "main"' "${network}-metadata/github.json")
-              RUN_ID=$(jq -r '.run_id' "${network}-metadata/github.json")
-              HEAD_SHA=$(jq -r '.event.pull_request.head.sha // .sha' "${network}-metadata/github.json")
-              echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-              echo "run-id=${RUN_ID}" >> $GITHUB_OUTPUT
-              echo "head-sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
-              echo "Found metadata: PR=${PR_NUMBER}, Run=${RUN_ID}, Commit=${HEAD_SHA}"
-              break
-            fi
-          done
+          PR_NUMBER=$(jq -r '.event.pull_request.number // "main"' run-metadata-extracted/github.json)
+          RUN_ID=$(jq -r '.run_id' run-metadata-extracted/github.json)
+          HEAD_SHA=$(jq -r '.event.pull_request.head.sha // .sha' run-metadata-extracted/github.json)
+          echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "run-id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "head-sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          echo "Found metadata: PR=${PR_NUMBER}, Run=${RUN_ID}, Commit=${HEAD_SHA}"
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31

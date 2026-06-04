@@ -40,6 +40,8 @@ class Capabilities:
     # Required tools
     has_hyperfine: bool
     has_flamegraph: bool
+    has_stackcollapse_perf: bool
+    has_difffolded: bool
     has_perf: bool
     has_nix: bool
 
@@ -70,10 +72,30 @@ class Capabilities:
         if is_instrumented:
             if not self.has_flamegraph:
                 errors.append(
-                    "flamegraph not found in PATH (required for --instrumented)"
+                    "flamegraph.pl not found in PATH (required for instrumented runs)"
+                )
+            if not self.has_stackcollapse_perf:
+                errors.append(
+                    "stackcollapse-perf.pl not found in PATH "
+                    "(required for instrumented runs)"
                 )
             if not self.has_perf:
                 errors.append("perf not found in PATH (required for --instrumented)")
+
+        return errors
+
+    def check_for_diff_flamegraphs(self) -> list[str]:
+        """Check if differential flamegraph generation can run."""
+        errors = []
+
+        if not self.has_perf:
+            errors.append("perf not found in PATH (required for perf script)")
+        if not self.has_stackcollapse_perf:
+            errors.append("stackcollapse-perf.pl not found in PATH")
+        if not self.has_difffolded:
+            errors.append("difffolded.pl not found in PATH")
+        if not self.has_flamegraph:
+            errors.append("flamegraph.pl not found in PATH")
 
         return errors
 
@@ -143,7 +165,9 @@ def detect_capabilities() -> Capabilities:
         can_fstrim=fstrim_path is not None,
         fstrim_path=fstrim_path,
         has_hyperfine=_check_executable("hyperfine"),
-        has_flamegraph=_check_executable("flamegraph"),
+        has_flamegraph=_check_executable("flamegraph.pl"),
+        has_stackcollapse_perf=_check_executable("stackcollapse-perf.pl"),
+        has_difffolded=_check_executable("difffolded.pl"),
         has_perf=_check_executable("perf"),
         has_nix=_check_executable("nix"),
         cpu_count=os.cpu_count() or 1,

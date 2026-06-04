@@ -1,0 +1,49 @@
+# Differential flamegraph experiment.
+#
+# Usage:
+#   bench.py experiment run bench/experiments/differential-flamegraph.toml \
+#     --datadir /data/pruned-840k --output-dir ./output
+
+[experiment]
+name = "differential-flamegraph"
+outputs = ["results", "differential-flamegraph"]
+
+[benchmark]
+start_height = 840000
+runs = 1
+
+[bitcoind]
+stopatheight = 900000
+chain = "main"
+connect = "148.251.128.115:33333"
+prune = 1000000
+daemon = false
+printtoconsole = false
+
+[bitcoind.instrumented]
+debug = ["coindb", "leveldb", "bench", "validation"]
+
+[[subjects]]
+name = "before"
+commit = "f1ce2ab37348374bd185e3b18fab160c51c6db05"
+
+[[subjects]]
+name = "after"
+commit = "d89b877f04bb28e37c9844dd30c83003e253e300"
+
+[[profiles]]
+name = "450"
+dbcache = 450
+instrumentation = true
+
+[[profiles]]
+name = "32000"
+dbcache = 32000
+instrumentation = true
+
+[[comparisons]]
+name = "before-vs-after"
+before = "before"
+after = "after"
+profiles = ["450", "32000"]
+outputs = ["differential-flamegraph"]

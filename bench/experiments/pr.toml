@@ -1,0 +1,48 @@
+# Default PR-style experiment.
+#
+# Usage:
+#   bench.py experiment run bench/experiments/pr.toml \
+#     --datadir /data/pruned-840k --output-dir ./output
+
+[experiment]
+name = "pr"
+outputs = ["results", "debug-plots"]
+
+[benchmark]
+start_height = 840000
+runs = 2
+
+[bitcoind]
+stopatheight = 900000
+chain = "main"
+connect = "148.251.128.115:33333"
+prune = 1000000
+daemon = false
+printtoconsole = false
+
+[bitcoind.instrumented]
+debug = ["coindb", "leveldb", "bench", "validation"]
+
+[[subjects]]
+name = "head"
+commit = "HEAD"
+
+[[profiles]]
+name = "450-uninstrumented"
+dbcache = 450
+instrumentation = false
+
+[[profiles]]
+name = "450-instrumented"
+dbcache = 450
+instrumentation = true
+
+[[profiles]]
+name = "32000-uninstrumented"
+dbcache = 32000
+instrumentation = false
+
+[[profiles]]
+name = "32000-instrumented"
+dbcache = 32000
+instrumentation = true

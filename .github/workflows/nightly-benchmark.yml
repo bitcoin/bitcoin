@@ -6,9 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  benchmark:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 1200
+    env:
+      ORIGINAL_DATADIR: /data/pruned-840k
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -17,9 +20,6 @@ jobs:
 
       - name: Get commit SHAs
         run: |
-          # Benchcoin commit (for building)
-          echo "BENCHCOIN_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-
           # Bitcoin commit - find merge-base with upstream
           git remote add upstream https://github.com/bitcoin/bitcoin.git
           git fetch upstream master
@@ -34,22 +34,27 @@ jobs:
           echo "Bitcoin merge-base: $BITCOIN_SHA"
           echo "Commit date: $COMMIT_DATE"
 
-      - name: Build master binary
+      - name: Run experiment
         run: |
-          nix develop --command python3 bench.py build \
-            -o ${{ runner.temp }}/binaries \
-            $BENCHCOIN_SHA:master
+          nix develop --command python3 bench.py experiment run \
+            bench/experiments/nightly.toml \
+            --datadir $ORIGINAL_DATADIR \
+            --tmp-dir ${{ runner.temp }}/datadirs \
+            --binaries-dir ${{ runner.temp }}/binaries \
+            --output-dir ${{ runner.temp }}/experiment-output \
+            --skip-existing
 
-      - name: Upload binaries
+      - name: Upload experiment output
         uses: actions/upload-artifact@v7
         with:
-          name: nightly-binaries
-          path: ${{ runner.temp }}/binaries/
+          name: nightly-experiment-output
+          path: ${{ runner.temp }}/experiment-output/
 
       - name: Upload commit info
         run: |
           echo "$BITCOIN_SHA" > ${{ runner.temp }}/commit.txt
           echo "$COMMIT_DATE" > ${{ runner.temp }}/commit-date.txt
+
       - uses: actions/upload-artifact@v7
         with:
           name: commit-info
@@ -71,98 +76,8 @@ jobs:
           name: machine-specs
           path: ${{ runner.temp }}/machine-specs.json
 
-  benchmark-450:
-    needs: build
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 600
-    env:
-      ORIGINAL_DATADIR: /data/pruned-840k
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Download binaries
-        uses: actions/download-artifact@v7
-        with:
-          name: nightly-binaries
-          path: ${{ runner.temp }}/binaries
-
-      - name: Set binary permissions
-        run: |
-          chmod +x ${{ runner.temp }}/binaries/master/bitcoind
-
-      - name: Run benchmark
-        run: |
-          nix develop --command python3 bench.py run \
-            --benchmark-config bench/configs/nightly.toml \
-            --matrix-entry 450 \
-            --datadir $ORIGINAL_DATADIR \
-            --tmp-datadir ${{ runner.temp }}/datadir \
-            --output-dir ${{ runner.temp }}/output \
-            master:${{ runner.temp }}/binaries/master/bitcoind
-
-      - name: Upload results
-        uses: actions/upload-artifact@v7
-        with:
-          name: result-nightly-450
-          path: ${{ runner.temp }}/output/results.json
-
-      - name: Upload debug logs
-        uses: actions/upload-artifact@v7
-        with:
-          name: debug-logs-nightly-450
-          path: ${{ runner.temp }}/output/*-debug.log
-          if-no-files-found: ignore
-
-  benchmark-32000:
-    needs: benchmark-450
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 600
-    env:
-      ORIGINAL_DATADIR: /data/pruned-840k
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Download binaries
-        uses: actions/download-artifact@v7
-        with:
-          name: nightly-binaries
-          path: ${{ runner.temp }}/binaries
-
-      - name: Set binary permissions
-        run: |
-          chmod +x ${{ runner.temp }}/binaries/master/bitcoind
-
-      - name: Run benchmark
-        run: |
-          nix develop --command python3 bench.py run \
-            --benchmark-config bench/configs/nightly.toml \
-            --matrix-entry 32000 \
-            --datadir $ORIGINAL_DATADIR \
-            --tmp-datadir ${{ runner.temp }}/datadir \
-            --output-dir ${{ runner.temp }}/output \
-            master:${{ runner.temp }}/binaries/master/bitcoind
-
-      - name: Upload results
-        uses: actions/upload-artifact@v7
-        with:
-          name: result-nightly-32000
-          path: ${{ runner.temp }}/output/results.json
-
-      - name: Upload debug logs
-        uses: actions/upload-artifact@v7
-        with:
-          name: debug-logs-nightly-32000
-          path: ${{ runner.temp }}/output/*-debug.log
-          if-no-files-found: ignore
-
   publish:
-    needs: benchmark-32000
+    needs: benchmark
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -184,17 +99,11 @@ jobs:
           name: commit-info
           path: ./commit-info
 
-      - name: Download 450 results
+      - name: Download experiment output
         uses: actions/download-artifact@v7
         with:
-          name: result-nightly-450
-          path: ./nightly-450-results
-
-      - name: Download 32000 results
-        uses: actions/download-artifact@v7
-        with:
-          name: result-nightly-32000
-          path: ./nightly-32000-results
+          name: nightly-experiment-output
+          path: ./nightly-experiment-output
 
       - name: Download machine specs
         uses: actions/download-artifact@v7
@@ -227,7 +136,7 @@ jobs:
           nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
             --history-file ./nightly-history.json \
             append \
-            ./nightly-450-results/results.json \
+            ./nightly-experiment-output/runs/450/master/results.json \
             "$COMMIT" \
             450 \
             --date "$COMMIT_DATE" \
@@ -240,7 +149,7 @@ jobs:
           nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
             --history-file ./nightly-history.json \
             append \
-            ./nightly-32000-results/results.json \
+            ./nightly-experiment-output/runs/32000/master/results.json \
             "$COMMIT" \
             32000 \
             --date "$COMMIT_DATE" \

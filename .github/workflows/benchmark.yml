@@ -5,34 +5,7 @@ on:
       - master
 
 jobs:
-  build-binary:
-    runs-on: [self-hosted, linux, x64]
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Build PR binary
-        run: |
-          HEAD_SHA=$(git rev-parse HEAD)
-          echo "HEAD_SHA=${HEAD_SHA}" >> "$GITHUB_ENV"
-          nix develop --command python3 bench.py build \
-            -o ${{ runner.temp }}/binaries \
-            ${HEAD_SHA}:pr
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v7
-        with:
-          name: bitcoind-binaries
-          path: ${{ runner.temp }}/binaries/
-
   benchmark:
-    needs: build-binary
-    strategy:
-      matrix:
-        # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumentation=[uninstrumented,instrumented]
-        name: [450-uninstrumented, 450-instrumented, 32000-uninstrumented, 32000-instrumented]
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 600
     env:
@@ -43,45 +16,21 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Download binaries
-        uses: actions/download-artifact@v7
-        with:
-          name: bitcoind-binaries
-          path: ${{ runner.temp }}/binaries
-
-      - name: Set binary permissions
+      - name: Run experiment
         run: |
-          chmod +x ${{ runner.temp }}/binaries/pr/bitcoind
-
-      - name: Run benchmark
-        run: |
-          nix develop --command python3 bench.py run \
-            --benchmark-config bench/configs/pr.toml \
-            --matrix-entry ${{ matrix.name }} \
+          nix develop --command python3 bench.py experiment run \
+            bench/experiments/pr.toml \
             --datadir $ORIGINAL_DATADIR \
-            --tmp-datadir ${{ runner.temp }}/datadir \
-            --output-dir ${{ runner.temp }}/output \
-            pr:${{ runner.temp }}/binaries/pr/bitcoind
+            --tmp-dir ${{ runner.temp }}/datadirs \
+            --binaries-dir ${{ runner.temp }}/binaries \
+            --output-dir ${{ runner.temp }}/experiment-output \
+            --skip-existing
 
-      - name: Upload results
+      - name: Upload experiment output
         uses: actions/upload-artifact@v7
         with:
-          name: result-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/results.json
-
-      - name: Upload flamegraphs
-        uses: actions/upload-artifact@v7
-        with:
-          name: flamegraph-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/*-flamegraph.svg
-          if-no-files-found: ignore
-
-      - name: Upload debug logs
-        uses: actions/upload-artifact@v7
-        with:
-          name: debug-logs-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/*-debug.log
-          if-no-files-found: ignore
+          name: experiment-output
+          path: ${{ runner.temp }}/experiment-output/
 
       - name: Write context metadata
         env:
@@ -95,75 +44,5 @@ jobs:
       - name: Upload context metadata
         uses: actions/upload-artifact@v7
         with:
-          name: run-metadata-${{ matrix.name }}
-          path: ${{ runner.temp }}/contexts/
-
-  benchmark-noav:
-    needs: build-binary
-    strategy:
-      matrix:
-        name: [450-uninstrumented, 32000-uninstrumented]
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 600
-    env:
-      ORIGINAL_DATADIR: /data/pruned-840k
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Download binaries
-        uses: actions/download-artifact@v7
-        with:
-          name: bitcoind-binaries
-          path: ${{ runner.temp }}/binaries
-
-      - name: Set binary permissions
-        run: |
-          chmod +x ${{ runner.temp }}/binaries/pr/bitcoind
-
-      - name: Run benchmark
-        run: |
-          nix develop --command python3 bench.py run \
-            --benchmark-config bench/configs/pr-noassumevalid.toml \
-            --matrix-entry ${{ matrix.name }} \
-            --datadir $ORIGINAL_DATADIR \
-            --tmp-datadir ${{ runner.temp }}/datadir \
-            --output-dir ${{ runner.temp }}/output \
-            pr:${{ runner.temp }}/binaries/pr/bitcoind
-
-      - name: Upload results
-        uses: actions/upload-artifact@v7
-        with:
-          name: result-noav-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/results.json
-
-      - name: Upload flamegraphs
-        uses: actions/upload-artifact@v7
-        with:
-          name: flamegraph-noav-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/*-flamegraph.svg
-          if-no-files-found: ignore
-
-      - name: Upload debug logs
-        uses: actions/upload-artifact@v7
-        with:
-          name: debug-logs-noav-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/*-debug.log
-          if-no-files-found: ignore
-
-      - name: Write context metadata
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-          RUNNER_CONTEXT: ${{ toJSON(runner) }}
-        run: |
-          mkdir -p ${{ runner.temp }}/contexts
-          echo "$GITHUB_CONTEXT" | nix develop --command jq "del(.token)" > ${{ runner.temp }}/contexts/github.json
-          echo "$RUNNER_CONTEXT" > ${{ runner.temp }}/contexts/runner.json
-
-      - name: Upload context metadata
-        uses: actions/upload-artifact@v7
-        with:
-          name: run-metadata-noav-${{ matrix.name }}
+          name: run-metadata
           path: ${{ runner.temp }}/contexts/

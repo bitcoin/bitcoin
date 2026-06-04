@@ -14,6 +14,12 @@ nix develop --command python3 bench.py run \
     --output-dir ./output \
     test:./binaries/test/bitcoind
 
+# Declarative PR-style experiment
+nix develop --command python3 bench.py experiment run \
+    bench/experiments/pr.toml \
+    --datadir /data/pruned-840k \
+    --output-dir ./output
+
 # Or use just
 just test-uninstrumented HEAD /path/to/signet-datadir
 ```
@@ -38,12 +44,69 @@ Global Options:
   --dry-run                   Show what would run
 
 Commands:
+  experiment Run a declarative experiment manifest
   build     Build bitcoind at a commit
   run       Run benchmark (requires pre-built binary + TOML config)
   analyze   Generate plots from debug.log
   report    Generate HTML report
   nightly   Manage nightly history + generate chart
 ```
+
+### experiment
+
+Run a complete benchmark experiment from a TOML manifest:
+
+```bash
+python3 bench.py experiment run bench/experiments/pr.toml \
+    --datadir /data/pruned-840k \
+    --output-dir ./output \
+    --binaries-dir ./binaries
+```
+
+An experiment is the high-level interface for normal use. It defines:
+
+- `subjects`: commits or existing binaries to benchmark
+- `profiles`: runtime settings such as dbcache and instrumentation
+- `comparisons`: derived outputs such as differential flamegraphs
+
+Example with two named commits and two instrumented profiles:
+
+```toml
+[experiment]
+name = "diff"
+outputs = ["results", "differential-flamegraph"]
+
+[[subjects]]
+name = "before"
+commit = "abc123"
+
+[[subjects]]
+name = "after"
+commit = "def456"
+
+[[profiles]]
+name = "450"
+dbcache = 450
+instrumentation = true
+
+[[profiles]]
+name = "32000"
+dbcache = 32000
+instrumentation = true
+
+[[comparisons]]
+name = "before-vs-after"
+before = "before"
+after = "after"
+outputs = ["differential-flamegraph"]
+```
+
+Defaults are intentionally useful: if a manifest omits subjects, benchcoin
+benchmarks `HEAD`; if it omits profiles, benchcoin uses a `450` MB
+uninstrumented profile.
+
+Schedulers can shard a manifest without changing its benchmark definition by
+using `--subject-name NAME` or `--profile-name NAME`.
 
 ### build
 
@@ -118,7 +181,16 @@ python3 bench.py nightly --history-file history.json append \
 python3 bench.py nightly --history-file history.json chart index.html
 ```
 
-## Benchmark Configs
+## Experiment Manifests
+
+Experiments are driven by TOML files in `bench/experiments/`:
+
+| File | Subjects | Profiles | Use Case |
+|------|----------|----------|----------|
+| `pr.toml` | `HEAD` | 450/32000 x uninstrumented/instrumented | PR-style benchmark |
+| `differential-flamegraph.toml` | before/after commits | 450/32000 instrumented | Differential flamegraphs |
+
+## Low-Level Benchmark Configs
 
 Benchmarks are driven by TOML config files in `bench/configs/`:
 
@@ -160,16 +232,31 @@ just report ./input ./output --nightly-history ./nightly-history.json
 ```
 bench.py              CLI entry point (argparse)
 bench/
+├── experiment.py     Experiment manifests, planning, execution, derivations
 ├── config.py         Layered configuration (TOML + env + CLI)
 ├── benchmark_config.py  TOML config loader + matrix expansion
 ├── capabilities.py   System capability detection
 ├── build.py          Build phase (nix build)
 ├── benchmark.py      Benchmark phase (hyperfine)
+├── flamegraph.py     Differential flamegraph derivation
 ├── analyze.py        Plot generation (matplotlib)
 ├── report.py         HTML report generation
 ├── nightly.py        Nightly history + chart generation
 └── utils.py          Git operations, datadir management
 ```
+
+### Experiment Model
+
+The high-level flow is:
+
+```
+experiment manifest -> subjects x profiles -> run artifacts -> derivations
+```
+
+Subjects describe what to benchmark (`commit` or `binary`). Profiles describe
+how to benchmark it (`dbcache`, `instrumentation`, `runs`, and optional
+bitcoind flags). Comparisons describe outputs derived from multiple runs, such
+as differential flamegraphs.
 
 ### Hyperfine Integration
 
@@ -177,17 +264,16 @@ The benchmark phase generates shell scripts for hyperfine hooks:
 
 - `setup` - Clean tmp datadir (once before all runs)
 - `prepare` - Copy snapshot, drop caches, clean logs (before each run)
-- `cleanup` - Clean tmp datadir (after all runs)
-- `conclude` - Collect flamegraph/logs (instrumented only)
+- `cleanup` - Collect artifacts and clean tmp datadir (after each run)
 
 ### Instrumented Mode
 
 When `instrumentation = "instrumented"` in the matrix:
 
-1. Wraps bitcoind in `flamegraph` for CPU profiling
+1. Runs bitcoind under `perf record`
 2. Enables debug logging: `coindb`, `leveldb`, `bench`, `validation`
 3. Forces `runs=1` (profiling overhead makes multiple runs pointless)
-4. Generates flamegraph SVGs and performance plots
+4. Generates raw `perf.data`, folded stacks, flamegraph SVGs, and optional plots
 
 ## CI Integration
 
@@ -195,11 +281,10 @@ GitHub Actions workflows call bench.py directly:
 
 ```yaml
 - run: |
-    nix develop --command python3 bench.py run \
-      --benchmark-config bench/configs/pr.toml \
-      --matrix-entry ${{ matrix.name }} \
+    nix develop --command python3 bench.py experiment run \
+      bench/experiments/pr.toml \
       --datadir $ORIGINAL_DATADIR \
-      --tmp-datadir ${{ runner.temp }}/datadir \
-      --output-dir ${{ runner.temp }}/output \
-      pr:${{ runner.temp }}/binaries/pr/bitcoind
+      --tmp-dir ${{ runner.temp }}/datadirs \
+      --binaries-dir ${{ runner.temp }}/binaries \
+      --output-dir ${{ runner.temp }}/experiment-output
 ```

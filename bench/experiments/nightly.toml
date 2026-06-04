@@ -1,0 +1,35 @@
+# Nightly benchmark experiment.
+#
+# Usage:
+#   bench.py experiment run bench/experiments/nightly.toml \
+#     --datadir /data/pruned-840k --output-dir ./output
+
+[experiment]
+name = "nightly"
+outputs = ["results"]
+
+[benchmark]
+start_height = 840000
+runs = 2
+
+[bitcoind]
+stopatheight = 900000
+chain = "main"
+connect = "148.251.128.115:33333" # accepts whitelisted ip addrs only
+prune = 1000000
+daemon = false
+printtoconsole = false
+
+[[subjects]]
+name = "master"
+commit = "HEAD"
+
+[[profiles]]
+name = "450"
+dbcache = 450
+instrumentation = false
+
+[[profiles]]
+name = "32000"
+dbcache = 32000
+instrumentation = false

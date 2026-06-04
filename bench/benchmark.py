@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -38,6 +39,8 @@ class BenchmarkResult:
     instrumented: str  # "uninstrumented" or "instrumented"
     name: str
     flamegraph: Path | None = None
+    perf_data: Path | None = None
+    folded_stacks: Path | None = None
     debug_log: Path | None = None
 
 
@@ -135,7 +138,7 @@ class BenchmarkPhase:
             # Create hook scripts for hyperfine
             setup_script = self._create_setup_script(tmp_datadir)
             prepare_script = self._create_prepare_script(tmp_datadir, datadir)
-            cleanup_script = self._create_cleanup_script(tmp_datadir)
+            cleanup_script = self._create_cleanup_script(tmp_datadir, name, output_dir)
 
             # Build hyperfine command
             cmd = self._build_hyperfine_cmd(
@@ -150,7 +153,12 @@ class BenchmarkPhase:
             )
 
             # Log the command being benchmarked
-            bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
+            bitcoind_cmd = self._build_bitcoind_cmd(
+                binary_path,
+                tmp_datadir,
+                output_dir,
+                name,
+            )
             logger.info(f"Command to benchmark: {bitcoind_cmd}")
 
             if self.config.dry_run:
@@ -179,8 +187,18 @@ class BenchmarkPhase:
                 result.debug_log = debug_log_file
                 logger.info(f"Collected debug log: {debug_log_file}")
 
-            # For instrumented runs, also collect flamegraph
+            # For instrumented runs, also collect profile artifacts.
             if self.is_instrumented:
+                perf_data_file = output_dir / f"{name}.perf.data"
+                if perf_data_file.exists():
+                    result.perf_data = perf_data_file
+                    logger.info(f"Collected perf data: {perf_data_file}")
+
+                folded_file = output_dir / f"{name}.folded"
+                if folded_file.exists():
+                    result.folded_stacks = folded_file
+                    logger.info(f"Collected folded stacks: {folded_file}")
+
                 flamegraph_file = output_dir / f"{name}-flamegraph.svg"
                 if flamegraph_file.exists():
                     result.flamegraph = flamegraph_file
@@ -253,17 +271,23 @@ class BenchmarkPhase:
 
         return self._create_temp_script(commands, "prepare")
 
-    def _create_cleanup_script(self, tmp_datadir: Path) -> Path:
-        """Create cleanup script (runs after all timing runs)."""
-        commands = [
-            f'rm -rf "{tmp_datadir}"/*',
-        ]
+    def _create_cleanup_script(
+        self,
+        tmp_datadir: Path,
+        name: str,
+        output_dir: Path,
+    ) -> Path:
+        """Create cleanup script (runs after each timing run)."""
+        commands = self._create_artifact_commands(name, tmp_datadir, output_dir)
+        commands.append(f'rm -rf "{tmp_datadir}"/*')
         return self._create_temp_script(commands, "cleanup")
 
     def _build_bitcoind_cmd(
         self,
         binary: Path,
         tmp_datadir: Path,
+        output_dir: Path,
+        name: str,
     ) -> str:
         """Build the bitcoind command string for hyperfine."""
         if not self.benchmark_config:
@@ -271,17 +295,20 @@ class BenchmarkPhase:
 
         parts = []
 
-        # Add flamegraph wrapper for instrumented mode
+        # Add perf wrapper for instrumented mode. Derived artifacts are produced
+        # in the cleanup hook so hyperfine only measures bitcoind execution.
         if self.is_instrumented:
-            parts.append("flamegraph")
-            parts.append("--palette bitcoin")
-            parts.append("--title 'bitcoind IBD'")
-            parts.append("-c 'record -F 101 --call-graph fp'")
+            perf_data = output_dir / f"{name}.perf.data"
+            parts.append(f"rm -f {shlex.quote(str(perf_data))} &&")
+            parts.append("perf record")
+            parts.append("-F 101")
+            parts.append("--call-graph fp")
+            parts.append(f"-o {shlex.quote(str(perf_data))}")
             parts.append("--")
 
         # Bitcoind command
-        parts.append(str(binary))
-        parts.append(f"-datadir={tmp_datadir}")
+        parts.append(shlex.quote(str(binary)))
+        parts.append(f"-datadir={shlex.quote(str(tmp_datadir))}")
 
         # Add dbcache from matrix entry
         parts.append(f"-dbcache={self.config.dbcache}")
@@ -324,29 +351,40 @@ class BenchmarkPhase:
         ]
 
         # Build the actual command to benchmark
-        bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
-
-        # Append conclude logic (debug.log for all, flamegraph for instrumented)
-        conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
-        bitcoind_cmd += f" && {conclude}"
+        bitcoind_cmd = self._build_bitcoind_cmd(
+            binary_path,
+            tmp_datadir,
+            output_dir,
+            name,
+        )
 
         cmd.append(bitcoind_cmd)
 
         return cmd
 
-    def _create_conclude_commands(
+    def _create_artifact_commands(
         self,
         name: str,
         tmp_datadir: Path,
         output_dir: Path,
-    ) -> str:
-        """Create inline conclude commands for the binary."""
+    ) -> list[str]:
+        """Create artifact collection commands for the binary."""
         commands = []
 
-        # Move flamegraph if exists (instrumented only)
+        # Generate flamegraph artifacts from perf.data (instrumented only)
         if self.is_instrumented:
+            perf_data = output_dir / f"{name}.perf.data"
+            stacks_file = output_dir / f"{name}.perf.stacks"
+            folded_file = output_dir / f"{name}.folded"
+            flamegraph_file = output_dir / f"{name}-flamegraph.svg"
             commands.append(
-                f'if [ -e flamegraph.svg ]; then mv flamegraph.svg "{output_dir}/{name}-flamegraph.svg"; fi'
+                " && ".join(
+                    [
+                        f'perf script -i {shlex.quote(str(perf_data))} > {shlex.quote(str(stacks_file))}',
+                        f'stackcollapse-perf.pl {shlex.quote(str(stacks_file))} > {shlex.quote(str(folded_file))}',
+                        f'flamegraph.pl --title {shlex.quote(name + " bitcoind IBD")} {shlex.quote(str(folded_file))} > {shlex.quote(str(flamegraph_file))}',
+                    ]
+                )
             )
 
         # Copy debug log if exists (all runs)
@@ -355,4 +393,4 @@ class BenchmarkPhase:
             f'if [ -n "$debug_log" ]; then cp "$debug_log" "{output_dir}/{name}-debug.log"; fi'
         )
 
-        return " && ".join(commands)
+        return commands

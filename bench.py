@@ -5,6 +5,7 @@ A CLI for building, benchmarking, analyzing, and reporting on Bitcoin Core
 performance. PR results are compared against nightly baseline data.
 
 Usage:
+    bench.py experiment run MANIFEST Run a declarative benchmark experiment
     bench.py build COMMIT            Build bitcoind at a commit
     bench.py run NAME:BINARY         Benchmark a binary
     bench.py analyze COMMIT LOGFILE  Generate plots from debug.log
@@ -13,6 +14,9 @@ Usage:
     bench.py nightly chart ...       Generate nightly chart HTML
 
 Examples:
+    # Run a PR-style experiment
+    bench.py experiment run bench/experiments/pr.toml --datadir /data
+
     # Build at HEAD
     bench.py build HEAD:pr
 
@@ -343,6 +347,53 @@ def cmd_nightly(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_experiment(args: argparse.Namespace) -> int:
+    """Run an experiment manifest."""
+    from bench.experiment import Experiment, ExperimentRunner
+
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    capabilities = detect_capabilities()
+    config = build_config(
+        cli_args={
+            "binaries_dir": args.binaries_dir,
+            "output_dir": args.output_dir,
+            "skip_existing": args.skip_existing,
+            "no_cache_drop": args.no_cache_drop,
+            "dry_run": args.dry_run,
+            "verbose": args.verbose,
+        },
+        config_file=Path(args.config) if args.config else None,
+        profile=args.profile,
+    )
+
+    try:
+        experiment = Experiment.from_toml(Path(args.manifest))
+        runner = ExperimentRunner(config, capabilities)
+        result = runner.run(
+            experiment=experiment,
+            datadir=Path(args.datadir) if args.datadir else None,
+            output_dir=Path(config.output_dir),
+            binaries_dir=Path(config.binaries_dir),
+            tmp_dir=Path(args.tmp_dir) if args.tmp_dir else None,
+            subject_names=args.subject_name,
+            profile_names=args.profile_name,
+        )
+        logger.info(f"Experiment outputs saved to: {result.output_dir}")
+        logger.info(f"Completed {len(result.runs)} benchmark runs")
+        if result.comparisons:
+            logger.info(f"Generated {len(result.comparisons)} comparison artifacts")
+        return 0
+    except Exception as e:
+        logger.error(f"Experiment failed: {e}")
+        if args.verbose:
+            import traceback
+
+            traceback.print_exc()
+        return 1
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -598,9 +649,76 @@ def main() -> int:
 
     nightly_parser.set_defaults(func=cmd_nightly)
 
+    # Experiment command
+    experiment_parser = subparsers.add_parser(
+        "experiment",
+        help="Run declarative benchmark experiments",
+        description="Commands for running experiment manifests.",
+    )
+    experiment_subparsers = experiment_parser.add_subparsers(
+        dest="experiment_command", help="Experiment commands"
+    )
+    experiment_run = experiment_subparsers.add_parser(
+        "run",
+        help="Run an experiment manifest",
+        description="Build subjects, run profiles, and derive comparison artifacts.",
+    )
+    experiment_run.add_argument(
+        "manifest",
+        help="Path to experiment TOML file",
+    )
+    experiment_run.add_argument(
+        "--datadir",
+        metavar="PATH",
+        help="Source datadir with blockchain snapshot (omit for fresh sync)",
+    )
+    experiment_run.add_argument(
+        "--tmp-dir",
+        metavar="PATH",
+        help="Base temp directory for benchmark datadirs",
+    )
+    experiment_run.add_argument(
+        "--subject-name",
+        action="append",
+        metavar="NAME",
+        help="Run only a named subject from the manifest (repeatable)",
+    )
+    experiment_run.add_argument(
+        "--profile-name",
+        action="append",
+        metavar="NAME",
+        help="Run only a named profile from the manifest (repeatable)",
+    )
+    experiment_run.add_argument(
+        "-o",
+        "--output-dir",
+        metavar="PATH",
+        help="Output directory for experiment artifacts",
+    )
+    experiment_run.add_argument(
+        "--binaries-dir",
+        metavar="PATH",
+        help="Where to store or find built commit binaries",
+    )
+    experiment_run.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip commit builds if the subject binary already exists",
+    )
+    experiment_run.add_argument(
+        "--no-cache-drop",
+        action="store_true",
+        help="Skip cache dropping between runs",
+    )
+    experiment_run.set_defaults(func=cmd_experiment)
+
     args = parser.parse_args()
 
     if not args.command:
+        parser.print_help()
+        return 1
+
+    if not hasattr(args, "func"):
         parser.print_help()
         return 1
 
