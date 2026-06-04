@@ -1236,10 +1236,12 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     if (response.status == HTTP_UNAUTHORIZED) {
         std::string error{"Authorization failed: "};
+        bool read_err = false;
         if (auth_cookie_result.has_value()) {
             switch (*auth_cookie_result) {
             case AuthCookieResult::Error:
                 error += "Failed to read cookie file and no rpcpassword was specified.";
+                read_err = true;
                 break;
             case AuthCookieResult::Disabled:
                 error += "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.";
@@ -1252,6 +1254,9 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
             error += "Incorrect rpcuser or rpcpassword were specified.";
         }
         error += strprintf(" Configuration file: (%s)", fs::PathToString(gArgs.GetConfigFilePath()));
+        if (BaseParams().DataDir() == "signet" && read_err) {
+            error += "\nDid you forget -signetchallenge for custom signets?";
+        }
         throw std::runtime_error(error);
     } else if (response.status == HTTP_SERVICE_UNAVAILABLE) {
         throw std::runtime_error(strprintf("Server response: %s", response.body));
