@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_FEEFRAC_H
 #define BITCOIN_UTIL_FEEFRAC_H
 
+#include <consensus/amount.h>
 #include <util/check.h>
 #include <util/overflow.h>
 
@@ -23,7 +24,7 @@ struct FeeFrac
     /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
      *  ordered type. This is a fallback version, separate so it can be tested on platforms where
      *  it isn't actually needed. */
-    static inline std::pair<int64_t, uint32_t> MulFallback(int64_t a, int32_t b) noexcept
+    static inline std::pair<int64_t, uint32_t> MulFallback(CAmount a, int32_t b) noexcept
     {
         int64_t low = int64_t{static_cast<uint32_t>(a)} * b;
         int64_t high = (a >> 32) * b;
@@ -62,7 +63,7 @@ struct FeeFrac
 #ifdef __SIZEOF_INT128__
     /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
      *  ordered type. This is a version relying on __int128. */
-    static inline __int128 Mul(int64_t a, int32_t b) noexcept
+    static inline __int128 Mul(CAmount a, int32_t b) noexcept
     {
         return __int128{a} * b;
     }
@@ -86,14 +87,14 @@ struct FeeFrac
     static constexpr auto Div = DivFallback;
 #endif
 
-    int64_t fee;
+    CAmount fee;
     int32_t size;
 
     /** Construct an IsEmpty() FeeFrac. */
     constexpr inline FeeFrac() noexcept : fee{0}, size{0} {}
 
     /** Construct a FeeFrac with specified fee and size. */
-    constexpr inline FeeFrac(int64_t f, int32_t s) noexcept : fee{f}, size{s} {}
+    constexpr inline FeeFrac(CAmount f, int32_t s) noexcept : fee{f}, size{s} {}
 
     constexpr inline FeeFrac(const FeeFrac&) noexcept = default;
     constexpr inline FeeFrac& operator=(const FeeFrac&) noexcept = default;
@@ -151,8 +152,8 @@ struct FeeFrac
      * Requires this->size > 0, at_size >= 0, and that the correct result fits in a int64_t. This
      * is guaranteed to be the case when 0 <= at_size <= this->size.
      */
-    template<bool RoundDown>
-    int64_t EvaluateFee(int32_t at_size) const noexcept
+    template <bool RoundDown>
+    CAmount EvaluateFee(int32_t at_size) const noexcept
     {
         Assume(size > 0);
         Assume(at_size >= 0);
@@ -171,9 +172,9 @@ struct FeeFrac
 
 public:
     /** Compute the fee for a given size `at_size` using this object's feerate, rounding down. */
-    int64_t EvaluateFeeDown(int32_t at_size) const noexcept { return EvaluateFee<true>(at_size); }
+    CAmount EvaluateFeeDown(int32_t at_size) const noexcept { return EvaluateFee<true>(at_size); }
     /** Compute the fee for a given size `at_size` using this object's feerate, rounding up. */
-    int64_t EvaluateFeeUp(int32_t at_size) const noexcept { return EvaluateFee<false>(at_size); }
+    CAmount EvaluateFeeUp(int32_t at_size) const noexcept { return EvaluateFee<false>(at_size); }
 };
 
 /** Compare the feerate diagrams implied by the provided sorted chunks data.
