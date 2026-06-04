@@ -9,7 +9,7 @@ from os import path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.signet import SIGNET_DEFAULT_CHALLENGE, message_start
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_process_error
 
 signet_blocks = [
     '00000020f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000f575c83235984e7dc4afc1f30944c170462e84437ab6f2d52e16878a79e4678bd1914d5fae77031eccf4070001010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff025151feffffff0200f2052a010000001600149243f727dd5343293eb83174324019ec16c2630f0000000000000000776a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf94c4fecc7daa2490047304402205e423a8754336ca99dbe16509b877ef1bf98d008836c725005b3c787c41ebe46022047246e4467ad7cc7f1ad98662afcaf14c115e0095a227c7b05c5182591c23e7e01000120000000000000000000000000000000000000000000000000000000000000000000000000',
@@ -130,12 +130,28 @@ class SignetBasicTest(BitcoinTestFramework):
         self.log.info("Test that an explicit empty -signetchallenge= is a distinct network, not the default signet")
         assert_node_datadir(self.nodes[7], f"signet_{message_start(self.signets[4].challenge)}")
 
+        self.test_cli_signetchallenge_hint()
+
         self.log.info("test that signet logs the network magic on node start")
         with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
             self.restart_node(0)
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(extra_args=["-signetchallenge=abc"], expected_msg="Error: -signetchallenge must be hex, not 'abc'.")
         self.nodes[0].assert_start_raises_init_error(extra_args=["-signetchallenge=abc"] * 2, expected_msg="Error: -signetchallenge cannot be multiple values.")
+
+
+    def test_cli_signetchallenge_hint(self):
+        if not self.is_cli_compiled():
+            self.log.info("Skipping bitcoin-cli -signetchallenge hint test")
+            return
+
+        self.log.info("Test that bitcoin-cli hints about -signetchallenge on a signet RPC auth failure")
+        hint = "Is your -signetchallenge correct for custom signets?"
+        # test custom signet node (0) and default signet node (3)
+        for node_idx in [0, 3]:
+            node = self.nodes[node_idx]
+            missing_cookie = node.datadir_path / "nonexistent.cookie"
+            assert_raises_process_error(1, hint, node.cli(f"-rpccookiefile={missing_cookie}").getblockcount)
 
 
 if __name__ == '__main__':
