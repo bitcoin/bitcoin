@@ -123,7 +123,7 @@ struct TxMempoolInfo
     int32_t vsize;
 
     /** The fee delta. */
-    int64_t nFeeDelta;
+    CAmount nFeeDelta;
 };
 
 /**
