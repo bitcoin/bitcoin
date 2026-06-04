@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 class COutPoint;
@@ -59,6 +60,9 @@ public:
 
     //! @returns filesystem path to on-disk storage or std::nullopt if in memory.
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
+
+    //! Return an underlying LevelDB property value, if available.
+    std::optional<std::string> GetDBProperty(const std::string& property);
 };
 
 #endif // BITCOIN_TXDB_H
