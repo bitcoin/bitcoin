@@ -51,6 +51,11 @@
     "description": "Creates a blank transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["01000000000000000000", "-json"],
+    "output_cmp": "blanktxv1.json",
+    "description": "Parses an option after a transaction hex"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-json","-"],
     "input": "blanktxv2.hex",
     "output_cmp": "blanktxv2.json",
