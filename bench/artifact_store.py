@@ -23,6 +23,21 @@ class RunArtifactRecord:
     folded_stacks: Path | None = None
 
 
+@dataclass(frozen=True)
+class ArtifactRun:
+    """Loaded metadata for one subject/profile run."""
+
+    subject: str
+    profile: str
+    config: dict[str, Any]
+    output_dir: Path
+    results_file: Path
+    debug_log: Path | None = None
+    flamegraph: Path | None = None
+    perf_data: Path | None = None
+    folded_stacks: Path | None = None
+
+
 class ArtifactStore:
     """Own experiment artifact paths and metadata."""
 
@@ -69,6 +84,11 @@ class ArtifactStore:
         """Load artifact metadata."""
         return json.loads(self.manifest_path.read_text())
 
+    def load_runs(self) -> list[ArtifactRun]:
+        """Load run artifact records with paths resolved against the root."""
+        manifest = self.load_manifest()
+        return [self._run_from_dict(record) for record in manifest.get("runs", [])]
+
     def _record_to_dict(self, record: RunArtifactRecord) -> dict[str, Any]:
         """Convert a run record to relative-path JSON."""
         result: dict[str, Any] = {
@@ -87,3 +107,26 @@ class ArtifactStore:
     def _relative(self, path: Path) -> str:
         """Return path relative to root when possible."""
         return str(path.relative_to(self.root)) if path.is_relative_to(self.root) else str(path)
+
+    def _run_from_dict(self, record: dict[str, Any]) -> ArtifactRun:
+        """Convert manifest JSON to a loaded run record."""
+        return ArtifactRun(
+            subject=record["subject"],
+            profile=record["profile"],
+            config=record["config"],
+            output_dir=self._resolve_path(record["output_dir"]),
+            results_file=self._resolve_path(record["results_file"]),
+            debug_log=self._resolve_optional_path(record.get("debug_log")),
+            flamegraph=self._resolve_optional_path(record.get("flamegraph")),
+            perf_data=self._resolve_optional_path(record.get("perf_data")),
+            folded_stacks=self._resolve_optional_path(record.get("folded_stacks")),
+        )
+
+    def _resolve_optional_path(self, path: str | None) -> Path | None:
+        """Resolve an optional manifest path against the root."""
+        return self._resolve_path(path) if path else None
+
+    def _resolve_path(self, path: str) -> Path:
+        """Resolve a manifest path against the root when relative."""
+        parsed = Path(path)
+        return parsed if parsed.is_absolute() else self.root / parsed

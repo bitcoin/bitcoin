@@ -548,18 +548,15 @@ class NightlyPhase:
         from bench.artifact_store import ArtifactStore
 
         store = ArtifactStore(experiment_dir)
-        manifest = store.load_manifest()
         history = NightlyHistory(self.history_file)
         machine_specs = self._machine_specs(machine_specs_file)
 
         appended = 0
-        for run_record in manifest.get("runs", []):
-            config = run_record["config"]
-            results_file = experiment_dir / run_record["results_file"]
+        for run_artifact in store.load_runs():
             history.append_from_results_json(
-                results_file=results_file,
+                results_file=run_artifact.results_file,
                 commit=commit,
-                config_snapshot=config,
+                config_snapshot=run_artifact.config,
                 machine_specs=machine_specs,
                 date_str=date_str,
                 run_date=run_date,

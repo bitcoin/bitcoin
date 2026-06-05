@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from bench.analyze import HAS_MATPLOTLIB, LogParser, PlotGenerator
+from bench.artifact_store import ArtifactRun, ArtifactStore
 from bench.nightly import (
     NightlyHistory,
     series_color_index,
@@ -200,34 +201,27 @@ class ReportGenerator:
         commit: str | None = None,
     ) -> ReportResult:
         """Generate HTML report from an experiment artifact manifest."""
-        manifest_file = experiment_dir / "artifacts.json"
-        if not manifest_file.exists():
-            raise FileNotFoundError(f"artifacts.json not found in {experiment_dir}")
-
         output_dir.mkdir(parents=True, exist_ok=True)
-        manifest = json.loads(manifest_file.read_text())
+        artifact_store = ArtifactStore(experiment_dir)
         all_runs: list[BenchmarkRun] = []
 
-        for run_record in manifest.get("runs", []):
-            profile = run_record["profile"]
-            config = run_record["config"]
-            results_file = experiment_dir / run_record["results_file"]
-            if not results_file.exists():
+        for run_artifact in artifact_store.load_runs():
+            if not run_artifact.results_file.exists():
                 logger.warning(
                     "results.json not found for profile %s at %s",
-                    profile,
-                    results_file,
+                    run_artifact.profile,
+                    run_artifact.results_file,
                 )
                 continue
 
-            with open(results_file) as f:
+            with open(run_artifact.results_file) as f:
                 data = json.load(f)
 
             for result in data.get("results", []):
                 all_runs.append(
                     BenchmarkRun(
-                        profile=profile,
-                        config=config,
+                        profile=run_artifact.profile,
+                        config=run_artifact.config,
                         command=result.get("command", ""),
                         mean=result.get("mean", 0),
                         stddev=result.get("stddev"),
@@ -237,7 +231,7 @@ class ReportGenerator:
                     )
                 )
 
-            self._copy_manifest_artifacts(run_record, experiment_dir, output_dir)
+            self._copy_manifest_artifacts(run_artifact, output_dir)
 
         if not all_runs:
             raise ValueError("No benchmark results found in experiment manifest")
@@ -491,36 +485,30 @@ class ReportGenerator:
 
     def _copy_manifest_artifacts(
         self,
-        run_record: dict[str, Any],
-        experiment_dir: Path,
+        run_artifact: ArtifactRun,
         output_dir: Path,
     ) -> None:
         """Copy artifacts listed in an experiment manifest run record."""
-        profile = run_record["profile"]
-        flamegraph = run_record.get("flamegraph")
-        if flamegraph:
-            source = experiment_dir / flamegraph
-            if source.exists():
-                dest = output_dir / f"{profile}-{source.name}"
-                shutil.copy2(source, dest)
-                logger.debug(f"Copied {source.name} as {dest.name}")
+        if run_artifact.flamegraph and run_artifact.flamegraph.exists():
+            dest = output_dir / f"{run_artifact.profile}-{run_artifact.flamegraph.name}"
+            shutil.copy2(run_artifact.flamegraph, dest)
+            logger.debug(f"Copied {run_artifact.flamegraph.name} as {dest.name}")
 
-        debug_log = run_record.get("debug_log")
-        if HAS_MATPLOTLIB and debug_log:
-            log = experiment_dir / debug_log
-            if log.exists():
-                name = log.name.removesuffix("-debug.log")
-                prefix = f"{profile}-{name}"
-                plots_dir = output_dir / "plots"
-                plots_dir.mkdir(parents=True, exist_ok=True)
-                try:
-                    data = LogParser().parse_file(log)
-                    plots = PlotGenerator(prefix, plots_dir).generate_all(data)
-                    logger.info(f"Generated {len(plots)} plots for {prefix}")
-                except Exception:
-                    logger.warning(
-                        f"Failed to generate plots for {prefix}", exc_info=True
-                    )
+        if (
+            HAS_MATPLOTLIB
+            and run_artifact.debug_log
+            and run_artifact.debug_log.exists()
+        ):
+            name = run_artifact.debug_log.name.removesuffix("-debug.log")
+            prefix = f"{run_artifact.profile}-{name}"
+            plots_dir = output_dir / "plots"
+            plots_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                data = LogParser().parse_file(run_artifact.debug_log)
+                plots = PlotGenerator(prefix, plots_dir).generate_all(data)
+                logger.info(f"Generated {len(plots)} plots for {prefix}")
+            except Exception:
+                logger.warning(f"Failed to generate plots for {prefix}", exc_info=True)
 
     def _generate_html(
         self,

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from bench.artifact_store import ArtifactStore
 from bench.nightly import NightlyHistory, NightlyPhase
 from bench.report import ReportGenerator
 
@@ -88,6 +89,14 @@ class CiInterfaceTests(unittest.TestCase):
             )
 
             self.assertEqual(count, 2)
+            runs = ArtifactStore(experiment_dir).load_runs()
+            self.assertEqual(
+                [run.results_file for run in runs],
+                [
+                    experiment_dir / "runs/small-cache/master/results.json",
+                    experiment_dir / "runs/large-cache/master/results.json",
+                ],
+            )
             history = json.loads(history_file.read_text())
             self.assertEqual(
                 [r["config"]["bitcoind"]["dbcache"] for r in history["results"]],
