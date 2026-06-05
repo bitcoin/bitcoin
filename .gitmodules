@@ -1,0 +1,4 @@
+[submodule "src/ultrafast_secp256k1"]
+	path = src/ultrafast_secp256k1
+	url = https://github.com/shrec/UltrafastSecp256k1.git
+	branch = dev

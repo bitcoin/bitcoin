@@ -27,3 +27,8 @@ target/
 /guix-build-*
 
 /ci/scratch/
+
+# Build directories (must go in out/)
+out/
+build-*/
+build/

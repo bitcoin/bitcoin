@@ -60,6 +60,30 @@
       }
     },
     {
+      "name": "ultrafast-bench",
+      "displayName": "UltrafastSecp256k1 backend — Release + LTO (benchmark)",
+      "binaryDir": "${sourceDir}/out/build-ultrafast-lto",
+      "cacheVariables": {
+        "SECP256K1_BACKEND": "ultrafast",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+        "BUILD_BENCH": "ON",
+        "ENABLE_IPC": "OFF"
+      }
+    },
+    {
+      "name": "libsecp-bench",
+      "displayName": "libsecp256k1 backend — Release + LTO (benchmark baseline)",
+      "binaryDir": "${sourceDir}/out/build-libsecp-lto",
+      "cacheVariables": {
+        "SECP256K1_BACKEND": "libsecp",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+        "BUILD_BENCH": "ON",
+        "ENABLE_IPC": "OFF"
+      }
+    },
+    {
       "name": "dev-mode",
       "displayName": "Developer mode, with all features/dependencies enabled",
       "binaryDir": "${sourceDir}/build_dev_mode",
