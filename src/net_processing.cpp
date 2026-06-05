@@ -179,6 +179,10 @@ static constexpr double OUTBOUND_INVENTORY_BUCKET_MULTIPLIER{Ticks<SecondsDouble
 static constexpr auto INVENTORY_BUCKET_CHECK_DELAY{100ms};
 /** Empty backlog target capacity */
 static constexpr size_t INVENTORY_BUCKET_BACKLOG_CAPACITY{300};
+/** Delay between inventory bucket backlog heartbeat log entries */
+static constexpr auto INVENTORY_BUCKET_BACKLOG_HEARTBEAT{2000ms};
+/** Minimum backlog to trigger heartbeat log entries */
+static constexpr size_t INVENTORY_BUCKET_BACKLOG_HEARTBEAT_MIN{100};
 /** Average delay between feefilter broadcasts in seconds. */
 static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL{10min};
 /** Maximum feefilter broadcast delay after significant change. */
@@ -1166,6 +1170,7 @@ private:
     InvToSendBucket m_inbound_inv_bucket GUARDED_BY(m_inv_to_send_mutex);
     InvToSendBucket m_outbound_inv_bucket GUARDED_BY(m_inv_to_send_mutex);
     std::atomic<NodeClock::time_point> m_next_inv_bucket_check{NodeClock::time_point::min()};
+    std::optional<NodeClock::time_point> m_next_inv_bucket_heartbeat GUARDED_BY(m_inv_to_send_mutex);
 
     void ProcessInvBacklog(NodeClock::time_point now, bool backlog_bumped=false) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
 };
@@ -2377,6 +2382,27 @@ void PeerManagerImpl::ProcessInvBacklog(NodeClock::time_point now, bool backlog_
     LOCK(m_inv_to_send_mutex);
     m_inbound_inv_bucket.increment(now);
     m_outbound_inv_bucket.increment(now);
+
+    // Regular heartbeat logging when there's a backlog
+    if (!m_next_inv_bucket_heartbeat.has_value()) {
+        if (m_inbound_inv_bucket.backlog.size() >= INVENTORY_BUCKET_BACKLOG_HEARTBEAT_MIN || m_outbound_inv_bucket.backlog.size() >= INVENTORY_BUCKET_BACKLOG_HEARTBEAT_MIN) {
+            m_next_inv_bucket_heartbeat = now;
+        }
+    }
+    if (m_next_inv_bucket_heartbeat.has_value() && now >= *m_next_inv_bucket_heartbeat) {
+        LogDebug(BCLog::NET, "Transaction rate-limiting backlog inbound=%d itok=%.1f isz=%.1f outbound=%d otok=%.1f osz=%.1f",
+                 m_inbound_inv_bucket.backlog.size(),
+                 m_inbound_inv_bucket.count_bucket.value(),
+                 m_inbound_inv_bucket.size_bucket.value(),
+                 m_outbound_inv_bucket.backlog.size(),
+                 m_outbound_inv_bucket.count_bucket.value(),
+                 m_outbound_inv_bucket.size_bucket.value());
+        if (m_inbound_inv_bucket.backlog.empty() && m_outbound_inv_bucket.backlog.empty()) {
+            m_next_inv_bucket_heartbeat = std::nullopt;
+        } else {
+            m_next_inv_bucket_heartbeat = now + INVENTORY_BUCKET_BACKLOG_HEARTBEAT;
+        }
+    }
 
     // Early exit to skip pointlessly touching mempool lock
     bool in_avail = m_inbound_inv_bucket.avail();
