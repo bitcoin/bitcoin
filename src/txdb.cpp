@@ -54,7 +54,12 @@ struct CoinEntry {
 CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},
-    m_db{std::make_unique<CDBWrapper>(m_db_params)} { }
+    m_db{std::make_unique<CDBWrapper>(m_db_params)}
+{
+    if (!m_db_params.memory_only && !m_db_params.options.force_compact) {
+        m_db->WarnIfNeedsCompaction();
+    }
+}
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {

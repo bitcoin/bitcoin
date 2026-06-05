@@ -323,12 +323,28 @@ class InitTest(BitcoinTestFramework):
         for option in options:
             self.restart_node(1, option)
 
+    def chainstate_warning_test(self):
+        self.log.info("Test warning when the chainstate contains many small files")
+        node = self.nodes[1]
+        warning = "This may indicate a legacy table format"
+
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=[warning]):
+            self.restart_node(1)
+        self.stop_node(1)
+
+        for i in range(101):
+            (node.chain_path / "chainstate" / f"small_file_{i}").touch()
+        with node.assert_debug_log(expected_msgs=[warning]):
+            self.start_node(1)
+        self.stop_node(1)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()
         self.init_empty_test()
+        self.chainstate_warning_test()
 
 
 if __name__ == '__main__':

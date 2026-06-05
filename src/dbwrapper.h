@@ -193,6 +193,9 @@ private:
     //! the name of this database
     std::string m_name;
 
+    //! filesystem path to this database
+    fs::path m_path;
+
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
 
@@ -260,6 +263,8 @@ public:
 
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;
+
+    void WarnIfNeedsCompaction() const;
 
     CDBIterator* NewIterator();
 

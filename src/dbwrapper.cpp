@@ -36,6 +36,20 @@
 
 static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
 
+static int32_t CountSmallLevelDBFiles(const fs::path& path)
+{
+    try {
+        int32_t small_files{0};
+        for (auto& entry : fs::directory_iterator{path}) {
+            // A few non-table files may match; the threshold tolerates them.
+            small_files += entry.is_regular_file() && entry.file_size() < 3_MiB;
+        }
+        return small_files;
+    } catch (const fs::filesystem_error&) {
+        return -1;
+    }
+}
+
 bool DestroyDB(const std::string& path_str)
 {
     return leveldb::DestroyDB(path_str, {}).ok();
@@ -218,7 +232,9 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()},
+      m_name{fs::PathToString(params.path.stem())},
+      m_path{params.path}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
@@ -310,6 +326,15 @@ size_t CDBWrapper::DynamicMemoryUsage() const
         return 0;
     }
     return parsed.value();
+}
+
+void CDBWrapper::WarnIfNeedsCompaction() const
+{
+    if (auto small_files{CountSmallLevelDBFiles(m_path)}; small_files > 100) {
+        LogWarning("LevelDB database %s contains %d small files. This may indicate a legacy table format. "
+                   "-forcecompactdb can migrate it to a more efficient format when run once.",
+                   m_name, small_files);
+    }
 }
 
 std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) const
