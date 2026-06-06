@@ -1383,14 +1383,16 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     for (int i = 0; i < 10; ++i) {
         V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.SendKey();
         tester.SendGarbage();
         tester.ReceiveKey();
         tester.SendGarbageTerm();
         tester.SendVersion();
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
@@ -1400,10 +1402,15 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(0, {}); // Invalidly encoded message
         tester.SendMessage("tx", msg_data_2); // 12-character encoded message type
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->size() == 3);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "cmpctblock" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->size() == 3);
+        BOOST_CHECK((*ret)[0]);
+        BOOST_CHECK((*ret)[0]->m_type == "cmpctblock");
+        BOOST_CHECK(std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
         BOOST_CHECK(!(*ret)[1]);
-        BOOST_CHECK((*ret)[2] && (*ret)[2]->m_type == "tx" && std::ranges::equal((*ret)[2]->m_recv, MakeByteSpan(msg_data_2)));
+        BOOST_CHECK((*ret)[2]);
+        BOOST_CHECK((*ret)[2]->m_type == "tx");
+        BOOST_CHECK(std::ranges::equal((*ret)[2]->m_recv, MakeByteSpan(msg_data_2)));
 
         // Then send a message with a bit error, expecting failure. It's possible this failure does
         // not occur immediately (when the length descriptor was modified), but it should come
@@ -1426,12 +1433,14 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendKey();
         tester.SendGarbage();
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveKey();
         tester.SendGarbageTerm();
         tester.SendVersion();
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
@@ -1440,9 +1449,14 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(uint8_t(14), msg_data_1); // inv short id
         tester.SendMessage(uint8_t(19), msg_data_2); // pong short id
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->size() == 2);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "inv" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "pong" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->size() == 2);
+        BOOST_CHECK((*ret)[0]);
+        BOOST_CHECK((*ret)[0]->m_type == "inv");
+        BOOST_CHECK(std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_CHECK((*ret)[1]);
+        BOOST_CHECK((*ret)[1]->m_type == "pong");
+        BOOST_CHECK(std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
 
         // Then send a too-large message.
         auto msg_data_3 = m_rng.randbytes<uint8_t>(4005000);
@@ -1471,7 +1485,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
             tester.SendGarbage(garb_len);
         }
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         if (!send_immediately) {
             tester.SendKey();
             tester.SendGarbage(garb_len);
@@ -1485,7 +1500,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         }
         tester.SendVersion(ver_data, false);
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
@@ -1506,11 +1522,18 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage("foobar", {}); // test receiving unknown message type
         tester.AddMessage("barfoo", {}); // test sending unknown message type
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->size() == 4);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "addrv2" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "headers" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->size() == 4);
+        BOOST_CHECK((*ret)[0]);
+        BOOST_CHECK((*ret)[0]->m_type == "addrv2");
+        BOOST_CHECK(std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_CHECK((*ret)[1]);
+        BOOST_CHECK((*ret)[1]->m_type == "headers");
+        BOOST_CHECK(std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
         BOOST_CHECK(!(*ret)[2]);
-        BOOST_CHECK((*ret)[3] && (*ret)[3]->m_type == "foobar" && (*ret)[3]->m_recv.empty());
+        BOOST_CHECK((*ret)[3]);
+        BOOST_CHECK((*ret)[3]->m_type == "foobar");
+        BOOST_CHECK((*ret)[3]->m_recv.empty());
         tester.ReceiveMessage("barfoo", {});
     }
 
@@ -1518,7 +1541,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     {
         V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.SendKey();
         tester.SendGarbage(V2Transport::MAX_GARBAGE_LEN + 1);
         tester.ReceiveKey();
@@ -1533,7 +1557,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendKey();
         tester.SendGarbage(V2Transport::MAX_GARBAGE_LEN + 1);
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveKey();
         tester.SendGarbageTerm();
         ret = tester.Interact();
@@ -1544,7 +1569,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     {
         V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.SendKey();
         tester.ReceiveKey();
         /** The number of random garbage bytes before the included first 15 bytes of terminator. */
@@ -1563,7 +1589,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendGarbageTerm();
         tester.SendVersion();
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->empty());
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->empty());
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
@@ -1573,9 +1600,12 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(uint8_t(2), msg_data_1); // "block" short id
         tester.AddMessage("blocktxn", msg_data_2); // schedule blocktxn to be sent to us
         ret = tester.Interact();
-        BOOST_REQUIRE(ret && ret->size() == 2);
+        BOOST_REQUIRE(ret);
+        BOOST_REQUIRE(ret->size() == 2);
         BOOST_CHECK(!(*ret)[0]);
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "block" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_CHECK((*ret)[1]);
+        BOOST_CHECK((*ret)[1]->m_type == "block");
+        BOOST_CHECK(std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_1)));
         tester.ReceiveMessage(uint8_t(3), msg_data_2); // "blocktxn" short id
     }
 

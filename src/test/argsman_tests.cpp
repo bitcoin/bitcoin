@@ -204,24 +204,33 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     testArgs.SetupArgs({a, b, ccc, d});
     BOOST_CHECK(testArgs.ParseParameters(0, argv_test, error));
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.empty() && s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.empty());
+        BOOST_CHECK(s.ro_config.empty());
     });
 
     BOOST_CHECK(testArgs.ParseParameters(1, argv_test, error));
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.empty() && s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.empty());
+        BOOST_CHECK(s.ro_config.empty());
     });
 
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
-                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+    BOOST_CHECK(testArgs.IsArgSet("-a"));
+    BOOST_CHECK(testArgs.IsArgSet("-b"));
+    BOOST_CHECK(testArgs.IsArgSet("-ccc"));
+    BOOST_CHECK(!testArgs.IsArgSet("f"));
+    BOOST_CHECK(!testArgs.IsArgSet("-d"));
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.size() == 3 && s.ro_config.empty());
-        BOOST_CHECK(s.command_line_options.contains("a") && s.command_line_options.contains("b") && s.command_line_options.contains("ccc")
-                    && !s.command_line_options.contains("f") && !s.command_line_options.contains("d"));
+        BOOST_CHECK(s.command_line_options.size() == 3);
+        BOOST_CHECK(s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.contains("a"));
+        BOOST_CHECK(s.command_line_options.contains("b"));
+        BOOST_CHECK(s.command_line_options.contains("ccc"));
+        BOOST_CHECK(!s.command_line_options.contains("f"));
+        BOOST_CHECK(!s.command_line_options.contains("d"));
 
         BOOST_CHECK(s.command_line_options.at("a").size() == 1);
         BOOST_CHECK(s.command_line_options.at("a").front().get_str() == "");
@@ -329,7 +338,8 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 
     // Nothing else should be in the map
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.size() == 6 && s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.size() == 6);
+        BOOST_CHECK(s.ro_config.empty());
     });
 
     // The -no prefix should get stripped on the way in.
@@ -397,8 +407,8 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // Command line overrides, but doesn't erase old setting
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
-    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
-                && testArgs.GetArgs("-bar").front() == "");
+    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1);
+    BOOST_CHECK(testArgs.GetArgs("-bar").front() == "");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
@@ -498,22 +508,22 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
         BOOST_CHECK(test_args.GetBoolArg("-iii", def) == def);
     }
 
-    BOOST_CHECK(test_args.GetArgs("-a").size() == 1
-                && test_args.GetArgs("-a").front() == "");
-    BOOST_CHECK(test_args.GetArgs("-b").size() == 1
-                && test_args.GetArgs("-b").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2
-                && test_args.GetArgs("-ccc").front() == "argument"
-                && test_args.GetArgs("-ccc").back() == "multiple");
+    BOOST_CHECK(test_args.GetArgs("-a").size() == 1);
+    BOOST_CHECK(test_args.GetArgs("-a").front() == "");
+    BOOST_CHECK(test_args.GetArgs("-b").size() == 1);
+    BOOST_CHECK(test_args.GetArgs("-b").front() == "1");
+    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
+    BOOST_CHECK(test_args.GetArgs("-ccc").front() == "argument");
+    BOOST_CHECK(test_args.GetArgs("-ccc").back() == "multiple");
     BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
-                && test_args.GetArgs("-ggg").front() == "1");
+    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1);
+    BOOST_CHECK(test_args.GetArgs("-ggg").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-i").size() == 1
-                && test_args.GetArgs("-i").front() == "1");
+    BOOST_CHECK(test_args.GetArgs("-i").size() == 1);
+    BOOST_CHECK(test_args.GetArgs("-i").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noi").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-zzz").size() == 0);
 
