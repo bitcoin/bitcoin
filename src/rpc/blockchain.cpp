@@ -993,18 +993,19 @@ CoinStatsHashType ParseHashType(std::string_view hash_type_input)
  * @param[in] index_requested Signals if the coinstatsindex should be used (when available).
  */
 static std::optional<kernel::CCoinsStats> GetUTXOStats(const CCoinsViewDB& view, node::BlockManager& blockman,
+                                                       const CoinStatsIndex* coin_stats_index,
                                                        kernel::CoinStatsHashType hash_type,
                                                        const std::function<void()>& interruption_point = {},
                                                        const CBlockIndex* pindex = nullptr,
                                                        bool index_requested = true)
 {
     // Use CoinStatsIndex if it is requested and available and a hash_type of Muhash or None was requested
-    if ((hash_type == kernel::CoinStatsHashType::MUHASH || hash_type == kernel::CoinStatsHashType::NONE) && g_coin_stats_index && index_requested) {
+    if ((hash_type == kernel::CoinStatsHashType::MUHASH || hash_type == kernel::CoinStatsHashType::NONE) && coin_stats_index && index_requested) {
         if (pindex) {
-            return g_coin_stats_index->LookUpStats(*pindex);
+            return coin_stats_index->LookUpStats(*pindex);
         } else {
             CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view.GetBestBlock())));
-            return g_coin_stats_index->LookUpStats(block_index);
+            return coin_stats_index->LookUpStats(block_index);
         }
     }
 
@@ -1088,7 +1089,7 @@ static RPCMethod gettxoutsetinfo()
 
     const CBlockIndex* pindex{nullptr};
     if (!request.params[1].isNull()) {
-        if (!g_coin_stats_index) {
+        if (!node.coin_stats_index) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Querying specific block heights requires coinstatsindex");
         }
 
@@ -1102,9 +1103,9 @@ static RPCMethod gettxoutsetinfo()
         pindex = ParseHashOrHeight(request.params[1], chainman);
     }
 
-    if (index_requested && g_coin_stats_index) {
-        if (!g_coin_stats_index->BlockUntilSyncedToCurrentChain()) {
-            const IndexSummary summary{g_coin_stats_index->GetSummary()};
+    if (index_requested && node.coin_stats_index) {
+        if (!node.coin_stats_index->BlockUntilSyncedToCurrentChain()) {
+            const IndexSummary summary{node.coin_stats_index->GetSummary()};
 
             // If a specific block was requested and the index has already synced past that height, we can return the
             // data already even though the index is not fully synced yet.
@@ -1114,7 +1115,7 @@ static RPCMethod gettxoutsetinfo()
         }
     }
 
-    const std::optional<CCoinsStats> maybe_stats = GetUTXOStats(coins_view, blockman, hash_type, node.rpc_interruption_point, pindex, index_requested);
+    const std::optional<CCoinsStats> maybe_stats = GetUTXOStats(coins_view, blockman, node.coin_stats_index.get(), hash_type, node.rpc_interruption_point, pindex, index_requested);
     if (maybe_stats.has_value()) {
         const CCoinsStats& stats = maybe_stats.value();
         ret.pushKV("height", stats.nHeight);
@@ -1136,7 +1137,7 @@ static RPCMethod gettxoutsetinfo()
             CCoinsStats prev_stats{};
             if (stats.nHeight > 0) {
                 const CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(stats.hashBlock)));
-                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, blockman, hash_type, node.rpc_interruption_point, block_index.pprev, index_requested);
+                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, blockman, node.coin_stats_index.get(), hash_type, node.rpc_interruption_point, block_index.pprev, index_requested);
                 if (!maybe_prev_stats) {
                     throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
                 }
@@ -3325,6 +3326,7 @@ UniValue CreateRolledBackUTXOSnapshot(
     LogInfo("Rollback complete. Computing UTXO statistics for created txoutset dump.");
     std::optional<CCoinsStats> maybe_stats = GetUTXOStats(*temp_db,
                                                           chainstate.m_blockman,
+                                                          /*coin_stats_index=*/nullptr,
                                                           CoinStatsHashType::HASH_SERIALIZED,
                                                           node.rpc_interruption_point);
 
@@ -3371,7 +3373,7 @@ PrepareUTXOSnapshot(
 
         chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
 
-        maybe_stats = GetUTXOStats(chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
+        maybe_stats = GetUTXOStats(chainstate.CoinsDB(), chainstate.m_blockman, /*coin_stats_index=*/nullptr, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
         if (!maybe_stats) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
