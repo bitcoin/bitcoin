@@ -58,6 +58,7 @@
 #include <node/chainstate.h>
 #include <node/chainstatemanager_args.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/interface_ui.h>
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
@@ -156,6 +157,7 @@ using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINT_MODIFIED_FEE;
 using node::DEFAULT_STOPATHEIGHT;
 using node::DumpMempool;
+using node::GetBlockFilterIndex;
 using node::ImportBlocks;
 using node::KernelNotifications;
 using node::LoadChainstate;
@@ -393,7 +395,7 @@ void Shutdown(NodeContext& node)
     node.txindex.reset();
     node.txospenderindex.reset();
     node.coin_stats_index.reset();
-    DestroyAllBlockFilterIndexes();
+    node.block_filter_indexes.clear();
 
     // Callbacks queued by this final chainstate flush will not run during shutdown
     if (node.chainman) {
@@ -1684,8 +1686,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     PeerManager::Options peerman_opts{};
     ApplyArgsManOptions(args, peerman_opts);
-    peerman_opts.get_block_filter_index = [](BlockFilterType filter_type) {
-        return GetBlockFilterIndex(filter_type);
+    peerman_opts.get_block_filter_index = [&node](BlockFilterType filter_type) {
+        return GetBlockFilterIndex(node, filter_type);
     };
 
     {
@@ -2022,8 +2024,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
-        InitBlockFilterIndex([&]{ return interfaces::MakeChain(node); }, filter_type, index_cache_sizes.filter_index, false, do_reindex);
-        node.indexes.emplace_back(GetBlockFilterIndex(filter_type));
+        auto& index{node.block_filter_indexes.emplace_back(
+            MakeIndex<BlockFilterIndex>(interfaces::MakeChain(node), filter_type, index_cache_sizes.filter_index, /*f_memory=*/false, do_reindex))};
+        node.indexes.emplace_back(index.get());
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {

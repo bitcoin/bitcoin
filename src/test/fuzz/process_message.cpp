@@ -5,10 +5,10 @@
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
-#include <index/blockfilterindex.h>
 #include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/indexes.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
@@ -97,8 +97,8 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
                                      PeerManager::Options{
                                          .reconcile_txs = true,
                                          .deterministic_rng = true,
-                                         .get_block_filter_index = [](BlockFilterType filter_type) {
-                                             return GetBlockFilterIndex(filter_type);
+                                         .get_block_filter_index = [&node](BlockFilterType filter_type) {
+                                             return node::GetBlockFilterIndex(node, filter_type);
                                          },
                                      });
 

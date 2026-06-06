@@ -17,6 +17,7 @@ class ArgsManager;
 class AddrMan;
 class BanMan;
 class BaseIndex;
+class BlockFilterIndex;
 class CConnman;
 class CoinStatsIndex;
 class FeeRateEstimatorManager;
@@ -52,6 +53,7 @@ class Warnings;
 // including index headers. Index code includes node/context.h, so including
 // index headers there would create a circular dependency.
 struct IndexDeleter {
+    void operator()(BlockFilterIndex* index) const noexcept;
     void operator()(CoinStatsIndex* index) const noexcept;
     void operator()(TxIndex* index) const noexcept;
     void operator()(TxoSpenderIndex* index) const noexcept;
@@ -94,7 +96,7 @@ struct NodeContext {
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
-    std::vector<BaseIndex*> indexes; // raw pointers because memory is managed by index owner members below or elsewhere
+    std::vector<BaseIndex*> indexes; // raw pointers because memory is managed by index owner members below
     std::unique_ptr<interfaces::Chain> chain;
     //! List of all chain clients (wallet processes or other client) connected to node.
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
@@ -112,6 +114,7 @@ struct NodeContext {
     std::unique_ptr<node::Warnings> warnings;
     //! Destroy indexes while they can still unregister from validation_signals
     //! and report fatal errors through exit_status and warnings.
+    std::vector<std::unique_ptr<BlockFilterIndex, IndexDeleter>> block_filter_indexes;
     std::unique_ptr<TxIndex, IndexDeleter> txindex;
     std::unique_ptr<TxoSpenderIndex, IndexDeleter> txospenderindex;
     std::unique_ptr<CoinStatsIndex, IndexDeleter> coin_stats_index;

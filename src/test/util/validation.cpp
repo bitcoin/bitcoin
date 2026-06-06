@@ -115,7 +115,7 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
 {
     node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
 
-    DestroyAllBlockFilterIndexes();
+    setup.m_node.block_filter_indexes.clear();
 
     bilingual_str error{};
     setup.m_node.block_template_manager.reset();
@@ -142,8 +142,8 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
     }
 
     if (opts.init_block_filter_basic) {
-        Assert(InitBlockFilterIndex([&] { return interfaces::MakeChain(setup.m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true));
-        auto& index = *Assert(GetBlockFilterIndex(BlockFilterType::BASIC));
+        auto& index{*setup.m_node.block_filter_indexes.emplace_back(
+            node::MakeIndex<BlockFilterIndex>(interfaces::MakeChain(setup.m_node), BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true))};
         Assert(index.Init());
         index.Sync();
         // The index serves the static setup chain only. Leaving it registered
