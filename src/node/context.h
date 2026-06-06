@@ -29,6 +29,7 @@ class NetGroupManager;
 class PeerManager;
 class TorController;
 class TxIndex;
+class TxoSpenderIndex;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -52,6 +53,9 @@ class Warnings;
 // index headers there would create a circular dependency.
 struct TxIndexDeleter {
     void operator()(TxIndex* index) const noexcept;
+};
+struct TxoSpenderIndexDeleter {
+    void operator()(TxoSpenderIndex* index) const noexcept;
 };
 
 //! NodeContext struct containing references to chain state and connection
@@ -105,6 +109,7 @@ struct NodeContext {
     std::unique_ptr<ValidationSignals> validation_signals;
     //! Declared after validation_signals so index destructors can unregister safely.
     std::unique_ptr<TxIndex, TxIndexDeleter> txindex;
+    std::unique_ptr<TxoSpenderIndex, TxoSpenderIndexDeleter> txospenderindex;
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
