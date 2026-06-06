@@ -197,7 +197,8 @@ BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     }
 
     // But trying to derive a non-existent 256th depth will fail!
-    BOOST_CHECK(key_parent.nDepth == 255 && pubkey_parent.nDepth == 255);
+    BOOST_CHECK(key_parent.nDepth == 255);
+    BOOST_CHECK(pubkey_parent.nDepth == 255);
     BOOST_CHECK(!key_parent.Derive(key_child, 0));
     BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
 }
