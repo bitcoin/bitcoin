@@ -19,11 +19,17 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
 from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    JSONRPCException,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
@@ -114,6 +120,9 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+        # Heavy test (many blocks, large mempool, node restart). Cleanup restores
+        # balance, node settings, and connectivity so later tests are unaffected.
+        test_bump_fee_uncomputable_cluster(self, rbf_node, peer_node, dest_address)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -827,6 +836,123 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
     self.clear_mempool()
+
+
+def test_bump_fee_uncomputable_cluster(self, rbf_node, peer_node, dest_address):
+    self.log.info('Test that bumpfee fails when unconfirmed UTXOs depend on an enormous cluster')
+
+    # bumpfee's CheckFeeRate() calls calculateCombinedBumpFee(), which relies on
+    # the MiniMiner. The MiniMiner refuses to gather more than 500 unconfirmed
+    # transactions (CTxMemPool::GatherClusters DoS limit) and returns no value in
+    # that case. Since a single mempool cluster is capped at MAX_CLUSTER_COUNT_LIMIT
+    # (64) transactions, we build several maxed-out clusters and have the bumped
+    # transaction spend one output from each; their union exceeds 500 and triggers
+    # the no-value path.
+    #
+    # The original transaction must spend these unconfirmed outputs while staying
+    # out of the mempool itself (otherwise it would connect all clusters into one
+    # oversized cluster and GatherClusters would return only that single, in-limit
+    # cluster). It also must be created while the clusters are still small: the
+    # wallet's own coin selection computes per-input bump fees and would hit the
+    # same MiniMiner limit. We therefore:
+    #   1. create small "seed" transactions, each paying the rbf_node (spent by the
+    #      original tx) and leaving a MiniWallet output for later cluster growth,
+    #   2. build and broadcast the original tx with a low fee so it enters the
+    #      mempool while every seed is still a tiny cluster,
+    #   3. restart with a higher -minrelaytxfee to evict the low-fee original tx
+    #      from the mempool while keeping it in the wallet,
+    #   4. grow each seed into a maxed-out cluster.
+    # Keep the node disconnected from its peer to avoid relaying the intentionally
+    # large set of cluster transactions.
+    balance_before = rbf_node.getbalance()
+    original_txid = None
+    self.disconnect_nodes(0, 1)
+    try:
+        NUM_CLUSTERS = 8
+        CLUSTER_SIZE = 64  # == MAX_CLUSTER_COUNT_LIMIT; NUM_CLUSTERS * CLUSTER_SIZE = 512 > 500
+        SEED_PAYMENT = COIN  # 1 BTC paid to the rbf_node by every seed transaction
+        SEED_FEE = 100_000  # ~500 sat/vB; survives -minrelaytxfee=0.0001 eviction
+
+        # Fund a MiniWallet directly on rbf_node so all cluster transactions live in
+        # rbf_node's own mempool, where the bump fee calculation inspects them.
+        # Use a dedicated tag so coinbase outputs are not picked up by other tests'
+        # default MiniWallet instances on this node.
+        miniwallet = MiniWallet(rbf_node, tag_name="feebumper_cluster")
+        self.generatetoaddress(rbf_node, COINBASE_MATURITY + NUM_CLUSTERS, miniwallet.get_address(), sync_fun=self.no_op)
+        miniwallet.rescan_utxos()
+        mw_spk = miniwallet.get_output_script()
+
+        # All seeds pay this single rbf_node-owned address; the original tx spends those
+        # (unconfirmed) outputs.
+        rbf_addr = rbf_node.getnewaddress(address_type="bech32")
+        rbf_spk = bytes.fromhex(rbf_node.getaddressinfo(rbf_addr)["scriptPubKey"])
+
+        seed_txids = []
+        for _ in range(NUM_CLUSTERS):
+            coin = miniwallet.get_utxo()  # a mature coinbase output
+            seed = CTransaction()
+            seed.vin = [CTxIn(COutPoint(int(coin["txid"], 16), coin["vout"]), nSequence=MAX_BIP125_RBF_SEQUENCE)]
+            # vout0 -> rbf_node (spent by the original tx), vout1 -> MiniWallet (grown later)
+            seed.vout = [CTxOut(SEED_PAYMENT, rbf_spk), CTxOut(int(coin["value"] * COIN) - SEED_PAYMENT - SEED_FEE, mw_spk)]
+            miniwallet.sign_tx(seed)
+            seed_hex = seed.serialize().hex()
+            seed_txid = rbf_node.sendrawtransaction(seed_hex)
+            miniwallet.scan_tx(rbf_node.decoderawtransaction(seed_hex))
+            seed_txids.append(seed_txid)
+
+        # Build the original RBF transaction spending every seed's payment output, with
+        # a low fee so it is mempool-accepted now but evictable below.
+        inputs = [{"txid": txid, "vout": 0, "sequence": MAX_BIP125_RBF_SEQUENCE} for txid in seed_txids]
+        ORIGINAL_TX_FEE = 2000  # ~3 sat/vB; evicted when minrelaytxfee rises to 10 sat/vB
+        raw = rbf_node.createrawtransaction(inputs, {dest_address: Decimal(NUM_CLUSTERS * SEED_PAYMENT - ORIGINAL_TX_FEE) / COIN})
+        prevtxs = [{"txid": txid, "vout": 0, "scriptPubKey": rbf_spk.hex(), "amount": Decimal(SEED_PAYMENT) / COIN} for txid in seed_txids]
+        signed = rbf_node.signrawtransactionwithwallet(raw, prevtxs)
+        assert signed["complete"]
+        original_txid = rbf_node.sendrawtransaction(signed["hex"])
+        assert original_txid in rbf_node.getrawmempool()
+
+        # Evict the low-fee original tx from the mempool (it stays in the wallet). The
+        # seeds and their soon-to-be-added descendants pay a far higher fee rate.
+        self.restart_node(1, ['-minrelaytxfee=0.0001'] + self.extra_args[1])
+        rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+        assert original_txid not in rbf_node.getrawmempool()
+        assert_equal(rbf_node.gettransaction(original_txid)["confirmations"], 0)
+        assert all(txid in rbf_node.getrawmempool() for txid in seed_txids)
+
+        # Grow each seed into a full cluster of CLUSTER_SIZE transactions by extending
+        # its MiniWallet output. NUM_CLUSTERS * CLUSTER_SIZE = 512 unconfirmed txs are
+        # now reachable from the original tx's inputs, exceeding the 500 gather limit.
+        for seed_txid in seed_txids:
+            miniwallet.send_self_transfer_chain(
+                from_node=rbf_node,
+                chain_length=CLUSTER_SIZE - 1,
+                utxo_to_spend=miniwallet.get_utxo(txid=seed_txid),
+            )
+
+        # Exactly 8 seeds + 8x63 chain txs; peer is disconnected so nothing else is pending.
+        assert_equal(len(rbf_node.getrawmempool()), NUM_CLUSTERS * CLUSTER_SIZE)
+
+        # Bumping the original tx must fail cleanly with the cluster error instead of
+        # dereferencing an empty optional (which previously aborted the node).
+        assert_raises_rpc_error(
+            -4,
+            "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
+            rbf_node.bumpfee, original_txid, {"fee_rate": NORMAL})
+    finally:
+        if original_txid is not None:
+            try:
+                rbf_node.abandontransaction(original_txid)
+            except JSONRPCException:
+                pass
+        self.generate(rbf_node, 1, sync_fun=self.no_op)
+        self.restart_node(1, self.extra_args[1])
+        rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+        self.connect_nodes(1, 0)
+        self.sync_all()
+        excess = rbf_node.getbalance() - balance_before
+        if excess > 0:
+            rbf_node.sendtoaddress(peer_node.getnewaddress(), excess)
+        self.clear_mempool()
 
 
 if __name__ == "__main__":
