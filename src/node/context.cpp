@@ -7,6 +7,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <index/txindex.h>
+#include <index/txospenderindex.h>
 #include <interfaces/chain.h>
 #include <interfaces/mining.h>
 #include <kernel/context.h>
