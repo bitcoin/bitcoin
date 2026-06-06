@@ -18,6 +18,7 @@ class AddrMan;
 class BanMan;
 class BaseIndex;
 class CConnman;
+class CoinStatsIndex;
 class FeeRateEstimatorManager;
 class ValidationSignals;
 class CScheduler;
@@ -51,6 +52,7 @@ class Warnings;
 // including index headers. Index code includes node/context.h, so including
 // index headers there would create a circular dependency.
 struct IndexDeleter {
+    void operator()(CoinStatsIndex* index) const noexcept;
     void operator()(TxIndex* index) const noexcept;
     void operator()(TxoSpenderIndex* index) const noexcept;
 };
@@ -112,6 +114,7 @@ struct NodeContext {
     //! and report fatal errors through exit_status and warnings.
     std::unique_ptr<TxIndex, IndexDeleter> txindex;
     std::unique_ptr<TxoSpenderIndex, IndexDeleter> txospenderindex;
+    std::unique_ptr<CoinStatsIndex, IndexDeleter> coin_stats_index;
     std::thread background_init_thread;
 
     //! Declare default constructor and destructor that are not inline, so code
