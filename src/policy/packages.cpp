@@ -84,7 +84,7 @@ bool IsWellFormedPackage(const Package& txns, PackageValidationState& state)
         return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
     }
 
-    const int64_t total_weight = std::accumulate(txns.cbegin(), txns.cend(), 0,
+    const int64_t total_weight = std::accumulate(txns.cbegin(), txns.cend(), int64_t{0},
                                [](int64_t sum, const auto& tx) { return sum + GetTransactionWeight(*tx); });
     // If the package only contains 1 tx, it's better to report the policy violation on individual tx weight.
     if (package_count > 1 && total_weight > MAX_PACKAGE_WEIGHT) {

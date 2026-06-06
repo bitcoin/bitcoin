@@ -21,6 +21,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <limits>
+
 using namespace util::hex_literals;
 
 // A fee amount that is above 1sat/vB but below 5sat/vB for most transactions created within these
@@ -199,6 +201,43 @@ BOOST_AUTO_TEST_CASE(package_sanitization_tests)
     BOOST_CHECK(IsConsistentPackage(package_with_dup_tx));
     package_with_dup_tx.emplace_back(create_placeholder_tx(1, 1));
     BOOST_CHECK(IsConsistentPackage(package_with_dup_tx));
+}
+
+// Regression test for an integer-truncation defect in IsWellFormedPackage's
+// MAX_PACKAGE_WEIGHT guard. The total-weight accumulator must be 64-bit; if the
+// std::accumulate init value is a plain `0` (int), the running sum is narrowed to
+// 32 bits each iteration, so a package whose true weight exceeds INT_MAX wraps to a
+// small/negative value and slips past the "package-too-large" check.
+//
+// We reuse a single large transaction MAX_PACKAGE_COUNT times. The weight check runs
+// before the duplicate-txid check, so the accumulator sees 25 x weight. With the bug
+// present, the wrapped total bypasses the weight guard and the package is instead
+// rejected later as "package-contains-duplicates"; with the fix, it is correctly
+// rejected as "package-too-large".
+BOOST_AUTO_TEST_CASE(package_weight_overflow_tests)
+{
+    // ~27 MB tx => weight ~109M; 25 copies => true total ~2.73e9, which exceeds
+    // INT_MAX (~2.147e9) and so overflows a 32-bit accumulator, yet stays a single
+    // ~27 MB allocation rather than 25 separate large transactions.
+    CTransactionRef big_ptx = create_placeholder_tx(/*num_inputs=*/150'000, /*num_outputs=*/150'000);
+    const int64_t tx_weight = GetTransactionWeight(*big_ptx);
+    const int64_t total_true_weight = tx_weight * MAX_PACKAGE_COUNT;
+
+    // Preconditions for this regression to be meaningful: a single tx is under
+    // INT_MAX, but MAX_PACKAGE_COUNT copies exceed it (and stay below 2^32, so a
+    // 32-bit accumulator wraps to a value <= MAX_PACKAGE_WEIGHT).
+    BOOST_REQUIRE(tx_weight <= std::numeric_limits<int32_t>::max());
+    BOOST_REQUIRE(total_true_weight > std::numeric_limits<int32_t>::max());
+    BOOST_REQUIRE(total_true_weight < (int64_t{1} << 32));
+
+    Package package_overflow(MAX_PACKAGE_COUNT, big_ptx);
+    PackageValidationState state_overflow;
+    BOOST_CHECK(!IsWellFormedPackage(package_overflow, state_overflow));
+    BOOST_CHECK_EQUAL(state_overflow.GetResult(), PackageValidationResult::PCKG_POLICY);
+    // With a correct 64-bit accumulator the weight guard fires first. If this is
+    // "package-contains-duplicates" instead, the weight guard was bypassed by the
+    // 32-bit overflow.
+    BOOST_CHECK_EQUAL(state_overflow.GetRejectReason(), "package-too-large");
 }
 
 BOOST_AUTO_TEST_CASE(package_validation_tests)
