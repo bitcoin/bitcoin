@@ -167,21 +167,25 @@ check_cxx_source_compiles_with_flags("
   CXXFLAGS ${SSE41_CXXFLAGS}
 )
 
-if(NOT MSVC)
-  # Check for AVX2 intrinsics.
+# Check for AVX2 intrinsics.
+if(MSVC)
+  set(AVX2_CXXFLAGS /arch:AVX2)
+else()
   set(AVX2_CXXFLAGS -mavx -mavx2)
-  check_cxx_source_compiles_with_flags("
-    #include <immintrin.h>
+endif()
+check_cxx_source_compiles_with_flags("
+  #include <immintrin.h>
 
-    int main()
-    {
-      __m256i l = _mm256_set1_epi32(0);
-      return _mm256_extract_epi32(l, 7);
-    }
-    " HAVE_AVX2
-    CXXFLAGS ${AVX2_CXXFLAGS}
-  )
+  int main()
+  {
+    __m256i l = _mm256_set1_epi32(0);
+    return _mm256_extract_epi32(l, 7);
+  }
+  " HAVE_AVX2
+  CXXFLAGS ${AVX2_CXXFLAGS}
+)
 
+if(NOT MSVC)
   # Check for x86 SHA-NI intrinsics.
   set(X86_SHANI_CXXFLAGS -msse4 -msha)
   check_cxx_source_compiles_with_flags("
