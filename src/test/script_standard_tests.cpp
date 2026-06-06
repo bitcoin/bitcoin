@@ -439,15 +439,20 @@ BOOST_AUTO_TEST_CASE(script_standard_taproot_builder)
     constexpr uint256 hash_3{"31fe7061656bea2a36aa60a2f7ef940578049273746935d296426dc0afd86b68"};
 
     TaprootBuilder builder;
-    BOOST_CHECK(builder.IsValid() && builder.IsComplete());
+    BOOST_CHECK(builder.IsValid());
+    BOOST_CHECK(builder.IsComplete());
     builder.Add(2, script_2, 0xc0);
-    BOOST_CHECK(builder.IsValid() && !builder.IsComplete());
+    BOOST_CHECK(builder.IsValid());
+    BOOST_CHECK(!builder.IsComplete());
     builder.AddOmitted(2, hash_3);
-    BOOST_CHECK(builder.IsValid() && !builder.IsComplete());
+    BOOST_CHECK(builder.IsValid());
+    BOOST_CHECK(!builder.IsComplete());
     builder.Add(1, script_1, 0xc0);
-    BOOST_CHECK(builder.IsValid() && builder.IsComplete());
+    BOOST_CHECK(builder.IsValid());
+    BOOST_CHECK(builder.IsComplete());
     builder.Finalize(key_inner);
-    BOOST_CHECK(builder.IsValid() && builder.IsComplete());
+    BOOST_CHECK(builder.IsValid());
+    BOOST_CHECK(builder.IsComplete());
     BOOST_CHECK_EQUAL(EncodeDestination(builder.GetOutput()), "bc1pj6gaw944fy0xpmzzu45ugqde4rz7mqj5kj0tg8kmr5f0pjq8vnaqgynnge");
 }
 
