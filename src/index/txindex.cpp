@@ -38,8 +38,6 @@
 #include <utility>
 #include <vector>
 
-std::unique_ptr<TxIndex> g_txindex;
-
 namespace {
 SipHasher13UJ ReadOrCreateTxidHasher(CDBWrapper& db)
 {
