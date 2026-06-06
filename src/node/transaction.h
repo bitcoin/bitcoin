@@ -12,6 +12,7 @@
 
 class CBlockIndex;
 class CTxMemPool;
+class TxIndex;
 namespace Consensus {
 struct Params;
 }
@@ -60,17 +61,18 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
 /**
  * Return transaction with a given hash.
  * If mempool is provided and block_index is not provided, check it first for the tx.
- * If -txindex is available, check it next for the tx.
+ * If txindex is provided, check it next for the tx.
  * Finally, if block_index is provided, check for tx by reading entire block from disk.
  *
  * @param[in]  block_index     The block to read from disk, or nullptr
  * @param[in]  mempool         If provided, check mempool for tx
+ * @param[in]  txindex         If provided, check txindex for tx
  * @param[in]  hash            The txid
  * @param[in]  blockman        Used to access and read blocks from disk
  * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
  * @returns                    The tx if found, otherwise nullptr
  */
-CTransactionRef GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
+CTransactionRef GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const TxIndex* txindex, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H

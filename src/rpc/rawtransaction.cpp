@@ -134,8 +134,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
     }
     PartiallySignedTransaction psbtx = *psbt_res;
 
-    if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
     const NodeContext& node = EnsureAnyNodeContext(context);
+    if (node.txindex) node.txindex->BlockUntilSyncedToCurrentChain();
 
     // If we can't find the corresponding full transaction for all of our inputs,
     // this will be used to find just the utxos for the segwit inputs for which
@@ -151,9 +151,9 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         CTransactionRef tx;
 
         // Look in the txindex
-        if (g_txindex) {
+        if (node.txindex) {
             uint256 block_hash;
-            g_txindex->FindTx(psbt_input.prev_txid, block_hash, tx);
+            node.txindex->FindTx(psbt_input.prev_txid, block_hash, tx);
         }
         // If we still don't have it look in the mempool
         if (!tx) {
@@ -303,12 +303,12 @@ static RPCMethod getrawtransaction()
     }
 
     bool f_txindex_ready = false;
-    if (g_txindex && !blockindex) {
-        f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
+    if (node.txindex && !blockindex) {
+        f_txindex_ready = node.txindex->BlockUntilSyncedToCurrentChain();
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), node.txindex.get(), txid, chainman.m_blockman, hash_block);
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
@@ -317,7 +317,7 @@ static RPCMethod getrawtransaction()
                 throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
             errmsg = "No such transaction found in the provided block";
-        } else if (!g_txindex) {
+        } else if (!node.txindex) {
             errmsg = "No such mempool transaction. Use -txindex or provide a block hash to enable blockchain transaction queries";
         } else if (!f_txindex_ready) {
             errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";

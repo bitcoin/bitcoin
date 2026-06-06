@@ -389,9 +389,10 @@ static RPCMethod getindexinfo()
 {
     UniValue result(UniValue::VOBJ);
     const std::string index_name{self.MaybeArg<std::string_view>("index_name").value_or("")};
+    const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
-    if (g_txindex) {
-        result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));
+    if (node.txindex) {
+        result.pushKVs(SummaryToJSON(node.txindex->GetSummary(), index_name));
     }
 
     if (g_coin_stats_index) {

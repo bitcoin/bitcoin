@@ -28,6 +28,7 @@ class ECC_Context;
 class NetGroupManager;
 class PeerManager;
 class TorController;
+class TxIndex;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -95,6 +96,8 @@ struct NodeContext {
     std::unique_ptr<KernelNotifications> notifications;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
+    //! Declared after validation_signals so index destructors can unregister safely.
+    std::unique_ptr<TxIndex> txindex;
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
