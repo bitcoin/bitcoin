@@ -139,14 +139,14 @@ TransactionError BroadcastTransaction(NodeContext& node,
     return TransactionError::OK;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const TxIndex* const txindex, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
 {
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);
         if (ptx) return ptx;
     }
-    if (g_txindex) {
-        if (auto result{g_txindex->FindTx(hash)}) {
+    if (txindex) {
+        if (auto result{txindex->FindTx(hash)}) {
             if (!block_index || block_index->GetBlockHash() == result->block_hash) {
                 // Don't return the transaction if the provided block hash doesn't match.
                 // The case where a transaction appears in multiple blocks (e.g. reorgs or
