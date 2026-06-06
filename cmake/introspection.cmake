@@ -145,25 +145,29 @@ check_cxx_source_compiles("
   " HAVE_SYSCTL_ARND
 )
 
-if(NOT MSVC)
-  include(CheckSourceCompilesWithFlags)
+include(CheckSourceCompilesWithFlags)
 
-  # Check for SSE4.1 intrinsics.
+# Check for SSE4.1 intrinsics.
+if(MSVC)
+  set(AVX2_CXXFLAGS /arch:SSE4.2)
+else()
   set(SSE41_CXXFLAGS -msse4.1)
-  check_cxx_source_compiles_with_flags("
-    #include <immintrin.h>
+endif()
+check_cxx_source_compiles_with_flags("
+  #include <immintrin.h>
 
-    int main()
-    {
-      __m128i a = _mm_set1_epi32(0);
-      __m128i b = _mm_set1_epi32(1);
-      __m128i r = _mm_blend_epi16(a, b, 0xFF);
-      return _mm_extract_epi32(r, 3);
-    }
-    " HAVE_SSE41
-    CXXFLAGS ${SSE41_CXXFLAGS}
-  )
+  int main()
+  {
+    __m128i a = _mm_set1_epi32(0);
+    __m128i b = _mm_set1_epi32(1);
+    __m128i r = _mm_blend_epi16(a, b, 0xFF);
+    return _mm_extract_epi32(r, 3);
+  }
+  " HAVE_SSE41
+  CXXFLAGS ${SSE41_CXXFLAGS}
+)
 
+if(NOT MSVC)
   # Check for AVX2 intrinsics.
   set(AVX2_CXXFLAGS -mavx -mavx2)
   check_cxx_source_compiles_with_flags("
