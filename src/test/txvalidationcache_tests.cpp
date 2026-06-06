@@ -114,8 +114,6 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
 // CHECKLOCKTIMEVERIFY (or CHECKSEQUENCEVERIFY), but the script does contain
 // OP_CHECKLOCKTIMEVERIFY (or OP_CHECKSEQUENCEVERIFY), then script execution
 // should fail.
-// Capture this interaction with the upgraded_nop argument: set it when evaluating
-// any script flag that is implemented as an upgraded NOP code.
 static void ValidateCheckInputsForAllFlags(const CTransaction &tx, script_verify_flags failing_flags, bool add_to_cache, CCoinsViewCache& active_coins_tip, ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     PrecomputedTransactionData txdata;
@@ -133,6 +131,10 @@ static void ValidateCheckInputsForAllFlags(const CTransaction &tx, script_verify
             // CLEANSTACK requires P2SH and WITNESS, see VerifyScript() in
             // script/interpreter.cpp
             test_flags |= SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS;
+        }
+        if ((test_flags & SCRIPT_VERIFY_TAPROOT)) {
+            // TAPROOT requires WITNESS
+            test_flags |= SCRIPT_VERIFY_WITNESS;
         }
         if ((test_flags & SCRIPT_VERIFY_WITNESS)) {
             // WITNESS requires P2SH
