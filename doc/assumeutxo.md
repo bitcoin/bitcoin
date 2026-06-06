@@ -72,7 +72,7 @@ Example usage:
 $ bitcoin-cli -rpcclienttimeout=0 dumptxoutset /path/to/output rollback
 ```
 
-For most of the duration of `dumptxoutset` running the node is in a temporary
+For most of the duration that `dumptxoutset` is running, the node is in a temporary
 state that does not actually reflect reality, i.e. blocks are marked invalid
 although we know they are not invalid. Because of this it is discouraged to
 interact with the node in any other way during this time to avoid inconsistent

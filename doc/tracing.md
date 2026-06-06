@@ -266,7 +266,7 @@ Is called when the second `CreateTransactionInternal` with Avoid Partial Spends 
 Arguments passed:
 1. Wallet name as `pointer to C-style string`
 2. Whether the Avoid Partial Spends solution will be used as `bool`
-3. Whether `CreateTransactionInternal` succeeded as` bool`
+3. Whether `CreateTransactionInternal` succeeded as `bool`
 4. The expected transaction fee as an `int64`
 5. The position of the change output as an `int32`
 
