@@ -28,6 +28,7 @@ class NetGroupManager;
 class PeerManager;
 class TorController;
 class TxIndex;
+class TxoSpenderIndex;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -51,6 +52,7 @@ class Warnings;
 // index headers there would create a circular dependency.
 struct IndexDeleter {
     void operator()(TxIndex* index) const noexcept;
+    void operator()(TxoSpenderIndex* index) const noexcept;
 };
 
 //! Construct an index with the out-of-line deleter used by NodeContext.
@@ -109,6 +111,7 @@ struct NodeContext {
     //! Destroy indexes while they can still unregister from validation_signals
     //! and report fatal errors through exit_status and warnings.
     std::unique_ptr<TxIndex, IndexDeleter> txindex;
+    std::unique_ptr<TxoSpenderIndex, IndexDeleter> txospenderindex;
     std::thread background_init_thread;
 
     //! Declare default constructor and destructor that are not inline, so code
