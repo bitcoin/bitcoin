@@ -46,6 +46,7 @@ void ComputeTag(ChaCha20& chacha20, std::span<const std::byte> aad, std::span<co
 
     // Use the first 32 bytes of the first keystream block as poly1305 key.
     Poly1305 poly1305{std::span{first_block}.first(Poly1305::KEYLEN)};
+    memory_cleanse(first_block, sizeof(first_block));
 
     // Compute tag:
     // - Process the padded AAD with Poly1305.
