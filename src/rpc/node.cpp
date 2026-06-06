@@ -395,8 +395,8 @@ static RPCMethod getindexinfo()
         result.pushKVs(SummaryToJSON(node.txindex->GetSummary(), index_name));
     }
 
-    if (g_coin_stats_index) {
-        result.pushKVs(SummaryToJSON(g_coin_stats_index->GetSummary(), index_name));
+    if (node.coin_stats_index) {
+        result.pushKVs(SummaryToJSON(node.coin_stats_index->GetSummary(), index_name));
     }
 
     if (node.txospenderindex) {

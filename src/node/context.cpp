@@ -6,6 +6,7 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
 #include <interfaces/chain.h>

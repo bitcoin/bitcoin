@@ -390,7 +390,7 @@ void Shutdown(NodeContext& node)
     node.indexes.clear();
     node.txindex.reset();
     node.txospenderindex.reset();
-    if (g_coin_stats_index) g_coin_stats_index.reset();
+    node.coin_stats_index.reset();
     DestroyAllBlockFilterIndexes();
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
@@ -1925,8 +1925,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
-        g_coin_stats_index = std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /*cache_size=*/0, false, do_reindex);
-        node.indexes.emplace_back(g_coin_stats_index.get());
+        node.coin_stats_index = std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /*cache_size=*/0, false, do_reindex);
+        node.indexes.emplace_back(node.coin_stats_index.get());
     }
 
     // Init indexes

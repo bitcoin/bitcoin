@@ -20,6 +20,7 @@ class BanMan;
 class BaseIndex;
 class CBlockPolicyEstimator;
 class CConnman;
+class CoinStatsIndex;
 class ValidationSignals;
 class CScheduler;
 class CTxMemPool;
@@ -100,6 +101,7 @@ struct NodeContext {
     //! Declared after validation_signals so index destructors can unregister safely.
     std::unique_ptr<TxIndex> txindex;
     std::unique_ptr<TxoSpenderIndex> txospenderindex;
+    std::unique_ptr<CoinStatsIndex> coin_stats_index;
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
