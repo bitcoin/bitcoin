@@ -73,7 +73,7 @@ struct AddressPosition {
     const int bucket;
     const int position;
 
-    bool operator==(AddressPosition other) {
+    bool operator==(AddressPosition other) const {
         return std::tie(tried, multiplicity, bucket, position) ==
                std::tie(other.tried, other.multiplicity, other.bucket, other.position);
     }
