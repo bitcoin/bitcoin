@@ -18,6 +18,7 @@ class ArgsManager;
 class AddrMan;
 class BanMan;
 class BaseIndex;
+class BlockFilterIndex;
 class CConnman;
 class CoinStatsIndex;
 class FeeRateEstimatorManager;
@@ -52,6 +53,9 @@ class Warnings;
 // Custom deleters let NodeContext own indexes without node/context.cpp
 // including index headers. Index code includes node/context.h, so including
 // index headers there would create a circular dependency.
+struct BlockFilterIndexDeleter {
+    void operator()(BlockFilterIndex* index) const noexcept;
+};
 struct CoinStatsIndexDeleter {
     void operator()(CoinStatsIndex* index) const noexcept;
 };
@@ -112,6 +116,7 @@ struct NodeContext {
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
     //! Declared after validation_signals so index destructors can unregister safely.
+    std::vector<std::unique_ptr<BlockFilterIndex, BlockFilterIndexDeleter>> block_filter_indexes;
     std::unique_ptr<TxIndex, TxIndexDeleter> txindex;
     std::unique_ptr<TxoSpenderIndex, TxoSpenderIndexDeleter> txospenderindex;
     std::unique_ptr<CoinStatsIndex, CoinStatsIndexDeleter> coin_stats_index;

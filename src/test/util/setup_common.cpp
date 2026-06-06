@@ -30,6 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
@@ -401,8 +402,8 @@ TestingSetup::TestingSetup(
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;
-    peerman_opts.get_block_filter_index = [](BlockFilterType filter_type) {
-        return GetBlockFilterIndex(filter_type);
+    peerman_opts.get_block_filter_index = [this](BlockFilterType filter_type) {
+        return node::GetBlockFilterIndex(m_node, filter_type);
     };
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
