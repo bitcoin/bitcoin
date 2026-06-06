@@ -399,8 +399,8 @@ static RPCMethod getindexinfo()
         result.pushKVs(SummaryToJSON(g_coin_stats_index->GetSummary(), index_name));
     }
 
-    if (g_txospenderindex) {
-        result.pushKVs(SummaryToJSON(g_txospenderindex->GetSummary(), index_name));
+    if (node.txospenderindex) {
+        result.pushKVs(SummaryToJSON(node.txospenderindex->GetSummary(), index_name));
     }
 
     ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {

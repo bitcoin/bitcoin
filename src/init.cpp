@@ -389,7 +389,7 @@ void Shutdown(NodeContext& node)
     for (auto* index : node.indexes) index->Stop();
     node.indexes.clear();
     node.txindex.reset();
-    if (g_txospenderindex) g_txospenderindex.reset();
+    node.txospenderindex.reset();
     if (g_coin_stats_index) g_coin_stats_index.reset();
     DestroyAllBlockFilterIndexes();
 
@@ -1915,8 +1915,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX)) {
-        g_txospenderindex = std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), index_cache_sizes.txospender_index, false, do_reindex);
-        node.indexes.emplace_back(g_txospenderindex.get());
+        node.txospenderindex = std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), index_cache_sizes.txospender_index, false, do_reindex);
+        node.indexes.emplace_back(node.txospenderindex.get());
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
