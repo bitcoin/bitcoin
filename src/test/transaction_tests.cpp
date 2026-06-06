@@ -382,7 +382,8 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     SpanReader{vch} >> TX_WITH_WITNESS(tx);
     TxValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);

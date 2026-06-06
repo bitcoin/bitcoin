@@ -49,7 +49,10 @@ public:
         const std::optional<CService> local_ipv6{Lookup("2a10:1234:5678:9abc:def0:1234:5678:9abc", 1, false)};
         const std::optional<CService> gateway_ipv4{Lookup("192.168.0.1", 1, false)};
         const std::optional<CService> gateway_ipv6{Lookup("2a10:1234:5678:9abc:def0:0000:0000:0000", 1, false)};
-        BOOST_REQUIRE(local_ipv4 && local_ipv6 && gateway_ipv4 && gateway_ipv6);
+        BOOST_REQUIRE(local_ipv4);
+        BOOST_REQUIRE(local_ipv6);
+        BOOST_REQUIRE(gateway_ipv4);
+        BOOST_REQUIRE(gateway_ipv6);
         default_local_ipv4 = *local_ipv4;
         default_local_ipv6 = *local_ipv6;
         default_gateway_ipv4 = *gateway_ipv4;
