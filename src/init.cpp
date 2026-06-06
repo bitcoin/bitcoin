@@ -60,6 +60,7 @@
 #include <node/chainstatemanager_args.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/indexes.h>
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
 #include <node/mempool_persist.h>
@@ -154,8 +155,11 @@ using node::ChainstateLoadStatus;
 using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINT_MODIFIED_FEE;
 using node::DEFAULT_STOPATHEIGHT;
+using node::DestroyAllBlockFilterIndexes;
 using node::DumpMempool;
+using node::GetBlockFilterIndex;
 using node::ImportBlocks;
+using node::InitBlockFilterIndex;
 using node::KernelNotifications;
 using node::LoadChainstate;
 using node::LoadMempool;
@@ -391,7 +395,7 @@ void Shutdown(NodeContext& node)
     node.txindex.reset();
     node.txospenderindex.reset();
     node.coin_stats_index.reset();
-    DestroyAllBlockFilterIndexes();
+    DestroyAllBlockFilterIndexes(node);
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
@@ -1587,6 +1591,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     PeerManager::Options peerman_opts{};
     ApplyArgsManOptions(args, peerman_opts);
+    peerman_opts.get_block_filter_index = [&node](BlockFilterType filter_type) {
+        return GetBlockFilterIndex(node, filter_type);
+    };
 
     {
         // Read asmap file if configured or embedded asmap data and initialize
@@ -1910,22 +1917,22 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 8: start indexers
 
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        node.txindex = std::make_unique<TxIndex>(interfaces::MakeChain(node), index_cache_sizes.tx_index, false, do_reindex);
+        node.txindex.reset(new TxIndex(interfaces::MakeChain(node), index_cache_sizes.tx_index, false, do_reindex));
         node.indexes.emplace_back(node.txindex.get());
     }
 
     if (args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX)) {
-        node.txospenderindex = std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), index_cache_sizes.txospender_index, false, do_reindex);
+        node.txospenderindex.reset(new TxoSpenderIndex(interfaces::MakeChain(node), index_cache_sizes.txospender_index, false, do_reindex));
         node.indexes.emplace_back(node.txospenderindex.get());
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
-        InitBlockFilterIndex([&]{ return interfaces::MakeChain(node); }, filter_type, index_cache_sizes.filter_index, false, do_reindex);
-        node.indexes.emplace_back(GetBlockFilterIndex(filter_type));
+        InitBlockFilterIndex(node, [&]{ return interfaces::MakeChain(node); }, filter_type, index_cache_sizes.filter_index, false, do_reindex);
+        node.indexes.emplace_back(GetBlockFilterIndex(node, filter_type));
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
-        node.coin_stats_index = std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /*cache_size=*/0, false, do_reindex);
+        node.coin_stats_index.reset(new CoinStatsIndex(interfaces::MakeChain(node), /*n_cache_size=*/0, false, do_reindex));
         node.indexes.emplace_back(node.coin_stats_index.get());
     }
 

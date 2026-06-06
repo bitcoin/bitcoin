@@ -18,12 +18,15 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 class AddrMan;
+class BlockFilterIndex;
+enum class BlockFilterType : uint8_t;
 class CTxMemPool;
 class ChainstateManager;
 class BanMan;
@@ -94,6 +97,8 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Return the running block filter index for a filter type, if enabled.
+        std::function<BlockFilterIndex*(BlockFilterType)> get_block_filter_index{[](BlockFilterType) { return nullptr; }};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,

@@ -15,6 +15,7 @@
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
@@ -38,6 +39,7 @@
 #include <univalue.h>
 
 using node::GetTransaction;
+using node::GetBlockFilterIndex;
 using node::NodeContext;
 using util::SplitString;
 
@@ -538,7 +540,9 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    NodeContext* node = GetNodeContext(context, req);
+    if (!node) return false;
+    BlockFilterIndex* index = GetBlockFilterIndex(*node, filtertype);
     if (!index) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
     }
@@ -642,7 +646,9 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    NodeContext* node = GetNodeContext(context, req);
+    if (!node) return false;
+    BlockFilterIndex* index = GetBlockFilterIndex(*node, filtertype);
     if (!index) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
     }

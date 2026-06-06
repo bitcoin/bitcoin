@@ -3305,7 +3305,7 @@ bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
         return false;
     }
 
-    filter_index = GetBlockFilterIndex(filter_type);
+    filter_index = m_opts.get_block_filter_index(filter_type);
     if (!filter_index) {
         LogDebug(BCLog::NET, "Filter index for supported type %s not found\n", BlockFilterTypeName(filter_type));
         return false;

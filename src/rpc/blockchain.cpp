@@ -29,6 +29,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/transaction.h>
 #include <node/utxo_snapshot.h>
 #include <node/warnings.h>
@@ -71,6 +72,7 @@ using kernel::CoinStatsHashType;
 using interfaces::BlockRef;
 using interfaces::Mining;
 using node::BlockManager;
+using node::GetBlockFilterIndex;
 using node::NodeContext;
 using node::SnapshotMetadata;
 using util::MakeUnorderedList;
@@ -2623,12 +2625,12 @@ static RPCMethod scanblocks()
         UniValue options{request.params[5].isNull() ? UniValue::VOBJ : request.params[5]};
         bool filter_false_positives{options.exists("filter_false_positives") ? options["filter_false_positives"].get_bool() : false};
 
-        BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+        NodeContext& node = EnsureAnyNodeContext(request.context);
+        BlockFilterIndex* index = GetBlockFilterIndex(node, filtertype);
         if (!index) {
             throw JSONRPCError(RPC_MISC_ERROR, tfm::format("Index is not enabled for filtertype %s", filtertype_name));
         }
 
-        NodeContext& node = EnsureAnyNodeContext(request.context);
         ChainstateManager& chainman = EnsureChainman(node);
 
         // set the start-height
@@ -2997,7 +2999,8 @@ static RPCMethod getblockfilter()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown filtertype");
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    BlockFilterIndex* index = GetBlockFilterIndex(node, filtertype);
     if (!index) {
         throw JSONRPCError(RPC_MISC_ERROR, tfm::format("Index is not enabled for filtertype %s", filtertype_name));
     }
@@ -3005,7 +3008,7 @@ static RPCMethod getblockfilter()
     const CBlockIndex* block_index;
     bool block_was_connected;
     {
-        ChainstateManager& chainman = EnsureAnyChainman(request.context);
+        ChainstateManager& chainman = EnsureChainman(node);
         LOCK(cs_main);
         block_index = chainman.m_blockman.LookupBlockIndex(block_hash);
         if (!block_index) {

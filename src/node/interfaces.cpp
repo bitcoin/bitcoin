@@ -38,6 +38,7 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/indexes.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mini_miner.h>
@@ -585,11 +586,11 @@ public:
     }
     bool hasBlockFilterIndex(BlockFilterType filter_type) override
     {
-        return GetBlockFilterIndex(filter_type) != nullptr;
+        return GetBlockFilterIndex(m_node, filter_type) != nullptr;
     }
     std::optional<bool> blockFilterMatchesAny(BlockFilterType filter_type, const uint256& block_hash, const GCSFilter::ElementSet& filter_set) override
     {
-        const BlockFilterIndex* block_filter_index{GetBlockFilterIndex(filter_type)};
+        const BlockFilterIndex* block_filter_index{GetBlockFilterIndex(m_node, filter_type)};
         if (!block_filter_index) return std::nullopt;
 
         BlockFilter filter;
