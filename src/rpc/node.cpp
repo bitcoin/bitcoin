@@ -7,10 +7,7 @@
 
 #include <chainparams.h>
 #include <httpserver.h>
-#include <index/blockfilterindex.h>
-#include <index/coinstatsindex.h>
-#include <index/txindex.h>
-#include <index/txospenderindex.h>
+#include <index/base.h>
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
 #include <interfaces/init.h>
@@ -391,21 +388,9 @@ static RPCMethod getindexinfo()
     const std::string index_name{self.MaybeArg<std::string_view>("index_name").value_or("")};
     const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
-    if (node.txindex) {
-        result.pushKVs(SummaryToJSON(node.txindex->GetSummary(), index_name));
+    for (const auto* index : node.indexes) {
+        result.pushKVs(SummaryToJSON(index->GetSummary(), index_name));
     }
-
-    if (node.coin_stats_index) {
-        result.pushKVs(SummaryToJSON(node.coin_stats_index->GetSummary(), index_name));
-    }
-
-    if (node.txospenderindex) {
-        result.pushKVs(SummaryToJSON(node.txospenderindex->GetSummary(), index_name));
-    }
-
-    ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {
-        result.pushKVs(SummaryToJSON(index.GetSummary(), index_name));
-    });
 
     return result;
 },
