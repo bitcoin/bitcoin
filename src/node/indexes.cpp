@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
 #include <node/context.h>
 
 namespace node {
 
+void CoinStatsIndexDeleter::operator()(CoinStatsIndex* index) const noexcept { delete index; }
 void TxIndexDeleter::operator()(TxIndex* index) const noexcept { delete index; }
 void TxoSpenderIndexDeleter::operator()(TxoSpenderIndex* index) const noexcept { delete index; }
 

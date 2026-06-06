@@ -17,6 +17,7 @@ class AddrMan;
 class BanMan;
 class BaseIndex;
 class CConnman;
+class CoinStatsIndex;
 class FeeRateEstimatorManager;
 class ValidationSignals;
 class CScheduler;
@@ -49,6 +50,9 @@ class Warnings;
 // Custom deleters let NodeContext own indexes without node/context.cpp
 // including index headers. Index code includes node/context.h, so including
 // index headers there would create a circular dependency.
+struct CoinStatsIndexDeleter {
+    void operator()(CoinStatsIndex* index) const noexcept;
+};
 struct TxIndexDeleter {
     void operator()(TxIndex* index) const noexcept;
 };
@@ -102,6 +106,7 @@ struct NodeContext {
     //! Declared after validation_signals so index destructors can unregister safely.
     std::unique_ptr<TxIndex, TxIndexDeleter> txindex;
     std::unique_ptr<TxoSpenderIndex, TxoSpenderIndexDeleter> txospenderindex;
+    std::unique_ptr<CoinStatsIndex, CoinStatsIndexDeleter> coin_stats_index;
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
