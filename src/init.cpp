@@ -1131,10 +1131,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Prevent setting deployment parameters on mainnet.
     if (chainparams.GetChainType() == ChainType::MAIN) {
-        if (args.IsArgSet("-testactivationheight")) {
+        if (!args.GetArgs("-testactivationheight").empty()) {
             return InitError(_("The -testactivationheight option may not be used on mainnet."));
         }
-        if (args.IsArgSet("-vbparams")) {
+        if (!args.GetArgs("-vbparams").empty()) {
             return InitError(_("The -vbparams option may not be used on mainnet."));
         }
     }
