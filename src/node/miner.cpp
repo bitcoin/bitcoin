@@ -325,10 +325,15 @@ void BlockAssembler::addChunks()
 
             // This chunk will fit, so add it to the block.
             nConsecutiveFailed = 0;
+            std::vector<Wtxid> chunk_wtxids;
+            chunk_wtxids.reserve(selected_transactions.size());
+            int64_t chunk_weight{0};
             for (const auto& tx : selected_transactions) {
+                chunk_weight += tx.get().GetTxWeight();
                 AddToBlock(tx);
+                chunk_wtxids.emplace_back(tx.get().GetTx().GetWitnessHash());
             }
-            pblocktemplate->m_package_feerates.emplace_back(chunk_feerate_vsize);
+            pblocktemplate->m_template_chunks.push_back({chunk_feerate, std::move(chunk_wtxids), chunk_weight, chunk_sig_ops});
         }
 
         selected_transactions.clear();

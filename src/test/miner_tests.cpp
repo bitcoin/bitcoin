@@ -217,25 +217,31 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
 
-    // Test the inclusion of package feerates in the block template and ensure they are sequential.
-    // Can't use the Mining interface because it needs access to m_package_feerates.
-    const auto block_package_feerates = BlockAssembler{
+    // Test template chunks are recorded with correct feerates, weights, sigops, and wtxids.
+    // Can't use the Mining interface because it needs access to m_template_chunks.
+    const auto template_chunks = BlockAssembler{
         m_node.chainman->ActiveChainstate(),
         &tx_mempool,
-        MergeMiningOptions(options, Assert(m_node.block_template_manager)->GetInitBlockCreateOptions()),
-    }.CreateNewBlock()->m_package_feerates;
-    BOOST_CHECK(block_package_feerates.size() == 2);
+        MergeMiningOptions(options,
+                           Assert(m_node.block_template_manager)->GetInitBlockCreateOptions())}
+                                     .CreateNewBlock()
+                                     ->m_template_chunks;
+    BOOST_CHECK_EQUAL(template_chunks.size(), 2U);
 
-    // parent_tx and high_fee_tx are added to the block as a package.
-    const auto combined_txs_fee = parent_tx.GetFee() + high_fee_tx.GetFee();
-    const auto combined_txs_size = parent_tx.GetTxSize() + high_fee_tx.GetTxSize();
-    FeeFrac package_feefrac{combined_txs_fee, combined_txs_size};
-    // The package should be added first.
-    BOOST_CHECK(block_package_feerates[0] == package_feefrac);
+    // parent_tx and high_fee_tx are added to the block as a chunk.
+    BOOST_CHECK_EQUAL(template_chunks[0].feerate.fee, parent_tx.GetFee() + high_fee_tx.GetFee());
+    BOOST_CHECK_EQUAL(template_chunks[0].feerate.size, int32_t(parent_tx.GetTxWeight() + high_fee_tx.GetTxWeight()));
+    BOOST_CHECK_EQUAL(template_chunks[0].weight, parent_tx.GetTxWeight() + high_fee_tx.GetTxWeight());
+    BOOST_CHECK_EQUAL(template_chunks[0].sigops_cost, parent_tx.GetSigOpCost() + high_fee_tx.GetSigOpCost());
+    std::vector<Wtxid> expected_wtxids_0{parent_tx.GetSharedTx()->GetWitnessHash(), high_fee_tx.GetSharedTx()->GetWitnessHash()};
+    BOOST_CHECK(template_chunks[0].chunk_wtxids == expected_wtxids_0);
 
-    // The medium_fee_tx should be added next.
-    FeeFrac medium_tx_feefrac{medium_fee_tx.GetFee(), medium_fee_tx.GetTxSize()};
-    BOOST_CHECK(block_package_feerates[1] == medium_tx_feefrac);
+    BOOST_CHECK_EQUAL(template_chunks[1].feerate.fee, medium_fee_tx.GetFee());
+    BOOST_CHECK_EQUAL(template_chunks[1].feerate.size, int32_t(medium_fee_tx.GetTxWeight()));
+    BOOST_CHECK_EQUAL(template_chunks[1].weight, medium_fee_tx.GetTxWeight());
+    BOOST_CHECK_EQUAL(template_chunks[1].sigops_cost, medium_fee_tx.GetSigOpCost());
+    std::vector<Wtxid> expected_wtxids_1{medium_fee_tx.GetSharedTx()->GetWitnessHash()};
+    BOOST_CHECK(template_chunks[1].chunk_wtxids == expected_wtxids_1);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
