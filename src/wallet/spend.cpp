@@ -893,6 +893,99 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
     return op_selection_result;
 }
 
+// Defined later in this file; needed by AutomaticCoinSelection for SP-eligible filtering.
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
+
+// Two-phase coin selection for silent payments transactions, enforcing BIP352's requirement
+// that at least one eligible input appears in the final selection.
+//
+// Phase 1: run normal selection restricted to eligible_groups. Succeeds when eligible UTXOs
+//          alone can cover the target within the weight budget.
+// Phase 2: if Phase 1 fails for any reason (insufficient funds or weight constraints), try
+//          eligible anchor candidates in descending value order. For each, select the remainder
+//          from all available coins with a reduced m_max_tx_weight budget. A heavier anchor may
+//          leave no room for the remainder, so we fall back to the next candidate.
+//
+// Returns a successful SelectionResult or an empty error meaning "try the next eligibility filter".
+static util::Result<SelectionResult> AttemptSelectionSP(
+    const CWallet& wallet,
+    const CAmount& value_to_select,
+    OutputGroupTypeMap& eligible_groups,
+    const CoinsResult& available_coins,
+    const CoinSelectionParams& coin_selection_params,
+    const SelectionFilter& select_filter)
+{
+    // Phase 1: eligible-only selection (covers the case where the wallet holds
+    // only eligible UTXOs). Any failure — including ErrorMaxWeightExceeded for heavy
+    // eligible coins — falls through to Phase 2, which anchors a smaller eligible coin
+    // and selects the remainder from the full pool.
+    if (auto res{AttemptSelection(wallet.chain(), value_to_select, eligible_groups,
+                                  coin_selection_params, select_filter.allow_mixed_output_types)}) {
+        return res;
+    }
+
+    // Phase 2: eligible funds insufficient. Anchor the best-fitting eligible group, then
+    // select the remaining target from the full coin pool.
+    const int max_tx_weight = coin_selection_params.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
+    const int max_selection_weight = max_tx_weight
+        - coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR
+        - coin_selection_params.change_output_size * WITNESS_SCALE_FACTOR;
+
+    // Collect eligible anchor candidates within the weight budget and sort them by descending
+    // effective value. We prefer higher-value anchors (smaller remainder), but if a candidate
+    // leaves insufficient weight budget for the remainder we fall back to the next one.
+    std::vector<const OutputGroup*> candidates;
+    for (const auto& group : eligible_groups.all_groups.positive_group) {
+        if (group.m_weight <= max_selection_weight) candidates.push_back(&group);
+    }
+    if (candidates.empty()) return util::Error{};
+
+    std::sort(candidates.begin(), candidates.end(), [](const OutputGroup* a, const OutputGroup* b) {
+        return a->effective_value > b->effective_value;
+    });
+
+    for (const OutputGroup* anchor_ptr : candidates) {
+        const OutputGroup& anchor = *anchor_ptr;
+
+        OutputSet anchor_set;
+        for (const auto& o : anchor.m_outputs) anchor_set.insert(o);
+        SelectionResult anchor_result(anchor.GetSelectionAmount(), SelectionAlgorithm::MANUAL);
+        anchor_result.AddInputs(anchor_set, coin_selection_params.m_subtract_fee_outputs);
+
+        CAmount remainder_target = value_to_select - anchor.GetSelectionAmount();
+        if (remainder_target <= 0) {
+            anchor_result.RecalculateWaste(coin_selection_params.min_viable_change,
+                                           coin_selection_params.m_cost_of_change,
+                                           coin_selection_params.m_change_fee);
+            return anchor_result;
+        }
+
+        std::unordered_set<COutPoint, SaltedOutpointHasher> anchor_pts;
+        for (const auto& o : anchor.m_outputs) anchor_pts.insert(o->outpoint);
+        CoinsResult non_anchor_coins = available_coins;
+        non_anchor_coins.Erase(anchor_pts);
+
+        CoinSelectionParams remainder_params = coin_selection_params;
+        remainder_params.m_max_tx_weight = max_tx_weight - anchor.m_weight;
+
+        std::vector<OutputGroup> discarded;
+        FilteredOutputGroups remainder_fgroups = GroupOutputs(wallet, non_anchor_coins, remainder_params, {select_filter}, discarded);
+        auto rem_it = remainder_fgroups.find(select_filter.filter);
+        if (rem_it == remainder_fgroups.end()) continue;
+
+        auto res{AttemptSelection(wallet.chain(), remainder_target, rem_it->second, remainder_params, /*allow_mixed_output_types=*/true)};
+        if (!res) continue;
+
+        res->Merge(anchor_result);
+        res->RecalculateWaste(coin_selection_params.min_viable_change,
+                              coin_selection_params.m_cost_of_change,
+                              coin_selection_params.m_change_fee);
+        return res;
+    }
+
+    return util::Error{};
+}
+
 util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
 {
     // Try to enforce a mixture of cluster limits and ancestor/descendant limits on transactions we create by limiting
@@ -912,6 +1005,22 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     // explicitly shuffling the outputs before processing
     if (coin_selection_params.m_avoid_partial_spends && available_coins.Size() > OUTPUT_GROUP_MAX_ENTRIES) {
         available_coins.Shuffle(coin_selection_params.rng_fast);
+    }
+
+    // For silent payments, split available coins into BIP352-eligible and the full set. At least one
+    // eligible input must appear in the final selection.
+    CoinsResult sp_eligible_coins;
+    if (coin_selection_params.m_silent_payments) {
+        for (const auto& [type, outputs] : available_coins.coins) {
+            for (const COutput& output : outputs) {
+                if (IsInputForSharedSecretDerivation(output.txout.scriptPubKey, wallet)) {
+                    sp_eligible_coins.Add(type, output);
+                }
+            }
+        }
+        if (sp_eligible_coins.coins.empty()) {
+            return util::Error{_("No silent payment eligible inputs were found.")};
+        }
     }
 
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
@@ -955,6 +1064,13 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         std::vector<OutputGroup> discarded_groups;
         FilteredOutputGroups filtered_groups = GroupOutputs(wallet, available_coins, coin_selection_params, ordered_filters, discarded_groups);
 
+        // For silent payments, also group the BIP352-eligible subset
+        FilteredOutputGroups eligible_filtered_groups;
+        if (coin_selection_params.m_silent_payments) {
+            std::vector<OutputGroup> discarded_eligible;
+            eligible_filtered_groups = GroupOutputs(wallet, sp_eligible_coins, coin_selection_params, ordered_filters, discarded_eligible);
+        }
+
         // Check if we still have enough balance after applying filters (some coins might be discarded)
         CAmount total_discarded = 0;
         CAmount total_unconf_long_chain = 0;
@@ -984,6 +1100,18 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
                     updated_selection_params.m_max_tx_weight = TRUC_CHILD_MAX_WEIGHT;
                 }
             }
+
+            if (coin_selection_params.m_silent_payments) {
+                auto elig_it = eligible_filtered_groups.find(select_filter.filter);
+                if (elig_it != eligible_filtered_groups.end()) {
+                    auto res{AttemptSelectionSP(wallet, value_to_select, elig_it->second,
+                                                available_coins, updated_selection_params, select_filter)};
+                    if (res) return res;
+                    if (HasErrorMsg(res)) res_detailed_errors.emplace_back(std::move(res));
+                }
+                continue;
+            }
+
             if (auto res{AttemptSelection(wallet.chain(), value_to_select, it->second,
                                           updated_selection_params, select_filter.allow_mixed_output_types)}) {
                 return res; // result found
@@ -1159,6 +1287,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
     coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
     coin_selection_params.m_version = coin_control.m_version;
+    coin_selection_params.m_silent_payments = coin_control.m_silent_payments;
     int minimum_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR;
     if (coin_selection_params.m_max_tx_weight.value() < minimum_tx_weight || coin_selection_params.m_max_tx_weight.value() > MAX_STANDARD_TX_WEIGHT) {
         return util::Error{strprintf(_("Maximum transaction weight must be between %d and %d"), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};
