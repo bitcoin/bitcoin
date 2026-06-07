@@ -4642,8 +4642,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 // able to without any round trips.
                 PartiallyDownloadedBlock tempBlock(&m_mempool);
                 ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact);
-                if (status != READ_STATUS_OK) {
-                    // TODO: don't ignore failures
+                if (status == READ_STATUS_INVALID) {
+                    Misbehaving(peer, "invalid compact block");
+                    return;
+                } else if (status != READ_STATUS_OK) {
                     return;
                 }
                 std::vector<CTransactionRef> dummy;
