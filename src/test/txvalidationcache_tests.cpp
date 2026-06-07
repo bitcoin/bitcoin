@@ -170,6 +170,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     CScript p2sh_scriptPubKey = GetScriptForDestination(ScriptHash(p2pk_scriptPubKey));
     CScript p2pkh_scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
     CScript p2wpkh_scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(coinbaseKey.GetPubKey()));
+    CScript p2tr_scriptPubKey = GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey(coinbaseKey.GetPubKey())));
 
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
@@ -188,6 +189,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         CTxOut{11*CENT, p2wpkh_scriptPubKey},
         CTxOut{11*CENT, CScript() << OP_CHECKLOCKTIMEVERIFY << OP_DROP << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG},
         CTxOut{11*CENT, CScript() << OP_CHECKSEQUENCEVERIFY << OP_DROP << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG},
+        CTxOut{11*CENT, p2tr_scriptPubKey},
     };
 
     // Sign, with a non-DER signature
@@ -315,6 +317,32 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // Remove the witness, and check that it is now invalid.
         valid_with_witness_tx.vin[0].scriptWitness.SetNull();
         ValidateCheckInputsForAllFlags(CTransaction(valid_with_witness_tx), SCRIPT_VERIFY_WITNESS, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+    }
+
+    // Test a Taproot (witness v1) key-path spend, to exercise the Schnorr branch of the signature cache.
+    {
+        CMutableTransaction tr_tx;
+        tr_tx.vin = {CTxIn{spend_tx.GetHash(), 4}};
+        tr_tx.vout = {CTxOut{11*CENT, p2pk_scriptPubKey}};
+
+        // Sign P2TR output for key-path spending (i.e. add Schnorr signature to witness stack)
+        FlatSigningProvider tr_keystore;
+        tr_keystore.keys.emplace(coinbaseKey.GetPubKey().GetID(), coinbaseKey);
+        const std::map<COutPoint, Coin> coins{
+            {tr_tx.vin[0].prevout, Coin(spend_tx.vout[4], /*nHeightIn=*/0, /*fCoinBaseIn=*/false)}
+        };
+        std::map<int, bilingual_str> input_errors;
+        BOOST_REQUIRE(SignTransaction(tr_tx, &tr_keystore, coins, {.sighash_type = SIGHASH_DEFAULT}, input_errors));
+        auto& witness_stack = tr_tx.vin[0].scriptWitness.stack;
+        BOOST_REQUIRE(witness_stack.size() == 1 && witness_stack[0].size() == 64);
+
+        // Invalidate signature; an invalid Taproot key-path spend is only invalid if SCRIPT_VERIFY_TAPROOT is set
+        witness_stack[0][63] ^= 0x01; // damage signature
+        ValidateCheckInputsForAllFlags(CTransaction(tr_tx), SCRIPT_VERIFY_TAPROOT, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+        witness_stack[0][63] ^= 0x01; // repair signature
+
+        // A valid Taproot key-path spend is valid under all flags
+        ValidateCheckInputsForAllFlags(CTransaction(tr_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
     }
 
     {
