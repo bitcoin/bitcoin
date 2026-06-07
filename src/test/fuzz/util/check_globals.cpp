@@ -19,6 +19,7 @@ struct CheckGlobalsImpl {
         g_seeded_g_prng_zero = false;
         g_used_system_time = false;
         SetMockTime(0s);
+        MockableSteadyClock::ClearMockTime();
     }
     ~CheckGlobalsImpl()
     {
