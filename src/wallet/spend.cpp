@@ -210,10 +210,6 @@ std::vector<COutput> CoinsResult::All() const
     return all;
 }
 
-void CoinsResult::Clear() {
-    coins.clear();
-}
-
 void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher>& coins_to_remove)
 {
     for (auto& [type, vec] : coins) {

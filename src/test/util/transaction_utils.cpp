@@ -7,7 +7,7 @@
 #include <script/signingprovider.h>
 #include <test/util/transaction_utils.h>
 
-CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int nValue)
+CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, CAmount nValue)
 {
     CMutableTransaction txCredit;
     txCredit.version = 1;
