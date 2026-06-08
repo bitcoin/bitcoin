@@ -55,7 +55,11 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     }
 
     const auto max_sat_maxsig{desc.MaxSatisfactionWeight(true)};
-    const auto max_sat_nonmaxsig{desc.MaxSatisfactionWeight(true)};
+    const auto max_sat_nonmaxsig{desc.MaxSatisfactionWeight(false)};
+    // Whether an estimate is available must not depend on the signature-size
+    // assumption, and assuming non-max-size signatures must never increase it.
+    assert(max_sat_maxsig.has_value() == max_sat_nonmaxsig.has_value());
+    assert(max_sat_nonmaxsig <= max_sat_maxsig);
     const auto max_elems{desc.MaxSatisfactionElems()};
     // We must be able to estimate the max satisfaction size for any solvable descriptor (but combo).
     const bool is_nontop_or_nonsolvable{!*is_solvable || !desc.GetOutputType()};
