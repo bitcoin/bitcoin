@@ -705,6 +705,10 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
 
     case TxoutType::ANCHOR:
         return true;
+
+    case TxoutType::WITNESS_V2_WOTS:
+        return false;
+
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

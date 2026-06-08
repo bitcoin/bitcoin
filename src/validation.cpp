@@ -63,6 +63,7 @@
 #include <util/trace.h>
 #include <util/translation.h>
 #include <validationinterface.h>
+#include <crypto/wots_sha256.h>
 
 #include <algorithm>
 #include <cassert>
@@ -74,6 +75,7 @@
 #include <span>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 
 using kernel::CCoinsStats;
@@ -83,6 +85,7 @@ using kernel::ComputeUTXOStats;
 using kernel::Notifications;
 
 using fsbridge::FopenFn;
+
 using node::BlockManager;
 using node::BlockMap;
 using node::CBlockIndexHeightOnlyComparator;
@@ -774,6 +777,14 @@ private:
         CleanupTemporaryCoins();
     }
 };
+
+bool IsP2WOTSOutput(const CTxOut& txout)
+{
+    const CScript& spk = txout.scriptPubKey;
+    return spk.size() == 34 &&
+           static_cast<uint8_t>(spk[0]) == 0x53 &&
+           static_cast<uint8_t>(spk[1]) == 0x20;
+}
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 {
@@ -2281,6 +2292,8 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
+    flags |= SCRIPT_VERIFY_P2WOTS;
+
     return flags;
 }
 
@@ -2517,6 +2530,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
+
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         if (!state.IsValid()) break;

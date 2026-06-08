@@ -117,6 +117,8 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:
             return "Signature is found in scriptCode";
+        case SCRIPT_ERR_WOTS_VERIFY:
+            return "OP_WOTS_VERIFY: WOTS+ post-quantum signature verification failed";
         case SCRIPT_ERR_SCRIPTNUM:
             return "Script number overflowed or is non-minimally encoded";
         case SCRIPT_ERR_UNKNOWN_ERROR:

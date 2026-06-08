@@ -334,8 +334,8 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
 bool CaseInsensitiveEqual(std::string_view s1, std::string_view s2);
 
 namespace util {
-/** consteval version of HexDigit() without the lookup table. */
-consteval uint8_t ConstevalHexDigit(const char c)
+/** constexpr version of HexDigit() without the lookup table. */
+constexpr uint8_t ConstevalHexDigit(const char c)
 {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 0xa;
@@ -347,7 +347,7 @@ namespace detail {
 template <size_t N>
 struct Hex {
     std::array<std::byte, N / 2> bytes{};
-    consteval Hex(const char (&hex_str)[N])
+    constexpr Hex(const char (&hex_str)[N])
         // 2 hex digits required per byte + implicit null terminator
         requires(N % 2 == 1)
     {

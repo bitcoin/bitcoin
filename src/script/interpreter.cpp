@@ -6,6 +6,7 @@
 #include <script/interpreter.h>
 
 #include <crypto/ripemd160.h>
+#include <crypto/wots_sha256.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <pubkey.h>
@@ -1102,6 +1103,12 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 }
                 break;
 
+                case OP_RESERVED:
+                {
+                    return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                }
+                break;
+
                 case OP_CHECKMULTISIG:
                 case OP_CHECKMULTISIGVERIFY:
                 {
@@ -1416,9 +1423,11 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
         if (!txTo.vin[inpos].scriptWitness.IsNull()) {
             if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
-                m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
-                // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
-                // spend. This only works if spent_outputs was provided as well, but if it wasn't, actual validation
+                (m_spent_outputs[inpos].scriptPubKey[0] == OP_1 ||
+                 m_spent_outputs[inpos].scriptPubKey[0] == OP_3)) {
+                // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 (taproot)
+                // or OP_3 (P2WOTS) as needing the BIP341-style spent-output cache fields.
+                // This only works if spent_outputs was provided as well, but if it wasn't, actual validation
                 // will fail anyway. Note that this branch may trigger for scriptPubKeys that aren't actually segwit
                 // but in that case validation will fail as SCRIPT_ERR_WITNESS_UNEXPECTED anyway.
                 uses_bip341_taproot = true;
@@ -1825,6 +1834,48 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
     return true;
 }
 
+template <class T>
+static bool SignatureHashP2WOTS(uint256& hash_out, const T& tx_to, uint32_t in_pos,
+                                const PrecomputedTransactionData& cache)
+{
+    assert(in_pos < tx_to.vin.size());
+    if (!(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready)) {
+        return false;
+    }
+
+    static const HashWriter HASHER_P2WOTS = TaggedHash("P2WOTS/sighash");
+    HashWriter ss{HASHER_P2WOTS};
+
+    static constexpr uint8_t EPOCH = 0;
+    ss << EPOCH;
+
+    static constexpr uint8_t HASH_TYPE = SIGHASH_ALL;
+    ss << HASH_TYPE;
+
+    ss << tx_to.version;
+    ss << tx_to.nLockTime;
+    ss << cache.m_prevouts_single_hash;
+    ss << cache.m_spent_amounts_single_hash;
+    ss << cache.m_spent_scripts_single_hash;
+    ss << cache.m_sequences_single_hash;
+    ss << cache.m_outputs_single_hash;
+
+    static constexpr uint8_t SPEND_TYPE = 0;
+    ss << SPEND_TYPE;
+
+    ss << in_pos;
+
+    hash_out = ss.GetSHA256();
+    return true;
+}
+
+template <class T>
+bool GenericTransactionSignatureChecker<T>::ComputeP2WOTSSighash(uint256& hash_out) const
+{
+    if (!txdata) return false;
+    return SignatureHashP2WOTS(hash_out, *txTo, nIn, *txdata);
+}
+
 // explicit instantiation
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
@@ -1987,6 +2038,139 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             return set_success(serror);
         }
+    } else if (witversion == 3 && program.size() == 32 && !is_p2sh) {
+        if (!(flags & SCRIPT_VERIFY_P2WOTS)) return set_success(serror);
+
+        const size_t n_items = stack.size();
+
+        if (n_items == static_cast<size_t>(WOTS39::WOTS_WITNESS_ITEMS)) {
+            const valtype& nonce_bytes = stack[WOTS39::WOTS_L];
+            if (nonce_bytes.size() != 32)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            uint256 slotNonce{nonce_bytes};
+
+            const valtype& kidx_bytes = stack[WOTS39::WOTS_L + 1];
+            if (kidx_bytes.size() != 1 || kidx_bytes[0] >= WOTS39::WOTS_TREE_SLOTS)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            uint64_t keyIndex = kidx_bytes[0];
+
+            std::array<uint256, WOTS39::WOTS_TREE_HEIGHT> authPath;
+            for (int i = 0; i < WOTS39::WOTS_TREE_HEIGHT; ++i) {
+                const valtype& ap = stack[WOTS39::WOTS_L + 2 + i];
+                if (ap.size() != 32)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                authPath[i] = uint256{ap};
+            }
+
+            uint256 merkleRoot{program};
+
+            uint256 sighash;
+            if (!checker.ComputeP2WOTSSighash(sighash))
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            uint256 msgHash = WOTS39::ComputeMsgHash(sighash);
+
+            auto digits = WOTS39::BaseWEncode(msgHash);
+            CSHA256 pkh;
+            for (int i = 0; i < WOTS39::WOTS_L; ++i) {
+                if (stack[i].size() != 32)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                uint256 elem;
+                memcpy(elem.begin(), stack[i].data(), 32);
+                uint256 tip = WOTS39::ChainUp(elem, digits[i], WOTS39::WOTS_W - 1, slotNonce, static_cast<uint64_t>(i));
+                pkh.Write(tip.begin(), 32);
+            }
+            uint256 reconstructedPK;
+            pkh.Finalize(reconstructedPK.begin());
+
+            if (!WOTS39::VerifyAuthPath(reconstructedPK, keyIndex, authPath, merkleRoot))
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+
+            return set_success(serror);
+
+        } else if (n_items >= 2 && stack[0].size() == 2) {
+            const uint8_t k = stack[0][0];
+            const uint8_t n = stack[0][1];
+
+            if (k == 0 || n < k || n > WOTS39::WOTS_MULTISIG_MAX_N)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+
+            const size_t expected = 1u + n + static_cast<size_t>(k) * WOTS39::WOTS_MULTISIG_ITEMS_PER_SIGNER;
+            if (n_items != expected)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+
+            std::vector<uint256> merkleRoots(n);
+            for (int i = 0; i < n; ++i) {
+                if (stack[1 + i].size() != 32)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                merkleRoots[i] = uint256{stack[1 + i]};
+            }
+
+            uint256 expectedCommitment = WOTS39::ComputeMultiSigCommitment(k, n, merkleRoots);
+            uint256 scriptCommitment{program};
+            if (expectedCommitment != scriptCommitment)
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+
+            uint256 sighash;
+            if (!checker.ComputeP2WOTSSighash(sighash))
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            uint256 msgHash = WOTS39::ComputeMsgHash(sighash);
+            auto digits = WOTS39::BaseWEncode(msgHash);
+
+            std::vector<bool> signerUsed(n, false);
+
+            for (int p = 0; p < k; ++p) {
+                const size_t base = 1u + n + static_cast<size_t>(p) * WOTS39::WOTS_MULTISIG_ITEMS_PER_SIGNER;
+
+                const valtype& sidx_bytes = stack[base];
+                if (sidx_bytes.size() != 1 || sidx_bytes[0] >= n)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                const uint8_t signerIdx = sidx_bytes[0];
+
+                if (signerUsed[signerIdx])
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                signerUsed[signerIdx] = true;
+
+                const valtype& snonce_bytes = stack[base + 1 + WOTS39::WOTS_L];
+                if (snonce_bytes.size() != 32)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                uint256 slotNonce{snonce_bytes};
+
+                const valtype& kidx_bytes = stack[base + 1 + WOTS39::WOTS_L + 1];
+                if (kidx_bytes.size() != 1 || kidx_bytes[0] >= WOTS39::WOTS_TREE_SLOTS)
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                uint64_t keyIndex = kidx_bytes[0];
+
+                std::array<uint256, WOTS39::WOTS_TREE_HEIGHT> authPath;
+                for (int i = 0; i < WOTS39::WOTS_TREE_HEIGHT; ++i) {
+                    const valtype& ap = stack[base + 1 + WOTS39::WOTS_L + 2 + i];
+                    if (ap.size() != 32)
+                        return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                    authPath[i] = uint256{ap};
+                }
+
+                CSHA256 pkh;
+                for (int i = 0; i < WOTS39::WOTS_L; ++i) {
+                    const valtype& elem_bytes = stack[base + 1 + i];
+                    if (elem_bytes.size() != 32)
+                        return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+                    uint256 elem;
+                    memcpy(elem.begin(), elem_bytes.data(), 32);
+                    uint256 tip = WOTS39::ChainUp(elem, digits[i], WOTS39::WOTS_W - 1, slotNonce, static_cast<uint64_t>(i));
+                    pkh.Write(tip.begin(), 32);
+                }
+                uint256 reconstructedPK;
+                pkh.Finalize(reconstructedPK.begin());
+
+                if (!WOTS39::VerifyAuthPath(reconstructedPK, keyIndex, authPath, merkleRoots[signerIdx]))
+                    return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            }
+
+            return set_success(serror);
+
+        } else {
+            return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+        }
+
     } else if (!is_p2sh && CScript::IsPayToAnchor(witversion, program)) {
         return true;
     } else {

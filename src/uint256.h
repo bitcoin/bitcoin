@@ -44,7 +44,7 @@ public:
         std::copy(vch.begin(), vch.end(), m_data.begin());
     }
 
-    consteval explicit base_blob(std::string_view hex_str);
+    constexpr explicit base_blob(std::string_view hex_str);
 
     constexpr bool IsNull() const
     {
@@ -122,7 +122,7 @@ public:
 };
 
 template <unsigned int BITS>
-consteval base_blob<BITS>::base_blob(std::string_view hex_str)
+constexpr base_blob<BITS>::base_blob(std::string_view hex_str)
 {
     if (hex_str.length() != m_data.size() * 2) throw "Hex string must fit exactly";
     auto str_it = hex_str.rbegin();
@@ -198,7 +198,7 @@ public:
     static std::optional<uint256> FromHex(std::string_view str) { return detail::FromHex<uint256>(str); }
     static std::optional<uint256> FromUserHex(std::string_view str) { return detail::FromUserHex<uint256>(str); }
     constexpr uint256() = default;
-    consteval explicit uint256(std::string_view hex_str) : base_blob<256>(hex_str) {}
+    constexpr explicit uint256(std::string_view hex_str) : base_blob<256>(hex_str) {}
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     constexpr explicit uint256(std::span<const unsigned char> vch) : base_blob<256>(vch) {}
     static const uint256 ZERO;

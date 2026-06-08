@@ -11,6 +11,7 @@
 #include <attributes.h>
 #include <script/script.h>
 #include <span.h>
+#include <uint256.h>
 
 #include <string>
 #include <optional>
@@ -31,6 +32,7 @@ enum class TxoutType {
     WITNESS_V0_SCRIPTHASH,
     WITNESS_V0_KEYHASH,
     WITNESS_V1_TAPROOT,
+    WITNESS_V2_WOTS, //!< OP_3 <32-byte Merkle Key Tree root>; see BIP-P2WOTS
     WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 
@@ -63,5 +65,12 @@ std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> Match
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+
+/** Generate a P2WOTS scriptPubKey: OP_3 <merkle_root_32B>. */
+CScript GetScriptForP2WOTS(const uint256& wots_pk);
+
+/** Generate a P2WOTS k-of-n multisig scriptPubKey: OP_3 <multisig_commitment_32B>.
+ *  Requires 1 ≤ k ≤ n ≤ WOTS39::WOTS_MULTISIG_MAX_N. */
+CScript GetScriptForP2WOTSMultiSig(uint8_t k, uint8_t n, const std::vector<uint256>& merkle_roots);
 
 #endif // BITCOIN_SCRIPT_SOLVER_H

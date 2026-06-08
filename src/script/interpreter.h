@@ -145,6 +145,8 @@ enum class script_verify_flag_name : uint8_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE,
 
+    SCRIPT_VERIFY_P2WOTS,
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -203,6 +205,7 @@ enum class SigVersion
     WITNESS_V0 = 1,  //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
     TAPROOT = 2,     //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
     TAPSCRIPT = 3,   //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
+    WITNESS_V2 = 4,  //!< Witness v3 P2WOTS: 32-byte Merkle Key Tree root; see BIP-P2WOTS
 };
 
 struct ScriptExecutionData
@@ -294,6 +297,8 @@ public:
          return false;
     }
 
+    virtual bool ComputeP2WOTSSighash(uint256& hash_out) const { return false; }
+
     virtual ~BaseSignatureChecker() = default;
 };
 
@@ -331,6 +336,7 @@ public:
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool ComputeP2WOTSSighash(uint256& hash_out) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;

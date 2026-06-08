@@ -15,6 +15,8 @@
 #include <util/log.h>
 #include <util/vector.h>
 
+#include <compat/byteswap.h>
+
 #include <cassert>
 #include <cstdlib>
 #include <iterator>
@@ -25,7 +27,6 @@ static constexpr uint8_t DB_BEST_BLOCK{'B'};
 static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 // Keys used in previous version that might still be found in the DB:
 static constexpr uint8_t DB_COINS{'c'};
-
 // Threshold for warning when writing this many dirty cache entries to disk.
 static constexpr size_t WARN_FLUSH_COINS_COUNT{10'000'000};
 

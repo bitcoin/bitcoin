@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <crypto/wots_sha256.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -28,6 +29,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
+    case TxoutType::WITNESS_V2_WOTS: return "witness_v2_wots";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -166,6 +168,10 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V1_TAPROOT;
         }
+        if (witnessversion == 3 && witnessprogram.size() == 32) {
+            vSolutionsRet.push_back(std::move(witnessprogram));
+            return TxoutType::WITNESS_V2_WOTS;
+        }
         if (scriptPubKey.IsPayToAnchor()) {
             return TxoutType::ANCHOR;
         }
@@ -225,4 +231,17 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     script << keys.size() << OP_CHECKMULTISIG;
 
     return script;
+}
+
+CScript GetScriptForP2WOTS(const uint256& wots_pk)
+{
+    return CScript() << OP_3 << std::vector<unsigned char>(wots_pk.begin(), wots_pk.end());
+}
+
+CScript GetScriptForP2WOTSMultiSig(uint8_t k, uint8_t n, const std::vector<uint256>& merkle_roots)
+{
+    assert(k >= 1 && n >= k && n <= WOTS39::WOTS_MULTISIG_MAX_N);
+    assert(merkle_roots.size() == static_cast<size_t>(n));
+    uint256 commitment = WOTS39::ComputeMultiSigCommitment(k, n, merkle_roots);
+    return CScript() << OP_3 << std::vector<unsigned char>(commitment.begin(), commitment.end());
 }

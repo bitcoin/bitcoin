@@ -95,6 +95,10 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = WitnessUnknown{vSolutions[0][0], vSolutions[1]};
         return true;
     }
+    case TxoutType::WITNESS_V2_WOTS: {
+        addressRet = WitnessUnknown{3, vSolutions[0]};
+        return true;
+    }
     case TxoutType::MULTISIG:
     case TxoutType::NULL_DATA:
     case TxoutType::NONSTANDARD:
