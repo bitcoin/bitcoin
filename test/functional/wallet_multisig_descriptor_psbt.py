@@ -16,10 +16,9 @@ from test_framework.util import (
 
 class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 1
         self.setup_clean_chain = True
-        self.wallet_names = []
-        self.extra_args = [["-keypool=100"]] * self.num_nodes
+        self.extra_args = [["-keypool=100"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -47,9 +46,9 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
     def participants_create_multisigs(self, xpubs):
         """The multisig is created by importing the following descriptors. The resulting wallet is watch-only and every participant can do this."""
-        for i, node in enumerate(self.nodes):
-            node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, disable_private_keys=True)
-            multisig = node.get_wallet_rpc(f"{self.name}_{i}")
+        for i in range(self.N):
+            self.node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, disable_private_keys=True)
+            multisig = self.node.get_wallet_rpc(f"{self.name}_{i}")
             multisig_desc = f"wsh(sortedmulti({self.M},{','.join(xpubs)}))"
             checksum = multisig.getdescriptorinfo(multisig_desc)["checksum"]
             result = multisig.importdescriptors([
@@ -64,14 +63,15 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
     def run_test(self):
         self.M = 2
-        self.N = self.num_nodes
+        self.N = 3
+        self.node = self.nodes[0]
         self.name = f"{self.M}_of_{self.N}_multisig"
         self.log.info(f"Testing {self.name}...")
 
         participants = {
             # Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet.
             # This wallet will be the participant's `signer` for the resulting multisig. Avoid reusing this wallet for any other purpose (for privacy reasons).
-            "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}")["name"]) for node in self.nodes],
+            "signers": [self.node.get_wallet_rpc(self.node.createwallet(wallet_name=f"participant_{i}")["name"]) for i in range(self.N)],
             # After participants generate and exchange their xpubs they will each create their own watch-only multisig.
             # Note: these multisigs are all the same, this just highlights that each participant can independently verify everything on their own node.
             "multisigs": []
@@ -94,13 +94,13 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Get a mature utxo to send to the multisig...")
         coordinator_wallet = participants["signers"][0]
-        self.generatetoaddress(self.nodes[0], 101, coordinator_wallet.getnewaddress())
+        self.generatetoaddress(self.node, 101, coordinator_wallet.getnewaddress())
 
         deposit_amount = 6.15
         multisig_receiving_address = participants["multisigs"][0].getnewaddress()
         self.log.info("Send funds to the resulting multisig receiving address...")
         coordinator_wallet.sendtoaddress(multisig_receiving_address, deposit_amount)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.node, 1)
         for participant in participants["multisigs"]:
             assert_approx(participant.getbalance(), deposit_amount, vspan=0.001)
 
@@ -125,7 +125,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         coordinator_wallet.sendrawtransaction(finalized["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.node, 1)
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - value, vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value)
 
@@ -140,7 +140,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         coordinator_wallet.sendrawtransaction(psbt["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.node, 1)
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)
 
