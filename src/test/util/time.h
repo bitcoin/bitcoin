@@ -8,10 +8,24 @@
 #include <util/check.h>
 #include <util/time.h>
 
+/// CRTP Helper to limit a class to at most one at a time.
+template <class T>
+class LimitOne
+{
+public:
+    LimitOne() { Assert(g_T_available) = false; }
+    ~LimitOne() { g_T_available = true; }
+    LimitOne(const LimitOne&) = delete;
+    LimitOne& operator=(const LimitOne&) = delete;
+
+private:
+    static inline bool g_T_available{true};
+};
+
 
 /// Helper to initialize the global MockableSteadyClock, let a duration elapse,
 /// and reset it after use in a test.
-class SteadyClockContext
+class SteadyClockContext : public LimitOne<SteadyClockContext>
 {
     MockableSteadyClock::mock_time_point::duration t{MockableSteadyClock::INITIAL_MOCK_TIME};
 
@@ -36,7 +50,7 @@ public:
 
 /// Helper to initialize the global NodeClock, let a duration elapse,
 /// and reset it after use in a test.
-class FakeNodeClock
+class FakeNodeClock : public LimitOne<FakeNodeClock>
 {
     NodeSeconds m_t{std::chrono::seconds::max()};
 
