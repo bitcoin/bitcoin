@@ -223,6 +223,12 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         tx_receiver = self.nodes[1]
         far_observer = tx_receiver.add_p2p_connection(P2PInterface())
 
+        self.log.info("Test getprivatebroadcastinfo and abortprivatebroadcast fails if the node is running without -privatebroadcast set")
+        assert_raises_rpc_error(-32601, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
+            tx_receiver.getprivatebroadcastinfo)
+        assert_raises_rpc_error(-32601, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
+            tx_receiver.abortprivatebroadcast, "00" * 32)
+
         self.fill_node_addrman(node_index=0, address_types_to_add=[CAddress.NET_IPV4, CAddress.NET_IPV6, CAddress.NET_TORV3, CAddress.NET_I2P, CAddress.NET_CJDNS])
 
         wallet = MiniWallet(tx_originator)
