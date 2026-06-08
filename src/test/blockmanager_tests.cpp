@@ -42,6 +42,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     };
     BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
+    LOCK(::cs_main);
     BOOST_CHECK_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
     // simulate what happens during reindex
     // simulate a well-formed genesis block being found at offset 8 in the blk00000.dat file
@@ -257,6 +258,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     constexpr int TEST_BLOCK_SIZE{81};
 
     // Blockstore is empty
+    LOCK(::cs_main);
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), 0);
 
     // Write the first block to a new location.
