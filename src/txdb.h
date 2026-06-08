@@ -61,6 +61,9 @@ public:
     //! @returns filesystem path to on-disk storage or std::nullopt if in memory.
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
 
+    //! Perform a blocking full compaction of the underlying LevelDB.
+    void CompactFull() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     //! Return an underlying LevelDB property value, if available.
     std::optional<std::string> GetDBProperty(const std::string& property);
 };
