@@ -42,10 +42,13 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 
     // Part 1: Sync, then "crash" (stop without flushing). Models a node that
     // started up, had its index catch up, but never flushed before going down.
-    sync_index(false, 100, 100);
+    // The end-of-sync Commit() runs at chain tip (height 100) but
+    // m_last_flushed_block is null, so it is skipped.
+    sync_index(false, 100, 0);
 
     // Part 2: Restart cleanly. Sync, force a chainstate flush, and drain the
     // validation queue so the index's ChainStateFlushed callback runs.
+    // Now m_last_flushed_block == tip == 100 and the index can commit.
     sync_index(true, 100, 100);
 
     // Part 3: Connect a new block on the chain without flushing
@@ -53,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
     // in parallel with Sync(). Here we do it before Sync() to make the race
     // state deterministic.
     CreateAndProcessBlock({}, CScript() << OP_TRUE);
-    sync_index(false, 101, 101);
+    sync_index(false, 101, 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
