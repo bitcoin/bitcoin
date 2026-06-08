@@ -65,15 +65,17 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * @page remarks Remarks
+ * @page remarks Bitcoinkernel
  *
  * @section purpose Purpose
  *
  * This header currently exposes an API for interacting with parts of Bitcoin
  * Core's consensus code. Users can validate blocks, iterate the block index,
  * read block and undo data from disk, and validate scripts. The header is
- * unversioned and not stable yet. Users should expect breaking changes. It is
- * also not yet included in releases of Bitcoin Core.
+ * unversioned and not stable. Users should expect breaking changes. It is
+ * also not yet included in releases of Bitcoin Core. See <a
+ * href="https://github.com/bitcoin/bitcoin/issues/27587">issue #27587</a>
+ * for project background and additional information.
  *
  * @section context Context
  *
