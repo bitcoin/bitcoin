@@ -168,6 +168,33 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         result = w_import.importdescriptors([{"desc": other_desc, "timestamp": "now"}])
         assert_equal(result[0]['success'], True)
 
+        self.log.info("Aborting an importdescriptors rescan should fail the RPC call")
+        wallet_name = "abort_import_wallet"
+        self.nodes[0].createwallet(wallet_name, blank=True)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
+            w_import = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+            abort_rpc = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+            descriptor = [{"desc": descsum_create("pkh(" + xpriv + "/2h/*h)"),
+            "timestamp": 0, "range": [0, 4000]}]
+
+            importing = thread.submit(w_import.importdescriptors, descriptor)
+
+            # Keep trying because an abort before ScanForWalletTransactions starts
+            # is reset when the scan loop begins.
+            abort_succeeded = False
+            abort_deadline = time.time() + 30 * self.options.timeout_factor
+            while not importing.done() and time.time() < abort_deadline:
+                abort_succeeded = abort_rpc.abortrescan() or abort_succeeded
+
+            assert_equal(abort_succeeded, True)
+            try:
+                importing.result(timeout=30 * self.options.timeout_factor)
+                raise AssertionError("importdescriptors unexpectedly succeeded")
+            except JSONRPCException as e:
+                assert_equal(e.error["code"], -1)
+                assert_equal(e.error["message"], "Rescan aborted by user.")
+
     def run_test(self):
         self.log.info('Setting up wallets')
         self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
