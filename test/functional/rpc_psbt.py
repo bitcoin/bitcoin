@@ -1410,6 +1410,57 @@ class PSBTTest(BitcoinTestFramework):
         # Broadcast transaction
         self.nodes[2].sendrawtransaction(processed_psbt['hex'])
 
+        self.log.info("Test descriptorprocesspsbt keypath_only skips taproot script path signing")
+        taproot_key = get_generate_key()
+        taproot_descriptor = descsum_create(f"tr({H_POINT},pk({taproot_key.privkey}))")
+        taproot_public_descriptor = descsum_create(f"tr({H_POINT},pk({taproot_key.pubkey}))")
+        taproot_address = self.nodes[2].deriveaddresses(taproot_descriptor)[0]
+        taproot_utxo = self.create_outpoints(self.nodes[0], outputs=[{taproot_address: 1}])[0]
+        self.sync_all()
+
+        taproot_psbt = self.nodes[2].createpsbt([taproot_utxo], {self.nodes[0].getnewaddress(): 0.99999})
+        keypath_only_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=taproot_psbt,
+            descriptors=[taproot_descriptor],
+            finalize=False,
+            keypath_only=True,
+        )
+        decoded = self.nodes[2].decodepsbt(keypath_only_psbt["psbt"])
+        assert "taproot_scripts" not in decoded["inputs"][0]
+        assert "taproot_key_path_sig" not in decoded["inputs"][0]
+        assert "taproot_script_path_sigs" not in decoded["inputs"][0]
+
+        prepopulated_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=taproot_psbt,
+            descriptors=[taproot_public_descriptor],
+            finalize=False,
+        )
+        decoded = self.nodes[2].decodepsbt(prepopulated_psbt["psbt"])
+        assert "taproot_scripts" in decoded["inputs"][0]
+        assert "taproot_script_path_sigs" not in decoded["inputs"][0]
+
+        keypath_only_prepopulated_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=prepopulated_psbt["psbt"],
+            descriptors=[taproot_descriptor],
+            finalize=False,
+            keypath_only=True,
+        )
+        decoded = self.nodes[2].decodepsbt(keypath_only_prepopulated_psbt["psbt"])
+        assert "taproot_scripts" in decoded["inputs"][0]
+        assert "taproot_key_path_sig" not in decoded["inputs"][0]
+        assert "taproot_script_path_sigs" not in decoded["inputs"][0]
+
+        signed_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=taproot_psbt,
+            descriptors=[taproot_descriptor],
+            finalize=False,
+            keypath_only=False,
+        )
+        decoded = self.nodes[2].decodepsbt(signed_psbt["psbt"])
+        assert "taproot_script_path_sigs" in decoded["inputs"][0]
+        rawtx = self.nodes[2].finalizepsbt(signed_psbt["psbt"])["hex"]
+        assert self.nodes[2].testmempoolaccept([rawtx])[0]["allowed"]
+
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt=psbt, descriptors=[descriptor], sighashtype="all")
 
