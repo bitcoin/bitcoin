@@ -9,6 +9,7 @@
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
+#include <validationinterface.h>
 
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -67,8 +68,9 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
     auto rand_ctx(FastRandomContext(uint256{42}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
-    LOCK2(cs_main, pool.cs);
     TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    LOCK2(cs_main, pool.cs);
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     // Do a simple ShortTxIDs RT
@@ -151,8 +153,9 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
     auto rand_ctx(FastRandomContext(uint256{42}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
-    LOCK2(cs_main, pool.cs);
     TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    LOCK2(cs_main, pool.cs);
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     Txid txhash;
@@ -222,8 +225,9 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
     auto rand_ctx(FastRandomContext(uint256{42}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
-    LOCK2(cs_main, pool.cs);
     TryAddToMempool(pool, entry.FromTx(block.vtx[1]));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    LOCK2(cs_main, pool.cs);
     BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     Txid txhash;
@@ -322,8 +326,9 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     std::vector<std::pair<Wtxid, CTransactionRef>> extra_txn;
     extra_txn.resize(10);
 
-    LOCK2(cs_main, pool.cs);
     TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    LOCK2(cs_main, pool.cs);
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
     // Ensure the non_block_tx is actually not in the block
     for (const auto &block_tx : block.vtx) {
