@@ -256,7 +256,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
 
     if (params.options.force_compact) {
         LogInfo("Starting database compaction of %s", fs::PathToString(params.path));
-        DBContext().pdb->CompactRange(nullptr, nullptr);
+        CompactFull();
         LogInfo("Finished database compaction of %s", fs::PathToString(params.path));
     }
 
@@ -306,6 +306,8 @@ std::optional<std::string> CDBWrapper::GetProperty(const std::string& property) 
     if (std::string value; DBContext().pdb->GetProperty(property, &value)) return value;
     return std::nullopt;
 }
+
+void CDBWrapper::CompactFull() { DBContext().pdb->CompactRange(nullptr, nullptr); }
 
 size_t CDBWrapper::DynamicMemoryUsage() const
 {

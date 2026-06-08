@@ -180,6 +180,14 @@ std::optional<std::string> CCoinsViewDB::GetDBProperty(const std::string& proper
     return m_db->GetProperty(property);
 }
 
+void CCoinsViewDB::CompactFull()
+{
+    AssertLockHeld(::cs_main);
+    LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
+    m_db->CompactFull();
+    LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
+}
+
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
 class CCoinsViewDBCursor: public CCoinsViewCursor
 {

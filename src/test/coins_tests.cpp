@@ -1078,6 +1078,8 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
     cache.Sync();
 
     BOOST_CHECK_EQUAL(level2_files(base), 0);
+    WITH_LOCK(::cs_main, base.CompactFull());
+    BOOST_CHECK_EQUAL(level2_files(base), 1);
 
     BOOST_CHECK(*Assert(base.GetCoin(outpoint)) == coin);
     BOOST_CHECK_EQUAL(base.GetBestBlock(), block_hash);
