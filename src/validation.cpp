@@ -2837,9 +2837,11 @@ bool Chainstate::FlushStateToDisk(
             m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_chain.Tip()));
         }
 
-        if (!m_chainman.m_interrupt && m_chainman.m_chainstates.size() == 1) { // Skip AssumeUTXO
-            if (ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
+        if (!m_chainman.m_interrupt && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
+            try {
                 CoinsDB().CompactFull();
+            } catch (const std::exception& e) {
+                LogWarning("Failed to start chainstate compaction (%s)", e.what());
             }
         }
     }
