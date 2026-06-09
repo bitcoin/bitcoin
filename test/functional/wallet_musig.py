@@ -194,7 +194,16 @@ class WalletMuSigTest(BitcoinTestFramework):
         assert "musig2_pubnonces" in dec["inputs"][0]
         assert "musig2_partial_sigs" not in dec["inputs"][0]
 
-    def test_success_case(self, comment, pattern, sighash_type=None, scriptpath=False, nosign_wallets=None, only_one_musig_wallet=False):
+    def test_success_case(
+        self,
+        comment,
+        pattern,
+        sighash_type=None,
+        scriptpath=False,
+        keypath_only=False,
+        nosign_wallets=None,
+        only_one_musig_wallet=False,
+    ):
         self.log.info(f"Testing {comment}")
         has_internal = MULTIPATH_TWO_RE.search(pattern) is not None
 
@@ -218,6 +227,9 @@ class WalletMuSigTest(BitcoinTestFramework):
                     continue
             if musig_partial_sigs is not None:
                 expected_partial_sigs += musig_partial_sigs
+            if keypath_only:
+                # The first MuSig aggregate is the key path, so do not count script-path MuSigs.
+                break
 
         # Check that the wallets agree on the same musig address
         addr = None
@@ -281,7 +293,7 @@ class WalletMuSigTest(BitcoinTestFramework):
             if nosign_wallets and i in nosign_wallets:
                 continue
             for psbt_list in [nonce_psbts, nonce_psbts2]:
-                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
+                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type, keypath_only=keypath_only)
                 assert_equal(proc["complete"], False)
                 psbt_list.append(proc["psbt"])
 
@@ -302,7 +314,7 @@ class WalletMuSigTest(BitcoinTestFramework):
             if nosign_wallets and i in nosign_wallets:
                 continue
             for psbt, psbt_list in [(comb_nonce_psbt, psig_psbts), (comb_nonce_psbt2, psig_psbts2)]:
-                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
+                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type, keypath_only=keypath_only)
                 assert_equal(proc["complete"], False)
                 psbt_list.append(proc["psbt"])
 
@@ -346,8 +358,23 @@ class WalletMuSigTest(BitcoinTestFramework):
         self.test_success_case("tr(H,pk(musig/*))", "tr($H,pk(musig($0,$1,$2)/<0;1>/*))", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($3,$4,$5)/0/*)})", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(same keys different musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($1,$2)/0/*)})", scriptpath=True)
-        self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})}", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})")
-        self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})} script-path", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})", scriptpath=True, nosign_wallets=[0])
+        # Descriptor with one MuSig key path and two MuSig script paths.
+        key_and_script_path_musigs = "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})"
+        self.test_success_case(
+            "tr() with MuSig key path and different MuSig script paths",
+            key_and_script_path_musigs,
+        )
+        self.test_success_case(
+            "tr() with MuSig script path when key path cannot sign",
+            key_and_script_path_musigs,
+            scriptpath=True,
+            nosign_wallets=[0],
+        )
+        self.test_success_case(
+            "tr() with MuSig key path and keypath_only",
+            key_and_script_path_musigs,
+            keypath_only=True,
+        )
         self.test_success_case("tr(H,and(pk(musig/*),after(1)))", "tr($H,and_v(v:pk(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
         self.test_success_case("tr(H,and(pk_k(musig/*),after(1)))", "tr($H,and_v(vc:pk_k(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
         self.test_success_case("tr(H,and(pkh(musig/*),after(1)))", "tr($H,and_v(v:pkh(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
