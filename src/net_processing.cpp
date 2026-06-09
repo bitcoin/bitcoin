@@ -1027,6 +1027,9 @@ private:
     void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
 
+    void ProcessGetBlocks(CNode& pfrom, Peer& peer, DataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
+
     /**
      * Validation logic for compact filters request handling.
      *
@@ -2512,6 +2515,72 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             vInv.emplace_back(MSG_BLOCK, tip->GetBlockHash());
             MakeAndPushMessage(pfrom, NetMsgType::INV, vInv);
             peer.m_continuation_block.SetNull();
+        }
+    }
+}
+
+void PeerManagerImpl::ProcessGetBlocks(CNode& pfrom, Peer& peer, DataStream& vRecv)
+{
+    CBlockLocator locator;
+    uint256 hashStop;
+    vRecv >> locator >> hashStop;
+
+    if (locator.vHave.size() > MAX_LOCATOR_SZ) {
+        LogDebug(BCLog::NET, "getblocks locator size %lld > %d, %s", locator.vHave.size(), MAX_LOCATOR_SZ, pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    // We might have announced the currently-being-connected tip using a
+    // compact block, which resulted in the peer sending a getblocks
+    // request, which we would otherwise respond to without the new block.
+    // To avoid this situation we simply verify that we are on our best
+    // known chain now. This is super overkill, but we handle it better
+    // for getheaders requests, and there are no known nodes which support
+    // compact blocks but still use getblocks to request blocks.
+    {
+        std::shared_ptr<const CBlock> a_recent_block;
+        {
+            LOCK(m_most_recent_block_mutex);
+            a_recent_block = m_most_recent_block;
+        }
+        BlockValidationState state;
+        if (!m_chainman.ActiveChainstate().ActivateBestChain(state, a_recent_block)) {
+            LogDebug(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
+        }
+    }
+
+    LOCK(cs_main);
+
+    // Find the last block the caller has in the main chain
+    const CBlockIndex* pindex = m_chainman.ActiveChainstate().FindForkInGlobalIndex(locator);
+
+    // Send the rest of the chain
+    if (pindex)
+        pindex = m_chainman.ActiveChain().Next(*pindex);
+    int nLimit = 500;
+    LogDebug(BCLog::NET, "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), nLimit, pfrom.GetId());
+    for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
+    {
+        if (pindex->GetBlockHash() == hashStop)
+        {
+            LogDebug(BCLog::NET, " getblocks stopping at %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
+            break;
+        }
+        // If pruning, don't inv blocks unless we have on disk and are likely to still have
+        // for some reasonable time window (1 hour) that block relay might require.
+        const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / m_chainparams.GetConsensus().nPowTargetSpacing;
+        if (m_chainman.m_blockman.IsPruneMode() && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= m_chainman.ActiveChain().Tip()->nHeight - nPrunedBlocksLikelyToHave)) {
+            LogDebug(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+            break;
+        }
+        WITH_LOCK(peer.m_block_inv_mutex, peer.m_blocks_for_inv_relay.push_back(pindex->GetBlockHash()));
+        if (--nLimit <= 0) {
+            // When this block is requested, we'll send an inv that'll
+            // trigger the peer to getblocks the next batch of inventory.
+            LogDebug(BCLog::NET, " getblocks stopping at limit %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
+            WITH_LOCK(peer.m_block_inv_mutex, {peer.m_continuation_block = pindex->GetBlockHash();});
+            break;
         }
     }
 }
@@ -4207,68 +4276,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::GETBLOCKS) {
-        CBlockLocator locator;
-        uint256 hashStop;
-        vRecv >> locator >> hashStop;
-
-        if (locator.vHave.size() > MAX_LOCATOR_SZ) {
-            LogDebug(BCLog::NET, "getblocks locator size %lld > %d, %s", locator.vHave.size(), MAX_LOCATOR_SZ, pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        // We might have announced the currently-being-connected tip using a
-        // compact block, which resulted in the peer sending a getblocks
-        // request, which we would otherwise respond to without the new block.
-        // To avoid this situation we simply verify that we are on our best
-        // known chain now. This is super overkill, but we handle it better
-        // for getheaders requests, and there are no known nodes which support
-        // compact blocks but still use getblocks to request blocks.
-        {
-            std::shared_ptr<const CBlock> a_recent_block;
-            {
-                LOCK(m_most_recent_block_mutex);
-                a_recent_block = m_most_recent_block;
-            }
-            BlockValidationState state;
-            if (!m_chainman.ActiveChainstate().ActivateBestChain(state, a_recent_block)) {
-                LogDebug(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
-            }
-        }
-
-        LOCK(cs_main);
-
-        // Find the last block the caller has in the main chain
-        const CBlockIndex* pindex = m_chainman.ActiveChainstate().FindForkInGlobalIndex(locator);
-
-        // Send the rest of the chain
-        if (pindex)
-            pindex = m_chainman.ActiveChain().Next(*pindex);
-        int nLimit = 500;
-        LogDebug(BCLog::NET, "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), nLimit, pfrom.GetId());
-        for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
-        {
-            if (pindex->GetBlockHash() == hashStop)
-            {
-                LogDebug(BCLog::NET, " getblocks stopping at %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
-                break;
-            }
-            // If pruning, don't inv blocks unless we have on disk and are likely to still have
-            // for some reasonable time window (1 hour) that block relay might require.
-            const int nPrunedBlocksLikelyToHave = MIN_BLOCKS_TO_KEEP - 3600 / m_chainparams.GetConsensus().nPowTargetSpacing;
-            if (m_chainman.m_blockman.IsPruneMode() && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= m_chainman.ActiveChain().Tip()->nHeight - nPrunedBlocksLikelyToHave)) {
-                LogDebug(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                break;
-            }
-            WITH_LOCK(peer.m_block_inv_mutex, peer.m_blocks_for_inv_relay.push_back(pindex->GetBlockHash()));
-            if (--nLimit <= 0) {
-                // When this block is requested, we'll send an inv that'll
-                // trigger the peer to getblocks the next batch of inventory.
-                LogDebug(BCLog::NET, " getblocks stopping at limit %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
-                WITH_LOCK(peer.m_block_inv_mutex, {peer.m_continuation_block = pindex->GetBlockHash();});
-                break;
-            }
-        }
+        ProcessGetBlocks(pfrom, peer, vRecv);
         return;
     }
 
