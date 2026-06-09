@@ -642,12 +642,20 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
             }
             if (Unlock(plain_master_key))
             {
-                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, master_key)) {
+                // Work on a copy so that a failure to persist the new master key
+                // does not leave the in-memory state out of sync with disk.
+                CMasterKey new_master_key{master_key};
+                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, new_master_key)) {
                     return false;
                 }
+                if (!WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, new_master_key)) {
+                    WalletLogPrintf("Failed to write master key to wallet database; passphrase unchanged\n");
+                    if (fWasLocked) Lock();
+                    return false;
+                }
+                master_key = new_master_key;
                 WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", master_key.nDeriveIterations);
 
-                WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, master_key);
                 if (fWasLocked)
                     Lock();
                 return true;
