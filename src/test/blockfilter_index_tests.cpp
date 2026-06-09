@@ -376,10 +376,10 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
     auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
         auto deadline = std::chrono::steady_clock::now() + timeout;
         while (index.GetSummary().best_block_height < height) {
-            if (std::chrono::steady_clock::now() > deadline) {
-                BOOST_FAIL(strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height));
-                return;
-            }
+            BOOST_REQUIRE_MESSAGE(
+                std::chrono::steady_clock::now() < deadline,
+                strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height)
+            );
             std::this_thread::sleep_for(100ms);
         }
     };

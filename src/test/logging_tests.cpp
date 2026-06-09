@@ -403,29 +403,31 @@ void TestLogFromLocation(Location location, const std::string& message,
                          BCLog::LogRateLimiter::Status status, bool suppressions_active,
                          std::source_location source = std::source_location::current())
 {
-    BOOST_TEST_INFO_SCOPE("TestLogFromLocation called from " << source.file_name() << ":" << source.line());
     using Status = BCLog::LogRateLimiter::Status;
     if (!suppressions_active) assert(status == Status::UNSUPPRESSED); // developer error
 
     std::ofstream ofs(LogInstance().m_file_path.std_path(), std::ios::out | std::ios::trunc); // clear debug log
     LogFromLocation(location, message);
     auto log_lines{ReadDebugLogLines()};
-    BOOST_TEST_INFO_SCOPE(log_lines.size() << " log_lines read: \n" << util::Join(log_lines, "\n"));
+
+    const std::string ctx{tfm::format(
+        "called from %s:%u, %u log_lines read:\n%s",
+        source.file_name(), source.line(), log_lines.size(), util::Join(log_lines, "\n"))};
 
     if (status == Status::STILL_SUPPRESSED) {
-        BOOST_CHECK_EQUAL(log_lines.size(), 0);
+        BOOST_CHECK_MESSAGE(log_lines.size() == 0, ctx);
         return;
     }
 
     if (status == Status::NEWLY_SUPPRESSED) {
-        BOOST_REQUIRE_EQUAL(log_lines.size(), 2);
-        BOOST_CHECK(log_lines[0].starts_with("[*] [warning] Excessive logging detected"));
+        BOOST_REQUIRE_MESSAGE(log_lines.size() == 2, ctx);
+        BOOST_CHECK_MESSAGE(log_lines[0].starts_with("[*] [warning] Excessive logging detected"), ctx);
         log_lines.erase(log_lines.begin());
     }
-    BOOST_REQUIRE_EQUAL(log_lines.size(), 1);
+    BOOST_REQUIRE_MESSAGE(log_lines.size() == 1, ctx);
     auto& payload{log_lines.back()};
-    BOOST_CHECK_EQUAL(suppressions_active, payload.starts_with("[*]"));
-    BOOST_CHECK(payload.ends_with(message));
+    BOOST_CHECK_MESSAGE(suppressions_active == payload.starts_with("[*]"), ctx);
+    BOOST_CHECK_MESSAGE(payload.ends_with(message), ctx);
 }
 
 } // namespace
