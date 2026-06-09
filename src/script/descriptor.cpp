@@ -234,6 +234,14 @@ public:
     /** Derive a private key, if private data is available in arg and put it into out. */
     virtual void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const = 0;
 
+    /** Whether private data for this provider is available in arg. */
+    virtual bool HavePrivateKeys(const SigningProvider& arg) const
+    {
+        FlatSigningProvider tmp_provider;
+        GetPrivKey(/*pos=*/0, arg, tmp_provider);
+        return !tmp_provider.keys.empty();
+    }
+
     /** Return the non-extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CPubKey> GetRootPubKey() const = 0;
     /** Return the extended public key for this PubkeyProvider, if it has one. */
@@ -784,6 +792,11 @@ public:
         }
     }
 
+    bool HavePrivateKeys(const SigningProvider& arg) const override
+    {
+        return std::ranges::all_of(m_participants, [&](const auto& prov) { return prov->HavePrivateKeys(arg); });
+    }
+
     // Get RootPubKey and GetRootExtPubKey are used to return the single pubkey underlying the pubkey provider
     // to be presented to the user in gethdkeys. As this is a multisig construction, there is no single underlying
     // pubkey hence nothing should be returned.
@@ -890,11 +903,8 @@ public:
             if (!sub->HavePrivateKeys(arg)) return false;
         }
 
-        FlatSigningProvider tmp_provider;
         for (const auto& pubkey : m_pubkey_args) {
-            tmp_provider.keys.clear();
-            pubkey->GetPrivKey(0, arg, tmp_provider);
-            if (tmp_provider.keys.empty()) return false;
+            if (!pubkey->HavePrivateKeys(arg)) return false;
         }
 
         return true;
