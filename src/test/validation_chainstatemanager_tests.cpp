@@ -26,6 +26,8 @@
 
 #include <tinyformat.h>
 
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -164,10 +166,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
         manager.MaybeRebalanceCaches();
     }
 
-    BOOST_CHECK_CLOSE(double(c1.m_coinstip_cache_size_bytes), max_cache * 0.05, 1);
-    BOOST_CHECK_CLOSE(double(c1.m_coinsdb_cache_size_bytes), max_cache * 0.05, 1);
-    BOOST_CHECK_CLOSE(double(c2.m_coinstip_cache_size_bytes), max_cache * 0.95, 1);
-    BOOST_CHECK_CLOSE(double(c2.m_coinsdb_cache_size_bytes), max_cache * 0.95, 1);
+    auto close_to = [](double a, double b, double tol_pct) {
+        return std::abs(a - b) <= (tol_pct / 100.0) * std::max(std::abs(a), std::abs(b));
+    };
+    BOOST_CHECK(close_to(double(c1.m_coinstip_cache_size_bytes), max_cache * 0.05, 1));
+    BOOST_CHECK(close_to(double(c1.m_coinsdb_cache_size_bytes), max_cache * 0.05, 1));
+    BOOST_CHECK(close_to(double(c2.m_coinstip_cache_size_bytes), max_cache * 0.95, 1));
+    BOOST_CHECK(close_to(double(c2.m_coinsdb_cache_size_bytes), max_cache * 0.95, 1));
 }
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTestingSetup)
