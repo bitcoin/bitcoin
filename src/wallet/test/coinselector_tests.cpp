@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     BOOST_CHECK_NE(result->GetAlgo(), SelectionAlgorithm::BNB);
     BOOST_CHECK(result->GetInputSet().size() == 2);
     // We have only considered BnB, SRD, and Knapsack. Test needs to be reevaluated if new algo is added
-    BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
+    BOOST_CHECK((result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK));
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)

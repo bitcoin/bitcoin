@@ -235,7 +235,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
         const unsigned int expected_parents = parent_recent_rej || parent_recent_conf || parent_in_mempool ? 0 : 1;
         // If we don't expect to keep the orphan then expected_parents is 0.
         // !expect_keep_orphan => (expected_parents == 0)
-        BOOST_CHECK(expect_keep_orphan || expected_parents == 0);
+        BOOST_CHECK((expect_keep_orphan || expected_parents == 0));
         const auto ret_1p1c = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
         std::string err_msg;
         const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c, err_msg,
