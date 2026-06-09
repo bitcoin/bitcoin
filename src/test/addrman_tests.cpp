@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK(addrman->Add({CAddress(addr1_port, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
     auto addr_ret2 = addrman->Select().first;
-    BOOST_CHECK(addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334");
+    BOOST_CHECK((addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334"));
 
     // Test: Add same IP but diff port to tried table; this converts the entry with
     // the specified port to tried, but not the other.
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
 
     while (--counter > 0 && (!new_selected || !tried_selected)) {
         const CAddress selected{addrman->Select(/*new_only=*/false, {NET_I2P}).first};
-        BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
+        BOOST_REQUIRE((selected == i2p_addr || selected == i2p_addr2));
         if (selected == i2p_addr) {
             tried_selected = true;
         } else {

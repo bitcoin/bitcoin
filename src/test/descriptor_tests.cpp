@@ -203,11 +203,11 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK(max_sat_nonmaxsig <= max_sat_maxsig);
     const auto max_elems{parse_priv->MaxSatisfactionElems()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
-    BOOST_CHECK_MESSAGE(is_input_size_info_set || is_nontop_or_nonsolvable, prv);
+    BOOST_CHECK_MESSAGE((is_input_size_info_set || is_nontop_or_nonsolvable), prv);
 
     // The ScriptSize() must match the size of the Script string. (ScriptSize() is set for all descs but 'combo()'.)
     const bool is_combo{!parse_priv->IsSingleType()};
-    BOOST_CHECK_MESSAGE(is_combo || parse_priv->ScriptSize() == scripts[0][0].size() / 2, "Invalid ScriptSize() for " + prv);
+    BOOST_CHECK_MESSAGE((is_combo || parse_priv->ScriptSize() == scripts[0][0].size() / 2), "Invalid ScriptSize() for " + prv);
 
     // Check that the correct OutputType is inferred
     BOOST_CHECK(parse_priv->GetOutputType() == type);

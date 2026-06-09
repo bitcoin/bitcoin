@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 
     // Each letter should be set.
     for (const char opt : "abcdef")
-        BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
+        BOOST_CHECK((testArgs.IsArgSet({'-', opt}) || !opt));
 
     // Nothing else should be in the map
     testArgs.LockSettings([&](const common::Settings& s) {

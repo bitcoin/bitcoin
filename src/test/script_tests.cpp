@@ -1305,7 +1305,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_b));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSigCopy, scriptSig);
-    BOOST_CHECK(combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig);
+    BOOST_CHECK((combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig));
 
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
@@ -1323,7 +1323,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_d));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSigCopy, scriptSig);
-    BOOST_CHECK(combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig);
+    BOOST_CHECK((combined.scriptSig == scriptSigCopy.scriptSig || combined.scriptSig == scriptSig.scriptSig));
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
