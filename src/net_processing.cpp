@@ -1089,6 +1089,9 @@ private:
     void ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer& peer, std::vector<CAddress>&& vAddr, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex);
 
+    void ProcessGetAddr(CNode& pfrom, Peer& peer)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
@@ -4832,38 +4835,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::GETADDR) {
-        // This asymmetric behavior for inbound and outbound connections was introduced
-        // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-        // to users' AddrMan and later request them by sending getaddr messages.
-        // Making nodes which are behind NAT and can only make outgoing connections ignore
-        // the getaddr message mitigates the attack.
-        if (!pfrom.IsInboundConn()) {
-            LogDebug(BCLog::NET, "Ignoring \"getaddr\" from %s connection. peer=%d\n", pfrom.ConnectionTypeAsString(), pfrom.GetId());
-            return;
-        }
-
-        // Since this must be an inbound connection, SetupAddressRelay will
-        // never fail.
-        Assume(SetupAddressRelay(pfrom, peer));
-
-        // Only send one GetAddr response per connection to reduce resource waste
-        // and discourage addr stamping of INV announcements.
-        if (peer.m_getaddr_recvd) {
-            LogDebug(BCLog::NET, "Ignoring repeated \"getaddr\". peer=%d\n", pfrom.GetId());
-            return;
-        }
-        peer.m_getaddr_recvd = true;
-
-        peer.m_addrs_to_send.clear();
-        std::vector<CAddress> vAddr;
-        if (pfrom.HasPermission(NetPermissionFlags::Addr)) {
-            vAddr = m_connman.GetAddressesUnsafe(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND, /*network=*/std::nullopt);
-        } else {
-            vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
-        }
-        for (const CAddress &addr : vAddr) {
-            PushAddress(peer, addr);
-        }
+        ProcessGetAddr(pfrom, peer);
         return;
     }
 
@@ -5729,6 +5701,42 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
     if (pfrom.IsAddrFetchConn() && vAddr.size() > 1) {
         LogDebug(BCLog::NET, "addrfetch connection completed, %s", pfrom.DisconnectMsg());
         pfrom.fDisconnect = true;
+    }
+}
+
+void PeerManagerImpl::ProcessGetAddr(CNode& pfrom, Peer& peer)
+{
+    // This asymmetric behavior for inbound and outbound connections was introduced
+    // to prevent a fingerprinting attack: an attacker can send specific fake addresses
+    // to users' AddrMan and later request them by sending getaddr messages.
+    // Making nodes which are behind NAT and can only make outgoing connections ignore
+    // the getaddr message mitigates the attack.
+    if (!pfrom.IsInboundConn()) {
+        LogDebug(BCLog::NET, "Ignoring \"getaddr\" from %s connection. peer=%d\n", pfrom.ConnectionTypeAsString(), pfrom.GetId());
+        return;
+    }
+
+    // Since this must be an inbound connection, SetupAddressRelay will
+    // never fail.
+    Assume(SetupAddressRelay(pfrom, peer));
+
+    // Only send one GetAddr response per connection to reduce resource waste
+    // and discourage addr stamping of INV announcements.
+    if (peer.m_getaddr_recvd) {
+        LogDebug(BCLog::NET, "Ignoring repeated \"getaddr\". peer=%d\n", pfrom.GetId());
+        return;
+    }
+    peer.m_getaddr_recvd = true;
+
+    peer.m_addrs_to_send.clear();
+    std::vector<CAddress> vAddr;
+    if (pfrom.HasPermission(NetPermissionFlags::Addr)) {
+        vAddr = m_connman.GetAddressesUnsafe(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND, /*network=*/std::nullopt);
+    } else {
+        vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
+    }
+    for (const CAddress &addr : vAddr) {
+        PushAddress(peer, addr);
     }
 }
 
