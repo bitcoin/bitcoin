@@ -6,6 +6,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
+
 inline bool operator==(const bilingual_str& a, const bilingual_str& b)
 {
     return a.original == b.original && a.translated == b.translated;
