@@ -79,13 +79,13 @@ BOOST_AUTO_TEST_CASE(basic)
     check_peer_counts(/*tx1_peer_count=*/0, /*tx2_peer_count=*/0);
 
     const auto tx_for_recipient1{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1, /*will_send_to_address=*/addr1).value()};
-    BOOST_CHECK(tx_for_recipient1 == tx1 || tx_for_recipient1 == tx2);
+    BOOST_CHECK((tx_for_recipient1 == tx1 || tx_for_recipient1 == tx2));
 
     // A second pick must return the other transaction.
     const NodeId recipient2{2};
     const CService addr2{ipv4Addr, 2222};
     const auto tx_for_recipient2{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2, /*will_send_to_address=*/addr2).value()};
-    BOOST_CHECK(tx_for_recipient2 == tx1 || tx_for_recipient2 == tx2);
+    BOOST_CHECK((tx_for_recipient2 == tx1 || tx_for_recipient2 == tx2));
     BOOST_CHECK_NE(tx_for_recipient1, tx_for_recipient2);
 
     check_peer_counts(/*tx1_peer_count=*/1, /*tx2_peer_count=*/1);
