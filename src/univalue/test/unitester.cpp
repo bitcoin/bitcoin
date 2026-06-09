@@ -219,6 +219,20 @@ void get_json_token_end_test()
 
     expect_json_token("01", 2, JTOK_ERR);
     expect_json_token("-01", 3, JTOK_ERR);
+
+    // fractions
+    expect_json_token("1.5", /*size=*/3, JTOK_NUMBER, /*expected_consumed=*/3, "1.5");
+    expect_json_token("-0.5", /*size=*/4, JTOK_NUMBER, /*expected_consumed=*/4, "-0.5");
+    expect_json_token("1.5", /*size=*/2, JTOK_ERR);
+
+    // exponents
+    expect_json_token("1e5", /*size=*/3, JTOK_NUMBER, /*expected_consumed=*/3, "1e5");
+    expect_json_token("-1e-5", /*size=*/5, JTOK_NUMBER, /*expected_consumed=*/5, "-1e-5");
+    expect_json_token("1e", /*size=*/2, JTOK_ERR);
+
+    // fractions + exponents combined
+    expect_json_token("1.5e3", /*size=*/5, JTOK_NUMBER, /*expected_consumed=*/5, "1.5e3");
+    expect_json_token("-1.5e-3", /*size=*/7, JTOK_NUMBER, /*expected_consumed=*/7, "-1.5e-3");
 }
 
 int main(int argc, char* argv[])
