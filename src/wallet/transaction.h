@@ -353,11 +353,11 @@ public:
 
     CTransactionRef GetTx() const { return m_txs.at(m_canonical_wtxid); }
 
-    void SetTx(CTransactionRef arg)
-    {
-        Assert(arg);
-        m_txs.emplace(arg->GetWitnessHash(), std::move(arg));
-    }
+    // Update the state of this wallet transaction along with a transaction that may have a different wtxid.
+    // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
+    // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
+    // those with witnesses are preferred, followed by least weight.
+    bool Update(CTransactionRef tx, const TxState& arg_state);
 
     //! make sure balances are recalculated
     void MarkDirty()
@@ -408,6 +408,9 @@ private:
     Wtxid m_canonical_wtxid;
     std::map<Wtxid, CTransactionRef> m_txs;
 
+    //! Set m_canonical_wtxid to the best variant under the unconfirmed rule
+    //! (witnessed preferred, then least weight). Ignores state.
+    void RecomputeCanonical();
 };
 
 struct WalletTxOrderComparator {
