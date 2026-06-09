@@ -234,7 +234,7 @@ public:
     mutable bool fChangeCached;
     mutable CAmount nChangeCached;
 
-    CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(Assert(tx))), m_state(state)
+    CWalletTx(CTransactionRef tx, const TxState& state) : m_state(state), tx(std::move(Assert(tx)))
     {
         Init();
     }
@@ -254,7 +254,6 @@ public:
         nOrderPos = -1;
     }
 
-    CTransactionRef tx;
     TxState m_state;
 
     // Set of mempool transactions that conflict
@@ -343,6 +342,8 @@ public:
         }
     }
 
+    CTransactionRef GetTx() const { return tx; }
+
     void SetTx(CTransactionRef arg)
     {
         tx = std::move(arg);
@@ -390,6 +391,9 @@ public:
 
     // Enable the default move constructor
     CWalletTx(CWalletTx&&) = default;
+
+private:
+    CTransactionRef tx;
 };
 
 struct WalletTxOrderComparator {
@@ -410,7 +414,7 @@ public:
     : m_wtx(wtx),
     m_output(output)
     {
-        Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
+        Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }

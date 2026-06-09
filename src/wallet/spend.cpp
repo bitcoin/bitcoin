@@ -178,8 +178,8 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         // Can not estimate size without knowing the input details
         if (mi != wallet->mapWallet.end()) {
-            assert(input.prevout.n < mi->second.tx->vout.size());
-            txouts.emplace_back(mi->second.tx->vout.at(input.prevout.n));
+            assert(input.prevout.n < mi->second.GetTx()->vout.size());
+            txouts.emplace_back(mi->second.GetTx()->vout.at(input.prevout.n));
         } else if (coin_control) {
             const auto& txout{coin_control->GetExternalOutput(input.prevout)};
             if (!txout) return TxSize{-1, -1};
@@ -281,10 +281,10 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
             }
             const CWalletTx& parent_tx = txo->GetWalletTx();
             if (wallet.GetTxDepthInMainChain(parent_tx) == 0) {
-                if (parent_tx.tx->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
+                if (parent_tx.GetTx()->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
                     return util::Error{strprintf(_("Can't spend unconfirmed version 3 pre-selected input with a version %d tx"), coin_control.m_version)};
-                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.tx->version != TRUC_VERSION) {
-                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.tx->version)};
+                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.GetTx()->version != TRUC_VERSION) {
+                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.GetTx()->version)};
                 }
             }
         } else {
@@ -396,16 +396,16 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             if (nDepth == 0 && params.check_version_trucness) {
                 if (coinControl->m_version == TRUC_VERSION) {
-                    if (wtx.tx->version != TRUC_VERSION) continue;
+                    if (wtx.GetTx()->version != TRUC_VERSION) continue;
                     // this unconfirmed v3 transaction already has a child
                     if (wtx.truc_child_in_mempool.has_value()) continue;
 
                     // this unconfirmed v3 transaction has a parent: spending would create a third generation
                     size_t ancestors, unused_cluster_count;
-                    wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, unused_cluster_count);
+                    wallet.chain().getTransactionAncestry(wtx.GetTx()->GetHash(), ancestors, unused_cluster_count);
                     if (ancestors > 1) continue;
                 } else {
-                    if (wtx.tx->version == TRUC_VERSION) continue;
+                    if (wtx.GetTx()->version == TRUC_VERSION) continue;
                 }
             }
 
@@ -468,9 +468,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
-        if (wtx.tx->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
+        if (wtx.GetTx()->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
             unconfirmed_truc_coins.emplace_back(available_output_type, available_output);
-            auto [it, _] = truc_txid_by_value.try_emplace(wtx.tx->GetHash(), 0);
+            auto [it, _] = truc_txid_by_value.try_emplace(wtx.GetTx()->GetHash(), 0);
             it->second += output.nValue;
         } else {
             result.Add(available_output_type, available_output);
@@ -526,16 +526,16 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
     AssertLockHeld(wallet.cs_wallet);
     const CWalletTx* wtx{Assert(wallet.GetWalletTx(outpoint.hash))};
 
-    const CTransaction* ptx = wtx->tx.get();
+    const CTransaction* ptx = wtx->GetTx().get();
     int n = outpoint.n;
     while (OutputIsChange(wallet, ptx->vout[n]) && ptx->vin.size() > 0) {
         const COutPoint& prevout = ptx->vin[0].prevout;
         const CWalletTx* it = wallet.GetWalletTx(prevout.hash);
-        if (!it || it->tx->vout.size() <= prevout.n ||
-            !wallet.IsMine(it->tx->vout[prevout.n])) {
+        if (!it || it->GetTx()->vout.size() <= prevout.n ||
+            !wallet.IsMine(it->GetTx()->vout[prevout.n])) {
             break;
         }
-        ptx = it->tx.get();
+        ptx = it->GetTx().get();
         n = prevout.n;
     }
     return ptx->vout[n];

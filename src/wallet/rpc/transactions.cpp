@@ -53,7 +53,7 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     if (chain.rpcEnableDeprecated("bip125")) {
         std::string rbfStatus = "no";
         if (confirms <= 0) {
-            RBFTransactionState rbfState = chain.isRBFOptIn(*wtx.tx);
+            RBFTransactionState rbfState = chain.isRBFOptIn(*wtx.GetTx());
             if (rbfState == RBFTransactionState::UNKNOWN)
                 rbfStatus = "unknown";
             else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
@@ -110,7 +110,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout) {
+        for (const CTxOut& txout : wtx.GetTx()->vout) {
             CTxDestination address;
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
@@ -354,7 +354,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             UniValue entry(UniValue::VOBJ);
             MaybePushAddress(entry, r.destination);
-            PushParentDescriptors(wallet, wtx.tx->vout.at(r.vout).scriptPubKey, entry);
+            PushParentDescriptors(wallet, wtx.GetTx()->vout.at(r.vout).scriptPubKey, entry);
             if (wtx.IsCoinBase())
             {
                 if (wallet.GetTxDepthInMainChain(wtx) < 1)
@@ -755,7 +755,7 @@ RPCMethod gettransaction()
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.GetTx()->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (CachedTxIsFromMe(*pwallet, wtx))
@@ -767,11 +767,11 @@ RPCMethod gettransaction()
     ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
     entry.pushKV("details", std::move(details));
 
-    entry.pushKV("hex", EncodeHexTx(*wtx.tx));
+    entry.pushKV("hex", EncodeHexTx(*wtx.GetTx()));
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx,
+        TxToUniv(*wtx.GetTx(),
                 /*block_hash=*/uint256(),
                 /*entry=*/decoded,
                 /*include_hex=*/false,
