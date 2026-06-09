@@ -1181,11 +1181,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     return &wtx;
 }
 
-bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
+bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
 {
-    const auto& ins = mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(nullptr, TxStateInactive{}));
+    const auto& ins = mapWallet.emplace(wtx_in.GetHash(), std::move(wtx_in));
     CWalletTx& wtx = ins.first->second;
-    if (!fill_wtx(wtx, ins.second)) {
+    if (!ins.second) {
         return false;
     }
     // If wallet doesn't have a chain (e.g when using bitcoin-wallet tool),
@@ -1193,9 +1193,7 @@ bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
     if (HaveChain()) {
       wtx.updateState(chain());
     }
-    if (/* insertion took place */ ins.second) {
-        wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
-    }
+    wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     AddToSpends(wtx);
     for (const CTxIn& txin : wtx.tx->vin) {
         auto it = mapWallet.find(txin.prevout.hash);
@@ -4049,13 +4047,10 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
                 // Add to watchonly wallet
                 const Txid& hash = wtx->GetHash();
-                const CWalletTx& to_copy_wtx = *wtx;
-                if (!data.watchonly_wallet->LoadToWallet(hash, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(data.watchonly_wallet->cs_wallet) {
-                    if (!new_tx) return false;
-                    ins_wtx.SetTx(to_copy_wtx.tx);
-                    ins_wtx.CopyFrom(to_copy_wtx);
-                    return true;
-                })) {
+                DataStream wtx_ser;
+                wtx_ser << *wtx;
+                CWalletTx copy_wtx(deserialize, wtx_ser);
+                if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
                 watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));

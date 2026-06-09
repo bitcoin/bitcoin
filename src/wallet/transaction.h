@@ -234,9 +234,15 @@ public:
     mutable bool fChangeCached;
     mutable CAmount nChangeCached;
 
-    CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(tx)), m_state(state)
+    CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(Assert(tx))), m_state(state)
     {
         Init();
+    }
+
+    template <typename Stream>
+    CWalletTx(deserialize_type, Stream& s) : m_state(TxStateInactive{})
+    {
+        Unserialize(s);
     }
 
     void Init()
@@ -385,6 +391,9 @@ private:
 public:
     // Instead have an explicit copy function
     void CopyFrom(const CWalletTx&);
+
+    // Enable the default move constructor
+    CWalletTx(CWalletTx&&) = default;
 };
 
 struct WalletTxOrderComparator {

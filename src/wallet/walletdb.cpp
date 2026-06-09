@@ -992,27 +992,17 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         DBErrors result = DBErrors::LOAD_OK;
         Txid hash;
         key >> hash;
-        // LoadToWallet call below creates a new CWalletTx that fill_wtx
-        // callback fills with transaction metadata.
-        auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
-            if(!new_tx) {
-                // There's some corruption here since the tx we just tried to load was already in the wallet.
-                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
-                result = DBErrors::CORRUPT;
-                return false;
-            }
-            value >> wtx;
-            if (wtx.GetHash() != hash)
-                return false;
-
-            if (wtx.nOrderPos == -1)
-                any_unordered = true;
-
-            return true;
-        };
-        if (!pwallet->LoadToWallet(hash, fill_wtx)) {
-            // Use std::max as fill_wtx may have already set result to CORRUPT
+        CWalletTx wtx{deserialize, value};
+        if (wtx.GetHash() != hash) {
             result = std::max(result, DBErrors::NEED_RESCAN);
+        }
+
+        if (wtx.nOrderPos == -1) {
+            any_unordered = true;
+        }
+
+        if (!pwallet->LoadToWallet(std::move(wtx))) {
+            result = std::max(result, DBErrors::CORRUPT);
         }
         return result;
     });
