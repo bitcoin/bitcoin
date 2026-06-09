@@ -38,6 +38,12 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     }
     entry.pushKV("txid", wtx.GetHash().GetHex());
     entry.pushKV("wtxid", wtx.GetWitnessHash().GetHex());
+    UniValue alternate_wtxids(UniValue::VARR);
+    for (const auto& [wtxid, _] : wtx.GetTxs()) {
+        if (wtxid == wtx.GetWitnessHash()) continue;
+        alternate_wtxids.push_back(wtxid.GetHex());
+    }
+    entry.pushKV("alternate_wtxids", alternate_wtxids);
     UniValue conflicts(UniValue::VARR);
     for (const Txid& conflict : wallet.GetTxConflicts(wtx))
         conflicts.push_back(conflict.GetHex());
@@ -395,6 +401,10 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            {RPCResult::Type::STR_HEX, "wtxid", "The hash of serialized transaction, including witness data."},
+           {RPCResult::Type::ARR, "alternate_wtxids", "The wtxids of transactions with different witness data but the same txid.",
+           {
+               {RPCResult::Type::STR_HEX, "wtxid", "The witness transaction id."},
+           }},
            {RPCResult::Type::ARR, "walletconflicts", "Confirmed transactions that have been detected by the wallet to conflict with this transaction.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
