@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE((!CheckTransaction(CTransaction(tx), state) || !state.IsValid()), "Transaction with duplicate txins should be invalid.");
 }
 
 BOOST_AUTO_TEST_CASE(test_Get)
