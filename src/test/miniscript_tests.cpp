@@ -392,9 +392,9 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
                 if (node.ValidSatisfactions()) BOOST_CHECK(res);
                 // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
                 // or with a stack size error (if CheckStackSize check fails).
-                BOOST_CHECK(res ||
+                BOOST_CHECK((res ||
                             (!node.CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-                            (!node.CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+                            (!node.CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE)));
             }
 
             if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
@@ -403,7 +403,7 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
                 bool res = VerifyScript(CScript(), script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror);
                 // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
                 // fail due to stack or ops limits.
-                BOOST_CHECK(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
+                BOOST_CHECK((res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
             }
 
             if (node.IsSane()) {
@@ -453,7 +453,7 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, const K
     auto node = miniscript::FromString(ms, converter);
     const bool is_tapscript{miniscript::IsTapscript(converter.MsContext())};
     if (mode == TESTMODE_INVALID || ((mode & TESTMODE_P2WSH_INVALID) && !is_tapscript) || ((mode & TESTMODE_TAPSCRIPT_INVALID) && is_tapscript)) {
-        BOOST_CHECK_MESSAGE(!node || !node->IsValid(), "Unexpectedly valid: " + ms);
+        BOOST_CHECK_MESSAGE((!node || !node->IsValid()), "Unexpectedly valid: " + ms);
     } else {
         BOOST_CHECK_MESSAGE(node, "Unparseable: " + ms);
         BOOST_CHECK_MESSAGE(node->IsValid(), "Invalid: " + ms);
