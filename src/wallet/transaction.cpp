@@ -11,8 +11,8 @@ using interfaces::FoundBlock;
 namespace wallet {
 bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
 {
-        CMutableTransaction tx1 {*this->tx};
-        CMutableTransaction tx2 {*_tx.tx};
+        CMutableTransaction tx1 {*this->GetTx()};
+        CMutableTransaction tx2 {*_tx.GetTx()};
         for (auto& txin : tx1.vin) {
             txin.scriptSig = CScript();
             txin.scriptWitness.SetNull();
