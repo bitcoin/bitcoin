@@ -973,6 +973,9 @@ private:
     void ProcessInv(CNode& pfrom, Peer& peer, DataStream& vRecv, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_tx_download_mutex);
 
+    void ProcessSendTxRcncl(CNode& pfrom, Peer& peer, DataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
     /** Process a new block. Perform any post-processing housekeeping */
     void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
@@ -4276,55 +4279,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     // This feature negotiation must happen between VERSION and VERACK to avoid relay problems
     // from switching announcement protocols after the connection is up.
     if (msg_type == NetMsgType::SENDTXRCNCL) {
-        if (!m_txreconciliation) {
-            LogDebug(BCLog::NET, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled\n", pfrom.GetId());
-            return;
-        }
-
-        if (pfrom.fSuccessfullyConnected) {
-            LogDebug(BCLog::NET, "sendtxrcncl received after verack, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        // Peer must not offer us reconciliations if we specified no tx relay support in VERSION.
-        if (RejectIncomingTxs(pfrom)) {
-            LogDebug(BCLog::NET, "sendtxrcncl received to which we indicated no tx relay, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        // Peer must not offer us reconciliations if they specified no tx relay support in VERSION.
-        // This flag might also be false in other cases, but the RejectIncomingTxs check above
-        // eliminates them, so that this flag fully represents what we are looking for.
-        const auto* tx_relay = peer.GetTxRelay();
-        if (!tx_relay || !WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs)) {
-            LogDebug(BCLog::NET, "sendtxrcncl received which indicated no tx relay to us, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        uint32_t peer_txreconcl_version;
-        uint64_t remote_salt;
-        vRecv >> peer_txreconcl_version >> remote_salt;
-
-        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
-                                                                                     peer_txreconcl_version, remote_salt);
-        switch (result) {
-        case ReconciliationRegisterResult::NOT_FOUND:
-            LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
-            break;
-        case ReconciliationRegisterResult::SUCCESS:
-            break;
-        case ReconciliationRegisterResult::ALREADY_REGISTERED:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        case ReconciliationRegisterResult::PROTOCOL_VIOLATION:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
+        ProcessSendTxRcncl(pfrom, peer, vRecv);
         return;
     }
 
@@ -5571,6 +5526,59 @@ bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
     if (m_opts.ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
     return false;
+}
+
+void PeerManagerImpl::ProcessSendTxRcncl(CNode& pfrom, Peer& peer, DataStream& vRecv)
+{
+    if (!m_txreconciliation) {
+        LogDebug(BCLog::NET, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled\n", pfrom.GetId());
+        return;
+    }
+
+    if (pfrom.fSuccessfullyConnected) {
+        LogDebug(BCLog::NET, "sendtxrcncl received after verack, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    // Peer must not offer us reconciliations if we specified no tx relay support in VERSION.
+    if (RejectIncomingTxs(pfrom)) {
+        LogDebug(BCLog::NET, "sendtxrcncl received to which we indicated no tx relay, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    // Peer must not offer us reconciliations if they specified no tx relay support in VERSION.
+    // This flag might also be false in other cases, but the RejectIncomingTxs check above
+    // eliminates them, so that this flag fully represents what we are looking for.
+    const auto* tx_relay = peer.GetTxRelay();
+    if (!tx_relay || !WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs)) {
+        LogDebug(BCLog::NET, "sendtxrcncl received which indicated no tx relay to us, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    uint32_t peer_txreconcl_version;
+    uint64_t remote_salt;
+    vRecv >> peer_txreconcl_version >> remote_salt;
+
+    const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
+                                                                                 peer_txreconcl_version, remote_salt);
+    switch (result) {
+    case ReconciliationRegisterResult::NOT_FOUND:
+        LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
+        break;
+    case ReconciliationRegisterResult::SUCCESS:
+        break;
+    case ReconciliationRegisterResult::ALREADY_REGISTERED:
+        LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    case ReconciliationRegisterResult::PROTOCOL_VIOLATION:
+        LogDebug(BCLog::NET, "txreconciliation protocol violation, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
 }
 
 void PeerManagerImpl::ProcessPong(CNode& pfrom, Peer& peer, const NodeClock::time_point ping_end, DataStream& vRecv)
