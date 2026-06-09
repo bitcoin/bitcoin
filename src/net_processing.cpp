@@ -961,6 +961,11 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
+    /** Handle a getdata message: parse the requested inventory and append it to
+     *  peer.m_getdata_requests, which ProcessGetData() services. */
+    void ProcessGetDataMessage(CNode& pfrom, Peer& peer, DataStream& vRecv, const std::atomic<bool>& interruptMsgProc)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
+
     /** Process a new block. Perform any post-processing housekeeping */
     void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
@@ -2606,6 +2611,56 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     }
 }
 
+void PeerManagerImpl::ProcessGetDataMessage(CNode& pfrom, Peer& peer, DataStream& vRecv, const std::atomic<bool>& interruptMsgProc)
+{
+    std::vector<CInv> vInv;
+    vRecv >> vInv;
+    if (vInv.size() > MAX_INV_SZ)
+    {
+        Misbehaving(peer, strprintf("getdata message size = %u", vInv.size()));
+        return;
+    }
+
+    LogDebug(BCLog::NET, "received getdata (%u invsz) peer=%d\n", vInv.size(), pfrom.GetId());
+
+    if (vInv.size() > 0) {
+        LogDebug(BCLog::NET, "received getdata for: %s peer=%d\n", vInv[0].ToString(), pfrom.GetId());
+    }
+
+    if (pfrom.IsPrivateBroadcastConn()) {
+        const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
+        if (!pushed_tx_opt) {
+            LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got GETDATA without sending an INV, %s",
+                     pfrom.LogPeer());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        const CTransactionRef& pushed_tx{*pushed_tx_opt};
+
+        // The GETDATA request must contain exactly one inv and it must be for the transaction
+        // that we INVed to the peer earlier.
+        if (vInv.size() == 1 && vInv[0].IsMsgTx() && vInv[0].hash == pushed_tx->GetHash().ToUint256()) {
+
+            MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
+
+            peer.m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
+            MaybeSendPing(pfrom, peer, NodeClock::now());
+        } else {
+            LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got an unexpected GETDATA message, %s",
+                     pfrom.LogPeer());
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    {
+        LOCK(peer.m_getdata_requests_mutex);
+        peer.m_getdata_requests.insert(peer.m_getdata_requests.end(), vInv.begin(), vInv.end());
+        ProcessGetData(pfrom, peer, interruptMsgProc);
+    }
+}
+
 uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
 {
     uint32_t nFetchFlags = 0;
@@ -4147,53 +4202,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::GETDATA) {
-        std::vector<CInv> vInv;
-        vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
-        {
-            Misbehaving(peer, strprintf("getdata message size = %u", vInv.size()));
-            return;
-        }
-
-        LogDebug(BCLog::NET, "received getdata (%u invsz) peer=%d\n", vInv.size(), pfrom.GetId());
-
-        if (vInv.size() > 0) {
-            LogDebug(BCLog::NET, "received getdata for: %s peer=%d\n", vInv[0].ToString(), pfrom.GetId());
-        }
-
-        if (pfrom.IsPrivateBroadcastConn()) {
-            const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
-            if (!pushed_tx_opt) {
-                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got GETDATA without sending an INV, %s",
-                         pfrom.LogPeer());
-                pfrom.fDisconnect = true;
-                return;
-            }
-
-            const CTransactionRef& pushed_tx{*pushed_tx_opt};
-
-            // The GETDATA request must contain exactly one inv and it must be for the transaction
-            // that we INVed to the peer earlier.
-            if (vInv.size() == 1 && vInv[0].IsMsgTx() && vInv[0].hash == pushed_tx->GetHash().ToUint256()) {
-
-                MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
-
-                peer.m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
-                MaybeSendPing(pfrom, peer, NodeClock::now());
-            } else {
-                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got an unexpected GETDATA message, %s",
-                         pfrom.LogPeer());
-                pfrom.fDisconnect = true;
-            }
-            return;
-        }
-
-        {
-            LOCK(peer.m_getdata_requests_mutex);
-            peer.m_getdata_requests.insert(peer.m_getdata_requests.end(), vInv.begin(), vInv.end());
-            ProcessGetData(pfrom, peer, interruptMsgProc);
-        }
-
+        ProcessGetDataMessage(pfrom, peer, vRecv, interruptMsgProc);
         return;
     }
 
