@@ -118,7 +118,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
-    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
+    FakeNodeClock clock{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
@@ -173,7 +173,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
-    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
+    FakeNodeClock clock{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);

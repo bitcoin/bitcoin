@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
 
     // Set node time a few minutes past the testnet4 genesis block
     const auto template_time{3min + WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->Time())};
-    NodeClockContext clock_ctx{template_time};
+    FakeNodeClock clock{template_time};
 
     block_template = mining->createNewBlock({}, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
@@ -57,14 +57,14 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     // This remains the case when exactly 20 minutes have gone by
-    clock_ctx += 17min;
+    clock += 17min;
     should_be_nullptr = block_template->waitNext(wait_options);
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     // One second later the difficulty drops and it returns a new template
     // Note that we can't test the actual difficulty change, because the
     // difficulty is already at 1.
-    clock_ctx += 1s;
+    clock += 1s;
     block_template = block_template->waitNext(wait_options);
     BOOST_REQUIRE(block_template);
 }
