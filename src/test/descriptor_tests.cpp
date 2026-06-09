@@ -182,6 +182,10 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
     std::vector<std::unique_ptr<Descriptor>> parse_privs;
     std::vector<std::unique_ptr<Descriptor>> parse_pubs;
+
+    BOOST_TEST_INFO_SCOPE("Priv desc: " << prv);
+    BOOST_TEST_INFO_SCOPE("Pub desc: " << pub);
+
     // Check that parsing succeeds.
     if (replace_apostrophe_with_h_in_prv) {
         prv = UseHInsteadOfApostrophe(prv);
@@ -204,11 +208,11 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK(max_sat_nonmaxsig <= max_sat_maxsig);
     const auto max_elems{parse_priv->MaxSatisfactionElems()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
-    BOOST_CHECK_MESSAGE(is_input_size_info_set || is_nontop_or_nonsolvable, prv);
+    BOOST_CHECK(is_input_size_info_set || is_nontop_or_nonsolvable);
 
     // The ScriptSize() must match the size of the Script string. (ScriptSize() is set for all descs but 'combo()'.)
     const bool is_combo{!parse_priv->IsSingleType()};
-    BOOST_CHECK_MESSAGE(is_combo || parse_priv->ScriptSize() == scripts[0][0].size() / 2, "Invalid ScriptSize() for " + prv);
+    if (!is_combo) BOOST_CHECK_EQUAL(parse_priv->ScriptSize().value(), scripts[0][0].size() / 2);
 
     // Check that the correct OutputType is inferred
     BOOST_CHECK(parse_priv->GetOutputType() == type);
@@ -273,13 +277,13 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
         FlatSigningProvider pub_prov;
         parse_pub->ExpandPrivate(0, keys_priv, pub_prov);
 
-        BOOST_CHECK_MESSAGE(EqualSigningProviders(priv_prov, pub_prov), "Private desc: " + prv + " Pub desc: " + pub);
+        BOOST_CHECK(EqualSigningProviders(priv_prov, pub_prov));
     } else if (keys_priv.keys.size() > 0) {
         // If there is at least one private key, ToPrivateString() should return true and include that key
         std::string prv_str;
         BOOST_CHECK(parse_priv->ToPrivateString(keys_priv, prv_str));
         size_t checksum_len = 9; // Including the '#' character
-        BOOST_CHECK_MESSAGE(prv == prv_str.substr(0, prv_str.length() - checksum_len), prv);
+        BOOST_CHECK_EQUAL(prv, prv_str.substr(0, prv_str.length() - checksum_len));
     }
 
     // Check that private can produce the normalized descriptors
@@ -294,10 +298,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
     // Check that the highest key expression index matches the number of keys in the descriptor
-    BOOST_TEST_INFO("Pub desc: " + pub);
     uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
     BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
-    BOOST_TEST_INFO("Priv desc: " + prv);
     BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
     BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
 
@@ -469,7 +471,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                     sigdata.ripemd160_preimages = preimages;
                     sigdata.hash160_preimages = preimages;
                     const auto prod_sig_res = ProduceSignature(FlatSigningProvider{keys_priv}.Merge(FlatSigningProvider{script_provider}), creator, spks[n], sigdata);
-                    BOOST_CHECK_MESSAGE(prod_sig_res == !(flags & SIGNABLE_FAILS), prv);
+                    BOOST_CHECK_EQUAL(prod_sig_res, !(flags & SIGNABLE_FAILS));
                 }
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
@@ -489,7 +491,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),
             // and then remove it from that set.
             for (const auto& origin : script_provider.origins) {
-                BOOST_CHECK_MESSAGE(paths.contains(origin.second.second.path), "Unexpected key path: " + prv);
+                BOOST_CHECK_MESSAGE(paths.contains(origin.second.second.path), "Unexpected key path");
                 left_paths.erase(origin.second.second.path);
             }
 
@@ -499,7 +501,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     }
 
     // Verify no expected paths remain that were not observed.
-    BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found: " + prv);
+    BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found");
 }
 
 void Check(const std::string& prv, const std::string& pub, const std::string& norm_pub, int flags,
