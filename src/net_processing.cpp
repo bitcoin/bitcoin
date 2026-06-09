@@ -976,6 +976,9 @@ private:
     void ProcessSendTxRcncl(CNode& pfrom, Peer& peer, DataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
+    void ProcessTx(CNode& pfrom, Peer& peer, DataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_tx_download_mutex);
+
     /** Process a new block. Perform any post-processing housekeeping */
     void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
@@ -2830,6 +2833,86 @@ void PeerManagerImpl::ProcessInv(CNode& pfrom, Peer& peer, DataStream& vRecv, co
     }
 }
 
+void PeerManagerImpl::ProcessTx(CNode& pfrom, Peer& peer, DataStream& vRecv)
+{
+    if (RejectIncomingTxs(pfrom)) {
+        LogDebug(BCLog::NET, "transaction sent in violation of protocol, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    // Stop processing the transaction early if we are still in IBD since we don't
+    // have enough information to validate it yet. Sending unsolicited transactions
+    // is not considered a protocol violation, so don't punish the peer.
+    if (m_chainman.IsInitialBlockDownload()) return;
+
+    CTransactionRef ptx;
+    vRecv >> TX_WITH_WITNESS(ptx);
+
+    const Txid& txid = ptx->GetHash();
+    const Wtxid& wtxid = ptx->GetWitnessHash();
+
+    const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
+    AddKnownTx(peer, hash);
+
+    if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
+        LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
+                                       "network from %s; stopping private broadcast attempts",
+                 txid.ToString(), pfrom.LogPeer());
+        if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
+            // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
+            // Tell CConnman it does not need to start the remaining ones.
+            m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
+        }
+    }
+
+    LOCK2(cs_main, m_tx_download_mutex);
+
+    const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
+    if (!should_validate) {
+        if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
+            // Always relay transactions received from peers with forcerelay
+            // permission, even if they were already in the mempool, allowing
+            // the node to function as a gateway for nodes hidden behind it.
+            if (!m_mempool.exists(txid)) {
+                LogInfo("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
+                          txid.ToString(), wtxid.ToString(), pfrom.GetId());
+            } else {
+                LogInfo("Force relaying tx %s (wtxid=%s) from peer=%d\n",
+                          txid.ToString(), wtxid.ToString(), pfrom.GetId());
+                InitiateTxBroadcastToAll(txid, wtxid);
+            }
+        }
+
+        if (package_to_validate) {
+            const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
+            LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
+                     package_result.m_state.IsValid() ? "package accepted" : "package rejected");
+            ProcessPackageResult(package_to_validate.value(), package_result);
+        }
+        return;
+    }
+
+    // ReceivedTx should not be telling us to validate the tx and a package.
+    Assume(!package_to_validate.has_value());
+
+    const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
+    const TxValidationState& state = result.m_state;
+
+    if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+        ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions);
+        pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
+    }
+    if (state.IsInvalid()) {
+        if (auto package_to_validate{ProcessInvalidTx(pfrom.GetId(), ptx, state, /*first_time_failure=*/true)}) {
+            const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
+            LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
+                     package_result.m_state.IsValid() ? "package accepted" : "package rejected");
+            ProcessPackageResult(package_to_validate.value(), package_result);
+        }
+    }
+}
+
 uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
 {
     uint32_t nFetchFlags = 0;
@@ -4392,83 +4475,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::TX) {
-        if (RejectIncomingTxs(pfrom)) {
-            LogDebug(BCLog::NET, "transaction sent in violation of protocol, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        // Stop processing the transaction early if we are still in IBD since we don't
-        // have enough information to validate it yet. Sending unsolicited transactions
-        // is not considered a protocol violation, so don't punish the peer.
-        if (m_chainman.IsInitialBlockDownload()) return;
-
-        CTransactionRef ptx;
-        vRecv >> TX_WITH_WITNESS(ptx);
-
-        const Txid& txid = ptx->GetHash();
-        const Wtxid& wtxid = ptx->GetWitnessHash();
-
-        const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
-        AddKnownTx(peer, hash);
-
-        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
-            LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
-                                           "network from %s; stopping private broadcast attempts",
-                     txid.ToString(), pfrom.LogPeer());
-            if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
-                // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
-                // Tell CConnman it does not need to start the remaining ones.
-                m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
-            }
-        }
-
-        LOCK2(cs_main, m_tx_download_mutex);
-
-        const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
-        if (!should_validate) {
-            if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
-                // Always relay transactions received from peers with forcerelay
-                // permission, even if they were already in the mempool, allowing
-                // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(txid)) {
-                    LogInfo("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
-                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
-                } else {
-                    LogInfo("Force relaying tx %s (wtxid=%s) from peer=%d\n",
-                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
-                    InitiateTxBroadcastToAll(txid, wtxid);
-                }
-            }
-
-            if (package_to_validate) {
-                const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
-                LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
-                         package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                ProcessPackageResult(package_to_validate.value(), package_result);
-            }
-            return;
-        }
-
-        // ReceivedTx should not be telling us to validate the tx and a package.
-        Assume(!package_to_validate.has_value());
-
-        const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
-        const TxValidationState& state = result.m_state;
-
-        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions);
-            pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
-        }
-        if (state.IsInvalid()) {
-            if (auto package_to_validate{ProcessInvalidTx(pfrom.GetId(), ptx, state, /*first_time_failure=*/true)}) {
-                const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
-                LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
-                         package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                ProcessPackageResult(package_to_validate.value(), package_result);
-            }
-        }
-
+        ProcessTx(pfrom, peer, vRecv);
         return;
     }
 
