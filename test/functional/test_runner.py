@@ -371,6 +371,7 @@ BASE_SCRIPTS = [
     'wallet_startup.py',
     'p2p_private_broadcast_retry_v1.py',
     'feature_remove_pruned_files_on_startup.py',
+    'feature_prune_stale_fork.py',
     'p2p_i2p_ports.py',
     'p2p_i2p_sessions.py',
     'feature_presegwit_node_upgrade.py',
