@@ -13,12 +13,12 @@ import subprocess
 import sys
 
 
-def grep_boost_fixture_test_suite():
+def grep_boost_test_suites():
     command = [
         "git",
         "grep",
         "-E",
-        r"^BOOST_FIXTURE_TEST_SUITE\(",
+        r"^(BOOST_FIXTURE_TEST_SUITE|BOOST_AUTO_TEST_SUITE)\(",
         "--",
         "src/ipc/test/**.cpp",
         "src/test/**.cpp",
@@ -31,7 +31,7 @@ def check_matching_test_names(test_suite_list):
     not_matching = [
         x
         for x in test_suite_list
-        if re.search(r"/(.*?)\.cpp:BOOST_FIXTURE_TEST_SUITE\(\1(_[a-z0-9]+)?, .*\)", x) is None
+        if re.search(r"/(.*?)\.cpp:(?:BOOST_FIXTURE_TEST_SUITE|BOOST_AUTO_TEST_SUITE)\(\1(_[a-z0-9]+)?[,)]", x) is None
     ]
     if len(not_matching) > 0:
         not_matching = "\n".join(not_matching)
@@ -61,7 +61,7 @@ def get_duplicates(input_list):
 
 
 def check_unique_test_names(test_suite_list):
-    output = [re.search(r"\((.*?),", x) for x in test_suite_list]
+    output = [re.search(r"\((.*?)[,)]", x) for x in test_suite_list]
     output = [x.group(1) for x in output if x is not None]
     output = get_duplicates(output)
     output = sorted(list(output))
@@ -78,7 +78,7 @@ def check_unique_test_names(test_suite_list):
 
 
 def main():
-    test_suite_list = grep_boost_fixture_test_suite().splitlines()
+    test_suite_list = grep_boost_test_suites().splitlines()
     exit_code = check_matching_test_names(test_suite_list)
     exit_code |= check_unique_test_names(test_suite_list)
     sys.exit(exit_code)
