@@ -29,10 +29,8 @@ using namespace util::hex_literals;
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
 
-namespace
-{
 //! equality test
-bool operator==(const Coin &a, const Coin &b) {
+static bool operator==(const Coin &a, const Coin &b) {
     // Empty Coin objects are always equal.
     if (a.IsSpent() && b.IsSpent()) return true;
     return a.fCoinBase == b.fCoinBase &&
@@ -40,6 +38,8 @@ bool operator==(const Coin &a, const Coin &b) {
            a.out == b.out;
 }
 
+namespace
+{
 class CCoinsViewTest : public CoinsViewEmpty
 {
     FastRandomContext& m_rng;
