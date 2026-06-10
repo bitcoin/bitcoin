@@ -335,14 +335,15 @@ static RPCMethod generatetoaddress()
 static RPCMethod generateblock()
 {
     return RPCMethod{"generateblock",
-        "Mine a block with a set of ordered transactions or mempool transactions to a specified group of addresses or descriptors and return the block hash.",
+        "Mine a block with a set of ordered transactions or mempool transactions to a specified group of addresses or descriptors and optionally the corresponding amount in sats to each one. It returns the block hash.",
         {
             {"output", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses or descriptors to split, in equal parts, the coinbase reward among.\n"
-                "If the total reward cannot be splited in equal parts, the first outputs will get the extra remainder.\n"
+                "If the total reward cannot be split in equal parts, the first outputs will get the extra remainder.\n"
                 "If no outputs are provided the coinbase transaction will burn the coins into an OP_RETURN output.\n"
-                "If only one output is desired a simple address or descriptor can be provided without using JSON format",
+                "If only one output is desired a simple address or descriptor can be provided without using JSON format\n"
+                "Optionally, each output can be specified as an object {\"address/descriptor\": amount} to assign a fixed amount in satoshis; any remaining reward is then split equally among all outputs.",
                 {
-                    {"output", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A valid address or descriptor"},
+                    {"output", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A valid address or descriptor, or an object {\"address/descriptor\": amount} assigning a fixed amount in satoshis"},
                 },
                 RPCArgOptions{.skip_type_check = true},
             },
@@ -370,6 +371,7 @@ static RPCMethod generateblock()
             + HelpExampleCli("generateblock", R"("myaddress" [])")
             + HelpExampleCli("generateblock", R"('["myaddress1", "myaddress2"]')")
             + HelpExampleCli("generateblock", R"('["myaddress1", "myaddress2"]' [])")
+            + HelpExampleCli("generateblock", R"('[{"myaddress1":100000000},{"myaddress2":200000000}]')")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -392,15 +394,30 @@ static RPCMethod generateblock()
     for (const UniValue& entry : address_or_descriptor.getValues()) {
         std::string error; // dummy ignored error
         CScript coinbase_output_script;
-        if (!getScriptFromDescriptor(entry.get_str(), coinbase_output_script, error)) {
-            const auto destination{DecodeDestination(entry.get_str())};
+        std::string address_or_descriptor_str;
+        CAmount custom_reward = 0;
+
+        if (entry.isObject() && !entry.empty()) {
+            if (entry.size() != 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Custom reward object must contain exactly one \"address/descriptor\": amount pair");
+            }
+            // Amounts are integer satoshis, AmountFromValue's default (decimals=8) would interpret them as BTC.
+            custom_reward = AmountFromValue(entry.getValues()[0], 0);
+            address_or_descriptor_str = entry.getKeys()[0];
+        } else if (entry.isStr()) {
+            address_or_descriptor_str = entry.get_str();
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Custom reward must be a string address/descriptor or an object {\"address/descriptor\": amount}");
+        }
+        if (!getScriptFromDescriptor(address_or_descriptor_str, coinbase_output_script, error)) {
+            const auto destination = DecodeDestination(address_or_descriptor_str);
             if (!IsValidDestination(destination)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
             }
             coinbase_output_script = GetScriptForDestination(destination);
         }
 
-        coinbase_payouts.emplace_back(0, coinbase_output_script);
+        coinbase_payouts.emplace_back(custom_reward, coinbase_output_script);
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -482,8 +499,21 @@ static RPCMethod generateblock()
         const auto num_outputs = coinbase_payouts.size();
         const CTransaction& template_coinbase{*block.vtx.at(0)};
         const CAmount total_reward{template_coinbase.vout.at(0).nValue};
-        CAmount reward_parted = total_reward / num_outputs;
-        CAmount remainder = total_reward % num_outputs;
+
+        // Accumulate rewards while validating against total_reward.
+        // Checking at each step prevents total_value from overflowing int64_t
+        // if there are many payouts.
+        CAmount total_value{0};
+        for (const auto& payout : coinbase_payouts) {
+            total_value += payout.nValue;
+            if (total_reward < total_value) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Sum of custom rewards exceeds the total block reward");
+            }
+        }
+
+        const CAmount extra = total_reward - total_value;
+        const CAmount reward_parted = extra / static_cast<CAmount>(num_outputs);
+        const CAmount remainder = extra % static_cast<CAmount>(num_outputs);
 
         for (size_t i = 0; i < num_outputs; ++i) {
             coinbase_payouts[i].nValue += reward_parted + (i < static_cast<size_t>(remainder) ? 1 : 0);
