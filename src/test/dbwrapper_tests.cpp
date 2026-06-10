@@ -356,8 +356,8 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
     for (const int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
         for (unsigned int x=seek_start; x<255; ++x) {
-            uint8_t key;
-            uint32_t value;
+            uint8_t key{};
+            uint32_t value{};
             BOOST_CHECK(it->Valid());
             if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                 break;
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
                 for (int z = 0; z < y; ++z)
                     exp_key += exp_key;
                 StringContentsSerializer key;
-                uint32_t value;
+                uint32_t value{};
                 BOOST_CHECK(it->Valid());
                 if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                     break;
