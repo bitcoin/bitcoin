@@ -85,7 +85,7 @@ FUZZ_TARGET(key, .init = initialize_key)
     {
         CKey child_key;
         ChainCode child_chaincode;
-        const bool ok = key.Derive(child_key, child_chaincode, 0, random_uint256);
+        const bool ok = key.Derive(child_key, child_chaincode, 0, ChainCode{random_uint256});
         assert(ok);
         assert(child_key.IsValid());
         assert(!(child_key == key));
@@ -275,7 +275,7 @@ FUZZ_TARGET(key, .init = initialize_key)
     {
         CPubKey child_pubkey;
         ChainCode child_chaincode;
-        const bool ok = pubkey.Derive(child_pubkey, child_chaincode, 0, random_uint256);
+        const bool ok = pubkey.Derive(child_pubkey, child_chaincode, 0, ChainCode{random_uint256});
         assert(ok);
         assert(child_pubkey != pubkey);
         assert(child_pubkey.IsCompressed());

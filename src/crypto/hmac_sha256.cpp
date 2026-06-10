@@ -5,6 +5,7 @@
 #include <crypto/hmac_sha256.h>
 
 #include <crypto/sha256.h>
+#include <support/cleanse.h>
 
 #include <cstring>
 
@@ -26,6 +27,8 @@ CHMAC_SHA256::CHMAC_SHA256(const unsigned char* key, size_t keylen)
     for (int n = 0; n < 64; n++)
         rkey[n] ^= 0x5c ^ 0x36;
     inner.Write(rkey, 64);
+
+    memory_cleanse(rkey, sizeof(rkey));
 }
 
 void CHMAC_SHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
@@ -33,4 +36,5 @@ void CHMAC_SHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
     unsigned char temp[32];
     inner.Finalize(temp);
     outer.Write(temp, 32).Finalize(hash);
+    memory_cleanse(temp, sizeof(temp));
 }
