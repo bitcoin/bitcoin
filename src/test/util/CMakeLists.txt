@@ -29,3 +29,12 @@ target_link_libraries(test_util
   PUBLIC
     univalue
 )
+
+add_library(test_framework STATIC EXCLUDE_FROM_ALL
+  framework.cpp
+)
+
+target_link_libraries(test_framework
+  PUBLIC
+    core_interface
+)
