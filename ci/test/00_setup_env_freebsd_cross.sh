@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_freebsd_cross
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
 export APT_LLVM_V="22"
 export FREEBSD_VERSION=15.0
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld"

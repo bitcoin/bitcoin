@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie"  # To build codegen, CMake must be 3.31 or newer.
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"  # To build codegen, CMake must be 3.31 or newer.
 export CONTAINER_NAME=ci_native_iwyu
 export IWYU_LLVM_V="22"
 export APT_LLVM_V="${IWYU_LLVM_V}"
