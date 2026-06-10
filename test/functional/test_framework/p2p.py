@@ -43,6 +43,7 @@ from test_framework.messages import (
     msg_cfheaders,
     msg_cfilter,
     msg_cmpctblock,
+    msg_feature,
     msg_feefilter,
     msg_filteradd,
     msg_filterclear,
@@ -99,7 +100,8 @@ logger = logging.getLogger("TestFramework.p2p")
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
 # Version 70016 supports wtxid relay
-P2P_VERSION = 70016
+# Version 70017 supports feature
+P2P_VERSION = 70017
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 # The P2P user agent string that this test framework sends in its `version` message
@@ -124,6 +126,7 @@ MESSAGEMAP = {
     b"cfheaders": msg_cfheaders,
     b"cfilter": msg_cfilter,
     b"cmpctblock": msg_cmpctblock,
+    b"feature": msg_feature,
     b"feefilter": msg_feefilter,
     b"filteradd": msg_filteradd,
     b"filterclear": msg_filterclear,
@@ -543,6 +546,7 @@ class P2PInterface(P2PConnection):
     def on_cfheaders(self, message): pass
     def on_cfilter(self, message): pass
     def on_cmpctblock(self, message): pass
+    def on_feature(self, message): pass
     def on_feefilter(self, message): pass
     def on_filteradd(self, message): pass
     def on_filterclear(self, message): pass

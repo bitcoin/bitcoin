@@ -15,6 +15,8 @@
 #include <pubkey.h>
 #include <span.h>
 
+static constexpr unsigned BIP324_SHORTIDS_IMPLEMENTED{38};
+
 /** The BIP324 packet cipher, encapsulating its key derivation, stream cipher, and AEAD. */
 class BIP324Cipher
 {

@@ -725,6 +725,15 @@ private:
     {
         m_connman.PushMessage(&node, NetMsg::Make(std::move(msg_type), std::forward<Args>(args)...));
     }
+    template <typename... Args>
+    void MakeAndPushFeature(CNode& node, std::string_view feature_id, Args&&... args) const
+    {
+        if (!Assume(feature_id.size() >= 4 && feature_id.size() <= MAX_FEATUREID_LENGTH)) return;
+        std::vector<unsigned char> feature_data;
+        VectorWriter{feature_data, 0, std::forward<Args>(args)...};
+        if (!Assume(feature_data.size() <= MAX_FEATUREDATA_LENGTH)) return;
+        MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
+    }
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -1578,7 +1587,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     MakeAndPushMessage(
         pnode,
         NetMsgType::VERSION,
-        PROTOCOL_VERSION,
+        pnode.AdvertisedVersion(),
         my_services,
         my_time,
         // your_services + CNetAddr::V1(your_addr) is the pre-version-31402 serialization of your_addr (without nTime)
@@ -1592,7 +1601,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
     LogDebug(
         BCLog::NET, "send version message: version=%d, blocks=%d%s, txrelay=%d, peer=%d\n",
-        PROTOCOL_VERSION, my_height,
+        pnode.AdvertisedVersion(), my_height,
         fLogIPs ? strprintf(", them=%s", your_addr.ToStringAddrPort()) : "",
         my_tx_relay, pnode.GetId());
 }
@@ -3679,7 +3688,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         // Change version
-        const int greatest_common_version = std::min(nVersion, PROTOCOL_VERSION);
+        const int greatest_common_version = std::min(nVersion, pfrom.AdvertisedVersion());
         pfrom.SetCommonVersion(greatest_common_version);
         pfrom.nVersion = nVersion;
 
@@ -3752,6 +3761,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
                                    TXRECONCILIATION_VERSION, recon_salt);
             }
+        }
+
+        if (greatest_common_version >= FEATURE_VERSION) {
+            // announce supported features
+            // MakeAndPushFeature(pfrom, NetMsgFeature::FOO, uint32_t{1});
         }
 
         MakeAndPushMessage(pfrom, NetMsgType::VERACK);
@@ -3966,6 +3980,45 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             return;
         }
         peer.m_wants_addrv2 = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::FEATURE) {
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a FEATURE message after VERACK.
+            LogDebug(BCLog::NET, "feature received after verack, %s", pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        } else if (pfrom.GetCommonVersion() < FEATURE_VERSION) {
+            // Disconnect peers that send a FEATURE message without valid version negotiation.
+            LogDebug(BCLog::NET, "feature received with incompatible version %d, %s", pfrom.GetCommonVersion(), pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        std::string feature_id;
+        DataStream feature_data;
+        try {
+            vRecv >> LIMITED_STRING(feature_id, MAX_FEATUREID_LENGTH);
+            std::vector<unsigned char> feature_data_vec;
+            vRecv >> LIMITED_VECTOR(feature_data_vec, MAX_FEATUREDATA_LENGTH);
+            feature_data = DataStream(feature_data_vec);
+        } catch (const std::exception&) {
+            feature_id.clear(); // use empty feature_id as error indicator
+        }
+        if (feature_id.size() < 4 || !vRecv.empty()) {
+            LogDebug(BCLog::NET, "invalid feature payload, %s", pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        // if (feature_id == NetMsgFeature::FOO) {
+        //     ...
+        //     return;
+        // }
+
+        // ignore unknown feature_id
+        LogDebug(BCLog::NET, "unknown feature advertised: %s", SanitizeString(feature_id));
         return;
     }
 

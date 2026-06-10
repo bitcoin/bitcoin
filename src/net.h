@@ -831,6 +831,13 @@ public:
         return m_conn_type == ConnectionType::PRIVATE_BROADCAST;
     }
 
+    /** Protocol version advertised in our VERSION message.
+     *  Private broadcast connections use a fixed version to maximise anonymity. */
+    int AdvertisedVersion() const
+    {
+        return IsPrivateBroadcastConn() ? WTXID_RELAY_VERSION : PROTOCOL_VERSION;
+    }
+
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }

@@ -301,6 +301,8 @@ BASE_SCRIPTS = [
     'wallet_listsinceblock.py',
     'wallet_listdescriptors.py',
     'p2p_leak.py',
+    'p2p_bip434_feature.py',
+    'p2p_bip434_feature.py --v2transport',
     'wallet_encryption.py',
     'feature_dersig.py',
     'feature_reindex_init.py',

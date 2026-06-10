@@ -1928,6 +1928,28 @@ class msg_sendtxrcncl:
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
 
+class msg_feature:
+    """FEATURE message for negotiating optional features."""
+    __slots__ = ("feature_id", "feature_data")
+    msgtype = b"feature"
+
+    def __init__(self, feature_id="", feature_data=b""):
+        self.feature_id = feature_id
+        self.feature_data = feature_data
+
+    def deserialize(self, f):
+        self.feature_id = deser_string(f).decode()
+        self.feature_data = deser_string(f)
+
+    def serialize(self):
+        r = ser_string(self.feature_id.encode())
+        r += ser_string(self.feature_data)
+        return r
+
+    def __repr__(self):
+        return f"msg_feature(feature_id={self.feature_id}, data={self.feature_data.hex()})"
+
+
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):
         def check_addrv2(ip, net):
