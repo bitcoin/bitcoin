@@ -18,6 +18,10 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 
+#include <array>
+#include <cstdint>
+#include <fstream>
+
 using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
 using node::BlockManager;
@@ -58,6 +62,54 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     // add another 8 bytes for the second block's serialization header and we get 293 + 8 = 301
     FlatFilePos actual{blockman.WriteBlock(params->GenesisBlock(), 1)};
     BOOST_CHECK_EQUAL(actual.nPos, STORAGE_HEADER_BYTES + ::GetSerializeSize(TX_WITH_WITNESS(params->GenesisBlock())) + STORAGE_HEADER_BYTES);
+}
+
+BOOST_AUTO_TEST_CASE(blockmanager_readblock_rejects_trailing_bytes)
+{
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::MAIN)};
+    KernelNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
+    const BlockManager::Options blockman_opts{
+        .chainparams = *params,
+        .use_xor = false,
+        .blocks_dir = m_args.GetBlocksDirPath(),
+        .notifications = notifications,
+        .block_tree_db_params = DBParams{
+            .path = m_args.GetDataDirNet() / "blocks" / "index",
+            .cache_bytes = 0,
+        },
+    };
+    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
+
+    const CBlock& block{params->GenesisBlock()};
+    LOCK(::cs_main);
+    const FlatFilePos pos{blockman.WriteBlock(block, 0)};
+    const unsigned int block_size{static_cast<unsigned int>(::GetSerializeSize(TX_WITH_WITNESS(block)))};
+    constexpr std::array<char, 8> trailing_bytes{'t', 'r', 'a', 'i', 'l', 'i', 'n', 'g'};
+    const uint32_t stored_size{static_cast<uint32_t>(block_size + trailing_bytes.size())};
+    const std::array<char, 4> stored_size_bytes{
+        static_cast<char>(stored_size),
+        static_cast<char>(stored_size >> 8),
+        static_cast<char>(stored_size >> 16),
+        static_cast<char>(stored_size >> 24),
+    };
+    {
+        std::fstream file{
+            blockman.GetBlockPosFilename(pos).std_path(),
+            std::ios::in | std::ios::out | std::ios::binary};
+        BOOST_REQUIRE(file);
+        file.seekp(pos.nPos - sizeof(stored_size));
+        file.write(stored_size_bytes.data(), stored_size_bytes.size());
+        file.seekp(pos.nPos + block_size);
+        file.write(trailing_bytes.data(), trailing_bytes.size());
+        BOOST_REQUIRE(file);
+    }
+
+    const auto raw_block{blockman.ReadRawBlock(pos)};
+    BOOST_REQUIRE(raw_block);
+    BOOST_CHECK_EQUAL(raw_block->size(), block_size + trailing_bytes.size());
+
+    CBlock read_block;
+    BOOST_CHECK(!blockman.ReadBlock(read_block, pos, block.GetHash()));
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain100Setup)

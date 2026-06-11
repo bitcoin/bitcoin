@@ -1047,7 +1047,11 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
     try {
         // Read block
-        SpanReader{*block_data} >> TX_WITH_WITNESS(block);
+        SpanReader reader{*block_data};
+        reader >> TX_WITH_WITNESS(block);
+        if (!reader.empty()) {
+            throw std::ios_base::failure("Unexpected trailing data");
+        }
     } catch (const std::exception& e) {
         LogError("Deserialize or I/O error - %s at %s while reading block", e.what(), pos.ToString());
         return false;
