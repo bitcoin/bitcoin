@@ -47,7 +47,7 @@ public:
     void fixup(QString &input) const override
     {
         bool valid;
-        CAmount val;
+        CAmount val{0};
 
         if (input.isEmpty() && !m_allow_empty) {
             valid = true;
@@ -151,10 +151,10 @@ public:
 
 private:
     BitcoinUnit currentUnit{BitcoinUnit::BTC};
-    CAmount singleStep{CAmount(100000)}; // satoshis
+    CAmount singleStep{100000}; // satoshis
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
-    CAmount m_min_amount{CAmount(0)};
+    CAmount m_min_amount{0};
     CAmount m_max_amount{BitcoinUnits::maxMoney()};
 
     /**

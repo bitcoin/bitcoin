@@ -122,7 +122,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
-        std::map<Txid, CAmount> mapDeltas;
+        std::map<Txid, CAmount::inner_type> mapDeltas;
         file >> mapDeltas;
 
         if (opts.apply_fee_delta_priority) {
@@ -163,9 +163,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     {
         LOCK(pool.cs);
-        for (const auto &i : pool.mapDeltas) {
-            mapDeltas[i.first] = i.second;
-        }
+        mapDeltas = pool.mapDeltas;
         vinfo = pool.infoAll();
         unbroadcast_txids = pool.GetUnbroadcastTxs();
     }

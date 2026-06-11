@@ -67,7 +67,7 @@ private:
     uint64_t nBlockWeight;
     uint64_t nBlockTx;
     uint64_t nBlockSigOpsCost;
-    CAmount nFees;
+    CAmount nFees{0};
 
     // Chain context for the block
     int nHeight;

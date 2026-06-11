@@ -953,7 +953,7 @@ public:
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
 
-    CAmount amount;
+    CAmount amount{0};
     CScript script;
 
     bool IsNull() const;
