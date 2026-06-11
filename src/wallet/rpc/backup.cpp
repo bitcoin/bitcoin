@@ -124,18 +124,32 @@ RPCMethod removeprunedfunds()
     };
 }
 
-static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
+static std::optional<int64_t> GetImportTimestamp(const UniValue& data, int64_t now)
 {
-    if (data.exists("timestamp")) {
-        const UniValue& timestamp = data["timestamp"];
-        if (timestamp.isNum()) {
-            return timestamp.getInt<int64_t>();
-        } else if (timestamp.isStr() && timestamp.get_str() == "now") {
-            return now;
-        }
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
+    if (!data.exists("timestamp")) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
     }
-    throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+
+    const UniValue& timestamp = data["timestamp"];
+
+    if (timestamp.isNum()) {
+        const int64_t required_timestamp = timestamp.getInt<int64_t>();
+        if (required_timestamp < 0) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "timestamp must be greater than or equal to zero");
+        }
+        return required_timestamp;
+    }
+
+    if (timestamp.isStr()) {
+        const std::string& ts_str = timestamp.get_str();
+        if (ts_str == "now")   return now;
+        if (ts_str == "never") return std::nullopt;
+        throw JSONRPCError(RPC_TYPE_ERROR,
+            strprintf("Invalid timestamp string \"%s\": expected \"now\" or \"never\"", ts_str));
+    }
+
+    throw JSONRPCError(RPC_TYPE_ERROR,
+        strprintf("Expected number or \"now\" or \"never\" for timestamp, got type %s", uvTypeName(timestamp.type())));
 }
 
 static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -339,10 +353,11 @@ RPCMethod importdescriptors()
                                     {"next_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If a ranged descriptor is set to active, this specifies the next index to generate addresses from"},
                                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time from which to start rescanning the blockchain for this descriptor, in " + UNIX_EPOCH_TIME + "\n"
                                         "Use the string \"now\" to substitute the current synced blockchain time.\n"
-                                        "\"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
+                                        "\"now\" can be specified to scan from last mediantime, for outputs which are known to never have been used, and\n"
+                                        "\"never\" can be specified to skip scanning, and\n"
                                         "0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
                                         "of all descriptors being imported will be scanned as well as the mempool.",
-                                        RPCArgOptions{.type_str={"timestamp | \"now\"", "integer / string"}}
+                                        RPCArgOptions{.type_str={"timestamp | \"now\" | \"never\"", "integer / string"}}
                                     },
                                     {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
                                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
@@ -394,7 +409,6 @@ RPCMethod importdescriptors()
     LOCK(pwallet->m_relock_mutex);
 
     const UniValue& requests = main_request.params[0];
-    const int64_t minimum_timestamp = 1;
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
     bool rescan = false;
@@ -407,19 +421,15 @@ RPCMethod importdescriptors()
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
-            // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
-            const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
+            const auto request_timestamp = GetImportTimestamp(request, now);
+            const int64_t import_timestamp = request_timestamp.value_or(now);
+
+            const UniValue& result = ProcessDescriptorImport(*pwallet, request, import_timestamp);
+            const bool success = result["success"].get_bool();
             response.push_back(result);
 
-            if (lowest_timestamp > timestamp ) {
-                lowest_timestamp = timestamp;
-            }
-
-            // If we know the chain tip, and at least one request was successful then allow rescan
-            if (!rescan && result["success"].get_bool()) {
-                rescan = true;
-            }
+            lowest_timestamp = std::min(lowest_timestamp, import_timestamp);
+            rescan = rescan || (success && request_timestamp.has_value());
         }
         pwallet->ConnectScriptPubKeyManNotifiers();
         pwallet->RefreshAllTXOs();
@@ -443,18 +453,26 @@ RPCMethod importdescriptors()
             for (unsigned int i = 0; i < requests.size(); ++i) {
                 const UniValue& request = requests.getValues().at(i);
 
+                auto request_timestamp = GetImportTimestamp(request, now);
+                // Pass through the response of "never" timestamp descriptors
+                // that don't need any scanning.
+                if (!request_timestamp) {
+                   response.push_back(results.at(i));
+                   continue;
+                }
+
                 // If the descriptor timestamp is within the successfully scanned
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
+                if (scanned_time <= *request_timestamp || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
                             "was an error reading a block from time %d, which is after or within %d seconds "
                             "of key creation, and could contain transactions pertaining to the desc. As a "
                             "result, transactions and coins using this desc may not appear in the wallet.",
-                            GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
+                            *request_timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
                     if (pwallet->chain().havePruned()) {
                         error_msg += strprintf(" This error could be caused by pruning or data corruption "
                                 "(see bitcoind log for details) and could be dealt with by downloading and "
