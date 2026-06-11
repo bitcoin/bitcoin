@@ -750,6 +750,11 @@ private:
     /** Send `feefilter` message. */
     void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
+    /** Determine whether it is time to trickle tx inventory to a peer, and clear the pending
+     *  inventory if the peer has requested no transaction relay. Returns true if trickle is due. */
+    [[nodiscard]] bool ScheduleTxRelayTrickle(Peer::TxRelay& tx_relay, const CNode& node, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, tx_relay.m_tx_inventory_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -5716,6 +5721,31 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
     }
 }
 
+bool PeerManagerImpl::ScheduleTxRelayTrickle(Peer::TxRelay& tx_relay, const CNode& node, std::chrono::microseconds current_time)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(tx_relay.m_tx_inventory_mutex);
+
+    // Check whether periodic sends should happen
+    bool fSendTrickle = node.HasPermission(NetPermissionFlags::NoBan);
+    if (tx_relay.m_next_inv_send_time < current_time) {
+        fSendTrickle = true;
+        if (node.IsInboundConn()) {
+            tx_relay.m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL, node.m_network_key);
+        } else {
+            tx_relay.m_next_inv_send_time = current_time + m_rng.rand_exp_duration(OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
+        }
+    }
+
+    // Time to send but the peer has requested we not relay transactions.
+    if (fSendTrickle) {
+        LOCK(tx_relay.m_bloom_filter_mutex);
+        if (!tx_relay.m_relay_txs) tx_relay.m_tx_inventory_to_send.clear();
+    }
+
+    return fSendTrickle;
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -5984,22 +6014,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
                 LOCK(tx_relay->m_tx_inventory_mutex);
-                // Check whether periodic sends should happen
-                bool fSendTrickle = node.HasPermission(NetPermissionFlags::NoBan);
-                if (tx_relay->m_next_inv_send_time < current_time) {
-                    fSendTrickle = true;
-                    if (node.IsInboundConn()) {
-                        tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL, node.m_network_key);
-                    } else {
-                        tx_relay->m_next_inv_send_time = current_time + m_rng.rand_exp_duration(OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
-                    }
-                }
-
-                // Time to send but the peer has requested we not relay transactions.
-                if (fSendTrickle) {
-                    LOCK(tx_relay->m_bloom_filter_mutex);
-                    if (!tx_relay->m_relay_txs) tx_relay->m_tx_inventory_to_send.clear();
-                }
+                const bool fSendTrickle{ScheduleTxRelayTrickle(*tx_relay, node, current_time)};
 
                 // Respond to BIP35 mempool requests
                 if (fSendTrickle && tx_relay->m_send_mempool) {
