@@ -125,12 +125,14 @@ Usage:
 [
     {
         "fingerprint": "00000000",
-        "name": "trezor_t"
+        "model": "trezor_t"
     }
 ]
 ```
 
 The command MUST return an array, possibly empty, of entries that contain at least a `fingerprint` field.
+
+If present, the optional `model` field is used as the device name in the `enumeratesigners` RPC result.
 
 A future extension could add an optional return field with device capabilities. Perhaps a descriptor with wildcards. For example: `["pkh("44'/0'/$'/{0,1}/*"), sh(wpkh("49'/0'/$'/{0,1}/*")), wpkh("84'/0'/$'/{0,1}/*")]`. This would indicate the device supports legacy, wrapped SegWit and native SegWit. In addition it restricts the derivation paths that can used for those, to maintain compatibility with other wallet software. It also indicates the device, or the driver, doesn't support multisig.
 
@@ -204,7 +206,9 @@ The command MAY complain if `--chain` is set to a test-network, but the BIP32 co
 
 ## How Bitcoin Core uses the Signer API
 
-The `enumeratesigners` RPC simply calls `<cmd> enumerate`.
+The `enumeratesigners` RPC calls `<cmd> enumerate`, skips duplicate entries with the same `fingerprint`, and maps the optional `model` field to the RPC `name` field.
+
+Wallet operations that need a signer (`createwallet`, `walletdisplayaddress` and spending) also call `<cmd> enumerate` and fail unless exactly one signer is found, so only one device should be connected at a time.
 
 The `createwallet` RPC calls:
 
