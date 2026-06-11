@@ -18,7 +18,6 @@
 #include <util/vector.h>
 
 #include <algorithm>
-#include <compare>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
