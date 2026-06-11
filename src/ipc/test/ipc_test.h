@@ -22,6 +22,7 @@ public:
     std::vector<char> passVectorChar(std::vector<char> v) { return v; }
     BlockValidationState passBlockState(BlockValidationState s) { return s; }
     CScript passScript(CScript s) { return s; }
+    std::vector<CAmount> passAmounts(std::vector<CAmount> v) { return v; }
 };
 
 void IpcPipeTest();

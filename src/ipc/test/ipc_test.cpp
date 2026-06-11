@@ -119,6 +119,10 @@ void IpcPipeTest()
     auto script2{foo->passScript(script1)};
     BOOST_CHECK_EQUAL(HexStr(script1), HexStr(script2));
 
+    const std::vector<CAmount> amounts1{0_sats, 1_sats, COIN, MAX_MONEY, CAmount{-1}};
+    const std::vector<CAmount> amounts2{foo->passAmounts(amounts1)};
+    BOOST_CHECK_EQUAL_COLLECTIONS(amounts1.begin(), amounts1.end(), amounts2.begin(), amounts2.end());
+
     // Test cleanup: disconnect and join thread
     foo.reset();
     thread.join();
