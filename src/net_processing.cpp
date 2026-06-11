@@ -755,6 +755,10 @@ private:
     [[nodiscard]] bool ScheduleTxRelayTrickle(Peer::TxRelay& tx_relay, const CNode& node, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, tx_relay.m_tx_inventory_mutex);
 
+    /** Respond to a BIP35 mempool request by queuing all mempool transactions for inv relay. */
+    void MaybeSendMempoolResponse(Peer::TxRelay& tx_relay, Peer& peer, CNode& node, std::vector<CInv>& vInv)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, tx_relay.m_tx_inventory_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -5746,6 +5750,43 @@ bool PeerManagerImpl::ScheduleTxRelayTrickle(Peer::TxRelay& tx_relay, const CNod
     return fSendTrickle;
 }
 
+void PeerManagerImpl::MaybeSendMempoolResponse(Peer::TxRelay& tx_relay, Peer& peer, CNode& node, std::vector<CInv>& vInv)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(tx_relay.m_tx_inventory_mutex);
+
+    if (!tx_relay.m_send_mempool) return;
+
+    auto vtxinfo = m_mempool.infoAll();
+    tx_relay.m_send_mempool = false;
+    const CFeeRate filterrate{tx_relay.m_fee_filter_received.load()};
+
+    LOCK(tx_relay.m_bloom_filter_mutex);
+
+    for (const auto& txinfo : vtxinfo) {
+        const Txid& txid{txinfo.tx->GetHash()};
+        const Wtxid& wtxid{txinfo.tx->GetWitnessHash()};
+        const auto inv = peer.m_wtxid_relay ?
+                             CInv{MSG_WTX, wtxid.ToUint256()} :
+                             CInv{MSG_TX, txid.ToUint256()};
+        tx_relay.m_tx_inventory_to_send.erase(wtxid);
+
+        // Don't send transactions that peers will not put into their mempool
+        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+            continue;
+        }
+        if (tx_relay.m_bloom_filter) {
+            if (!tx_relay.m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+        }
+        tx_relay.m_tx_inventory_known_filter.insert(inv.hash);
+        vInv.push_back(inv);
+        if (vInv.size() == MAX_INV_SZ) {
+            MakeAndPushMessage(node, NetMsgType::INV, vInv);
+            vInv.clear();
+        }
+    }
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -6017,36 +6058,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 const bool fSendTrickle{ScheduleTxRelayTrickle(*tx_relay, node, current_time)};
 
                 // Respond to BIP35 mempool requests
-                if (fSendTrickle && tx_relay->m_send_mempool) {
-                    auto vtxinfo = m_mempool.infoAll();
-                    tx_relay->m_send_mempool = false;
-                    const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
-
-                    LOCK(tx_relay->m_bloom_filter_mutex);
-
-                    for (const auto& txinfo : vtxinfo) {
-                        const Txid& txid{txinfo.tx->GetHash()};
-                        const Wtxid& wtxid{txinfo.tx->GetWitnessHash()};
-                        const auto inv = peer.m_wtxid_relay ?
-                                             CInv{MSG_WTX, wtxid.ToUint256()} :
-                                             CInv{MSG_TX, txid.ToUint256()};
-                        tx_relay->m_tx_inventory_to_send.erase(wtxid);
-
-                        // Don't send transactions that peers will not put into their mempool
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
-                            continue;
-                        }
-                        if (tx_relay->m_bloom_filter) {
-                            if (!tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-                        }
-                        tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
-                        vInv.push_back(inv);
-                        if (vInv.size() == MAX_INV_SZ) {
-                            MakeAndPushMessage(node, NetMsgType::INV, vInv);
-                            vInv.clear();
-                        }
-                    }
-                }
+                if (fSendTrickle) MaybeSendMempoolResponse(*tx_relay, peer, node, vInv);
 
                 // Determine transactions to relay
                 if (fSendTrickle) {
