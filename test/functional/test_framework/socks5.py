@@ -138,7 +138,12 @@ class Socks5Connection():
 
     def handle(self):
         """Handle socks5 request according to RFC1928."""
+        log_exception_prefix = "Socks5Connection.handle(): "
         try:
+            log_exception_prefix = ("Socks5Connection.handle("
+                                    f"client={format_sock(self.conn, local=False)}, "
+                                    f"proxy={format_sock(self.conn, local=True)}): ")
+
             # Verify socks version
             ver = recvall(self.conn, 1)[0]
             if ver != 0x05:
@@ -212,9 +217,12 @@ class Socks5Connection():
                 else:
                     logger.debug(f"Can't serve the connection to {requested_to}: no destinations factory")
 
-            # Fall through to disconnect
+            # Disconnect happens in the "finally" block below.
+
+        except (BrokenPipeError, ConnectionResetError) as e:
+            logger.debug(f"{log_exception_prefix}abnormal connection close: {str(e)}")
         except Exception as e:
-            logger.exception(f"socks5 request handling failed (running {self.serv.is_running()})")
+            logger.exception(f"{log_exception_prefix}exception: {str(e)} (running {self.serv.is_running()})")
             if self.serv.is_running():
                 self.serv.queue.put(e)
         finally:
