@@ -200,7 +200,7 @@ public:
      * more than one callback is enabled.
      */
     template <typename... Args>
-    result_type operator()(Args&&... args) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    [[nodiscard]] result_type operator()(Args&&... args) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::vector<std::shared_ptr<connection_holder>> connections;
         {
