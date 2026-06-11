@@ -84,13 +84,17 @@ Prerequisite knowledge:
 * [Output Descriptors](descriptors.md)
 * Partially Signed Bitcoin Transaction ([PSBT](psbt.md))
 
-### Flag `--chain <name>` (required)
+### Flag `--chain <name>` (required except for `enumerate`)
 
 With `<name>` one of `main`, `test`, `signet`, `regtest`, `testnet4`.
 
+Bitcoin Core passes this flag to commands that operate on a chain-specific signer, for example `getdescriptors`, `displayaddress` and `signtx`.
+
 ### Flag `--stdin` (required)
 
-Indicate that (sub)command should be received over stdin and results returned in response to that. `--stdin` is a global flag, it is not used for all subcommands.
+Indicate that (sub)command should be received over stdin and results returned in response to that. `--stdin` is a global flag, it is not specific to any subcommand.
+
+Bitcoin Core currently uses this flag for `signtx`.
 
 All subcommands SHOULD support both
 - being called as commandline arguments; or
@@ -107,11 +111,11 @@ Usage:
 
 Note: remember that shell-expansion is not available on _stdin_. Consequently, commands such as `signtx`, may write their arguments in either quoted or unquoted form.
 
-### Flag `--fingerprint <fingerprint>` (required)
+### Flag `--fingerprint <fingerprint>` (required except for `enumerate`)
 
 With `<fingerprint>` being the hexadecimal 8-symbol identifier for a wallet.
 
-Commands will specify a fingerprint as an identifier for external-signer wallet.
+Bitcoin Core passes this flag to commands that operate on a specific external-signer wallet, for example `getdescriptors`, `displayaddress` and `signtx`.
 
 ### `enumerate` (required)
 
@@ -155,14 +159,13 @@ The command MAY complain if `--chain` is set to a test-network, but any of the B
 Usage:
 
 ```sh
-<cmd> --fingerprint=<fingerprint> getdescriptors <account>
-<xpub>
+<cmd> --fingerprint <fingerprint> --chain <name> getdescriptors --account <account>
 ```
 
 Returns descriptors supported by the device. Example:
 
 ```sh
-<cmd> --fingerprint=00000000 getdescriptors
+<cmd> --fingerprint 00000000 --chain main getdescriptors --account 0
 ```
 
 ```
@@ -184,13 +187,13 @@ Returns descriptors supported by the device. Example:
 
 Usage:
 ```sh
-<cmd> --fingerprint=<fingerprint> displayaddress --desc <descriptor>
+<cmd> --fingerprint <fingerprint> --chain <name> displayaddress --desc <descriptor>
 ```
 
 Example, display the first native SegWit receive address on Testnet:
 
 ```sh
-<cmd> --chain test --fingerprint=00000000 displayaddress --desc "wpkh([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
+<cmd> --fingerprint 00000000 --chain test displayaddress --desc "wpkh([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
 ```
 
 The command MUST be able to figure out the address type from the descriptor.
@@ -212,10 +215,10 @@ Wallet operations that need a signer (`createwallet`, `walletdisplayaddress` and
 
 The `createwallet` RPC calls:
 
-* `<cmd> --chain <name> --fingerprint=00000000 getdescriptors --account 0`
+* `<cmd> --fingerprint 00000000 --chain <name> getdescriptors --account 0`
 
 It then imports descriptors for all supported address types, in a BIP44/49/84/86 compatible manner.
 
-The `walletdisplayaddress` RPC reuses some code from `getaddressinfo` on the provided address and obtains the inferred descriptor. It then calls `<cmd> --fingerprint=00000000 displayaddress --desc=<descriptor>`.
+The `walletdisplayaddress` RPC obtains the inferred descriptor for the provided address. It then calls `<cmd> --fingerprint 00000000 --chain <name> displayaddress --desc <descriptor>`.
 
 For external-signer wallets, spending uses `send` or `sendall`, and fee-bumping uses `bumpfee`. Bitcoin Core builds a PSBT, adds key origin information, checks whether any input key origin fingerprint matches the signer, calls `<cmd> --stdin --fingerprint 00000000 --chain <name>`, and sends `signtx <psbt>` over stdin. If signatures are sufficient, it finalizes the transaction and, for broadcasting RPCs, broadcasts it. If signing cannot complete, the call fails with an error. For manual fee-bumping, use `psbtbumpfee` to obtain a PSBT for signing.
