@@ -60,7 +60,7 @@ static void CoinSelection(benchmark::Bench& bench)
 
     // Generate coin amounts biased towards smaller amounts
     for (int i = 0; i < 400; ++i) {
-        CAmount amount;
+        CAmount amount{0};
         int p{det_rand.randrange(100)};
         if (p < 50) {
             amount = 10'000 + det_rand.randrange(90'000);
@@ -163,7 +163,7 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 static void BnBExhaustion(benchmark::Bench& bench)
 {
     std::vector<OutputGroup> utxo_pool;
-    CAmount target;
+    CAmount target{0};
     bench.setup([&] { target = make_hard_case(17, utxo_pool); })
         .run([&] {
             auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0_sats, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust

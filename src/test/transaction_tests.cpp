@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
-                    mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();
+                    mapprevOutValues.emplace(outpoint, vinput[3].getInt<int64_t>());
                 }
             }
             if (!fValid)
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
-                    mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();
+                    mapprevOutValues.emplace(outpoint, vinput[3].getInt<int64_t>());
                 }
             }
             if (!fValid)

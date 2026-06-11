@@ -28,7 +28,8 @@ class CAmount
 public:
     using inner_type = decltype(m_sats);
 
-    CAmount() = default;
+    // Require explicit initialization to a stated monetary value.
+    CAmount() = delete;
 
     template <non_bool_integral T>
     constexpr CAmount(T sats) noexcept

@@ -117,7 +117,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
-    std::vector<CAmount> lookahead(utxo_pool.size());
+    std::vector<CAmount> lookahead(utxo_pool.size(), 0_sats);
 
     // Calculate lookahead values, and check that there are sufficient funds
     CAmount total_available = 0_sats;
@@ -400,7 +400,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
-    std::vector<CAmount> lookahead(utxo_pool.size());
+    std::vector<CAmount> lookahead(utxo_pool.size(), 0_sats);
     // The minimum UTXO weight among the remaining UTXOs after this UTXO index, e.g. min_tail_weight[5] = min(UTXO[6+].weight)
     std::vector<int> min_tail_weight(utxo_pool.size());
 
@@ -777,7 +777,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     // Solve subset sum by stochastic approximation
     std::sort(applicable_groups.begin(), applicable_groups.end(), descending);
     std::vector<char> vfBest;
-    CAmount nBest;
+    CAmount nBest{0};
 
     ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest, max_selection_weight);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + change_target) {

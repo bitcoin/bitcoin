@@ -388,9 +388,9 @@ struct WalletTx
     std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
     std::vector<bool> txout_address_is_mine;
-    CAmount credit;
-    CAmount debit;
-    CAmount change;
+    CAmount credit{0};
+    CAmount debit{0};
+    CAmount change{0};
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;

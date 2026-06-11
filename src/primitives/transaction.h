@@ -142,10 +142,7 @@ public:
     CAmount nValue;
     CScript scriptPubKey;
 
-    CTxOut()
-    {
-        SetNull();
-    }
+    CTxOut() : nValue{-1} {}
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 

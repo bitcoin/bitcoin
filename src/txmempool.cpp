@@ -640,7 +640,13 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
 {
     {
         LOCK(cs);
-        CAmount &delta = mapDeltas[hash];
+        CAmount& delta{[&]() EXCLUSIVE_LOCKS_REQUIRED(cs) -> CAmount& {
+            if (auto it = mapDeltas.find(hash); it != mapDeltas.end()) {
+                return it->second;
+            } else {
+                return mapDeltas.emplace(hash, 0_sats).first->second;
+            }
+        }()};
         delta = CAmount{SaturatingAdd(delta.Int(), nFeeDelta.Int())};
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {

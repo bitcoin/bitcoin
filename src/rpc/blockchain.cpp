@@ -2167,7 +2167,7 @@ static RPCMethod getblockstats()
         }
     }
 
-    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = { 0_sats };
+    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = {0_sats, 0_sats, 0_sats, 0_sats, 0_sats};
     CalculatePercentilesByWeight(feerate_percentiles, feerate_array, total_weight);
 
     UniValue feerates_res(UniValue::VARR);
@@ -2919,7 +2919,7 @@ static RPCMethod getdescriptoractivity()
 
             for (size_t vin_idx = 0; vin_idx < tx->vin.size(); ++vin_idx) {
                 CScript scriptPubKey;
-                CAmount value;
+                CAmount value{0};
                 const auto& txin = tx->vin.at(vin_idx);
                 std::optional<Coin> coin = coins_view.GetCoin(txin.prevout);
 

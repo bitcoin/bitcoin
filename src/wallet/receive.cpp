@@ -315,7 +315,11 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
             if(!ExtractDestination(txo.GetTxOut().scriptPubKey, addr)) continue;
 
             CAmount n = wallet.IsSpent(outpoint) ? 0_sats : txo.GetTxOut().nValue;
-            balances[addr] += n;
+            if (auto it{balances.find(addr)}; it != balances.end()) {
+                it->second += n;
+            } else {
+                balances.emplace(addr, n);
+            }
         }
     }
 

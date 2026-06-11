@@ -248,7 +248,7 @@ public:
      */
     mutable bool m_is_cache_empty{true};
     mutable bool fChangeCached;
-    mutable CAmount nChangeCached;
+    mutable CAmount nChangeCached{0};
 
     CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(tx)), m_state(state)
     {

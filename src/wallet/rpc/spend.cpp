@@ -1112,8 +1112,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
 
     std::vector<bilingual_str> errors;
-    CAmount old_fee;
-    CAmount new_fee;
+    CAmount old_fee{0};
+    CAmount new_fee{0};
     CMutableTransaction mtx;
     // Targeting feerate bump.
     [&](){
