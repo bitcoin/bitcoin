@@ -166,7 +166,7 @@ mkdir -p "$DISTSRC"
           -DWITH_CCACHE=OFF \
           -Werror=dev \
           ${CONFIGFLAGS} \
-          "${CMAKE_EXE_LINKER_FLAGS}"
+          ${CMAKE_EXE_LINKER_FLAGS+"$CMAKE_EXE_LINKER_FLAGS"}
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS"
