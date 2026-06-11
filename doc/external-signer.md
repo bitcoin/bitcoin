@@ -173,12 +173,14 @@ Returns descriptors supported by the device. Example:
   "receive": [
     "pkh([00000000/44h/0h/0h]xpub6C.../0/*)#fn95jwmg",
     "sh(wpkh([00000000/49h/0h/0h]xpub6B..../0/*))#j4r9hntt",
-    "wpkh([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9"
+    "wpkh([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9",
+    "tr([00000000/86h/0h/0h]xpub6C.../0/*)#4d8tq2ns"
   ],
   "internal": [
     "pkh([00000000/44h/0h/0h]xpub6C.../1/*)#c8q40mts",
     "sh(wpkh([00000000/49h/0h/0h]xpub6B..../1/*))#85dn0v75",
-    "wpkh([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda"
+    "wpkh([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda",
+    "tr([00000000/86h/0h/0h]xpub6C.../1/*)#d63h6jpt"
   ]
 }
 ```
