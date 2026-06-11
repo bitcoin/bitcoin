@@ -58,7 +58,8 @@ public:
     UniValue GetDescriptors(int account);
 
     //! Sign PartiallySignedTransaction on the device.
-    //! Calls `<command> signtransaction` and passes the PSBT via stdin.
+    //! Calls `<command> --stdin --fingerprint <fingerprint> --chain <chain>` and passes the
+    //! `signtx` command and PSBT via stdin.
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
     bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 };

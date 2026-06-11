@@ -67,7 +67,7 @@ Replace `<address>` with the result of `getnewaddress`.
 Under the hood this uses a [PSBT (Partially Signed Bitcoin Transaction)](psbt.md).
 
 ```sh
-bitcoin-cli -rpcwallet=<walletname> sendtoaddress <address> <amount>
+bitcoin rpc -rpcwallet=<walletname> send outputs='{"<address>": <amount>}'
 ```
 
 This constructs a PSBT and prompts your external signer to sign (will fail if it's not connected). If successful, Bitcoin Core finalizes and broadcasts the transaction.
@@ -218,6 +218,4 @@ It then imports descriptors for all supported address types, in a BIP44/49/84/86
 
 The `walletdisplayaddress` RPC reuses some code from `getaddressinfo` on the provided address and obtains the inferred descriptor. It then calls `<cmd> --fingerprint=00000000 displayaddress --desc=<descriptor>`.
 
-For external-signer wallets, spending uses `send` or `sendall`. Bitcoin Core builds a PSBT, calls the signer via stdin with `signtx`, and if signatures are sufficient, finalizes and broadcasts the transaction. If the signer is not connected or cancels, the call fails with an error. For fee-bumping on such wallets, use `psbtbumpfee` to involve an external signer.
-
-`sendtoaddress` and `sendmany` check `inputs->bip32_derivs` to see if any inputs have the same `master_fingerprint` as the signer. If so, it calls `<cmd> --fingerprint=00000000 signtransaction <psbt>`. It waits for the device to return a (partially) signed psbt, tries to finalize it and broadcasts the transaction.
+For external-signer wallets, spending uses `send` or `sendall`, and fee-bumping uses `bumpfee`. Bitcoin Core builds a PSBT, adds key origin information, checks whether any input key origin fingerprint matches the signer, calls `<cmd> --stdin --fingerprint 00000000 --chain <name>`, and sends `signtx <psbt>` over stdin. If signatures are sufficient, it finalizes the transaction and, for broadcasting RPCs, broadcasts it. If signing cannot complete, the call fails with an error. For manual fee-bumping, use `psbtbumpfee` to obtain a PSBT for signing.
