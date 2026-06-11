@@ -31,13 +31,13 @@ static const int P2WPKH_OUTPUT_VSIZE = 31;
  * 10'292 s/kvB
  * - a high feerate that has been exceeded occasionally: 59'764 s/kvB
  * - a huge feerate that is extremely uncommon: 1'500'000 s/kvB */
-static const std::vector<int> FEERATES = {0, 1, 99, 100, 315, 1'000, 2'345, 10'292, 59'764, 1'500'000};
+constexpr std::array<CAmount, 10> FEERATES{0_sats, 1_sats, 99_sats, 100_sats, 315_sats, 1'000_sats, 2'345_sats, 10'292_sats, 59'764_sats, 1'500'000_sats};
 
 /** Default coin selection parameters allow us to only explicitly set
  * parameters when a diverging value is relevant in the context of a test,
  * without reiterating the defaults in every test. We use P2WPKH input and
  * output weights for the change weights. */
-static CoinSelectionParams init_cs_params(int eff_feerate = 5000)
+static CoinSelectionParams init_cs_params(CAmount eff_feerate = 5000_sats)
 {
     CoinSelectionParams csp{
         /*rng_fast=*/default_rand,
@@ -141,7 +141,7 @@ static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 
 BOOST_AUTO_TEST_CASE(bnb_test)
 {
-    for (int feerate : FEERATES) {
+    for (const CAmount feerate : FEERATES) {
         std::vector<OutputGroup> utxo_pool;
 
         const CoinSelectionParams cs_params = init_cs_params(feerate);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     AddCoins(low_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT});
     TestBnBSuccess("Select many inputs at low feerates", low_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{2 * CENT, 3 * CENT, 5 * CENT}, /*expected_attempts=*/6);
 
-    const CoinSelectionParams high_feerate_params = init_cs_params(/*eff_feerate=*/25'000);
+    const CoinSelectionParams high_feerate_params{init_cs_params(/*eff_feerate=*/25'000_sats)};
     std::vector<OutputGroup> high_feerate_pool; // 25 sat/vB (greater than long_term_feerate of 10 sat/vB)
     AddCoins(high_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT}, high_feerate_params);
     TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, /*expected_attempts=*/5, high_feerate_params);
@@ -264,7 +264,7 @@ static void TestSRDFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 
 BOOST_AUTO_TEST_CASE(srd_test)
 {
-    for (int feerate : FEERATES) {
+    for (const CAmount feerate : FEERATES) {
         std::vector<OutputGroup> utxo_pool;
 
         const CoinSelectionParams cs_params = init_cs_params(feerate);

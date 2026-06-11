@@ -215,8 +215,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     QString ret = QString("bitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
-    if (info.amount)
-    {
+    if (info.amount != 0_sats) {
         ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnit::BTC, info.amount, false, BitcoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }

@@ -912,7 +912,7 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     // Bump fee of whole selection may diverge from sum of individual bump fees
     waste -= bump_fee_group_discount;
 
-    if (GetChange(min_viable_change, change_fee)) {
+    if (GetChange(min_viable_change, change_fee) != 0_sats) {
         // if we have a minimum viable amount after deducting fees, account for
         // cost of creating and spending change
         waste += change_cost;

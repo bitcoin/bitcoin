@@ -796,7 +796,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
             return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
-        if (bump_fee_overestimate) {
+        if (bump_fee_overestimate != 0_sats) {
             result.SetBumpFeeDiscount(bump_fee_overestimate);
         }
         result.RecalculateWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);

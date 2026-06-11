@@ -1026,7 +1026,7 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
     FeePerWeight feerate(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp));
     auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
     m_pool->m_txgraph->AddTransaction(const_cast<CTxMemPoolEntry&>(*newit), feerate);
-    if (delta) {
+    if (delta != 0_sats) {
         newit->UpdateModifiedFee(delta);
         m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());
     }

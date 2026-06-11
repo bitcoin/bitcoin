@@ -43,7 +43,7 @@ void URITests::uriTests()
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=Wikipedia Example"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
-    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.amount == 10000000000_sats);
     QVERIFY(rv.label == QString("Wikipedia Example"));
 
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address"));
@@ -69,7 +69,7 @@ void URITests::uriTests()
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&amount=200&label=Wikipedia Example"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
-    QVERIFY(rv.amount == 20000000000LL);
+    QVERIFY(rv.amount == 20000000000_sats);
     QVERIFY(rv.label == QString("Wikipedia Example"));
 
     // The first amount value is correct. However, the second amount value is not valid. Hence, the URI is not valid.
@@ -80,13 +80,13 @@ void URITests::uriTests()
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=?"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
-    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.amount == 10000000000_sats);
     QVERIFY(rv.label == QString("?"));
 
     // Escape sequences are not supported.
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100&label=%3F"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
-    QVERIFY(rv.amount == 10000000000LL);
+    QVERIFY(rv.amount == 10000000000_sats);
     QVERIFY(rv.label == QString("%3F"));
 }
