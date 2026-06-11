@@ -14,6 +14,7 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <test/util/random.h>
+#include <test/util/time.h>
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
@@ -226,6 +227,7 @@ struct TestChain100Setup : public TestingSetup {
      */
     std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
 
+    FakeNodeClock m_clock{std::chrono::seconds{1598887952}};
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };

@@ -92,7 +92,6 @@ public:
           m_local_ip(local_ip),
           m_gateway_ip(gateway_ip)
     {
-        ElapseTime(std::chrono::seconds(0)); // start mocking steady time
         PrepareOp();
     }
 
@@ -193,10 +192,10 @@ public:
     {
         // Only handles receive events.
         if (AtEndOfScript() || requested != Sock::RECV) {
-            ElapseTime(timeout);
+            m_clock += timeout;
         } else {
             std::chrono::milliseconds delay = std::min(m_time_left, timeout);
-            ElapseTime(delay);
+            m_clock += delay;
             m_time_left -= delay;
             if (CurOp().op == TestOp::RECV && m_time_left == 0s && occurred != nullptr) {
                 *occurred = Sock::RECV;
@@ -223,17 +222,11 @@ private:
     const std::vector<TestOp> m_script;
     mutable size_t m_script_ptr = 0;
     mutable std::chrono::milliseconds m_time_left;
-    mutable std::chrono::milliseconds m_time{MockableSteadyClock::INITIAL_MOCK_TIME};
+    mutable SteadyClockContext m_clock{};
     mutable bool m_connected{false};
     mutable CService m_bound;
     mutable CNetAddr m_local_ip;
     mutable CNetAddr m_gateway_ip;
-
-    void ElapseTime(std::chrono::milliseconds duration) const
-    {
-        m_time += duration;
-        MockableSteadyClock::SetMockTime(m_time);
-    }
 
     bool AtEndOfScript() const { return m_script_ptr == m_script.size(); }
     const TestOp &CurOp() const {

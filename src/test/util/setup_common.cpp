@@ -416,7 +416,6 @@ TestChain100Setup::TestChain100Setup(
     TestOpts opts)
     : TestingSetup{ChainType::REGTEST, opts}
 {
-    SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
@@ -438,7 +437,7 @@ void TestChain100Setup::mineBlocks(int num_blocks)
     for (int i = 0; i < num_blocks; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
-        SetMockTime(GetTime() + 1);
+        m_clock += 1s;
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 }

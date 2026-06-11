@@ -21,11 +21,11 @@
 #include <test/util/blockfilter.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/fs.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -332,14 +332,15 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 class IndexReorgCrash : public BaseIndex
 {
 private:
+    FakeNodeClock& m_clock;
     std::unique_ptr<BaseIndex::DB> m_db;
     std::shared_future<void> m_blocker;
     int m_blocking_height;
 
 public:
     explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
-                             int blocking_height) : BaseIndex(std::move(chain), "test index"), m_blocker(blocker),
-                                                    m_blocking_height(blocking_height)
+                             int blocking_height, FakeNodeClock& clock)
+        : BaseIndex(std::move(chain), "test index"), m_clock(clock), m_blocker(blocker), m_blocking_height(blocking_height)
     {
         const fs::path path = gArgs.GetDataDirNet() / "index";
         fs::create_directories(path);
@@ -356,7 +357,7 @@ public:
 
         // Move mock time forward so the best index gets updated only when we are not at the blocking height
         if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
-            SetMockTime(GetTime<std::chrono::seconds>() + 31s);
+            m_clock += 31s;
         }
 
         return true;
@@ -365,14 +366,11 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
 {
-    // Enable mock time
-    SetMockTime(GetTime<std::chrono::minutes>());
-
     std::promise<void> promise;
     std::shared_future<void> blocker(promise.get_future());
     int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
 
-    IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
+    IndexReorgCrash index{interfaces::MakeChain(m_node), blocker, blocking_height, m_clock};
     BOOST_REQUIRE(index.Init());
     BOOST_REQUIRE(index.StartBackgroundSync());
 

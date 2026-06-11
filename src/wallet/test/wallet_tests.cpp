@@ -246,12 +246,12 @@ BOOST_FIXTURE_TEST_CASE(write_wallet_settings_concurrently, TestingSetup)
                             /*num_expected_wallets=*/0);
 }
 
-static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
+static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lockTime, std::chrono::seconds mock_time, int64_t blockTime)
 {
     CMutableTransaction tx;
     TxState state = TxStateInactive{};
     tx.nLockTime = lockTime;
-    SetMockTime(mockTime);
+    FakeNodeClock clock{mock_time};
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
         LOCK(cs_main);
@@ -277,24 +277,24 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
 BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
 {
     // New transaction should use clock time if lower than block time.
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 1, 100, 120), 100);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 1, 100s, 120), 100);
 
     // Test that updating existing transaction does not change smart time.
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 1, 200, 220), 100);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 1, 200s, 220), 100);
 
     // New transaction should use clock time if there's no block time.
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 2, 300, 0), 300);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 2, 300s, 0), 300);
 
     // New transaction should use block time if lower than clock time.
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 3, 420, 400), 400);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 3, 420s, 400), 400);
 
     // New transaction should use latest entry time if higher than
     // min(block time, clock time).
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 4, 500, 390), 400);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 4, 500s, 390), 400);
 
     // If there are future entries, new transaction should use time of the
     // newest entry that is no more than 300 seconds ahead of the clock time.
-    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 5, 50, 600), 300);
+    BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 5, 50s, 600), 300);
 }
 
 void TestLoadWallet(const std::string& name, DatabaseFormat format, std::function<void(std::shared_ptr<CWallet>)> f)
