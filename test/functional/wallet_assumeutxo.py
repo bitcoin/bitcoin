@@ -215,12 +215,18 @@ class AssumeutxoTest(BitcoinTestFramework):
         wallet_name = "w1"
         n1.createwallet(wallet_name, disable_private_keys=True)
         key = get_generate_key()
-        time = n1.getblockchaininfo()['time']
+        block_info = n1.getblockchaininfo()
+        time = block_info["time"]
+        def expected_rescan_error(timestamp):
+            return f"Rescan failed for descriptor with timestamp {timestamp}. There was an error reading a block from time {time}, which is after or within 7200 seconds of key creation, and could contain transactions pertaining to the desc. As a result, transactions and coins using this desc may not appear in the wallet. This error is likely caused by an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later."
         timestamp = 0
-        expected_error_message = f"Rescan failed for descriptor with timestamp {timestamp}. There was an error reading a block from time {time}, which is after or within 7200 seconds of key creation, and could contain transactions pertaining to the desc. As a result, transactions and coins using this desc may not appear in the wallet. This error is likely caused by an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later."
         result = self.import_descriptor(n1, wallet_name, key, timestamp)
         assert_equal(result[0]['error']['code'], -1)
-        assert_equal(result[0]['error']['message'], expected_error_message)
+        assert_equal(result[0]['error']['message'], expected_rescan_error(timestamp))
+        now_timestamp = block_info["mediantime"]
+        result = self.import_descriptor(n1, wallet_name, get_generate_key(), "now")
+        assert_equal(result[0]['error']['code'], -1)
+        assert_equal(result[0]['error']['message'], expected_rescan_error(now_timestamp))
 
         self.log.info("Test that rescanning blocks from before the snapshot fails when blocks are not available from the background sync yet")
         w1 = n1.get_wallet_rpc(wallet_name)
