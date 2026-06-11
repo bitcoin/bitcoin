@@ -194,7 +194,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
 
     PSBTAnalysis analysis = AnalyzePSBT(psbtx);
     tx_description.append(bullet_point);
-    if (!*analysis.fee) {
+    if (*analysis.fee == 0_sats) {
         // This happens if the transaction is missing input UTXO information.
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {

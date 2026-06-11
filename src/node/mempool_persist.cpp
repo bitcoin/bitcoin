@@ -97,7 +97,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
 
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta && opts.apply_fee_delta_priority) {
+            if (amountdelta != 0_sats && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {

@@ -15,9 +15,9 @@
 
 BOOST_FIXTURE_TEST_SUITE(miniminer_tests, TestingSetup)
 
-const CAmount low_fee{CENT/2000}; // 500 ṩ
-const CAmount med_fee{CENT/200}; // 5000 ṩ
-const CAmount high_fee{CENT/10}; // 100_000 ṩ
+constexpr CAmount low_fee{     500_sats};
+constexpr CAmount med_fee{   5'000_sats};
+constexpr CAmount high_fee{100'000_sats};
 
 
 static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, size_t num_outputs)

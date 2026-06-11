@@ -797,7 +797,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
         // Avoid negative discount if mempool changed between the two bump fee snapshots.
-        if (bump_fee_overestimate > 0) {
+        if (bump_fee_overestimate > 0_sats) {
             result.SetBumpFeeDiscount(bump_fee_overestimate);
         }
         result.RecalculateWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
