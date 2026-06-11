@@ -8,6 +8,7 @@ from decimal import Decimal
 from itertools import product
 from random import randbytes
 
+from test_framework.address import base58_to_byte
 from test_framework.blocktools import (
     MAX_STANDARD_TX_WEIGHT,
 )
@@ -28,6 +29,7 @@ from test_framework.psbt import (
     PSBT_GLOBAL_PROPRIETARY,
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_GLOBAL_VERSION,
+    PSBT_GLOBAL_XPUB,
     PSBT_IN_RIPEMD160,
     PSBT_IN_SHA256,
     PSBT_IN_SIGHASH_TYPE,
@@ -1086,6 +1088,36 @@ class PSBTTest(BitcoinTestFramework):
             if shuffled:
                 break
         assert shuffled
+
+        # Check that joining preserves global xpub and proprietary records
+        def global_xpub_key(extended_pubkey):
+            xpub_data, xpub_version = base58_to_byte(extended_pubkey)
+            return bytes([PSBT_GLOBAL_XPUB]) + bytes([xpub_version]) + xpub_data
+
+        xpub_key1 = global_xpub_key("tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp")
+        xpub_key2 = global_xpub_key("tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B")
+        xpub_value = b"\x00\x00\x00\x00"  # master key fingerprint with an empty derivation path
+        global_prop_key = bytes([PSBT_GLOBAL_PROPRIETARY]) + b"\x02\x01\x02\x00"  # identifier "0102", subtype 0
+        global_prop_value = b"\xde\xad\xbe\xef"
+
+        psbt1_obj = PSBT.from_base64(psbt1)
+        psbt1_obj.g.map[xpub_key1] = xpub_value
+        psbt1_obj.g.map[global_prop_key] = global_prop_value
+        psbt2_obj = PSBT.from_base64(psbt2)
+        psbt2_obj.g.map[xpub_key2] = xpub_value
+        joined_globals = PSBT.from_base64(self.nodes[0].joinpsbts([psbt1_obj.to_base64(), psbt2_obj.to_base64()]))
+        assert_equal(joined_globals.g.map[xpub_key1], xpub_value)
+        assert_equal(joined_globals.g.map[xpub_key2], xpub_value)
+        assert_equal(joined_globals.g.map[global_prop_key], global_prop_value)
+
+        # Same proprietary key in both PSBTs with different values: the first PSBT's value wins
+        collide_key = bytes([PSBT_GLOBAL_PROPRIETARY]) + b"\x02\x03\x04\x00"
+        psbt_first_obj = PSBT.from_base64(psbt1)
+        psbt_first_obj.g.map[collide_key] = b"\x11\x11\x11\x11"
+        psbt_second_obj = PSBT.from_base64(psbt2)
+        psbt_second_obj.g.map[collide_key] = b"\x22\x22\x22\x22"
+        joined_collision = PSBT.from_base64(self.nodes[0].joinpsbts([psbt_first_obj.to_base64(), psbt_second_obj.to_base64()]))
+        assert_equal(joined_collision.g.map[collide_key], b"\x11\x11\x11\x11")
 
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
