@@ -213,6 +213,36 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_abort, TestChain100Setup)
+{
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    uint256 genesis_hash;
+    {
+        LOCK(wallet.cs_wallet);
+        LOCK(Assert(m_node.chainman)->GetMutex());
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet.SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+        genesis_hash = m_node.chainman->ActiveChain().Genesis()->GetBlockHash();
+    }
+
+    // An abort requested while no rescan is held is stale and must
+    // not cancel a later scan.
+    wallet.AbortRescan();
+    WalletRescanReserver reserver(wallet);
+    BOOST_CHECK(reserver.reserve());
+    BOOST_CHECK(!wallet.IsAbortingRescan());
+
+    // An abort requested after the reservation but before the scan starts
+    // (e.g. while importdescriptors is still deriving keys) must cancel the
+    // scan.
+    wallet.AbortRescan();
+    CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+    BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::USER_ABORT);
+    BOOST_CHECK(result.last_scanned_block.IsNull());
+    BOOST_CHECK(!result.last_scanned_height);
+    BOOST_CHECK(result.last_failed_block.IsNull());
+}
+
 // This test verifies that wallet settings can be added and removed
 // concurrently, ensuring no race conditions occur during either process.
 BOOST_FIXTURE_TEST_CASE(write_wallet_settings_concurrently, TestingSetup)
