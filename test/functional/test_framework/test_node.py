@@ -717,7 +717,7 @@ class TestNode():
             self.log.warning("Can't profile with perf; must install perf-tools")
             return None
 
-        if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
+        if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binaries.paths.bitcoind))):
             self.log.warning(
                 "perf output won't be very useful without debug symbols compiled into bitcoind")
 
@@ -749,7 +749,7 @@ class TestNode():
         subp.wait(timeout=10)
 
         stderr = subp.stderr.read().decode()
-        if 'Consider tweaking /proc/sys/kernel/perf_event_paranoid' in stderr:
+        if 'Consider adjusting /proc/sys/kernel/perf_event_paranoid' in stderr:
             self.log.warning(
                 "perf couldn't collect data! Try "
                 "'sudo sysctl -w kernel.perf_event_paranoid=-1'")
