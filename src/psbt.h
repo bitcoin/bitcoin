@@ -1360,9 +1360,6 @@ public:
         // Used for duplicate key detection
         std::set<std::vector<unsigned char>> key_lookup;
 
-        // Track the global xpubs we have already seen. Just for sanity checking
-        std::set<CExtPubKey> global_xpubs;
-
         // Read global data
         bool found_sep = false;
         std::optional<CMutableTransaction> tx;
@@ -1465,7 +1462,6 @@ public:
                     if (!xpub.pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
-                    global_xpubs.insert(xpub);
                     // Read in the keypath from stream
                     KeyOriginInfo keypath;
                     DeserializeHDKeypath(s, keypath);
