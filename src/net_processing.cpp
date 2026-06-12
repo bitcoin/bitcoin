@@ -6172,6 +6172,17 @@ bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState
 
     if (CheckBlockDownloadStall(node, state, current_time)) return true;
     if (CheckBlockFlightTimeout(node, state, current_time, consensusParams)) return true;
+    if (CheckHeadersSyncTimeout(node, peer, state, current_time)) return true;
+
+    return false;
+}
+
+bool PeerManagerImpl::CheckHeadersSyncTimeout(CNode& node, Peer& peer, CNodeState& state,
+    std::chrono::microseconds current_time)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
     // Check for headers sync timeouts
     if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
         // Detect whether this is a stalling initial-headers-sync peer
