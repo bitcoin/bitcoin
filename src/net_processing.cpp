@@ -904,6 +904,17 @@ private:
         bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_tx_download_mutex);
 
+    /** Queue block getdata requests into vGetData. */
+    void QueueBlocksGetData(CNode& node, Peer& peer, CNodeState& state,
+        bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
+        std::vector<CInv>& vGetData)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
+    /** Queue transaction getdata requests into vGetData. */
+    void QueueTxGetData(CNode& node, Peer& peer, std::chrono::microseconds current_time,
+        std::vector<CInv>& vGetData)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     /** Copied into short-lived tx INV deduplication sets to avoid generating salts per message. */
@@ -6542,17 +6553,13 @@ bool PeerManagerImpl::CheckHeadersSyncTimeout(CNode& node, Peer& peer, CNodeStat
     return false;
 }
 
-void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
-    bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
+void PeerManagerImpl::QueueBlocksGetData(CNode& node, Peer& peer, CNodeState& state,
+    bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
+    std::vector<CInv>& vGetData)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_msgproc_mutex);
-    AssertLockNotHeld(m_tx_download_mutex);
 
-    //
-    // Message: getdata (blocks)
-    //
-    std::vector<CInv> vGetData;
     if (CanServeBlocks(peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
         std::vector<const CBlockIndex*> vToDownload;
         NodeId staller = -1;
@@ -6588,6 +6595,19 @@ void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& stat
             }
         }
     }
+}
+
+void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
+    bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    //
+    // Message: getdata (blocks)
+    //
+    std::vector<CInv> vGetData;
+    QueueBlocksGetData(node, peer, state, sync_blocks_and_headers_from_peer, current_time, vGetData);
 
     //
     // Message: getdata (transactions)
