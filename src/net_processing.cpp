@@ -821,7 +821,7 @@ private:
     /** Queue transaction getdata requests into vGetData. */
     void QueueTxGetData(CNode& node, Peer& peer, std::chrono::microseconds current_time,
         std::vector<CInv>& vGetData)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_tx_download_mutex);
 
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
@@ -6274,11 +6274,29 @@ void PeerManagerImpl::QueueBlocksGetData(CNode& node, Peer& peer, CNodeState& st
     }
 }
 
+void PeerManagerImpl::QueueTxGetData(CNode& node, Peer& peer, std::chrono::microseconds current_time,
+    std::vector<CInv>& vGetData)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockNotHeld(m_tx_download_mutex);
+
+    LOCK(m_tx_download_mutex);
+    for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), current_time)) {
+        vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(peer)), gtxid.ToUint256());
+        if (vGetData.size() >= MAX_GETDATA_SZ) {
+            MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+            vGetData.clear();
+        }
+    }
+}
+
 void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
     bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_msgproc_mutex);
+    AssertLockNotHeld(m_tx_download_mutex);
 
     //
     // Message: getdata (blocks)
@@ -6289,16 +6307,7 @@ void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& stat
     //
     // Message: getdata (transactions)
     //
-    {
-        LOCK(m_tx_download_mutex);
-        for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), current_time)) {
-            vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(peer)), gtxid.ToUint256());
-            if (vGetData.size() >= MAX_GETDATA_SZ) {
-                MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
-                vGetData.clear();
-            }
-        }
-    }
+    QueueTxGetData(node, peer, current_time, vGetData);
 
     if (!vGetData.empty())
         MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
