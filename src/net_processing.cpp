@@ -763,6 +763,12 @@ private:
     void MaybeSendTxInventory(Peer::TxRelay& tx_relay, Peer& peer, CNode& node, std::vector<CInv>& vInv)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, tx_relay.m_tx_inventory_mutex);
 
+    /** Kick off initial headers sync with a peer if not yet started. */
+    void MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeState& state,
+        bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
+        const Consensus::Params& consensusParams)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -5856,6 +5862,43 @@ void PeerManagerImpl::MaybeSendTxInventory(Peer::TxRelay& tx_relay, Peer& peer, 
     tx_relay.m_last_inv_sequence = m_mempool.GetSequence();
 }
 
+void PeerManagerImpl::MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeState& state,
+    bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
+    const Consensus::Params& consensusParams)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    if (!state.fSyncStarted && CanServeBlocks(peer) && !m_chainman.m_blockman.LoadingBlocks()) {
+        // Only actively request headers from a single peer, unless we're close to today.
+        if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
+            const CBlockIndex* pindexStart = m_chainman.m_best_header;
+            /* If possible, start at the block preceding the currently
+               best known header.  This ensures that we always get a
+               non-empty list of headers back as long as the peer
+               is up-to-date.  With a non-empty response, we can initialise
+               the peer's known best block.  This wouldn't be possible
+               if we requested starting at m_chainman.m_best_header and
+               got back an empty response.  */
+            if (pindexStart->pprev)
+                pindexStart = pindexStart->pprev;
+            if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
+                LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
+
+                state.fSyncStarted = true;
+                peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
+                    (
+                     // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
+                     // to maintain precision
+                     std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
+                     Ticks<std::chrono::seconds>(NodeClock::now() - m_chainman.m_best_header->Time()) / consensusParams.nPowTargetSpacing
+                    );
+                nSyncStarted++;
+            }
+        }
+    }
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -5941,34 +5984,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
         }
 
-        if (!state.fSyncStarted && CanServeBlocks(peer) && !m_chainman.m_blockman.LoadingBlocks()) {
-            // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
-                const CBlockIndex* pindexStart = m_chainman.m_best_header;
-                /* If possible, start at the block preceding the currently
-                   best known header.  This ensures that we always get a
-                   non-empty list of headers back as long as the peer
-                   is up-to-date.  With a non-empty response, we can initialise
-                   the peer's known best block.  This wouldn't be possible
-                   if we requested starting at m_chainman.m_best_header and
-                   got back an empty response.  */
-                if (pindexStart->pprev)
-                    pindexStart = pindexStart->pprev;
-                if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
-                    LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
-
-                    state.fSyncStarted = true;
-                    peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
-                        (
-                         // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
-                         // to maintain precision
-                         std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
-                         Ticks<std::chrono::seconds>(NodeClock::now() - m_chainman.m_best_header->Time()) / consensusParams.nPowTargetSpacing
-                        );
-                    nSyncStarted++;
-                }
-            }
-        }
+        MaybeSendInitialGetheaders(node, peer, state, sync_blocks_and_headers_from_peer, current_time, consensusParams);
 
         //
         // Try sending block announcements via headers
