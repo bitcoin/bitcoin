@@ -769,6 +769,10 @@ private:
         const Consensus::Params& consensusParams)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
+    /** Announce new blocks to a peer via headers, compact blocks, or inv as appropriate. */
+    void MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNodeState& state)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_most_recent_block_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -5899,6 +5903,141 @@ void PeerManagerImpl::MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeS
     }
 }
 
+void PeerManagerImpl::MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNodeState& state)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockNotHeld(m_most_recent_block_mutex);
+
+    // If we have no more than MAX_BLOCKS_TO_ANNOUNCE in our
+    // list of block hashes we're relaying, and our peer wants
+    // headers announcements, then find the first header
+    // not yet known to our peer but would connect, and send.
+    // If no header would connect, or if we have too many
+    // blocks, or if the peer doesn't want headers, just
+    // add all to the inv queue.
+    LOCK(peer.m_block_inv_mutex);
+    std::vector<CBlock> vHeaders;
+    bool fRevertToInv = ((!peer.m_prefers_headers &&
+                         (!state.m_requested_hb_cmpctblocks || peer.m_blocks_for_headers_relay.size() > 1)) ||
+                         peer.m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
+    const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
+    ProcessBlockAvailability(node.GetId()); // ensure pindexBestKnownBlock is up-to-date
+
+    if (!fRevertToInv) {
+        bool fFoundStartingHeader = false;
+        // Try to find first header that our peer doesn't have, and
+        // then send all headers past that one.  If we come across any
+        // headers that aren't on m_chainman.ActiveChain(), give up.
+        for (const uint256& hash : peer.m_blocks_for_headers_relay) {
+            const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hash);
+            assert(pindex);
+            if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
+                // Bail out if we reorged away from this block
+                fRevertToInv = true;
+                break;
+            }
+            if (pBestIndex != nullptr && pindex->pprev != pBestIndex) {
+                // This means that the list of blocks to announce don't
+                // connect to each other.
+                // This shouldn't really be possible to hit during
+                // regular operation (because reorgs should take us to
+                // a chain that has some block not on the prior chain,
+                // which should be caught by the prior check), but one
+                // way this could happen is by using invalidateblock /
+                // reconsiderblock repeatedly on the tip, causing it to
+                // be added multiple times to m_blocks_for_headers_relay.
+                // Robustly deal with this rare situation by reverting
+                // to an inv.
+                fRevertToInv = true;
+                break;
+            }
+            pBestIndex = pindex;
+            if (fFoundStartingHeader) {
+                // add this to the headers message
+                vHeaders.emplace_back(pindex->GetBlockHeader());
+            } else if (PeerHasHeader(&state, pindex)) {
+                continue; // keep looking for the first new block
+            } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
+                // Peer doesn't have this header but they do have the prior one.
+                // Start sending headers.
+                fFoundStartingHeader = true;
+                vHeaders.emplace_back(pindex->GetBlockHeader());
+            } else {
+                // Peer doesn't have this header or the prior one -- nothing will
+                // connect, so bail out.
+                fRevertToInv = true;
+                break;
+            }
+        }
+    }
+    if (!fRevertToInv && !vHeaders.empty()) {
+        if (vHeaders.size() == 1 && state.m_requested_hb_cmpctblocks) {
+            // We only send up to 1 block as header-and-ids, as otherwise
+            // probably means we're doing an initial-ish-sync or they're slow
+            LogDebug(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
+                    vHeaders.front().GetHash().ToString(), node.GetId());
+
+            std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
+            {
+                LOCK(m_most_recent_block_mutex);
+                if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
+                    cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                }
+            }
+            if (cached_cmpctblock_msg.has_value()) {
+                PushMessage(node, std::move(cached_cmpctblock_msg.value()));
+            } else {
+                CBlock block;
+                const bool ret{m_chainman.m_blockman.ReadBlock(block, *pBestIndex)};
+                assert(ret);
+                CBlockHeaderAndShortTxIDs cmpctblock{block, m_rng.rand64()};
+                MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, cmpctblock);
+            }
+            state.pindexBestHeaderSent = pBestIndex;
+        } else if (peer.m_prefers_headers) {
+            if (vHeaders.size() > 1) {
+                LogDebug(BCLog::NET, "%s: %u headers, range (%s, %s), to peer=%d\n", __func__,
+                        vHeaders.size(),
+                        vHeaders.front().GetHash().ToString(),
+                        vHeaders.back().GetHash().ToString(), node.GetId());
+            } else {
+                LogDebug(BCLog::NET, "%s: sending header %s to peer=%d\n", __func__,
+                        vHeaders.front().GetHash().ToString(), node.GetId());
+            }
+            MakeAndPushMessage(node, NetMsgType::HEADERS, TX_WITH_WITNESS(vHeaders));
+            state.pindexBestHeaderSent = pBestIndex;
+        } else
+            fRevertToInv = true;
+    }
+    if (fRevertToInv) {
+        // If falling back to using an inv, just try to inv the tip.
+        // The last entry in m_blocks_for_headers_relay was our tip at some point
+        // in the past.
+        if (!peer.m_blocks_for_headers_relay.empty()) {
+            const uint256& hashToAnnounce = peer.m_blocks_for_headers_relay.back();
+            const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hashToAnnounce);
+            assert(pindex);
+
+            // Warn if we're announcing a block that is not on the main chain.
+            // This should be very rare and could be optimized out.
+            // Just log for now.
+            if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
+                LogDebug(BCLog::NET, "Announcing block %s not on main chain (tip=%s)\n",
+                    hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
+            }
+
+            // If the peer's chain has this block, don't inv it back.
+            if (!PeerHasHeader(&state, pindex)) {
+                peer.m_blocks_for_inv_relay.push_back(hashToAnnounce);
+                LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
+                    node.GetId(), hashToAnnounce.ToString());
+            }
+        }
+    }
+    peer.m_blocks_for_headers_relay.clear();
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -5989,135 +6128,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         //
         // Try sending block announcements via headers
         //
-        {
-            // If we have no more than MAX_BLOCKS_TO_ANNOUNCE in our
-            // list of block hashes we're relaying, and our peer wants
-            // headers announcements, then find the first header
-            // not yet known to our peer but would connect, and send.
-            // If no header would connect, or if we have too many
-            // blocks, or if the peer doesn't want headers, just
-            // add all to the inv queue.
-            LOCK(peer.m_block_inv_mutex);
-            std::vector<CBlock> vHeaders;
-            bool fRevertToInv = ((!peer.m_prefers_headers &&
-                                 (!state.m_requested_hb_cmpctblocks || peer.m_blocks_for_headers_relay.size() > 1)) ||
-                                 peer.m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
-            const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
-            ProcessBlockAvailability(node.GetId()); // ensure pindexBestKnownBlock is up-to-date
-
-            if (!fRevertToInv) {
-                bool fFoundStartingHeader = false;
-                // Try to find first header that our peer doesn't have, and
-                // then send all headers past that one.  If we come across any
-                // headers that aren't on m_chainman.ActiveChain(), give up.
-                for (const uint256& hash : peer.m_blocks_for_headers_relay) {
-                    const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hash);
-                    assert(pindex);
-                    if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
-                        // Bail out if we reorged away from this block
-                        fRevertToInv = true;
-                        break;
-                    }
-                    if (pBestIndex != nullptr && pindex->pprev != pBestIndex) {
-                        // This means that the list of blocks to announce don't
-                        // connect to each other.
-                        // This shouldn't really be possible to hit during
-                        // regular operation (because reorgs should take us to
-                        // a chain that has some block not on the prior chain,
-                        // which should be caught by the prior check), but one
-                        // way this could happen is by using invalidateblock /
-                        // reconsiderblock repeatedly on the tip, causing it to
-                        // be added multiple times to m_blocks_for_headers_relay.
-                        // Robustly deal with this rare situation by reverting
-                        // to an inv.
-                        fRevertToInv = true;
-                        break;
-                    }
-                    pBestIndex = pindex;
-                    if (fFoundStartingHeader) {
-                        // add this to the headers message
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
-                    } else if (PeerHasHeader(&state, pindex)) {
-                        continue; // keep looking for the first new block
-                    } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
-                        // Peer doesn't have this header but they do have the prior one.
-                        // Start sending headers.
-                        fFoundStartingHeader = true;
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
-                    } else {
-                        // Peer doesn't have this header or the prior one -- nothing will
-                        // connect, so bail out.
-                        fRevertToInv = true;
-                        break;
-                    }
-                }
-            }
-            if (!fRevertToInv && !vHeaders.empty()) {
-                if (vHeaders.size() == 1 && state.m_requested_hb_cmpctblocks) {
-                    // We only send up to 1 block as header-and-ids, as otherwise
-                    // probably means we're doing an initial-ish-sync or they're slow
-                    LogDebug(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
-                            vHeaders.front().GetHash().ToString(), node.GetId());
-
-                    std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
-                    {
-                        LOCK(m_most_recent_block_mutex);
-                        if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
-                        }
-                    }
-                    if (cached_cmpctblock_msg.has_value()) {
-                        PushMessage(node, std::move(cached_cmpctblock_msg.value()));
-                    } else {
-                        CBlock block;
-                        const bool ret{m_chainman.m_blockman.ReadBlock(block, *pBestIndex)};
-                        assert(ret);
-                        CBlockHeaderAndShortTxIDs cmpctblock{block, m_rng.rand64()};
-                        MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, cmpctblock);
-                    }
-                    state.pindexBestHeaderSent = pBestIndex;
-                } else if (peer.m_prefers_headers) {
-                    if (vHeaders.size() > 1) {
-                        LogDebug(BCLog::NET, "%s: %u headers, range (%s, %s), to peer=%d\n", __func__,
-                                vHeaders.size(),
-                                vHeaders.front().GetHash().ToString(),
-                                vHeaders.back().GetHash().ToString(), node.GetId());
-                    } else {
-                        LogDebug(BCLog::NET, "%s: sending header %s to peer=%d\n", __func__,
-                                vHeaders.front().GetHash().ToString(), node.GetId());
-                    }
-                    MakeAndPushMessage(node, NetMsgType::HEADERS, TX_WITH_WITNESS(vHeaders));
-                    state.pindexBestHeaderSent = pBestIndex;
-                } else
-                    fRevertToInv = true;
-            }
-            if (fRevertToInv) {
-                // If falling back to using an inv, just try to inv the tip.
-                // The last entry in m_blocks_for_headers_relay was our tip at some point
-                // in the past.
-                if (!peer.m_blocks_for_headers_relay.empty()) {
-                    const uint256& hashToAnnounce = peer.m_blocks_for_headers_relay.back();
-                    const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hashToAnnounce);
-                    assert(pindex);
-
-                    // Warn if we're announcing a block that is not on the main chain.
-                    // This should be very rare and could be optimized out.
-                    // Just log for now.
-                    if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
-                        LogDebug(BCLog::NET, "Announcing block %s not on main chain (tip=%s)\n",
-                            hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
-                    }
-
-                    // If the peer's chain has this block, don't inv it back.
-                    if (!PeerHasHeader(&state, pindex)) {
-                        peer.m_blocks_for_inv_relay.push_back(hashToAnnounce);
-                        LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
-                            node.GetId(), hashToAnnounce.ToString());
-                    }
-                }
-            }
-            peer.m_blocks_for_headers_relay.clear();
-        }
+        MaybeSendBlockAnnouncements(node, peer, state);
 
         //
         // Message: inventory
