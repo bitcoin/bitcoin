@@ -43,10 +43,9 @@ CMutableTransaction MNHFTxPayload::PrepareTx() const
     return tx;
 }
 
-CMNHFManager::CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman, const llmq::CQuorumManager& qman) :
+CMNHFManager::CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman) :
     m_evoDb(evoDb),
-    m_chainman{chainman},
-    m_qman{qman}
+    m_chainman{chainman}
 {
     assert(globalInstance == nullptr);
     globalInstance = this;
@@ -91,22 +90,13 @@ CMNHFManager::Signals CMNHFManager::GetSignalsStage(const CBlockIndex* const pin
     return signals_ret;
 }
 
-bool MNHFTx::Verify(const llmq::CQuorumManager& qman, const uint256& quorumHash, const uint256& requestId, const uint256& msgHash, TxValidationState& state) const
+bool MNHFTxPayload::IsTriviallyValid(TxValidationState& state) const
 {
-    if (versionBit >= VERSIONBITS_NUM_BITS) {
+    if (nVersion == 0 || nVersion > CURRENT_VERSION) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
+    }
+    if (signal.versionBit >= VERSIONBITS_NUM_BITS) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-nbit-out-of-bounds");
-    }
-
-    const Consensus::LLMQType& llmqType = Params().GetConsensus().llmqTypeMnhf;
-    const auto quorum = qman.GetQuorum(llmqType, quorumHash);
-
-    if (!quorum) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-missing-quorum");
-    }
-
-    const llmq::SignHash signHash{llmqType, quorum->qc->quorumHash, requestId, msgHash};
-    if (!sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get())) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-invalid");
     }
 
     return true;
@@ -122,9 +112,10 @@ bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& 
     if (!opt_mnhfTx) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-payload");
     }
-    auto& mnhfTx = *opt_mnhfTx;
-    if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
+    const auto& mnhfTx = *opt_mnhfTx;
+
+    if (!mnhfTx.IsTriviallyValid(state)) {
+        return false;
     }
 
     if (!Params().IsValidMNActivation(mnhfTx.signal.versionBit, pindexPrev->GetMedianTimePast())) {
@@ -141,17 +132,22 @@ bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-quorum-hash");
     }
 
-    // Copy transaction except `quorumSig` field to calculate hash
+    // Copy transaction except `sig` field to calculate the hash signed by the quorum
     CMutableTransaction tx_copy(tx);
     auto payload_copy = mnhfTx;
     payload_copy.signal.sig = CBLSSignature();
     SetTxPayload(tx_copy, payload_copy);
-    uint256 msgHash = tx_copy.GetHash();
+    const uint256 msgHash = tx_copy.GetHash();
 
+    const Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypeMnhf;
+    const auto quorum = qman.GetQuorum(llmqType, mnhfTx.signal.quorumHash);
+    if (!quorum) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-missing-quorum");
+    }
 
-    if (!mnhfTx.signal.Verify(qman, mnhfTx.signal.quorumHash, mnhfTx.GetRequestId(), msgHash, state)) {
-        // set up inside Verify
-        return false;
+    const llmq::SignHash signHash{llmqType, quorum->qc->quorumHash, mnhfTx.GetRequestId(), msgHash};
+    if (!mnhfTx.signal.sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get())) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-invalid");
     }
 
     return true;
@@ -171,31 +167,21 @@ std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
     return opt_mnhfTx->signal.versionBit;
 }
 
-static bool extractSignals(const ChainstateManager& chainman, const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
+static bool extractSignals(const CBlock& block, std::vector<uint8_t>& new_signals, BlockValidationState& state)
 {
+    // Each signal's payload and signature were already validated by CheckMNHFTx during
+    // block processing, so here we only collect the version bits without re-validating.
     // we skip the coinbase
     for (size_t i = 1; i < block.vtx.size(); ++i) {
-        const CTransaction& tx = *block.vtx[i];
-
-        if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+        const std::optional<uint8_t> bit = extractEHFSignal(*block.vtx[i]);
+        if (!bit.has_value()) {
             // only interested in special TXs 'TRANSACTION_MNHF_SIGNAL'
             continue;
         }
-
-        TxValidationState tx_state;
-        if (!CheckMNHFTx(chainman, qman, tx, pindex, tx_state)) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-        }
-
-        const auto opt_mnhfTx = GetTxPayload<MNHFTxPayload>(tx);
-        if (!opt_mnhfTx) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-tx-payload");
-        }
-        const uint8_t bit = opt_mnhfTx->signal.versionBit;
         if (std::find(new_signals.begin(), new_signals.end(), bit) != new_signals.end()) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicates-in-block");
         }
-        new_signals.push_back(bit);
+        new_signals.push_back(*bit);
     }
 
     return true;
@@ -205,7 +191,7 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
 {
     try {
         std::vector<uint8_t> new_signals;
-        if (!extractSignals(m_chainman, m_qman, block, pindex, new_signals, state)) {
+        if (!extractSignals(block, new_signals, state)) {
             // state is set inside extractSignals
             return std::nullopt;
         }
@@ -254,7 +240,7 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
 {
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
-    if (!extractSignals(m_chainman, m_qman, block, pindex, excluded_signals, state)) {
+    if (!extractSignals(block, excluded_signals, state)) {
         LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
@@ -266,7 +252,6 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
     for (const auto& versionBit : excluded_signals) {
         LogPrintf("%s: exclude mnhf bit=%d block:%s number of known signals:%lld\n", __func__, versionBit, pindex->GetBlockHash().ToString(), signals.size());
         assert(signals.find(versionBit) != signals.end());
-        assert(Params().IsValidMNActivation(versionBit, pindex->GetMedianTimePast()));
     }
 
     return true;

@@ -39,8 +39,6 @@ public:
     CBLSSignature sig{};
 
     MNHFTx() = default;
-    bool Verify(const llmq::CQuorumManager& qman, const uint256& quorumHash, const uint256& requestId, const uint256& msgHash,
-                TxValidationState& state) const;
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
@@ -74,6 +72,12 @@ public:
      */
     CMutableTransaction PrepareTx() const;
 
+    /**
+     * Checks that don't depend on chain state or the BLS signature (payload version
+     * and signal version bit bounds).
+     */
+    bool IsTriviallyValid(TxValidationState& state) const;
+
     SERIALIZE_METHODS(MNHFTxPayload, obj)
     {
         READWRITE(obj.nVersion, obj.signal);
@@ -90,12 +94,11 @@ class CMNHFManager : public AbstractEHFManager
 private:
     CEvoDB& m_evoDb;
     // TODO: move its functionallity of ProcessBlock, UndoBlock to specialtxman;
-    // it will help to drop dependency on m_chainman, m_qman here (and validation.h)
+    // it will help to drop dependency on m_chainman here (and validation.h)
     // Secondly, store in database active EHF signals not for each block;
     // but quite opposite: keep only hash of block where signal is added.
     // TODO: implement migration to a new format
     const ChainstateManager& m_chainman;
-    const llmq::CQuorumManager& m_qman;
 
     static constexpr size_t MNHFCacheSize = 1000;
     Mutex cs_cache;
@@ -106,7 +109,7 @@ public:
     CMNHFManager() = delete;
     CMNHFManager(const CMNHFManager&) = delete;
     CMNHFManager& operator=(const CMNHFManager&) = delete;
-    explicit CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman, const llmq::CQuorumManager& qman);
+    explicit CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman);
     ~CMNHFManager();
 
     /**
