@@ -783,6 +783,11 @@ private:
         const Consensus::Params& consensusParams)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
+    /** Build and send getdata requests for blocks and transactions. */
+    void MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
+        bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_tx_download_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -6140,6 +6145,71 @@ bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState
     return false;
 }
 
+void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
+    bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockNotHeld(m_tx_download_mutex);
+
+    //
+    // Message: getdata (blocks)
+    //
+    std::vector<CInv> vGetData;
+    if (CanServeBlocks(peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        std::vector<const CBlockIndex*> vToDownload;
+        NodeId staller = -1;
+        auto get_inflight_budget = [&state]() {
+            return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
+        };
+
+        // If there are multiple chainstates, download blocks for the
+        // current chainstate first, to prioritize getting to network tip
+        // before downloading historical blocks.
+        FindNextBlocksToDownload(peer, get_inflight_budget(), vToDownload, staller);
+        auto historical_blocks{m_chainman.GetHistoricalBlockRange()};
+        if (historical_blocks && !IsLimitedPeer(peer)) {
+            // If the first needed historical block is not an ancestor of the last,
+            // we need to start requesting blocks from their last common ancestor.
+            const CBlockIndex* from_tip = LastCommonAncestor(historical_blocks->first, historical_blocks->second);
+            TryDownloadingHistoricalBlocks(
+                peer,
+                get_inflight_budget(),
+                vToDownload, from_tip, historical_blocks->second);
+        }
+        for (const CBlockIndex *pindex : vToDownload) {
+            uint32_t nFetchFlags = GetFetchFlags(peer);
+            vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
+            BlockRequested(node.GetId(), *pindex);
+            LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                pindex->nHeight, node.GetId());
+        }
+        if (state.vBlocksInFlight.empty() && staller != -1) {
+            if (State(staller)->m_stalling_since == 0us) {
+                State(staller)->m_stalling_since = current_time;
+                LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
+            }
+        }
+    }
+
+    //
+    // Message: getdata (transactions)
+    //
+    {
+        LOCK(m_tx_download_mutex);
+        for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), current_time)) {
+            vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(peer)), gtxid.ToUint256());
+            if (vGetData.size() >= MAX_GETDATA_SZ) {
+                MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+                vGetData.clear();
+            }
+        }
+    }
+
+    if (!vGetData.empty())
+        MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -6257,62 +6327,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // GetTime() is used by this anti-DoS logic so we can test this using mocktime
         ConsiderEviction(node, peer, GetTime<std::chrono::seconds>());
 
-        //
-        // Message: getdata (blocks)
-        //
-        std::vector<CInv> vGetData;
-        if (CanServeBlocks(peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-            std::vector<const CBlockIndex*> vToDownload;
-            NodeId staller = -1;
-            auto get_inflight_budget = [&state]() {
-                return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
-            };
-
-            // If there are multiple chainstates, download blocks for the
-            // current chainstate first, to prioritize getting to network tip
-            // before downloading historical blocks.
-            FindNextBlocksToDownload(peer, get_inflight_budget(), vToDownload, staller);
-            auto historical_blocks{m_chainman.GetHistoricalBlockRange()};
-            if (historical_blocks && !IsLimitedPeer(peer)) {
-                // If the first needed historical block is not an ancestor of the last,
-                // we need to start requesting blocks from their last common ancestor.
-                const CBlockIndex* from_tip = LastCommonAncestor(historical_blocks->first, historical_blocks->second);
-                TryDownloadingHistoricalBlocks(
-                    peer,
-                    get_inflight_budget(),
-                    vToDownload, from_tip, historical_blocks->second);
-            }
-            for (const CBlockIndex *pindex : vToDownload) {
-                uint32_t nFetchFlags = GetFetchFlags(peer);
-                vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
-                BlockRequested(node.GetId(), *pindex);
-                LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    pindex->nHeight, node.GetId());
-            }
-            if (state.vBlocksInFlight.empty() && staller != -1) {
-                if (State(staller)->m_stalling_since == 0us) {
-                    State(staller)->m_stalling_since = current_time;
-                    LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
-                }
-            }
-        }
-
-        //
-        // Message: getdata (transactions)
-        //
-        {
-            LOCK(m_tx_download_mutex);
-            for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), current_time)) {
-                vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(peer)), gtxid.ToUint256());
-                if (vGetData.size() >= MAX_GETDATA_SZ) {
-                    MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
-                    vGetData.clear();
-                }
-            }
-        }
-
-        if (!vGetData.empty())
-            MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+        MaybeSendGetData(node, peer, state, sync_blocks_and_headers_from_peer, current_time);
     } // release cs_main
     MaybeSendFeefilter(node, peer, current_time);
     return true;
