@@ -25,31 +25,18 @@ require a reindex.
 
 # Release Notes
 
-## Notable changes
-- Asset lock transactions that Dash Platform cannot process are now treated as
-  non-standard, so they are no longer relayed across the network.
-  This covers asset locks with more than 100 inputs, or larger than 20480 bytes,
-  and those using the v2 payload (for post-v24 release), protecting users from
-  creating oversized asset locks that could result in lost funds.
-  Such transactions remain valid for consensus if mined into a block (dash#7359).
+## GUI changes
+
+- Restored the Send button when using an external signer (dash#7271).
 
 ## Bug Fixes
 
-- Reject two ProRegTx/ProUpServTx with the same Platform node ID from being
-  present in the mempool simultaneously.
+- Kept relaying InstantSend lock inventory messages to non-masternode peers that request recovered signatures (dash#7293).
+- Reverted an improper dual-way connection attempt avoidance change that could break recovered-signature handshakes under spork 21 (dash#7289).
+- Fixed intermittent incorrect `CheckQueue` logging for invalid blocks (dash#7312).
+- Fixed `listaddressbalances` RPC help so the documented result matches returned address balances (dash#7279).
 
-## Performance Improvements
-
-- Reduced lock contention when penalizing peers for invalid transactions,
-  improving networking responsiveness under load (dash#7332).
-- Made header sync almost twice as fast by optimization of low-level math
-  primitives (dash#7352).
-- Avoid re-validation of EHF signals during block connect. This also prevents
-  a potential assertion crash during large blockchain re-organizations when a
-  buried fork is re-validated in `BlockUndo`.
-
-
-# v23.1.4 Change log
+# v23.1.3 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -58,6 +45,7 @@ See detailed [set of changes][set-of-changes].
 Thanks to everyone who directly contributed to this release:
 
 - Konstantin Akimov
+- PastaPastaPasta
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -66,7 +54,6 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v23.1.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.3.md) released May/28/2026
 - [v23.1.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.2.md) released Mar/12/2026
 - [v23.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.0.md) released Feb/15/2026
 - [v23.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.2.md) released Dec/4/2025
@@ -82,4 +69,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v21.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.0.md) released Jul/25/2024
 - [v20.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.1.1.md) released April/3/2024
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.3...dashpay:v23.1.4
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.2...dashpay:v23.1.3
