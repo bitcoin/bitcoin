@@ -579,5 +579,27 @@ class NetInfoTest(BitcoinTestFramework):
         # All non-duplicate entries should still succeed
         update_node_two(self)
 
+        # Check for detection of duplicate platformNodeID
+        dup_platform = hash160(b'duplicate platformNodeID').hex()
+        self.node_evo.mn.update_service(self.node_evo.node, submit=True, addrs_core_p2p=f"127.0.0.1:{self.node_evo.mn.nodePort}",
+                                        platform_node_id=dup_platform, addrs_platform_p2p=DEFAULT_PORT_PLATFORM_P2P, addrs_platform_https=DEFAULT_PORT_PLATFORM_HTTP)
+        self.sync_mempools()
+        self.node_two.mn.update_service(self.node_two.node, submit=True, addrs_core_p2p=f"127.0.0.2:{self.node_two.mn.nodePort}",
+                                        platform_node_id=dup_platform, addrs_platform_p2p=DEFAULT_PORT_PLATFORM_P2P, addrs_platform_https=DEFAULT_PORT_PLATFORM_HTTP,
+                                        expected_assert_code=-26, expected_assert_msg="protx-dup")
+
+        # Same check via the ProRegTx path: two fresh EvoNodes sharing a platformNodeID, the second is rejected from the mempool
+        dup_platform_2 = hash160(b'duplicate ProRegTx platformNodeID').hex()
+        node_reg_one = EvoNode(self.nodes[0])
+        node_reg_one.generate_collateral(self)
+        node_reg_two = EvoNode(self.nodes[1])
+        node_reg_two.generate_collateral(self)
+        node_reg_one.mn.register(node_reg_one.node, submit=True, addrs_core_p2p=f"127.0.0.10:{node_reg_one.mn.nodePort}",
+                                 platform_node_id=dup_platform_2, addrs_platform_p2p=DEFAULT_PORT_PLATFORM_P2P, addrs_platform_https=DEFAULT_PORT_PLATFORM_HTTP)
+        self.sync_mempools()
+        node_reg_two.mn.register(node_reg_two.node, submit=True, addrs_core_p2p=f"127.0.0.11:{node_reg_two.mn.nodePort}",
+                                 platform_node_id=dup_platform_2, addrs_platform_p2p=DEFAULT_PORT_PLATFORM_P2P, addrs_platform_https=DEFAULT_PORT_PLATFORM_HTTP,
+                                 expected_assert_code=-26, expected_assert_msg="protx-dup")
+
 if __name__ == "__main__":
     NetInfoTest().main()
