@@ -169,7 +169,7 @@ class AuthServiceProxy():
                 'message': '%r RPC took longer than %f seconds. Consider '
                            'using larger timeout for calls that take '
                            'longer to return.' % (self._service_name,
-                                                  self.__conn.timeout)})
+                                                  self.__conn.timeout)}) from None
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
