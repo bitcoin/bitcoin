@@ -30,6 +30,7 @@
 #include <numeric>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -168,6 +169,9 @@ void VerifyIterator(CDBWrapper& dbw, const Oracle& oracle,
 
 /** Maximum number of concurrent reader threads in dbwrapper_concurrent_reads. */
 constexpr size_t MAX_READ_WORKERS{8};
+
+/** Maximum number of queries each worker executes in dbwrapper_concurrent_reads. */
+constexpr size_t MAX_READ_QUERIES_PER_WORKER{128};
 
 ThreadPool g_read_pool{"dbfuzz"};
 Mutex g_read_pool_mutex;
@@ -371,7 +375,7 @@ FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLog
 
     // Seed the DB. Drain work after small batches so we don't deadlock on a
     // scheduled compaction.
-    const size_t num_entries{provider.ConsumeIntegralInRange<size_t>(100, 3'000)};
+    const size_t num_entries{provider.ConsumeIntegralInRange<size_t>(100, 5'000)};
     std::vector<uint16_t> keys;
     keys.reserve(num_entries);
     Oracle oracle;
@@ -416,12 +420,13 @@ FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLog
             std::vector<size_t> order(queries.size());
             std::iota(order.begin(), order.end(), size_t{0});
             std::ranges::shuffle(order, thread_rng);
+            const size_t queries_to_run{std::min(queries.size(), MAX_READ_QUERIES_PER_WORKER)};
             std::vector<uint8_t> v;
             std::string key_str;
             start_latch.arrive_and_wait();
             const std::unique_ptr<CDBIterator> it{db.NewIterator()};
             // Every read must agree with the oracle, the source of truth.
-            for (const auto i : order) {
+            for (const auto i : std::span{order}.first(queries_to_run)) {
                 const auto& [op, key] = queries[i];
                 switch (op) {
                 case ReadOp::Read:
