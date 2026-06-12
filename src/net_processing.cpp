@@ -823,6 +823,15 @@ private:
         std::vector<CInv>& vGetData)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_tx_download_mutex);
 
+    /** Compute whether to sync blocks and headers from this peer; also initialises m_best_header. */
+    bool ComputeSyncBlocksAndHeaders(const CNode& node, const Peer& peer, const CNodeState& state)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
+    /** Schedule trickle and send tx inventory messages; requires tx_relay lock held. */
+    void MaybeSendTxMessages(CNode& node, Peer& peer, std::vector<CInv>& vInv,
+        std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -6313,6 +6322,39 @@ void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& stat
         MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
 }
 
+bool PeerManagerImpl::ComputeSyncBlocksAndHeaders(const CNode& node, const Peer& peer,
+    const CNodeState& state)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    // Start block sync
+    if (m_chainman.m_best_header == nullptr) {
+        m_chainman.m_best_header = m_chainman.ActiveChain().Tip();
+    }
+
+    // Determine whether we might try initial headers sync or parallel
+    // block download from this peer -- this mostly affects behavior while
+    // in IBD (once out of IBD, we sync from all peers).
+    if (state.fPreferredDownload) {
+        return true;
+    } else if (CanServeBlocks(peer) && !node.IsAddrFetchConn()) {
+        // Typically this is an inbound peer. If we don't have any outbound
+        // peers, or if we aren't downloading any blocks from such peers,
+        // then allow block downloads from this peer, too.
+        // We prefer downloading blocks from outbound peers to avoid
+        // putting undue load on (say) some home user who is just making
+        // outbound connections to the network, but if our only source of
+        // the latest blocks is from an inbound peer, we have to be sure to
+        // eventually download it (and not just wait indefinitely for an
+        // outbound peer to have it).
+        if (m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -6372,31 +6414,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         CNodeState &state = *State(node.GetId());
 
-        // Start block sync
-        if (m_chainman.m_best_header == nullptr) {
-            m_chainman.m_best_header = m_chainman.ActiveChain().Tip();
-        }
-
-        // Determine whether we might try initial headers sync or parallel
-        // block download from this peer -- this mostly affects behavior while
-        // in IBD (once out of IBD, we sync from all peers).
-        bool sync_blocks_and_headers_from_peer = false;
-        if (state.fPreferredDownload) {
-            sync_blocks_and_headers_from_peer = true;
-        } else if (CanServeBlocks(peer) && !node.IsAddrFetchConn()) {
-            // Typically this is an inbound peer. If we don't have any outbound
-            // peers, or if we aren't downloading any blocks from such peers,
-            // then allow block downloads from this peer, too.
-            // We prefer downloading blocks from outbound peers to avoid
-            // putting undue load on (say) some home user who is just making
-            // outbound connections to the network, but if our only source of
-            // the latest blocks is from an inbound peer, we have to be sure to
-            // eventually download it (and not just wait indefinitely for an
-            // outbound peer to have it).
-            if (m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty()) {
-                sync_blocks_and_headers_from_peer = true;
-            }
-        }
+        const bool sync_blocks_and_headers_from_peer{ComputeSyncBlocksAndHeaders(node, peer, state)};
 
         MaybeSendInitialGetheaders(node, peer, state, sync_blocks_and_headers_from_peer, current_time, consensusParams);
 
