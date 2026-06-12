@@ -865,6 +865,10 @@ private:
     void MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNodeState& state)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_most_recent_block_mutex);
 
+    /** Flush pending block invs from m_blocks_for_inv_relay into vInv. */
+    void MaybeSendBlockInv(CNode& node, Peer& peer, std::vector<CInv>& vInv)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     /** Copied into short-lived tx INV deduplication sets to avoid generating salts per message. */
@@ -6361,6 +6365,25 @@ void PeerManagerImpl::MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNode
     peer.m_blocks_for_headers_relay.clear();
 }
 
+void PeerManagerImpl::MaybeSendBlockInv(CNode& node, Peer& peer, std::vector<CInv>& vInv)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    LOCK(peer.m_block_inv_mutex);
+    vInv.reserve(peer.m_blocks_for_inv_relay.size());
+
+    // Add blocks
+    for (const uint256& hash : peer.m_blocks_for_inv_relay) {
+        vInv.emplace_back(MSG_BLOCK, hash);
+        if (vInv.size() == MAX_INV_SZ) {
+            MakeAndPushMessage(node, NetMsgType::INV, vInv);
+            vInv.clear();
+        }
+    }
+    peer.m_blocks_for_inv_relay.clear();
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -6459,20 +6482,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // Message: inventory
         //
         std::vector<CInv> vInv;
-        {
-            LOCK(peer.m_block_inv_mutex);
-            vInv.reserve(peer.m_blocks_for_inv_relay.size());
-
-            // Add blocks
-            for (const uint256& hash : peer.m_blocks_for_inv_relay) {
-                vInv.emplace_back(MSG_BLOCK, hash);
-                if (vInv.size() == MAX_INV_SZ) {
-                    MakeAndPushMessage(node, NetMsgType::INV, vInv);
-                    vInv.clear();
-                }
-            }
-            peer.m_blocks_for_inv_relay.clear();
-        }
+        MaybeSendBlockInv(node, peer, vInv);
 
         if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
                 LOCK(tx_relay->m_tx_inventory_mutex);
