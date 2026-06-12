@@ -893,6 +893,11 @@ private:
                                  std::chrono::microseconds current_time, const Consensus::Params& consensusParams)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
+    /** Disconnect or reset sync state if initial headers sync has timed out; returns true if disconnected. */
+    bool CheckHeadersSyncTimeout(CNode& node, Peer& peer, CNodeState& state,
+                                 std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     /** Build and send getdata requests for blocks and transactions. */
     void MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
                           bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
@@ -6521,6 +6526,17 @@ bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState
         node.fDisconnect = true;
         return true;
     }
+    if (CheckHeadersSyncTimeout(node, peer, state, current_time)) return true;
+
+    return false;
+}
+
+bool PeerManagerImpl::CheckHeadersSyncTimeout(CNode& node, Peer& peer, CNodeState& state,
+                                              std::chrono::microseconds current_time)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
     // Check for headers sync timeouts
     if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
         // Detect whether this is a stalling initial-headers-sync peer
