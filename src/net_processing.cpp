@@ -888,6 +888,11 @@ private:
     bool CheckBlockDownloadStall(CNode& node, CNodeState& state, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
+    /** Disconnect peer if a block in flight has timed out; returns true if disconnected. */
+    bool CheckBlockFlightTimeout(CNode& node, CNodeState& state,
+                                 std::chrono::microseconds current_time, const Consensus::Params& consensusParams)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     /** Build and send getdata requests for blocks and transactions. */
     void MaybeSendGetData(CNode& node, Peer& peer, CNodeState& state,
                           bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time)
@@ -6469,14 +6474,12 @@ bool PeerManagerImpl::CheckBlockDownloadStall(CNode& node, CNodeState& state,
     return false;
 }
 
-bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState& state,
-                                             std::chrono::microseconds current_time, NodeClock::time_point now,
-                                             const Consensus::Params& consensusParams)
+bool PeerManagerImpl::CheckBlockFlightTimeout(CNode& node, CNodeState& state,
+                                              std::chrono::microseconds current_time, const Consensus::Params& consensusParams)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_msgproc_mutex);
 
-    if (CheckBlockDownloadStall(node, state, current_time)) return true;
     // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)
     // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
     // We compensate for other peers to prevent killing off peers due to our own downstream link
@@ -6491,6 +6494,18 @@ bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState
             return true;
         }
     }
+    return false;
+}
+
+bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState& state,
+                                             std::chrono::microseconds current_time, NodeClock::time_point now,
+                                             const Consensus::Params& consensusParams)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    if (CheckBlockDownloadStall(node, state, current_time)) return true;
+    if (CheckBlockFlightTimeout(node, state, current_time, consensusParams)) return true;
     // If the peer failed to answer our ping in time, disconnect due to timeout.
     // Skip the check while it is serving us blocks and let the block download timeout above govern
     // instead. Once the last new block was received, give the peer a grace period to answer the ping.
