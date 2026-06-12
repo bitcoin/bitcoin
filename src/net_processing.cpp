@@ -777,6 +777,12 @@ private:
     void MaybeSendBlockInv(CNode& node, Peer& peer, std::vector<CInv>& vInv)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
+    /** Check stall and download timeouts; marks peer for disconnect and returns true if any fired. */
+    bool CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState& state,
+        std::chrono::microseconds current_time,
+        const Consensus::Params& consensusParams)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -6061,6 +6067,79 @@ void PeerManagerImpl::MaybeSendBlockInv(CNode& node, Peer& peer, std::vector<CIn
     peer.m_blocks_for_inv_relay.clear();
 }
 
+bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState& state,
+    std::chrono::microseconds current_time,
+    const Consensus::Params& consensusParams)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+
+    // Detect whether we're stalling
+    auto stalling_timeout = m_block_stalling_timeout.load();
+    if (state.m_stalling_since.count() && state.m_stalling_since < current_time - stalling_timeout) {
+        // Stalling only triggers when the block download window cannot move. During normal steady state,
+        // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
+        // should only happen during initial block download.
+        LogInfo("Peer is stalling block download, %s", node.DisconnectMsg());
+        node.fDisconnect = true;
+        // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
+        // bandwidth is insufficient.
+        const auto new_timeout = std::min(2 * stalling_timeout, BLOCK_STALLING_TIMEOUT_MAX);
+        if (stalling_timeout != new_timeout && m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
+            LogDebug(BCLog::NET, "Increased stalling timeout temporarily to %d seconds\n", count_seconds(new_timeout));
+        }
+        return true;
+    }
+    // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)
+    // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
+    // We compensate for other peers to prevent killing off peers due to our own downstream link
+    // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
+    // to unreasonably increase our timeout.
+    if (state.vBlocksInFlight.size() > 0) {
+        QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
+        int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
+        if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
+            LogInfo("Timeout downloading block %s, %s", queuedBlock.pindex->GetBlockHash().ToString(), node.DisconnectMsg());
+            node.fDisconnect = true;
+            return true;
+        }
+    }
+    // Check for headers sync timeouts
+    if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
+        // Detect whether this is a stalling initial-headers-sync peer
+        if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
+            if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
+                // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
+                // and we have others we could be using instead.
+                // Note: If all our peers are inbound, then we won't
+                // disconnect our sync peer for stalling; we have bigger
+                // problems if we can't get any outbound peers.
+                if (!node.HasPermission(NetPermissionFlags::NoBan)) {
+                    LogInfo("Timeout downloading headers, %s", node.DisconnectMsg());
+                    node.fDisconnect = true;
+                    return true;
+                } else {
+                    LogInfo("Timeout downloading headers from noban peer, not %s", node.DisconnectMsg());
+                    // Reset the headers sync state so that we have a
+                    // chance to try downloading from a different peer.
+                    // Note: this will also result in at least one more
+                    // getheaders message to be sent to
+                    // this peer (eventually).
+                    state.fSyncStarted = false;
+                    nSyncStarted--;
+                    peer.m_headers_sync_timeout = 0us;
+                }
+            }
+        } else {
+            // After we've caught up once, reset the timeout so we can't trigger
+            // disconnect later.
+            peer.m_headers_sync_timeout = std::chrono::microseconds::max();
+        }
+    }
+
+    return false;
+}
+
 bool PeerManagerImpl::SendMessages(CNode& node)
 {
     AssertLockNotHeld(m_tx_download_mutex);
@@ -6172,68 +6251,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         if (!vInv.empty())
             MakeAndPushMessage(node, NetMsgType::INV, vInv);
 
-        // Detect whether we're stalling
-        auto stalling_timeout = m_block_stalling_timeout.load();
-        if (state.m_stalling_since.count() && state.m_stalling_since < current_time - stalling_timeout) {
-            // Stalling only triggers when the block download window cannot move. During normal steady state,
-            // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
-            // should only happen during initial block download.
-            LogInfo("Peer is stalling block download, %s", node.DisconnectMsg());
-            node.fDisconnect = true;
-            // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
-            // bandwidth is insufficient.
-            const auto new_timeout = std::min(2 * stalling_timeout, BLOCK_STALLING_TIMEOUT_MAX);
-            if (stalling_timeout != new_timeout && m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
-                LogDebug(BCLog::NET, "Increased stalling timeout temporarily to %d seconds\n", count_seconds(new_timeout));
-            }
-            return true;
-        }
-        // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)
-        // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
-        // We compensate for other peers to prevent killing off peers due to our own downstream link
-        // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
-        // to unreasonably increase our timeout.
-        if (state.vBlocksInFlight.size() > 0) {
-            QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-            int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
-            if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogInfo("Timeout downloading block %s, %s", queuedBlock.pindex->GetBlockHash().ToString(), node.DisconnectMsg());
-                node.fDisconnect = true;
-                return true;
-            }
-        }
-        // Check for headers sync timeouts
-        if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
-            // Detect whether this is a stalling initial-headers-sync peer
-            if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
-                if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
-                    // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
-                    // and we have others we could be using instead.
-                    // Note: If all our peers are inbound, then we won't
-                    // disconnect our sync peer for stalling; we have bigger
-                    // problems if we can't get any outbound peers.
-                    if (!node.HasPermission(NetPermissionFlags::NoBan)) {
-                        LogInfo("Timeout downloading headers, %s", node.DisconnectMsg());
-                        node.fDisconnect = true;
-                        return true;
-                    } else {
-                        LogInfo("Timeout downloading headers from noban peer, not %s", node.DisconnectMsg());
-                        // Reset the headers sync state so that we have a
-                        // chance to try downloading from a different peer.
-                        // Note: this will also result in at least one more
-                        // getheaders message to be sent to
-                        // this peer (eventually).
-                        state.fSyncStarted = false;
-                        nSyncStarted--;
-                        peer.m_headers_sync_timeout = 0us;
-                    }
-                }
-            } else {
-                // After we've caught up once, reset the timeout so we can't trigger
-                // disconnect later.
-                peer.m_headers_sync_timeout = std::chrono::microseconds::max();
-            }
-        }
+        if (CheckBlockSyncTimeouts(node, peer, state, current_time, consensusParams)) return true;
 
         // Check that outbound peers have reasonable chains
         // GetTime() is used by this anti-DoS logic so we can test this using mocktime
