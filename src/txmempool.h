@@ -531,6 +531,7 @@ private:
     std::map<NetInfoEntry, uint256> mapProTxAddresses;
     std::map<CKeyID, uint256> mapProTxPubKeyIDs;
     std::map<uint256, uint256> mapProTxBlsPubKeyHashes;
+    std::map<uint160, uint256> mapProTxPlatformNodeIDs;
     std::map<COutPoint, uint256> mapProTxCollaterals;
     std::map<uint256, int /* expiry height */> mapAssetUnlockExpiry; // tx hash -> height
 
@@ -631,6 +632,7 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSLazyPublicKey &pubKey) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeProTxPlatformNodeIDConflicts(const CTransaction &tx, const uint160 &platformNodeID) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxSpentCollateralConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash) EXCLUSIVE_LOCKS_REQUIRED(cs);

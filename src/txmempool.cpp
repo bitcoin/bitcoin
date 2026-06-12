@@ -661,6 +661,9 @@ void CTxMemPool::addUncheckedProTx(CDeterministicMNManager& dmnman, indexed_tran
         }
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx_hash);
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx_hash);
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull()) {
+            mapProTxPlatformNodeIDs.emplace(proTx.platformNodeID, tx_hash);
+        }
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx_hash);
         } else {
@@ -671,6 +674,9 @@ void CTxMemPool::addUncheckedProTx(CDeterministicMNManager& dmnman, indexed_tran
         mapProTxRefs.emplace(proTx.proTxHash, tx_hash);
         for (const auto& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.emplace(entry, tx_hash);
+        }
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull()) {
+            mapProTxPlatformNodeIDs.emplace(proTx.platformNodeID, tx_hash);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         auto proTx = *Assert(GetTxPayload<CProUpRegTx>(tx));
@@ -765,6 +771,9 @@ void CTxMemPool::removeUncheckedProTx(const CTransaction& tx)
         }
         mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull()) {
+            mapProTxPlatformNodeIDs.erase(proTx.platformNodeID);
+        }
         mapProTxCollaterals.erase(proTx.collateralOutpoint);
         mapProTxCollaterals.erase(COutPoint(tx_hash, proTx.collateralOutpoint.n));
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
@@ -772,6 +781,9 @@ void CTxMemPool::removeUncheckedProTx(const CTransaction& tx)
         eraseProTxRef(proTx.proTxHash, tx_hash);
         for (const auto& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.erase(entry);
+        }
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull()) {
+            mapProTxPlatformNodeIDs.erase(proTx.platformNodeID);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         auto proTx = *Assert(GetTxPayload<CProUpRegTx>(tx));
@@ -919,6 +931,16 @@ void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSLa
     }
 }
 
+void CTxMemPool::removeProTxPlatformNodeIDConflicts(const CTransaction &tx, const uint160 &platformNodeID)
+{
+    if (mapProTxPlatformNodeIDs.count(platformNodeID)) {
+        uint256 conflictHash = mapProTxPlatformNodeIDs[platformNodeID];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+}
+
 void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint)
 {
     if (mapProTxCollaterals.count(collateralOutpoint)) {
@@ -1009,6 +1031,9 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
         }
         removeProTxPubKeyConflicts(tx, proTx.keyIDOwner);
         removeProTxPubKeyConflicts(tx, proTx.pubKeyOperator);
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull()) {
+            removeProTxPlatformNodeIDConflicts(tx, proTx.platformNodeID);
+        }
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             removeProTxCollateralConflicts(tx, proTx.collateralOutpoint);
         } else {
@@ -1028,6 +1053,9 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
                     removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
                 }
             }
+        }
+        if (opt_proTx->nType == MnType::Evo && !opt_proTx->platformNodeID.IsNull()) {
+            removeProTxPlatformNodeIDConflicts(tx, opt_proTx->platformNodeID);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx);
@@ -1110,6 +1138,7 @@ void CTxMemPool::_clear()
     mapNextTx.clear();
     mapProTxAddresses.clear();
     mapProTxPubKeyIDs.clear();
+    mapProTxPlatformNodeIDs.clear();
     totalTxSize = 0;
     m_total_fee = 0;
     cachedInnerUsage = 0;
@@ -1367,6 +1396,9 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         if (mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash())) {
             return true;
         }
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull() && mapProTxPlatformNodeIDs.count(proTx.platformNodeID)) {
+            return true;
+        }
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             if (mapProTxCollaterals.count(proTx.collateralOutpoint)) {
                 // there is another ProRegTx that refers to the same collateral
@@ -1387,6 +1419,12 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         for (const auto& entry : opt_proTx->netInfo->GetEntries()) {
             auto it = mapProTxAddresses.find(entry);
             if (it != mapProTxAddresses.end() && it->second != opt_proTx->proTxHash) {
+                return true;
+            }
+        }
+        if (opt_proTx->nType == MnType::Evo && !opt_proTx->platformNodeID.IsNull()) {
+            auto it = mapProTxPlatformNodeIDs.find(opt_proTx->platformNodeID);
+            if (it != mapProTxPlatformNodeIDs.end() && it->second != opt_proTx->proTxHash) {
                 return true;
             }
         }
