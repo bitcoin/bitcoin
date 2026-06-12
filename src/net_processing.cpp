@@ -779,6 +779,10 @@ private:
         bool& fRevertToInv)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !m_most_recent_block_mutex);
 
+    /** Fall back to inv-announcing the chain tip when header relay is not possible. */
+    void SendBlockInvFallback(CNode& node, Peer& peer, CNodeState& state)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, peer.m_block_inv_mutex);
+
     /** Flush pending block invs from m_blocks_for_inv_relay into vInv. */
     void MaybeSendBlockInv(CNode& node, Peer& peer, std::vector<CInv>& vInv)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
@@ -5972,6 +5976,37 @@ void PeerManagerImpl::SendCompactBlockOrHeaders(CNode& node, Peer& peer, CNodeSt
     }
 }
 
+void PeerManagerImpl::SendBlockInvFallback(CNode& node, Peer& peer, CNodeState& state)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(peer.m_block_inv_mutex);
+
+    // If falling back to using an inv, just try to inv the tip.
+    // The last entry in m_blocks_for_headers_relay was our tip at some point
+    // in the past.
+    if (!peer.m_blocks_for_headers_relay.empty()) {
+        const uint256& hashToAnnounce = peer.m_blocks_for_headers_relay.back();
+        const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hashToAnnounce);
+        assert(pindex);
+
+        // Warn if we're announcing a block that is not on the main chain.
+        // This should be very rare and could be optimized out.
+        // Just log for now.
+        if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
+            LogDebug(BCLog::NET, "Announcing block %s not on main chain (tip=%s)\n",
+                hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
+        }
+
+        // If the peer's chain has this block, don't inv it back.
+        if (!PeerHasHeader(&state, pindex)) {
+            peer.m_blocks_for_inv_relay.push_back(hashToAnnounce);
+            LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
+                node.GetId(), hashToAnnounce.ToString());
+        }
+    }
+}
+
 void PeerManagerImpl::MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNodeState& state)
 {
     AssertLockHeld(cs_main);
@@ -6043,31 +6078,7 @@ void PeerManagerImpl::MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNode
     if (!fRevertToInv && !vHeaders.empty()) {
         SendCompactBlockOrHeaders(node, peer, state, vHeaders, pBestIndex, fRevertToInv);
     }
-    if (fRevertToInv) {
-        // If falling back to using an inv, just try to inv the tip.
-        // The last entry in m_blocks_for_headers_relay was our tip at some point
-        // in the past.
-        if (!peer.m_blocks_for_headers_relay.empty()) {
-            const uint256& hashToAnnounce = peer.m_blocks_for_headers_relay.back();
-            const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(hashToAnnounce);
-            assert(pindex);
-
-            // Warn if we're announcing a block that is not on the main chain.
-            // This should be very rare and could be optimized out.
-            // Just log for now.
-            if (m_chainman.ActiveChain()[pindex->nHeight] != pindex) {
-                LogDebug(BCLog::NET, "Announcing block %s not on main chain (tip=%s)\n",
-                    hashToAnnounce.ToString(), m_chainman.ActiveChain().Tip()->GetBlockHash().ToString());
-            }
-
-            // If the peer's chain has this block, don't inv it back.
-            if (!PeerHasHeader(&state, pindex)) {
-                peer.m_blocks_for_inv_relay.push_back(hashToAnnounce);
-                LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
-                    node.GetId(), hashToAnnounce.ToString());
-            }
-        }
-    }
+    if (fRevertToInv) SendBlockInvFallback(node, peer, state);
     peer.m_blocks_for_headers_relay.clear();
 }
 
