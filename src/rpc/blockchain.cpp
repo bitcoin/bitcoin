@@ -534,7 +534,10 @@ static RPCMethod getblockfrompeer()
         "Returns an empty JSON object if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
-            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The peer to fetch it from (see getpeerinfo for peer IDs). "
+                        "If omitted, the node will fetch the block from any available peer."},
+            {"retry", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Whether to automatically retry to download the block from different peers if the initial request fails or not. "
+                        "If omitted, the node will continuously attempt to download the block from various peers until it succeeds."},
         },
         RPCResult{RPCResult::Type::OBJ, "", /*optional=*/false, "", {}},
         RPCExamples{
@@ -548,7 +551,9 @@ static RPCMethod getblockfrompeer()
     PeerManager& peerman = EnsurePeerman(node);
 
     const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
-    const NodeId peer_id{request.params[1].getInt<int64_t>()};
+    const std::optional<NodeId> peer_id = request.params[1].isNull() ? std::nullopt : std::make_optional(request.params[1].getInt<int64_t>());
+    const bool retry = !request.params[2].isNull() ? request.params[2].get_bool() : true; // default true
+    if (!retry && !peer_id) throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot disable the 'retry' process without specifying a peer from which the block will be downloaded ('peer_id')");
 
     const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
 
@@ -567,7 +572,7 @@ static RPCMethod getblockfrompeer()
         throw JSONRPCError(RPC_MISC_ERROR, "Block already downloaded");
     }
 
-    if (const auto res{peerman.FetchBlock(peer_id, *index)}; !res) {
+    if (const auto res{peerman.FetchBlock(peer_id, *index, retry)}; !res) {
         throw JSONRPCError(RPC_MISC_ERROR, res.error());
     }
     return UniValue::VOBJ;
