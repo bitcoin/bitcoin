@@ -158,4 +158,45 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
     BOOST_CHECK_EQUAL(stale_state[0], tx);
 }
 
+BOOST_AUTO_TEST_CASE(have_pending_transactions_threshold)
+{
+    PrivateBroadcast pb;
+
+    in_addr ipv4Addr;
+    ipv4Addr.s_addr = 0xa0b0c001;
+
+    // No transactions: HavePendingTransactions always false.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.HavePendingTransactions(3));
+
+    const auto tx{MakeDummyTx(/*id=*/7, /*num_witness=*/0)};
+    BOOST_REQUIRE(pb.Add(tx));
+
+    // Before any send: pending regardless of threshold (0 < 3).
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK(pb.HavePendingTransactions(3));
+
+    // Send to 2 peers and confirm both.
+    for (uint16_t port = 1; port <= 2; ++port) {
+        NodeId nid{port};
+        BOOST_REQUIRE(pb.PickTxForSend(nid, CService{ipv4Addr, port}).has_value());
+        pb.NodeConfirmedReception(nid);
+    }
+
+    // 2 confirmations out of 3 needed: still pending.
+    BOOST_CHECK(pb.HavePendingTransactions(3));
+
+    // Send to a 3rd peer and confirm.
+    pb.PickTxForSend(/*will_send_to_nodeid=*/3, CService{ipv4Addr, 3});
+    pb.NodeConfirmedReception(3);
+
+    // 3 confirmations: not pending when threshold is 3, but still present in the
+    // system (not yet removed), so the old !m_transactions.empty() would have returned
+    // true — demonstrating the bug this test guards against.
+    BOOST_CHECK(!pb.HavePendingTransactions(3));
+
+    // Default threshold (SIZE_MAX) still sees the tx as present.
+    BOOST_CHECK(pb.HavePendingTransactions());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

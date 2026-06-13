@@ -106,9 +106,12 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Check if there are transactions that need to be broadcast.
+     * Check if there are transactions that still need to be broadcast.
+     * @param[in] sufficient_confirmations A transaction is not considered pending once
+     *            it has been confirmed by at least this many recipients. Pass SIZE_MAX
+     *            (the default) to consider any un-removed transaction as pending.
      */
-    bool HavePendingTransactions()
+    bool HavePendingTransactions(size_t sufficient_confirmations = SIZE_MAX)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**

@@ -79,11 +79,15 @@ bool PrivateBroadcast::DidNodeConfirmReception(const NodeId& nodeid)
     return false;
 }
 
-bool PrivateBroadcast::HavePendingTransactions()
+bool PrivateBroadcast::HavePendingTransactions(size_t sufficient_confirmations)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    return !m_transactions.empty();
+    for (const auto& [tx, state] : m_transactions) {
+        const Priority p{DerivePriority(state.send_statuses)};
+        if (p.num_confirmed < sufficient_confirmations) return true;
+    }
+    return false;
 }
 
 std::vector<CTransactionRef> PrivateBroadcast::GetStale() const

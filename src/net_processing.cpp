@@ -1754,7 +1754,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     }
     if (node.IsPrivateBroadcastConn() &&
         !m_tx_for_private_broadcast.DidNodeConfirmReception(nodeid) &&
-        m_tx_for_private_broadcast.HavePendingTransactions()) {
+        m_tx_for_private_broadcast.HavePendingTransactions(NUM_PRIVATE_BROADCAST_PER_TX)) {
 
         m_connman.m_private_broadcast.NumToOpenAdd(1);
     }
