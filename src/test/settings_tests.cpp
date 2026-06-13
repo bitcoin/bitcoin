@@ -82,6 +82,12 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     BOOST_CHECK(values.empty());
     BOOST_CHECK(errors.empty());
 
+    // Check no errors if file is empty.
+    WriteText(path, "");
+    BOOST_CHECK(common::ReadSettings(path, values, errors));
+    BOOST_CHECK(values.empty());
+    BOOST_CHECK(errors.empty());
+
     // Check duplicate keys not allowed and that values returns empty if a duplicate is found.
     WriteText(path, R"({
         "dupe": "string",
