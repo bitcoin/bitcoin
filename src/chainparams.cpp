@@ -218,8 +218,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].nFalloffCoeff = 5;          // this corresponds to 10 periods
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].useEHF = true;
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000b9040746437784aaec47"); // 2471728
-        consensus.defaultAssumeValid = uint256S("0x000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032"); // 2471728
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000ba7225adc3153945d14d"); // 2487500
+        consensus.defaultAssumeValid = uint256S("0x00000000000000119fe42827219e0686d3f7b494ae65f823194c740c5dbab492"); // 2487500
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -333,6 +333,7 @@ public:
                 {2361500, uint256S("0x0000000000000009ba1e8f47851d036bb618a4f6565eb3c32d1f647d450ff195")},
                 {2421800, uint256S("0x000000000000000718ed026ebd644a8b70b42d4cbd7b25304c066c9bf15f85b7")},
                 {2471728, uint256S("0x000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032")},
+                {2487500, uint256S("0x00000000000000000000000000000000000000000000ba7225adc3153945d14d")},
             }
         };
 
@@ -342,10 +343,10 @@ public:
 
         // getchaintxstats 17280 000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032
         chainTxData = ChainTxData{
-                1778832687, // * UNIX timestamp of last known number of transactions (Block 2471728)
-                69379403,   // * total number of transactions between genesis and that timestamp
+                1781318234, // * UNIX timestamp of last known number of transactions (Block 2487500)
+                69770814,   // * total number of transactions between genesis and that timestamp
                             //   (the tx=... number in the ChainStateFlushed debug.log lines)
-                0.1476929741159368,      // * estimated number of transactions per second after that timestamp
+                0.1569520632249578,      // * estimated number of transactions per second after that timestamp
         };
     }
 };
