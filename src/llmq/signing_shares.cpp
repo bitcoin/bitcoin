@@ -287,7 +287,12 @@ void CSigSharesManager::ProcessMessage(const CNode& pfrom, const std::string& ms
         }
     } else if (msg_type == NetMsgType::QSIGSHARESINV) {
         std::vector<CSigSharesInv> msgs;
-        vRecv >> msgs;
+        try {
+            vRecv >> msgs;
+        } catch (const std::ios_base::failure&) {
+            BanNode(pfrom.GetId());
+            throw;
+        }
         if (msgs.size() > MAX_MSGS_CNT_QSIGSHARESINV) {
             LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- too many invs in QSIGSHARESINV message. cnt=%d, max=%d, node=%d\n", __func__, msgs.size(), MAX_MSGS_CNT_QSIGSHARESINV, pfrom.GetId());
             BanNode(pfrom.GetId());
@@ -300,7 +305,12 @@ void CSigSharesManager::ProcessMessage(const CNode& pfrom, const std::string& ms
         }
     } else if (msg_type == NetMsgType::QGETSIGSHARES) {
         std::vector<CSigSharesInv> msgs;
-        vRecv >> msgs;
+        try {
+            vRecv >> msgs;
+        } catch (const std::ios_base::failure&) {
+            BanNode(pfrom.GetId());
+            throw;
+        }
         if (msgs.size() > MAX_MSGS_CNT_QGETSIGSHARES) {
             LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- too many invs in QGETSIGSHARES message. cnt=%d, max=%d, node=%d\n", __func__, msgs.size(), MAX_MSGS_CNT_QGETSIGSHARES, pfrom.GetId());
             BanNode(pfrom.GetId());
