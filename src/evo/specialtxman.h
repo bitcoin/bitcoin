@@ -104,4 +104,20 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
 bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
 
+
+/**
+ * Asset lock transactions with more than 100 inputs (and so over ~20 kB) can not
+ * be processed by Platform, so Dash Core nodes should not relay them: they are
+ * marked non-standard, which keeps the network from propagating them over p2p.
+ *
+ * Asset lock v2 is enabled by the v24 fork, but Platform can not process it yet.
+ * It is kept non-standard so it can be enabled later without another hard fork.
+ *
+ * These are relay/mempool checks only: a rejected transaction stays valid inside
+ * a block.
+ *
+ * Returns false (with `reason` set) for a non-standard asset lock, and
+ * true for any transaction that is not an asset lock or not special-tx.
+ */
+bool IsStandardSpecialTx(const CTransaction& tx, std::string& reason);
 #endif // BITCOIN_EVO_SPECIALTXMAN_H

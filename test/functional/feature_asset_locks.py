@@ -67,7 +67,8 @@ class AssetLocksTest(DashTestFramework):
         node_wallet = self.nodes[0]
 
 
-        inputs = [CTxIn(COutPoint(int(coin["txid"], 16), coin["vout"]))]
+        coins = coin if isinstance(coin, list) else [coin]
+        inputs = [CTxIn(COutPoint(int(c["txid"], 16), c["vout"])) for c in coins]
 
         credit_outputs = []
         tmp_amount = amount
@@ -78,7 +79,7 @@ class AssetLocksTest(DashTestFramework):
 
         lockTx_payload = CAssetLockTx(1, credit_outputs)
 
-        remaining = int(COIN * coin['amount']) - tiny_amount - amount
+        remaining = sum(int(COIN * c['amount']) for c in coins) - tiny_amount - amount
 
         tx_output_ret = CTxOut(amount, CScript([OP_RETURN, b""]))
         tx_output = CTxOut(remaining, key_to_p2pk_script(pubkey))
@@ -270,6 +271,7 @@ class AssetLocksTest(DashTestFramework):
         self.test_mn_rr(node_wallet, node, pubkey)
         self.test_withdrawals_fork(node_wallet, node, pubkey)
         self.test_v24_fork(node_wallet, node, pubkey)
+        self.test_non_standard(node_wallet, node, pubkey)
 
 
     def test_asset_locks(self, node_wallet, node, pubkey):
@@ -759,6 +761,34 @@ class AssetLocksTest(DashTestFramework):
         self.log.info(f"{txid_in_block} should not be mined")
         tip_hash = self.generate(node, 1)[0]
         assert txid_in_block not in node.getblock(tip_hash)['tx']
+
+
+    def test_non_standard(self, node_wallet, node, pubkey):
+        self.log.info("Split one coin into 101 outputs to build an asset lock with >100 inputs")
+        raw = node_wallet.createrawtransaction([], [{node_wallet.getnewaddress(): 1} for _ in range(101)])
+        funded = node_wallet.fundrawtransaction(raw, {'change_position': 101})['hex']
+        split_txid = node_wallet.sendrawtransaction(node_wallet.signrawtransactionwithwallet(funded)['hex'])
+        self.generate(node, 1)
+        many_coins = [{'txid': split_txid, 'vout': i, 'amount': 1} for i in range(101)]
+        tx_many_inputs = self.create_assetlock(many_coins, COIN, pubkey)
+        assert_equal(len(tx_many_inputs.vin), 101)
+
+        self.log.info("A standard node (-acceptnonstdtxn=1) rejects them; the permissive node accepts them")
+        self.restart_node(1, self.extra_args[1] + ["-acceptnonstdtxn=1"])
+        self.connect_nodes(1, 0)
+
+        tx_hex = tx_many_inputs.serialize().hex()
+        assert_equal(node.testmempoolaccept([tx_hex])[0]['allowed'], True)
+        rejected = node_wallet.testmempoolaccept([tx_hex])[0]
+        assert_equal(rejected['allowed'], False)
+        assert_equal(rejected['reject-reason'], 'assetlocktx-too-many-inputs')
+
+        txid = node.sendrawtransaction(tx_hex)
+        block_hash = self.generate(node, 1)[0]
+        for checked_node in self.nodes:
+            assert txid in checked_node.getblock(block_hash)['tx']
+        self.restart_node(1, self.extra_args[1])
+        self.connect_nodes(1, 0)
 
 
 if __name__ == '__main__':

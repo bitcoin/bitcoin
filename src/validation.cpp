@@ -787,6 +787,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
 
+    if (fRequireStandard && !IsStandardSpecialTx(tx, reason))
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
+
     // Do not work on transactions that are too small.
     // A transaction with 1 empty scriptSig input and 1 P2SH output has size of 83 bytes.
     // Transactions smaller than this are not relayed to mitigate CVE-2017-12842 by not relaying
