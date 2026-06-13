@@ -1031,11 +1031,6 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     }
 
     switch (m_type) {
-    case Type::ELISION: {
-        // Deprecated alias of m_opts.print_elision
-        sections.PushSection({indent + "..." + maybe_separator, m_description});
-        return;
-    }
     case Type::ANY: {
         NONFATAL_UNREACHABLE(); // Only for testing
     }
@@ -1075,7 +1070,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         }
         CHECK_NONFATAL(!m_inner.empty());
         CHECK_NONFATAL(elision_has_description(m_inner));
-        if (m_type == Type::ARR && m_inner.back().m_type != Type::ELISION && !std::holds_alternative<std::string>(m_inner.back().m_opts.print_elision)) {
+        if (m_type == Type::ARR && !std::holds_alternative<std::string>(m_inner.back().m_opts.print_elision)) {
             sections.PushSection({indent_next + "...", ""});
         } else {
             // Remove final comma, which would be invalid JSON
@@ -1095,7 +1090,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         for (const auto& i : m_inner) {
             i.ToSections(sections, OuterType::OBJ, current_indent + 2);
         }
-        if (m_type == Type::OBJ_DYN && m_inner.back().m_type != Type::ELISION) {
+        if (m_type == Type::OBJ_DYN) {
             // If the dictionary keys are dynamic, use three dots for continuation
             sections.PushSection({indent_next + "...", ""});
         } else {
@@ -1113,7 +1108,6 @@ static std::optional<UniValue::VType> ExpectedType(RPCResult::Type type)
 {
     using Type = RPCResult::Type;
     switch (type) {
-    case Type::ELISION:
     case Type::ANY: {
         return std::nullopt;
     }
@@ -1171,7 +1165,6 @@ UniValue RPCResult::MatchesType(const UniValue& result) const
     }
 
     if (UniValue::VOBJ == result.getType()) {
-        if (!m_inner.empty() && m_inner.at(0).m_type == Type::ELISION) return true;
         UniValue errors(UniValue::VOBJ);
         if (m_type == Type::OBJ_DYN) {
             const RPCResult& doc_inner{m_inner.at(0)}; // Assume all types are the same, randomly pick the first

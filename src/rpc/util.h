@@ -318,7 +318,6 @@ struct RPCResult {
         OBJ_DYN,    //!< Special dictionary with keys that are not literals
         ARR_FIXED,  //!< Special array that has a fixed number of entries
         NUM_TIME,   //!< Special numeric to denote unix epoch time
-        ELISION,    //!< Special type to denote elision (...)
     };
 
     const Type m_type;
