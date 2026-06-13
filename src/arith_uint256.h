@@ -160,6 +160,7 @@ public:
 
     base_uint& operator*=(uint32_t b32);
     base_uint& operator*=(const base_uint& b);
+    base_uint& operator/=(uint64_t b32);
     base_uint& operator/=(const base_uint& b);
 
     base_uint& operator++()
@@ -209,6 +210,7 @@ public:
     friend inline base_uint operator>>(const base_uint& a, int shift) { return base_uint(a) >>= shift; }
     friend inline base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
     friend inline base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
+    friend inline base_uint operator/(const base_uint& a, uint64_t b) { return base_uint(a) /= b; }
     friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) == 0; }
     friend inline bool operator!=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) != 0; }
     friend inline bool operator>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) > 0; }

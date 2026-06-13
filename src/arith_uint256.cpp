@@ -5,6 +5,7 @@
 
 #include <arith_uint256.h>
 
+#include <limits>
 #include <uint256.h>
 #include <crypto/common.h>
 
@@ -76,6 +77,23 @@ base_uint<BITS>& base_uint<BITS>::operator*=(const base_uint& b)
         }
     }
     *this = a;
+    return *this;
+}
+
+template <unsigned int BITS>
+base_uint<BITS>& base_uint<BITS>::operator/=(uint64_t b32)
+{
+    if (b32 == 0)
+        throw uint_error("Division by zero");
+    if (b32 > std::numeric_limits<uint32_t>::max()) {
+        return *this /= base_uint(b32);
+    }
+    uint64_t rem = 0;
+    for (int i = WIDTH - 1; i >= 0; --i) {
+        uint64_t cur = (rem << 32) | pn[i];
+        pn[i] = static_cast<uint32_t>(cur / b32);
+        rem = cur % b32;
+    }
     return *this;
 }
 

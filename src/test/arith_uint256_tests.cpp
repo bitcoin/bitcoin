@@ -360,6 +360,19 @@ BOOST_AUTO_TEST_CASE( divide )
     BOOST_CHECK(R2L / MaxL == ZeroL);
     BOOST_CHECK(MaxL / R2L == 1);
     BOOST_CHECK_THROW(R2L / ZeroL, uint_error);
+
+    // The integer-divisor overload must be bit-identical to dividing by the same
+    // value widened to arith_uint256, for both the fast word-wise path
+    // (<= uint32 max) and the arith_uint256 fallback above it.
+    for (uint64_t d : {uint64_t{1}, uint64_t{2}, uint64_t{24}, uint64_t{3600},
+                       uint64_t{std::numeric_limits<uint32_t>::max()},
+                       uint64_t{std::numeric_limits<uint32_t>::max()} + 1,
+                       uint64_t{0xFEDCBA9876543210}}) {
+        BOOST_CHECK(R1L / d == R1L / arith_uint256(d));
+        BOOST_CHECK(R2L / d == R2L / arith_uint256(d));
+        BOOST_CHECK(MaxL / d == MaxL / arith_uint256(d));
+    }
+    BOOST_CHECK_THROW(R1L / uint64_t{0}, uint_error);
 }
 
 
