@@ -5,7 +5,7 @@
 
 import time
 
-from test_framework.messages import msg_qgetdata, msg_qwatch
+from test_framework.messages import CSigSharesInv, msg_qgetdata, msg_qsigsinv, msg_qwatch
 from test_framework.p2p import (
     p2p_lock,
     P2PInterface,
@@ -44,6 +44,14 @@ fake_mnauth_2 = ["6ad7ed7a2d6c2c1db30fc364114602b36b2730a9aa96d8f11f1871a9cee373
 # Used to distinguish mininode connections
 uacomment_m3_1 = "MN3_1"
 uacomment_m3_2 = "MN3_2"
+
+# A single CSigSharesInv entry that declares the maximum bitset size costs 8 bytes
+# on the wire but forces ReadFixedVarIntsBitSet to allocate a vector<bool> of that
+# many bits (~4 MiB) up front. The declared sizes are only validated after the
+# whole vector has been deserialized, so a few hundred KiB on the wire can demand
+# hundreds of GiB of memory.
+oversized_inv_bits = 0x02000000  # MAX_SIZE; ~4 MiB per vector<bool>
+oversized_inv_count = 65536      # ~512 KiB wire -> ~256 GiB declared allocation
 
 
 def assert_qdata(qdata, qgetdata, error, len_vvec=0, len_contributions=0):
@@ -404,6 +412,19 @@ class QuorumDataMessagesTest(DashTestFramework):
                                     mn1.get_node(self).quorum, "getdata", 0, 100, quorum_hash, 0x03,
                                     "0000000000000000000000000000000000000000000000000000000000000000")
 
+        def test_qsigshares_inv_oom():
+            self.log.info("Check masternode rejects oversized CSigSharesInv bitsets without OOM")
+            # No MNAUTH: the qsigsinv handler runs for any inbound peer once we are a
+            # masternode, so an unauthenticated connection is enough to reach it.
+            p2p_mn = p2p_connection(mn1.get_node(self))
+            invs = [CSigSharesInv(inv_size=oversized_inv_bits) for _ in range(oversized_inv_count)]
+            p2p_mn.send_message(msg_qsigsinv(invs))
+            # A correctly-bounded node rejects the declared size while deserializing and
+            # drops the peer; it must stay responsive instead of being OOM-killed.
+            self.wait_until(lambda: not p2p_mn.is_connected, timeout=10)
+            assert_equal(mn1.get_node(self).getblockcount(), node0.getblockcount())
+            mn1.get_node(self).disconnect_p2ps()
+
         # Enable DKG and disable ChainLocks
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
@@ -432,6 +453,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             test_qwatch_connections()
             test_watchquorums()
             test_rpc_quorum_getdata_protx_hash()
+
+        test_qsigshares_inv_oom()
 
 
 if __name__ == '__main__':
