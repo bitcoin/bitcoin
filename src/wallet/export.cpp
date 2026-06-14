@@ -161,7 +161,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             for (const auto& [txid, wtx] : wallet.mapWallet) {
                 DataStream wtx_ser;
                 wtx_ser << wtx;
-                CWalletTx copy_wtx(deserialize, wtx_ser);
+                CWalletTx copy_wtx(deserialize, wtx_ser, wtx.GetTxs());
                 if (!watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
                 }

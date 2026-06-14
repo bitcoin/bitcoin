@@ -4049,7 +4049,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 const Txid& hash = wtx->GetHash();
                 DataStream wtx_ser;
                 wtx_ser << *wtx;
-                CWalletTx copy_wtx(deserialize, wtx_ser);
+                CWalletTx copy_wtx(deserialize, wtx_ser, wtx->GetTxs());
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
