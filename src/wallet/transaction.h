@@ -234,15 +234,21 @@ public:
     mutable bool fChangeCached;
     mutable CAmount nChangeCached;
 
-    CWalletTx(CTransactionRef tx, const TxState& state) : m_state(state), tx(std::move(Assert(tx)))
+    CWalletTx(CTransactionRef tx, const TxState& state) : m_state(state)
     {
+        Assert(tx);
+        m_canonical_wtxid = tx->GetWitnessHash();
+        m_txs.emplace(tx->GetWitnessHash(), std::move(tx));
         Init();
     }
 
     template <typename Stream>
-    CWalletTx(deserialize_type, Stream& s) : m_state(TxStateInactive{})
+    CWalletTx(deserialize_type, Stream& s, const std::map<Wtxid, CTransactionRef>& variants) : m_state(TxStateInactive{})
     {
         Unserialize(s);
+        // Merge witness variants
+        m_txs.insert(variants.begin(), variants.end());
+        Assert(m_txs.contains(GetWitnessHash()));
     }
 
     void Init()
@@ -297,7 +303,7 @@ public:
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(GetTx()) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
     }
 
     template<typename Stream>
@@ -313,7 +319,10 @@ public:
         int serializedIndex;
         std::map<std::string, std::string> string_values;
         std::vector<std::pair<std::string, std::string>> msgs_reqs;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        CTransactionRef canonical_tx;
+        s >> TX_WITH_WITNESS(canonical_tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        m_canonical_wtxid = canonical_tx->GetWitnessHash();
+        m_txs.emplace(m_canonical_wtxid, std::move(canonical_tx));
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -342,11 +351,12 @@ public:
         }
     }
 
-    CTransactionRef GetTx() const { return tx; }
+    CTransactionRef GetTx() const { return m_txs.at(m_canonical_wtxid); }
 
     void SetTx(CTransactionRef arg)
     {
-        tx = std::move(arg);
+        Assert(arg);
+        m_txs.emplace(arg->GetWitnessHash(), std::move(arg));
     }
 
     //! make sure balances are recalculated
@@ -379,9 +389,11 @@ public:
     bool isInactive() const { return state<TxStateInactive>(); }
     bool isUnconfirmed() const { return !isAbandoned() && !isBlockConflicted() && !isMempoolConflicted() && !isConfirmed(); }
     bool isConfirmed() const { return state<TxStateConfirmed>(); }
-    const Txid& GetHash() const LIFETIMEBOUND { return tx->GetHash(); }
-    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return tx->GetWitnessHash(); }
-    bool IsCoinBase() const { return tx->IsCoinBase(); }
+    const Txid& GetHash() const LIFETIMEBOUND { return GetTx()->GetHash(); }
+    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return GetTx()->GetWitnessHash(); }
+    bool IsCoinBase() const { return GetTx()->IsCoinBase(); }
+
+    const std::map<Wtxid, CTransactionRef>& GetTxs() const { return m_txs; }
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the
@@ -393,7 +405,9 @@ public:
     CWalletTx(CWalletTx&&) = default;
 
 private:
-    CTransactionRef tx;
+    Wtxid m_canonical_wtxid;
+    std::map<Wtxid, CTransactionRef> m_txs;
+
 };
 
 struct WalletTxOrderComparator {
