@@ -219,8 +219,7 @@ public:
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
 
     //! Register handler for message box messages.
-    using MessageBoxFn =
-        std::function<bool(const bilingual_str& message, unsigned int style)>;
+    using MessageBoxFn = std::function<void(const bilingual_str& message, unsigned int style)>;
     virtual std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) = 0;
 
     //! Register handler for question messages.

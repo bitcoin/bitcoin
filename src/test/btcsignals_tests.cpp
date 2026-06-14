@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <btcsignals.h>
 #include <test/util/setup_common.h>
+#include <util/btcsignals.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -11,22 +11,6 @@
 
 namespace {
 
-
-struct MoveOnlyData {
-    MoveOnlyData(int data) : m_data(data) {}
-    MoveOnlyData(MoveOnlyData&&) = default;
-
-    MoveOnlyData& operator=(MoveOnlyData&&) = delete;
-    MoveOnlyData(const MoveOnlyData&) = delete;
-    MoveOnlyData& operator=(const MoveOnlyData&) = delete;
-
-    int m_data;
-};
-
-MoveOnlyData MoveOnlyReturnCallback(int val)
-{
-    return {val};
-}
 
 void IncrementCallback(int& val)
 {
@@ -97,61 +81,48 @@ BOOST_AUTO_TEST_CASE(disconnects)
     BOOST_CHECK_EQUAL(val, 6);
 }
 
-/* Check that move-only return types work correctly
- */
-BOOST_AUTO_TEST_CASE(moveonly_return)
+BOOST_AUTO_TEST_CASE(any_of_combiner)
 {
-    btcsignals::signal<MoveOnlyData(int)> sig0;
-    sig0.connect(MoveOnlyReturnCallback);
-    int data{3};
-    auto ret = sig0(data);
-    BOOST_CHECK_EQUAL(ret->m_data, 3);
-}
-
-/* The result of the signal invocation should always be the result of the last
- * enabled callback.
- */
-BOOST_AUTO_TEST_CASE(return_value)
-{
-    btcsignals::signal<bool()> sig0;
+    btcsignals::signal<bool(), btcsignals::any_of> sig0;
     decltype(sig0)::result_type ret;
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
     {
-        btcsignals::scoped_connection conn0 = sig0.connect(ReturnTrue);
+        btcsignals::scoped_connection conn0{sig0.connect(ReturnTrue)};
         ret = sig0();
-        BOOST_CHECK(ret && *ret == true);
+        BOOST_CHECK_EQUAL(ret, true);
     }
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
     {
-        btcsignals::scoped_connection conn1 = sig0.connect(ReturnTrue);
-        btcsignals::scoped_connection conn0 = sig0.connect(ReturnFalse);
+        btcsignals::scoped_connection conn0{sig0.connect(ReturnTrue)};
+        btcsignals::scoped_connection conn1{sig0.connect(ReturnFalse)};
         ret = sig0();
-        BOOST_CHECK(ret && *ret == false);
+        BOOST_CHECK_EQUAL(ret, true);
         conn0.disconnect();
         ret = sig0();
-        BOOST_CHECK(ret && *ret == true);
+        BOOST_CHECK_EQUAL(ret, false);
     }
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
 }
 
 /* Test the thread-safety of connect/disconnect/empty/connected/callbacks.
  * Connect sig0 to an incrementor function and loop in a thread.
  * Meanwhile, in another thread, inject and call new increment callbacks.
  * Both threads are constantly calling empty/connected.
- * Though the end-result is undefined due to a non-deterministic number of
- * total callbacks executed, this should all be completely threadsafe.
+ * The end-result must be deterministic for the atomic modified by conn0.
+ * Though, the end-result for the atomic modified by the extra connections is
+ * undefined due to a non-deterministic number of total callbacks executed.
+ * In any case, this should all be completely threadsafe.
  * Sanitizers should pick up any buggy data race behavior (if present).
  */
 BOOST_AUTO_TEST_CASE(thread_safety)
 {
     btcsignals::signal<void()> sig0;
-    std::atomic<uint32_t> val{0};
-    auto conn0 = sig0.connect([&val] {
-        val++;
-    });
+    std::atomic<uint32_t> val_det{0};
+    std::atomic<uint32_t> val_non_det{0};
+    auto conn0 = sig0.connect([&val_det] { val_det++; });
 
     std::thread incrementor([&conn0, &sig0] {
         for (int i = 0; i < 1000; i++) {
@@ -164,16 +135,17 @@ BOOST_AUTO_TEST_CASE(thread_safety)
         assert(conn0.connected());
     });
 
-    std::thread extra_increment_injector([&conn0, &sig0, &val] {
+    std::thread extra_increment_injector([&conn0, &sig0, &val_non_det] {
         static constexpr size_t num_extra_conns{1000};
         std::vector<btcsignals::scoped_connection> extra_conns;
         extra_conns.reserve(num_extra_conns);
         for (size_t i = 0; i < num_extra_conns; i++) {
             BOOST_CHECK(!sig0.empty());
             BOOST_CHECK(conn0.connected());
-            extra_conns.emplace_back(sig0.connect([&val] {
-                val++;
-            }));
+            btcsignals::scoped_connection extra{sig0.connect([&val_non_det] { val_non_det++; })};
+            if (i % 2 == 0) {
+                extra_conns.emplace_back(std::move(extra));
+            }
             sig0();
         }
     });
@@ -182,10 +154,16 @@ BOOST_AUTO_TEST_CASE(thread_safety)
     conn0.disconnect();
     BOOST_CHECK(sig0.empty());
 
-    // sig will have been called 2000 times, and at least 1000 of those will
-    // have been executing multiple incrementing callbacks. So while val is
-    // probably MUCH bigger, it's guaranteed to be at least 3000.
-    BOOST_CHECK_GE(val.load(), 3000);
+    // sig0 will have been called 2000 times, and only the first connection did
+    // increment val_det, so it must be 2000.
+    BOOST_CHECK_EQUAL(val_det.load(), 2000);
+    // The number of connections that increment val_non_det is growing from 1
+    // to 500, where 500 are disconnected immediately again after the step.
+    // Before the end of each step the connections are called at least once.
+    // However, it is unknown how often the connections have been called
+    // exactly. The 500th Triangular Number gives a lower estimate.
+    // T_n=n(n+1)/2
+    BOOST_CHECK_GE(val_non_det.load(), 500 * 501 / 2);
 }
 
 /* Test that connection and disconnection works from within signal
