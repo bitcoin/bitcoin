@@ -3,11 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cluster_linearize.h>
+#include <random.h>
 #include <test/util/cluster_linearize.h>
 #include <test/util/setup_common.h>
 #include <util/bitset.h>
+#include <util/feefrac.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
+#include <numeric>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -480,6 +484,189 @@ BOOST_AUTO_TEST_CASE(depgraph_optimal_tests)
     TestOptimalLinearization("855f8024008024816501807c81020284629b030383078631048044895c000002048078100100000000068315856a020000000004800784130300000000028167800c04000000000281758a14010000000885249a1a0100010004852ca63e020000010300"_hex_u8, {6, 1, 12, 5, 11, 3, 4, 10, 0, 8, 9, 7, 2});
     TestOptimalLinearization("855f97230080678a4f018210925d02856113038105892b04854e996105805a8a480000000000000283028b7a01000000000002846d9f080200000000000283189656030000000000018277862e0400000000000185508d200500000000000000"_hex_u8, {3, 0, 10, 7, 2, 1, 4, 8, 6, 5, 11, 9});
     TestOptimalLinearization("866faa23008646b71501851f96130282588f1103804d851c0000000003822097600100000003850a8f310200000003856e9201000000038656935f01000003855b8f5f020000018743923a0000000a812b810b010000098403a328020000068712970203000005833e98400400000200"_hex_u8, {11, 14, 1, 10, 4, 3, 5, 13, 9, 7, 6, 12, 8, 0, 2});
+}
+
+/** Construct a random tree-structured dependency graph.
+ *  A tree structure means: either all transactions have at most one parent (upright tree),
+ *  or all transactions have at most one child (reverse tree).
+ *  Uses random feerates for transactions.
+ */
+template<typename SetType>
+DepGraph<SetType> MakeRandomTreeGraph(DepGraphIndex ntx, InsecureRandomContext& rng, bool upright_tree)
+{
+    DepGraph<SetType> depgraph;
+
+    // Add transactions with random feerates
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;  // Random fee: 100 to 100 + (2^27 - 1)
+        int32_t size = rng.randrange(1000) + 1;  // Random size: 1 to 1000
+        depgraph.AddTransaction({fee, size});
+    }
+
+    if (upright_tree) {
+        // Upright tree: each transaction has at most one parent.
+        // Root (0) has no parent; each node i in [1, ntx) has exactly one parent in [0, i).
+        // This yields exactly ntx-1 edges and no cycles (parent < i), so the result is a tree.
+        for (DepGraphIndex i = 1; i < ntx; ++i) {
+            DepGraphIndex parent = rng.randrange(i);  // Parent in [0, i)
+            depgraph.AddDependencies(SetType::Singleton(parent), i);
+        }
+    } else {
+        // Reverse tree: each transaction has at most one child.
+        // Mirror of the upright tree: node i picks a random child from [0, i).
+        // Since child < i, no cycles are possible. Multiple nodes may pick the same
+        // child, producing genuine branching (a node with multiple parents, one child).
+        for (DepGraphIndex i = 1; i < ntx; ++i) {
+            DepGraphIndex child = rng.randrange(i);  // child in [0, i)
+            depgraph.AddDependencies(SetType::Singleton(i), child);
+        }
+    }
+
+    return depgraph;
+}
+
+/** Test that PostLinearize finds optimal linearization for tree-structured graphs.
+ *  This test verifies the guarantee stated in PostLinearize's documentation:
+ *  "If the input has a tree shape (either all transactions have at most one child,
+ *   or all transactions have at most one parent), the result is optimal."
+ */
+BOOST_AUTO_TEST_CASE(postlinearize_tree_optimal_tests)
+{
+    FastRandomContext rng;
+
+    // Test with different tree sizes and structures
+    for (DepGraphIndex ntx : {5, 10, 15, 20, 25, 30}) {
+        for (int iter = 0; iter < 10; ++iter) {
+            // Test both upright tree (each tx has at most one parent) and reverse tree (each tx has at most one child)
+            for (bool upright : {true, false}) {
+                InsecureRandomContext tree_rng(rng.rand64());
+                DepGraph<BitSet<64>> depgraph = MakeRandomTreeGraph<BitSet<64>>(ntx, tree_rng, upright);
+
+                SanityCheck(depgraph);
+                // Tree must have exactly ntx-1 edges
+                BOOST_CHECK_EQUAL(depgraph.CountDependencies(), ntx - 1);
+
+                // Build a topological linearization: ancestors before descendants.
+                // Sort by ancestor count (ascending); use index as tie-breaker for deterministic order.
+                std::vector<DepGraphIndex> topo_lin(ntx);
+                std::iota(topo_lin.begin(), topo_lin.end(), DepGraphIndex{0});
+                std::sort(topo_lin.begin(), topo_lin.end(), [&](DepGraphIndex a, DepGraphIndex b) {
+                    const auto na = depgraph.Ancestors(a).Count();
+                    const auto nb = depgraph.Ancestors(b).Count();
+                    return na < nb || (na == nb && a < b);
+                });
+
+                // Apply PostLinearize
+                std::vector<DepGraphIndex> post_lin = topo_lin;
+                PostLinearize(depgraph, post_lin);
+                SanityCheck(depgraph, post_lin);
+
+                // Find optimal linearization using Linearize
+                auto [opt_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
+                BOOST_CHECK(optimal);
+                SanityCheck(depgraph, opt_lin);
+
+                // Compare chunk diagrams: PostLinearize result should be equal to optimal
+                auto post_chunks = ChunkLinearization(depgraph, post_lin);
+                auto opt_chunks = ChunkLinearization(depgraph, opt_lin);
+                auto cmp = CompareChunks(post_chunks, opt_chunks);
+
+                // PostLinearize should produce optimal result for tree graphs
+                BOOST_CHECK_MESSAGE(std::is_eq(cmp),
+                    "PostLinearize should find optimal linearization for tree-structured graphs. "
+                    "ntx=" << ntx << ", upright=" << upright << ", iter=" << iter);
+
+                // Verify that running PostLinearize again doesn't change the result
+                std::vector<DepGraphIndex> post_post_lin = post_lin;
+                PostLinearize(depgraph, post_post_lin);
+                auto post_post_chunks = ChunkLinearization(depgraph, post_post_lin);
+                auto cmp_post = CompareChunks(post_post_chunks, post_chunks);
+                BOOST_CHECK_MESSAGE(std::is_eq(cmp_post),
+                    "PostLinearize should be idempotent on tree-structured graphs. "
+                    "ntx=" << ntx << ", upright=" << upright << ", iter=" << iter);
+            }
+        }
+    }
+}
+
+/** Construct a random chain-structured dependency graph.
+ *  A chain structure means: tx0 -> tx1 -> tx2 -> ... -> tx_{n-1}
+ *  Each transaction depends only on the previous one.
+ *  Uses random feerates for transactions.
+ */
+template<typename SetType>
+DepGraph<SetType> MakeRandomChainGraph(DepGraphIndex ntx, InsecureRandomContext& rng)
+{
+    DepGraph<SetType> depgraph;
+
+    // Add transactions with random feerates
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;  // Random fee: 100 to 100 + (2^27 - 1)
+        int32_t size = rng.randrange(1000) + 1;  // Random size: 1 to 1000
+        depgraph.AddTransaction({fee, size});
+    }
+
+    // Create chain: tx0 -> tx1 -> tx2 -> ... -> tx_{n-1}
+    for (DepGraphIndex i = 1; i < ntx; ++i) {
+        depgraph.AddDependencies(SetType::Singleton(i - 1), i);
+    }
+
+    return depgraph;
+}
+
+/** Test that PostLinearize finds optimal linearization for chain-structured graphs.
+ *  Chain graphs are a special case of tree graphs (each transaction has at most one parent),
+ *  so PostLinearize should find optimal linearization.
+ */
+BOOST_AUTO_TEST_CASE(postlinearize_chain_optimal_tests)
+{
+    FastRandomContext rng;
+
+    // Test with different chain sizes
+    for (DepGraphIndex ntx : {5, 10, 15, 20, 25, 30, 40, 50}) {
+        for (int iter = 0; iter < 10; ++iter) {
+            InsecureRandomContext chain_rng(rng.rand64());
+            DepGraph<BitSet<64>> depgraph = MakeRandomChainGraph<BitSet<64>>(ntx, chain_rng);
+
+            SanityCheck(depgraph);
+
+            // Create a topological linearization as input to PostLinearize
+            // For chain graphs, the topological order is simply [0, 1, 2, ..., n-1]
+            std::vector<DepGraphIndex> topo_lin(ntx);
+            for (DepGraphIndex i = 0; i < ntx; ++i) {
+                topo_lin[i] = i;
+            }
+
+            // Apply PostLinearize
+            std::vector<DepGraphIndex> post_lin = topo_lin;
+            PostLinearize(depgraph, post_lin);
+            SanityCheck(depgraph, post_lin);
+
+            // Find optimal linearization using Linearize
+            auto [opt_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
+            BOOST_CHECK(optimal);
+            SanityCheck(depgraph, opt_lin);
+
+            // Compare chunk diagrams: PostLinearize result should be equal to optimal
+            auto post_chunks = ChunkLinearization(depgraph, post_lin);
+            auto opt_chunks = ChunkLinearization(depgraph, opt_lin);
+            auto cmp = CompareChunks(post_chunks, opt_chunks);
+
+            // PostLinearize should produce optimal result for chain graphs
+            BOOST_CHECK_MESSAGE(std::is_eq(cmp),
+                "PostLinearize should find optimal linearization for chain-structured graphs. "
+                "ntx=" << ntx << ", iter=" << iter);
+
+            // Verify that running PostLinearize again doesn't change the result
+            std::vector<DepGraphIndex> post_post_lin = post_lin;
+            PostLinearize(depgraph, post_post_lin);
+            auto post_post_chunks = ChunkLinearization(depgraph, post_post_lin);
+            auto cmp_post = CompareChunks(post_post_chunks, post_chunks);
+            BOOST_CHECK_MESSAGE(std::is_eq(cmp_post),
+                "PostLinearize should be idempotent on chain-structured graphs. "
+                "ntx=" << ntx << ", iter=" << iter);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
