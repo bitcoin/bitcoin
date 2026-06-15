@@ -12,13 +12,12 @@
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <memory>
-#include <string>
 #include <vector>
 
 using node::BlockCreateOptions;

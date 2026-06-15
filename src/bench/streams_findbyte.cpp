@@ -5,11 +5,13 @@
 #include <bench/bench.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/fs.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 
 static void FindByte(benchmark::Bench& bench)
 {

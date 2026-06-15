@@ -5,10 +5,17 @@
 #include <bench/bench.h>
 #include <random.h>
 #include <txgraph.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 
-#include <cassert>
+#include <algorithm>
+#include <compare>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace {
 

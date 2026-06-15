@@ -13,17 +13,16 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/script.h>
-#include <span.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/strencodings.h>
-#include <util/time.h>
 #include <validation.h>
 
-#include <cassert>
 #include <memory>
+#include <span>
 #include <vector>
 
 using namespace util::hex_literals;

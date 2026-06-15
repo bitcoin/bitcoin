@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
 #include <kernel/chainparams.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -12,14 +13,14 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
-#include <util/time.h>
+#include <util/check.h>
 #include <validation.h>
+#include <wallet/db.h>
 #include <wallet/receive.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <memory>
 #include <optional>
 #include <string>

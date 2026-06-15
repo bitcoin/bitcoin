@@ -11,6 +11,7 @@
 #include <hash.h>
 #include <logging/timer.h>
 #include <netaddress.h>
+#include <netgroup.h>
 #include <protocol.h>
 #include <random.h>
 #include <serialize.h>

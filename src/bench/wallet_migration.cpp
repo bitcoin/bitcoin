@@ -2,20 +2,34 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
+#include <consensus/amount.h>
 #include <interfaces/wallet.h>
-#include <kernel/chain.h>
-#include <kernel/types.h>
-#include <node/context.h>
-#include <test/util/mining.h>
+#include <key.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
-#include <wallet/context.h>
-#include <wallet/receive.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/result.h>
+#include <wallet/db.h>
+#include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
+#include <wallet/transaction.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace wallet{
 

@@ -11,14 +11,19 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
+#include <script/verify_flags.h>
 #include <span.h>
 #include <test/util/transaction_utils.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/translation.h>
 
-#include <array>
-#include <cassert>
-#include <cstdint>
+#include <cstddef>
+#include <map>
+#include <span>
 #include <vector>
 
 enum class ScriptType {

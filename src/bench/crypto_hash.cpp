@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
 #include <bench/bench.h>
 #include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
@@ -12,11 +11,12 @@
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
 #include <random.h>
-#include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
 
 #include <cstdint>
+#include <span>
+#include <string>
 #include <vector>
 
 /* Number of bytes to hash per iteration */

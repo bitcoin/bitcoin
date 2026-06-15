@@ -7,8 +7,10 @@
 #include <consensus/amount.h>
 #include <outputtype.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/db.h>
 #include <wallet/test/util.h>
@@ -18,6 +20,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 

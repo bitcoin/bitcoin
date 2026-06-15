@@ -16,9 +16,9 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <string>

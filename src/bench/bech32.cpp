@@ -6,6 +6,7 @@
 #include <bench/bench.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <vector>
 
 using namespace util::hex_literals;

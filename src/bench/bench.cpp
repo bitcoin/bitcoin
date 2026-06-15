@@ -7,18 +7,17 @@
 #include <test/util/setup_common.h> // IWYU pragma: keep
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <compare>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <regex>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
-
-using namespace std::chrono_literals;
 
 /**
  * Retrieves the available test setup command line arguments that may be used
@@ -68,9 +67,9 @@ BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
     return benchmarks_map;
 }
 
-BenchRunner::BenchRunner(std::string name, BenchFunction func)
+BenchRunner::BenchRunner(std::string_view name, BenchFunction func)
 {
-    Assert(benchmarks().try_emplace(std::move(name), std::move(func)).second);
+    Assert(benchmarks().try_emplace(std::string{name}, std::move(func)).second);
 }
 
 void BenchRunner::RunAll(const Args& args)

@@ -8,17 +8,17 @@
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
+#include <random.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <span.h>
-#include <test/util/random.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/translation.h>
 
-#include <cassert>
 #include <map>
+#include <span>
 #include <vector>
 
 enum class InputType {

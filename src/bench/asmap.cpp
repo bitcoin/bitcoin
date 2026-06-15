@@ -8,10 +8,10 @@
 #include <node/data/ip_asn.dat.h>
 #include <random.h>
 #include <util/asmap.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <span>
 #include <string>
 
