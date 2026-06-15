@@ -562,9 +562,8 @@ For IWYU pragmas, prefer adding a nearby source comment that explains why the an
 
 Profiling is a good way to get a precise idea of where time is being spent in
 code. One tool for doing profiling on Linux platforms is called
-[`perf`](https://www.brendangregg.com/perf.html), and has been integrated into
-the functional test framework. Perf can observe a running process and sample
-(at some frequency) where its execution is.
+[`perf`](https://www.brendangregg.com/perf.html). It can observe a running
+process and sample (at some frequency) where its execution is.
 
 Perf installation is contingent on which kernel version you're running; see
 [this thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
@@ -598,8 +597,6 @@ perf report --stdio | c++filt | less
 ```
 
 or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
-
-See the functional test documentation for how to invoke perf within tests.
 
 ### Valgrind
 

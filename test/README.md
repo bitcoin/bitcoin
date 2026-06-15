@@ -318,26 +318,6 @@ Often while debugging RPC calls in functional tests, the test might time out bef
 process can return a response. Use `--timeout-factor 0` to disable all RPC timeouts for that particular
 functional test. Ex: `build/test/functional/wallet_hd.py --timeout-factor 0`.
 
-##### Profiling
-
-An easy way to profile node performance during functional tests is provided
-for Linux platforms using `perf`.
-
-Perf will sample the running node and will generate profile data in the node's
-datadir. The profile data can then be presented using `perf report` or a graphical
-tool like [hotspot](https://github.com/KDAB/hotspot).
-
-To generate a profile during test suite runs, use the `--perf` flag.
-
-To see render the output to text, run
-
-```sh
-perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
-```
-
-For ways to generate more granular profiles, see the README in
-[test/functional](/test/functional).
-
 ### Lint tests
 
 See the README in [test/lint](/test/lint).

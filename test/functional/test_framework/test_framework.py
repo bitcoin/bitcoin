@@ -191,8 +191,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Attach a python debugger if test fails")
         parser.add_argument("--usecli", dest="usecli", default=False, action="store_true",
                             help="use bitcoin-cli instead of RPC for all commands")
-        parser.add_argument("--perf", dest="perf", default=False, action="store_true",
-                            help="profile running nodes with perf for the duration of the test")
         parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
                             help="Run binaries under the valgrind memory error detector: Expect at least a ~10x slowdown. Does not apply to previous release binaries.")
         parser.add_argument("--randomseed", type=int,
@@ -292,15 +290,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         should_clean_up = (
             not self.options.nocleanup and
-            self.success != TestStatus.FAILED and
-            not self.options.perf
+            self.success != TestStatus.FAILED
         )
         if should_clean_up:
             self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
             cleanup_tree_on_exit = True
-        elif self.options.perf:
-            self.log.warning("Not cleaning up dir {} due to perf data".format(self.options.tmpdir))
-            cleanup_tree_on_exit = False
         else:
             self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
             cleanup_tree_on_exit = False
@@ -482,7 +476,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 extra_conf=extra_confs[i],
                 extra_args=args,
                 use_cli=self.options.usecli,
-                start_perf=self.options.perf,
                 v2transport=self.options.v2transport,
                 uses_wallet=self.uses_wallet,
             )
