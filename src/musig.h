@@ -59,7 +59,7 @@ public:
 
 /**
  * Computes an arbitrary unique session ID to identify ongoing signing sessions.
- * It is the SHA256 of the aggregate xonly key, the participant pubkey, the sighash, and the pubnonce
+ * It is the SHA256 of the signing (aggregate) pubkey, the participant pubkey, the sighash, and the pubnonce
  */
 uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash, const std::vector<uint8_t>& pubnonce);
 

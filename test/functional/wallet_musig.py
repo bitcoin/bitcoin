@@ -112,7 +112,7 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         return wallets, psbt
 
-    def assert_musig_signer_data(self, first, second, different_key):
+    def assert_musig_signer_data(self, first, second, different_field):
         assert_equal(first["participant_pubkey"], second["participant_pubkey"])
         assert_equal(first["aggregate_pubkey"], second["aggregate_pubkey"])
         if "leaf_hash" in first:
@@ -120,7 +120,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         else:
             assert "leaf_hash" not in second
 
-        assert_not_equal(first[different_key], second[different_key])
+        assert_not_equal(first[different_field], second[different_field])
 
     def assert_musig_aggregate_in_script(self, signer_data, pattern, psbtin):
         pubkey = signer_data["aggregate_pubkey"][2:]
@@ -290,8 +290,7 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         dec_psbt = self.nodes[0].decodepsbt(comb_nonce_psbt)
         dec_psbt2 = self.nodes[0].decodepsbt(comb_nonce_psbt2)
-        assert_equal(len(dec_psbt["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
-        assert_equal(len(dec_psbt2["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
+        assert_equal(len(dec_psbt["inputs"][0]["musig2_pubnonces"]), len(dec_psbt2["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
         for pn, pn2 in zip(dec_psbt["inputs"][0]["musig2_pubnonces"], dec_psbt2["inputs"][0]["musig2_pubnonces"]):
             self.assert_musig_signer_data(pn, pn2, "pubnonce")
             self.assert_musig_aggregate_in_script(pn, pattern, dec_psbt["inputs"][0])
@@ -312,8 +311,7 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         dec_psbt = self.nodes[0].decodepsbt(comb_psig_psbt)
         dec_psbt2 = self.nodes[0].decodepsbt(comb_psig_psbt2)
-        assert_equal(len(dec_psbt["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
-        assert_equal(len(dec_psbt2["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
+        assert_equal(len(dec_psbt["inputs"][0]["musig2_partial_sigs"]), len(dec_psbt2["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
         for ps, ps2 in zip(dec_psbt["inputs"][0]["musig2_partial_sigs"], dec_psbt2["inputs"][0]["musig2_partial_sigs"]):
             self.assert_musig_signer_data(ps, ps2, "partial_sig")
             self.assert_musig_aggregate_in_script(ps, pattern, dec_psbt["inputs"][0])
