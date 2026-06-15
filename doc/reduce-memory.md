@@ -22,7 +22,7 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 ## Memory pool
 
 - In Bitcoin Core there is a memory pool limiter which can be configured with `-maxmempool=<n>`, where `<n>` is the size in MB (1000). The default value is `300`.
-  - The minimum value for `-maxmempool` is 5.
+  - The minimum value for `-maxmempool` is derived from the mempool's cluster size limit (5 MB by default). Setting a lower value results in a `-maxmempool must be at least N MB` startup error.
   - A lower maximum mempool size means that transactions will be evicted sooner. This will affect any uses of `bitcoind` that process unconfirmed transactions.
 
 - The unused memory allocated to the mempool (default: 300MB) is shared with the UTXO cache, so when trying to reduce memory usage you should limit the mempool, with the `-maxmempool` command line argument.
