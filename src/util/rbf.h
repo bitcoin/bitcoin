@@ -9,6 +9,11 @@
 
 class CTransaction;
 
+// BIP125 defines opt-in RBF as any nSequence < maxint-1, so
+// we use the highest possible value in that range (maxint-2)
+// to avoid conflicting with other possible uses of nSequence,
+// and in the spirit of "smallest possible change from prior
+// behavior."
 static constexpr uint32_t MAX_BIP125_RBF_SEQUENCE{0xfffffffd};
 
 /** Check whether the sequence numbers on this transaction are signaling opt-in to replace-by-fee,
