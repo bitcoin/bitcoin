@@ -31,6 +31,7 @@
 #include <compare>
 #include <limits>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -95,9 +96,18 @@ CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t 
     // decide to downgrade their node.
     auto old_path = gArgs.GetDataDirNet() / "indexes" / "coinstats";
     if (fs::exists(old_path)) {
-        // TODO: Change this to deleting the old index with v31.
-        LogWarning("Old version of coinstatsindex found at %s. This folder can be safely deleted unless you " \
-            "plan to downgrade your node to version 29 or lower.", fs::PathToString(old_path));
+        std::error_code ec;
+        for (const auto& entry : fs::directory_iterator(old_path, ec)) {
+            fs::remove(entry.path(), ec);
+        }
+        if (!ec) {
+            fs::remove(old_path, ec);
+        }
+        if (ec) {
+            LogWarning("Failed to delete old coinstatsindex directory at %s: %s\n", fs::PathToString(old_path), ec.message());
+        } else {
+            LogInfo("Deleted old coinstatsindex directory at %s\n", fs::PathToString(old_path));
+        }
     }
     fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstatsindex"};
     fs::create_directories(path);
@@ -115,7 +125,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
         uint256 expected_block_hash{*Assert(block.prev_hash)};
         if (m_current_block_hash != expected_block_hash) {
             LogError("previous block header belongs to unexpected block %s; expected %s",
-                      m_current_block_hash.ToString(), expected_block_hash.ToString());
+                     m_current_block_hash.ToString(), expected_block_hash.ToString());
             return false;
         }
 
@@ -267,7 +277,7 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
         // failure, and starting the index would cause further corruption.
         if (m_db->Exists(DB_MUHASH)) {
             LogError("Cannot read current %s state; index may be corrupted",
-                      GetName());
+                     GetName());
             return false;
         }
     }
@@ -276,7 +286,7 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
         DBVal entry;
         if (!index_util::LookUpOne(*m_db, *block, entry)) {
             LogError("Cannot read current %s state; index may be corrupted",
-                      GetName());
+                     GetName());
             return false;
         }
 
@@ -284,7 +294,7 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
         m_muhash.Finalize(out);
         if (entry.muhash != out) {
             LogError("Cannot read current %s state; index may be corrupted",
-                      GetName());
+                     GetName());
             return false;
         }
 
@@ -336,11 +346,11 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
         uint256 expected_block_hash{*block.prev_hash};
         if (read_out.first != expected_block_hash) {
             LogWarning("previous block header belongs to unexpected block %s; expected %s",
-                      read_out.first.ToString(), expected_block_hash.ToString());
+                       read_out.first.ToString(), expected_block_hash.ToString());
 
             if (!m_db->Read(index_util::DBHashKey(expected_block_hash), read_out)) {
                 LogError("previous block header not found; expected %s",
-                          expected_block_hash.ToString());
+                         expected_block_hash.ToString());
                 return false;
             }
         }
