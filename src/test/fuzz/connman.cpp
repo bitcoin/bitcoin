@@ -42,6 +42,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
+    FakeSteadyClock steady_clock;
     auto netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr{std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio())};
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -58,8 +59,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;
-    CreateSock = [&fuzzed_data_provider](int, int, int) {
-        return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+    CreateSock = [&fuzzed_data_provider, &steady_clock](int, int, int) {
+        return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
     };
 
     // Mock g_dns_lookup() to return a fuzzed address.
@@ -96,13 +97,13 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     CNetAddr random_netaddr;
     CAddress random_address;
-    CNode random_node = ConsumeNode(fuzzed_data_provider);
+    CNode random_node = ConsumeNode(fuzzed_data_provider, steady_clock);
     CSubNet random_subnet;
     std::string random_string;
     std::vector<NodeId> node_ids;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
-        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
+        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, steady_clock).release()};
         // Simulate post-handshake state.
         p2p_node.fSuccessfullyConnected = true;
         connman.AddTestNode(p2p_node);

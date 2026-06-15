@@ -73,6 +73,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     FakeNodeClock clock{1610000000s}; // any time to successfully reset ibd
+    FakeSteadyClock steady_clock;
     chainman.ResetIbd();
     chainman.DisableNextWrite();
 
@@ -98,7 +99,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     std::vector<CNode*> peers;
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
-        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
+        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, steady_clock, i).release());
         CNode& p2p_node = *peers.back();
 
         FillNode(fuzzed_data_provider, connman, p2p_node);
