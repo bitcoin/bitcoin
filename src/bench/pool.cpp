@@ -10,7 +10,6 @@
 #include <functional>
 #include <unordered_map>
 #include <utility>
-#include <variant>
 
 template <typename Map>
 void BenchFillClearMap(benchmark::Bench& bench, Map& map)
