@@ -166,17 +166,17 @@ mkdir -p "$DISTSRC"
           -DWITH_CCACHE=OFF \
           -Werror=dev \
           ${CONFIGFLAGS} \
-          "${CMAKE_EXE_LINKER_FLAGS}"
+          ${CMAKE_EXE_LINKER_FLAGS+"$CMAKE_EXE_LINKER_FLAGS"}
 
     # Build Bitcoin Core
-    cmake --build build -j "$JOBS" ${V:+--verbose}
+    cmake --build build -j "$JOBS"
 
     mkdir -p "$OUTDIR"
 
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
-            cmake --build build -j "$JOBS" -t deploy ${V:+--verbose}
+            cmake --build build -j "$JOBS" -t deploy
             mv build/bitcoin-win64-setup.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             ;;
     esac
@@ -188,10 +188,10 @@ mkdir -p "$DISTSRC"
     # Install built Bitcoin Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
-            cmake --install build --strip --prefix "${INSTALLPATH}" ${V:+--verbose}
+            cmake --install build --strip --prefix "${INSTALLPATH}"
             ;;
         *)
-            cmake --install build --prefix "${INSTALLPATH}" ${V:+--verbose}
+            cmake --install build --prefix "${INSTALLPATH}"
             ;;
     esac
 
