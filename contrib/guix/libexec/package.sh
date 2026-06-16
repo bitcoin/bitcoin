@@ -86,6 +86,10 @@ set -e -o pipefail
     # Finally make tarballs for codesigning
     case "$HOST" in
         *mingw*)
+            # Make the installer
+            cmake -D BIN_DIR="${INSTALLPATH}/bin" -D LIBEXEC_DIR="${INSTALLPATH}/libexec" -P build/GenerateWindowsInstaller.cmake
+            mv build/bitcoin-win64-setup.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+
             cp -rf --target-directory=. contrib/windeploy
             (
                 cd ./windeploy
