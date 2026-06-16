@@ -922,7 +922,7 @@ public:
     {
         if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -950,6 +950,7 @@ public:
     bool m_interrupt_wait{false};
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     const NodeContext& m_node;
 };
 
@@ -1026,7 +1027,7 @@ public:
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
     {
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(block_in), reason, debug);
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
@@ -1058,6 +1059,7 @@ public:
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     // Treat as if guarded by notifications().m_tip_block_mutex
     bool m_interrupt_mining{false};
     const NodeContext& m_node;
