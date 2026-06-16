@@ -21,6 +21,7 @@ TEST_FRAMEWORK_MODULES = [
     "compressor",
     "crypto.chacha20",
     "crypto.ellswift",
+    "extendedkey",
     "key",
     "messages",
     "crypto.muhash",
