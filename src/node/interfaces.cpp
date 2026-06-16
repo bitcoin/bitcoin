@@ -924,7 +924,7 @@ public:
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
         std::string reason;
         std::string debug;
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -952,6 +952,7 @@ public:
     bool m_interrupt_wait{false};
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     const NodeContext& m_node;
 };
 
@@ -1030,7 +1031,7 @@ public:
     {
         auto block = std::make_shared<const CBlock>(block_in);
         bool new_block;
-        const bool accepted = SubmitBlock(chainman(), block, &new_block, reason, debug);
+        const bool accepted = block_template_manager().SubmitBlock(block, &new_block, reason, debug);
         // ProcessNewBlock() can accept and store a block before it is checked
         // for validity. Treat duplicates as errors for mining clients, and only
         // return success when validation completed without setting a reason.
@@ -1066,6 +1067,7 @@ public:
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     // Treat as if guarded by notifications().m_tip_block_mutex
     bool m_interrupt_mining{false};
     const NodeContext& m_node;

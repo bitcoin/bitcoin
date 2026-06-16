@@ -9,6 +9,7 @@
 
 #include <memory>
 
+class CBlock;
 class ChainstateManager;
 class CTxMemPool;
 
@@ -33,6 +34,9 @@ public:
 
     /** Create a fresh block template. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** Submit a block via ProcessNewBlock and capture validation state. */
+    bool SubmitBlock(const std::shared_ptr<const CBlock>& block, bool* new_block, std::string& reason, std::string& debug);
 };
 } // namespace node
 
