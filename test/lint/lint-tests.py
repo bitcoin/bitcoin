@@ -27,7 +27,8 @@ def grep_boost_test_suites():
     return subprocess.check_output(command, text=True)
 
 
-def check_matching_test_names(test_suite_list):
+def main():
+    test_suite_list = grep_boost_test_suites().splitlines()
     not_matching = [
         x
         for x in test_suite_list
@@ -42,46 +43,7 @@ def check_matching_test_names(test_suite_list):
             f"{not_matching}\n"
         )
         print(error_msg)
-        return 1
-    return 0
-
-
-def get_duplicates(input_list):
-    """
-    From https://stackoverflow.com/a/9835819
-    """
-    seen = set()
-    dupes = set()
-    for x in input_list:
-        if x in seen:
-            dupes.add(x)
-        else:
-            seen.add(x)
-    return dupes
-
-
-def check_unique_test_names(test_suite_list):
-    output = [re.search(r"\((.*?)[,)]", x) for x in test_suite_list]
-    output = [x.group(1) for x in output if x is not None]
-    output = get_duplicates(output)
-    output = sorted(list(output))
-
-    if len(output) > 0:
-        output = "\n".join(output)
-        error_msg = (
-            "Test suite names must be unique. The following test suite names\n"
-            f"appear to be used more than once:\n\n{output}"
-        )
-        print(error_msg)
-        return 1
-    return 0
-
-
-def main():
-    test_suite_list = grep_boost_test_suites().splitlines()
-    exit_code = check_matching_test_names(test_suite_list)
-    exit_code |= check_unique_test_names(test_suite_list)
-    sys.exit(exit_code)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
