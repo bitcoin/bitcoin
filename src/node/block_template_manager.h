@@ -8,14 +8,16 @@
 #include <node/mining_types.h>
 
 #include <memory>
+#include <string>
 
+class CBlock;
 class ChainstateManager;
 class CTxMemPool;
 
 namespace node {
 struct CBlockTemplate;
 
-/** Creates block templates.
+/** Creates block templates, submits solved blocks.
  *  Owns the init-time block creation args.
  */
 class BlockTemplateManager
@@ -35,6 +37,10 @@ public:
 
     /** Create a fresh block template. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** Submit a block via ProcessNewBlock and capture validation state.
+     *  @return whether the block was accepted as a new valid block. */
+    bool SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug);
 };
 } // namespace node
 
