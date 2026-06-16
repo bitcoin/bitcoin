@@ -699,16 +699,16 @@ and its `cs_KeyStore` lock for example).
   : Performs various loading tasks that are part of init but shouldn't block the node from being started: external block import,
    reindex, reindex-chainstate, main chain activation, spawn indexes background sync threads and mempool load.
 
-- [CCheckQueue::Loop (`b-scriptch.x`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#checkqueue)
+- [CCheckQueue::Loop (`b-scriptch.xx`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#checkqueue)
   : Parallel script validation threads for transactions in blocks.
 
 - [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http)
   : Libevent thread to listen for RPC and REST connections.
 
-- [HTTP worker threads (`b-http_pool_x`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
+- [HTTP worker threads (`b-http.xx`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
   : Threads to service RPC and REST requests.
 
-- [Indexer threads (`b-txindex`, etc)](https://doxygen.bitcoincore.org/class_base_index.html#index_sync)
+- [Indexer threads (`b-txidx`, `b-blkfltbscidx`, `b-coinstatsidx`, `b-txospenderidx`)](https://doxygen.bitcoincore.org/class_base_index.html#index_sync)
   : One thread per indexer.
 
 - [SchedulerThread (`b-scheduler`)](https://doxygen.bitcoincore.org/class_c_scheduler.html#scheduler)

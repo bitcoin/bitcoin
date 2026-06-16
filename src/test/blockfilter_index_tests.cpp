@@ -338,9 +338,8 @@ private:
     int m_blocking_height;
 
 public:
-    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
-                             int blocking_height, FakeNodeClock& clock)
-        : BaseIndex(std::move(chain), "test index"), m_clock(clock), m_blocker(blocker), m_blocking_height(blocking_height)
+    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker, int blocking_height, FakeNodeClock& clock)
+        : BaseIndex(std::move(chain), "test index", "testidx"), m_clock(clock), m_blocker(blocker), m_blocking_height(blocking_height)
     {
         const fs::path path = gArgs.GetDataDirNet() / "index";
         fs::create_directories(path);
