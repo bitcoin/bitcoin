@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_AMOUNT_H
 #define BITCOIN_CONSENSUS_AMOUNT_H
 
+#include <cassert>
 #include <cstdint>
 
 /** Amount in satoshis (Can be negative) */
@@ -25,5 +26,11 @@ static constexpr CAmount COIN = 100000000;
  * */
 static constexpr CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+
+consteval CAmount operator""_sats(unsigned long long amount) noexcept
+{
+    assert(amount <= MAX_MONEY);
+    return CAmount(amount);
+}
 
 #endif // BITCOIN_CONSENSUS_AMOUNT_H
