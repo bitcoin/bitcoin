@@ -27,3 +27,4 @@ target/
 /guix-build-*
 
 /ci/scratch/
+node_modules/
