@@ -1,0 +1,74 @@
+{
+  "name": "@octokit/rest",
+  "version": "20.1.2",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "description": "GitHub REST API client for Node.js",
+  "keywords": [
+    "octokit",
+    "github",
+    "rest",
+    "api-client"
+  ],
+  "author": "Gregor Martynus (https://github.com/gr2m)",
+  "contributors": [
+    {
+      "name": "Mike de Boer",
+      "email": "info@mikedeboer.nl"
+    },
+    {
+      "name": "Fabian Jakobs",
+      "email": "fabian@c9.io"
+    },
+    {
+      "name": "Joe Gallo",
+      "email": "joe@brassafrax.com"
+    },
+    {
+      "name": "Gregor Martynus",
+      "url": "https://github.com/gr2m"
+    }
+  ],
+  "repository": "github:octokit/rest.js",
+  "dependencies": {
+    "@octokit/core": "^5.0.2",
+    "@octokit/plugin-paginate-rest": "11.4.4-cjs.2",
+    "@octokit/plugin-request-log": "^4.0.0",
+    "@octokit/plugin-rest-endpoint-methods": "13.3.2-cjs.1"
+  },
+  "devDependencies": {
+    "@octokit/auth-action": "^4.0.1",
+    "@octokit/auth-app": "^6.0.3",
+    "@octokit/fixtures-server": "^7.0.10",
+    "@octokit/request": "^8.4.1",
+    "@octokit/tsconfig": "^2.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.5",
+    "esbuild": "~0.25.0",
+    "fetch-mock": "^11.1.5",
+    "glob": "^10.3.10",
+    "jest": "^29.7.0",
+    "nock": "^13.5.0",
+    "prettier": "^3.5.1",
+    "semantic-release": "^23.0.0",
+    "semantic-release-plugin-update-version-in-files": "^1.1.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3",
+    "undici": "^6.4.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  },
+  "files": [
+    "dist-*/**",
+    "bin/**"
+  ],
+  "main": "dist-node/index.js",
+  "module": "dist-web/index.js",
+  "types": "dist-types/index.d.ts",
+  "source": "dist-src/index.js",
+  "sideEffects": false
+}

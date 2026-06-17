@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../dist-src/index.js", "../dist-src/version.js"],
+  "sourcesContent": ["import { Octokit as Core } from \"@octokit/core\";\nimport { requestLog } from \"@octokit/plugin-request-log\";\nimport { paginateRest } from \"@octokit/plugin-paginate-rest\";\nimport { legacyRestEndpointMethods } from \"@octokit/plugin-rest-endpoint-methods\";\nimport { VERSION } from \"./version.js\";\nconst Octokit = Core.plugin(\n  requestLog,\n  legacyRestEndpointMethods,\n  paginateRest\n).defaults({\n  userAgent: `octokit-rest.js/${VERSION}`\n});\nexport {\n  Octokit\n};\n", "const VERSION = \"20.1.2\";\nexport {\n  VERSION\n};\n"],
+  "mappings": ";AAAA,SAAS,WAAW,YAAY;AAChC,SAAS,kBAAkB;AAC3B,SAAS,oBAAoB;AAC7B,SAAS,iCAAiC;;;ACH1C,IAAM,UAAU;;;ADKhB,IAAM,UAAU,KAAK;AAAA,EACnB;AAAA,EACA;AAAA,EACA;AACF,EAAE,SAAS;AAAA,EACT,WAAW,mBAAmB,OAAO;AACvC,CAAC;",
+  "names": []
+}
