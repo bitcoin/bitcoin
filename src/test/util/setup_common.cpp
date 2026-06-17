@@ -26,6 +26,7 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
@@ -330,12 +331,20 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };
     m_make_chainman();
+    CreateBlockTemplateManager();
+}
+
+void ChainTestingSetup::CreateBlockTemplateManager()
+{
+    Assert(!m_node.block_template_manager);
+    m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman);
 }
 
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    m_node.block_template_manager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.addrman.reset();
