@@ -23,6 +23,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
+#include <uint256.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -50,6 +51,8 @@ void ResetChainman(TestingSetup& setup)
     }
 }
 } // namespace
+
+extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
 void initialize_process_messages()
 {
@@ -142,7 +145,9 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     node.connman->StopNodes();
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
-        // Reuse the global chainman, but reset it when it is dirty
+        // Reuse the global chainman, but reset it when it is dirty. Reset the
+        // rng first, so ResetChainman() consumes it from a fixed seed.
+        MakeRandDeterministicDANGEROUS(uint256::ZERO);
         ResetChainman(*g_setup);
     }
 }
