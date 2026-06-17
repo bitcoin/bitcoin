@@ -396,7 +396,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         LOCK(m_wallet->cs_wallet);
-        CAmount total_amount = 0;
+        CAmount total_amount = 0_sats;
         // Fetch selected coins total amount
         if (coin_control.HasSelected()) {
             FastRandomContext rng{};

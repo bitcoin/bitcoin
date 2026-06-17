@@ -47,7 +47,7 @@ FUZZ_TARGET(script_flags)
             ds >> prevout;
             if (!MoneyRange(prevout.nValue)) {
                 // prevouts should be consensus-valid
-                prevout.nValue = 1;
+                prevout.nValue = 1_sats;
             }
             spent_outputs.push_back(prevout);
         }

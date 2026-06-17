@@ -719,7 +719,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 {
     // It's not possible to get reasonable estimates for confTarget of 1
     if (confTarget <= 1)
-        return CFeeRate(0);
+        return CFeeRate(0_sats);
 
     return estimateRawFee(confTarget, DOUBLE_SUCCESS_PCT, FeeEstimateHorizon::MED_HALFLIFE);
 }
@@ -748,14 +748,14 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     LOCK(m_cs_fee_estimator);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > stats->GetMaxConfirms())
-        return CFeeRate(0);
+        return CFeeRate(0_sats);
     if (successThreshold > 1)
-        return CFeeRate(0);
+        return CFeeRate(0_sats);
 
     double median = stats->EstimateMedianVal(confTarget, sufficientTxs, successThreshold, nBestSeenHeight, result);
 
     if (median < 0)
-        return CFeeRate(0);
+        return CFeeRate(0_sats);
 
     return CFeeRate(llround(median));
 }
@@ -883,7 +883,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms()) {
-        return CFeeRate(0);  // error condition
+        return CFeeRate(0_sats);  // error condition
     }
 
     // It's not possible to get reasonable estimates for confTarget of 1
@@ -895,7 +895,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     }
     if (feeCalc) feeCalc->returnedTarget = confTarget;
 
-    if (confTarget <= 1) return CFeeRate(0); // error condition
+    if (confTarget <= 1) return CFeeRate(0_sats); // error condition
 
     assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
     /** true is passed to estimateCombined fee for target/2 and target so
@@ -950,7 +950,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         }
     }
 
-    if (median < 0) return CFeeRate(0); // error condition
+    if (median < 0) return CFeeRate(0_sats); // error condition
 
     return CFeeRate(llround(median));
 }

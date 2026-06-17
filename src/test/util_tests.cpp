@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(util_FormatRFC1123DateTime)
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
-    BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
+    BOOST_CHECK_EQUAL(FormatMoney(0_sats), "0.00");
     BOOST_CHECK_EQUAL(FormatMoney((COIN/10000)*123456789), "12345.6789");
     BOOST_CHECK_EQUAL(FormatMoney(-COIN), "-1.00");
 
@@ -440,11 +440,11 @@ BOOST_AUTO_TEST_CASE(util_FormatMoney)
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney)
 {
-    BOOST_CHECK_EQUAL(ParseMoney("0.0").value(), 0);
-    BOOST_CHECK_EQUAL(ParseMoney(".").value(), 0);
-    BOOST_CHECK_EQUAL(ParseMoney("0.").value(), 0);
-    BOOST_CHECK_EQUAL(ParseMoney(".0").value(), 0);
-    BOOST_CHECK_EQUAL(ParseMoney(".6789").value(), 6789'0000);
+    BOOST_CHECK_EQUAL(ParseMoney("0.0").value(), 0_sats);
+    BOOST_CHECK_EQUAL(ParseMoney(".").value(), 0_sats);
+    BOOST_CHECK_EQUAL(ParseMoney("0.").value(), 0_sats);
+    BOOST_CHECK_EQUAL(ParseMoney(".0").value(), 0_sats);
+    BOOST_CHECK_EQUAL(ParseMoney(".6789").value(), 6789'0000_sats);
     BOOST_CHECK_EQUAL(ParseMoney("12345.").value(), COIN * 12345);
 
     BOOST_CHECK_EQUAL(ParseMoney("12345.6789").value(), (COIN/10000)*123456789);

@@ -458,7 +458,7 @@ void TxOrphanageImpl::LimitOrphans()
     for (const auto& [nodeid, entry] : m_peer_orphanage_info) {
         // Performance optimization: only consider peers with a DoS score > 1.
         const auto dos_score = entry.GetDosScore(max_lat, max_mem);
-        if (ByRatio{dos_score} > ByRatio{FeeFrac{1, 1}}) {
+        if (ByRatio{dos_score} > ByRatio{FeeFrac{1_sats, 1}}) {
             heap_peer_dos.emplace_back(nodeid, dos_score);
         }
     }
@@ -488,7 +488,7 @@ void TxOrphanageImpl::LimitOrphans()
         heap_peer_dos.pop_back();
 
         // If needs trim, then at least one peer has a DoS score higher than 1.
-        Assume(ByRatio{dos_score} > ByRatio{FeeFrac(1, 1)});
+        Assume(ByRatio{dos_score} > ByRatio{FeeFrac(1_sats, 1)});
 
         auto it_worst_peer = m_peer_orphanage_info.find(worst_peer);
 
@@ -496,7 +496,7 @@ void TxOrphanageImpl::LimitOrphans()
         // just a conservative fallback: once the last peer goes below ratio 1, NeedsTrim() will return false anyway.
         // We evict the oldest announcement(s) from this peer, sorting non-reconsiderable before reconsiderable.
         // The number of inner loop iterations is bounded by the total number of announcements.
-        const auto& dos_threshold = heap_peer_dos.empty() ? FeeFrac{1, 1} : heap_peer_dos.front().second;
+        const auto& dos_threshold = heap_peer_dos.empty() ? FeeFrac{1_sats, 1} : heap_peer_dos.front().second;
         auto it_ann = m_orphans.get<ByPeer>().lower_bound(ByPeerView{worst_peer, false, 0});
         unsigned int num_erased_this_round{0};
         unsigned int starting_num_ann{it_worst_peer->second.m_count_announcements};

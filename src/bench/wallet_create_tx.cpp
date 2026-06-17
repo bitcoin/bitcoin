@@ -145,7 +145,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
 
-    CAmount target = 0;
+    CAmount target = 0_sats;
     if (preset_inputs) {
         // Select inputs, each has 48 BTC
         wallet::CoinFilterParams filter_coins;

@@ -82,10 +82,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
                 CAmount nValue = txout.nValue;
                 /* Add fee to first output */
-                if (nTxFee > 0)
+                if (nTxFee > 0_sats)
                 {
                     nValue += nTxFee;
-                    nTxFee = 0;
+                    nTxFee = 0_sats;
                 }
                 sub.debit = -nValue;
 
@@ -127,7 +127,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
         //
         // Mixed debit transaction, can't break down payees
         //
-        parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+        parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0_sats));
     }
 
     return parts;

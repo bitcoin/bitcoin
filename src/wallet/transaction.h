@@ -262,7 +262,7 @@ public:
         nTimeReceived = 0;
         nTimeSmart = 0;
         fChangeCached = false;
-        nChangeCached = 0;
+        nChangeCached = 0_sats;
         nOrderPos = -1;
     }
 

@@ -49,7 +49,7 @@ static bool Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool f
     txTo.vin[0].prevout.n = 0;
     txTo.vin[0].prevout.hash = txFrom.GetHash();
     txTo.vin[0].scriptSig = scriptSig;
-    txTo.vout[0].nValue = 1;
+    txTo.vout[0].nValue = 1_sats;
 
     return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err);
 }
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(sign)
         txTo[i].vout.resize(1);
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vout[0].nValue = 1_sats;
     }
     for (int i = 0; i < 8; i++)
     {
@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CScript pay1of3 = GetScriptForMultisig(1, keys);
 
     txFrom.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(pay1)); // P2SH (OP_CHECKSIG)
-    txFrom.vout[0].nValue = 1000;
+    txFrom.vout[0].nValue = 1000_sats;
     txFrom.vout[1].scriptPubKey = pay1; // ordinary OP_CHECKSIG
-    txFrom.vout[1].nValue = 2000;
+    txFrom.vout[1].nValue = 2000_sats;
     txFrom.vout[2].scriptPubKey = pay1of3; // ordinary OP_CHECKMULTISIG
-    txFrom.vout[2].nValue = 3000;
+    txFrom.vout[2].nValue = 3000_sats;
 
     // vout[3] is complicated 1-of-3 AND 2-of-3
     // ... that is OK if wrapped in P2SH:
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     oneAndTwo << OP_3 << OP_CHECKMULTISIG;
     BOOST_CHECK(keystore.AddCScript(oneAndTwo));
     txFrom.vout[3].scriptPubKey = GetScriptForDestination(ScriptHash(oneAndTwo));
-    txFrom.vout[3].nValue = 4000;
+    txFrom.vout[3].nValue = 4000_sats;
 
     // vout[4] is max sigops:
     CScript fifteenSigops; fifteenSigops << OP_1;
@@ -323,34 +323,34 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     fifteenSigops << OP_15 << OP_CHECKMULTISIG;
     BOOST_CHECK(keystore.AddCScript(fifteenSigops));
     txFrom.vout[4].scriptPubKey = GetScriptForDestination(ScriptHash(fifteenSigops));
-    txFrom.vout[4].nValue = 5000;
+    txFrom.vout[4].nValue = 5000_sats;
 
     // vout[5/6] are non-standard because they exceed MAX_P2SH_SIGOPS
     CScript sixteenSigops; sixteenSigops << OP_16 << OP_CHECKMULTISIG;
     BOOST_CHECK(keystore.AddCScript(sixteenSigops));
     txFrom.vout[5].scriptPubKey = GetScriptForDestination(ScriptHash(sixteenSigops));
-    txFrom.vout[5].nValue = 5000;
+    txFrom.vout[5].nValue = 5000_sats;
     CScript twentySigops; twentySigops << OP_CHECKMULTISIG;
     BOOST_CHECK(keystore.AddCScript(twentySigops));
     txFrom.vout[6].scriptPubKey = GetScriptForDestination(ScriptHash(twentySigops));
-    txFrom.vout[6].nValue = 3000;
+    txFrom.vout[6].nValue = 3000_sats;
 
     // vout[7] is non-standard because it lacks sigops
     CScript no_sigops;
     txFrom.vout[7].scriptPubKey = no_sigops;
-    txFrom.vout[7].nValue = 1000;
+    txFrom.vout[7].nValue = 1000_sats;
 
     // vout [8] is non-standard because it contains OP_RETURN in its redeemScript.
     static const unsigned char op_return[] = {OP_RETURN};
     const auto op_return_script = CScript(op_return, op_return + sizeof(op_return));
     txFrom.vout[8].scriptPubKey = GetScriptForDestination(ScriptHash(op_return_script));
-    txFrom.vout[8].nValue = 1000;
+    txFrom.vout[8].nValue = 1000_sats;
 
     // vout[9] is non-standard because its witness is unknown
     CScript witnessUnknown;
     witnessUnknown << OP_16 << ToByteVector(uint256::ONE);
     txFrom.vout[9].scriptPubKey = witnessUnknown;
-    txFrom.vout[9].nValue = 1000;
+    txFrom.vout[9].nValue = 1000_sats;
 
     AddCoins(coins, CTransaction(txFrom), 0);
 
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txToNonStd1;
     txToNonStd1.vout.resize(1);
     txToNonStd1.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txToNonStd1.vout[0].nValue = 1000;
+    txToNonStd1.vout[0].nValue = 1000_sats;
     txToNonStd1.vin.resize(1);
     txToNonStd1.vin[0].prevout.n = 5;
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txToNonStd2;
     txToNonStd2.vout.resize(1);
     txToNonStd2.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txToNonStd2.vout[0].nValue = 1000;
+    txToNonStd2.vout[0].nValue = 1000_sats;
     txToNonStd2.vin.resize(1);
     txToNonStd2.vin[0].prevout.n = 6;
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txToNonStd2_no_scriptSig;
     txToNonStd2_no_scriptSig.vout.resize(1);
     txToNonStd2_no_scriptSig.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txToNonStd2_no_scriptSig.vout[0].nValue = 1000;
+    txToNonStd2_no_scriptSig.vout[0].nValue = 1000_sats;
     txToNonStd2_no_scriptSig.vin.resize(1);
     txToNonStd2_no_scriptSig.vin[0].prevout.n = 6;
     txToNonStd2_no_scriptSig.vin[0].prevout.hash = txFrom.GetHash();
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txToNonStd3;
     txToNonStd3.vout.resize(1);
     txToNonStd3.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txToNonStd3.vout[0].nValue = 1000;
+    txToNonStd3.vout[0].nValue = 1000_sats;
     txToNonStd3.vin.resize(1);
     txToNonStd3.vin[0].prevout.n = 7;
     txToNonStd3.vin[0].prevout.hash = txFrom.GetHash();
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txToNonStd4;
     txToNonStd4.vout.resize(1);
     txToNonStd4.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txToNonStd4.vout[0].nValue = 1000;
+    txToNonStd4.vout[0].nValue = 1000_sats;
     txToNonStd4.vin.resize(1);
     txToNonStd4.vin[0].prevout.n = 8;
     txToNonStd4.vin[0].prevout.hash = txFrom.GetHash();
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     CMutableTransaction txWitnessUnknown;
     txWitnessUnknown.vout.resize(1);
     txWitnessUnknown.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
-    txWitnessUnknown.vout[0].nValue = 1000;
+    txWitnessUnknown.vout[0].nValue = 1000_sats;
     txWitnessUnknown.vin.resize(1);
     txWitnessUnknown.vin[0].prevout.n = 9;
     txWitnessUnknown.vin[0].prevout.hash = txFrom.GetHash();

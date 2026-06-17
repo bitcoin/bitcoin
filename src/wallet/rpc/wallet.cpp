@@ -570,7 +570,7 @@ RPCMethod simulaterawtransaction()
         for (size_t i = 0; i < mtx.vout.size(); ++i) {
             const auto& txout = mtx.vout[i];
             bool is_mine = wallet.IsMine(txout);
-            changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.nValue : 0;
+            changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.nValue : 0_sats;
         }
     }
 

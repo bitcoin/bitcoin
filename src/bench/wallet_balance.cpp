@@ -60,7 +60,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
         .run([&] {
             bal = GetBalance(wallet);
             ankerl::nanobench::doNotOptimizeAway(bal);
-            assert(add_mine == (bal.m_mine_trusted > 0));
+            assert(add_mine == (bal.m_mine_trusted > 0_sats));
         });
 }
 

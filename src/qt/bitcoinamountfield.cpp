@@ -164,16 +164,16 @@ private:
      */
     CAmount parse(const QString &text, bool *valid_out=nullptr) const
     {
-        CAmount val = 0;
+        CAmount val = 0_sats;
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
-            if(val < 0 || val > BitcoinUnits::maxMoney())
+            if(val < 0_sats || val > BitcoinUnits::maxMoney())
                 valid = false;
         }
         if(valid_out)
             *valid_out = valid;
-        return valid ? val : 0;
+        return valid ? val : 0_sats;
     }
 
 protected:

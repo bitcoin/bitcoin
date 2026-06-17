@@ -24,7 +24,7 @@ static CMutableTransaction BuildTransactionTestCase() {
     tx.vin.resize(1);
     tx.vin[0].scriptSig.resize(10);
     tx.vout.resize(1);
-    tx.vout[0].nValue = 42;
+    tx.vout[0].nValue = 42_sats;
     return tx;
 }
 

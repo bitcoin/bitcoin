@@ -43,10 +43,10 @@ static CoinSelectionParams init_cs_params(int eff_feerate = 5000)
         /*rng_fast=*/default_rand,
         /*change_output_size=*/P2WPKH_OUTPUT_VSIZE,
         /*change_spend_size=*/P2WPKH_INPUT_VSIZE,
-        /*min_change_target=*/50'000,
+        /*min_change_target=*/50'000_sats,
         /*effective_feerate=*/CFeeRate(eff_feerate),
-        /*long_term_feerate=*/CFeeRate(10'000),
-        /*discard_feerate=*/CFeeRate(3000),
+        /*long_term_feerate=*/CFeeRate(10'000_sats),
+        /*discard_feerate=*/CFeeRate(3000_sats),
         /*tx_noinputs_size=*/11 + P2WPKH_OUTPUT_VSIZE, //static header size + output size
         /*avoid_partial=*/false,
     };
@@ -116,7 +116,7 @@ static std::string InputAmountsToString(const SelectionResult& selection)
 static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, size_t expected_attempts, const CoinSelectionParams& cs_params = default_cs_params, const int custom_spending_vsize = P2WPKH_INPUT_VSIZE, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
-    CAmount expected_amount = 0;
+    CAmount expected_amount = 0_sats;
     for (CAmount input_amount : expected_input_amounts) {
         OutputGroup group = MakeCoin(input_amount, true, cs_params, custom_spending_vsize);
         expected_amount += group.m_value;
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/4, cs_params);
 
         // BnB fails to find changeless solution when overshooting by cost_of_change + 1 sat
-        TestBnBFail("Overshoot upper bound", utxo_pool, /*selection_target=*/4 * CENT - cs_params.m_cost_of_change - 1, cs_params);
+        TestBnBFail("Overshoot upper bound", utxo_pool, /*selection_target=*/4 * CENT - cs_params.m_cost_of_change - 1_sats, cs_params);
 
         TestBnBSuccess("Select max weight", utxo_pool, /*selection_target=*/4 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/4, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE, /*max_selection_weight=*/4 * 2 * P2WPKH_INPUT_VSIZE);
 
@@ -212,11 +212,11 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         TestBnBSuccess("Combine smallest 8 of 17 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, /*expected_input_amounts=*/expected_inputs, /*expected_attempts=*/51'765, cs_params);
 
         // Among up to 18 unique UTXOs of similar effective value we will find a solution composed of the eight smallest UTXOs
-        AddCoins(doppelganger_pool, {1 * CENT + cs_params.m_cost_of_change + 17}, cs_params);
+        AddCoins(doppelganger_pool, {1 * CENT + cs_params.m_cost_of_change + 17_sats}, cs_params);
         TestBnBSuccess("Combine smallest 8 of 18 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, /*expected_input_amounts=*/expected_inputs, /*expected_attempts=*/87'957, cs_params);
 
         // Starting with 19 unique UTXOs of similar effective value we will not find the solution due to exceeding the attempt limit
-        AddCoins(doppelganger_pool, {1 * CENT + cs_params.m_cost_of_change + 18}, cs_params);
+        AddCoins(doppelganger_pool, {1 * CENT + cs_params.m_cost_of_change + 18_sats}, cs_params);
         TestBnBFail("Exhaust looking for smallest 8 of 19 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, cs_params);
     }
 }
@@ -273,16 +273,16 @@ BOOST_AUTO_TEST_CASE(srd_test)
 
         AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT}, cs_params);
 
-        TestSRDSuccess("Select 21k sats", utxo_pool, /*selection_target=*/21'000, cs_params);
+        TestSRDSuccess("Select 21k sats", utxo_pool, /*selection_target=*/21'000_sats, cs_params);
         TestSRDSuccess("Select 1 CENT", utxo_pool, /*selection_target=*/1 * CENT, cs_params);
-        TestSRDSuccess("Select 3.125 CENT", utxo_pool, /*selection_target=*/3'125'000, cs_params);
+        TestSRDSuccess("Select 3.125 CENT", utxo_pool, /*selection_target=*/3'125'000_sats, cs_params);
         TestSRDSuccess("Select 4 CENT", utxo_pool, /*selection_target=*/4 * CENT, cs_params);
         TestSRDSuccess("Select 7 CENT", utxo_pool, /*selection_target=*/7 * CENT, cs_params);
 
         // The minimum change amount for SRD is the feerate dependent `change_fee` plus CHANGE_LOWER
         TestSRDSuccess("Create minimum change", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER, cs_params);
-        TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1, cs_params);
-        TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1, cs_params);
+        TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1_sats, cs_params);
+        TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1_sats, cs_params);
         TestSRDFail("Spend everything", utxo_pool, /*selection_target=*/9 * CENT, cs_params);
 
         AddDuplicateCoins(utxo_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);

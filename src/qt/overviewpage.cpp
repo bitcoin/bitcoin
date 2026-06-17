@@ -167,7 +167,7 @@ void OverviewPage::setPrivacy(bool privacy)
     m_privacy = privacy;
     clientModel->getOptionsModel()->setOption(OptionsModel::OptionID::MaskValues, privacy);
     const auto& balances = walletModel->getCachedBalance();
-    if (balances.balance != -1) {
+    if (balances.balance != -1_sats) {
         setBalance(balances);
     }
 
@@ -193,7 +193,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
-    bool showImmature = balances.immature_balance != 0;
+    bool showImmature = balances.immature_balance != 0_sats;
 
     ui->labelImmature->setVisible(showImmature);
     ui->labelImmatureText->setVisible(showImmature);
@@ -268,7 +268,7 @@ void OverviewPage::updateDisplayUnit()
 {
     if (walletModel && walletModel->getOptionsModel()) {
         const auto& balances = walletModel->getCachedBalance();
-        if (balances.balance != -1) {
+        if (balances.balance != -1_sats) {
             setBalance(balances);
         }
 

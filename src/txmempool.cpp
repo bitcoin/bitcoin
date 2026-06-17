@@ -532,7 +532,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         assert(std::equal(setChildrenCheck.begin(), setChildrenCheck.end(), setChildrenStored.begin(), comp));
 
         TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
-        CAmount txfee = 0;
+        CAmount txfee = 0_sats;
         assert(!tx.IsCoinBase());
         assert(Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee));
         for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
@@ -650,7 +650,7 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
             m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
             ++nTransactionsUpdated;
         }
-        if (delta == 0) {
+        if (delta == 0_sats) {
             mapDeltas.erase(hash);
             LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
@@ -813,7 +813,7 @@ bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
     // limits would be violated. Note that the changeset will be destroyed
     // when it goes out of scope.
     auto changeset = GetChangeSet();
-    (void) changeset->StageAddition(tx, /*fee=*/0, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
+    (void) changeset->StageAddition(tx, /*fee=*/0_sats, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
     return changeset->CheckMemPoolPolicyLimits();
 }
 
@@ -853,7 +853,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
         if (rollingMinimumFeeRate < (double)m_opts.incremental_relay_feerate.GetFeePerK() / 2) {
             rollingMinimumFeeRate = 0;
-            return CFeeRate(0);
+            return CFeeRate(0_sats);
         }
     }
     return std::max(CFeeRate(llround(rollingMinimumFeeRate)), m_opts.incremental_relay_feerate);
@@ -872,7 +872,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     Assume(!m_have_changeset);
 
     unsigned nTxnRemoved = 0;
-    CFeeRate maxFeeRateRemoved(0);
+    CFeeRate maxFeeRateRemoved(0_sats);
 
     while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
         const auto &[worst_chunk, feeperweight] = m_txgraph->GetWorstMainChunk();
@@ -914,7 +914,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         }
     }
 
-    if (maxFeeRateRemoved > CFeeRate(0)) {
+    if (maxFeeRateRemoved > CFeeRate(0_sats)) {
         LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
@@ -925,7 +925,7 @@ std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateAncestorData(const CTxM
 
     size_t ancestor_count = ancestors.size();
     size_t ancestor_size = 0;
-    CAmount ancestor_fees = 0;
+    CAmount ancestor_fees = 0_sats;
     for (auto tx: ancestors) {
         const CTxMemPoolEntry& anc = static_cast<const CTxMemPoolEntry&>(*tx);
         ancestor_size += anc.GetTxSize();
@@ -939,7 +939,7 @@ std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateDescendantData(const CT
     auto descendants = m_txgraph->GetDescendants(entry, TxGraph::Level::MAIN);
     size_t descendant_count = descendants.size();
     size_t descendant_size = 0;
-    CAmount descendant_fees = 0;
+    CAmount descendant_fees = 0_sats;
 
     for (auto tx: descendants) {
         const CTxMemPoolEntry &desc = static_cast<const CTxMemPoolEntry&>(*tx);

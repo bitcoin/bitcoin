@@ -120,7 +120,7 @@ void BlockAssembler::resetBlock()
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
-    nFees = 0;
+    nFees = 0_sats;
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
@@ -435,7 +435,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
-    CAmount current_fees = -1;
+    CAmount current_fees = -1_sats;
 
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
@@ -498,7 +498,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
             if (tip_changed) return new_tmpl;
 
             // Calculate the original template total fees if we haven't already
-            if (current_fees == -1) {
+            if (current_fees == -1_sats) {
                 current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
             }
 

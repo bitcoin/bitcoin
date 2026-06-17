@@ -32,12 +32,12 @@ static void GroupCoins(FuzzedDataProvider& fuzzed_data_provider, const std::vect
     auto output_group = OutputGroup(coin_params);
     bool valid_outputgroup{false};
     for (auto& coin : coins) {
-        if (!positive_only || (positive_only && coin.GetEffectiveValue() > 0)) {
+        if (!positive_only || (positive_only && coin.GetEffectiveValue() > 0_sats)) {
             output_group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/0, /*cluster_count=*/0);
         }
         // If positive_only was specified, nothing was inserted, leading to an empty output group
         // that would be invalid for the BnB algorithm
-        valid_outputgroup = !positive_only || output_group.GetSelectionAmount() > 0;
+        valid_outputgroup = !positive_only || output_group.GetSelectionAmount() > 0_sats;
         if (valid_outputgroup && fuzzed_data_provider.ConsumeBool()) {
             output_groups.push_back(output_group);
             output_group = OutputGroup(coin_params);
@@ -126,12 +126,12 @@ FUZZ_TARGET(coin_grinder)
     if (!result_cg->GetAlgoCompleted()) return; // Bail out if CoinGrinder solution is not optimal
 
     auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
-    if (result_srd && result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0) { // exclude any srd solutions that don’t have change, err on excluding
+    if (result_srd && result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0_sats) { // exclude any srd solutions that don’t have change, err on excluding
         assert(result_srd->GetWeight() >= result_cg->GetWeight());
     }
 
     auto result_knapsack = KnapsackSolver(group_pos, target, coin_params.m_min_change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
-    if (result_knapsack && result_knapsack->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0) { // exclude any knapsack solutions that don’t have change, err on excluding
+    if (result_knapsack && result_knapsack->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0_sats) { // exclude any knapsack solutions that don’t have change, err on excluding
         assert(result_knapsack->GetWeight() >= result_cg->GetWeight());
     }
 }
@@ -225,9 +225,9 @@ FUZZ_TARGET(bnb_finds_min_waste)
     CoinSelectionParams coin_params{fast_random_context};
     coin_params.m_subtract_fee_outputs = false;
     // Set effective feerate up to 10'000'000 sats per kvB (10'000 sat/vB).
-    coin_params.m_effective_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000), 1'000};
-    coin_params.m_long_term_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000), 1'000};
-    coin_params.m_discard_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000), 1'000};
+    coin_params.m_effective_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000_sats), 1'000};
+    coin_params.m_long_term_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000_sats), 1'000};
+    coin_params.m_discard_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 10'000'000_sats), 1'000};
     coin_params.m_cost_of_change = ConsumeMoney(fuzzed_data_provider);
 
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange(1, MAX_SCRIPT_SIZE);
@@ -237,7 +237,7 @@ FUZZ_TARGET(bnb_finds_min_waste)
     coin_params.m_cost_of_change = coin_params.m_change_fee + change_spend_fee;
     CScript change_out_script = CScript() << std::vector<unsigned char>(coin_params.change_output_size, OP_TRUE);
     const auto dust{GetDustThreshold(CTxOut{/*nValueIn=*/0, change_out_script}, coin_params.m_discard_feerate)};
-    coin_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+    coin_params.min_viable_change = std::max(change_spend_fee + 1_sats, dust);
 
     // Create some coins
     CAmount max_spendable{0};
@@ -375,7 +375,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
     coin_params.m_cost_of_change = coin_params.m_change_fee + change_spend_fee;
     CScript change_out_script = CScript() << std::vector<unsigned char>(coin_params.change_output_size, OP_TRUE);
     const auto dust{GetDustThreshold(CTxOut{/*nValueIn=*/0, change_out_script}, coin_params.m_discard_feerate)};
-    coin_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+    coin_params.min_viable_change = std::max(change_spend_fee + 1_sats, dust);
 
     int next_locktime{0};
     CAmount total_balance{CreateCoins(fuzzed_data_provider, utxo_pool, coin_params, next_locktime)};
@@ -392,7 +392,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
             auto result_bnb = SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, max_selection_weight);
             if (result_bnb) {
                 result = *result_bnb;
-                assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
+                assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0_sats);
                 assert(result_bnb->GetSelectedValue() >= target);
                 assert(result_bnb->GetWeight() <= max_selection_weight);
                 (void)result_bnb->GetShuffledInputVector();
@@ -406,7 +406,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
         if (result_srd) {
             result = *result_srd;
             assert(result_srd->GetSelectedValue() >= target);
-            assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0);
+            assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0_sats);
             assert(result_srd->GetWeight() <= max_selection_weight);
             result_srd->SetBumpFeeDiscount(ConsumeMoney(fuzzed_data_provider));
             result_srd->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
@@ -444,7 +444,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
 
     std::vector<COutput> utxos;
     CAmount new_total_balance{CreateCoins(fuzzed_data_provider, utxos, coin_params, next_locktime)};
-    if (new_total_balance > 0) {
+    if (new_total_balance > 0_sats) {
         OutputSet new_utxo_pool;
         for (const auto& utxo : utxos) {
             new_utxo_pool.insert(std::make_shared<COutput>(utxo));
@@ -458,7 +458,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
 
     std::vector<COutput> manual_inputs;
     CAmount manual_balance{CreateCoins(fuzzed_data_provider, manual_inputs, coin_params, next_locktime)};
-    if (manual_balance == 0) return;
+    if (manual_balance == 0_sats) return;
     auto manual_selection{ManualSelection(manual_inputs, manual_balance, coin_params.m_subtract_fee_outputs)};
     if (result) {
         const CAmount old_target{result->GetTarget()};

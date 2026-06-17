@@ -147,11 +147,11 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 1U);
 
     // waitNext() on an empty mempool should return nullptr because there is no better template
-    auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
+    auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1_sats});
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     // Unless fee_threshold is 0
-    block_template = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 0});
+    block_template = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 0_sats});
     BOOST_REQUIRE(block_template);
 
     // Test the ancestor feerate transaction selection.
@@ -168,21 +168,21 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
-    const auto parent_tx{entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    const auto parent_tx{entry.Fee(1000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
     TryAddToMempool(tx_mempool, parent_tx);
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
-    const auto medium_fee_tx{entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    const auto medium_fee_tx{entry.Fee(10000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
     TryAddToMempool(tx_mempool, medium_fee_tx);
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
     Txid hashHighFeeTx = tx.GetHash();
-    const auto high_fee_tx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
+    const auto high_fee_tx{entry.Fee(50000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
     TryAddToMempool(tx_mempool, high_fee_tx);
 
     // Test getTransactionsByTxID()
@@ -238,12 +238,12 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.hash = hashHighFeeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
     Txid hashFreeTx = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).FromTx(tx));
     uint64_t freeTxSize{::GetSerializeSize(TX_WITH_WITNESS(tx))};
 
     // Calculate a fee on child transaction that will put the package just
     // below the block min tx fee (assuming 1 child tx of the same size).
-    CAmount feeToUse = blockMinFeeRate.GetFee(2*freeTxSize) - 1;
+    CAmount feeToUse = blockMinFeeRate.GetFee(2*freeTxSize) - 1_sats;
 
     tx.vin[0].prevout.hash = hashFreeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
@@ -251,7 +251,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
 
     // waitNext() should return nullptr because there is no better template
-    should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
+    should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1_sats});
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     block = block_template->getBlock();
@@ -265,12 +265,12 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // of the transactions is below the min relay fee
     // Remove the low fee transaction and replace with a higher fee transaction
     tx_mempool.removeRecursive(CTransaction(tx), MemPoolRemovalReason::REPLACED);
-    tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
+    tx.vout[0].nValue -= 2_sats; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2_sats).FromTx(tx));
 
     // waitNext() should return if fees for the new template are at least 1 sat up
-    block_template = block_template->waitNext({.fee_threshold = 1});
+    block_template = block_template->waitNext({.fee_threshold = 1_sats});
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
@@ -283,13 +283,13 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout.resize(2);
     tx.vout[0].nValue = 5000000000LL - 100000000;
-    tx.vout[1].nValue = 100000000; // 1BTC output
+    tx.vout[1].nValue = 100000000_sats; // 1BTC output
     // Increase size to avoid rounding errors: when the feerate is extremely small (i.e. 1sat/kvB), evaluating the fee
     // at smaller sizes gives us rounded values that are equal to each other, which means we incorrectly include
     // hashFreeTx2 + hashLowFeeTx2.
     BulkTransaction(tx, 4000);
     Txid hashFreeTx2 = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).SpendsCoinbase(true).FromTx(tx));
 
     // This tx can't be mined by itself
     tx.vin[0].prevout.hash = hashFreeTx2;
@@ -311,8 +311,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // This tx will be mineable, and should cause hashLowFeeTx2 to be selected
     // as well.
     tx.vin[0].prevout.n = 1;
-    tx.vout[0].nValue = 100000000 - 10000; // 10k satoshi fee
-    TryAddToMempool(tx_mempool, entry.Fee(10000).FromTx(tx));
+    tx.vout[0].nValue = 100000000_sats - 10000_sats; // 10k satoshi fee
+    TryAddToMempool(tx_mempool, entry.Fee(10000_sats).FromTx(tx));
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
@@ -354,7 +354,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
         tx2.vout.resize(20);
         tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
         for (auto &out : tx2.vout) {
-            out.nValue = 0;
+            out.nValue = 0_sats;
             out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
         }
         ret.push_back(MakeTransactionRef(tx2));
@@ -369,7 +369,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     Txid hash;
     CMutableTransaction tx;
     TestMemPoolEntryHelper entry;
-    entry.nFee = 11;
+    entry.nFee = 11_sats;
     entry.nHeight = 11;
 
     const CAmount BLOCKSUBSIDY = 50 * COIN;
@@ -503,7 +503,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin.resize(1);
         tx.vin[0].prevout.SetNull();
         tx.vin[0].scriptSig = CScript() << OP_0 << OP_1;
-        tx.vout[0].nValue = 0;
+        tx.vout[0].nValue = 0_sats;
         hash = tx.GetHash();
         // give it a fee so it'll get mined
         TryAddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
@@ -725,7 +725,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     Txid hashFreePrioritisedTx = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
 
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
@@ -733,20 +733,20 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
-    TryAddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(1000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(10000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
 
     // This tx also has a low fee, but is prioritised
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 1000; // 1000 satoshi fee
     Txid hashPrioritsedChild = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(1000_sats).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
 
     // Test that transaction selection properly updates ancestor fee calculations as prioritised
@@ -758,19 +758,19 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     Txid hashFreeParent = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreeParent, 10 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeParent;
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     Txid hashFreeChild = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).SpendsCoinbase(false).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreeChild, 1 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeChild;
     tx.vout[0].nValue = 5000000000LL; // 0 fee
     Txid hashFreeGrandchild = tx.GetHash();
-    TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
+    TryAddToMempool(tx_mempool, entry.Fee(0_sats).SpendsCoinbase(false).FromTx(tx));
 
     auto block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);

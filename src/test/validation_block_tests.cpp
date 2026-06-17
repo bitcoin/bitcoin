@@ -96,7 +96,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout.resize(2);
     txCoinbase.vout[1].scriptPubKey = P2WSH_OP_TRUE;
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
-    txCoinbase.vout[0].nValue = 0;
+    txCoinbase.vout[0].nValue = 0_sats;
     txCoinbase.vin[0].scriptWitness.SetNull();
     // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
     const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             mtx.vin.emplace_back(COutPoint{last_mined->vtx[0]->GetHash(), 1}, CScript{});
             mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
             mtx.vout.push_back(last_mined->vtx[0]->vout[1]);
-            mtx.vout[0].nValue -= 1000;
+            mtx.vout[0].nValue -= 1000_sats;
             txs.push_back(MakeTransactionRef(mtx));
 
             last_mined = GoodBlock(last_mined->GetHash());

@@ -777,11 +777,11 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
         }
     }
 
-    if (amount > 0) {
+    if (amount > 0_sats) {
       entry->checkSubtractFeeFromAmount();
       entry->setAmount(amount);
     } else {
-      entry->setAmount(0);
+      entry->setAmount(0_sats);
     }
 }
 

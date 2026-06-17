@@ -125,7 +125,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
     // result.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate feerate(old_fee, txSize);
-    feerate += CFeeRate(1);
+    feerate += CFeeRate(1_sats);
 
     // The node has a configurable incremental relay fee. Increment the fee by
     // the minimum of that and the wallet's conservative
@@ -188,7 +188,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     // Retrieve all of the UTXOs and add them to coin control
     // While we're here, calculate the input amount
     std::map<COutPoint, Coin> coins;
-    CAmount input_value = 0;
+    CAmount input_value = 0_sats;
     std::vector<CTxOut> spent_outputs;
     for (const CTxIn& txin : wtx.tx->vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
@@ -238,7 +238,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     }
 
     // Calculate the old output amount.
-    CAmount output_value = 0;
+    CAmount output_value = 0_sats;
     for (const auto& old_output : wtx.tx->vout) {
         output_value += old_output.nValue;
     }
@@ -249,7 +249,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
-    CAmount new_outputs_value = 0;
+    CAmount new_outputs_value = 0_sats;
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {
         const CTxOut& output = txouts.at(i);

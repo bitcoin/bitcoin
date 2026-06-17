@@ -1846,7 +1846,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
         stats.m_inv_to_send = tx_relay->m_tx_inventory_to_send.size();
     } else {
         stats.m_relay_txs = false;
-        stats.m_fee_filter_received = 0;
+        stats.m_fee_filter_received = 0_sats;
         stats.m_inv_to_send = 0;
     }
 
@@ -5086,7 +5086,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::FEEFILTER) {
-        CAmount newFeeFilter = 0;
+        CAmount newFeeFilter = 0_sats;
         vRecv >> newFeeFilter;
         if (MoneyRange(newFeeFilter)) {
             if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {

@@ -138,7 +138,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         if (it == mapTally.end() && !fIncludeEmpty)
             return;
 
-        CAmount nAmount = 0;
+        CAmount nAmount = 0_sats;
         int nConf = std::numeric_limits<int>::max();
         if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
@@ -753,7 +753,7 @@ RPCMethod gettransaction()
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0_sats);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (CachedTxIsFromMe(*pwallet, wtx))

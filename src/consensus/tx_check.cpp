@@ -21,10 +21,10 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     }
 
     // Check for negative or overflow output values (see CVE-2010-5139)
-    CAmount nValueOut = 0;
+    CAmount nValueOut = 0_sats;
     for (const auto& txout : tx.vout)
     {
-        if (txout.nValue < 0)
+        if (txout.nValue < 0_sats)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-toolarge");

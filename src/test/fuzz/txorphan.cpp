@@ -287,9 +287,9 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
             for (uint32_t i = 0; i < num_out; i++) {
                 const auto payload_size = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 100000);
                 if (payload_size) {
-                    tx_mut.vout.emplace_back(0, CScript() << OP_RETURN << std::vector<unsigned char>(payload_size));
+                    tx_mut.vout.emplace_back(0_sats, CScript() << OP_RETURN << std::vector<unsigned char>(payload_size));
                 } else {
-                    tx_mut.vout.emplace_back(0, CScript{});
+                    tx_mut.vout.emplace_back(0_sats, CScript{});
                 }
             }
             auto new_tx = MakeTransactionRef(tx_mut);
@@ -705,7 +705,7 @@ FUZZ_TARGET(txorphanage_sim)
                                 (total_latency_score > real->MaxGlobalLatencyScore());
             if (!oversized) break;
             // Find worst peer.
-            FeeFrac worst_dos_score{0, 1};
+            FeeFrac worst_dos_score{0_sats, 1};
             unsigned worst_peer = unsigned(-1);
             for (unsigned peer = 0; peer < NUM_PEERS; ++peer) {
                 auto dos_score = dos_score_fn(peer, max_ann, max_mem);
@@ -717,7 +717,7 @@ FUZZ_TARGET(txorphanage_sim)
                 }
             }
             assert(worst_peer != unsigned(-1));
-            assert(ByRatio{worst_dos_score} > ByRatio{FeeFrac(1, 1)});
+            assert(ByRatio{worst_dos_score} > ByRatio{FeeFrac(1_sats, 1)});
             // Find oldest announcement from worst_peer, preferring non-reconsiderable ones.
             bool done{false};
             for (int reconsider = 0; reconsider < 2; ++reconsider) {

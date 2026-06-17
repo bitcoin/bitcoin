@@ -79,7 +79,7 @@ static RPCMethod estimatesmartfee()
             FeeCalculation feeCalc;
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
             CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
-            if (feeRate != CFeeRate(0)) {
+            if (feeRate != CFeeRate(0_sats)) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
@@ -197,7 +197,7 @@ static RPCMethod estimaterawfee()
                 failbucket.pushKV("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0);
 
                 // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
-                if (feeRate != CFeeRate(0)) {
+                if (feeRate != CFeeRate(0_sats)) {
                     horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", buckets.scale);

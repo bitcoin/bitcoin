@@ -20,10 +20,10 @@ std::string FormatMoney(const CAmount n)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    static_assert(COIN > 1);
+    static_assert(COIN > 1_sats);
     int64_t quotient = n / COIN;
     int64_t remainder = n % COIN;
-    if (n < 0) {
+    if (n < 0_sats) {
         quotient = -quotient;
         remainder = -remainder;
     }
@@ -36,7 +36,7 @@ std::string FormatMoney(const CAmount n)
     if (nTrim)
         str.erase(str.size()-nTrim, nTrim);
 
-    if (n < 0)
+    if (n < 0_sats)
         str.insert(uint32_t{0}, 1, '-');
     return str;
 }
