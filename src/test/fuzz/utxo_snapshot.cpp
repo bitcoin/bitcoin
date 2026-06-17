@@ -8,6 +8,7 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <kernel/coinstats.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
@@ -211,9 +212,11 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         Assert(!dirty_chainman);
     }
     if (dirty_chainman) {
+        setup.m_node.block_template_manager.reset();
         setup.m_node.chainman.reset();
         setup.m_make_chainman();
         setup.LoadVerifyActivateChainstate();
+        setup.CreateBlockTemplateManager();
     }
 }
 
