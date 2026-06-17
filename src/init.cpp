@@ -51,6 +51,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/block_template_manager.h>
 #include <node/blockmanager_args.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
@@ -429,6 +430,7 @@ void Shutdown(NodeContext& node)
     if (node.validation_signals) {
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
+    node.block_template_manager.reset();
     node.mempool.reset();
     node.fee_estimator.reset();
     node.chainman.reset();
@@ -1326,6 +1328,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     // This function may be called twice, so any dirty state must be reset.
     node.notifications->setChainstateLoaded(false); // Drop state, such as a cached tip block
+    node.block_template_manager.reset();
     node.mempool.reset();
     node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
 
@@ -1434,6 +1437,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
         std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
             LogInfo("Block index and chainstate loaded");
+            node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*node.mempool, chainman);
             node.notifications->setChainstateLoaded(true);
         }
     }
@@ -1868,6 +1872,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     assert(!node.mempool);
     assert(!node.chainman);
+    assert(!node.block_template_manager);
 
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
