@@ -13,6 +13,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/mining_types.h>
 #include <policy/truc_policy.h>
@@ -112,13 +113,16 @@ void ResetChainmanAndMempool(TestingSetup& setup)
     SetMockTime(Params().GenesisBlock().Time());
 
     bilingual_str error{};
-    setup.m_node.mempool.reset();
-    setup.m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(setup.m_node), error);
+    auto& node = setup.m_node;
+    node.block_template_manager.reset();
+    node.mempool.reset();
+    node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(node), error);
     Assert(error.empty());
 
-    setup.m_node.chainman.reset();
+    node.chainman.reset();
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
+    setup.CreateBlockTemplateManager();
 
     node::BlockCreateOptions options;
     options.coinbase_output_script = P2WSH_OP_TRUE;
