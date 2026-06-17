@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/block_template_manager.h>
 #include <policy/fees/estimator_man.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -85,7 +86,9 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
+    node.block_template_manager.reset();
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
+    g_setup->CreateBlockTemplateManager();
     std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man = std::make_unique<FuzzedFeeEstimatorMan>(fuzzed_data_provider, *node.mempool, *node.chainman);
     g_setup->SetFeeEstimatorMan(std::move(fee_estimator_man));
     auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};

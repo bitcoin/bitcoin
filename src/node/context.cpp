@@ -13,6 +13,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netgroup.h>
+#include <node/block_template_manager.h>
 #include <node/kernel_notifications.h>
 #include <node/warnings.h>
 #include <policy/fees/estimator_man.h>
