@@ -43,13 +43,11 @@ static void GetFuture(std::future<void>& future, uint32_t& fail_counter)
 // instability in the fuzzing environment.
 // This is also how we use it in the app's lifecycle.
 ThreadPool g_pool{"fuzz"};
-Mutex g_pool_mutex;
 // Global to verify we always have the same number of threads.
 size_t g_num_workers = 3;
 
-static void StartPoolIfNeeded() EXCLUSIVE_LOCKS_REQUIRED(!g_pool_mutex)
+static void StartPoolIfNeeded()
 {
-    LOCK(g_pool_mutex);
     if (g_pool.WorkersCount() == g_num_workers) return;
     g_pool.Start(g_num_workers);
 }
@@ -60,7 +58,7 @@ static void setup_threadpool_test()
     LogInstance().DisableLogging();
 }
 
-FUZZ_TARGET(threadpool, .init = setup_threadpool_test) EXCLUSIVE_LOCKS_REQUIRED(!g_pool_mutex)
+FUZZ_TARGET(threadpool, .init = setup_threadpool_test)
 {
     // Because LibAFL calls fork() after calling the init setup function,
     // the child processes end up having one thread active and no workers.

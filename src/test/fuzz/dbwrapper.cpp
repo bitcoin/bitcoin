@@ -174,11 +174,9 @@ constexpr size_t MAX_READ_WORKERS{8};
 constexpr size_t MAX_READ_QUERIES_PER_WORKER{128};
 
 ThreadPool g_read_pool{"dbfuzz"};
-Mutex g_read_pool_mutex;
 
-void StartReadPoolIfNeeded() EXCLUSIVE_LOCKS_REQUIRED(!g_read_pool_mutex)
+void StartReadPoolIfNeeded()
 {
-    LOCK(g_read_pool_mutex);
     if (!g_read_pool.WorkersCount()) g_read_pool.Start(MAX_READ_WORKERS);
 }
 
@@ -361,7 +359,7 @@ FUZZ_TARGET(dbwrapper_threaded, .init = [] { static auto setup{MakeNoLogFileCont
         /*allow_force_compact=*/true);
 }
 
-FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLogFileContext<>()}; }) EXCLUSIVE_LOCKS_REQUIRED(!g_read_pool_mutex)
+FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLogFileContext<>()}; })
 {
     StartReadPoolIfNeeded();
     SeedRandomStateForTest(SeedRand::ZEROS);
