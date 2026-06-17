@@ -73,7 +73,9 @@ public:
      * Pick the transaction with the fewest send attempts, and confirmations,
      * and oldest send/confirm times.
      * @param[in] will_send_to_nodeid Will remember that the returned transaction
-     * was picked for sending to this node.
+     * was picked for sending to this node. Calling this method more than once with
+     * the same `will_send_to_nodeid` is not allowed because sending more than one
+     * transaction to one node would be a privacy leak.
      * @param[in] will_send_to_address Address of the peer to which this transaction
      * will be sent.
      * @return Most urgent transaction or nullopt if there are no transactions.

@@ -33,6 +33,11 @@ std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& wil
 {
     LOCK(m_mutex);
 
+    if (GetSendStatusByNode(will_send_to_nodeid).has_value()) { // nodeid reuse, shouldn't send >1 tx to a given node
+        Assume(false);
+        return std::nullopt;
+    }
+
     const auto it{std::ranges::max_element(
             m_transactions,
             [](const auto& a, const auto& b) { return a < b; },
