@@ -1,7 +1,7 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
              ((gnu packages base) #:select (glibc))
-             ((gnu packages cmake) #:select (cmake-minimal))
+             ((gnu packages cmake) #:select (cmake-minimal-4))
              (gnu packages commencement)
              ((gnu packages compression) #:select (gzip))
              (gnu packages cross-base)
@@ -281,7 +281,7 @@ chain for " target " development."))
         tar
         gzip
         ;; Build tools
-        cmake-minimal
+        cmake-minimal-4
         gnu-make
         ;; Git
         git-minimal)
