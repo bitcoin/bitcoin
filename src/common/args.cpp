@@ -669,7 +669,10 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     LOCK(cs_args);
 
+    // Allow duplicates involving HIDDEN — it is used as a placeholder for args
+    // unavailable in this binary but tolerated for shared config files (see #13441).
     for (const auto& arg_map : m_available_args) {
+        if (arg_map.first == OptionsCategory::HIDDEN || cat == OptionsCategory::HIDDEN) continue;
         Assert(!arg_map.second.contains(arg_name));
     }
 
