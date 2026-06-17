@@ -4608,3 +4608,4 @@ void CWallet::DisconnectChainNotifications()
 }
 
 } // namespace wallet
+// fix
