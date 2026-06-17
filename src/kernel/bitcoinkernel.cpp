@@ -1597,6 +1597,15 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
     }
 }
 
+int btck_chainstate_manager_set_clock_time(btck_ChainstateManager* chainstate_manager, int64_t now_seconds)
+{
+    constexpr int64_t max_time{std::numeric_limits<uint32_t>::max()};
+    if (now_seconds < 0 || now_seconds > max_time) return -1;
+    auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
+    chainman->m_clock_now_seconds.store(std::chrono::seconds{now_seconds}, std::memory_order_relaxed);
+    return 0;
+}
+
 const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_ChainstateManager* chainman)
 {
     return btck_Chain::ref(&WITH_LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex(), return btck_ChainstateManager::get(chainman).m_chainman->ActiveChain()));
