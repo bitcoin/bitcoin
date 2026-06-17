@@ -668,6 +668,11 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
     std::string arg_name = name.substr(0, eq_index);
 
     LOCK(cs_args);
+
+    for (const auto& arg_map : m_available_args) {
+        Assert(!arg_map.second.contains(arg_name));
+    }
+
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
     auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
