@@ -969,6 +969,13 @@ KernelLogger& GetKernelLogger()
     static KernelLogger* logger{new KernelLogger};
     return *logger;
 }
+
+//! Whether a clock time in seconds since the epoch is in the range the clock
+//! time setters accept. The upper bound matches the maximum block header timestamp.
+bool IsValidClockTime(int64_t now_seconds)
+{
+    return now_seconds >= 0 && now_seconds <= std::numeric_limits<uint32_t>::max();
+}
 } // namespace
 
 namespace util::log {
@@ -1226,6 +1233,15 @@ int btck_chainstate_manager_options_set_database_cache_bytes(btck_ChainstateMana
     LOCK(opts.m_mutex);
     opts.m_db_cache_bytes = database_cache_bytes;
     opts.m_blockman_options.block_tree_db_params.cache_bytes = kernel::CacheSizes{database_cache_bytes}.block_tree_db;
+    return 0;
+}
+
+int btck_chainstate_manager_options_set_clock_time(btck_ChainstateManagerOptions* chainman_opts, int64_t now_seconds)
+{
+    if (!IsValidClockTime(now_seconds)) return -1;
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_chainman_options.clock_time = now_seconds ? std::optional{NodeSeconds{std::chrono::seconds{now_seconds}}} : std::nullopt;
     return 0;
 }
 
@@ -1595,6 +1611,14 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
         LogError("Failed to process block header: %s", e.what());
         return nullptr;
     }
+}
+
+int btck_chainstate_manager_set_clock_time(btck_ChainstateManager* chainstate_manager, int64_t now_seconds)
+{
+    if (!IsValidClockTime(now_seconds)) return -1;
+    auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
+    chainman->m_clock_now_seconds.store(NodeSeconds{std::chrono::seconds{now_seconds}}, std::memory_order_relaxed);
+    return 0;
 }
 
 const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_ChainstateManager* chainman)

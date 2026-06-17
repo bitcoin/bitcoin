@@ -1321,6 +1321,11 @@ public:
         return btck_chainstate_manager_options_set_wipe_dbs(get(), wipe_block_tree, wipe_chainstate) == 0;
     }
 
+    bool SetClockTime(std::optional<std::chrono::sys_seconds> now)
+    {
+        return btck_chainstate_manager_options_set_clock_time(get(), now ? now->time_since_epoch().count() : 0) == 0;
+    }
+
     void UpdateBlockTreeDbInMemory(bool block_tree_db_in_memory)
     {
         btck_chainstate_manager_options_update_block_tree_db_in_memory(get(), block_tree_db_in_memory);
@@ -1495,6 +1500,13 @@ public:
     {
         auto state = btck_chainstate_manager_process_block_header(get(), header.get());
         return BlockValidationState{state};
+    }
+
+    void SetClockTime(std::optional<std::chrono::sys_seconds> now)
+    {
+        if (btck_chainstate_manager_set_clock_time(get(), now ? now->time_since_epoch().count() : 0) != 0) {
+            throw std::runtime_error("timestamp out of range");
+        }
     }
 
     ChainView GetChain() const

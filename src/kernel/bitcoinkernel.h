@@ -1262,6 +1262,24 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_o
     int wipe_chainstate_db) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Set the clock time the chainstate manager uses for validation from
+ * the moment it is created, including checks made while it loads the
+ * chainstate (such as rejecting a tip that appears to be from the future, and
+ * deciding whether initial block download is finished). The time can be
+ * changed later with @ref btck_chainstate_manager_set_clock_time.
+ *
+ * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
+ * @param[in] now_seconds                Unix epoch seconds in the range
+ *                                       [1, 4294967295], or 0 to use the
+ *                                       system clock (the default).
+ * @return                               0 on success, non-zero if now_seconds is
+ *                                       negative or exceeds 4294967295.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_options_set_clock_time(
+    btck_ChainstateManagerOptions* chainstate_manager_options,
+    int64_t now_seconds) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Sets block tree db in memory in the options.
  *
  * @param[in] chainstate_manager_options   Non-null, created by @ref btck_chainstate_manager_options_create.
@@ -1317,6 +1335,10 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* btck_chainstate_manager_get_best_en
 /**
  * @brief Processes and validates the provided btck_BlockHeader.
  *
+ * Time-sensitive checks (e.g. the future-time check) use the chainstate
+ * manager's current time, which can be overridden via
+ * @ref btck_chainstate_manager_set_clock_time.
+ *
  * @param[in] chainstate_manager        Non-null.
  * @param[in] header                    Non-null btck_BlockHeader to be validated.
  * @return                              The btck_BlockValidationState containing validation result, or null on error.
@@ -1324,6 +1346,28 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* btck_chainstate_manager_get_best_en
 BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_process_block_header(
     btck_ChainstateManager* chainstate_manager,
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Override the current time used by this chainstate manager.
+ *
+ * Affects all time-sensitive operations scoped to this chainstate manager:
+ * the block header future-time check, the IBD latch (IsTipRecent), header
+ * sync progress estimates, and the verification progress value passed to
+ * block tip callbacks. Checks made while the chainstate manager is created
+ * have already run by the time this can be called, so to cover those too, set
+ * the time with @ref btck_chainstate_manager_options_set_clock_time.
+ *
+ * @param[in] chainstate_manager  Non-null.
+ * @param[in] now_seconds         Unix epoch seconds in the range
+ *                                [1, 4294967295], or 0 to restore the
+ *                                system clock. The upper bound matches the
+ *                                maximum value of a block header timestamp.
+ * @return                        0 on success, non-zero if now_seconds is
+ *                                negative or exceeds 4294967295.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_set_clock_time(
+    btck_ChainstateManager* chainstate_manager,
+    int64_t now_seconds) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
  * @brief Triggers the start of a reindex if the wipe options were previously
@@ -1349,6 +1393,10 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_i
  * the block's validity. Detailed information on the validity of the block can
  * be retrieved by registering the `block_checked` callback in the validation
  * interface.
+ *
+ * Time-sensitive checks (e.g. the future-time check) and the IBD latch use
+ * the chainstate manager's current time, which can be overridden
+ * via @ref btck_chainstate_manager_set_clock_time.
  *
  * @param[in] chainstate_manager Non-null.
  * @param[in] block              Non-null, block to be validated.
