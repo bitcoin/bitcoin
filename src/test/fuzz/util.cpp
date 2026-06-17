@@ -237,6 +237,16 @@ CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<b
     return key;
 }
 
+UniValue ConsumeUniValue(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    UniValue value{UniValue::VOBJ};
+    value.pushKV("bool", fuzzed_data_provider.ConsumeBool());
+    value.pushKV("number", fuzzed_data_provider.ConsumeIntegralInRange<int>(-1'000'000, 1'000'000));
+    value.pushKV("string", "ipc fuzz");
+
+    return value;
+}
+
 bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
 {
     for (const CTxIn& tx_in : tx.vin) {

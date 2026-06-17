@@ -138,6 +138,10 @@ add_executable(fuzz
   versionbits.cpp
 )
 
+if(ENABLE_IPC)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/ipc/test/fuzz ipc)
+endif()
+
 add_windows_application_manifest(fuzz)
 
 target_link_libraries(fuzz

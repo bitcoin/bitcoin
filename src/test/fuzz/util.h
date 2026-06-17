@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_H
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
+#include <univalue.h>
 #include <addresstype.h>
 #include <arith_uint256.h>
 #include <coins.h>
@@ -208,6 +209,8 @@ template <class Dur>
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 [[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
+
+[[nodiscard]] UniValue ConsumeUniValue(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
