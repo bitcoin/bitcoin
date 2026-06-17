@@ -50,13 +50,13 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
         else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
 
         feerate_needed = wallet.chain().estimateSmartFee(target, conservative_estimate, feeCalc);
-        if (feerate_needed == CFeeRate(0)) {
+        if (feerate_needed == CFeeRate(0_sats)) {
             // if we don't have enough data for estimateSmartFee, then use fallback fee
             feerate_needed = wallet.m_fallback_fee;
             if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
 
             // directly return if fallback fee is disabled (feerate 0 == disabled)
-            if (wallet.m_fallback_fee == CFeeRate(0)) return feerate_needed;
+            if (wallet.m_fallback_fee == CFeeRate(0_sats)) return feerate_needed;
         }
         // Obey mempool min fee when using smart fee estimation
         CFeeRate min_mempool_feerate = wallet.chain().mempoolMinFee();
@@ -80,7 +80,7 @@ CFeeRate GetDiscardRate(const CWallet& wallet)
     unsigned int highest_target = wallet.chain().estimateMaxBlocks();
     CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, /*conservative=*/false);
     // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
-    discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
+    discard_rate = (discard_rate == CFeeRate(0_sats)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
     // Discard rate must be at least dust relay feerate
     discard_rate = std::max(discard_rate, wallet.chain().relayDustFee());
     return discard_rate;

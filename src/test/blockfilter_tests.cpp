@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     excluded_scripts[2] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
 
     CMutableTransaction tx_1;
-    tx_1.vout.emplace_back(100, included_scripts[0]);
-    tx_1.vout.emplace_back(200, included_scripts[1]);
-    tx_1.vout.emplace_back(0, excluded_scripts[0]);
+    tx_1.vout.emplace_back(100_sats, included_scripts[0]);
+    tx_1.vout.emplace_back(200_sats, included_scripts[1]);
+    tx_1.vout.emplace_back(0_sats, excluded_scripts[0]);
 
     CMutableTransaction tx_2;
-    tx_2.vout.emplace_back(300, included_scripts[2]);
-    tx_2.vout.emplace_back(0, excluded_scripts[2]);
-    tx_2.vout.emplace_back(400, excluded_scripts[3]); // Script is empty
+    tx_2.vout.emplace_back(300_sats, included_scripts[2]);
+    tx_2.vout.emplace_back(0_sats, excluded_scripts[2]);
+    tx_2.vout.emplace_back(400_sats, excluded_scripts[3]); // Script is empty
 
     CBlock block;
     block.vtx.push_back(MakeTransactionRef(tx_1));
@@ -95,9 +95,9 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
 
     CBlockUndo block_undo;
     block_undo.vtxundo.emplace_back();
-    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(500, included_scripts[3]), 1000, true);
-    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(600, included_scripts[4]), 10000, false);
-    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[3]), 100000, false);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(500_sats, included_scripts[3]), 1000, true);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(600_sats, included_scripts[4]), 10000, false);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700_sats, excluded_scripts[3]), 100000, false);
 
     BlockFilter block_filter(BlockFilterType::BASIC, block, block_undo);
     const GCSFilter& filter = block_filter.GetFilter();
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         const UniValue& prev_scripts = test[pos++].get_array();
         for (unsigned int ii = 0; ii < prev_scripts.size(); ii++) {
             std::vector<unsigned char> raw_script = ParseHex(prev_scripts[ii].get_str());
-            CTxOut txout(0, CScript(raw_script.begin(), raw_script.end()));
+            CTxOut txout(0_sats, CScript(raw_script.begin(), raw_script.end()));
             tx_undo.vprevout.emplace_back(txout, 0, false);
         }
 

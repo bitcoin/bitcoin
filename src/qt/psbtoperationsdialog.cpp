@@ -179,7 +179,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
 {
     QString tx_description;
     QLatin1String bullet_point(" * ");
-    CAmount totalAmount = 0;
+    CAmount totalAmount = 0_sats;
     for (const PSBTOutput& out : psbtx.outputs) {
         CTxDestination address;
         ExtractDestination(out.script, address);

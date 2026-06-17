@@ -21,7 +21,7 @@ namespace {
 
 /** Special magic value that indicates to TestDepGraphSerialization that a cluster entry represents
  *  a hole. */
-constexpr std::pair<FeeFrac, TestBitSet> HOLE{FeeFrac{0, 0x3FFFFF}, {}};
+constexpr std::pair<FeeFrac, TestBitSet> HOLE{FeeFrac{0_sats, 0x3FFFFF}, {}};
 
 template<typename SetType>
 void TestDepGraphSerialization(const std::vector<std::pair<FeeFrac, SetType>>& cluster, const std::string& hexenc)
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
 
     // Transactions: A(fee=0,size=1).
     TestDepGraphSerialization<TestBitSet>(
-        {{{0, 1}, {}}},
+        {{{0_sats, 1}, {}}},
         "01" /* A size */
         "00" /* A fee */
         "00" /* A insertion position (no skips): A */
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
 
     // Transactions: A(fee=42,size=11), B(fee=-13,size=7), B depends on A.
     TestDepGraphSerialization<TestBitSet>(
-        {{{42, 11}, {}}, {{-13, 7}, {0}}},
+        {{{42_sats, 11}, {}}, {{-13_sats, 7}, {0}}},
         "0b" /* A size */
         "54" /* A fee */
         "00" /* A insertion position (no skips): A */
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
 
     // Transactions: A(64,128), B(128,256), C(1,1), C depends on A and B.
     TestDepGraphSerialization<TestBitSet>(
-        {{{64, 128}, {}}, {{128, 256}, {}}, {{1, 1}, {0, 1}}},
+        {{{64_sats, 128}, {}}, {{128_sats, 256}, {}}, {{1_sats, 1}, {0, 1}}},
         "8000" /* A size */
         "8000" /* A fee */
         "00"   /* A insertion position (no skips): A */
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
     // Transactions: A(-57,113), B(57,114), C(-58,115), D(58,116). Deps: B->A, C->A, D->C, in order
     // [B,A,C,D]. This exercises non-topological ordering (internally serialized as A,B,C,D).
     TestDepGraphSerialization<TestBitSet>(
-        {{{57, 114}, {1}}, {{-57, 113}, {}}, {{-58, 115}, {1}}, {{58, 116}, {2}}},
+        {{{57_sats, 114}, {1}}, {{-57_sats, 113}, {}}, {{-58_sats, 115}, {1}}, {{58_sats, 116}, {2}}},
         "71" /* A size */
         "71" /* A fee */
         "00" /* A insertion position (no skips): A */
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
     // Transactions: A(1,2), B(3,1), C(2,1), D(1,3), E(1,1). Deps: C->A, D->A, D->B, E->D.
     // In order: [D,A,B,E,C]. Internally serialized in order A,B,C,D,E.
     TestDepGraphSerialization<TestBitSet>(
-        {{{1, 3}, {1, 2}}, {{1, 2}, {}}, {{3, 1}, {}}, {{1, 1}, {0}}, {{2, 1}, {1}}},
+        {{{1_sats, 3}, {1, 2}}, {{1_sats, 2}, {}}, {{3_sats, 1}, {}}, {{1_sats, 1}, {0}}, {{2_sats, 1}, {1}}},
         "02" /* A size */
         "02" /* A fee */
         "00" /* A insertion position (no skips): A */
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
     // In order: [_, D, _, _, A, _, B, _, _, _, E, _, _, C] (_ being holes). Internally serialized
     // in order A,B,C,D,E.
     TestDepGraphSerialization<TestBitSet>(
-        {HOLE, {{1, 3}, {4, 6}}, HOLE, HOLE, {{1, 2}, {}}, HOLE, {{3, 1}, {}}, HOLE, HOLE, HOLE, {{1, 1}, {1}}, HOLE, HOLE, {{2, 1}, {4}}},
+        {HOLE, {{1_sats, 3}, {4, 6}}, HOLE, HOLE, {{1_sats, 2}, {}}, HOLE, {{3_sats, 1}, {}}, HOLE, HOLE, HOLE, {{1_sats, 1}, {1}}, HOLE, HOLE, {{2_sats, 1}, {4}}},
         "02" /* A size */
         "02" /* A fee */
         "03" /* A insertion position (3 holes): _, _, _, A */

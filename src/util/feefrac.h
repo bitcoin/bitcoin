@@ -91,7 +91,7 @@ struct FeeFrac
     int32_t size;
 
     /** Construct an IsEmpty() FeeFrac. */
-    constexpr inline FeeFrac() noexcept : fee{0}, size{0} {}
+    constexpr inline FeeFrac() noexcept : fee{0_sats}, size{0} {}
 
     /** Construct a FeeFrac with specified fee and size. */
     constexpr inline FeeFrac(CAmount f, int32_t s) noexcept : fee{f}, size{s} {}
@@ -157,7 +157,7 @@ struct FeeFrac
     {
         Assume(size > 0);
         Assume(at_size >= 0);
-        if (fee >= 0 && fee < 0x200000000) [[likely]] {
+        if (fee >= 0_sats && fee < 0x200000000_sats) [[likely]] {
             // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
             if constexpr (RoundDown) {
                 return (uint64_t(fee) * at_size) / uint32_t(size);

@@ -2055,12 +2055,12 @@ static RPCMethod getblockstats()
     const bool do_calculate_weight = do_all || SetHasKeys(stats, "total_weight", "avgfeerate", "swtotal_weight", "avgfeerate", "feerate_percentiles", "minfeerate", "maxfeerate");
     const bool do_calculate_sw = do_all || SetHasKeys(stats, "swtxs", "swtotal_size", "swtotal_weight");
 
-    CAmount maxfee = 0;
-    CAmount maxfeerate = 0;
+    CAmount maxfee = 0_sats;
+    CAmount maxfeerate = 0_sats;
     CAmount minfee = MAX_MONEY;
     CAmount minfeerate = MAX_MONEY;
-    CAmount total_out = 0;
-    CAmount totalfee = 0;
+    CAmount total_out = 0_sats;
+    CAmount totalfee = 0_sats;
     int64_t inputs = 0;
     int64_t maxtxsize = 0;
     int64_t mintxsize = MAX_BLOCK_SERIALIZED_SIZE;
@@ -2081,7 +2081,7 @@ static RPCMethod getblockstats()
         const auto& tx = block.vtx.at(i);
         outputs += tx->vout.size();
 
-        CAmount tx_total_out = 0;
+        CAmount tx_total_out = 0_sats;
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
                 tx_total_out += out.nValue;
@@ -2132,7 +2132,7 @@ static RPCMethod getblockstats()
         }
 
         if (loop_inputs) {
-            CAmount tx_total_in = 0;
+            CAmount tx_total_in = 0_sats;
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
                 const CTxOut& prevoutput = coin.out;
@@ -2153,7 +2153,7 @@ static RPCMethod getblockstats()
             totalfee += txfee;
 
             // New feerate uses satoshis per virtual byte instead of per serialized byte
-            CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0;
+            CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0_sats;
             if (do_feerate_percentiles) {
                 feerate_array.emplace_back(feerate, weight);
             }
@@ -2162,7 +2162,7 @@ static RPCMethod getblockstats()
         }
     }
 
-    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = { 0_sats };
     CalculatePercentilesByWeight(feerate_percentiles, feerate_array, total_weight);
 
     UniValue feerates_res(UniValue::VARR);
@@ -2415,7 +2415,7 @@ static RPCMethod scantxoutset()
 
         std::set<CScript> needles;
         std::map<CScript, std::string> descriptors;
-        CAmount total_in = 0;
+        CAmount total_in = 0_sats;
 
         // loop through the scan objects
         for (const UniValue& scanobject : scanobjects->get_array().getValues()) {

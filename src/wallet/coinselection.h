@@ -84,7 +84,7 @@ public:
     {
         if (feerate) {
             // base fee without considering potential unconfirmed ancestors
-            fee = input_bytes < 0 ? 0 : feerate.value().GetFee(input_bytes);
+            fee = input_bytes < 0 ? 0_sats : feerate.value().GetFee(input_bytes);
             effective_value = txout.nValue - fee.value();
         }
     }
@@ -93,7 +93,7 @@ public:
         : COutput(outpoint, txout, depth, input_bytes, solvable, safe, time, from_me)
     {
         // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
-        assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
+        assert((input_bytes < 0 && fees == 0_sats) || (input_bytes > 0 && fees >= 0_sats));
         fee = fees;
         effective_value = txout.nValue - fee.value();
     }
@@ -107,7 +107,7 @@ public:
 
     void ApplyBumpFee(CAmount bump_fee)
     {
-        assert(bump_fee >= 0);
+        assert(bump_fee >= 0_sats);
         ancestor_bump_fees = bump_fee;
         assert(fee);
         *fee += bump_fee;
@@ -251,7 +251,7 @@ struct OutputGroup
     /** The feerate for spending a created change output eventually (i.e. not urgently, and thus at
      * a lower feerate). Calculated using long term fee estimate. This is used to decide whether
      * it could be economical to create a change output. */
-    CFeeRate m_long_term_feerate{0};
+    CFeeRate m_long_term_feerate{0_sats};
     /** Indicate that we are subtracting the fee from outputs.
      * When true, the value that is used for coin selection is the UTXO's real value rather than effective value */
     bool m_subtract_fee_outputs{false};

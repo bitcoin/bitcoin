@@ -265,7 +265,7 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
     const RecentRequestEntry& req = submodel->entry(sel.row());
     copyLabelAction->setDisabled(req.recipient.label.isEmpty());
     copyMessageAction->setDisabled(req.recipient.message.isEmpty());
-    copyAmountAction->setDisabled(req.recipient.amount == 0);
+    copyAmountAction->setDisabled(req.recipient.amount == 0_sats);
 
     contextMenu->exec(QCursor::pos());
 }

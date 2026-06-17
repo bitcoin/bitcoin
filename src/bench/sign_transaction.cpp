@@ -66,7 +66,7 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
         CMutableTransaction tx{unsigned_tx};
         std::map<COutPoint, Coin> coins;
         const CScript& prev_spk = prev_spks[(iter++) % prev_spks.size()];
-        coins[prevout] = Coin(CTxOut(10000, prev_spk), /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
+        coins[prevout] = Coin(CTxOut(10000_sats, prev_spk), /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
         std::map<int, bilingual_str> input_errors;
         bool complete = SignTransaction(tx, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors);
         assert(complete);
