@@ -210,7 +210,7 @@ fn get_subtrees() -> Vec<&'static str> {
         "src/crc32c",
         "src/crypto/ctaes",
         "src/ipc/libmultiprocess",
-        "src/leveldb",
+        //"src/leveldb", No longer a subtree in this release branch, due to direct cherry-picks
         "src/minisketch",
         "src/secp256k1",
     ]
