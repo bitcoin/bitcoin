@@ -1,0 +1,16 @@
+{
+  "name": "core-gate",
+  "version": "1.0.0",
+  "description": "PR quality gate for Bitcoin Core — scores PRs against contribution guidelines, routes high-quality PRs to maintainers, gives AI feedback to contributors",
+  "type": "module",
+  "main": "scripts/scorer.js",
+  "scripts": {
+    "gate": "node scripts/scorer.js",
+    "mock:bad": "CORE_GATE_MOCK=bad node scripts/scorer.js",
+    "mock:good": "CORE_GATE_MOCK=good node scripts/scorer.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.1.1"
+  },
+  "license": "MIT"
+}
