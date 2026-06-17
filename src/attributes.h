@@ -16,12 +16,15 @@
 #  define LIFETIMEBOUND
 #endif
 
-#if defined(__GNUC__)
-#  define ALWAYS_INLINE inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-#  define ALWAYS_INLINE __forceinline
-#else
-#  error No known always_inline attribute for this platform.
+#if !defined(_DEBUG) && !defined(__NO_INLINE__) && !defined(__OPTIMIZE_SIZE__)
+#  if (defined(__GNUC__) || defined(__clang__)) && defined(__OPTIMIZE__)
+#    define ALWAYS_INLINE inline __attribute__((always_inline))
+#  elif defined(_MSC_VER)
+#    define ALWAYS_INLINE __forceinline
+#  endif
+#endif
+#ifndef ALWAYS_INLINE
+#  define ALWAYS_INLINE inline
 #endif
 
 #endif // BITCOIN_ATTRIBUTES_H

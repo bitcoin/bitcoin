@@ -322,6 +322,8 @@ if(WIN32)
 
     target_compile_definitions(core_interface INTERFACE
       _UNICODE;UNICODE
+      # Match GCC/Clang's size-optimization macro for the inline guard.
+      $<$<CONFIG:MinSizeRel>:__OPTIMIZE_SIZE__=1>
     )
     target_compile_options(core_interface INTERFACE
       /utf-8
