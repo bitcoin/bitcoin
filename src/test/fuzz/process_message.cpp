@@ -48,7 +48,7 @@ std::string_view LIMIT_TO_MESSAGE_TYPE{};
 void ResetChainman(TestingSetup& setup)
 {
     SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
-    setup.m_node.block_template_manager.reset();
+    setup.ResetBlockTemplateManager();
     setup.m_node.chainman.reset();
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();

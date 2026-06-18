@@ -423,7 +423,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             // Process all callbacks referring to the old manager before wiping it.
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
-            m_node.block_template_manager.reset();
+            ResetBlockTemplateManager();
             LOCK(::cs_main);
             chainman.ResetChainstates();
             BOOST_CHECK_EQUAL(chainman.m_chainstates.size(), 0);

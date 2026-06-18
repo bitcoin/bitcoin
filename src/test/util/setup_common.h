@@ -106,6 +106,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
     explicit ChainTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
 
+    void ResetBlockTemplateManager();
     void CreateBlockTemplateManager();
 
     // Supplies a chainstate, if one is needed

@@ -7,8 +7,11 @@
 
 #include <consensus/amount.h>
 #include <node/mining_types.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/feefrac.h>
+#include <util/time.h>
+#include <validationinterface.h>
 
 #include <cstdint>
 #include <map>
@@ -60,16 +63,24 @@ struct TemplateSnapshot {
     std::map<uint256, TrackedChunk> template_chunks;
     /** Keeps chunks sorted so TrimToFit() can scan lowest-feerate chunks first. */
     std::set<FeerateIndexEntry> chunks_by_feerate;
+    /** Active chain tip this template was built on. */
+    uint256 tip_hash;
+    /** Options identify which template request this snapshot belongs to. */
+    BlockCreateOptions options;
     /** Minimum feerate accepted by the original template. */
     FeePerWeight min_feerate;
     /** Exclusive block weight limit used when deciding if new chunks fit. */
     int64_t max_weight{0};
+    /** Weight reserved before transaction selection. */
+    int64_t reserved_weight{0};
     /** Aggregate fees of all currently tracked chunks. */
     CAmount total_fees{0};
-    /** Aggregate weight of all currently tracked chunks. */
+    /** Reserved weight plus the weight of all currently tracked chunks. */
     int64_t total_weight{0};
     /** Aggregate sigops cost of all currently tracked chunks. */
     int64_t total_sigops{0};
+    /** Sigops reserved before transaction selection. */
+    int64_t reserved_sigops{0};
     /** Chain height used for finality checks against new chunks. */
     int height{0};
     /** Median-time-past cutoff used for finality checks against new chunks. */
@@ -88,26 +99,63 @@ struct TemplateSnapshot {
     void SanityCheck() const;
 };
 
-/** Creates block templates. */
-class BlockTemplateManager
+/** Block template creation and fee-inflow tracking.
+ *
+ * Tracks chunk feerates and total fees at creation time. On every mempool
+ * update, chunks that left the mempool are dropped from the record. New
+ * chunks at or above the block minimum fee rate that pass sigops and finality
+ * checks are added: directly if weight remains, or by evicting tracked
+ * chunks whose feerate is lower than the incoming chunk.
+ *
+ * Block connection (non-historical) and disconnection prune records built on
+ * the old tip of each transition.
+ */
+class BlockTemplateManager : public CValidationInterface
 {
 private:
     CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
     KernelNotifications& m_notifications;
     const BlockCreateOptions m_init_block_create_options;
+    mutable Mutex m_mutex;
+    /** Tracked template snapshots keyed by unique nonzero identifier. */
+    std::map<uint64_t, TemplateSnapshot> m_template_snapshots GUARDED_BY(m_mutex);
+    uint64_t m_next_template_id GUARDED_BY(m_mutex){1};
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
                                   ChainstateManager& chainman,
                                   KernelNotifications& notifications,
                                   BlockCreateOptions init_block_create_options = {});
+    virtual ~BlockTemplateManager() = default;
 
     /** @return a copy of the block create options set during node init. */
     BlockCreateOptions GetInitBlockCreateOptions() const { return m_init_block_create_options; }
 
-    /** Create a fresh block template, applying init-time defaults to any unset options. */
-    std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+    /** Create a fresh block template, applying init-time defaults to any unset
+     *  options. When @p tracking_id is non-null, the template is tracked for
+     *  fee inflow and its identifier is returned there. */
+    std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options, uint64_t* tracking_id = nullptr)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** @return true if fee-inflow tracking is active for the given template id. */
+    bool IsTrackingFeeInflow(uint64_t template_id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Stop tracking fee inflow for the given template id. */
+    void StopTrackingFeeInflow(uint64_t template_id)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Test-only: verify invariants. */
+    void SanityCheck() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    // CValidationInterface overrides
+    void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>&, const CBlockIndex*) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>&, const CBlockIndex*) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void MempoolUpdated(const MemPoolChunksUpdate& mempool_chunks) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Submit a block via ProcessNewBlock and capture validation state. */
     bool SubmitBlock(const std::shared_ptr<const CBlock>& block, bool* new_block, std::string& reason, std::string& debug);
@@ -155,7 +203,8 @@ public:
         const std::unique_ptr<CBlockTemplate>& block_template,
         const BlockWaitOptions& wait_options,
         const BlockCreateOptions& create_options,
-        bool& interrupt_wait);
+        bool& interrupt_wait)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 } // namespace node
 

@@ -331,17 +331,36 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
     CreateBlockTemplateManager();
 }
 
+void ChainTestingSetup::ResetBlockTemplateManager()
+{
+    if (m_node.validation_signals && m_node.block_template_manager) {
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_manager.get());
+    }
+    m_node.block_template_manager.reset();
+}
+
 void ChainTestingSetup::CreateBlockTemplateManager()
 {
+    Assert(!m_node.block_template_manager);
     auto mining_args{node::ReadMiningArgs(*Assert(m_node.args))};
     Assert(mining_args);
     m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman, *Assert(m_node.notifications), std::move(*mining_args));
+    if (m_node.validation_signals) m_node.validation_signals->RegisterValidationInterface(m_node.block_template_manager.get());
 }
 
 ChainTestingSetup::~ChainTestingSetup()
 {
+    // Skip sync if the scheduler is already stopped (e.g. by ~WalletTestingSetup),
+    // because SyncWithValidationInterfaceQueue blocks on a callback that needs a live thread.
+    if (m_node.validation_signals && m_node.scheduler && m_node.scheduler->AreThreadsServicingQueue()) {
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    }
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    if (m_node.validation_signals && m_node.block_template_manager) {
+        m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_manager.get());
+    }
     m_node.block_template_manager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
