@@ -283,31 +283,17 @@ public:
     // Default transaction version.
     static const uint32_t CURRENT_VERSION{2};
 
-    // The local variables are made const to prevent unintended modification
-    // without updating the cached hash value. However, CTransaction is not
-    // actually immutable; deserialization and assignment are implemented,
-    // and bypass the constness. This is safe, as they update the entire
-    // structure, including the hash.
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
-    const uint32_t version;
-    const uint32_t nLockTime;
-
-private:
-    /** Memory only. */
-    const bool m_has_witness;
-    const Txid hash;
-    const Wtxid m_witness_hash;
-
-    Txid ComputeHash() const;
-    Wtxid ComputeWitnessHash() const;
-
-    bool ComputeHasWitness() const;
-
-public:
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
     explicit CTransaction(CMutableTransaction&& tx);
+
+    CTransaction(const CTransaction&) = default;
+
+    // As long as transactions are passed around via `std::shared_ptr<const CTransaction>`,
+    // assignment should be disabled. The footgun is that shared pointer to const can only
+    // prevent modification through that handle. It cannot guarantee that no non-const
+    // alias exists, which would allow spooky action at a distance.
+    CTransaction& operator=(const CTransaction&) = delete;
 
     auto GetVersion() const -> uint32_t { return version; }
     auto GetInputs() const LIFETIMEBOUND -> const std::vector<CTxIn>& { return vin; }
@@ -356,6 +342,21 @@ public:
     std::string ToString() const;
 
     bool HasWitness() const { return m_has_witness; }
+
+private:
+    Txid ComputeHash() const;
+    Wtxid ComputeWitnessHash() const;
+    bool ComputeHasWitness() const;
+
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
+    uint32_t version;
+    uint32_t nLockTime;
+
+    /** Memory only. */
+    bool m_has_witness;
+    Txid hash;
+    Wtxid m_witness_hash;
 };
 
 /** A mutable version of CTransaction. */

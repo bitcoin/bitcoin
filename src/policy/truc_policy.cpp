@@ -43,12 +43,12 @@ struct ParentInfo {
     /** Wtxid used for debug string */
     const Wtxid& m_wtxid;
     /** version used to check inheritance of TRUC and non-TRUC */
-    decltype(CTransaction::version) m_version;
+    uint32_t m_version;
     /** If parent is in mempool, whether it has any descendants in mempool. */
     bool m_has_mempool_descendant;
 
     ParentInfo() = delete;
-    ParentInfo(const Txid& txid, const Wtxid& wtxid, decltype(CTransaction::version) version, bool has_mempool_descendant) :
+    ParentInfo(const Txid& txid, const Wtxid& wtxid, uint32_t version, bool has_mempool_descendant) :
         m_txid{txid}, m_wtxid{wtxid}, m_version{version},
         m_has_mempool_descendant{has_mempool_descendant}
     {}
