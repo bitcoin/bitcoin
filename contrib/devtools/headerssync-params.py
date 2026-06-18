@@ -56,8 +56,8 @@ ASSUME_CONVEX = True
 #
 #  - To actually implement this commitment mechanism, the following approach is used:
 #    - Keep a *1 bit* commitment (constructed using a salted hash function), for every block whose
-#      height is a multiple of {period} plus an offset value. If RANDOMIZE_OFFSET, the offset,
-#      like the salt, is chosen randomly when the synchronization starts and kept fixed afterwards.
+#      height is a multiple of {period} plus an offset value. The offset, like the salt, is chosen
+#      randomly when the synchronization starts and kept fixed afterwards.
 #    - When redownloading, headers are fed through a per-peer queue that holds {bufsize} headers,
 #      before passing them to validation. All the headers in this queue are verified against the
 #      commitment bits created in the first phase before any header is released from it. This means
@@ -114,9 +114,6 @@ NET_HEADER_SIZE = 81 * 8
 # How many headers are sent at once. [headers]
 HEADER_BATCH_COUNT = 2000
 
-# Whether or not the offset of which blocks heights get checksummed is randomized.
-RANDOMIZE_OFFSET = True
-
 # Timestamp of the genesis block
 GENESIS_TIME = datetime(2009, 1, 3)
 
@@ -169,16 +166,10 @@ def attack_rate(period, bufsize, limit=None):
         # This is the number being computed.
         rate = 0
 
-        # Iterate over the possible alignments of commitments w.r.t. the first batch. In case
-        # the alignments are randomized, try all values. If not, the attacker can know/choose
-        # the alignment, and will always start forging right after a commitment.
-        if RANDOMIZE_OFFSET:
-            align_choices = list(range(period))
-        else:
-            align_choices = [(honest - 1) % period]
-        # Now loop over those possible alignment values, computing the average attack rate
-        # over them by dividing each contribution by len(align_choices).
-        for align in align_choices:
+        # Iterate over all possible alignments of commitments w.r.t. the first batch. Since the
+        # offset is randomized, the attacker cannot know/choose it, so we try all {period} values,
+        # computing the average attack rate over them by dividing each contribution by period.
+        for align in range(period):
             # These state variables capture the situation after receiving the first batch.
             # - The number of headers received after the last commitment for an honest block:
             after_good_commit = HEADER_BATCH_COUNT - honest + ((honest - align - 1) % period)
@@ -194,14 +185,14 @@ def attack_rate(period, bufsize, limit=None):
                 if accept_forged_headers:
                     # The probability the attack has not been detected yet at this point:
                     prob = 0.5 ** (after_good_commit // period)
-                    # Update attack rate, divided by align_choices to average over the alignments.
-                    rate += accept_forged_headers * prob / len(align_choices)
+                    # Update attack rate, divided by period to average over the alignments.
+                    rate += accept_forged_headers * prob / period
                     # If this means we exceed limit, bail out early (performance optimization).
                     if limit is not None and rate >= limit:
                         return rate, None
                     # If the maximal term being added is negligible compared to rate, stop
                     # iterating.
-                    if HEADER_BATCH_COUNT * prob < 1.0e-16 * rate * len(align_choices):
+                    if HEADER_BATCH_COUNT * prob < 1.0e-16 * rate * period:
                         break
                 # Update state from a new incoming batch (which is all forged)
                 after_good_commit += HEADER_BATCH_COUNT
