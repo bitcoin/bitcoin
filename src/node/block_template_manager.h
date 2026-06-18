@@ -40,7 +40,7 @@ public:
     /** @return a copy of the block create options set during node init. */
     BlockCreateOptions GetInitBlockCreateOptions() const { return m_init_block_create_options; }
 
-    /** Create a fresh block template. */
+    /** Create a fresh block template, applying init-time defaults to any unset options. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
 
     /** Submit a block via ProcessNewBlock and capture validation state. */

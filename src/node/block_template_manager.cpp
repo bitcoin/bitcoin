@@ -30,7 +30,11 @@ BlockTemplateManager::BlockTemplateManager(CTxMemPool& mempool, ChainstateManage
 
 std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const BlockCreateOptions& options)
 {
-    return BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
+    return BlockAssembler{
+        m_chainman.ActiveChainstate(),
+        &m_mempool,
+        MergeMiningOptions(options, m_init_block_create_options),
+    }.CreateNewBlock();
 }
 
 namespace {

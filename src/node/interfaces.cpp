@@ -41,7 +41,6 @@
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mini_miner.h>
-#include <node/mining_args.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
 #include <node/types.h>
@@ -96,7 +95,6 @@ using interfaces::Node;
 using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
@@ -996,14 +994,8 @@ public:
             if (!block_template_manager().CooldownIfHeadersAhead(*maybe_tip, m_interrupt_mining)) return {};
         }
         auto& block_template_manager = *Assert(m_node.block_template_manager);
-        const BlockCreateOptions create_options{MergeMiningOptions(options, block_template_manager.GetInitBlockCreateOptions())};
-        return std::make_unique<BlockTemplateImpl>(create_options,
-                                                   BlockAssembler{
-                                                       chainman().ActiveChainstate(),
-                                                       m_node.mempool.get(),
-                                                       create_options,
-                                                   }.CreateNewBlock(),
-                                                   m_node);
+        auto new_template = block_template_manager.CreateNewTemplate(options);
+        return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), m_node);
     }
 
     void interrupt() override
