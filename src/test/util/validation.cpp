@@ -111,7 +111,7 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
     node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
 
     bilingual_str error{};
-    setup.m_node.block_template_manager.reset();
+    setup.ResetBlockTemplateManager();
     setup.m_node.mempool.reset();
     setup.m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(setup.m_node), error);
     Assert(error.empty());
