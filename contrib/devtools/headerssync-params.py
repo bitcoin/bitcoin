@@ -215,16 +215,15 @@ def attack_rate(period, bufsize, limit=None):
 
 
 def memory_usage(period, bufsize, when):
-    """How much memory (max,mainchain,timewarp) does the (period,bufsize) configuration need?"""
+    """Peak per-peer memory the (period,bufsize) configuration needs (the larger of the timewarp
+    and mainchain scenarios)."""
 
     # Per-peer memory usage for a timewarp chain that never meets minchainwork
     mem_timewarp = find_max_headers(when) // period
     # Per-peer memory usage for being fed the main chain
     mem_mainchain = (MINCHAINWORK_HEADERS // period) + bufsize * COMPACT_HEADER_SIZE
-    # Maximum per-peer memory usage
-    max_mem = max(mem_timewarp, mem_mainchain)
-
-    return max_mem, mem_mainchain, mem_timewarp
+    # The peak per-peer memory usage is the larger of the two.
+    return max(mem_timewarp, mem_mainchain)
 
 def find_bufsize(period, attack_headers, when, max_mem=None, min_bufsize=1):
     """Determine how big bufsize needs to be given a specific period length.
@@ -277,13 +276,11 @@ def optimize(when):
     # Compute approximation for {bufsize/period}, using a formula for a simplified problem.
     approx_ratio = lambert_w(log(4) * memory_scale / ATTACK_HEADERS**2) / log(4)
     # Use those for a first attempt.
-    print("Searching configurations:")
     period = int(sqrt(memory_scale / approx_ratio) + 0.5)
     bufsize = find_bufsize(period, ATTACK_HEADERS, when)
     mem = memory_usage(period, bufsize, when)
     best = (period, bufsize, mem)
     maps = [(period, bufsize), (MINCHAINWORK_HEADERS + 1, None)]
-    print(f"- Initial: period={period}, buffer={bufsize}, mem={mem[0] / 8192:.3f} KiB")
 
     # Consider all period values between 1 and MINCHAINWORK_HEADERS, except the one just tried.
     periods = [iv for iv in range(1, MINCHAINWORK_HEADERS + 1) if iv != period]
@@ -292,7 +289,7 @@ def optimize(when):
     while True:
         # Remove all periods whose memory usage for low-work long chain sync exceed the best
         # memory usage we've found so far.
-        periods = [p for p in periods if find_max_headers(when) // p < best[2][0]]
+        periods = [p for p in periods if find_max_headers(when) // p < best[2]]
         # Stop if there is nothing left to try.
         if len(periods) == 0:
             break
@@ -302,19 +299,18 @@ def optimize(when):
         # largest period smaller than the selected one we know the buffer size for, and use that
         # as a lower bound to find_bufsize.
         min_bufsize = max([(p, b) for p, b in maps if p < period] + [(0,0)])[1]
-        bufsize = find_bufsize(period, ATTACK_HEADERS, when, best[2][0], min_bufsize)
+        bufsize = find_bufsize(period, ATTACK_HEADERS, when, best[2], min_bufsize)
         if bufsize is not None:
             # We found a (period, bufsize) configuration with better memory usage than our best
             # so far. Remember it for future lower bounds.
             maps.append((period, bufsize))
             mem = memory_usage(period, bufsize, when)
-            assert mem[0] <= best[2][0]
+            assert mem <= best[2]
             if ASSUME_CONVEX:
                 # Remove all periods that are on the other side of the former best as the new
                 # best.
                 periods = [p for p in periods if (p < best[0]) == (period < best[0])]
             best = (period, bufsize, mem)
-            print(f"- New best: period={period}, buffer={bufsize}, mem={mem[0] / 8192:.3f} KiB")
         else:
             # The (period, bufsize) configuration we found is worse than what we already had.
             if ASSUME_CONVEX:
@@ -331,11 +327,7 @@ def analyze(when):
     """Find the best configuration and print it out."""
 
     period, bufsize = optimize(when)
-    # Compute accurate statistics for the best found configuration.
-    _, mem_mainchain, mem_timewarp = memory_usage(period, bufsize, when)
-    headers_per_attack, _ = attack_rate(period, bufsize)
-    attack_volume = NET_HEADER_SIZE * MINCHAINWORK_HEADERS
-    # And report them.
+    # Report it, in a form that can be pasted into chainparams.
     print()
     print(f"Given current min chainwork headers of {MINCHAINWORK_HEADERS}, the optimal parameters for low")
     print(f"memory usage on mainchain for release until {TIME:%Y-%m-%d} is:")
@@ -346,12 +338,6 @@ def analyze(when):
     print(f"            .redownload_buffer_size = {bufsize},"
           f" // {bufsize}/{period} = ~{bufsize/period:.1f} commitments")
     print( "        };")
-    print()
-    print("Properties:")
-    print(f"- Per-peer memory for mainchain sync: {mem_mainchain / 8192:.3f} KiB")
-    print(f"- Per-peer memory for timewarp attack: {mem_timewarp / 8192:.3f} KiB")
-    print(f"- Attack rate: {1/headers_per_attack:.1f} attacks for 1 header of memory growth")
-    print(f"  (where each attack costs {attack_volume / 8388608:.3f} MiB bandwidth)")
 
 
 analyze(TIME)
