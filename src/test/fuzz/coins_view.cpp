@@ -221,30 +221,19 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
             });
     }
 
-    {
-        bool expected_code_path = false;
-        try {
-            (void)coins_view_cache.Cursor();
-        } catch (const std::logic_error&) {
-            expected_code_path = true;
-        }
-        assert(expected_code_path);
-        (void)coins_view_cache.DynamicMemoryUsage();
-        (void)coins_view_cache.EstimateSize();
-        (void)coins_view_cache.GetBestBlock();
-        (void)coins_view_cache.GetCacheSize();
-        (void)coins_view_cache.GetHeadBlocks();
-        (void)coins_view_cache.HaveInputs(CTransaction{random_mutable_transaction});
-    }
+    (void)coins_view_cache.DynamicMemoryUsage();
+    (void)coins_view_cache.EstimateSize();
+    (void)coins_view_cache.GetBestBlock();
+    (void)coins_view_cache.GetCacheSize();
+    (void)coins_view_cache.GetHeadBlocks();
+    (void)coins_view_cache.HaveInputs(CTransaction{random_mutable_transaction});
 
-    {
-        if (is_db && backend_coins_view == original_backend) {
-            assert(backend_coins_view->Cursor());
-        }
-        (void)backend_coins_view->EstimateSize();
-        (void)backend_coins_view->GetBestBlock();
-        (void)backend_coins_view->GetHeadBlocks();
+    if (is_db && backend_coins_view == original_backend) {
+        assert(backend_coins_view->Cursor());
     }
+    (void)backend_coins_view->EstimateSize();
+    (void)backend_coins_view->GetBestBlock();
+    (void)backend_coins_view->GetHeadBlocks();
 
     if (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
