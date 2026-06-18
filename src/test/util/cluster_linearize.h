@@ -142,7 +142,7 @@ struct DepGraphFormatter
             // Write size, which must be larger than 0.
             s << VARINT_MODE(depgraph.FeeRate(idx).size, VarIntMode::NONNEGATIVE_SIGNED);
             // Write fee, encoded as an unsigned varint (odd=negative, even=non-negative).
-            s << VARINT(SignedToUnsigned(depgraph.FeeRate(idx).fee));
+            s << VARINT(SignedToUnsigned(depgraph.FeeRate(idx).fee.Int()));
             // Write dependency information.
             SetType written_parents;
             uint64_t diff = 0; //!< How many potential parent/child relations we have skipped over.

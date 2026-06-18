@@ -64,9 +64,9 @@ public:
         }
     }
 
-    CAmount value(bool *valid_out=nullptr) const
+    BitcoinAmountField::QAmount value(bool *valid_out=nullptr) const
     {
-        return parse(text(), valid_out);
+        return BitcoinAmountField::QAmount(parse(text(), valid_out));
     }
 
     void setValue(const CAmount& value)
@@ -291,7 +291,7 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     return unit;
 }
 
-CAmount BitcoinAmountField::value(bool *valid_out) const
+BitcoinAmountField::QAmount BitcoinAmountField::value(bool *valid_out) const
 {
     return amount->value(valid_out);
 }

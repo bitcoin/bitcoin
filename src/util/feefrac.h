@@ -26,8 +26,8 @@ struct FeeFrac
      *  it isn't actually needed. */
     static inline std::pair<int64_t, uint32_t> MulFallback(CAmount a, int32_t b) noexcept
     {
-        int64_t low = int64_t{static_cast<uint32_t>(a)} * b;
-        int64_t high = (a >> 32) * b;
+        int64_t low = int64_t{static_cast<uint32_t>(a.Int())} * b;
+        int64_t high = (a.Int() >> 32) * b;
         return {high + (low >> 32), static_cast<uint32_t>(low)};
     }
 
@@ -65,7 +65,7 @@ struct FeeFrac
      *  ordered type. This is a version relying on __int128. */
     static inline __int128 Mul(CAmount a, int32_t b) noexcept
     {
-        return __int128{a} * b;
+        return __int128{a.Int()} * b;
     }
 
     /** Helper function for 96/32 signed division, rounding towards negative infinity (if
@@ -160,9 +160,9 @@ struct FeeFrac
         if (fee >= 0_sats && fee < 0x200000000_sats) [[likely]] {
             // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
             if constexpr (RoundDown) {
-                return (uint64_t(fee) * at_size) / uint32_t(size);
+                return CAmount{(uint64_t(fee.Int()) * at_size) / uint32_t(size)};
             } else {
-                return CeilDiv(uint64_t(fee) * at_size, uint32_t(size));
+                return CAmount{CeilDiv(uint64_t(fee.Int()) * at_size, uint32_t(size))};
             }
         } else {
             // Otherwise, use Mul and Div.

@@ -8,6 +8,7 @@
 
 #include <chain.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
@@ -611,7 +612,7 @@ const btck_ScriptPubkey* btck_transaction_output_get_script_pubkey(const btck_Tr
 
 int64_t btck_transaction_output_get_amount(const btck_TransactionOutput* output)
 {
-    return btck_TransactionOutput::get(output).nValue;
+    return btck_TransactionOutput::get(output).nValue.Int();
 }
 
 void btck_transaction_output_destroy(btck_TransactionOutput* output)

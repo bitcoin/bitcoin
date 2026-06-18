@@ -38,7 +38,7 @@ CAmount ConsumeMoney(FuzzedDataProvider& provider, const CAmount& max) noexcept
 
 CAmount ConsumeMoney(FuzzedDataProvider& provider, const CAmount& min, const CAmount& max) noexcept
 {
-    return CAmount{provider.ConsumeIntegralInRange<CAmount>(min, max)};
+    return CAmount{provider.ConsumeIntegralInRange<CAmount::inner_type>(min.Int(), max.Int())};
 }
 
 NodeSeconds ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept

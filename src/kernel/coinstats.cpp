@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <utility>
 
 namespace kernel {
@@ -100,7 +101,7 @@ static void ApplyStats(CCoinsStats& stats, const std::map<uint32_t, Coin>& outpu
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
         if (stats.total_amount.has_value()) {
-            stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.nValue);
+            stats.total_amount = std::optional<CAmount>{CheckedAdd(stats.total_amount->Int(), it->second.out.nValue.Int())};
         }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }

@@ -17,15 +17,25 @@
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 
-#include <algorithm>
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <random>
+#include <type_traits>
+
+template <typename T>
+constexpr CAmount& operator*=(CAmount& a, const T b) noexcept
+    requires(std::is_integral_v<T> && !std::is_same_v<T, bool>)
+{
+    a = CAmount{a.Int() * b};
+    return a;
+}
 
 /** Imprecise fractional expressions only allowed for tests.
   * @{*/
 consteval CAmount operator""_BTC(long double coins) noexcept
 {
-    return CAmount(coins * COIN);
+    return CAmount{static_cast<CAmount::inner_type>(coins * COIN.Int())};
 }
 /** @}*/
 
@@ -336,8 +346,8 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     // Add spendable coin at the BnB selection upper bound
     CoinsResult available_coins;
     add_coin(available_coins, *wallet, COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
-    add_coin(available_coins, *wallet, 0.5 * COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
-    add_coin(available_coins, *wallet, 0.5 * COIN, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    add_coin(available_coins, *wallet, COIN / 2 + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    add_coin(available_coins, *wallet, COIN / 2, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
     // Knapsack will only find a changeless solution on an exact match to the satoshi, SRD doesn’t look for changeless
     // If BnB were run, it would produce a single input solution with the best waste score
     auto result = WITH_LOCK(wallet->cs_wallet, return SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, COIN, /*coin_control=*/{}, params));
@@ -586,7 +596,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
             if (amt - 2000_sats < CENT) {
                 // needs more than one input:
-                uint16_t returnSize = std::ceil((2000.0 + CENT)/amt);
+                uint16_t returnSize = std::ceil((2000.0 + CENT.Int()) / amt.Int());
                 CAmount returnValue = amt * returnSize;
                 BOOST_CHECK_EQUAL(result24->GetSelectedValue(), returnValue);
                 BOOST_CHECK_EQUAL(result24->GetInputSet().size(), returnSize);
@@ -694,7 +704,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         // Make a wallet with 1000 exponentially distributed random inputs
         for (int j = 0; j < 1000; ++j)
         {
-            CAmount val = distribution(generator)*10000000;
+            CAmount val{int64_t(distribution(generator) * 10000000)};
             add_coin(available_coins, *wallet, val);
             balance += val;
         }
@@ -703,7 +713,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CFeeRate rate(rand.randrange(300) + 100);
 
         // Generate a random target value between 1000 and wallet balance
-        CAmount target = rand.randrange(balance - 1000) + 1000;
+        CAmount target = rand.randrange(balance.Int() - 1000) + 1000;
 
         // Perform selection
         CoinSelectionParams cs_params{

@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
+#include <consensus/amount.h>
 #include <script/script.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
-#include <cstdint>
-
 #include <boost/test/unit_test.hpp>
+
+#include <cstdint>
 
 // amounts 0.00000001 .. 0.00100000
 #define NUM_MULTIPLES_UNIT 100000
@@ -25,16 +26,18 @@
 
 BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
-bool static TestEncode(uint64_t in) {
-    return in == DecompressAmount(CompressAmount(in));
+bool static TestEncode(CAmount in)
+{
+    return in == DecompressAmount(CompressAmount(in.Int()));
 }
 
 bool static TestDecode(uint64_t in) {
     return in == CompressAmount(DecompressAmount(in));
 }
 
-bool static TestPair(uint64_t dec, uint64_t enc) {
-    return CompressAmount(dec) == enc &&
+bool static TestPair(CAmount dec, uint64_t enc)
+{
+    return CompressAmount(dec.Int()) == enc &&
            DecompressAmount(enc) == dec;
 }
 

@@ -669,7 +669,7 @@ RPCMethod listunspent()
             if (ancestor_count) {
                 entry.pushKV("ancestorcount", ancestor_count);
                 entry.pushKV("ancestorsize", ancestor_size);
-                entry.pushKV("ancestorfees", ancestor_fees);
+                entry.pushKV("ancestorfees", ancestor_fees.Int());
             }
         }
         entry.pushKV("spendable", true); // Any coins we list are always spendable

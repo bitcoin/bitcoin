@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/chainparams.h>
@@ -21,6 +22,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+#include <compare>
 #include <memory>
 #include <optional>
 #include <string>

@@ -630,11 +630,11 @@ void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& 
     const CFeeRate feeRate(tx.info.m_fee, tx.info.m_virtual_transaction_size);
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
-    unsigned int bucketIndex = feeStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex = feeStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     mapMemPoolTxs[hash].bucketIndex = bucketIndex;
-    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     assert(bucketIndex == bucketIndex2);
-    unsigned int bucketIndex3 = longStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex3 = longStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     assert(bucketIndex == bucketIndex3);
 }
 
@@ -660,9 +660,9 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const Remo
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(tx.info.m_fee, tx.info.m_virtual_transaction_size);
 
-    feeStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
-    shortStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
-    longStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
+    feeStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
+    shortStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
+    longStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
     return true;
 }
 
@@ -1090,10 +1090,9 @@ static std::set<double> MakeFeeSet(const CFeeRate& min_incremental_fee,
 
     const CAmount min_fee_limit{std::max(CAmount(1), min_incremental_fee.GetFeePerK() / 2)};
     fee_set.insert(0);
-    for (double bucket_boundary = min_fee_limit;
+    for (double bucket_boundary = min_fee_limit.Int();
          bucket_boundary <= max_filter_fee_rate;
          bucket_boundary *= fee_filter_spacing) {
-
         fee_set.insert(bucket_boundary);
     }
 
@@ -1109,11 +1108,11 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee, FastRandom
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
     AssertLockNotHeld(m_insecure_rand_mutex);
-    std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee);
+    std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee.Int());
     if (it == m_fee_set.end() ||
         (it != m_fee_set.begin() &&
          WITH_LOCK(m_insecure_rand_mutex, return insecure_rand.rand32()) % 3 != 0)) {
         --it;
     }
-    return static_cast<int64_t>(*it);
+    return CAmount{static_cast<int64_t>(*it)};
 }
