@@ -31,6 +31,8 @@ inline bool IOErrorIsPermanent(int err)
     return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
 }
 
+class TCPInfo;
+
 /**
  * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */
@@ -153,6 +155,12 @@ public:
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
+
+    /**
+     * To the degree to which the platform supports it, get the number of bytes
+     * in the socket output queue: unsent + unack'ed.
+     */
+    [[nodiscard]] virtual int GetOSBytesQueued(const TCPInfo& info);
 
     /**
      * Set the non-blocking option on the socket.

@@ -136,4 +136,9 @@ typedef SSIZE_T ssize_t;
 #include <netinet/tcp.h>    // IWYU pragma: export
 #endif
 
+// Querying bytes in the send buffer on these platforms requires ioctl
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#include <sys/ioctl.h>  // IWYU pragma: export
+#endif
+
 #endif // BITCOIN_COMPAT_COMPAT_H
