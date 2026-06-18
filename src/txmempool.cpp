@@ -885,7 +885,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
 CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     LOCK(cs);
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
-        return CFeeRate(llround(rollingMinimumFeeRate));
+        return CFeeRate(CAmount{llround(rollingMinimumFeeRate)});
 
     int64_t time = GetTime();
     if (time > lastRollingFeeUpdate + 10) {
@@ -903,7 +903,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
             return CFeeRate(0_sats);
         }
     }
-    return std::max(CFeeRate(llround(rollingMinimumFeeRate)), m_opts.incremental_relay_feerate);
+    return std::max(CFeeRate(CAmount{llround(rollingMinimumFeeRate)}), m_opts.incremental_relay_feerate);
 }
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {

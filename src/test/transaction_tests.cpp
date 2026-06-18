@@ -85,7 +85,7 @@ bool CheckMapFlagNames()
 * Check that the input scripts of a transaction are valid/invalid as expected.
 */
 bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
-    const std::map<COutPoint, int64_t>& map_prevout_values, script_verify_flags flags,
+    const std::map<COutPoint, CAmount>& map_prevout_values, script_verify_flags flags,
     const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
 {
     bool tx_valid = true;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             }
 
             std::map<COutPoint, CScript> mapprevOutScriptPubKeys;
-            std::map<COutPoint, int64_t> mapprevOutValues;
+            std::map<COutPoint, CAmount> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
             for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             std::map<COutPoint, CScript> mapprevOutScriptPubKeys;
-            std::map<COutPoint, int64_t> mapprevOutValues;
+            std::map<COutPoint, CAmount> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
             for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
@@ -1036,7 +1036,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     const unsigned p2sh_inputs_count{MAX_TX_LEGACY_SIGOPS / MAX_P2SH_SIGOPS};
     tx_create.vout.reserve(p2sh_inputs_count);
     for (unsigned i{0}; i < p2sh_inputs_count; ++i) {
-        tx_create.vout.emplace_back(424242 + i, max_sigops_p2sh);
+        tx_create.vout.emplace_back(CAmount{424242 + i}, max_sigops_p2sh);
     }
     auto prev_txid{tx_create.GetHash()};
     tx_max_sigops.vin.reserve(p2sh_inputs_count);
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     const auto p2pk_script{CScript() << key.GetPubKey() << OP_CHECKSIG};
     unsigned p2pk_inputs_count{10}; // From 2490 to 2500.
     for (unsigned i{0}; i < p2pk_inputs_count; ++i) {
-        tx_create_p2pk.vout.emplace_back(212121 + i, p2pk_script);
+        tx_create_p2pk.vout.emplace_back(CAmount{212121 + i}, p2pk_script);
     }
     prev_txid = tx_create_p2pk.GetHash();
     tx_max_sigops.vin.resize(p2sh_inputs_count); // Drop the extra input.

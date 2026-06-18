@@ -163,8 +163,8 @@ class TxOrphanageImpl final : public TxOrphanage {
         {
             assert(max_peer_latency_score > 0);
             assert(max_peer_memory > 0);
-            const FeeFrac latency_score(m_total_latency_score, max_peer_latency_score);
-            const FeeFrac mem_score(m_total_usage, max_peer_memory);
+            const FeeFrac latency_score(CAmount{m_total_latency_score}, max_peer_latency_score);
+            const FeeFrac mem_score(CAmount{m_total_usage}, max_peer_memory);
             return std::max<ByRatioNegSize<FeeFrac>>(latency_score, mem_score);
         }
     };

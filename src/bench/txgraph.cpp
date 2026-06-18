@@ -78,7 +78,7 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
         for (int chaintx = 0; chaintx < NUM_TX_PER_TOP_CHAIN; ++chaintx) {
-            int64_t fee = rng.randbits<27>() + 100;
+            CAmount fee{rng.randbits<27>() + 100};
             FeePerWeight feerate{fee, 1};
             graph->AddTransaction(top_refs.emplace_back(), feerate);
             // Add internal dependencies linking the chain transactions together.
@@ -96,7 +96,7 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     // Construct the bottom transactions, and dependencies to the top chains.
     while (top_components.size() > 1) {
         // Construct the transaction.
-        int64_t fee = rng.randbits<27>() + 100;
+        CAmount fee{rng.randbits<27>() + 100};
         FeePerWeight feerate{fee, 1};
         TxGraph::Ref bottom_tx;
         graph->AddTransaction(bottom_tx, feerate);

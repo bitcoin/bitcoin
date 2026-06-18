@@ -1908,7 +1908,7 @@ static T CalculateTruncatedMedian(std::vector<T>& scores)
 {
     size_t size = scores.size();
     if (size == 0) {
-        return 0;
+        return T{0};
     }
 
     std::sort(scores.begin(), scores.end());

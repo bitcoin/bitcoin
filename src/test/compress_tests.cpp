@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
 bool static TestEncode(CAmount in)
 {
-    return in == DecompressAmount(CompressAmount(in.Int()));
+    return in == CAmount{DecompressAmount(CompressAmount(in.Int()))};
 }
 
 bool static TestDecode(uint64_t in) {
@@ -38,7 +38,7 @@ bool static TestDecode(uint64_t in) {
 bool static TestPair(CAmount dec, uint64_t enc)
 {
     return CompressAmount(dec.Int()) == enc &&
-           DecompressAmount(enc) == dec;
+           CAmount{DecompressAmount(enc)} == dec;
 }
 
 BOOST_AUTO_TEST_CASE(compress_amounts)
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
     BOOST_CHECK(TestPair(21000000*COIN, 0x1406f40));
 
     for (uint64_t i = 1; i <= NUM_MULTIPLES_UNIT; i++)
-        BOOST_CHECK(TestEncode(i));
+        BOOST_CHECK(TestEncode(CAmount{i}));
 
     for (uint64_t i = 1; i <= NUM_MULTIPLES_CENT; i++)
         BOOST_CHECK(TestEncode(i * CENT));

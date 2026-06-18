@@ -107,9 +107,9 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(largeNumber * feeRate == feeRate * largeNumber);
     // check boundary values
     int maxInt = std::numeric_limits<int>::max();
-    feeRate = CFeeRate(maxInt);
-    BOOST_CHECK(feeRate * 2 == CFeeRate(static_cast<int64_t>(maxInt) * 2));
-    BOOST_CHECK(2 * feeRate == CFeeRate(static_cast<int64_t>(maxInt) * 2));
+    feeRate = CFeeRate(CAmount{maxInt});
+    BOOST_CHECK(feeRate * 2 == CFeeRate(CAmount{static_cast<int64_t>(maxInt) * 2}));
+    BOOST_CHECK(2 * feeRate == CFeeRate(CAmount{static_cast<int64_t>(maxInt) * 2}));
     // check with zero fee rate
     feeRate = CFeeRate(0_sats);
     BOOST_CHECK(feeRate * 5 == CFeeRate(0_sats));

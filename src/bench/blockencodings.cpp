@@ -90,7 +90,7 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
         tx.vin[0].scriptWitness.stack.push_back({1});
         tx.vout.resize(1);
         tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
-        tx.vout[0].nValue = i;
+        tx.vout[0].nValue = CAmount{i};
         refs.push_back(MakeTransactionRef(tx));
     }
 

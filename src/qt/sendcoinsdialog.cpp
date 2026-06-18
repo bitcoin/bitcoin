@@ -840,7 +840,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
-    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK().Int())));
+    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())));
 
     if (reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)

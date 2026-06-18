@@ -200,11 +200,11 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         for (int i = 0; i < 17; ++i) {
             if (i < 8) {
                 // The eight smallest UTXOs can be combined to create expected_result
-                doppelgangers.push_back(1 * CENT + i);
+                doppelgangers.push_back(1 * CENT + CAmount{i});
                 expected_inputs.push_back(doppelgangers[i]);
             } else {
                 // Any eight UTXOs including at least one UTXO with the added cost_of_change will exceed target window
-                doppelgangers.push_back(1 * CENT + cs_params.m_cost_of_change + i);
+                doppelgangers.push_back(1 * CENT + cs_params.m_cost_of_change + CAmount{i});
             }
         }
         AddCoins(doppelganger_pool, doppelgangers, cs_params);
@@ -230,12 +230,12 @@ BOOST_AUTO_TEST_CASE(bnb_exhaustion_with_solution_test)
     // A hard case with no exact-match solution: BnB must still report that the algorithm did not complete once the
     // search is pushed into the attempt limit, even though it finds a solution within cost_of_change of the target.
     for (size_t i = 0; i < 19; ++i) {
-        utxo_pool.push_back(MakeCoin(100'000 + i, /*is_eff_value=*/true, default_cs_params));
+        utxo_pool.push_back(MakeCoin(CAmount{100'000 + i}, /*is_eff_value=*/true, default_cs_params));
     }
 
     const auto result{SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT)};
     BOOST_CHECK_MESSAGE(result, "Falsy result in BnB-Success: Exhaust with early solution");
-    BOOST_CHECK(result->GetSelectedEffectiveValue() > selection_target + 28);
+    BOOST_CHECK(result->GetSelectedEffectiveValue() > selection_target + 28_sats);
     BOOST_CHECK_EQUAL(result->GetInputSet().size(), 8U);
     BOOST_CHECK_EQUAL(result->GetSelectionsEvaluated(), 100'000U);
     BOOST_CHECK(!result->GetAlgoCompleted());
