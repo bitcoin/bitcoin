@@ -608,7 +608,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             LockPoints lp;
             auto changeset = m_node.mempool->GetChangeSet();
             changeset->StageAddition(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                    /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                    /*time=*/{}, /*entry_height=*/1, /*entry_sequence=*/0,
                     /*spends_coinbase=*/false, /*sigops_cost=*/4, lp);
             if (changeset->CheckMemPoolPolicyLimits()) {
                 changeset->Apply();

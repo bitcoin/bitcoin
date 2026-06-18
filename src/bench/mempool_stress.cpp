@@ -23,7 +23,7 @@ class CCoinsViewCache;
 
 static void AddTx(const CTransactionRef& tx, CTxMemPool& pool, FastRandomContext& det_rand) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
-    int64_t nTime = 0;
+    MempoolTime nTime{};
     unsigned int nHeight = 1;
     uint64_t sequence = 0;
     bool spendsCoinbase = false;

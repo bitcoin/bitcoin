@@ -278,7 +278,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         RemovalReasonToString(reason).c_str(),
         it->GetTxSize(),
         it->GetFee(),
-        std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count()
+        TicksSinceEpoch<std::chrono::duration<std::uint64_t>>(it->GetTime())
     );
 
     for (const CTxIn& txin : it->GetTx().vin)
@@ -423,7 +423,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     if (m_opts.signals) {
         m_opts.signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
     }
-    lastRollingFeeUpdate = GetTime();
+    lastRollingFeeUpdate = Now();
     blockSinceLastRollingFeeBump = true;
     if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
         LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after block.");
@@ -804,11 +804,11 @@ bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
     // limits would be violated. Note that the changeset will be destroyed
     // when it goes out of scope.
     auto changeset = GetChangeSet();
-    (void) changeset->StageAddition(tx, /*fee=*/0, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
+    (void) changeset->StageAddition(tx, /*fee=*/0, /*time=*/{}, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
     return changeset->CheckMemPoolPolicyLimits();
 }
 
-int CTxMemPool::Expire(std::chrono::seconds time)
+int CTxMemPool::Expire(MempoolTime time)
 {
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
@@ -831,9 +831,9 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
         return CFeeRate(llround(rollingMinimumFeeRate));
 
-    int64_t time = GetTime();
-    if (time > lastRollingFeeUpdate + 10) {
-        double halflife = ROLLING_FEE_HALFLIFE;
+    MempoolTime time = Now();
+    if (time > lastRollingFeeUpdate + 10s) {
+        std::chrono::duration<double> halflife = ROLLING_FEE_HALFLIFE;
         if (DynamicMemoryUsage() < sizelimit / 4)
             halflife /= 4;
         else if (DynamicMemoryUsage() < sizelimit / 2)
@@ -1002,7 +1002,7 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     return m_pool->m_txgraph->GetMainStagingDiagrams();
 }
 
-CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
+CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, MempoolTime time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
 {
     LOCK(m_pool->cs);
     Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());

@@ -529,7 +529,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
     info.pushKV("vsize", e.GetTxSize());
     info.pushKV("weight", e.GetTxWeight());
-    info.pushKV("time", count_seconds(e.GetTime()));
+    info.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(e.GetTime()));
     info.pushKV("height", e.GetHeight());
     info.pushKV("descendantcount", descendant_count);
     info.pushKV("descendantsize", descendant_size);

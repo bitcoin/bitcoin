@@ -114,7 +114,7 @@ struct TxMempoolInfo
     CTransactionRef tx;
 
     /** Time the transaction entered the mempool. */
-    std::chrono::seconds m_time;
+    MempoolTime m_time;
 
     /** Fee of the transaction. */
     CAmount fee;
@@ -192,7 +192,7 @@ protected:
     CAmount m_total_fee GUARDED_BY(cs){0};       //!< sum of all mempool tx's fees (NOT modified fee)
     uint64_t cachedInnerUsage GUARDED_BY(cs){0}; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs){GetTime()};
+    mutable MempoolTime lastRollingFeeUpdate GUARDED_BY(cs){Now()};
     mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs){false};
     mutable double rollingMinimumFeeRate GUARDED_BY(cs){0}; //!< minimum fee to get into the pool, decreases exponentially
 
@@ -209,7 +209,7 @@ protected:
 
 public:
 
-    static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
+    static constexpr auto ROLLING_FEE_HALFLIFE{std::chrono::hours{12}}; // public only for testing
 
     using indexed_transaction_set = boost::multi_index_container<
         CTxMemPoolEntry,
@@ -458,7 +458,7 @@ public:
     void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
-    int Expire(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Expire(MempoolTime time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Calculate the ancestor and cluster count for the given transaction.
@@ -573,6 +573,17 @@ public:
         return m_sequence_number;
     }
 
+    /**
+     * Return the current time. Non-static so the time source can be
+     * controlled per instance, enabling dependency injection for testing,
+     * simulation, or other integrations. Also insulates callers from future
+     * changes to the underlying time representation.
+     */
+    MempoolTime Now() const
+    {
+        return NodeClock::now();
+    }
+
 private:
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
@@ -631,7 +642,7 @@ public:
 
         using TxHandle = CTxMemPool::txiter;
 
-        TxHandle StageAddition(const CTransactionRef& tx, CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        TxHandle StageAddition(const CTransactionRef& tx, CAmount fee, MempoolTime time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
 
         void StageRemoval(CTxMemPool::txiter it);
 
