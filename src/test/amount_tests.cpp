@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(1), CAmount(1));
     BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(121));
     BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(999));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(1e3));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(9e3));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount{int64_t(1e3)});
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount{int64_t(9e3)});
 
     feeRate = CFeeRate(-1000_sats);
     // Must always just return -1 * arg
@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(1), CAmount(-1));
     BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(-121));
     BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(-999));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(-1e3));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(-9e3));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount{int64_t(-1e3)});
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount{int64_t(-9e3)});
 
     feeRate = CFeeRate(123_sats);
     // Rounds up the result, if not integer

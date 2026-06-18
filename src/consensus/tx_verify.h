@@ -5,13 +5,13 @@
 #ifndef BITCOIN_CONSENSUS_TX_VERIFY_H
 #define BITCOIN_CONSENSUS_TX_VERIFY_H
 
-#include <consensus/amount.h>
 #include <script/verify_flags.h>
 
 #include <cstdint>
 #include <utility>
 #include <vector>
 
+class CAmount;
 class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;

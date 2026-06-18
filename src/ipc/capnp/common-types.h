@@ -139,6 +139,22 @@ bool CustomHasField(TypeList<CTransaction>, InvokeContext& invoke_context, const
 {
     return input.get().size() > 0;
 }
+
+//! Overload CustomBuildField and CustomReadField to serialize CAmount
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<CAmount>, Priority<1>, InvokeContext& invoke_context, Value&& value, Output&& output)
+{
+    output.set(value.Int());
+}
+
+template <typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<CAmount>, Priority<1>, InvokeContext& invoke_context, Input&& input,
+                               ReadDest&& read_dest)
+{
+    const CAmount::inner_type& source{input.get()};
+    return read_dest.construct(source);
+}
+
 } // namespace mp
 
 #endif // BITCOIN_IPC_CAPNP_COMMON_TYPES_H

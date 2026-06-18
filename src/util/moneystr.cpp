@@ -10,6 +10,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
+#include <compare>
 #include <cstdint>
 #include <optional>
 
@@ -60,7 +61,7 @@ std::optional<CAmount> ParseMoney(const std::string& money_string)
         if (*p == '.')
         {
             p++;
-            int64_t nMult = COIN / 10;
+            int64_t nMult = COIN.Int() / 10;
             while (IsDigit(*p) && (nMult > 0))
             {
                 nUnits += nMult * (*p++ - '0');
