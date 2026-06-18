@@ -1,4 +1,4 @@
-# Dash Core version v23.1.3
+# Dash Core version v23.1.4
 
 This is a new patch version release, bringing GUI improvements and bugfixes.
 This release is **optional** for all nodes, although recommended.
