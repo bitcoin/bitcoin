@@ -16,6 +16,7 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <uint256.h>
 #include <util/byte_units.h>
@@ -172,6 +173,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTestingSetup)
 {
+    // Freeze the clock to avoid a race where Now<NodeSeconds>() in test setup
+    // and Now<NodeSeconds>() inside IsTipRecent() straddle a second boundary,
+    // causing a spurious failure in the tip_recent=true case.
+    FakeNodeClock clock{};
+
     CBlockIndex tip;
     ChainstateManager& chainman{*Assert(m_node.chainman)};
     auto apply{[&](bool cached_is_ibd, bool loading_blocks, bool tip_exists, bool enough_work, bool tip_recent) {
