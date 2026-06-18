@@ -37,6 +37,7 @@ require a reindex.
 
 - Reject two ProRegTx/ProUpServTx with the same Platform node ID from being
   present in the mempool simultaneously.
+- Compilation fix for some compilers due to invalid final mark (dash#7317).
 
 ## Performance Improvements
 
@@ -47,7 +48,7 @@ require a reindex.
 - Avoid re-validation of EHF signals during block connect. This also prevents
   a potential assertion crash during large blockchain re-organizations when a
   buried fork is re-validated in `BlockUndo`.
-
+- Early bail-out for invalid oversized llmq messages.
 
 # v23.1.4 Change log
 

@@ -2428,6 +2428,40 @@ class msg_platformban:
                (self.protx_hash, self.requested_height, self.quorum_hash)
 
 
+class CSigSharesInv:
+    __slots__ = ("session_id", "inv_size")
+
+    def __init__(self, session_id=0, inv_size=0):
+        self.session_id = session_id
+        self.inv_size = inv_size
+
+    def serialize(self):
+        # sessionId is a VARINT and the trailing 0 is the AUTOBITSET VarInt
+        # stopper; for the small values used here both match ser_compact_size.
+        r = ser_compact_size(self.session_id)
+        r += ser_compact_size(self.inv_size)
+        r += b"\x01"  # AUTOBITSET: select the VarInts bitset encoding
+        r += b"\x00"  # VarInt stopper: empty bitset, no set bits
+        return r
+
+    def __repr__(self):
+        return "CSigSharesInv(session_id=%d, inv_size=%d)" % (self.session_id, self.inv_size)
+
+
+class msg_qsigsinv:
+    __slots__ = ("invs",)
+    msgtype = b"qsigsinv"
+
+    def __init__(self, invs=None):
+        self.invs = invs if invs is not None else []
+
+    def serialize(self):
+        return ser_vector(self.invs)
+
+    def __repr__(self):
+        return "msg_qsigsinv(invs=%d)" % len(self.invs)
+
+
 class msg_qsigshare:
     __slots__ = ("sig_shares",)
     msgtype = b"qsigshare"
