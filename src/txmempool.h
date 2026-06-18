@@ -581,7 +581,10 @@ public:
      */
     MempoolTime Now() const
     {
-        return NodeClock::now();
+        // It's fine to use nondeterministic times in the mempool even though it
+        // gets linked into the kernel library, because it's just an internal
+        // dependency that's not exposed to applications.
+        return NodeClock::_now_nondet();
     }
 
 private:

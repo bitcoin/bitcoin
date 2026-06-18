@@ -2756,7 +2756,7 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
         }
-        const auto nNow{NodeClock::now()};
+        const auto nNow{NodeClock::_now_nondet()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
         // The cache is over the limit, we have to write now.
@@ -2812,7 +2812,7 @@ bool Chainstate::FlushStateToDisk(
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
                 full_flush_completed = true;
                 TRACEPOINT(utxocache, flush,
-                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
+                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::_now_nondet() - nNow)},
                     (uint32_t)mode,
                     (uint64_t)coins_count,
                     (uint64_t)coins_mem_usage,
@@ -2822,7 +2822,7 @@ bool Chainstate::FlushStateToDisk(
 
         if (should_write || m_next_write == NodeClock::time_point::max()) {
             constexpr auto range{DATABASE_WRITE_INTERVAL_MAX - DATABASE_WRITE_INTERVAL_MIN};
-            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::now() + DATABASE_WRITE_INTERVAL_MIN, range);
+            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::_now_nondet() + DATABASE_WRITE_INTERVAL_MIN, range);
         }
     }
     if (full_flush_completed && m_chainman.m_options.signals) {
@@ -4270,7 +4270,7 @@ void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
         if (m_best_header->nChainWork >= UintToArith256(GetConsensus().nMinimumChainWork)) return;
         // Rate limit headers presync updates to 4 per second, as these are not subject to DoS
         // protection.
-        auto now = MockableSteadyClock::now();
+        auto now = MockableSteadyClock::_now_nondet();
         if (now < m_last_presync_update + std::chrono::milliseconds{250}) return;
         m_last_presync_update = now;
     }
