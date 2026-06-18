@@ -38,7 +38,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) co
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
 {
-    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
+    return CTxMemPoolEntry{tx, nFee, time, nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
 }
 
 std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
@@ -217,7 +217,7 @@ void TryAddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
     LOCK2(cs_main, tx_pool.cs);
     auto changeset = tx_pool.GetChangeSet();
     changeset->StageAddition(entry.GetSharedTx(), entry.GetFee(),
-            entry.GetTime().count(), entry.GetHeight(), entry.GetSequence(),
+            entry.GetTime(), entry.GetHeight(), entry.GetSequence(),
             entry.GetSpendsCoinbase(), entry.GetSigOpCost(), entry.GetLockPoints());
     if (changeset->CheckMemPoolPolicyLimits()) changeset->Apply();
 }
@@ -249,7 +249,7 @@ void MockMempoolMinFee(const CFeeRate& target_feerate, CTxMemPool& mempool)
     {
         auto changeset = mempool.GetChangeSet();
         changeset->StageAddition(tx, /*fee=*/tx_fee,
-                /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                /*time=*/{}, /*entry_height=*/1, /*entry_sequence=*/0,
                 /*spends_coinbase=*/true, /*sigops_cost=*/1, lp);
         changeset->Apply();
     }
