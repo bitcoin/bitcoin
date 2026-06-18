@@ -13,6 +13,7 @@
 #include <util/time.h>
 #include <validationinterface.h>
 
+#include <compare>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -23,7 +24,6 @@
 class CBlock;
 class ChainstateManager;
 class CTxMemPool;
-class uint256;
 
 namespace interfaces {
 struct BlockRef;
@@ -40,7 +40,9 @@ struct CBlockTemplate;
  * incrementally, avoiding a full sort on every TrimToFit() call.
  *
  * Invariant: template_chunks and chunks_by_feerate contain the same chunk
- * hashes, and total_fees/total_weight/total_sigops are their aggregate totals.
+ * hashes. Cached totals equal their aggregates, with reserved_weight included
+ * in total_weight. Non-empty snapshots have total_weight < max_weight; empty
+ * snapshots may have total_weight == max_weight.
  */
 struct TemplateSnapshot {
     /** Chunk metadata captured from the template: adjusted feerate, weight,
@@ -75,6 +77,8 @@ struct TemplateSnapshot {
     int64_t max_weight{0};
     /** Weight reserved before transaction selection. */
     int64_t reserved_weight{0};
+    /** Fees in the original template, used as the staleness baseline. */
+    CAmount original_fees{0};
     /** Aggregate fees of all currently tracked chunks. */
     CAmount total_fees{0};
     /** Reserved weight plus the weight of all currently tracked chunks. */
@@ -109,9 +113,14 @@ struct TemplateSnapshot {
  * every mempool update, chunks that left the mempool are dropped from the
  * record. New chunks at or above the block minimum fee rate that pass sigops
  * and finality checks are added: directly if weight remains, or by evicting
- * tracked chunks whose feerate is lower than the incoming chunk. Block
- * connection (non-historical) and disconnection prune records built on the old
- * tip of each transition.
+ * tracked chunks whose feerate is lower than the incoming chunk.
+ *
+ * A template is stale once the tracked fee improvement reaches the requested
+ * threshold. The fee improvement is the lower-bound difference between the
+ * current tracked chunk fees and the original template fees.
+ *
+ * Block connection (non-historical) and disconnection prune records built on
+ * the old tip of each transition.
  */
 class BlockTemplateManager : public CValidationInterface
 {
@@ -137,8 +146,13 @@ public:
 
     /** Create a fresh block template, applying init-time defaults to any unset
      *  options. When @p tracking_id is non-null, the template is tracked for
-     *  fee inflow and its identifier is returned there. */
+     *  staleness and its identifier is returned there. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options, uint64_t* tracking_id = nullptr)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** @return true if fee inflow exceeds @p fee_threshold. Returns false if no
+     *  tracked entry exists for @p template_id or if the options do not match. */
+    bool IsStale(const BlockCreateOptions& options, uint64_t template_id, CAmount fee_threshold) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** @return true if fee-inflow tracking is active for the given template id. */
