@@ -4324,7 +4324,7 @@ void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
+BlockValidationState ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
     const CBlock& block = *pblock;
 
@@ -4334,11 +4334,12 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    state = AcceptBlockHeader(block, &pindex, min_pow_checked);
-    CheckBlockIndex();
-
-    if (!state.IsValid())
-        return false;
+    {
+        BlockValidationState accept_state{AcceptBlockHeader(block, &pindex, min_pow_checked)};
+        CheckBlockIndex();
+        if (!accept_state.IsValid())
+            return accept_state;
+    }
 
     // Check all requested blocks that we do not already have for validity and
     // save them to disk. Skip processing of unrequested blocks as an anti-DoS
@@ -4361,31 +4362,33 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
-    if (fAlreadyHave) return true;
+    if (fAlreadyHave) return BlockValidationState{};
     if (!fRequested) {  // If we didn't ask for it:
-        if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
-        if (fTooFarAhead) return true;        // Block height is too high
+        if (pindex->nTx != 0) return BlockValidationState{};    // This is a previously-processed block that was pruned
+        if (!fHasMoreOrSameWork) return BlockValidationState{}; // Don't process less-work chains
+        if (fTooFarAhead) return BlockValidationState{};        // Block height is too high
 
         // Protect against DoS attacks from low-work chains.
         // If our tip is behind, a peer could try to send us
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
-        if (pindex->nChainWork < MinimumChainWork()) return true;
+        if (pindex->nChainWork < MinimumChainWork()) return BlockValidationState{};
     }
 
     const CChainParams& params{GetParams()};
 
-    state = CheckBlock(block, params.GetConsensus());
-    if (state.IsValid()) {
-        state = ContextualCheckBlock(block, *this, pindex->pprev);
-    }
-    if (!state.IsValid()) {
-        if (Assume(state.IsInvalid())) {
-            ActiveChainstate().InvalidBlockFound(pindex, state);
+    {
+        BlockValidationState state{CheckBlock(block, params.GetConsensus())};
+        if (state.IsValid()) {
+            state = ContextualCheckBlock(block, *this, pindex->pprev);
         }
-        LogError("%s: %s\n", __func__, state.ToString());
-        return false;
+        if (!state.IsValid()) {
+            if (Assume(state.IsInvalid())) {
+                ActiveChainstate().InvalidBlockFound(pindex, state);
+            }
+            LogError("%s: %s\n", __func__, state.ToString());
+            return state;
+        }
     }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
@@ -4404,14 +4407,14 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         } else {
             blockPos = m_blockman.WriteBlock(block, pindex->nHeight);
             if (blockPos.IsNull()) {
-                state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
-                return false;
+                BlockValidationState error_state;
+                error_state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
+                return error_state;
             }
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        state = FatalError(GetNotifications(), strprintf(_("System error while saving block to disk: %s"), e.what()));
-        return false;
+        return FatalError(GetNotifications(), strprintf(_("System error while saving block to disk: %s"), e.what()));
     }
 
     // TODO: FlushStateToDisk() handles flushing of both block and chainstate
@@ -4430,7 +4433,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     CheckBlockIndex();
 
-    return true;
+    return BlockValidationState{};
 }
 
 bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
@@ -4454,7 +4457,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         state = CheckBlock(*block, GetConsensus());
         if (state.IsValid()) {
             // Store to disk
-            (void)AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            state = AcceptBlock(block, &pindex, force_processing, nullptr, new_block, min_pow_checked);
         }
         if (!state.IsValid()) {
             if (m_options.signals) {
@@ -5076,8 +5079,8 @@ void ChainstateManager::LoadExternalBlockFile(
                         blkdat >> TX_WITH_WITNESS(*pblock);
                         nRewind = blkdat.GetPos();
 
-                        BlockValidationState state;
-                        if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr, true)) {
+                        BlockValidationState state{AcceptBlock(pblock, nullptr, true, dbp, nullptr, true)};
+                        if (state.IsValid()) {
                             nLoaded++;
                         }
                         if (state.IsError()) {
@@ -5134,8 +5137,7 @@ void ChainstateManager::LoadExternalBlockFile(
                             const auto& block_hash{pblockrecursive->GetHash()};
                             LogDebug(BCLog::REINDEX, "%s: Processing out of order child %s of %s", __func__, block_hash.ToString(), head.ToString());
                             LOCK(cs_main);
-                            BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)) {
+                            if (auto state{AcceptBlock(pblockrecursive, nullptr, true, &it->second, nullptr, true)}; state.IsValid()) {
                                 nLoaded++;
                                 queue.push_back(block_hash);
                             }

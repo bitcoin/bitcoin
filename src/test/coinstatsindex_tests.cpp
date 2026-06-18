@@ -103,7 +103,8 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
             LOCK(cs_main);
             BlockValidationState state{CheckBlock(block, params.GetConsensus())};
             BOOST_CHECK(state.IsValid());
-            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+            state = m_node.chainman->AcceptBlock(new_block, &new_block_index, true, nullptr, nullptr, true);
+            BOOST_CHECK(state.IsValid());
             CCoinsViewCache view(&chainstate.CoinsTip());
             BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
         }
