@@ -1,6 +1,6 @@
 # Dash Core version v23.1.4
 
-This is a new patch version release, bringing GUI improvements and bugfixes.
+This is a new patch version release, bringing performance improvements and bugfixes.
 This release is **optional** for all nodes, although recommended.
 
 Please report bugs using the issue tracker at GitHub:
