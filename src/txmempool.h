@@ -671,6 +671,8 @@ public:
          */
         util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF();
 
+        const std::pair<std::vector<TxGraph::Chunk>, std::vector<TxGraph::Chunk>>& GetFeeRateDiagramChunks() const;
+
         size_t GetTxCount() const { return m_entry_vec.size(); }
         const CTransaction& GetAddedTxn(size_t index) const { return m_entry_vec.at(index)->GetTx(); }
 
@@ -684,6 +686,7 @@ public:
         std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order
         // map from the m_to_add index to the ancestors for the transaction
         std::map<CTxMemPool::txiter, CTxMemPool::setEntries, CompareIteratorByHash> m_ancestors;
+        std::pair<std::vector<TxGraph::Chunk>, std::vector<TxGraph::Chunk>> m_fee_rate_diagrams;
         CTxMemPool::setEntries m_to_remove;
         bool m_dependencies_processed{false};
 

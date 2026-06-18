@@ -998,18 +998,22 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     if (!CheckMemPoolPolicyLimits()) {
         return util::Error{Untranslated("cluster size limit exceeded")};
     }
-
     std::vector<FeeFrac> old_diagram, new_diagram;
-    auto diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
-    old_diagram.reserve(diagrams.first.size());
-    new_diagram.reserve(diagrams.second.size());
-    for (auto& chunk : diagrams.first) {
+    m_fee_rate_diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
+    old_diagram.reserve(m_fee_rate_diagrams.first.size());
+    new_diagram.reserve(m_fee_rate_diagrams.second.size());
+    for (auto& chunk : m_fee_rate_diagrams.first) {
         old_diagram.emplace_back(chunk.feerate);
     }
-    for (auto& chunk : diagrams.second) {
+    for (auto& chunk : m_fee_rate_diagrams.second) {
         new_diagram.emplace_back(chunk.feerate);
     }
     return std::make_pair(old_diagram, new_diagram);
+}
+
+const std::pair<std::vector<TxGraph::Chunk>, std::vector<TxGraph::Chunk>>& CTxMemPool::ChangeSet::GetFeeRateDiagramChunks() const
+{
+    return m_fee_rate_diagrams;
 }
 
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
