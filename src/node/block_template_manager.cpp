@@ -62,6 +62,9 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
         auto wtxids{chunk.chunk_wtxids};
         snapshot.AddChunk(GetHashFromWitnesses(wtxids), {chunk.feerate, chunk.weight, chunk.sigops_cost});
     }
+    // Baseline uses the same modified-fee basis as total_fees so the staleness
+    // delta is zero at creation and reflects only later mempool fee inflow.
+    snapshot.original_fees = snapshot.total_fees;
     LOCK(m_mutex);
     Assume(m_next_template_id != 0);
     *tracking_id = m_next_template_id++;
@@ -454,6 +457,18 @@ void BlockTemplateManager::StopTrackingFeeInflow(uint64_t template_id)
 {
     LOCK(m_mutex);
     m_template_snapshots.erase(template_id);
+}
+
+bool BlockTemplateManager::IsStale(const BlockCreateOptions& options,
+                                   uint64_t template_id,
+                                   CAmount fee_threshold) const
+{
+    LOCK(m_mutex);
+    const auto snapshot = m_template_snapshots.find(template_id);
+    if (snapshot == m_template_snapshots.end()) return false;
+    if (snapshot->second.options != FlattenMiningOptions(options)) return false;
+    const CAmount fee_delta = snapshot->second.total_fees - snapshot->second.original_fees;
+    return fee_delta >= fee_threshold;
 }
 
 void BlockTemplateManager::SanityCheck() const

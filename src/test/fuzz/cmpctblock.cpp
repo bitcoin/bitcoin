@@ -114,7 +114,7 @@ void ResetChainmanAndMempool(TestingSetup& setup)
 
     bilingual_str error{};
     auto& node = setup.m_node;
-    node.block_template_manager.reset();
+    setup.ResetBlockTemplateManager();
     node.mempool.reset();
     node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(node), error);
     Assert(error.empty());
