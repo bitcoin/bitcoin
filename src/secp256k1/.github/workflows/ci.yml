@@ -604,11 +604,10 @@ jobs:
     steps:
       - *CHECKOUT
 
-      - name: Add cl.exe to PATH
-        uses: ilammy/msvc-dev-cmd@v1
-
       - name: C++ (public headers)
+        shell: cmd
         run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cl.exe -c -WX -TP include/*.h
 
   cxx_fpermissive_debian:

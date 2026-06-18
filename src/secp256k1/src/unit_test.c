@@ -17,6 +17,11 @@
 #include "testrand.h"
 #include "tests_common.h"
 
+#if defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic warning "-Wunused-function"
+#endif
+
 #define UNUSED(x) (void)(x)
 
 /* Number of times certain tests will run */
@@ -477,3 +482,7 @@ static int tf_run(struct tf_framework* tf) {
 
     return status;
 }
+
+#if defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif

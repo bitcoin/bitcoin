@@ -40,6 +40,11 @@
 #include "../include/secp256k1_ellswift.h"
 #endif
 
+#if defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic warning "-Wunused-function"
+#endif
+
 static void run_tests(secp256k1_context *ctx, unsigned char *key);
 
 int main(void) {
@@ -265,3 +270,7 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
 
 #endif
 }
+
+#if defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
