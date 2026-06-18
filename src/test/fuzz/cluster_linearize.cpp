@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cluster_linearize.h>
+
+#include <consensus/amount.h>
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
@@ -491,7 +493,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             // Iterate decreasing command until an applicable branch is found.
             if (num_tx_sim < TestBitSet::Size() && command-- == 0) {
                 // AddTransaction.
-                auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+                CAmount fee{provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff)};
                 auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
                 FeeFrac feerate{fee, size};
                 // Apply to DepGraph.
@@ -1286,7 +1288,7 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
 
     // Compare diagrams (applying the fee delta after computing the old one).
     auto old_chunking = ChunkLinearization(depgraph, lin);
-    depgraph.FeeRate(lin_leaf.back()).fee += fee_inc;
+    depgraph.FeeRate(lin_leaf.back()).fee += CAmount{fee_inc};
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);

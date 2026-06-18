@@ -94,7 +94,7 @@ void PopulateChunks(FuzzedDataProvider& fuzzed_data_provider, std::vector<FeeFra
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 50)
     {
-        chunks.emplace_back(fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(INT32_MIN>>1, INT32_MAX>>1), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000));
+        chunks.emplace_back(CAmount{fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(INT32_MIN>>1, INT32_MAX>>1)}, fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000));
     }
     return;
 }

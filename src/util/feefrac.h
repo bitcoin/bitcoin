@@ -166,7 +166,7 @@ struct FeeFrac
             }
         } else {
             // Otherwise, use Mul and Div.
-            return Div(Mul(fee, at_size), size, RoundDown);
+            return CAmount{Div(Mul(fee, at_size), size, RoundDown)};
         }
     }
 

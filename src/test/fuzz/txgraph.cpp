@@ -479,7 +479,7 @@ FUZZ_TARGET(txgraph)
                     fee = provider.ConsumeIntegral<uint8_t>();
                     size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
-                FeePerWeight feerate{fee, size};
+                FeePerWeight feerate{CAmount{fee}, size};
                 // Pick a novel txid (and not 0, which is reserved for empty_ref).
                 uint64_t txid;
                 do {
@@ -565,9 +565,9 @@ FUZZ_TARGET(txgraph)
                     fee = provider.ConsumeIntegral<uint8_t>();
                 }
                 auto ref = pick_fn();
-                real->SetTransactionFee(*ref, fee);
+                real->SetTransactionFee(*ref, CAmount{fee});
                 for (auto& sim : sims) {
-                    sim.SetTransactionFee(ref, fee);
+                    sim.SetTransactionFee(ref, CAmount{fee});
                 }
                 break;
             } else if (command-- == 0) {

@@ -757,7 +757,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     if (median < 0)
         return CFeeRate(0_sats);
 
-    return CFeeRate(llround(median));
+    return CFeeRate(CAmount{llround(median)});
 }
 
 unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
@@ -952,7 +952,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     if (median < 0) return CFeeRate(0_sats); // error condition
 
-    return CFeeRate(llround(median));
+    return CFeeRate(CAmount{llround(median)});
 }
 
 void CBlockPolicyEstimator::Flush() {

@@ -559,9 +559,10 @@ static CAmount AmountFromValue(const UniValue& value)
     int64_t amount;
     if (!ParseFixedPoint(value.getValStr(), 8, &amount))
         throw std::runtime_error("Invalid amount");
-    if (!MoneyRange(amount))
+    CAmount result{amount};
+    if (!MoneyRange(result))
         throw std::runtime_error("Amount out of range");
-    return amount;
+    return result;
 }
 
 static std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)

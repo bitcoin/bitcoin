@@ -251,7 +251,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
         for (int32_t i = 0; i < num_parents; ++i) {
             assert(coinbase_idx < m_coinbase_txns.size());
             auto mtx_parent = CreateValidMempoolTransaction(m_coinbase_txns[coinbase_idx++], /*input_vout=*/0, test_chain_height,
-                                                            coinbaseKey, destination, amount_depth_1 + i, /*submit=*/false);
+                                                            coinbaseKey, destination, amount_depth_1 + CAmount{i}, /*submit=*/false);
             auto ptx_parent = MakeTransactionRef(mtx_parent);
             parents.emplace_back(ptx_parent);
             outpoints.emplace_back(ptx_parent->GetHash(), 0);

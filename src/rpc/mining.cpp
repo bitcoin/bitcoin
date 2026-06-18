@@ -554,7 +554,7 @@ static RPCMethod prioritisetransaction()
 
     auto txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
     const auto dummy{self.MaybeArg<double>("dummy")};
-    CAmount nAmount = request.params[2].getInt<int64_t>();
+    CAmount nAmount{request.params[2].getInt<int64_t>()};
 
     if (dummy && *dummy != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");

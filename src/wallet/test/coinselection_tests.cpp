@@ -200,11 +200,11 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         for (int i = 0; i < 17; ++i) {
             if (i < 8) {
                 // The eight smallest UTXOs can be combined to create expected_result
-                doppelgangers.push_back(1 * CENT + i);
+                doppelgangers.push_back(1 * CENT + CAmount{i});
                 expected_inputs.push_back(doppelgangers[i]);
             } else {
                 // Any eight UTXOs including at least one UTXO with the added cost_of_change will exceed target window
-                doppelgangers.push_back(1 * CENT + cs_params.m_cost_of_change + i);
+                doppelgangers.push_back(1 * CENT + cs_params.m_cost_of_change + CAmount{i});
             }
         }
         AddCoins(doppelganger_pool, doppelgangers, cs_params);

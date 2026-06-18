@@ -316,7 +316,7 @@ struct Peer {
         uint64_t m_last_inv_sequence GUARDED_BY(m_tx_inventory_mutex){1};
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
-        std::atomic<CAmount> m_fee_filter_received{0};
+        std::atomic<CAmount> m_fee_filter_received{0_sats};
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */

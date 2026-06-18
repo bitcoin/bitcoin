@@ -32,7 +32,7 @@ public:
     CAmount() = delete;
 
     template <non_bool_integral T>
-    constexpr CAmount(T sats) noexcept
+    constexpr explicit CAmount(T sats) noexcept
         : m_sats(sats)
     {
     }
@@ -112,7 +112,7 @@ public:
 };
 
 /** The amount of satoshis in one BTC. */
-static constexpr CAmount COIN = 100000000;
+constexpr CAmount COIN{100000000};
 
 /** No amount larger than this (in satoshi) is valid.
  *
@@ -124,11 +124,11 @@ static constexpr CAmount COIN = 100000000;
  * for the creation of coins out of thin air modification could lead to a fork.
  * */
 static constexpr CAmount MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+constexpr bool MoneyRange(const CAmount& nValue) { return (nValue.Int() >= 0 && nValue <= MAX_MONEY); }
 
 consteval CAmount operator""_sats(unsigned long long amount) noexcept
 {
-    assert(amount <= MAX_MONEY);
+    assert(amount <= MAX_MONEY.Int());
     return CAmount{static_cast<CAmount::inner_type>(amount)};
 }
 

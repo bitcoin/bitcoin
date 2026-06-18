@@ -102,9 +102,10 @@ CAmount AmountFromValue(const UniValue& value, int decimals)
     int64_t amount;
     if (!ParseFixedPoint(value.getValStr(), decimals, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (!MoneyRange(amount))
+    CAmount result{amount};
+    if (!MoneyRange(result))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-    return amount;
+    return result;
 }
 
 CFeeRate ParseFeeRate(const UniValue& json)

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
 #include <util/feefrac.h>
 #include <random.h>
 
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK_EQUAL(FeeFrac(0x200000001_sats, 123456789).EvaluateFeeUp(98765432), 6871947731_sats);
 
     // Tests paths that use double arithmetic
-    FeeFrac busted{(static_cast<int64_t>(INT32_MAX)) + 1, INT32_MAX};
+    FeeFrac busted{CAmount{(static_cast<int64_t>(INT32_MAX)) + 1}, INT32_MAX};
     BOOST_CHECK(!(ByRatioNegSize{busted} < ByRatioNegSize{busted}));
 
     FeeFrac max_fee{2100000000000000_sats, INT32_MAX};
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee2});
 
     // Test for integer overflow issue (https://github.com/bitcoin/bitcoin/issues/32294)
-    BOOST_CHECK_EQUAL((FeeFrac{0x7ffffffdfffffffb, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), 0x7fffffffffffffff);
+    BOOST_CHECK_EQUAL((FeeFrac{CAmount{0x7ffffffdfffffffb}, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), CAmount{0x7fffffffffffffff});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
