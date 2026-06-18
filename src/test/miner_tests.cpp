@@ -56,6 +56,7 @@ using interfaces::BlockTemplate;
 using interfaces::Mining;
 using node::BlockAssembler;
 using node::BlockCreateOptions;
+using node::TemplateSnapshot;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
@@ -951,6 +952,50 @@ BOOST_AUTO_TEST_CASE(block_template_manager)
     BOOST_CHECK(block.vtx[0]->IsCoinBase());
     BOOST_CHECK(block_template->vTxFees.empty());
     BOOST_CHECK(block_template->vTxSigOpsCost.empty());
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager_template_snapshot)
+{
+    TemplateSnapshot snapshot;
+    const uint256 hash{1};
+    snapshot.AddChunk(hash, {FeePerWeight{1000, 100}, 400, 1});
+    snapshot.AddChunk(hash, {FeePerWeight{2500, 100}, 600, 2});
+    BOOST_CHECK_EQUAL(snapshot.template_chunks.size(), 1U);
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 1U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 2500);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 600);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
+    snapshot.RemoveChunk(hash);
+    BOOST_CHECK(snapshot.template_chunks.empty());
+    BOOST_CHECK(snapshot.chunks_by_feerate.empty());
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 0);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 0);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 0);
+    snapshot.SanityCheck();
+    snapshot.max_weight = 1'000;
+    const uint256 low_fee_hash{1};
+    const uint256 high_fee_hash{2};
+    const uint256 equal_fee_hash{3};
+    snapshot.AddChunk(low_fee_hash, {FeePerWeight{1'000, 100}, 600, 1});
+    snapshot.AddChunk(high_fee_hash, {FeePerWeight{3'000, 100}, 150, 1});
+    snapshot.AddChunk(equal_fee_hash, {FeePerWeight{3'000, 100}, 150, 1});
+    BOOST_CHECK(snapshot.TrimToFit(/*needed_weight=*/500, /*needed_sigops=*/0, FeePerWeight{2'000, 100}));
+    BOOST_CHECK(!snapshot.template_chunks.contains(low_fee_hash));
+    BOOST_CHECK(snapshot.template_chunks.contains(high_fee_hash));
+    BOOST_CHECK(snapshot.template_chunks.contains(equal_fee_hash));
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 6'000);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 300);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
+    BOOST_CHECK(!snapshot.TrimToFit(/*needed_weight=*/700, /*needed_sigops=*/0, FeePerWeight{3'000, 100}));
+    BOOST_CHECK_EQUAL(snapshot.template_chunks.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 6'000);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 300);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
