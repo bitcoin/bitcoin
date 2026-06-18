@@ -23,7 +23,6 @@
 #include <net/if.h>      // IWYU pragma: export
 #include <netdb.h>       // IWYU pragma: export
 #include <netinet/in.h>  // IWYU pragma: export
-#include <netinet/tcp.h> // IWYU pragma: export
 #include <sys/mman.h>    // IWYU pragma: export
 #include <sys/select.h>  // IWYU pragma: export
 #include <sys/socket.h>  // IWYU pragma: export
@@ -123,6 +122,18 @@ typedef SSIZE_T ssize_t;
 #if defined(SIO_TCP_INFO)
 #define WIN32_TCPINFO_SUPPORTED
 #endif
+#endif
+
+// linux/tcp.h contains the definition of the extended tcp_info struct, which
+// has the tcpi_snd_wnd field.
+#if defined(__linux__)
+#include <linux/tcp.h>  // IWYU pragma: export
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+#define TCP_INFO_HAS_SEND_WND
+#endif
+#elif !defined(WIN32)
+#include <netinet/tcp.h>    // IWYU pragma: export
 #endif
 
 #endif // BITCOIN_COMPAT_COMPAT_H
