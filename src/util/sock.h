@@ -9,9 +9,11 @@
 #include <logging.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
@@ -359,6 +361,55 @@ public:
 #endif
         if (!m_valid) {
             LogError("Error getting TCP Info: %s", NetworkErrorString(WSAGetLastError()));
+        }
+    }
+
+    size_t GetTCPWindowSize()
+    {
+        if (!m_valid) {
+            return 0;
+        }
+
+        uint32_t cwnd_bytes{};
+        std::optional<uint32_t> peer_rwnd_bytes{std::nullopt};
+
+// Linux: tcpi_snd_wnd introduced in 5.4 https://github.com/torvalds/linux/commit/8f7baad7f03543451af27f5380fc816b008aa1f2
+// The logic around peer_rwnd_bytes being optional can be removed once the minimum supported kernel is 5.4 or greater.
+#if defined(__linux__)
+        // We can only create the runtime check if tcpi_snd_wnd is available at compile-time.
+        #if defined(TCP_INFO_HAS_SEND_WND)
+            // Offset + field length is the minimum struct size.
+            size_t snd_wnd_reqd_size = offsetof(struct tcp_info, tcpi_snd_wnd) + sizeof(m_tcp_info.tcpi_snd_wnd);
+            if (m_tcp_info_len >= snd_wnd_reqd_size) {
+                peer_rwnd_bytes = m_tcp_info.tcpi_snd_wnd;
+            }
+        #endif
+        // Unlike other platforms, on linux tcpi_snd_cwnd is reported in packets,
+        // not bytes.
+        uint64_t cwnd_bytes_temp = uint64_t(m_tcp_info.tcpi_snd_cwnd) * m_tcp_info.tcpi_snd_mss;
+        if (cwnd_bytes_temp > UINT32_MAX) {
+            // cwnd_bytes is u32, we overflowed.
+            return 0;
+        }
+        cwnd_bytes = cwnd_bytes_temp;
+/*
+ * FreeBSD: Available since 6.0: https://cgit.freebsd.org/src/tree/sys/netinet/tcp.h?h=releng/6.0#n214 (commit: https://cgit.freebsd.org/src/commit/?id=b8af5dfa81f1fdca5ed77f8f339a5b522d10e714)
+ * OSX: Available since 10.11: https://developer.apple.com/documentation/kernel/tcp_connection_info/1562043-tcpi_snd_wnd
+ * NetBSD: Available since 10.2: https://github.com/NetBSD/src/blame/6cee2c5b88e06440257c4c8ad704f388954c9fb0/sys/netinet/tcp.h#L202
+ * OpenBSD: Available since 7.2: https://cvsweb.openbsd.org/src/sys/netinet/tcp.h?rev=1.23&content-type=text/x-cvsweb-markup
+ */
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+        // congestion send window (# of segments) * mss (max segment size)
+        cwnd_bytes = m_tcp_info.tcpi_snd_cwnd;
+        peer_rwnd_bytes = m_tcp_info.tcpi_snd_wnd;
+#elif defined(WIN32_TCPINFO_SUPPORTED)
+        cwnd_bytes = m_tcp_info.Cwnd;
+        peer_rwnd_bytes = m_tcp_info.SndWnd;
+#endif
+        if(peer_rwnd_bytes.has_value()) {
+            return std::min(cwnd_bytes, peer_rwnd_bytes.value());
+        } else {
+            return cwnd_bytes;
         }
     }
 };
