@@ -367,6 +367,8 @@ public:
     /** Return the memory usage of this transport attributable to buffered data to send. */
     virtual size_t GetSendMemoryUsage() const noexcept = 0;
 
+    virtual size_t GetMessageSize(const CSerializedNetMsg &msg) const noexcept = 0;
+
     // 3. Miscellaneous functions.
 
     /** Whether upon disconnections, a reconnect with V1 is warranted. */
@@ -422,6 +424,9 @@ private:
     /** How many bytes have been sent so far (from m_header_to_send, or from m_message_to_send.data). */
     size_t m_bytes_sent GUARDED_BY(m_send_mutex) {0};
 
+    /** Return the message header size. */
+    size_t GetMessageHeaderSize() const noexcept;
+
 public:
     explicit V1Transport(NodeId node_id) noexcept;
 
@@ -452,6 +457,7 @@ public:
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+    size_t GetMessageSize(const CSerializedNetMsg &msg) const noexcept override;
     bool ShouldReconnectV1() const noexcept override { return false; }
 };
 
@@ -639,6 +645,9 @@ private:
     /** Process bytes in m_recv_buffer, while in VERSION/APP state. */
     bool ProcessReceivedPacketBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
 
+    /** Given a message type, return the message header size. */
+    size_t GetMessageHeaderSize(const std::string &m_type) const noexcept;
+
 public:
     static constexpr uint32_t MAX_GARBAGE_LEN = 4095;
 
@@ -662,6 +671,7 @@ public:
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+    size_t GetMessageSize(const CSerializedNetMsg &msg) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
 
     // Miscellaneous functions.
     bool ShouldReconnectV1() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
