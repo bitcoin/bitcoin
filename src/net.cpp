@@ -925,6 +925,16 @@ size_t V1Transport::GetMessageSize(const CSerializedNetMsg& msg) const noexcept
     return msg.data.size() + GetMessageHeaderSize();
 }
 
+size_t V1Transport::GetSendMessageSize() const noexcept
+{
+    LOCK(m_send_mutex);
+    if (m_sending_header) {
+        return m_header_to_send.size() - m_bytes_sent + m_message_to_send.data.size();
+    } else {
+        return m_message_to_send.data.size() - m_bytes_sent;
+    }
+}
+
 namespace {
 
 /** List of short messages as defined in BIP324, in order.
@@ -1614,6 +1624,20 @@ size_t V2Transport::GetMessageSize(const CSerializedNetMsg& msg) const noexcept
     return m_v1_fallback.GetMessageSize(msg);
 }
 
+size_t V2Transport::GetSendMessageSize() const noexcept
+{
+    SendState send_state;
+    {
+        LOCK(m_send_mutex);
+        send_state = m_send_state;
+
+        if (send_state != SendState::V1) return m_send_buffer.size() - m_send_pos;
+    }
+
+    Assume(send_state == SendState::V1);
+    return m_v1_fallback.GetSendMessageSize();
+}
+
 Transport::Info V2Transport::GetInfo() const noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
@@ -1648,9 +1672,11 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // there is an existing message still being sent, or (for v2 transports) when the
             // handshake has not yet completed.
             size_t memusage = it->GetMemoryUsage();
+            size_t sersize = node.m_transport->GetMessageSize(*it);
             if (node.m_transport->SetMessageToSend(*it)) {
                 // Update memory usage of send buffer (as *it will be deleted).
                 node.m_send_memusage -= memusage;
+                node.m_send_size -= sersize;
                 ++it;
             }
         }
@@ -1709,6 +1735,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
 
     if (it == node.vSendMsg.end()) {
         assert(node.m_send_memusage == 0);
+        Assume(node.m_send_size == 0);
     }
     node.vSendMsg.erase(node.vSendMsg.begin(), it);
     return {nSentSize, data_left};
@@ -4210,6 +4237,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
         // Update memory usage of send buffer.
         pnode->m_send_memusage += msg.GetMemoryUsage();
+        pnode->m_send_size += pnode->m_transport->GetMessageSize(msg);
         if (pnode->m_send_memusage + pnode->m_transport->GetSendMemoryUsage() > nSendBufferMaxSize) pnode->fPauseSend = true;
         // Move message to vSendMsg queue.
         pnode->vSendMsg.push_back(std::move(msg));
