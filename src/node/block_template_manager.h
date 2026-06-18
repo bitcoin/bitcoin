@@ -46,7 +46,7 @@ public:
     /** @return the block creation args set during node init. */
     const BlockCreateOptions& BlockCreateArgs() const { return m_block_create_args; }
 
-    /** Create a fresh block template. */
+    /** Create a fresh block template, applying init-time defaults to any unset options. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
