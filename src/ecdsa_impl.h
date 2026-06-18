@@ -273,14 +273,12 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_scalar *sigr, const secp25
 
 static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
     unsigned char b[32];
-    secp256k1_gej rp;
     secp256k1_ge r;
     secp256k1_scalar n;
     int overflow = 0;
     int high;
 
-    secp256k1_ecmult_gen(ctx, &rp, nonce);
-    secp256k1_ge_set_gej(&r, &rp);
+    secp256k1_ecmult_gen_ge(ctx, &r, nonce);
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
@@ -296,7 +294,6 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_scalar_inverse(sigs, nonce);
     secp256k1_scalar_mul(sigs, sigs, &n);
     secp256k1_scalar_clear(&n);
-    secp256k1_gej_clear(&rp);
     secp256k1_ge_clear(&r);
     high = secp256k1_scalar_is_high(sigs);
     secp256k1_scalar_cond_negate(sigs, high);
