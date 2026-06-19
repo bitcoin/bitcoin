@@ -1103,6 +1103,10 @@ public:
         if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
+        // Discard any abort request left over from previous reservation, so
+        // that an abort requested while the reservation is held always applies
+        // to abort this rescan, even if it arrives before the scan loop starts.
+        m_wallet.fAbortRescan = false;
         m_wallet.m_scanning_with_passphrase.exchange(with_passphrase);
         m_wallet.m_scanning_start = SteadyClock::now();
         m_wallet.m_scanning_progress = 0;
