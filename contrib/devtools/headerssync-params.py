@@ -6,7 +6,7 @@
 """Script to find the optimal parameters for the headerssync module through simulation."""
 
 from datetime import datetime, timedelta
-from math import log, exp, sqrt
+from math import log, exp, sqrt, expm1
 import random
 
 # Parameters:
@@ -146,6 +146,10 @@ def attack_rate(period, bufsize, limit=None):
     value in limit.
     """
 
+    # Each batch's probability is a factor 2**(HEADER_BATCH_COUNT/period) smaller than the previous
+    # one, so the contributions of all future batches form a geometric series. future_limit is an
+    # upper bound on the ratio between that future sum and a single batch's HEADER_BATCH_COUNT*prob.
+    future_limit = HEADER_BATCH_COUNT / expm1(log(2) * HEADER_BATCH_COUNT / period)
     max_rate = None
     max_honest = None
     # Let the current batch 0 being received be the first one in which the attacker starts lying.
@@ -183,7 +187,7 @@ def attack_rate(period, bufsize, limit=None):
                         return rate, None
                     # If the maximal term being added is negligible compared to rate, stop
                     # iterating.
-                    if HEADER_BATCH_COUNT * prob < 1.0e-16 * rate * period:
+                    if future_limit * prob < 1.0e-16 * rate:
                         break
                 # Update state from a new incoming batch (which is all forged)
                 after_good_commit += HEADER_BATCH_COUNT
@@ -305,8 +309,16 @@ def compute(max_headers, minchainwork_headers, attack_headers):
                 # best one.
                 periods = [p for p in periods if (p < period) == (best[0] < period)]
 
-    # Return the result.
-    period, bufsize, _ = best
+    # Break ties deterministically toward the smallest period (the memory usage as a function of
+    # period can be flat over several adjacent periods), so the result does not depend on the random
+    # search order.
+    period, bufsize, mem = best
+    while period > 1:
+        cand_bufsize = find_bufsize(period - 1, attack_headers, max_headers, minchainwork_headers)
+        cand_mem = memory_usage(period - 1, cand_bufsize, max_headers, minchainwork_headers)
+        if cand_mem != mem:
+            break
+        period, bufsize, mem = period - 1, cand_bufsize, cand_mem
     return period, bufsize
 
 
