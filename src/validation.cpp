@@ -3848,14 +3848,14 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     return BlockValidationState{};
 }
 
-static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
+[[nodiscard]] static BlockValidationState CheckMerkleRoot(const CBlock& block)
 {
-    if (block.m_checked_merkle_root) return true;
+    if (block.m_checked_merkle_root) return BlockValidationState{};
 
     bool mutated;
     uint256 merkle_root = BlockMerkleRoot(block, &mutated);
     if (block.hashMerkleRoot != merkle_root) {
-        return state.Invalid(
+        return BlockValidationState::InvalidState(
             /*result=*/BlockValidationResult::BLOCK_MUTATED,
             /*reject_reason=*/"bad-txnmrklroot",
             /*debug_message=*/"hashMerkleRoot mismatch");
@@ -3865,14 +3865,14 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
     // of transactions in a block without affecting the merkle root of a block,
     // while still invalidating it.
     if (mutated) {
-        return state.Invalid(
+        return BlockValidationState::InvalidState(
             /*result=*/BlockValidationResult::BLOCK_MUTATED,
             /*reject_reason=*/"bad-txns-duplicate",
             /*debug_message=*/"duplicate transaction");
     }
 
     block.m_checked_merkle_root = true;
-    return true;
+    return BlockValidationState{};
 }
 
 /** CheckWitnessMalleation performs checks for block malleation with regard to
@@ -3948,8 +3948,11 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     }
 
     // Check the merkle root.
-    if (fCheckMerkleRoot && !CheckMerkleRoot(block, state)) {
-        return false;
+    if (fCheckMerkleRoot) {
+        state = CheckMerkleRoot(block);
+        if (!state.IsValid()) {
+            return false;
+        }
     }
 
     // All potential-corruption validation must be done before we do any
@@ -4041,8 +4044,7 @@ bool HasValidProofOfWork(std::span<const CBlockHeader> headers, const Consensus:
 
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
 {
-    BlockValidationState state;
-    if (!CheckMerkleRoot(block, state)) {
+    if (const auto state = CheckMerkleRoot(block); !state.IsValid()) {
         LogDebug(BCLog::VALIDATION, "Block mutated: %s\n", state.ToString());
         return true;
     }
@@ -4062,6 +4064,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
         // here as it requires at least 224 bits of work.
     }
 
+    BlockValidationState state;
     if (!CheckWitnessMalleation(block, check_witness_root, state)) {
         LogDebug(BCLog::VALIDATION, "Block mutated: %s\n", state.ToString());
         return true;
