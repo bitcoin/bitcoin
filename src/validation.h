@@ -737,10 +737,9 @@ public:
      * If FlushStateMode::NONE is used, then FlushStateToDisk(...) won't do anything
      * besides checking if we need to prune.
      *
-     * @returns true unless a system error occurred
+     * @returns a validation result with `IsValid() == true` unless a system error occurred
      */
-    bool FlushStateToDisk(
-        BlockValidationState& state,
+    [[nodiscard]] BlockValidationState FlushStateToDisk(
         FlushStateMode mode,
         int nManualPruneHeight = 0);
 
