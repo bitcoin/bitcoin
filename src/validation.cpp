@@ -4226,7 +4226,7 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, const ChainstateManager& chainman, const CBlockIndex* pindexPrev)
+[[nodiscard]] static BlockValidationState ContextualCheckBlock(const CBlock& block, const ChainstateManager& chainman, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
@@ -4244,7 +4244,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // Check that all transactions are finalized
     for (const auto& tx : block.vtx) {
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final transaction");
+            return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final transaction");
         }
     }
 
@@ -4254,7 +4254,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-height", "block height mismatch in coinbase");
+            return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-height", "block height mismatch in coinbase");
         }
     }
 
@@ -4266,10 +4266,8 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
-    Assume(state.IsValid());
-    state = CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT));
-    if (!state.IsValid()) {
-        return false;
+    if (const auto state = CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT)); !state.IsValid()) {
+        return state;
     }
 
     // After the coinbase witness reserved value and commitment are verified,
@@ -4279,10 +4277,10 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // the block hash, so we couldn't mark the block as permanently
     // failed).
     if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
+        return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
-    return true;
+    return BlockValidationState{};
 }
 
 BlockValidationState ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, CBlockIndex** ppindex, bool min_pow_checked)
@@ -4456,7 +4454,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     state = CheckBlock(block, params.GetConsensus());
     if (state.IsValid()) {
-        ContextualCheckBlock(block, state, *this, pindex->pprev);
+        state = ContextualCheckBlock(block, *this, pindex->pprev);
     }
     if (!state.IsValid()) {
         if (Assume(state.IsInvalid())) {
@@ -4623,9 +4621,7 @@ BlockValidationState TestBlockValidity(
         return state;
     }
 
-    BlockValidationState state;
-    if (!ContextualCheckBlock(block, state, chainstate.m_chainman, tip)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
+    if (const auto state = ContextualCheckBlock(block, chainstate.m_chainman, tip); !state.IsValid()) {
         return state;
     }
 
@@ -4638,16 +4634,18 @@ BlockValidationState TestBlockValidity(
     index_dummy.phashBlock = &block_hash;
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
-    // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
+    {
+        BlockValidationState state;
+        // Set fJustCheck to true in order to update, and not clear, validation caches.
+        if (!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
+            if (state.IsValid()) NONFATAL_UNREACHABLE();
+            return state;
+        }
+        // Ensure no check returned successfully while also setting an invalid state.
+        if (!state.IsValid()) NONFATAL_UNREACHABLE();
     }
 
-    // Ensure no check returned successfully while also setting an invalid state.
-    if (!state.IsValid()) NONFATAL_UNREACHABLE();
-
-    return state;
+    return BlockValidationState{};
 }
 
 /* This function is called from the RPC code for pruneblockchain */
