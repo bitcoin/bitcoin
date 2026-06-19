@@ -213,6 +213,23 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
 static RPCMethod getrawtransaction()
 {
+    const std::vector<RPCResult> verbosity_1_block{
+        {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
+        {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
+        {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
+        {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
+        {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
+        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
+    };
+    const auto v2_extras = Cat<std::vector<RPCResult>>(
+        std::vector<RPCResult>{{
+            RPCResult::Type::NUM, "fee", /*optional=*/true,
+            "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"
+        }},
+        TxDoc({.elision_mode = ElisionMode::Silent,
+               .prevout = true,
+               .prevout_optional = true,
+               .vin_inner_elision = "Same vin fields as verbosity = 1"}));
     return RPCMethod{
                 "getrawtransaction",
 
@@ -238,36 +255,11 @@ static RPCMethod getrawtransaction()
                      RPCResult{"if verbosity is set to 1",
                          RPCResult::Type::OBJ, "", "",
                          Cat<std::vector<RPCResult>>(
-                         {
-                             {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
-                             {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
-                             {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
-                             {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
-                             {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
-                             {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
-                         },
+                         verbosity_1_block,
                          TxDoc({.txid_field_doc="The transaction id (same as provided)"})),
                     },
-                    RPCResult{"for verbosity = 2",
-                        RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                            {RPCResult::Type::NUM, "fee", /*optional=*/true, "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
-                            {RPCResult::Type::ARR, "vin", "",
-                            {
-                                {RPCResult::Type::OBJ, "", "utxo being spent",
-                                {
-                                    {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "The previous output, omitted if block undo data is not available",
-                                    {
-                                        {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
-                                        {RPCResult::Type::NUM, "height", "The height of the prevout"},
-                                        {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
-                                        {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
-                                    }},
-                                }},
-                            }},
-                        }},
+                    RPCResult{"for verbosity = 2", RPCResult::Type::OBJ, "", "",
+                    Cat(ElideGroup(verbosity_1_block, "Same output as verbosity = 1"), v2_extras)},
                 },
                 RPCExamples{
                     HelpExampleCli("getrawtransaction", "\"mytxid\"")
@@ -799,7 +791,7 @@ const RPCResult& DecodePSBTInputs()
             {RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
-                    TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+                    TxDoc({.elision_mode = ElisionMode::WithSummary, .elision_summary = "The layout is the same as the output of decoderawtransaction."})
                 },
                 {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
                 {
@@ -987,7 +979,7 @@ const RPCResult& DecodePSBTOutputs()
                 }},
                 {RPCResult::Type::NUM, "amount", /* optional=*/ true, "The amount (nValue) for this output"},
                 {RPCResult::Type::OBJ, "script", /* optional=*/ true, "The output script (scriptPubKey) for this output",
-                    {{RPCResult::Type::ELISION, "", "The layout is the same as the output of scriptPubKeys in decoderawtransaction."}},
+                    ElideGroup(ScriptPubKeyDoc(), "The layout is the same as the output of scriptPubKeys in decoderawtransaction."),
                 },
                 {RPCResult::Type::STR_HEX, "taproot_internal_key", /*optional=*/ true, "The hex-encoded Taproot x-only internal key"},
                 {RPCResult::Type::ARR, "taproot_tree", /*optional=*/ true, "The tuples that make up the Taproot tree, in depth first search order",
@@ -1055,7 +1047,7 @@ static RPCMethod decodepsbt()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::OBJ, "tx", /*optional=*/true, "The decoded network-serialized unsigned transaction.",
-                            TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+                            TxDoc({.elision_mode = ElisionMode::WithSummary, .elision_summary = "The layout is the same as the output of decoderawtransaction."})
                         },
                         {RPCResult::Type::ARR, "global_xpubs", "",
                         {

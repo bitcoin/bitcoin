@@ -292,18 +292,17 @@ struct RPCArg {
     std::string ToDescriptionString(bool is_named_arg) const;
 };
 
+/// Controls how an RPCResult is rendered in human-readable help text.
+/// The std::string alternative carries the summary text rendered as "...".
+struct HelpElisionNone {}; //!< field printed normally
+struct HelpElisionSkip {}; //!< field hidden from help
+using HelpElision = std::variant<HelpElisionNone, HelpElisionSkip, std::string>;
+
 struct RPCResultOptions {
     bool skip_type_check{false};
-    /// Whether to treat this as elided in the human-readable description, and
-    /// possibly supply a description for the elision. Normally, there will be
-    /// one string on any of the elided results, for example `Same output as
-    /// verbosity = 1`, and all other elided strings will be empty.
-    ///
-    /// - If nullopt: normal display.
-    /// - If empty string: suppress from help.
-    /// - If non-empty: show "..." with this description.
-    std::optional<std::string> print_elision{std::nullopt};
+    HelpElision print_elision{HelpElisionNone{}};
 };
+
 // NOLINTNEXTLINE(misc-no-recursion)
 struct RPCResult {
     enum class Type {
@@ -319,7 +318,6 @@ struct RPCResult {
         OBJ_DYN,    //!< Special dictionary with keys that are not literals
         ARR_FIXED,  //!< Special array that has a fixed number of entries
         NUM_TIME,   //!< Special numeric to denote unix epoch time
-        ELISION,    //!< Special type to denote elision (...)
     };
 
     const Type m_type;
@@ -385,6 +383,16 @@ struct RPCResult {
         RPCResultOptions opts = {})
         : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
 
+    /// Copy with replacement options, for stamping new opts onto an existing result.
+    RPCResult(const RPCResult& other, RPCResultOptions opts)
+        : m_type{other.m_type},
+          m_key_name{other.m_key_name},
+          m_inner{other.m_inner},
+          m_optional{other.m_optional},
+          m_opts{std::move(opts)},
+          m_description{other.m_description},
+          m_cond{other.m_cond} {}
+
     /** Append the sections of the result. */
     void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, int current_indent = 0) const;
     /** Return the type string of the result when it is in an object (dict). */
@@ -399,6 +407,10 @@ struct RPCResult {
 private:
     void CheckInnerDoc() const;
 };
+
+/// Stamp elision onto an entire vector of RPCResult fields at once.
+/// Merges into existing m_opts so that flags like skip_type_check are preserved.
+std::vector<RPCResult> ElideGroup(std::vector<RPCResult> fields, std::string summary = "");
 
 struct RPCResults {
     const std::vector<RPCResult> m_results;

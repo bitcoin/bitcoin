@@ -56,13 +56,37 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
 
+enum class ElisionMode {
+    None,        ///< no elision, all top-level fields rendered normally
+    WithSummary, ///< first field carries elision_summary as "...", rest skipped
+    Silent,      ///< all top-level fields skipped silently (no "..." line)
+};
+
 struct TxDocOptions {
     /// The description of the txid field
     std::string txid_field_doc{"The transaction id"};
     /// Include wallet-related fields (e.g. ischange on outputs)
     bool wallet{false};
-    /// Treat this as an elided Result in the help
-    std::optional<std::string> elision_description{};
+    /// Controls top-level field elision in the help
+    ElisionMode elision_mode{ElisionMode::None};
+    /// Summary text shown as "..." required for elision_mode == WithSummary
+    std::optional<std::string> elision_summary{};
+    /// Include prevout field
+    bool prevout{false};
+    /// Mark prevout field as optional (omitted when undo data unavailable)
+    bool prevout_optional{false};
+    /// Include fee field
+    bool fee{false};
+    /// Include hex field
+    bool hex{false};
+    /// Customize the vin item object's description (only meaningful when vin_inner_elision is set)
+    std::optional<std::string> vin_item_doc{};
+    /// Customize the prevout field's description (only meaningful when prevout is true)
+    std::optional<std::string> prevout_doc{};
+    /// Customize the fee field's description (only meaningful when fee is true)
+    std::optional<std::string> fee_doc{};
+    /// Elide vin inner fields but keep vin array with prevout expanded.
+    std::optional<std::string> vin_inner_elision{};
 };
 /** Explain the UniValue "decoded" transaction object, may include extra fields if processed by wallet **/
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts = {});
