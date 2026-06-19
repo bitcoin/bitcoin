@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "nontrivial-threadlocal.h"
+#include "use-observers.h"
 
 #include <clang-tidy/ClangTidyModule.h>
 
@@ -12,6 +13,7 @@ public:
     void addCheckFactories(clang::tidy::ClangTidyCheckFactories& CheckFactories) override
     {
         CheckFactories.registerCheck<bitcoin::NonTrivialThreadLocal>("bitcoin-nontrivial-threadlocal");
+        CheckFactories.registerCheck<UseObservers>("bitcoin-use-observers");
     }
 };
 
