@@ -3884,10 +3884,10 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
  * Note: If the witness commitment is expected (i.e. `expect_witness_commitment
  * = true`), then the block is required to have at least one transaction and the
  * first transaction needs to have at least one input. */
-static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment, BlockValidationState& state)
+[[nodiscard]] static BlockValidationState CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment)
 {
     if (expect_witness_commitment) {
-        if (block.m_checked_witness_commitment) return true;
+        if (block.m_checked_witness_commitment) return BlockValidationState{};
 
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
@@ -3895,7 +3895,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             const auto& witness_stack{block.vtx[0]->vin[0].scriptWitness.stack};
 
             if (witness_stack.size() != 1 || witness_stack[0].size() != 32) {
-                return state.Invalid(
+                return BlockValidationState::InvalidState(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-nonce-size",
                     /*debug_message=*/strprintf("%s : invalid witness reserved value size", __func__));
@@ -3908,28 +3908,28 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
 
             CHash256().Write(hash_witness).Write(witness_stack[0]).Finalize(hash_witness);
             if (memcmp(hash_witness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
-                return state.Invalid(
+                return BlockValidationState::InvalidState(
                     /*result=*/BlockValidationResult::BLOCK_MUTATED,
                     /*reject_reason=*/"bad-witness-merkle-match",
                     /*debug_message=*/strprintf("%s : witness merkle commitment mismatch", __func__));
             }
 
             block.m_checked_witness_commitment = true;
-            return true;
+            return BlockValidationState{};
         }
     }
 
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     for (const auto& tx : block.vtx) {
         if (tx->HasWitness()) {
-            return state.Invalid(
+            return BlockValidationState::InvalidState(
                 /*result=*/BlockValidationResult::BLOCK_MUTATED,
                 /*reject_reason=*/"unexpected-witness",
                 /*debug_message=*/strprintf("%s : unexpected witness data found", __func__));
         }
     }
 
-    return true;
+    return BlockValidationState{};
 }
 
 BlockValidationState CheckBlock(const CBlock& block, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
@@ -4070,8 +4070,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
         // here as it requires at least 224 bits of work.
     }
 
-    BlockValidationState state;
-    if (!CheckWitnessMalleation(block, check_witness_root, state)) {
+    if (const auto state = CheckWitnessMalleation(block, check_witness_root); !state.IsValid()) {
         LogDebug(BCLog::VALIDATION, "Block mutated: %s\n", state.ToString());
         return true;
     }
@@ -4192,7 +4191,8 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
-    if (!CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT), state)) {
+    state = CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT));
+    if (!state.IsValid()) {
         return false;
     }
 
