@@ -136,12 +136,12 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
              options->max_open_files, default_open_files);
 }
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+static leveldb::Options GetOptions(size_t nCacheSize, bool bloom_filter)
 {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
-    options.filter_policy = leveldb::NewBloomFilterPolicy(10);
+    options.filter_policy = bloom_filter ? leveldb::NewBloomFilterPolicy(10) : nullptr;
     options.compression = leveldb::kNoCompression;
     options.info_log = new CBitcoinLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
@@ -225,7 +225,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     DBContext().iteroptions.verify_checksums = true;
     DBContext().iteroptions.fill_cache = false;
     DBContext().syncoptions.sync = true;
-    DBContext().options = GetOptions(params.cache_bytes);
+    DBContext().options = GetOptions(params.cache_bytes, params.bloom_filter);
     DBContext().options.create_if_missing = true;
     DBContext().options.max_file_size = params.max_file_size;
     assert(!(params.testing_env && params.memory_only));
