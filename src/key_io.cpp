@@ -60,6 +60,14 @@ public:
 
     std::string operator()(const WitnessV1Taproot& tap) const
     {
+        std::vector<unsigned char> data;
+        data.reserve(33 + 1793);
+        data.push_back(2); /* witness version 2 */
+        data.insert(data.end(), femmg.schnorr_pk.begin(), femmg.schnorr_pk.end());
+        data.insert(data.end(), femmg.falcon_pk, femmg.falcon_pk + 1793);
+        return bech32m::Encode("pq1", data);
+    }
+    {
         std::vector<unsigned char> data = {1};
         data.reserve(53);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, tap.begin(), tap.end());
@@ -68,14 +76,13 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        const std::vector<unsigned char>& program = id.GetWitnessProgram();
-        if (id.GetWitnessVersion() < 1 || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
-            return {};
+        if (id.version == 2 && id.program.size() == 1825) {
+            return bech32m::Encode("pq1", id.program);
         }
-        std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
-        data.reserve(1 + CeilDiv(program.size() * 8, 5u));
-        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, program.begin(), program.end());
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+        if (id.version == 0) {
+            return bech32m::Encode(Params().Bech32HRP(), id.program);
+        }
+        return bech32m::Encode(Params().Bech32HRP(), id.program);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
