@@ -14,7 +14,6 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
-#include <node/mining_types.h>
 #include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -26,20 +25,17 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
-#include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <test/util/txmempool.h>
 #include <test/util/validation.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/task_runner.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -107,33 +103,6 @@ public:
     }
 };
 
-void ResetChainmanAndMempool(TestingSetup& setup)
-{
-    GetFakeNodeClock().set(Params().GenesisBlock().Time());
-
-    bilingual_str error{};
-    setup.m_node.mempool.reset();
-    setup.m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(setup.m_node), error);
-    Assert(error.empty());
-
-    setup.m_node.chainman.reset();
-    setup.m_make_chainman();
-    setup.LoadVerifyActivateChainstate();
-
-    node::BlockCreateOptions options;
-    options.coinbase_output_script = P2WSH_OP_TRUE;
-
-    g_mature_coinbase.clear();
-
-    for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(setup.m_node, options)};
-        if (i < COINBASE_MATURITY) {
-            LOCK(cs_main);
-            CAmount subsidy{setup.m_node.chainman->ActiveChainstate().CoinsTip().GetCoin(prevout)->out.nValue};
-            g_mature_coinbase.emplace_back(prevout, subsidy);
-        }
-    }
-}
 
 //! Used to run tasks in a std::thread to avoid DEBUG_LOCKORDER false positives.
 class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
@@ -155,7 +124,7 @@ void initialize_cmpctblock()
     g_nBits = Params().GenesisBlock().nBits;
     // Replace validation_signals before creating chainman and mempool so they use it.
     testing_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
-    ResetChainmanAndMempool(*g_setup);
+    g_mature_coinbase = ResetChainmanAndMempool(*g_setup);
 }
 
 FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
@@ -509,6 +478,6 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
     if (initial_index_size != end_index_size || initial_sequence != end_sequence) {
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        ResetChainmanAndMempool(*g_setup);
+        g_mature_coinbase = ResetChainmanAndMempool(*g_setup);
     }
 }

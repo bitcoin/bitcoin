@@ -4,11 +4,24 @@
 
 #include <test/util/validation.h>
 
+#include <coins.h>
+#include <consensus/consensus.h>
 #include <node/blockstorage.h>
+#include <node/mining_types.h>
+#include <test/util/mining.h>
+#include <test/util/script.h>
+#include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <test/util/txmempool.h>
+#include <txmempool.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 using kernel::ChainstateRole;
 
@@ -90,4 +103,32 @@ CBlockIndex* TestChainstateManager::FindMostWorkChain()
 void TestChainstateManager::ResetBestInvalid()
 {
     m_best_invalid = nullptr;
+}
+
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup)
+{
+    GetFakeNodeClock().set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+
+    bilingual_str error{};
+    setup.m_node.mempool.reset();
+    setup.m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(setup.m_node), error);
+    Assert(error.empty());
+
+    setup.m_node.chainman.reset();
+    setup.m_make_chainman();
+    setup.LoadVerifyActivateChainstate();
+
+    node::BlockCreateOptions options;
+    options.coinbase_output_script = P2WSH_OP_TRUE;
+
+    std::vector<std::pair<COutPoint, CAmount>> mature_coinbase;
+    for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
+        COutPoint prevout{MineBlock(setup.m_node, options)};
+        if (i < COINBASE_MATURITY) {
+            LOCK(cs_main);
+            CAmount subsidy{setup.m_node.chainman->ActiveChainstate().CoinsTip().GetCoin(prevout)->out.nValue};
+            mature_coinbase.emplace_back(prevout, subsidy);
+        }
+    }
+    return mature_coinbase;
 }
