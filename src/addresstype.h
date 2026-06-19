@@ -86,6 +86,22 @@ struct WitnessV0KeyHash : public BaseHash<uint160>
 CKeyID ToKeyID(const WitnessV0KeyHash& key_hash);
 
 struct WitnessV1Taproot : public XOnlyPubKey
+
+struct WitnessV2Femmg
+{
+    XOnlyPubKey schnorr_pk;
+    std::vector<unsigned char> falcon_pk;
+    WitnessV2Femmg() : falcon_pk(1793) {}
+    explicit WitnessV2Femmg(const XOnlyPubKey& spk, const std::vector<unsigned char>& fpk) : schnorr_pk(spk), falcon_pk(fpk) {}
+    bool operator<(const WitnessV2Femmg& other) const {
+        if (schnorr_pk != other.schnorr_pk) return schnorr_pk < other.schnorr_pk;
+        return falcon_pk < other.falcon_pk;
+    }
+    bool operator==(const WitnessV2Femmg& other) const {
+        return schnorr_pk == other.schnorr_pk && falcon_pk == other.falcon_pk;
+    }
+    static constexpr size_t size() { return 1825; } /* 32 + 1793 */
+};
 {
     WitnessV1Taproot() : XOnlyPubKey() {}
     explicit WitnessV1Taproot(const XOnlyPubKey& xpk) : XOnlyPubKey(xpk) {}
@@ -141,6 +157,7 @@ struct PayToAnchor : public WitnessUnknown
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
 using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, WitnessUnknown>;
+    WitnessV2Femmg,
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);

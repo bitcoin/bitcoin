@@ -59,6 +59,15 @@ public:
     }
 
     std::string operator()(const WitnessV1Taproot& tap) const
+    std::string operator()(const WitnessV2Femmg& femmg) const
+    {
+        std::vector<unsigned char> data;
+        data.reserve(33 + 1793);
+        data.push_back(2); /* witness version 2 */
+        data.insert(data.end(), femmg.schnorr_pk.begin(), femmg.schnorr_pk.end());
+        data.insert(data.end(), femmg.falcon_pk.begin(), femmg.falcon_pk.end());
+        return bech32m::Encode("femmg", data);
+    }
     {
         std::vector<unsigned char> data = {1};
         data.reserve(53);
@@ -178,6 +187,11 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
                 static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
                 WitnessV1Taproot tap;
+                WitnessV2Femmg femmg;
+                femmg.schnorr_pk = XOnlyPubKey{program};
+                /* Falcon pubkey is remaining bytes after witness version + schnorr */
+                /* For full implementation: parse from proper format */
+                return femmg;
                 std::copy(data.begin(), data.end(), tap.begin());
                 return tap;
             }
