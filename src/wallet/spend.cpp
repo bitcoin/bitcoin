@@ -144,7 +144,7 @@ static std::optional<int64_t> GetSignedTxinWeight(const CWallet* wallet, const C
 TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
 {
     // version + nLockTime + input count + output count
-    int64_t weight = (4 + 4 + GetSizeOfCompactSize(tx.vin.size()) + GetSizeOfCompactSize(tx.vout.size())) * WITNESS_SCALE_FACTOR;
+    int64_t weight = (4 + 4 + GetSizeOfCompactSize(tx.GetInputs().size()) + GetSizeOfCompactSize(tx.GetOutputs().size())) * WITNESS_SCALE_FACTOR;
     // Whether any input spends a witness program. Necessary to run before the next loop over the
     // inputs in order to accurately compute the compactSize length for the witness data per input.
     bool is_segwit = std::any_of(txouts.begin(), txouts.end(), [&](const CTxOut& txo) {
@@ -156,11 +156,11 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
     if (is_segwit) weight += 2;
 
     // Add the size of the transaction outputs.
-    for (const auto& txo : tx.vout) weight += GetSerializeSize(txo) * WITNESS_SCALE_FACTOR;
+    for (const auto& txo : tx.GetOutputs()) weight += GetSerializeSize(txo) * WITNESS_SCALE_FACTOR;
 
     // Add the size of the transaction inputs as if they were signed.
     for (uint32_t i = 0; i < txouts.size(); i++) {
-        const auto txin_weight = GetSignedTxinWeight(wallet, coin_control, tx.vin[i], txouts[i], is_segwit, wallet->CanGrindR());
+        const auto txin_weight = GetSignedTxinWeight(wallet, coin_control, tx.GetInputs()[i], txouts[i], is_segwit, wallet->CanGrindR());
         if (!txin_weight) return TxSize{-1, -1};
         assert(*txin_weight > -1);
         weight += *txin_weight;
@@ -174,12 +174,12 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
 {
     std::vector<CTxOut> txouts;
     // Look up the inputs. The inputs are either in the wallet, or in coin_control.
-    for (const CTxIn& input : tx.vin) {
+    for (const CTxIn& input : tx.GetInputs()) {
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         // Can not estimate size without knowing the input details
         if (mi != wallet->mapWallet.end()) {
-            assert(input.prevout.n < mi->second.tx->vout.size());
-            txouts.emplace_back(mi->second.tx->vout.at(input.prevout.n));
+            assert(input.prevout.n < mi->second.tx->GetOutputs().size());
+            txouts.emplace_back(mi->second.tx->GetOutputs().at(input.prevout.n));
         } else if (coin_control) {
             const auto& txout{coin_control->GetExternalOutput(input.prevout)};
             if (!txout) return TxSize{-1, -1};
@@ -281,10 +281,10 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
             }
             const CWalletTx& parent_tx = txo->GetWalletTx();
             if (wallet.GetTxDepthInMainChain(parent_tx) == 0) {
-                if (parent_tx.tx->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
+                if (parent_tx.tx->GetVersion() == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
                     return util::Error{strprintf(_("Can't spend unconfirmed version 3 pre-selected input with a version %d tx"), coin_control.m_version)};
-                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.tx->version != TRUC_VERSION) {
-                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.tx->version)};
+                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.tx->GetVersion() != TRUC_VERSION) {
+                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.tx->GetVersion())};
                 }
             }
         } else {
@@ -396,7 +396,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             if (nDepth == 0 && params.check_version_trucness) {
                 if (coinControl->m_version == TRUC_VERSION) {
-                    if (wtx.tx->version != TRUC_VERSION) continue;
+                    if (wtx.tx->GetVersion() != TRUC_VERSION) continue;
                     // this unconfirmed v3 transaction already has a child
                     if (wtx.truc_child_in_mempool.has_value()) continue;
 
@@ -405,7 +405,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, unused_cluster_count);
                     if (ancestors > 1) continue;
                 } else {
-                    if (wtx.tx->version == TRUC_VERSION) continue;
+                    if (wtx.tx->GetVersion() == TRUC_VERSION) continue;
                 }
             }
 
@@ -468,7 +468,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
-        if (wtx.tx->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
+        if (wtx.tx->GetVersion() == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
             unconfirmed_truc_coins.emplace_back(available_output_type, available_output);
             auto [it, _] = truc_txid_by_value.try_emplace(wtx.tx->GetHash(), 0);
             it->second += output.nValue;
@@ -528,17 +528,17 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
 
     const CTransaction* ptx = wtx->tx.get();
     int n = outpoint.n;
-    while (OutputIsChange(wallet, ptx->vout[n]) && ptx->vin.size() > 0) {
-        const COutPoint& prevout = ptx->vin[0].prevout;
+    while (OutputIsChange(wallet, ptx->GetOutputs()[n]) && ptx->GetInputs().size() > 0) {
+        const COutPoint& prevout = ptx->GetInputs()[0].prevout;
         const CWalletTx* it = wallet.GetWalletTx(prevout.hash);
-        if (!it || it->tx->vout.size() <= prevout.n ||
-            !wallet.IsMine(it->tx->vout[prevout.n])) {
+        if (!it || it->tx->GetOutputs().size() <= prevout.n ||
+            !wallet.IsMine(it->tx->GetOutputs()[prevout.n])) {
             break;
         }
         ptx = it->tx.get();
         n = prevout.n;
     }
-    return ptx->vout[n];
+    return ptx->GetOutputs()[n];
 }
 
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
@@ -1477,7 +1477,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
         // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
         if (txr_ungrouped.change_pos) {
-            ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
+            ExtractDestination(txr_ungrouped.tx->GetOutputs()[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
         }
 
         auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign);
@@ -1544,7 +1544,7 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
     }
 
     if (lockUnspents) {
-        for (const CTxIn& txin : res->tx->vin) {
+        for (const CTxIn& txin : res->tx->GetInputs()) {
             wallet.LockCoin(txin.prevout, /*persist=*/false);
         }
     }

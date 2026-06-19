@@ -49,9 +49,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     if (all_from_me || !any_from_me) {
         CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
 
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); i++)
+        for(unsigned int i = 0; i < wtx.tx->GetOutputs().size(); i++)
         {
-            const CTxOut& txout = wtx.tx->vout[i];
+            const CTxOut& txout = wtx.tx->GetOutputs()[i];
 
             if (all_from_me) {
                 // Change is only really possible if we're the sender

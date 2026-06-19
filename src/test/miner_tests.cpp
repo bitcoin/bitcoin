@@ -312,7 +312,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(50);
     for (auto &out : tx.vout) {
-        out.nValue = first_tx->vout[0].nValue / 50;
+        out.nValue = first_tx->GetOutputs()[0].nValue / 50;
         out.scriptPubKey = CScript() << OP_1;
     }
 
@@ -331,7 +331,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
         tx2.vin[0].prevout.n = i;
         tx2.vin[0].scriptSig = CScript() << OP_1;
         tx2.vout.resize(20);
-        tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
+        tx2.vout[0].nValue = parent_tx->GetOutputs()[i].nValue - CENT;
         for (auto &out : tx2.vout) {
             out.nValue = 0;
             out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;

@@ -97,7 +97,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             // Check that all txns returned from GetChildrenFrom* are indeed a direct child of this tx.
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
             for (const auto& child : orphanage->GetChildrenFromSamePeer(ptx_potential_parent, peer_id)) {
-                assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
+                assert(std::any_of(child->GetInputs().cbegin(), child->GetInputs().cend(), [&](const auto& input) {
                     return input.prevout.hash == ptx_potential_parent->GetHash();
                 }));
             }
@@ -318,7 +318,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
                     bool have_tx_and_peer = orphanage->HaveTxFromPeer(wtxid, peer_id);
                     if (peer_is_protected && !have_tx_and_peer &&
                         (orphanage->UsageByPeer(peer_id) + tx_weight > honest_mem_limit ||
-                        orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size() / 10) + 1 > honest_latency_limit)) {
+                        orphanage->LatencyScoreFromPeer(peer_id) + (tx->GetInputs().size() / 10) + 1 > honest_latency_limit)) {
                         // We never want our protected peer oversized or over-announced
                     } else {
                         orphanage->AddTx(tx, peer_id);
@@ -333,7 +333,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
                     {
                         if (peer_is_protected && !have_tx_and_peer &&
                             (orphanage->UsageByPeer(peer_id) + tx_weight > honest_mem_limit ||
-                            orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size() / 10) + 1 > honest_latency_limit)) {
+                            orphanage->LatencyScoreFromPeer(peer_id) + (tx->GetInputs().size() / 10) + 1 > honest_latency_limit)) {
                             // We never want our protected peer oversized
                         } else {
                             orphanage->AddAnnouncer(tx->GetWitnessHash(), peer_id);
@@ -439,8 +439,8 @@ FUZZ_TARGET(txorphanage_sim)
             for (auto& [child, parent] : deps) {
                 if (child == t) {
                     auto& partx = txn[txorder[parent]];
-                    assert(partx->version == 1);
-                    COutPoint outpoint(partx->GetHash(), rng.randrange<size_t>(partx->vout.size()));
+                    assert(partx->GetVersion() == 1);
+                    COutPoint outpoint(partx->GetHash(), rng.randrange<size_t>(partx->GetOutputs().size()));
                     tx.vin.emplace_back(outpoint);
                     tx.vin.back().scriptSig.resize(provider.ConsumeIntegralInRange<unsigned>(16, 200));
                 }
@@ -556,7 +556,7 @@ FUZZ_TARGET(txorphanage_sim)
         int64_t usage{0};
         for (auto& ann : sim_announcements) {
             if (ann.announcer != peer) continue;
-            count += 1 + (txn[ann.tx]->vin.size() / 10);
+            count += 1 + (txn[ann.tx]->GetInputs().size() / 10);
             usage += GetTransactionWeight(*txn[ann.tx]);
         }
         return std::max<ByRatioNegSize<FeeFrac>>(FeeFrac{count, max_count}, FeeFrac{usage, max_usage});
@@ -612,7 +612,7 @@ FUZZ_TARGET(txorphanage_sim)
                 for (unsigned tx = 0; tx < NUM_TX; ++tx) {
                     if ((pattern >> tx) & 1) {
                         block.vtx.emplace_back(txn[tx]);
-                        for (auto& txin : block.vtx.back()->vin) {
+                        for (auto& txin : block.vtx.back()->GetInputs()) {
                             spent.insert(txin.prevout);
                         }
                     }
@@ -620,7 +620,7 @@ FUZZ_TARGET(txorphanage_sim)
                 std::shuffle(block.vtx.begin(), block.vtx.end(), rng);
                 real->EraseForBlock(block);
                 std::erase_if(sim_announcements, [&](auto& ann) {
-                    for (auto& txin : txn[ann.tx]->vin) {
+                    for (auto& txin : txn[ann.tx]->GetInputs()) {
                         if (spent.contains(txin.prevout)) return true;
                     }
                     return false;
@@ -637,7 +637,7 @@ FUZZ_TARGET(txorphanage_sim)
                     if (!have_tx_fn(child_tx)) continue;
                     if (have_reconsiderable_fn(child_tx)) continue;
                     bool child_of = false;
-                    for (auto& txin : txn[child_tx]->vin) {
+                    for (auto& txin : txn[child_tx]->GetInputs()) {
                         if (txin.prevout.hash == txn[tx]->GetHash()) {
                             child_of = true;
                             break;
@@ -697,7 +697,7 @@ FUZZ_TARGET(txorphanage_sim)
             for (unsigned tx = 0; tx < NUM_TX; ++tx) {
                 if (have_tx_fn(tx)) {
                     total_usage += GetTransactionWeight(*txn[tx]);
-                    total_latency_score += txn[tx]->vin.size() / 10;
+                    total_latency_score += txn[tx]->GetInputs().size() / 10;
                 }
             }
             auto num_peers = count_peers_fn();
@@ -754,7 +754,7 @@ FUZZ_TARGET(txorphanage_sim)
         bool sim_have_tx = have_tx_fn(tx);
         if (sim_have_tx) {
             orphan_usage += GetTransactionWeight(*txn[tx]);
-            total_latency_score += txn[tx]->vin.size() / 10;
+            total_latency_score += txn[tx]->GetInputs().size() / 10;
         }
         unique_orphans += sim_have_tx;
         auto orphans_it = std::find_if(all_orphans.begin(), all_orphans.end(), [&](auto& orph) { return orph.tx->GetWitnessHash() == txn[tx]->GetWitnessHash(); });
@@ -788,7 +788,7 @@ FUZZ_TARGET(txorphanage_sim)
                     if (ann.announcer != peer) continue;
                     if (ann.reconsider != (phase == 1)) continue;
                     bool matching_parent{false};
-                    for (const auto& vin : txn[ann.tx]->vin) {
+                    for (const auto& vin : txn[ann.tx]->GetInputs()) {
                         if (vin.prevout.hash == txn[tx]->GetHash()) matching_parent = true;
                     }
                     if (!matching_parent) continue;

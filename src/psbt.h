@@ -1580,14 +1580,14 @@ public:
                     if (input.non_witness_utxo->GetHash() != tx->vin[i].prevout.hash) {
                         throw std::ios_base::failure("Non-witness UTXO does not match outpoint hash");
                     }
-                    if (tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
+                    if (tx->vin[i].prevout.n >= input.non_witness_utxo->GetOutputs().size()) {
                         throw std::ios_base::failure("Input specifies output index that does not exist");
                     }
                 } else {
                     if (input.non_witness_utxo->GetHash() != input.prev_txid) {
                         throw std::ios_base::failure("Non-witness UTXO does not match outpoint hash");
                     }
-                    if (input.prev_out >= input.non_witness_utxo->vout.size()) {
+                    if (input.prev_out >= input.non_witness_utxo->GetOutputs().size()) {
                         throw std::ios_base::failure("Input specifies output index that does not exist");
                     }
                 }

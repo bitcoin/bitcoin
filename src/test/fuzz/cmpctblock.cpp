@@ -216,7 +216,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             size_t random_idx = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mempool_size - 1);
             CTransactionRef tx = WITH_LOCK(mempool.cs, return mempool.txns_randomized[random_idx].second->GetSharedTx(););
             outpoint = COutPoint(tx->GetHash(), 0);
-            amount_in = tx->vout[0].nValue;
+            amount_in = tx->GetOutputs()[0].nValue;
         } else if (info.size() != 0 && fuzzed_data_provider.ConsumeBool()) {
             // These blocks (and txs) may be invalid, use a spent output, or not be in the main chain.
             auto info_it = info.begin();
@@ -224,7 +224,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             auto tx_it = info_it->block->vtx.begin();
             std::advance(tx_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info_it->block->vtx.size() - 1));
             outpoint = COutPoint(tx_it->get()->GetHash(), 0);
-            amount_in = tx_it->get()->vout[0].nValue;
+            amount_in = tx_it->get()->GetOutputs()[0].nValue;
         } else {
             auto coinbase_it = mature_coinbase.begin();
             std::advance(coinbase_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mature_coinbase.size() - 1));

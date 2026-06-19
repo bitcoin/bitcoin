@@ -945,7 +945,7 @@ static RPCMethod getblocktemplate()
         entry.pushKV("hash", tx.GetWitnessHash().GetHex());
 
         UniValue deps(UniValue::VARR);
-        for (const CTxIn &in : tx.vin)
+        for (const CTxIn &in : tx.GetInputs())
         {
             if (setTxIndex.contains(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
@@ -1028,7 +1028,7 @@ static RPCMethod getblocktemplate()
     result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
-    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", block.vtx[0]->GetOutputs()[0].nValue);
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));

@@ -76,7 +76,7 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CT
     LOCK(cs);
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
     std::set<Txid> inputs;
-    for (const auto& txin : entry.GetTx().vin) {
+    for (const auto& txin : entry.GetTx().GetInputs()) {
         inputs.insert(txin.prevout.hash);
     }
     for (const auto& hash : inputs) {
@@ -146,8 +146,8 @@ CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEnt
     const CTransaction &tx = entry.GetTx();
 
     // Get parents of this transaction that are in the mempool
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        std::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++) {
+        std::optional<txiter> piter = GetIter(tx.GetInputs()[i].prevout.hash);
         if (piter) {
             staged_parents.insert(*piter);
         }
@@ -236,8 +236,8 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
     cachedInnerUsage += entry.DynamicMemoryUsage();
 
     const CTransaction& tx = newit->GetTx();
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, newit));
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++) {
+        mapNextTx.insert(std::make_pair(&tx.GetInputs()[i].prevout, newit));
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -281,7 +281,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count()
     );
 
-    for (const CTxIn& txin : it->GetTx().vin)
+    for (const CTxIn& txin : it->GetTx().GetInputs())
         mapNextTx.erase(txin.prevout);
 
     RemoveUnbroadcastTx(it->GetTx().GetHash(), true /* add logging because unchecked */);
@@ -389,7 +389,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    for (const CTxIn &txin : tx.vin) {
+    for (const CTxIn &txin : tx.GetInputs()) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = it->second->GetTx();
@@ -488,12 +488,12 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentCheck;
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentsStored;
-        for (const CTxIn &txin : tx.vin) {
+        for (const CTxIn &txin : tx.GetInputs()) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
             indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                assert(tx2.GetOutputs().size() > txin.prevout.n && !tx2.GetOutputs()[txin.prevout.n].IsNull());
                 setParentCheck.insert(*it2);
             }
             // We are iterating through the mempool entries sorted
@@ -535,7 +535,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         CAmount txfee = 0;
         assert(!tx.IsCoinBase());
         assert(Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee));
-        for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
+        for (const auto& input: tx.GetInputs()) mempoolDuplicate.SpendCoin(input.prevout);
         AddCoins(mempoolDuplicate, tx, std::numeric_limits<int>::max());
     }
     for (auto it = mapNextTx.cbegin(); it != mapNextTx.cend(); it++) {
@@ -731,8 +731,8 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<Txid>& 
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(tx.vin[i].prevout.hash))
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++)
+        if (exists(tx.GetInputs()[i].prevout.hash))
             return false;
     return true;
 }
@@ -752,8 +752,8 @@ std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint) const
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
-        if (outpoint.n < ptx->vout.size()) {
-            Coin coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+        if (outpoint.n < ptx->GetOutputs().size()) {
+            Coin coin(ptx->GetOutputs()[outpoint.n], MEMPOOL_HEIGHT, false);
             m_non_base_coins.emplace(outpoint);
             return coin;
         }
@@ -764,8 +764,8 @@ std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint) const
 
 void CCoinsViewMemPool::PackageAddTransaction(const CTransactionRef& tx)
 {
-    for (unsigned int n = 0; n < tx->vout.size(); ++n) {
-        m_temp_added.emplace(COutPoint(tx->GetHash(), n), Coin(tx->vout[n], MEMPOOL_HEIGHT, false));
+    for (unsigned int n = 0; n < tx->GetOutputs().size(); ++n) {
+        m_temp_added.emplace(COutPoint(tx->GetHash(), n), Coin(tx->GetOutputs()[n], MEMPOOL_HEIGHT, false));
         m_non_base_coins.emplace(tx->GetHash(), n);
     }
 }
@@ -897,7 +897,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         }
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
-                for (const CTxIn& txin : tx.vin) {
+                for (const CTxIn& txin : tx.GetInputs()) {
                     if (exists(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
@@ -1052,7 +1052,7 @@ void CTxMemPool::ChangeSet::ProcessDependencies()
     LOCK(m_pool->cs);
     Assume(!m_dependencies_processed); // should only call this once.
     for (const auto& entryptr : m_entry_vec) {
-        for (const auto &txin : entryptr->GetSharedTx()->vin) {
+        for (const auto &txin : entryptr->GetSharedTx()->GetInputs()) {
             std::optional<txiter> piter = m_pool->GetIter(txin.prevout.hash);
             if (!piter) {
                 auto it = m_to_add.find(txin.prevout.hash);

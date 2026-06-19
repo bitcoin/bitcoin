@@ -1185,7 +1185,7 @@ static RPCMethod decodepsbt()
             have_a_utxo = true;
         }
         if (input.non_witness_utxo) {
-            txout = input.non_witness_utxo->vout[input.prev_out];
+            txout = input.non_witness_utxo->GetOutputs()[input.prev_out];
 
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*entry=*/non_wit, /*include_hex=*/false);

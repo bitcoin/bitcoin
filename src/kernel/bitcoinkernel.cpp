@@ -518,30 +518,30 @@ btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t ra
 
 size_t btck_transaction_count_outputs(const btck_Transaction* transaction)
 {
-    return btck_Transaction::get(transaction)->vout.size();
+    return btck_Transaction::get(transaction)->GetOutputs().size();
 }
 
 const btck_TransactionOutput* btck_transaction_get_output_at(const btck_Transaction* transaction, size_t output_index)
 {
     const CTransaction& tx = *btck_Transaction::get(transaction);
-    assert(output_index < tx.vout.size());
-    return btck_TransactionOutput::ref(&tx.vout[output_index]);
+    assert(output_index < tx.GetOutputs().size());
+    return btck_TransactionOutput::ref(&tx.GetOutputs()[output_index]);
 }
 
 size_t btck_transaction_count_inputs(const btck_Transaction* transaction)
 {
-    return btck_Transaction::get(transaction)->vin.size();
+    return btck_Transaction::get(transaction)->GetInputs().size();
 }
 
 const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transaction* transaction, size_t input_index)
 {
-    assert(input_index < btck_Transaction::get(transaction)->vin.size());
-    return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
+    assert(input_index < btck_Transaction::get(transaction)->GetInputs().size());
+    return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->GetInputs()[input_index]);
 }
 
 uint32_t btck_transaction_get_locktime(const btck_Transaction* transaction)
 {
-    return btck_Transaction::get(transaction)->nLockTime;
+    return btck_Transaction::get(transaction)->GetLockTime();
 }
 
 const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
@@ -626,7 +626,7 @@ btck_PrecomputedTransactionData* btck_precomputed_transaction_data_create(
         const CTransaction& tx{*btck_Transaction::get(tx_to)};
         auto txdata{btck_PrecomputedTransactionData::create()};
         if (spent_outputs_ != nullptr && spent_outputs_len > 0) {
-            assert(spent_outputs_len == tx.vin.size());
+            assert(spent_outputs_len == tx.GetInputs().size());
             std::vector<CTxOut> spent_outputs;
             spent_outputs.reserve(spent_outputs_len);
             for (size_t i = 0; i < spent_outputs_len; i++) {
@@ -671,7 +671,7 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     }
 
     const CTransaction& tx{*btck_Transaction::get(tx_to)};
-    assert(input_index < tx.vin.size());
+    assert(input_index < tx.GetInputs().size());
 
     const PrecomputedTransactionData& txdata{precomputed_txdata ? btck_PrecomputedTransactionData::get(precomputed_txdata) : PrecomputedTransactionData(tx)};
 
@@ -682,9 +682,9 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
 
     if (status) *status = btck_ScriptVerifyStatus_OK;
 
-    bool result = VerifyScript(tx.vin[input_index].scriptSig,
+    bool result = VerifyScript(tx.GetInputs()[input_index].scriptSig,
                                btck_ScriptPubkey::get(script_pubkey),
-                               &tx.vin[input_index].scriptWitness,
+                               &tx.GetInputs()[input_index].scriptWitness,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
                                nullptr);

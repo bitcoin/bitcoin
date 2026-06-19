@@ -45,7 +45,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
     cache.SetBestBlock(uint256::ONE);
 
     for (const auto& tx : block.vtx | std::views::drop(1)) {
-        for (const auto& in : tx->vin) {
+        for (const auto& in : tx->GetInputs()) {
             Coin coin{};
             if (!spent) coin.out.nValue = 1;
             cache.EmplaceCoinInternalDANGER(COutPoint{in.prevout}, std::move(coin));
@@ -61,9 +61,9 @@ void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
 
     for (const auto& tx : block.vtx) {
         if (tx->IsCoinBase()) {
-            BOOST_CHECK(!cache.HaveCoinInCache(tx->vin[0].prevout));
+            BOOST_CHECK(!cache.HaveCoinInCache(tx->GetInputs()[0].prevout));
         } else {
-            for (const auto& in : tx->vin) {
+            for (const auto& in : tx->GetInputs()) {
                 const auto& outpoint{in.prevout};
                 const auto& first{cache.AccessCoin(outpoint)};
                 const auto& second{cache.AccessCoin(outpoint)};
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_db)
     PopulateView(block, db);
     CCoinsViewCache main_cache{&db};
     CoinsViewOverlay view{&main_cache};
-    const auto& outpoint{block.vtx[1]->vin[0].prevout};
+    const auto& outpoint{block.vtx[1]->GetInputs()[0].prevout};
 
     BOOST_CHECK(view.HaveCoin(outpoint));
     BOOST_CHECK(view.GetCoin(outpoint).has_value());
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_db)
     CheckCache(block, view);
     // Check that no coins have been moved up to main cache from db
     for (const auto& tx : block.vtx) {
-        for (const auto& in : tx->vin) {
+        for (const auto& in : tx->GetInputs()) {
             BOOST_CHECK(!main_cache.HaveCoinInCache(in.prevout));
         }
     }
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_cache)
     CoinsViewOverlay view{&main_cache};
     CheckCache(block, view);
 
-    const auto& outpoint{block.vtx[1]->vin[0].prevout};
+    const auto& outpoint{block.vtx[1]->GetInputs()[0].prevout};
     view.SetBestBlock(uint256::ONE);
     BOOST_CHECK(view.SpendCoin(outpoint));
     view.Flush();
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_double_spend)
     PopulateView(block, main_cache, /*spent=*/true);
     CoinsViewOverlay view{&main_cache};
     for (const auto& tx : block.vtx) {
-        for (const auto& in : tx->vin) {
+        for (const auto& in : tx->GetInputs()) {
             const auto& c{view.AccessCoin(in.prevout)};
             BOOST_CHECK(c.IsSpent());
             BOOST_CHECK(!view.HaveCoin(in.prevout));
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_inputs)
     CCoinsViewCache main_cache{&db};
     CoinsViewOverlay view{&main_cache};
     for (const auto& tx : block.vtx) {
-        for (const auto& in : tx->vin) {
+        for (const auto& in : tx->GetInputs()) {
             const auto& c{view.AccessCoin(in.prevout)};
             BOOST_CHECK(c.IsSpent());
             BOOST_CHECK(!view.HaveCoin(in.prevout));

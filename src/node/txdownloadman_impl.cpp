@@ -335,8 +335,8 @@ void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
 std::vector<Txid> TxDownloadManagerImpl::GetUniqueParents(const CTransaction& tx)
 {
     std::vector<Txid> unique_parents;
-    unique_parents.reserve(tx.vin.size());
-    for (const CTxIn& txin : tx.vin) {
+    unique_parents.reserve(tx.GetInputs().size());
+    for (const CTxIn& txin : tx.GetInputs()) {
         // We start with all parents, and then remove duplicates below.
         unique_parents.push_back(txin.prevout.hash);
     }

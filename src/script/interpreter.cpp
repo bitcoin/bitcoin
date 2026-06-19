@@ -1308,7 +1308,7 @@ public:
         if (fAnyoneCanPay)
             nInput = nIn;
         // Serialize the prevout
-        ::Serialize(s, txTo.vin[nInput].prevout);
+        ::Serialize(s, txTo.GetInputs()[nInput].prevout);
         // Serialize the script
         if (nInput != nIn)
             // Blank out other inputs' signatures
@@ -1320,7 +1320,7 @@ public:
             // let the others update at will
             ::Serialize(s, int32_t{0});
         else
-            ::Serialize(s, txTo.vin[nInput].nSequence);
+            ::Serialize(s, txTo.GetInputs()[nInput].nSequence);
     }
 
     /** Serialize an output of txTo */
@@ -1330,26 +1330,26 @@ public:
             // Do not lock-in the txout payee at other indices as txin
             ::Serialize(s, CTxOut());
         else
-            ::Serialize(s, txTo.vout[nOutput]);
+            ::Serialize(s, txTo.GetOutputs()[nOutput]);
     }
 
     /** Serialize txTo */
     template<typename S>
     void Serialize(S &s) const {
         // Serialize version
-        ::Serialize(s, txTo.version);
+        ::Serialize(s, txTo.GetVersion());
         // Serialize vin
-        unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();
+        unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.GetInputs().size();
         ::WriteCompactSize(s, nInputs);
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
              SerializeInput(s, nInput);
         // Serialize vout
-        unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
+        unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.GetOutputs().size());
         ::WriteCompactSize(s, nOutputs);
         for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
              SerializeOutput(s, nOutput);
         // Serialize nLockTime
-        ::Serialize(s, txTo.nLockTime);
+        ::Serialize(s, txTo.GetLockTime());
     }
 };
 
@@ -1358,7 +1358,7 @@ template <class T>
 uint256 GetPrevoutsSHA256(const T& txTo)
 {
     HashWriter ss{};
-    for (const auto& txin : txTo.vin) {
+    for (const auto& txin : txTo.GetInputs()) {
         ss << txin.prevout;
     }
     return ss.GetSHA256();
@@ -1369,7 +1369,7 @@ template <class T>
 uint256 GetSequencesSHA256(const T& txTo)
 {
     HashWriter ss{};
-    for (const auto& txin : txTo.vin) {
+    for (const auto& txin : txTo.GetInputs()) {
         ss << txin.nSequence;
     }
     return ss.GetSHA256();
@@ -1380,7 +1380,7 @@ template <class T>
 uint256 GetOutputsSHA256(const T& txTo)
 {
     HashWriter ss{};
-    for (const auto& txout : txTo.vout) {
+    for (const auto& txout : txTo.GetOutputs()) {
         ss << txout;
     }
     return ss.GetSHA256();
@@ -1416,15 +1416,15 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
 
     m_spent_outputs = std::move(spent_outputs);
     if (!m_spent_outputs.empty()) {
-        assert(m_spent_outputs.size() == txTo.vin.size());
+        assert(m_spent_outputs.size() == txTo.GetInputs().size());
         m_spent_outputs_ready = true;
     }
 
     // Determine which precomputation-impacting features this transaction uses.
     bool uses_bip143_segwit = force;
     bool uses_bip341_taproot = force;
-    for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
-        if (!txTo.vin[inpos].scriptWitness.IsNull()) {
+    for (size_t inpos = 0; inpos < txTo.GetInputs().size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
+        if (!txTo.GetInputs()[inpos].scriptWitness.IsNull()) {
             if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
                 m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
                 // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
@@ -1509,7 +1509,7 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     default:
         assert(false);
     }
-    assert(in_pos < tx_to.vin.size());
+    assert(in_pos < tx_to.GetInputs().size());
     if (!(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready)) {
         return HandleMissingData(mdb);
     }
@@ -1527,8 +1527,8 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     ss << hash_type;
 
     // Transaction level data
-    ss << tx_to.version;
-    ss << tx_to.nLockTime;
+    ss << tx_to.GetVersion();
+    ss << tx_to.GetLockTime();
     if (input_type != SIGHASH_ANYONECANPAY) {
         ss << cache.m_prevouts_single_hash;
         ss << cache.m_spent_amounts_single_hash;
@@ -1545,9 +1545,9 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     const uint8_t spend_type = (ext_flag << 1) + (have_annex ? 1 : 0); // The low bit indicates whether an annex is present.
     ss << spend_type;
     if (input_type == SIGHASH_ANYONECANPAY) {
-        ss << tx_to.vin[in_pos].prevout;
+        ss << tx_to.GetInputs()[in_pos].prevout;
         ss << cache.m_spent_outputs[in_pos];
-        ss << tx_to.vin[in_pos].nSequence;
+        ss << tx_to.GetInputs()[in_pos].nSequence;
     } else {
         ss << in_pos;
     }
@@ -1557,10 +1557,10 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
 
     // Data about the output (if only one).
     if (output_type == SIGHASH_SINGLE) {
-        if (in_pos >= tx_to.vout.size()) return false;
+        if (in_pos >= tx_to.GetOutputs().size()) return false;
         if (!execdata.m_output_hash) {
             HashWriter sha_single_output{};
-            sha_single_output << tx_to.vout[in_pos];
+            sha_single_output << tx_to.GetOutputs()[in_pos];
             execdata.m_output_hash = sha_single_output.GetSHA256();
         }
         ss << execdata.m_output_hash.value();
@@ -1609,12 +1609,12 @@ void SigHashCache::Store(int32_t hash_type, const CScript& script_code, const Ha
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int32_t nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache, SigHashCache* sighash_cache)
 {
-    assert(nIn < txTo.vin.size());
+    assert(nIn < txTo.GetInputs().size());
 
     if (sigversion != SigVersion::WITNESS_V0) {
         // Check for invalid use of SIGHASH_SINGLE
         if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
-            if (nIn >= txTo.vout.size()) {
+            if (nIn >= txTo.GetOutputs().size()) {
                 //  nOut out of range
                 return uint256::ONE;
             }
@@ -1646,28 +1646,28 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             hashOutputs = cacheready ? cache->hashOutputs : SHA256Uint256(GetOutputsSHA256(txTo));
-        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
+        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.GetOutputs().size()) {
             HashWriter inner_ss{};
-            inner_ss << txTo.vout[nIn];
+            inner_ss << txTo.GetOutputs()[nIn];
             hashOutputs = inner_ss.GetHash();
         }
 
         // Version
-        ss << txTo.version;
+        ss << txTo.GetVersion();
         // Input prevouts/nSequence (none/all, depending on flags)
         ss << hashPrevouts;
         ss << hashSequence;
         // The input being signed (replacing the scriptSig with scriptCode + amount)
         // The prevout may already be contained in hashPrevout, and the nSequence
         // may already be contain in hashSequence.
-        ss << txTo.vin[nIn].prevout;
+        ss << txTo.GetInputs()[nIn].prevout;
         ss << scriptCode;
         ss << amount;
-        ss << txTo.vin[nIn].nSequence;
+        ss << txTo.GetInputs()[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;
         // Locktime
-        ss << txTo.nLockTime;
+        ss << txTo.GetLockTime();
     } else {
         // Wrapper to serialize only the necessary parts of the transaction being signed
         CTransactionSignatureSerializer<T> txTmp(txTo, scriptCode, nIn, nHashType);
@@ -1762,14 +1762,14 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
     if (!(
-        (txTo->nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
-        (txTo->nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
+        (txTo->GetLockTime() <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
+        (txTo->GetLockTime() >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
-    if (nLockTime > (int64_t)txTo->nLockTime)
+    if (nLockTime > (int64_t)txTo->GetLockTime())
         return false;
 
     // Finally the nLockTime feature can be disabled in IsFinalTx()
@@ -1782,7 +1782,7 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     // prevent this condition. Alternatively we could test all
     // inputs, but testing just this input minimizes the data
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
-    if (CTxIn::SEQUENCE_FINAL == txTo->vin[nIn].nSequence)
+    if (CTxIn::SEQUENCE_FINAL == txTo->GetInputs()[nIn].nSequence)
         return false;
 
     return true;
@@ -1793,11 +1793,11 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 {
     // Relative lock times are supported by comparing the passed
     // in operand to the sequence number of the input.
-    const int64_t txToSequence = (int64_t)txTo->vin[nIn].nSequence;
+    const int64_t txToSequence = (int64_t)txTo->GetInputs()[nIn].nSequence;
 
     // Fail if the transaction's version number is not set high
     // enough to trigger BIP 68 rules.
-    if (txTo->version < 2)
+    if (txTo->GetVersion() < 2)
         return false;
 
     // Sequence numbers with their most significant bit set are not

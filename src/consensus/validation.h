@@ -148,8 +148,8 @@ inline int GetWitnessCommitmentIndex(const CBlock& block)
 {
     int commitpos = NO_WITNESS_COMMITMENT;
     if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            const CTxOut& vout = block.vtx[0]->vout[o];
+        for (size_t o = 0; o < block.vtx[0]->GetOutputs().size(); o++) {
+            const CTxOut& vout = block.vtx[0]->GetOutputs()[o];
             if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
                 vout.scriptPubKey[0] == OP_RETURN &&
                 vout.scriptPubKey[1] == 0x24 &&

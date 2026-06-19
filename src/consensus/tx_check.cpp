@@ -11,9 +11,9 @@
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
     // Basic checks that don't depend on any context
-    if (tx.vin.empty())
+    if (tx.GetInputs().empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
-    if (tx.vout.empty())
+    if (tx.GetOutputs().empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
     if (::GetSerializeSize(TX_NO_WITNESS(tx)) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT) {
@@ -22,7 +22,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 
     // Check for negative or overflow output values (see CVE-2010-5139)
     CAmount nValueOut = 0;
-    for (const auto& txout : tx.vout)
+    for (const auto& txout : tx.GetOutputs())
     {
         if (txout.nValue < 0)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-negative");
@@ -39,19 +39,19 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     // Failure to run this check will result in either a crash or an inflation bug, depending on the implementation of
     // the underlying coins database.
     std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin) {
+    for (const auto& txin : tx.GetInputs()) {
         if (!vInOutPoints.insert(txin.prevout).second)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
     }
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        if (tx.GetInputs()[0].scriptSig.size() < 2 || tx.GetInputs()[0].scriptSig.size() > 100)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
     }
     else
     {
-        for (const auto& txin : tx.vin)
+        for (const auto& txin : tx.GetInputs())
             if (txin.prevout.IsNull())
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
     }

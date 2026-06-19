@@ -16,9 +16,9 @@
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
-    if (tx.nLockTime == 0)
+    if (tx.GetLockTime() == 0)
         return true;
-    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+    if ((int64_t)tx.GetLockTime() < ((int64_t)tx.GetLockTime() < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
 
     // Even if tx.nLockTime isn't satisfied by nBlockHeight/nBlockTime, a
@@ -29,7 +29,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     // also check that the spending input's nSequence != SEQUENCE_FINAL,
     // ensuring that an unsatisfied nLockTime value will actually cause
     // IsFinalTx() to return false here:
-    for (const auto& txin : tx.vin) {
+    for (const auto& txin : tx.GetInputs()) {
         if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL))
             return false;
     }
@@ -38,7 +38,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 
 std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block)
 {
-    assert(prevHeights.size() == tx.vin.size());
+    assert(prevHeights.size() == tx.GetInputs().size());
 
     // Will be set to the equivalent height- and time-based nLockTime
     // values that would be necessary to satisfy all relative lock-
@@ -48,7 +48,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     int nMinHeight = -1;
     int64_t nMinTime = -1;
 
-    bool fEnforceBIP68 = tx.version >= 2 && flags & LOCKTIME_VERIFY_SEQUENCE;
+    bool fEnforceBIP68 = tx.GetVersion() >= 2 && flags & LOCKTIME_VERIFY_SEQUENCE;
 
     // Do not enforce sequence numbers as a relative lock time
     // unless we have been instructed to
@@ -56,8 +56,8 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
         return std::make_pair(nMinHeight, nMinTime);
     }
 
-    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
-        const CTxIn& txin = tx.vin[txinIndex];
+    for (size_t txinIndex = 0; txinIndex < tx.GetInputs().size(); txinIndex++) {
+        const CTxIn& txin = tx.GetInputs()[txinIndex];
 
         // Sequence numbers with the most significant bit set are not
         // treated as relative lock-times, nor are they given any
@@ -112,11 +112,11 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeig
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
-    for (const auto& txin : tx.vin)
+    for (const auto& txin : tx.GetInputs())
     {
         nSigOps += txin.scriptSig.GetSigOpCount(false);
     }
-    for (const auto& txout : tx.vout)
+    for (const auto& txout : tx.GetOutputs())
     {
         nSigOps += txout.scriptPubKey.GetSigOpCount(false);
     }
@@ -129,13 +129,13 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
         return 0;
 
     unsigned int nSigOps = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++)
     {
-        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+        const Coin& coin = inputs.AccessCoin(tx.GetInputs()[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
         if (prevout.scriptPubKey.IsPayToScriptHash())
-            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.GetInputs()[i].scriptSig);
     }
     return nSigOps;
 }
@@ -151,12 +151,12 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
         nSigOps += GetP2SHSigOpCount(tx, inputs) * WITNESS_SCALE_FACTOR;
     }
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++)
     {
-        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+        const Coin& coin = inputs.AccessCoin(tx.GetInputs()[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
-        nSigOps += CountWitnessSigOps(tx.vin[i].scriptSig, prevout.scriptPubKey, tx.vin[i].scriptWitness, flags);
+        nSigOps += CountWitnessSigOps(tx.GetInputs()[i].scriptSig, prevout.scriptPubKey, tx.GetInputs()[i].scriptWitness, flags);
     }
     return nSigOps;
 }
@@ -170,8 +170,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
 
     CAmount nValueIn = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        const COutPoint &prevout = tx.vin[i].prevout;
+    for (unsigned int i = 0; i < tx.GetInputs().size(); ++i) {
+        const COutPoint &prevout = tx.GetInputs()[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 

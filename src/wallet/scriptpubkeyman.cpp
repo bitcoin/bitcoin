@@ -1373,10 +1373,10 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         if (!input.witness_utxo.IsNull()) {
             script = input.witness_utxo.scriptPubKey;
         } else if (input.non_witness_utxo) {
-            if (input.prev_out >= input.non_witness_utxo->vout.size()) {
+            if (input.prev_out >= input.non_witness_utxo->GetOutputs().size()) {
                 return PSBTError::MISSING_INPUTS;
             }
-            script = input.non_witness_utxo->vout[input.prev_out].scriptPubKey;
+            script = input.non_witness_utxo->GetOutputs()[input.prev_out].scriptPubKey;
         } else {
             // There's no UTXO so we can just skip this now
             continue;
