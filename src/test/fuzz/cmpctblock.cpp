@@ -109,7 +109,7 @@ public:
 
 void ResetChainmanAndMempool(TestingSetup& setup)
 {
-    SetMockTime(Params().GenesisBlock().Time());
+    GetFakeNodeClock().set(Params().GenesisBlock().Time());
 
     bilingual_str error{};
     setup.m_node.mempool.reset();
@@ -163,7 +163,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    FakeNodeClock clock{1610000000s};
+    GetFakeNodeClock().set(1610000000s);
     FakeSteadyClock steady_clock;
 
     auto setup = g_setup;
@@ -453,10 +453,10 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             [&]() {
                 // Set mock time randomly or to tip's time.
                 if (fuzzed_data_provider.ConsumeBool()) {
-                    clock.set(ConsumeTime(fuzzed_data_provider));
+                    GetFakeNodeClock().set(ConsumeTime(fuzzed_data_provider));
                 } else {
                     const NodeSeconds tip_time = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()->Time());
-                    clock.set(tip_time);
+                    GetFakeNodeClock().set(tip_time);
                 }
 
                 sent_net_msg = false;

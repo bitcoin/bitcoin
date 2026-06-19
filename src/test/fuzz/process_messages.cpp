@@ -40,7 +40,7 @@ TestingSetup* g_setup;
 
 void ResetChainman(TestingSetup& setup)
 {
-    SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    GetFakeNodeClock().set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
     setup.m_node.chainman.reset();
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
@@ -72,7 +72,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     connman.Reset();
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
-    FakeNodeClock clock{1610000000s}; // any time to successfully reset ibd
+    GetFakeNodeClock().set(1610000000s); // any time to successfully reset ibd
     FakeSteadyClock steady_clock;
     chainman.ResetIbd();
     chainman.DisableNextWrite();
@@ -110,7 +110,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 30) {
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::MESSAGE_TYPE_SIZE).c_str()};
 
-        clock.set(ConsumeTime(fuzzed_data_provider));
+        GetFakeNodeClock().set(ConsumeTime(fuzzed_data_provider));
 
         CSerializedNetMsg net_msg;
         net_msg.m_type = random_message_type;
