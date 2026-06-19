@@ -7,7 +7,7 @@
 #include <addresstype.h>
 #include <random.h>
 
-BOOST_AUTO_TEST_SUITE(femmg_tests)
+BOOST_AUTO_TEST_SUITE(pqhybrid_tests)
 
 BOOST_AUTO_TEST_CASE(falcon1024_keygen_sign_verify)
 {
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(femmg_address_encode)
     schnorr_pk = XOnlyPubKey(dummy_pk);
     
     std::vector<unsigned char> falcon_pk(1793, 0x05);
-    WitnessV2Femmg femmg(schnorr_pk, falcon_pk);
+    WitnessV2PQHybrid femmg(schnorr_pk, falcon_pk);
     
     std::string addr = EncodeDestination(femmg);
     BOOST_CHECK(addr.substr(0, 6) == "femmg1");

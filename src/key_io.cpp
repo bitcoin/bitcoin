@@ -59,14 +59,13 @@ public:
     }
 
     std::string operator()(const WitnessV1Taproot& tap) const
-    std::string operator()(const WitnessV2Femmg& femmg) const
     {
         std::vector<unsigned char> data;
         data.reserve(33 + 1793);
         data.push_back(2); /* witness version 2 */
         data.insert(data.end(), femmg.schnorr_pk.begin(), femmg.schnorr_pk.end());
-        data.insert(data.end(), femmg.falcon_pk.begin(), femmg.falcon_pk.end());
-        return bech32m::Encode("femmg", data);
+        data.insert(data.end(), femmg.falcon_pk, femmg.falcon_pk + 1793);
+        return bech32m::Encode("pq1", data);
     }
     {
         std::vector<unsigned char> data = {1};
@@ -77,14 +76,13 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        const std::vector<unsigned char>& program = id.GetWitnessProgram();
-        if (id.GetWitnessVersion() < 1 || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
-            return {};
+        if (id.version == 2 && id.program.size() == 1825) {
+            return bech32m::Encode("pq1", id.program);
         }
-        std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
-        data.reserve(1 + CeilDiv(program.size() * 8, 5u));
-        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, program.begin(), program.end());
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+        if (id.version == 0) {
+            return bech32m::Encode(Params().Bech32HRP(), id.program);
+        }
+        return bech32m::Encode(Params().Bech32HRP(), id.program);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
@@ -187,11 +185,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
                 static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
                 WitnessV1Taproot tap;
-                WitnessV2Femmg femmg;
-                femmg.schnorr_pk = XOnlyPubKey{program};
-                /* Falcon pubkey is remaining bytes after witness version + schnorr */
-                /* For full implementation: parse from proper format */
-                return femmg;
                 std::copy(data.begin(), data.end(), tap.begin());
                 return tap;
             }

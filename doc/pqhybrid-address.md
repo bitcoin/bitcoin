@@ -1,13 +1,13 @@
-# femmg1... Post-Quantum Hybrid Address
+# pq11... Post-Quantum Hybrid Address
 
 ## Overview
-`femmg1...` is a Bech32m address format for the **Schnorr + Falcon-1024 hybrid 
-post-quantum signature scheme**. Addresses start with `femmg1` and encode a 
+`pq11...` is a Bech32m address format for the **Schnorr + Falcon-1024 hybrid 
+post-quantum signature scheme**. Addresses start with `pq11` and encode a 
 composite public key: 32-byte Schnorr (BIP 340, secp256k1) + 1793-byte Falcon-1024 
 (NIST FIPS 204 Level 5).
 
 ## Address Format
-- **HRP:** `femmg`
+- **HRP:** `pq1`
 - **Witness version:** 2
 - **Program size:** 1825 bytes (32 Schnorr + 1793 Falcon-1024)
 - **Encoding:** Bech32m
@@ -18,10 +18,10 @@ composite public key: 32-byte Schnorr (BIP 340, secp256k1) + 1793-byte Falcon-10
 - **Composite security:** Both must be broken to forge
 
 ## Usage
-    # Generate femmg address
-    bitcoin-cli getnewaddress "" "femmg"
+    # Generate pq1 address
+    bitcoin-cli getnewaddress "" "pq1"
     
-    # femmg1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq...
+    # pq11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq...
 
 ## Dependencies
 - liboqs 0.15.0+ (Falcon-1024)
