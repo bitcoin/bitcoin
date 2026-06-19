@@ -1788,8 +1788,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
         );
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
-    BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    (void)active_chainstate.FlushStateToDisk(FlushStateMode::PERIODIC);
     return result;
 }
 
@@ -1819,8 +1818,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
         }
     }
     // Ensure the coins cache is still within limits.
-    BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    (void)active_chainstate.FlushStateToDisk(FlushStateMode::PERIODIC);
     return result;
 }
 
@@ -2775,8 +2773,7 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-bool Chainstate::FlushStateToDisk(
-    BlockValidationState &state,
+BlockValidationState Chainstate::FlushStateToDisk(
     FlushStateMode mode,
     int nManualPruneHeight)
 {
@@ -2851,8 +2848,7 @@ bool Chainstate::FlushStateToDisk(
 
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                state = FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
-                return false;
+                return FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
             }
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
@@ -2860,7 +2856,7 @@ bool Chainstate::FlushStateToDisk(
                 // First make sure all block and undo data is flushed to disk.
                 if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
                     // FlushChainstateBlockFile() already reported the specific error through flushError()
-                    return state.Error("Failed to flush block or undo file");
+                    return BlockValidationState::MakeError("Failed to flush block or undo file");
                 }
             }
 
@@ -2884,8 +2880,7 @@ bool Chainstate::FlushStateToDisk(
                 // an overestimation, as most will delete an existing entry or
                 // overwrite one. Still, use a conservative safety factor of 2.
                 if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetDirtyCount())) {
-                    state = FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
-                    return false;
+                    return FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
                 }
                 // Flush the chainstate (which may refer to block index entries).
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
@@ -2919,25 +2914,22 @@ bool Chainstate::FlushStateToDisk(
         }
     }
     } catch (const std::runtime_error& e) {
-        state = FatalError(m_chainman.GetNotifications(), strprintf(_("System error while flushing: %s"), e.what()));
-        return false;
+        return FatalError(m_chainman.GetNotifications(), strprintf(_("System error while flushing: %s"), e.what()));
     }
-    return true;
+    return BlockValidationState{};
 }
 
 void Chainstate::ForceFlushStateToDisk(bool wipe_cache)
 {
-    BlockValidationState state;
-    if (!this->FlushStateToDisk(state, wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC)) {
+    if (auto state = this->FlushStateToDisk(wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC); !state.IsValid()) {
         LogWarning("Failed to force flush state (%s)", state.ToString());
     }
 }
 
 void Chainstate::PruneAndFlush()
 {
-    BlockValidationState state;
     m_blockman.m_check_for_pruning = true;
-    if (!this->FlushStateToDisk(state, FlushStateMode::NONE)) {
+    if (auto state = this->FlushStateToDisk(FlushStateMode::NONE); !state.IsValid()) {
         LogWarning("Failed to flush state (%s)", state.ToString());
     }
 }
@@ -3054,7 +3046,9 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
+    Assume(state.IsValid());
+    state = FlushStateToDisk(FlushStateMode::IF_NEEDED);
+    if (!state.IsValid()) {
         return false;
     }
 
@@ -3148,7 +3142,9 @@ bool Chainstate::ConnectTip(
              Ticks<SecondsDouble>(m_chainman.time_flush),
              Ticks<MillisecondsDouble>(m_chainman.time_flush) / m_chainman.num_blocks_total);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
+    Assume(state.IsValid());
+    state = FlushStateToDisk(FlushStateMode::IF_NEEDED);
+    if (!state.IsValid()) {
         return false;
     }
     const auto time_5{SteadyClock::now()};
@@ -3543,7 +3539,9 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             }
 
             // Write changes periodically to disk, after relay.
-            if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            Assume(state.IsValid());
+            state = FlushStateToDisk(FlushStateMode::PERIODIC);
+            if (!state.IsValid()) {
                 return false;
             }
 
@@ -4502,9 +4500,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     // callers can't mistreat a flush failure as a block validation failure.
     // The fatal error notification inside FlushStateToDisk still fires,
     // so the node will shut down on unrecoverable flush errors regardless.
-    // For state a dummy value is used, and the return value is ignored.
-    BlockValidationState flush_state_ignore;
-    (void)ActiveChainstate().FlushStateToDisk(flush_state_ignore, FlushStateMode::NONE);
+    (void)ActiveChainstate().FlushStateToDisk(FlushStateMode::NONE);
 
     CheckBlockIndex();
 
@@ -4652,9 +4648,8 @@ BlockValidationState TestBlockValidity(
 /* This function is called from the RPC code for pruneblockchain */
 void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
 {
-    BlockValidationState state;
-    if (!active_chainstate.FlushStateToDisk(
-            state, FlushStateMode::NONE, nManualPruneHeight)) {
+    if (auto state = active_chainstate.FlushStateToDisk(
+            FlushStateMode::NONE, nManualPruneHeight); !state.IsValid()) {
         LogWarning("Failed to flush state after manual prune (%s)", state.ToString());
     }
 }
@@ -5596,15 +5591,14 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     LogInfo("[%s] resized coinstip cache to %.1f MiB",
         this->ToString(), coinstip_size / double(1_MiB));
 
-    BlockValidationState state;
     bool ret;
 
     if (coinstip_size > old_coinstip_size) {
         // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
+        ret = FlushStateToDisk(FlushStateMode::IF_NEEDED).IsValid();
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH);
+        ret = FlushStateToDisk(FlushStateMode::FORCE_FLUSH).IsValid();
     }
     return ret;
 }
