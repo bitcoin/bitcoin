@@ -4,11 +4,9 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <consensus/consensus.h>
 #include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
-#include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
@@ -17,13 +15,13 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
-#include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -39,17 +37,6 @@
 namespace {
 TestingSetup* g_setup;
 
-void ResetChainman(TestingSetup& setup)
-{
-    GetFakeNodeClock().set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
-    setup.m_node.chainman.reset();
-    setup.m_make_chainman();
-    setup.LoadVerifyActivateChainstate();
-    node::BlockCreateOptions options;
-    for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(setup.m_node, options);
-    }
-}
 } // namespace
 
 extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
@@ -62,7 +49,7 @@ void initialize_process_messages()
             {}),
     };
     g_setup = testing_setup.get();
-    ResetChainman(*g_setup);
+    ResetChainmanAndMempool(*g_setup);
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
@@ -75,6 +62,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     connman.Reset();
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
+    const auto initial_sequence{WITH_LOCK(node.mempool->cs, return node.mempool->GetSequence())};
     GetFakeNodeClock().set(1610000000s); // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
     chainman.ResetIbd();
@@ -144,10 +132,10 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     node.validation_signals->SyncWithValidationInterfaceQueue();
     node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     node.connman->StopNodes();
-    if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
-        // Reuse the global chainman, but reset it when it is dirty. Reset the
-        // rng first, so ResetChainman() consumes it from a fixed seed.
+    const auto end_sequence{WITH_LOCK(node.mempool->cs, return node.mempool->GetSequence())};
+    if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size()) || initial_sequence != end_sequence) {
+        // Reuse the global chainman and mempool, but reset them when dirty.
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        ResetChainman(*g_setup);
+        ResetChainmanAndMempool(*g_setup);
     }
 }
