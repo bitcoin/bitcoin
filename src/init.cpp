@@ -1437,7 +1437,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
             auto mining_args{node::ReadMiningArgs(args)};
             Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
             // Must be set before setChainstateLoaded(true), which unblocks MakeMining waiters that assume it is non-null.
-            node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*node.mempool, chainman, std::move(*mining_args));
+            node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*node.mempool, chainman, *node.notifications, std::move(*mining_args));
             node.notifications->setChainstateLoaded(true);
         }
     }
