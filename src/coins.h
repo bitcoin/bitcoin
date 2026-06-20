@@ -335,9 +335,6 @@ public:
     //! The passed cursor is used to iterate through the coins.
     virtual void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) = 0;
 
-    //! Get a cursor to iterate over the whole state. Implementations may return nullptr.
-    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const = 0;
-
     //! Estimate database size
     virtual size_t EstimateSize() const = 0;
 };
@@ -363,7 +360,6 @@ public:
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) { }
     }
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return {}; }
     size_t EstimateSize() const override { return 0; }
 };
 
@@ -384,7 +380,6 @@ public:
     uint256 GetBestBlock() const override { return base->GetBestBlock(); }
     std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override { base->BatchWrite(cursor, block_hash); }
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return base->Cursor(); }
     size_t EstimateSize() const override { return base->EstimateSize(); }
 };
 
@@ -435,9 +430,6 @@ public:
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256& block_hash);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override {
-        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
-    }
 
     /**
      * Check if we have the given utxo already loaded in this cache.

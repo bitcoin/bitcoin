@@ -227,13 +227,6 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
     }
 
     {
-        bool expected_code_path = false;
-        try {
-            (void)coins_view_cache.Cursor();
-        } catch (const std::logic_error&) {
-            expected_code_path = true;
-        }
-        assert(expected_code_path);
         (void)coins_view_cache.DynamicMemoryUsage();
         (void)coins_view_cache.EstimateSize();
         (void)coins_view_cache.GetBestBlock();
