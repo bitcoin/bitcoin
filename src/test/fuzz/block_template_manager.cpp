@@ -214,8 +214,9 @@ FUZZ_TARGET(block_template_manager, .init = initialize_block_template_manager)
         const auto merged_options{node::MergeMiningOptions(options, block_template_manager.BlockCreateArgs())};
         const auto options_check{node::CheckMiningOptions(merged_options, /*use_argnames=*/false)};
         std::unique_ptr<node::CBlockTemplate> block_template;
+        uint64_t template_id{0};
         try {
-            block_template = block_template_manager.CreateNewTemplate(options);
+            block_template = block_template_manager.CreateNewTemplate(options, &template_id);
         } catch (const std::runtime_error& e) {
             if (!options_check) {
                 assert(e.what() == util::ErrorString(options_check).original);
@@ -299,7 +300,8 @@ FUZZ_TARGET(block_template_manager, .init = initialize_block_template_manager)
             bool interrupt{false};
             if (interrupted) block_template_manager.InterruptWait(interrupt);
             assert(interrupt == interrupted);
-            const auto next_template{block_template_manager.WaitAndCreateNewBlock(block_template, wait_options, options, interrupt)};
+            uint64_t new_template_id{0};
+            const auto next_template{block_template_manager.WaitAndCreateNewBlock(tip_hash, template_id, wait_options, options, interrupt, new_template_id)};
             assert(!interrupt);
             if (interrupted) {
                 assert(!next_template);
