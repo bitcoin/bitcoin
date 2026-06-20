@@ -345,7 +345,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          provider: ${{ needs.runners.outputs.provider }}
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
@@ -540,7 +540,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          provider: ${{ matrix.provider || needs.runners.outputs.provider }}
+          provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
 
       - name: Clear unnecessary files
         if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
@@ -584,7 +584,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          provider: ${{ needs.runners.outputs.provider }}
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
       - name: CI script
         run: |
