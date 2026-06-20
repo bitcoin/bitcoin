@@ -4521,8 +4521,8 @@ BlockValidationState TestBlockValidity(
     }
 
     // For signets CheckBlock() verifies the challenge iff fCheckPow is set.
-    state = CheckBlock(block, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root);
-    if (!state.IsValid()) {
+    if (const auto state = CheckBlock(block, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root);
+        !state.IsValid()) {
         // This should never happen, but belt-and-suspenders don't approve the
         // block if it does.
         return state;
@@ -4543,13 +4543,11 @@ BlockValidationState TestBlockValidity(
      * - do run ContextualCheckBlock()
      */
 
-    state = ContextualCheckBlockHeader(block, chainstate.m_chainman, tip);
-    if (!state.IsValid()) {
+    if (const auto state = ContextualCheckBlockHeader(block, chainstate.m_chainman, tip); !state.IsValid()) {
         return state;
     }
 
-    state = ContextualCheckBlock(block, chainstate.m_chainman, tip);
-    if (!state.IsValid()) {
+    if (const auto state = ContextualCheckBlock(block, chainstate.m_chainman, tip); !state.IsValid()) {
         return state;
     }
 
@@ -4563,15 +4561,14 @@ BlockValidationState TestBlockValidity(
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
     // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
+    if (!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
+    } else {
+        if (!state.IsValid()) NONFATAL_UNREACHABLE();
     }
 
-    // Ensure no check returned successfully while also setting an invalid state.
-    if (!state.IsValid()) NONFATAL_UNREACHABLE();
-
-    return state;
+    return BlockValidationState{};
 }
 
 /* This function is called from the RPC code for pruneblockchain */
