@@ -244,7 +244,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
 
     {
         if (is_db && backend_coins_view == original_backend) {
-            assert(backend_coins_view->Cursor());
+            assert(db->Cursor());
         }
         (void)backend_coins_view->EstimateSize();
         (void)backend_coins_view->GetBestBlock();
