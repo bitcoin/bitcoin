@@ -17,7 +17,6 @@
 #include <dbwrapper.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <interfaces/mining.h>
 #include <kernel/caches.h>
 #include <kernel/context.h>
 #include <key.h>
@@ -452,13 +451,13 @@ CBlock TestChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey)
 {
-    auto mining{interfaces::MakeMining(m_node)};
-    auto block_template{mining->createNewBlock({
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    auto block_template{block_template_manager.CreateNewTemplate({
         .use_mempool = false,
         .coinbase_output_script = scriptPubKey,
-    }, /*cooldown=*/false)};
+    })};
     Assert(block_template);
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block};
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
