@@ -1835,6 +1835,53 @@ class msg_tx:
         return "msg_tx(tx=%s)" % (repr(self.tx))
 
 
+class CCoinJoinBroadcastTx:
+    __slots__ = ("tx", "m_protxHash", "vchSig", "sigTime")
+
+    def __init__(self, tx=None, m_protxHash=0, vchSig=b"", sigTime=0):
+        self.tx = tx or CTransaction()
+        self.m_protxHash = m_protxHash
+        self.vchSig = vchSig
+        self.sigTime = sigTime
+
+    def deserialize(self, f):
+        self.tx = CTransaction()
+        self.tx.deserialize(f)
+        self.m_protxHash = deser_uint256(f)
+        self.vchSig = deser_string(f)
+        self.sigTime = struct.unpack("<q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += self.tx.serialize()
+        r += ser_uint256(self.m_protxHash)
+        r += ser_string(self.vchSig)
+        r += struct.pack("<q", self.sigTime)
+        return r
+
+    def __repr__(self):
+        return "CCoinJoinBroadcastTx(tx=%s m_protxHash=%064x)" \
+               % (repr(self.tx), self.m_protxHash)
+
+
+class msg_dstx:
+    __slots__ = ("dstx",)
+    msgtype = b"dstx"
+
+    def __init__(self, dstx=None):
+        self.dstx = dstx or CCoinJoinBroadcastTx()
+
+    def deserialize(self, f):
+        self.dstx = CCoinJoinBroadcastTx()
+        self.dstx.deserialize(f)
+
+    def serialize(self):
+        return self.dstx.serialize()
+
+    def __repr__(self):
+        return "msg_dstx(dstx=%s)" % (repr(self.dstx))
+
+
 class msg_block:
     __slots__ = ("block",)
     msgtype = b"block"
