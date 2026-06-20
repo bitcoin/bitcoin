@@ -214,6 +214,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(raw_txs[0]);
     BOOST_CHECK(raw_txs[0]->GetHash() == hashParentTx);
     BOOST_CHECK(!raw_txs[1]);
+    // Drain pending MempoolUpdated signals before creating a new template
+    // so stale signals don't pollute the new entry's fee tracking.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
@@ -266,6 +269,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
 
     // A package below the block min tx fee should not make the template stale.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
@@ -285,6 +289,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
 
     // waitNext() should return if fees for the new template are at least 1 sat up
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     block_template = block_template->waitNext({.fee_threshold = 1});
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();

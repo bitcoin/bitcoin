@@ -879,11 +879,20 @@ class BlockTemplateImpl : public BlockTemplate
 public:
     explicit BlockTemplateImpl(BlockCreateOptions create_options,
                                std::unique_ptr<CBlockTemplate> block_template,
+                               uint64_t template_id,
                                const NodeContext& node) : m_create_options(std::move(create_options)),
                                                           m_block_template(std::move(block_template)),
+                                                          m_template_id(template_id),
                                                           m_node(node)
     {
         assert(m_block_template);
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        if (m_node.block_template_manager) {
+            m_node.block_template_manager->StopTrackingFeeInflow(m_template_id);
+        }
     }
 
     CBlockHeader getBlockHeader() override
@@ -927,9 +936,15 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
+        uint64_t new_template_id{0};
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
-            m_block_template, options, m_create_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
+            m_block_template->block.hashPrevBlock,
+            m_template_id,
+            options,
+            m_create_options,
+            m_interrupt_wait,
+            new_template_id);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), new_template_id, m_node);
         return nullptr;
     }
 
@@ -941,6 +956,10 @@ public:
     const BlockCreateOptions m_create_options;
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
+    // Identifier of this template's fee-inflow tracking snapshot, or 0 when
+    // untracked. Owned here rather than on CBlockTemplate so the assembler's
+    // template struct stays free of tracking state.
+    const uint64_t m_template_id;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
@@ -993,9 +1012,9 @@ public:
             // Also wait during the final catch-up moments after IBD.
             if (!block_template_manager().CooldownIfHeadersAhead(*maybe_tip, m_interrupt_mining)) return {};
         }
-        auto& block_template_manager = *Assert(m_node.block_template_manager);
-        auto new_template = block_template_manager.CreateNewTemplate(options);
-        return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), m_node);
+        uint64_t template_id{0};
+        auto new_template = block_template_manager().CreateNewTemplate(options, &template_id);
+        return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), template_id, m_node);
     }
 
     void interrupt() override

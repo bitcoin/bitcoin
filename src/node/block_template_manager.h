@@ -211,13 +211,16 @@ public:
     /** Interrupt a blocking wait. */
     void InterruptWait(bool& interrupt_wait);
 
-    /** Return a new block template when fees rise to a certain threshold or
-     *  after a new tip; return nullptr if timeout is reached. */
+    /** Wait for fee inflow or tip change, then return a new template. On
+     *  success the replacement's tracking id is written to @p new_template_id.
+     *  @return nullptr on timeout or interrupt. */
     std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(
-        const std::unique_ptr<CBlockTemplate>& block_template,
-        const BlockWaitOptions& wait_options,
-        const BlockCreateOptions& create_options,
-        bool& interrupt_wait)
+        const uint256& prev_block_hash,
+        uint64_t template_id,
+        const BlockWaitOptions& options,
+        const BlockCreateOptions& assemble_options,
+        bool& interrupt_wait,
+        uint64_t& new_template_id)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 } // namespace node
