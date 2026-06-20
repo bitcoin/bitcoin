@@ -336,7 +336,7 @@ void ChainTestingSetup::CreateBlockTemplateManager()
 {
     auto mining_args{node::ReadMiningArgs(*Assert(m_node.args))};
     Assert(mining_args);
-    m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman, std::move(*mining_args));
+    m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman, *Assert(m_node.notifications), std::move(*mining_args));
 }
 
 ChainTestingSetup::~ChainTestingSetup()
