@@ -18,13 +18,13 @@
 
 #if !defined(_DEBUG) && !defined(__NO_INLINE__) && !defined(__OPTIMIZE_SIZE__)
 #  if (defined(__GNUC__) || defined(__clang__)) && defined(__OPTIMIZE__)
-#    define ALWAYS_INLINE inline __attribute__((always_inline))
+#    define FORCE_INLINE inline __attribute__((always_inline))
 #  elif defined(_MSC_VER)
-#    define ALWAYS_INLINE __forceinline
+#    define FORCE_INLINE __forceinline
 #  endif
 #endif
-#ifndef ALWAYS_INLINE
-#  define ALWAYS_INLINE inline
+#ifndef FORCE_INLINE
+#  define FORCE_INLINE inline
 #endif
 
 #endif // BITCOIN_ATTRIBUTES_H
