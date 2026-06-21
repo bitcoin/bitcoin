@@ -118,7 +118,6 @@ static std::optional<CCoinsStats> ComputeUTXOStats(T hash_obj, const CCoinsViewD
         pcursor = view.Cursor();
         pindex = blockman.LookupBlockIndex(pcursor->GetBestBlock());
     }
-    assert(pcursor);
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     Txid prevkey;

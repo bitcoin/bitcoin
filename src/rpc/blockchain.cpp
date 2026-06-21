@@ -2441,7 +2441,7 @@ static RPCMethod scantxoutset()
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
             active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
-            pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
+            pcursor = active_chainstate.CoinsDB().Cursor();
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
@@ -3328,9 +3328,6 @@ UniValue CreateRolledBackUTXOSnapshot(
     }
 
     std::unique_ptr<CCoinsViewCursor> pcursor{temp_db->Cursor()};
-    if (!pcursor) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to create UTXO cursor");
-    }
 
     LogInfo("Writing snapshot to disk.");
     return WriteUTXOSnapshot(chainstate,
