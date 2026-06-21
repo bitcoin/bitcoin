@@ -314,6 +314,7 @@ BASE_SCRIPTS = [
     'p2p_private_broadcast.py',
     'rpc_getblockstats.py',
     'feature_port.py',
+    'feature_randomize_p2p_port.py',
     'feature_bind_port_externalip.py',
     'wallet_create_tx.py',
     'wallet_send.py',

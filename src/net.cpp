@@ -157,8 +157,13 @@ uint16_t GetListenPort()
         }
     }
 
-    // Otherwise, if -port= is provided, use that. Otherwise use the default port.
-    return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
+    const uint16_t default_port{static_cast<uint16_t>(
+        gArgs.GetBoolArg(RANDOMIZE_P2P_PORT_ARG, false) && !gArgs.IsArgSet("-port") ?
+            gArgs.GetIntArg(RANDOMIZED_P2P_PORT_ARG, Params().GetDefaultPort()) :
+            Params().GetDefaultPort())};
+
+    // Otherwise, if -port= is provided, use that. Otherwise use the default or randomized port.
+    return static_cast<uint16_t>(gArgs.GetIntArg("-port", default_port));
 }
 
 // Determine the "best" local address for a particular peer.
