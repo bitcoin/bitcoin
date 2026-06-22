@@ -61,6 +61,7 @@ struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
@@ -299,6 +300,22 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
 
+// One sigop-dense tx spending `input`: num_outputs bare CHECKMULTISIG outputs,
+// i.e. 20 * num_outputs legacy sigops (OP_NOP forces the inaccurate max-20 count).
+CMutableTransaction CreateBigSigOpsTx(const COutPoint& input, unsigned int num_outputs)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout = input;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout.resize(num_outputs);
+    for (auto& out : tx.vout) {
+        out.nValue = 0;
+        out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
+    }
+    return tx;
+}
+
 std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first_tx)
 {
     std::vector<CTransactionRef> ret;
@@ -325,20 +342,33 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     // Tx2-51 has 400 sigops: 1 input, 20 CHECKMULTISIG outputs
     // Total: 1000 CHECKMULTISIG + 1
     for (unsigned int i = 0; i < 50; ++i) {
-        auto tx2 = tx;
-        tx2.vin.resize(1);
-        tx2.vin[0].prevout.hash = parent_tx->GetHash();
-        tx2.vin[0].prevout.n = i;
-        tx2.vin[0].scriptSig = CScript() << OP_1;
-        tx2.vout.resize(20);
-        tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
-        for (auto &out : tx2.vout) {
-            out.nValue = 0;
-            out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
-        }
-        ret.push_back(MakeTransactionRef(tx2));
+        ret.push_back(MakeTransactionRef(CreateBigSigOpsTx(COutPoint{parent_tx->GetHash(), i}, /*num_outputs=*/20)));
     }
     return ret;
+}
+
+void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+{
+    auto mining{MakeMining()};
+    BOOST_REQUIRE(mining);
+
+    CTxMemPool& tx_mempool{MakeMempool()};
+    LOCK(tx_mempool.cs);
+    TestMemPoolEntryHelper entry;
+
+    const auto tx{CreateBigSigOpsTx(COutPoint{txFirst[0]->GetHash(), 0}, /*num_outputs=*/50)};
+    const auto sigop_entry{entry.Fee(COIN).SpendsCoinbase(true).SigOpsCost(GetLegacySigOpCount(CTransaction(tx)) * WITNESS_SCALE_FACTOR).FromTx(tx)};
+    BOOST_REQUIRE(sigop_entry.GetAdjustedWeight() > sigop_entry.GetTxWeight());
+    BOOST_REQUIRE(sigop_entry.GetSigOpCost() < MAX_BLOCK_SIGOPS_COST);
+    TryAddToMempool(tx_mempool, sigop_entry);
+
+    BlockCreateOptions options{
+        // +1 because TestChunkBlockLimits rejects on >= (exact fit doesn't count).
+        .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
+        .coinbase_output_script = scriptPubKey,
+    };
+    const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
@@ -905,6 +935,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+
+    TestSigOpsAdjustedWeightChunkLimit(scriptPubKey, txFirst);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
