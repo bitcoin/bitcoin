@@ -31,6 +31,15 @@ class OpenRPCDocTest(BitcoinTestFramework):
         assert_equal(type(openrpc["info"]).__name__, "dict")
         assert_equal(type(openrpc["methods"]).__name__, "list")
 
+        self.log.info("Calling rpc.discover")
+        if self.options.usecli:
+            discovered = self.nodes[0].cli("rpc.discover").send_cli()
+        else:
+            discovered = self.nodes[0].rpc.discover()
+        assert_equal(discovered, openrpc)
+        rpc_discover = find_method(discovered, "rpc.discover")
+        assert_equal(rpc_discover["params"], [])
+
         stop = find_method(openrpc, "stop")
         assert "wait" not in [param["name"] for param in stop["params"]]
 
@@ -85,11 +94,11 @@ class OpenRPCDocTest(BitcoinTestFramework):
         stats = find_param(getblockstats, "stats")
         assert_equal(stats["schema"]["x-bitcoin-default-hint"], "all values")
 
-        self.log.info("Checking string amount result annotations")
+        self.log.info("Checking numeric amount result annotations")
         analyzepsbt = find_method(openrpc, "analyzepsbt")
         result_schema = analyzepsbt["result"]["schema"]
         estimated_feerate = result_schema["properties"]["estimated_feerate"]
-        assert_equal(estimated_feerate["type"], "string")
+        assert_equal(estimated_feerate["type"], "number")
         assert_equal(estimated_feerate["x-bitcoin-unit"], "amount")
 
 

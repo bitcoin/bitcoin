@@ -442,7 +442,7 @@ UniValue OpenRPCResultSchema(const RPCResult& result)
     case RPCResult::Type::STR:
         return MakeObject({{"type", "string"}});
     case RPCResult::Type::STR_AMOUNT:
-        return MakeObject({{"type", "string"}, {"x-bitcoin-unit", "amount"}});
+        return MakeObject({{"type", "number"}, {"x-bitcoin-unit", "amount"}});
     case RPCResult::Type::STR_HEX:
         return MakeObject({{"type", "string"}, {"pattern", "^[0-9a-fA-F]+$"}});
     case RPCResult::Type::NUM:
@@ -511,6 +511,46 @@ UniValue OpenRPCResultSchema(const RPCResult& result)
 }
 } // namespace
 
+static RPCResult OpenRPCDocResult()
+{
+    return RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "openrpc", "OpenRPC specification version."},
+            {RPCResult::Type::OBJ, "info", "Metadata about this JSON-RPC interface.",
+                {
+                    {RPCResult::Type::STR, "title", "API title."},
+                    {RPCResult::Type::STR, "version", "Bitcoin Core version string."},
+                    {RPCResult::Type::STR, "description", "API description."},
+                }},
+            {RPCResult::Type::ARR, "methods", "Documented RPC methods.",
+                {{RPCResult::Type::OBJ, "", "An RPC method description object.",
+                    {
+                        {RPCResult::Type::STR, "name", "Method name."},
+                        {RPCResult::Type::STR, "description", "Method description."},
+                        {RPCResult::Type::ARR, "params", "Method parameters.",
+                            {{RPCResult::Type::OBJ, "", "A parameter.",
+                                {
+                                    {RPCResult::Type::STR, "name", "Parameter name."},
+                                    {RPCResult::Type::BOOL, "required", "Whether the parameter is required."},
+                                    {RPCResult::Type::ANY, "schema", "JSON Schema for the parameter."},
+                                    {RPCResult::Type::STR, "description", /*optional=*/true, "Parameter description."},
+                                    {RPCResult::Type::ARR, "x-bitcoin-aliases", /*optional=*/true, "Alternative parameter names.",
+                                        {{RPCResult::Type::STR, "", "An alias."}}},
+                                    {RPCResult::Type::BOOL, "x-bitcoin-placeholder", /*optional=*/true, "Whether the parameter is retained only for compatibility."},
+                                    {RPCResult::Type::BOOL, "x-bitcoin-also-positional", /*optional=*/true, "Whether the parameter can also be passed positionally."},
+                                }}}},
+                        {RPCResult::Type::OBJ, "result", "Method result.",
+                            {
+                                {RPCResult::Type::STR, "name", "Result name."},
+                                {RPCResult::Type::ANY, "schema", "JSON Schema for the result."},
+                            }},
+                        {RPCResult::Type::STR, "x-bitcoin-category", "RPC category."},
+                    }}}},
+        },
+        {.skip_type_check = true}};
+}
+
 static RPCMethod getopenrpcinfo()
 {
     return RPCMethod{
@@ -519,42 +559,7 @@ static RPCMethod getopenrpcinfo()
         {
             {"show_hidden", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also include hidden RPC commands and arguments."},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "openrpc", "OpenRPC specification version."},
-                {RPCResult::Type::OBJ, "info", "Metadata about this JSON-RPC interface.",
-                    {
-                        {RPCResult::Type::STR, "title", "API title."},
-                        {RPCResult::Type::STR, "version", "Bitcoin Core version string."},
-                        {RPCResult::Type::STR, "description", "API description."},
-                    }},
-                {RPCResult::Type::ARR, "methods", "Documented RPC methods.",
-                    {{RPCResult::Type::OBJ, "", "An RPC method description object.",
-                        {
-                            {RPCResult::Type::STR, "name", "Method name."},
-                            {RPCResult::Type::STR, "description", "Method description."},
-                            {RPCResult::Type::ARR, "params", "Method parameters.",
-                                {{RPCResult::Type::OBJ, "", "A parameter.",
-                                    {
-                                        {RPCResult::Type::STR, "name", "Parameter name."},
-                                        {RPCResult::Type::BOOL, "required", "Whether the parameter is required."},
-                                        {RPCResult::Type::ANY, "schema", "JSON Schema for the parameter."},
-                                        {RPCResult::Type::STR, "description", /*optional=*/true, "Parameter description."},
-                                        {RPCResult::Type::ARR, "x-bitcoin-aliases", /*optional=*/true, "Alternative parameter names.",
-                                            {{RPCResult::Type::STR, "", "An alias."}}},
-                                        {RPCResult::Type::BOOL, "x-bitcoin-placeholder", /*optional=*/true, "Whether the parameter is retained only for compatibility."},
-                                        {RPCResult::Type::BOOL, "x-bitcoin-also-positional", /*optional=*/true, "Whether the parameter can also be passed positionally."},
-                                    }}}},
-                            {RPCResult::Type::OBJ, "result", "Method result.",
-                                {
-                                    {RPCResult::Type::STR, "name", "Result name."},
-                                    {RPCResult::Type::ANY, "schema", "JSON Schema for the result."},
-                                }},
-                            {RPCResult::Type::STR, "x-bitcoin-category", "RPC category."},
-                        }}}},
-            },
-            {.skip_type_check = true}},
+        OpenRPCDocResult(),
         RPCExamples{
             HelpExampleCli("getopenrpcinfo", "")
             + HelpExampleRpc("getopenrpcinfo", "")
@@ -567,9 +572,28 @@ static RPCMethod getopenrpcinfo()
     };
 }
 
+static RPCMethod rpc_discover()
+{
+    return RPCMethod{
+        "rpc.discover",
+        "Returns an OpenRPC schema as a description of this service.\n",
+        {},
+        OpenRPCDocResult(),
+        RPCExamples{
+            HelpExampleCli("rpc.discover", "")
+            + HelpExampleRpc("rpc.discover", "")
+        },
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
+{
+    return tableRPC.buildOpenRPCDoc(/*include_hidden=*/false);
+},
+    };
+}
+
 static const CRPCCommand vRPCCommands[]{
     /* Overall control/query calls */
     {"control", &getopenrpcinfo},
+    {"control", &rpc_discover},
     {"control", &getrpcinfo},
     {"control", &help},
     {"control", &stop},
