@@ -15,6 +15,7 @@ from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
     P2P_VERSION,
+    start_p2p_listener,
 )
 from test_framework.messages import (
     CAddress,
@@ -29,8 +30,7 @@ from test_framework.netutil import (
 )
 from test_framework.script_util import build_malleated_tx_package
 from test_framework.socks5 import (
-    Socks5Configuration,
-    Socks5Server,
+    start_socks5_server,
 )
 from test_framework.test_framework import (
     BitcoinTestFramework,
@@ -40,7 +40,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
-    p2p_port,
     tor_port,
 )
 from test_framework.wallet import (
@@ -49,116 +48,6 @@ from test_framework.wallet import (
 
 NUM_PRIVATE_BROADCAST_PER_TX = 3
 
-# Fill addrman with these addresses. Must have enough Tor addresses, so that even
-# if all 10 default connections are opened to a Tor address (!?) there must be more
-# for private broadcast.
-ADDRMAN_ADDRESSES = [
-    "20.0.0.1",
-    "30.0.0.1",
-    "40.0.0.1",
-    "50.0.0.1",
-    "60.0.0.1",
-    "70.0.0.1",
-    "80.0.0.1",
-    "90.0.0.1",
-    "100.0.0.1",
-    "110.0.0.1",
-    "120.0.0.1",
-    "130.0.0.1",
-    "140.0.0.1",
-    "150.0.0.1",
-    "160.0.0.1",
-    "170.0.0.1",
-    "180.0.0.1",
-    "190.0.0.1",
-    "200.0.0.1",
-    "210.0.0.1",
-
-    "[20::1]",
-    "[30::1]",
-    "[40::1]",
-    "[50::1]",
-    "[60::1]",
-    "[70::1]",
-    "[80::1]",
-    "[90::1]",
-    "[100::1]",
-    "[110::1]",
-    "[120::1]",
-    "[130::1]",
-    "[140::1]",
-    "[150::1]",
-    "[160::1]",
-    "[170::1]",
-    "[180::1]",
-    "[190::1]",
-    "[200::1]",
-    "[210::1]",
-
-    "testonlyad777777777777777777777777777777777777777775b6qd.onion",
-    "testonlyah77777777777777777777777777777777777777777z7ayd.onion",
-    "testonlyal77777777777777777777777777777777777777777vp6qd.onion",
-    "testonlyap77777777777777777777777777777777777777777r5qad.onion",
-    "testonlyat77777777777777777777777777777777777777777udsid.onion",
-    "testonlyax77777777777777777777777777777777777777777yciid.onion",
-    "testonlya777777777777777777777777777777777777777777rhgyd.onion",
-    "testonlybd77777777777777777777777777777777777777777rs4ad.onion",
-    "testonlybp77777777777777777777777777777777777777777zs2ad.onion",
-    "testonlybt777777777777777777777777777777777777777777x6id.onion",
-    "testonlybx777777777777777777777777777777777777777775styd.onion",
-    "testonlyb3777777777777777777777777777777777777777774ckid.onion",
-    "testonlycd77777777777777777777777777777777777777777733id.onion",
-    "testonlych77777777777777777777777777777777777777777t6kid.onion",
-    "testonlycl77777777777777777777777777777777777777777tt3ad.onion",
-    "testonlyct77777777777777777777777777777777777777777wvhyd.onion",
-    "testonlycx7777777777777777777777777777777777777777774bad.onion",
-    "testonlyc377777777777777777777777777777777777777777u6aid.onion",
-    "testonlydd777777777777777777777777777777777777777777u5ad.onion",
-    "testonlydh77777777777777777777777777777777777777777wgnyd.onion",
-
-    "testonlyad77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyah77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyap77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyat77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyax77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlya377777777777777777777777777777777777777777q.b32.i2p",
-    "testonlya777777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybd77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybh77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybl77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybp77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybt77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlybx77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyb777777777777777777777777777777777777777777q.b32.i2p",
-    "testonlych77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlycp77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyct77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlycx77777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyc377777777777777777777777777777777777777777q.b32.i2p",
-    "testonlyc777777777777777777777777777777777777777777q.b32.i2p",
-
-    "[fc00::1]",
-    "[fc00::2]",
-    "[fc00::3]",
-    "[fc00::5]",
-    "[fc00::6]",
-    "[fc00::7]",
-    "[fc00::8]",
-    "[fc00::9]",
-    "[fc00::10]",
-    "[fc00::11]",
-    "[fc00::12]",
-    "[fc00::13]",
-    "[fc00::15]",
-    "[fc00::16]",
-    "[fc00::17]",
-    "[fc00::18]",
-    "[fc00::19]",
-    "[fc00::20]",
-    "[fc00::22]",
-    "[fc00::23]",
-]
-
 
 class P2PPrivateBroadcast(BitcoinTestFramework):
     def set_test_params(self):
@@ -166,18 +55,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        # Start a SOCKS5 proxy server.
-        socks5_server_config = Socks5Configuration()
-        # self.nodes[0] listens on p2p_port(0),
-        # self.nodes[1] listens on p2p_port(1),
-        # thus we tell the SOCKS5 server to listen on p2p_port(self.num_nodes) (self.num_nodes is 2)
-        socks5_server_config.addr = ("127.0.0.1", p2p_port(self.num_nodes))
-        socks5_server_config.unauth = True
-        socks5_server_config.auth = True
-
-        self.socks5_server = Socks5Server(socks5_server_config)
-        self.socks5_server.start()
-
         self.destinations = []
 
         self.destinations_lock = threading.Lock()
@@ -235,22 +112,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                     listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
                     listener.peer_connect_send_version(services=P2P_SERVICES)
 
-                    def on_listen_done(addr, port):
-                        nonlocal actual_to_addr
-                        nonlocal actual_to_port
-                        actual_to_addr = addr
-                        actual_to_port = port
-
-                    # Use port=0 to let the OS assign an available port. This
-                    # avoids "address already in use" errors when tests run
-                    # concurrently or ports are still in TIME_WAIT state.
-                    self.network_thread.listen(
-                        addr="127.0.0.1",
-                        port=0,
-                        p2p=listener,
-                        callback=on_listen_done)
-                    # Wait until the callback has been called.
-                    self.wait_until(lambda: actual_to_port != 0)
+                    actual_to_addr, actual_to_port = start_p2p_listener(self.network_thread, listener)
 
                 self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} ({conn_type}) for "
                                f"{format_addr_port(requested_to_addr, requested_to_port)} to "
@@ -268,7 +130,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                     "actual_to_port": actual_to_port,
                 }
 
-        self.socks5_server.conf.destinations_factory = destinations_factory
+        self.socks5_server = start_socks5_server(destinations_factory)
 
         self.extra_args = [
             [
@@ -279,7 +141,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                 "-v2transport=0",
                 "-test=addrman",
                 "-privatebroadcast",
-                f"-proxy={socks5_server_config.addr[0]}:{socks5_server_config.addr[1]}",
+                f"-proxy={self.socks5_server.conf.addr[0]}:{self.socks5_server.conf.addr[1]}",
                 # To increase coverage, make it think that the I2P network is reachable so that it
                 # selects such addresses as well. Pick a proxy address where nobody is listening
                 # and connection attempts fail quickly.
@@ -361,13 +223,9 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         tx_receiver = self.nodes[1]
         far_observer = tx_receiver.add_p2p_connection(P2PInterface())
 
-        wallet = MiniWallet(tx_originator)
+        self.fill_node_addrman(node_index=0, address_types_to_add=[CAddress.NET_IPV4, CAddress.NET_IPV6, CAddress.NET_TORV3, CAddress.NET_I2P, CAddress.NET_CJDNS])
 
-        # Fill tx_originator's addrman.
-        for addr in ADDRMAN_ADDRESSES:
-            res = tx_originator.addpeeraddress(address=addr, port=0 if addr.endswith(".i2p") else 8333, tried=False)
-            if not res["success"]:
-                self.log.debug(f"Could not add {addr} to tx_originator's addrman (collision?)")
+        wallet = MiniWallet(tx_originator)
 
         txs = wallet.create_self_transfer_chain(chain_length=3)
         self.log.info(f"Created txid={txs[0]['txid']}: for basic test")

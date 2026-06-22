@@ -487,8 +487,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 LogDebug(BCLog::PROXY, "Using proxy: %s to connect to %s\n", proxy.ToString(), target_addr.ToStringAddrPort());
                 sock = ConnectThroughProxy(proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
             } else {
-                // no proxy needed (none set for target network)
-                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                // No proxy needed (none set for target network). Private broadcast connections
+                // must always use a proxy, otherwise they would leak the originator's IP address.
+                if (Assume(conn_type != ConnectionType::PRIVATE_BROADCAST)) {
+                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                }
             }
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -536,6 +539,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                                 network_id,
                                 CNodeOptions{
                                     .permission_flags = permission_flags,
+                                    .proxy_override = proxy_override,
                                     .i2p_sam_session = std::move(i2p_transient_session),
                                     .recv_flood_size = nReceiveFloodSize,
                                     .use_v2transport = use_v2transport,
@@ -1902,7 +1906,13 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     CountingSemaphoreGrant<> grant(*semOutbound, true);
     if (!grant) return false;
 
-    OpenNetworkConnection(CAddress(), false, std::move(grant), address.c_str(), conn_type, /*use_v2transport=*/use_v2transport);
+    OpenNetworkConnection(/*addrConnect=*/CAddress{},
+                          /*fCountFailure=*/false,
+                          /*grant_outbound=*/std::move(grant),
+                          /*pszDest=*/address.c_str(),
+                          /*conn_type=*/conn_type,
+                          /*use_v2transport=*/use_v2transport,
+                          /*proxy_override=*/std::nullopt);
     return true;
 }
 
@@ -1943,6 +1953,7 @@ void CConnman::DisconnectNodes()
                 // and we don't want to hold up the socket handler thread for that long.
                 if (network_active && pnode->m_transport->ShouldReconnectV1()) {
                     reconnections_to_add.push_back({
+                        .proxy_override = pnode->m_proxy_override,
                         .addr_connect = pnode->addr,
                         .grant = std::move(pnode->grantOutbound),
                         .destination = pnode->m_dest,
@@ -2419,7 +2430,13 @@ void CConnman::ProcessAddrFetch()
     CAddress addr;
     CountingSemaphoreGrant<> grant(*semOutbound, /*fTry=*/true);
     if (grant) {
-        OpenNetworkConnection(addr, false, std::move(grant), strDest.c_str(), ConnectionType::ADDR_FETCH, use_v2transport);
+        OpenNetworkConnection(/*addrConnect=*/addr,
+                              /*fCountFailure=*/false,
+                              /*grant_outbound=*/std::move(grant),
+                              /*pszDest=*/strDest.c_str(),
+                              /*conn_type=*/ConnectionType::ADDR_FETCH,
+                              /*use_v2transport=*/use_v2transport,
+                              /*proxy_override=*/std::nullopt);
     }
 }
 
@@ -2537,8 +2554,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         {
             for (const std::string& strAddr : connect)
             {
-                CAddress addr(CService(), NODE_NONE);
-                OpenNetworkConnection(addr, false, {}, strAddr.c_str(), ConnectionType::MANUAL, /*use_v2transport=*/use_v2transport);
+                OpenNetworkConnection(/*addrConnect=*/CAddress{CService{}, NODE_NONE},
+                                      /*fCountFailure=*/false,
+                                      /*grant_outbound=*/{},
+                                      /*pszDest=*/strAddr.c_str(),
+                                      /*conn_type=*/ConnectionType::MANUAL,
+                                      /*use_v2transport=*/use_v2transport,
+                                      /*proxy_override=*/std::nullopt);
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
                     if (!m_interrupt_net->sleep_for(500ms)) {
@@ -2888,7 +2910,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             const bool count_failures{((int)outbound_ipv46_peer_netgroups.size() + outbound_privacy_network_peers) >= std::min(m_max_automatic_connections - 1, 2)};
             // Use BIP324 transport when both us and them have NODE_V2_P2P set.
             const bool use_v2transport(addrConnect.nServices & GetLocalServices() & NODE_P2P_V2);
-            OpenNetworkConnection(addrConnect, count_failures, std::move(grant), /*pszDest=*/nullptr, conn_type, use_v2transport);
+            OpenNetworkConnection(/*addrConnect=*/addrConnect,
+                                  /*fCountFailure=*/count_failures,
+                                  /*grant_outbound=*/std::move(grant),
+                                  /*pszDest=*/nullptr,
+                                  /*conn_type=*/conn_type,
+                                  /*use_v2transport=*/use_v2transport,
+                                  /*proxy_override=*/std::nullopt);
         }
     }
 }
@@ -2982,8 +3010,13 @@ void CConnman::ThreadOpenAddedConnections()
                 break;
             }
             tried = true;
-            CAddress addr(CService(), NODE_NONE);
-            OpenNetworkConnection(addr, false, std::move(grant), info.m_params.m_added_node.c_str(), ConnectionType::MANUAL, info.m_params.m_use_v2transport);
+            OpenNetworkConnection(/*addrConnect=*/CAddress{CService{}, NODE_NONE},
+                                  /*fCountFailure=*/false,
+                                  /*grant_outbound=*/std::move(grant),
+                                  /*pszDest=*/info.m_params.m_added_node.c_str(),
+                                  /*conn_type=*/ConnectionType::MANUAL,
+                                  /*use_v2transport=*/info.m_params.m_use_v2transport,
+                                  /*proxy_override=*/std::nullopt);
             if (!m_interrupt_net->sleep_for(500ms)) return;
             grant = CountingSemaphoreGrant<>(*semAddnode, /*fTry=*/true);
         }
@@ -3980,6 +4013,7 @@ CNode::CNode(NodeId idIn,
       m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
+      m_proxy_override{std::move(node_opts.proxy_override)},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringAddrPort() : addrNameIn},
@@ -4163,7 +4197,8 @@ void CConnman::PerformReconnections()
                               std::move(item.grant),
                               item.destination.empty() ? nullptr : item.destination.c_str(),
                               item.conn_type,
-                              item.use_v2transport);
+                              item.use_v2transport,
+                              item.proxy_override);
     }
 }
 

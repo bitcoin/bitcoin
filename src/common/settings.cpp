@@ -86,7 +86,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
 
     SettingsValue in;
     if (!in.read(std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()})) {
-        errors.emplace_back(strprintf("Settings file %s does not contain valid JSON. This is probably caused by disk corruption or a crash, "
+        errors.emplace_back(strprintf("Settings file %s does not contain valid JSON. This may be caused by a crash, power loss, full disk, or storage error, "
                                       "and can be fixed by removing the file, which will reset settings to default values.",
                                       fs::PathToString(path)));
         return false;
@@ -139,7 +139,15 @@ bool WriteSettings(const fs::path& path,
         return false;
     }
     file << out.write(/* prettyIndent= */ 4, /* indentLevel= */ 1) << std::endl;
+    if (file.fail()) {
+        errors.emplace_back(strprintf("Error: Unable to write settings file %s", fs::PathToString(path)));
+        return false;
+    }
     file.close();
+    if (file.fail()) {
+        errors.emplace_back(strprintf("Error: Unable to close settings file %s", fs::PathToString(path)));
+        return false;
+    }
     return true;
 }
 

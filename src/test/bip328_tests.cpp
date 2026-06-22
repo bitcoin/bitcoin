@@ -89,6 +89,12 @@ BOOST_AUTO_TEST_CASE(valid_keys)
     }
 }
 
+BOOST_AUTO_TEST_CASE(empty_pubkey_list)
+{
+    const std::optional<CPubKey> aggregate_pubkey{MuSig2AggregatePubkeys({})};
+    BOOST_CHECK(!aggregate_pubkey.has_value());
+}
+
 BOOST_AUTO_TEST_CASE(invalid_key)
 {
     std::vector<std::string> test_vectors = {

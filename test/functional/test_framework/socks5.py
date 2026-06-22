@@ -327,3 +327,15 @@ class Socks5Server():
                     logger.debug(f"Stop(): Handler {i} thread joined")
                 else:
                     logger.warning(f"Stop(): Handler thread {i} didn't finish after force close")
+
+def start_socks5_server(destinations_factory):
+    config = Socks5Configuration()
+    config.addr = ("127.0.0.1", 0) # Use port=0 to let the OS pick one. The actual port is later in server.conf.addr[1].
+    config.unauth = True
+    config.auth = True
+    config.destinations_factory = destinations_factory
+
+    server = Socks5Server(config)
+    server.start()
+
+    return server
