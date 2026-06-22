@@ -129,6 +129,56 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
     return result;
 }
 
+//! Generate command line that the executable being invoked will split up using
+//! the CommandLineToArgvW function, which expects arguments with spaces to be
+//! quoted, quote characters to be backslash-escaped, and backslashes to also be
+//! backslash-escaped, but only if they precede a quote character.
+std::string CommandLineFromArgv(const std::vector<std::string>& argv)
+{
+    std::string out;
+    for (const auto& arg : argv) {
+        if (!out.empty()) out += " ";
+        if (!arg.empty() && arg.find_first_of(" \t\"") == std::string::npos) {
+            // Argument has no quotes or spaces so escaping not necessary.
+            out += arg;
+        } else {
+            out += '"'; // Start with a quote
+            for (size_t i = 0; i < arg.size(); ++i) {
+                if (arg[i] == '\\') {
+                    // Count consecutive backslashes
+                    size_t backslash_count = 0;
+                    while (i < arg.size() && arg[i] == '\\') {
+                        ++backslash_count;
+                        ++i;
+                    }
+                    if (i < arg.size() && arg[i] == '"') {
+                        // Backslashes before a quote need to be doubled
+                        out.append(backslash_count * 2 + 1, '\\');
+                        out.push_back('"');
+                    } else if (i == arg.size()) {
+                        // Backslashes at the end of the argument precede the
+                        // closing quote added below, so also need to be doubled
+                        out.append(backslash_count * 2, '\\');
+                        --i; // Compensate for the outer loop's increment
+                    } else {
+                        // Otherwise, backslashes remain as-is
+                        out.append(backslash_count, '\\');
+                        --i; // Compensate for the outer loop's increment
+                    }
+                } else if (arg[i] == '"') {
+                    // Escape double quotes with a backslash
+                    out.push_back('\\');
+                    out.push_back('"');
+                } else {
+                    out.push_back(arg[i]);
+                }
+            }
+            out += '"'; // End with a quote
+        }
+    }
+    return out;
+}
+
 std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv)
 {
     auto fds{SocketPair()};
