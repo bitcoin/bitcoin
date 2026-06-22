@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+using http_bitcoin::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 
@@ -196,7 +197,7 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
 static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
-    if (req->GetRequestMethod() != HTTPRequest::POST) {
+    if (req->GetRequestMethod() != HTTPRequestMethod::POST) {
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return;
     }
@@ -347,8 +348,6 @@ bool StartHTTPRPC(const std::any& context)
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
-    struct event_base* eventBase = EventBase();
-    assert(eventBase);
     return true;
 }
 

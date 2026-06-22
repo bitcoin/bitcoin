@@ -46,9 +46,10 @@ enum LogFlags : CategoryMask {
     TXPACKAGES = (CategoryMask{1} << 28),
     KERNEL = (CategoryMask{1} << 29),
     PRIVBROADCAST = (CategoryMask{1} << 30),
-    ALL = ~NONE,
+    DEPRECATED = LIBEVENT,
+    // Remove deprecated categories from ALL
+    ALL = ~DEPRECATED,
 };
-
 } // namespace BCLog
 
 #endif // BITCOIN_LOGGING_CATEGORIES_H

@@ -104,7 +104,7 @@ void HTTPResponseHeaders::Read(util::LineReader& reader)
     // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
     // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
     while (auto maybe_line = reader.ReadLine()) {
-        const std::string& line = *maybe_line;
+        const std::string_view line = *maybe_line;
 
         // An empty line indicates end of the headers section https://www.rfc-editor.org/rfc/rfc2616#section-4
         if (line.empty()) return;
@@ -965,7 +965,7 @@ HTTPResponse HTTPClient::ReadResponse()
         throw HTTPError{"Failed to read status line"};
     }
 
-    const std::string& status_str = *status_line;
+    const std::string_view status_str = *status_line;
     // Minimum status line is "HTTP/X.Y NNN" (e.g. "HTTP/1.1 200"), 12 characters.
     if (status_str.size() < 12 || !status_str.starts_with("HTTP/")) {
         throw HTTPError{"Invalid status line"};
@@ -976,7 +976,7 @@ HTTPResponse HTTPClient::ReadResponse()
         throw HTTPError{"Invalid status line format"};
     }
 
-    std::string status_code_str = status_str.substr(space1 + 1, 3);
+    const std::string_view status_code_str = status_str.substr(space1 + 1, 3);
     auto status_code = ToIntegral<int>(status_code_str);
     if (!status_code) {
         throw HTTPError{"Invalid status code"};

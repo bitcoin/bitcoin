@@ -133,6 +133,11 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
+        if (*flag & DEPRECATED){
+            LogWarning("The logging category `%s` is deprecated, can not be enabled, and will be removed in a future version", str);
+            // Deprecated does not mean unsupported, which may prevent startup
+            return true;
+        }
         EnableCategory(*flag);
         return true;
     }
@@ -147,6 +152,11 @@ void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::DisableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
+        if (*flag & DEPRECATED){
+            LogWarning("The logging category `%s` is deprecated and will be removed in a future version", str);
+            // Deprecated does not mean unsupported, which may prevent startup
+            return true;
+        }
         DisableCategory(*flag);
         return true;
     }
