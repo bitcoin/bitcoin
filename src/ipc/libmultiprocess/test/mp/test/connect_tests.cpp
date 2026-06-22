@@ -13,7 +13,6 @@
 #include <mp/test/foo.capnp.proxy.h>
 #include <mp/test/socketlistener.h>
 #include <mp/util.h>
-#include <sys/socket.h>
 
 #include <array>
 #include <chrono>
@@ -27,6 +26,10 @@
 #include <string>
 #include <string_view>
 #include <thread>
+
+#ifndef WIN32
+#include <sys/socket.h>
+#endif
 
 namespace mp {
 namespace test {
