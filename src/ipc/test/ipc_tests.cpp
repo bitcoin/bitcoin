@@ -26,6 +26,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());
 static_assert(ipc::capnp::messages::DEFAULT_BLOCK_RESERVED_WEIGHT == DEFAULT_BLOCK_RESERVED_WEIGHT);
@@ -38,16 +44,22 @@ public:
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
 };
 
-//! Generate a temporary path with temp_directory_path and mkstemp
+//! Generate a unique temporary path using a XXXXXX-suffixed pattern.
 static std::string TempPath(std::string_view pattern)
 {
     std::string temp{fs::PathToString(fs::path{fs::temp_directory_path()} / fs::PathFromString(std::string{pattern}))};
     temp.push_back('\0');
+#ifdef WIN32
+    // _mktemp_s fills in the XXXXXX suffix without creating a file.
+    BOOST_CHECK_EQUAL(_mktemp_s(temp.data(), temp.size()), 0);
+    temp.resize(temp.size() - 1);
+#else
     int fd{mkstemp(temp.data())};
     BOOST_CHECK_GE(fd, 0);
     BOOST_CHECK_EQUAL(close(fd), 0);
     temp.resize(temp.size() - 1);
     fs::remove(fs::PathFromString(temp));
+#endif
     return temp;
 }
 
