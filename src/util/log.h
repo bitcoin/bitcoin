@@ -79,8 +79,9 @@ bool ShouldTraceLog(Category category);
 /** Send message to be logged. Applications using the logging library need to provide this. */
 void Log(Entry entry);
 
+namespace detail {
 template <typename... Args>
-inline void LogPrintFormatInternal_(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(bool should_ratelimit, SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     std::string log_msg;
     try {
@@ -96,17 +97,20 @@ inline void LogPrintFormatInternal_(SourceLocation&& source_loc, BCLog::LogFlags
         .message = std::move(log_msg)});
 }
 
+/* Treats lack of NO_RATE_LIMIT tag as should_ratelimit=true and delegates to function above */
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/true, fmt, args...);
+    return LogWithSrcLoc(/*should_ratelimit=*/true, std::move(source_loc), flag, level, fmt, args...);
 }
 
+/* Treats presence of NO_RATE_LIMIT tag as should_ratelimit=false and delegates to function above */
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::log::NoRateLimitTag, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::log::NoRateLimitTag, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/false, fmt, args...);
+    return LogWithSrcLoc(/*should_ratelimit=*/false, std::move(source_loc), flag, level, fmt, args...);
 }
+} // namespace util::log::detail
 } // namespace util::log
 
 namespace BCLog {
@@ -116,7 +120,7 @@ using Level = util::log::Level;
 
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define detail_LogWithSrcLoc(category, level, ...) util::log::LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
+#define detail_LogWithSrcLoc(category, level, ...) util::log::detail::LogWithSrcLoc(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!

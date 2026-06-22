@@ -226,7 +226,7 @@ static RPCMethod getrpcinfo()
     UniValue result(UniValue::VOBJ);
     result.pushKV("active_commands", std::move(active_commands));
 
-    const std::string path = LogInstance().m_file_path.utf8string();
+    const std::string path = LogInstance().GetFilePath().utf8string();
     UniValue log_path(UniValue::VSTR, path);
     result.pushKV("logpath", std::move(log_path));
 
