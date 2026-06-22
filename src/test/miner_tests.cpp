@@ -368,7 +368,8 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
         .coinbase_output_script = scriptPubKey,
     };
     const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+    BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
+    BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
