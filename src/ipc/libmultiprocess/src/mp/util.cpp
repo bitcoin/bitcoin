@@ -20,7 +20,11 @@
 #include <utility>
 #include <vector>
 
-#ifndef WIN32
+#ifdef WIN32
+#include <atomic>
+#include <windows.h>
+#include <winsock2.h>
+#else
 #include <fcntl.h>
 #include <spawn.h>
 #include <sys/resource.h>
@@ -44,6 +48,9 @@
 
 #ifndef WIN32
 extern "C" char **environ; // NOLINT(readability-redundant-declaration)
+#else
+// Forward-declare internal capnp function.
+namespace kj { namespace _ { int win32Socketpair(SOCKET socks[2]); } }
 #endif
 
 namespace mp {
@@ -219,6 +226,8 @@ std::string ThreadName(const char* exe_name)
     // the former are shorter and are the same as what gdb prints "LWP ...".
 #ifdef __linux__
     buffer << syscall(SYS_gettid);
+#elif defined(WIN32)
+    buffer << GetCurrentThreadId();
 #elif defined(HAVE_PTHREAD_THREADID_NP)
     uint64_t tid = 0;
     pthread_threadid_np(nullptr, &tid);
@@ -309,10 +318,11 @@ std::string CommandLineFromArgv(const std::vector<std::string>& argv)
 std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv)
 {
     auto fds{SocketPair()};
+
+#ifndef WIN32
     // Only used for the child to report errors back to the parent, so a one-way
     // pipe would be sufficient, but reuse the existing SocketPair() helper.
     auto error_fds{SocketPair()};
-
     // Evaluate the callback and build the argv array before forking.
     //
     // The parent process may be multi-threaded and holding internal library
@@ -394,49 +404,128 @@ std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std
         throw std::system_error(error->err, std::system_category(), SpawnErrorName(error->which));
     }
     return {pid, fds[1]};
+#else
+    // Create windows pipe to send socket over to child process.
+    static std::atomic<int> counter{1};
+    std::string pipe_path{R"(\\.\pipe\mp-)" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(counter.fetch_add(1))};
+    HANDLE pipe{CreateNamedPipeA(pipe_path.c_str(), PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_WAIT, /*nMaxInstances=*/1, /*nOutBufferSize=*/0, /*nInBufferSize=*/0, /*nDefaultTimeOut=*/0, /*lpSecurityAttributes=*/nullptr)};
+    KJ_WIN32(pipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed");
+
+    // TODO: Would be good to add more exception safety here. Resources (pipe,
+    // fds[1], pi.hProcess) may leak if any call below throws, and the child
+    // process will be orphaned.
+
+    // Start child process
+    std::string cmd{CommandLineFromArgv(spawn_argv(pipe_path))};
+    STARTUPINFOA si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+    KJ_WIN32(CreateProcessA(/*lpApplicationName=*/nullptr, const_cast<char*>(cmd.c_str()), /*lpProcessAttributes=*/nullptr, /*lpThreadAttributes=*/nullptr, /*bInheritHandles=*/FALSE, /*dwCreationFlags=*/0, /*lpEnvironment=*/nullptr, /*lpCurrentDirectory=*/nullptr, &si, &pi), "CreateProcess failed");
+    KJ_WIN32(CloseHandle(pi.hThread), "CloseHandle(hThread)");
+
+    // Send socket to the child via the pipe
+    KJ_WIN32(ConnectNamedPipe(pipe, nullptr) || GetLastError() == ERROR_PIPE_CONNECTED, "ConnectNamedPipe failed");
+    // Duplicate socket for the child using its PID.
+    WSAPROTOCOL_INFO info{};
+    KJ_WINSOCK(WSADuplicateSocket(fds[0], pi.dwProcessId, &info), "WSADuplicateSocket failed");
+    // Close the parent's copy of the child's socket end. Without this, the
+    // parent holds fds[0] open indefinitely, so the peer socket (fds[1]) never
+    // sees a disconnection when the child exits, resulting in hangs reading or
+    // writing to fds[1].
+    CloseSocket(fds[0]);
+    DWORD wr;
+    KJ_WIN32(WriteFile(pipe, &info, sizeof(info), &wr, nullptr) && wr == sizeof(info), "WriteFile(pipe) failed");
+    KJ_WIN32(CloseHandle(pipe), "CloseHandle(pipe)");
+
+    return {pi.hProcess, fds[1]};
+#endif
 }
 
 SocketId StartSpawned(const std::string& connect_info)
 {
+#ifndef WIN32
     try {
         return std::stoi(connect_info);
     } catch (const std::exception&) {
         throw std::system_error(EINVAL, std::system_category(),
             std::string("StartSpawned: invalid connect_info '") + connect_info + "'");
     }
+#else
+    HANDLE pipe = CreateFileA(connect_info.c_str(), /*dwDesiredAccess=*/GENERIC_READ, /*dwShareMode=*/0, /*lpSecurityAttributes=*/nullptr, /*dwCreationDisposition=*/OPEN_EXISTING, /*dwFlagsAndAttributes=*/0, /*hTemplateFile=*/nullptr);
+    KJ_WIN32(pipe != INVALID_HANDLE_VALUE, "CreateFile(pipe) failed");
+
+    WSAPROTOCOL_INFO info{};
+    DWORD rd;
+    KJ_WIN32(ReadFile(pipe, &info, sizeof(info), &rd, nullptr) && rd == sizeof(info), "ReadFile(pipe) failed");
+    KJ_WIN32(CloseHandle(pipe), "CloseHandle(pipe)");
+
+    WSADATA dontcare;
+    if (int wsaErr = WSAStartup(MAKEWORD(2, 2), &dontcare)) KJ_FAIL_WIN32("WSAStartup()", wsaErr);
+
+    SOCKET socket{WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &info, 0, WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT)};
+    KJ_WINSOCK(socket, "WSASocket(FROM_PROTOCOL_INFO) failed");
+    return socket;
+#endif
 }
 
 std::array<SocketId, 2> SocketPair()
 {
+#ifdef WIN32
+    SOCKET pair[2];
+    KJ_WINSOCK(kj::_::win32Socketpair(pair));
+#else
     int pair[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
     KJ_SYSCALL(fcntl(pair[0], F_SETFD, FD_CLOEXEC));
     KJ_SYSCALL(fcntl(pair[1], F_SETFD, FD_CLOEXEC));
+#endif
     return {pair[0], pair[1]};
 }
 
 void CloseSocket(SocketId fd)
 {
+#ifdef WIN32
+    KJ_WINSOCK(closesocket(fd));
+#else
     KJ_SYSCALL(close(fd));
+#endif
 }
 
 ProcessId StartProcess(const std::vector<std::string>& args)
 {
+#ifndef WIN32
     const std::vector<char*> argv{MakeArgv(args)};
     ProcessId pid;
     if (int err = posix_spawnp(&pid, argv[0], nullptr, nullptr, argv.data(), ::environ)) {
         KJ_FAIL_SYSCALL("posix_spawnp", err, args.front());
     }
     return pid;
+#else
+    std::string cmd{CommandLineFromArgv(args)};
+    STARTUPINFOA si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+    KJ_WIN32(CreateProcessA(/*lpApplicationName=*/nullptr, const_cast<char*>(cmd.c_str()), /*lpProcessAttributes=*/nullptr, /*lpThreadAttributes=*/nullptr, /*bInheritHandles=*/FALSE, /*dwCreationFlags=*/0, /*lpEnvironment=*/nullptr, /*lpCurrentDirectory=*/nullptr, &si, &pi), "CreateProcess");
+    KJ_WIN32(CloseHandle(pi.hThread), "CloseHandle(hThread)");
+    return pi.hProcess;
+#endif
 }
 
 int WaitProcess(ProcessId pid)
 {
+#ifndef WIN32
     int status;
     if (::waitpid(pid, &status, /*options=*/0) != pid) {
         throw std::system_error(errno, std::system_category(), "waitpid");
     }
     return status;
+#else
+    DWORD result{WaitForSingleObject(pid, /*dwMilliseconds=*/INFINITE)};
+    if (result != WAIT_OBJECT_0) KJ_FAIL_WIN32("WaitForSingleObject(child)", GetLastError());
+    KJ_WIN32(GetExitCodeProcess(pid, &result), "GetExitCodeProcess");
+    KJ_WIN32(CloseHandle(pid), "CloseHandle(process)");
+    return result;
+#endif
 }
 
 } // namespace mp
