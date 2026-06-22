@@ -182,6 +182,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                   std::list<COutputEntry>& listReceived,
                   std::list<COutputEntry>& listSent, CAmount& nFee,
                   bool include_change)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     nFee = 0;
     listReceived.clear();
@@ -195,7 +196,6 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         nFee = nDebit - nValueOut;
     }
 
-    LOCK(wallet.cs_wallet);
     // Sent/received.
     for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i)
     {
