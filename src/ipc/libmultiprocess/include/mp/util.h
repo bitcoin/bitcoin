@@ -289,6 +289,13 @@ std::string ThreadName(const char* exe_name);
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
+//! Convert an argument vector into a single command line string suitable for
+//! CreateProcess, following the quoting rules of CommandLineToArgvW, which
+//! executables use to split the command line back into arguments. Declared
+//! unconditionally (not just on windows) so it can be unit tested on any
+//! platform.
+std::string CommandLineFromArgv(const std::vector<std::string>& argv);
+
 using Stream = kj::Own<kj::AsyncIoStream>;
 
 using ProcessId = int;
