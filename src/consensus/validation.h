@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -77,7 +78,9 @@ enum class BlockValidationResult {
 
 /** Template for capturing information about block/transaction validation. This is instantiated
  *  by TxValidationState and BlockValidationState for validation information on transactions
- *  and blocks respectively. */
+ *  and blocks respectively.
+ *  The default constructor creates a Valid state.
+ */
 template <typename Result>
 class ValidationState
 {
@@ -130,7 +133,19 @@ public:
 };
 
 class TxValidationState : public ValidationState<TxValidationResult> {};
-class BlockValidationState : public ValidationState<BlockValidationResult> {};
+class BlockValidationState : public ValidationState<BlockValidationResult>
+{
+public:
+    //! Factory helper method to create an Invalid BlockValidationState
+    [[nodiscard]] static inline BlockValidationState MakeInvalid(BlockValidationResult result,
+        const std::string& reject_reason = {}, const std::string& debug_message = {})
+    {
+        Assume(result != BlockValidationResult::BLOCK_RESULT_UNSET);
+        BlockValidationState state;
+        (void)state.Invalid(result, reject_reason, debug_message);
+        return state;
+    }
+};
 
 // These implement the weight = (stripped_size * 4) + witness_size formula,
 // using only serialization with and without witness data. As witness_size
