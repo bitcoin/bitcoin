@@ -7,7 +7,6 @@
 
 #include <cerrno>
 #include <cstdio>
-#include <fcntl.h>
 #include <kj/common.h>
 #include <kj/debug.h>
 #include <kj/string-tree.h>
@@ -16,16 +15,20 @@
 #include <csignal>
 #include <sstream>
 #include <string>
-#include <sys/types.h>
+#include <system_error>
+#include <thread> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
+#include <utility>
+#include <vector>
+
+#ifndef WIN32
+#include <fcntl.h>
 #include <spawn.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <system_error>
-#include <thread> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
 #include <unistd.h>
-#include <utility>
-#include <vector>
+#endif
 
 #ifdef __linux__
 #include <sys/syscall.h>
@@ -39,11 +42,14 @@
 #include <sys/prctl.h>
 #endif
 
+#ifndef WIN32
 extern "C" char **environ; // NOLINT(readability-redundant-declaration)
+#endif
 
 namespace mp {
 namespace {
 
+#ifndef WIN32
 std::vector<char*> MakeArgv(const std::vector<std::string>& args)
 {
     std::vector<char*> argv;
@@ -173,6 +179,7 @@ void KillAndReapChild(ProcessId pid)
     (void)::kill(pid, SIGKILL);
     while (::waitpid(pid, /*status=*/nullptr, /*options=*/0) == -1 && errno == EINTR) {}
 }
+#endif
 
 } // namespace
 
