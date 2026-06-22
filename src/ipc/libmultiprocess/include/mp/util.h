@@ -94,6 +94,16 @@ using RemoveCvRef = std::remove_cv_t<std::remove_reference_t<T>>;
 template <typename T>
 using Decay = std::decay_t<T>;
 
+//! Concept satisfied when T's .get() method returns exactly type U.
+//! Used to constrain overloads that handle a specific capnp field type.
+template <typename T, typename U>
+concept FieldTypeIs = std::is_same_v<decltype(std::declval<T>().get()), U>;
+
+//! Concept satisfied when T's .get() method returns a capnp interface type
+//! (i.e., a type that exposes a nested ::Calls type in generated code).
+template <typename T>
+concept InterfaceField = requires { typename Decay<decltype(std::declval<T>().get())>::Calls; };
+
 //! SFINAE helper, see using Require below.
 template <typename SfinaeExpr, typename Result_>
 struct _Require

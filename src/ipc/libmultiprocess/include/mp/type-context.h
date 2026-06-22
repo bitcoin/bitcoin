@@ -12,11 +12,11 @@
 
 namespace mp {
 template <typename Output>
+    requires FieldTypeIs<Output, Context::Builder>
 void CustomBuildField(TypeList<>,
     Priority<1>,
     ClientInvokeContext& invoke_context,
-    Output&& output,
-    typename std::enable_if<std::is_same<decltype(output.get()), Context::Builder>::value>::type* enable = nullptr)
+    Output&& output)
 {
     auto& connection = invoke_context.connection;
     auto& thread_context = invoke_context.thread_context;
