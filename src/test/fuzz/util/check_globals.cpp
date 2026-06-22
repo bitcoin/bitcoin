@@ -44,7 +44,7 @@ struct CheckGlobalsImpl {
                          "The current fuzz target accessed system time.\n\n"
 
                          "This is acceptable, but requires the fuzz target to use \n"
-                         "a FakeNodeClock, SteadyClockContext or call \n"
+                         "a FakeNodeClock, FakeSteadyClock or call \n"
                          "SetMockTime() at the \n" "beginning of processing the \n"
                          "fuzz input.\n\n"
 

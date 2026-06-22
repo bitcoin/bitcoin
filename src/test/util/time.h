@@ -25,19 +25,19 @@ private:
 
 /// Helper to initialize the global MockableSteadyClock, let a duration elapse,
 /// and reset it after use in a test.
-class SteadyClockContext : public LimitOne<SteadyClockContext>
+class FakeSteadyClock : public LimitOne<FakeSteadyClock>
 {
     MockableSteadyClock::mock_time_point::duration t{MockableSteadyClock::INITIAL_MOCK_TIME};
 
 public:
     /** Initialize with INITIAL_MOCK_TIME. */
-    explicit SteadyClockContext() { (*this) += 0s; }
+    explicit FakeSteadyClock() { (*this) += 0s; }
 
     /** Unset mocktime */
-    ~SteadyClockContext() { MockableSteadyClock::ClearMockTime(); }
+    ~FakeSteadyClock() { MockableSteadyClock::ClearMockTime(); }
 
-    SteadyClockContext(const SteadyClockContext&) = delete;
-    SteadyClockContext& operator=(const SteadyClockContext&) = delete;
+    FakeSteadyClock(const FakeSteadyClock&) = delete;
+    FakeSteadyClock& operator=(const FakeSteadyClock&) = delete;
 
     /** Change mocktime by the given duration delta */
     void operator+=(std::chrono::milliseconds d)

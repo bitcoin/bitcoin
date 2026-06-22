@@ -222,7 +222,7 @@ private:
     const std::vector<TestOp> m_script;
     mutable size_t m_script_ptr = 0;
     mutable std::chrono::milliseconds m_time_left;
-    mutable SteadyClockContext m_clock{};
+    mutable FakeSteadyClock m_clock{};
     mutable bool m_connected{false};
     mutable CService m_bound;
     mutable CNetAddr m_local_ip;
