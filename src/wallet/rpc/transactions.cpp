@@ -295,7 +295,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 }
 
 /**
- * List transactions based on the given criteria.
+ * Append RPC entries for a wallet transaction based on the given criteria.
  *
  * @param  wallet         The wallet.
  * @param  wtx            The wallet transaction.
@@ -305,9 +305,9 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
 template <class Vec>
-static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
-                             Vec& ret, const std::optional<std::string>& filter_label,
-                             bool include_change = false)
+static void AppendWalletTxEntries(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
+                                  Vec& ret, const std::optional<std::string>& filter_label,
+                                  bool include_change = false)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
@@ -503,7 +503,7 @@ RPCMethod listtransactions()
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+            AppendWalletTxEntries(*pwallet, *pwtx, 0, true, ret, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -634,7 +634,7 @@ RPCMethod listsinceblock()
     for (const auto& [_, tx] : wallet.mapWallet) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);
+            AppendWalletTxEntries(wallet, tx, 0, true, transactions, filter_label, include_change);
         }
     }
 
@@ -651,7 +651,7 @@ RPCMethod listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter_label, include_change);
+                AppendWalletTxEntries(wallet, it->second, -100000000, true, removed, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -762,7 +762,7 @@ RPCMethod gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
+    AppendWalletTxEntries(*pwallet, wtx, /*nMinDepth=*/0, /*fLong=*/false, details, /*filter_label=*/std::nullopt);
     entry.pushKV("details", std::move(details));
 
     entry.pushKV("hex", EncodeHexTx(*wtx.tx));
