@@ -256,7 +256,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
 
     if (params.options.force_compact) {
         LogInfo("Starting database compaction of %s", fs::PathToString(params.path));
-        DBContext().pdb->CompactRange(nullptr, nullptr);
+        CompactFull();
         LogInfo("Finished database compaction of %s", fs::PathToString(params.path));
     }
 
@@ -301,11 +301,18 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     }
 }
 
+std::optional<std::string> CDBWrapper::GetProperty(const std::string& property) const
+{
+    if (std::string value; DBContext().pdb->GetProperty(property, &value)) return value;
+    return std::nullopt;
+}
+
+void CDBWrapper::CompactFull() { DBContext().pdb->CompactRange(nullptr, nullptr); }
+
 size_t CDBWrapper::DynamicMemoryUsage() const
 {
-    std::string memory;
     std::optional<size_t> parsed;
-    if (!DBContext().pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
+    if (auto memory{GetProperty("leveldb.approximate-memory-usage")}; !memory || !(parsed = ToIntegral<size_t>(*memory))) {
         LogDebug(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
