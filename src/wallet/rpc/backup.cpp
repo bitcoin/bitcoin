@@ -80,9 +80,9 @@ RPCMethod importprunedfunds()
 
     unsigned int txnIndex = vIndex[it - vMatch.begin()];
 
-    CTransactionRef tx_ref = MakeTransactionRef(tx);
-    if (pwallet->IsMine(*tx_ref)) {
-        pwallet->AddToWallet(std::move(tx_ref), TxStateConfirmed{merkleBlock.header.GetHash(), height, static_cast<int>(txnIndex)});
+    const CTransactionRef tx_ref = MakeTransactionRef(tx);
+    auto tx_state = TxStateConfirmed{merkleBlock.header.GetHash(), height, static_cast<int>(txnIndex)};
+    if (pwallet->AddToWalletIfInvolvingMe(tx_ref, tx_state, /*rescanning_old_block=*/false)) {
         return UniValue::VNULL;
     }
 
