@@ -21,9 +21,12 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <unistd.h>
 #include <utility>
 #include <vector>
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 namespace ipc {
 namespace {
