@@ -273,6 +273,12 @@ public:
 
     bool WriteBatch(CDBBatch& batch, bool fSync = false);
 
+    //! Perform a blocking full compaction of the underlying LevelDB.
+    void CompactFull();
+
+    //! Return a LevelDB property value, if available.
+    std::optional<std::string> GetProperty(const std::string& property) const;
+
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;
 

@@ -1,6 +1,6 @@
-Bitcoin Core version 29.x is now available from:
+Bitcoin Core version 29.4rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.4/test.rc1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -37,9 +37,14 @@ unsupported systems.
 Notable changes
 ===============
 
+This release fixes an issue where the chainstate database would repeatedly
+rewrite large portions of itself, causing excessive disk reads and writes
+during normal operation.
+
 ### Validation
 
 - #35209 validation: correct lifetime of precomputed tx data
+- #35465 coins: compact chainstate regularly
 
 ### Leveldb
 
@@ -57,6 +62,10 @@ Notable changes
 
 - #34228 depends: Unset SOURCE_DATE_EPOCH in gen_id script
 - #34848 cmake: Migrate away from deprecated SQLite3 target
+
+### Test
+
+- #34918 fuzz: [refactor] Remove unused g_setup pointers
 
 ### Doc
 
