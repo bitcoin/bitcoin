@@ -7,6 +7,7 @@
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <kernel/cs_main.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -92,7 +93,8 @@ void initialize_coins_view()
 
 void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView* backend_coins_view)
 {
-    const bool is_db{dynamic_cast<CCoinsViewDB*>(backend_coins_view) != nullptr};
+    auto* const db{dynamic_cast<CCoinsViewDB*>(backend_coins_view)};
+    const bool is_db{db != nullptr};
     bool good_data{true};
     auto* original_backend{backend_coins_view};
 
@@ -123,6 +125,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
             },
             [&] {
                 coins_view_cache.Sync();
+            },
+            [&] {
+                if (db) WITH_LOCK(::cs_main, (void)db->CompactFullAsync());
             },
             [&] {
                 uint256 best_block{ConsumeUInt256(fuzzed_data_provider)};
