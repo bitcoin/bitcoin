@@ -2840,7 +2840,7 @@ bool Chainstate::FlushStateToDisk(
 
         if (!m_chainman.m_interrupt && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
             try {
-                CoinsDB().CompactFull();
+                CoinsDB().CompactFullAsync();
             } catch (const std::exception& e) {
                 LogWarning("Failed to start chainstate compaction (%s)", e.what());
             }
