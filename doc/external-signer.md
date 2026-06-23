@@ -67,7 +67,7 @@ Replace `<address>` with the result of `getnewaddress`.
 Under the hood this uses a [PSBT (Partially Signed Bitcoin Transaction)](psbt.md).
 
 ```sh
-bitcoin-cli -rpcwallet=<walletname> sendtoaddress <address> <amount>
+bitcoin rpc -rpcwallet=<walletname> send outputs='{"<address>": <amount>}'
 ```
 
 This constructs a PSBT and prompts your external signer to sign (will fail if it's not connected). If successful, Bitcoin Core finalizes and broadcasts the transaction.
@@ -84,13 +84,17 @@ Prerequisite knowledge:
 * [Output Descriptors](descriptors.md)
 * Partially Signed Bitcoin Transaction ([PSBT](psbt.md))
 
-### Flag `--chain <name>` (required)
+### Flag `--chain <name>` (required except for `enumerate`)
 
 With `<name>` one of `main`, `test`, `signet`, `regtest`, `testnet4`.
 
+Bitcoin Core passes this flag to commands that operate on a chain-specific signer, for example `getdescriptors`, `displayaddress` and `signtx`.
+
 ### Flag `--stdin` (required)
 
-Indicate that (sub)command should be received over stdin and results returned in response to that. `--stdin` is a global flag, it is not used for all subcommands.
+Indicate that (sub)command should be received over stdin and results returned in response to that. `--stdin` is a global flag, it is not specific to any subcommand.
+
+Bitcoin Core currently uses this flag for `signtx`.
 
 All subcommands SHOULD support both
 - being called as commandline arguments; or
@@ -107,11 +111,11 @@ Usage:
 
 Note: remember that shell-expansion is not available on _stdin_. Consequently, commands such as `signtx`, may write their arguments in either quoted or unquoted form.
 
-### Flag `--fingerprint <fingerprint>` (required)
+### Flag `--fingerprint <fingerprint>` (required except for `enumerate`)
 
 With `<fingerprint>` being the hexadecimal 8-symbol identifier for a wallet.
 
-Commands will specify a fingerprint as an identifier for external-signer wallet.
+Bitcoin Core passes this flag to commands that operate on a specific external-signer wallet, for example `getdescriptors`, `displayaddress` and `signtx`.
 
 ### `enumerate` (required)
 
@@ -125,12 +129,14 @@ Usage:
 [
     {
         "fingerprint": "00000000",
-        "name": "trezor_t"
+        "model": "trezor_t"
     }
 ]
 ```
 
 The command MUST return an array, possibly empty, of entries that contain at least a `fingerprint` field.
+
+If present, the optional `model` field is used as the device name in the `enumeratesigners` RPC result.
 
 A future extension could add an optional return field with device capabilities. Perhaps a descriptor with wildcards. For example: `["pkh("44'/0'/$'/{0,1}/*"), sh(wpkh("49'/0'/$'/{0,1}/*")), wpkh("84'/0'/$'/{0,1}/*")]`. This would indicate the device supports legacy, wrapped SegWit and native SegWit. In addition it restricts the derivation paths that can used for those, to maintain compatibility with other wallet software. It also indicates the device, or the driver, doesn't support multisig.
 
@@ -153,14 +159,13 @@ The command MAY complain if `--chain` is set to a test-network, but any of the B
 Usage:
 
 ```sh
-<cmd> --fingerprint=<fingerprint> getdescriptors <account>
-<xpub>
+<cmd> --fingerprint <fingerprint> --chain <name> getdescriptors --account <account>
 ```
 
 Returns descriptors supported by the device. Example:
 
 ```sh
-<cmd> --fingerprint=00000000 getdescriptors
+<cmd> --fingerprint 00000000 --chain main getdescriptors --account 0
 ```
 
 ```
@@ -168,12 +173,14 @@ Returns descriptors supported by the device. Example:
   "receive": [
     "pkh([00000000/44h/0h/0h]xpub6C.../0/*)#fn95jwmg",
     "sh(wpkh([00000000/49h/0h/0h]xpub6B..../0/*))#j4r9hntt",
-    "wpkh([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9"
+    "wpkh([00000000/84h/0h/0h]xpub6C.../0/*)#qw72dxa9",
+    "tr([00000000/86h/0h/0h]xpub6C.../0/*)#4d8tq2ns"
   ],
   "internal": [
     "pkh([00000000/44h/0h/0h]xpub6C.../1/*)#c8q40mts",
     "sh(wpkh([00000000/49h/0h/0h]xpub6B..../1/*))#85dn0v75",
-    "wpkh([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda"
+    "wpkh([00000000/84h/0h/0h]xpub6C..../1/*)#36mtsnda",
+    "tr([00000000/86h/0h/0h]xpub6C.../1/*)#d63h6jpt"
   ]
 }
 ```
@@ -182,13 +189,13 @@ Returns descriptors supported by the device. Example:
 
 Usage:
 ```sh
-<cmd> --fingerprint=<fingerprint> displayaddress --desc <descriptor>
+<cmd> --fingerprint <fingerprint> --chain <name> displayaddress --desc <descriptor>
 ```
 
 Example, display the first native SegWit receive address on Testnet:
 
 ```sh
-<cmd> --chain test --fingerprint=00000000 displayaddress --desc "wpkh([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
+<cmd> --fingerprint 00000000 --chain test displayaddress --desc "wpkh([00000000/84h/1h/0h]tpubDDUZ..../0/0)"
 ```
 
 The command MUST be able to figure out the address type from the descriptor.
@@ -204,16 +211,16 @@ The command MAY complain if `--chain` is set to a test-network, but the BIP32 co
 
 ## How Bitcoin Core uses the Signer API
 
-The `enumeratesigners` RPC simply calls `<cmd> enumerate`.
+The `enumeratesigners` RPC calls `<cmd> enumerate`, skips duplicate entries with the same `fingerprint`, and maps the optional `model` field to the RPC `name` field.
+
+Wallet operations that need a signer (`createwallet`, `walletdisplayaddress` and spending) also call `<cmd> enumerate` and fail unless exactly one signer is found, so only one device should be connected at a time.
 
 The `createwallet` RPC calls:
 
-* `<cmd> --chain <name> --fingerprint=00000000 getdescriptors --account 0`
+* `<cmd> --fingerprint 00000000 --chain <name> getdescriptors --account 0`
 
 It then imports descriptors for all supported address types, in a BIP44/49/84/86 compatible manner.
 
-The `walletdisplayaddress` RPC reuses some code from `getaddressinfo` on the provided address and obtains the inferred descriptor. It then calls `<cmd> --fingerprint=00000000 displayaddress --desc=<descriptor>`.
+The `walletdisplayaddress` RPC obtains the inferred descriptor for the provided address. It then calls `<cmd> --fingerprint 00000000 --chain <name> displayaddress --desc <descriptor>`.
 
-For external-signer wallets, spending uses `send` or `sendall`. Bitcoin Core builds a PSBT, calls the signer via stdin with `signtx`, and if signatures are sufficient, finalizes and broadcasts the transaction. If the signer is not connected or cancels, the call fails with an error. For fee-bumping on such wallets, use `psbtbumpfee` to involve an external signer.
-
-`sendtoaddress` and `sendmany` check `inputs->bip32_derivs` to see if any inputs have the same `master_fingerprint` as the signer. If so, it calls `<cmd> --fingerprint=00000000 signtransaction <psbt>`. It waits for the device to return a (partially) signed psbt, tries to finalize it and broadcasts the transaction.
+For external-signer wallets, spending uses `send` or `sendall`, and fee-bumping uses `bumpfee`. Bitcoin Core builds a PSBT, adds key origin information, checks whether any input key origin fingerprint matches the signer, calls `<cmd> --stdin --fingerprint 00000000 --chain <name>`, and sends `signtx <psbt>` over stdin. If signatures are sufficient, it finalizes the transaction and, for broadcasting RPCs, broadcasts it. If signing cannot complete, the call fails with an error. For manual fee-bumping, use `psbtbumpfee` to obtain a PSBT for signing.

@@ -20,7 +20,7 @@
 static RPCMethod enumeratesigners()
 {
     return RPCMethod{"enumeratesigners",
-        "Returns a list of external signers from -signer.",
+        "Returns a list of external signers from -signer. Signers with duplicate master key fingerprints are skipped.",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -30,7 +30,7 @@ static RPCMethod enumeratesigners()
                     {RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::STR_HEX, "fingerprint", "Master key fingerprint"},
-                        {RPCResult::Type::STR, "name", "Device name"},
+                        {RPCResult::Type::STR, "name", "Device name, the model returned by the signer"},
                     }},
                 },
                 }
