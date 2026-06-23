@@ -263,6 +263,16 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_and_ping(msg_sendcmpct(announce=False, version=2))
         check_announcement_of_new_block(node, test_node, lambda p: "cmpctblock" not in p.last_message and "headers" in p.last_message)
 
+    # BIP152 mandates that the announce field of a sendcmpct message is a
+    # boolean and MUST have a value of either 1 or 0. Sending any other value
+    # should be treated as misbehavior and lead to a disconnect.
+    def test_invalid_sendcmpct_announce(self):
+        node = self.nodes[0]
+        bad_peer = node.add_p2p_connection(TestP2PConn())
+        msg = msg_sendcmpct(announce=2, version=2)
+        with node.assert_debug_log(['invalid sendcmpct announce field']):
+            bad_peer.send_await_disconnect(msg)
+
     # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
@@ -1016,6 +1026,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # The previous test will lead to a disconnection. Reconnect before continuing.
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+
+        self.log.info("Testing invalid announce field in sendcmpct message...")
+        self.test_invalid_sendcmpct_announce()
 
         self.log.info("Testing invalid index in cmpctblock message...")
         self.test_invalid_cmpctblock_message()
