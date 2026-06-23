@@ -131,7 +131,6 @@ class IPCMiningTest(BitcoinTestFramework):
         """Test Mining interface methods."""
         self.log.info("Running Mining interface test")
         block_hash_size = 32
-        timeout = 1000.0 * self.options.timeout_factor # 1000 milliseconds
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
@@ -141,19 +140,19 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("Mine a block")
             newblockref = (await wait_and_do(
-                mining.waitTipChanged(ctx, blockref.result.hash, timeout),
+                mining.waitTipChanged(ctx, blockref.result.hash, self.default_ipc_timeout),
                 lambda: self.generate(self.nodes[0], 1))).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
             self.log.debug("Wait for timeout")
-            oldblockref = (await mining.waitTipChanged(ctx, newblockref.hash, timeout)).result
+            oldblockref = (await mining.waitTipChanged(ctx, newblockref.hash, self.default_ipc_timeout)).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                long_timeout = max(timeout, 60000.0)  # at least 1 minute
+                long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
@@ -197,7 +196,6 @@ class IPCMiningTest(BitcoinTestFramework):
         """Test BlockTemplate interface methods."""
         self.log.info("Running BlockTemplate interface test")
         block_header_size = 80
-        timeout = 1000.0 * self.options.timeout_factor
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
@@ -266,7 +264,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 self.log.debug("Wait for a new template")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                waitoptions.timeout = timeout
+                waitoptions.timeout = self.default_ipc_timeout
                 waitoptions.feeThreshold = 1
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
@@ -310,7 +308,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                    new_waitoptions.timeout = max(timeout, 60000.0) # at least 1 minute
+                    new_waitoptions.timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
                     new_waitoptions.feeThreshold = 1
                     template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
                     assert template7 is None
@@ -326,6 +324,7 @@ class IPCMiningTest(BitcoinTestFramework):
         # blockReservedWeight per template request and are unaffected; later in
         # the test the IPC template includes a mempool transaction.
         self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
+        self.miniwallet.rescan_utxos()
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
@@ -702,9 +701,11 @@ class IPCMiningTest(BitcoinTestFramework):
 
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
+        # Amount of time in milliseconds the test is allowed to wait or be idle before it should fail.
+        self.default_ipc_timeout = 1000.0 * self.options.timeout_factor
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
         self.default_block_wait_options = self.capnp_modules['mining'].BlockWaitOptions()
-        self.default_block_wait_options.timeout = 1000.0 * self.options.timeout_factor
+        self.default_block_wait_options.timeout = self.default_ipc_timeout
         self.default_block_wait_options.feeThreshold = 1
         self.run_mining_interface_test()
         self.run_early_startup_test()

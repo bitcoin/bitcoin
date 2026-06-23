@@ -245,7 +245,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
 bool BlockAssembler::TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const
 {
-    if (nBlockWeight + chunk_feerate.size >= m_options.block_max_weight) {
+    // block_max_weight has been flattened before block assembly limit checks.
+    Assert(m_options.block_max_weight);
+    if (nBlockWeight + chunk_feerate.size >= *m_options.block_max_weight) {
         return false;
     }
     if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
@@ -318,8 +320,10 @@ void BlockAssembler::addChunks()
             m_mempool->SkipBuilderChunk();
             ++nConsecutiveFailed;
 
+            // block_max_weight has been flattened before block assembly limit checks.
+            Assert(m_options.block_max_weight);
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight +
-                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.block_max_weight) {
+                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > *m_options.block_max_weight) {
                 // Give up if we're close to full and haven't succeeded in a while
                 return;
             }
