@@ -75,10 +75,9 @@ bool BCLog::Logger::StartLogging()
     // dump buffered messages from before we opened the log
     m_buffering = false;
     if (m_buffer_lines_discarded > 0) {
-        LogPrint_({
+        LogPrint_({.level = Level::Info, .ratelimit = false}, {
             .category = BCLog::ALL,
             .level = Level::Info,
-            .should_ratelimit = false,
             .source_loc = SourceLocation{__func__},
             .message = strprintf("Early logging buffer overflowed, %d log lines discarded.", m_buffer_lines_discarded),
         });
@@ -359,7 +358,9 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 {
     if (category == LogFlags::NONE) category = LogFlags::ALL;
 
-    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+    // Only log categories at debug level and below so users cannot use category
+    // filters at higher levels and miss important messages.
+    const bool has_category{level <= Level::Debug && (m_always_print_category_level || category != LogFlags::ALL)};
 
     // If there is no category, Info is implied
     if (!has_category && level == Level::Info) return {};
@@ -438,14 +439,14 @@ std::string BCLog::Logger::Format(const util::log::Entry& entry) const
     return result;
 }
 
-void BCLog::Logger::LogPrint(util::log::Entry entry)
+void BCLog::Logger::LogPrint(const util::log::Options& options, util::log::Entry entry)
 {
     STDLOCK(m_cs);
-    return LogPrint_(std::move(entry));
+    return LogPrint_(options, std::move(entry));
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void BCLog::Logger::LogPrint_(util::log::Entry entry)
+void BCLog::Logger::LogPrint_(const util::log::Options& options, util::log::Entry entry)
 {
     if (m_buffering) {
         {
@@ -468,14 +469,14 @@ void BCLog::Logger::LogPrint_(util::log::Entry entry)
 
     std::string str_prefixed{Format(entry)};
     bool ratelimit{false};
-    if (entry.should_ratelimit && m_limiter) {
+    if (options.ratelimit && m_limiter) {
         auto status{m_limiter->Consume(entry.source_loc, str_prefixed)};
         if (status == LogRateLimiter::Status::NEWLY_SUPPRESSED) {
             // NOLINTNEXTLINE(misc-no-recursion)
-            LogPrint_({
+            LogPrint_({.level = Level::Warning, .ratelimit = false}, // with ratelimit=false, this cannot lead to infinite recursion
+            {
                 .category = LogFlags::ALL,
                 .level = Level::Warning,
-                .should_ratelimit = false, // with should_ratelimit=false, this cannot lead to infinite recursion
                 .source_loc = SourceLocation{__func__},
                 .message = strprintf(
                     "Excessive logging detected from %s:%d (%s): >%d bytes logged during "
@@ -548,10 +549,9 @@ void BCLog::Logger::ShrinkDebugFile()
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
             // LogWarning, except with m_cs held
-            LogPrint_({
+            LogPrint_({.level = Level::Warning, .ratelimit = false}, {
                 .category = BCLog::ALL,
                 .level = Level::Warning,
-                .should_ratelimit = true,
                 .source_loc = SourceLocation{__func__},
                 .message = "Failed to shrink debug log file: fseek(...) failed",
             });
@@ -582,7 +582,7 @@ void BCLog::LogRateLimiter::Reset()
     }
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
-        LogWarning(util::log::NO_RATE_LIMIT,
+        LOG_EMIT((.level = Level::Warning, .ratelimit = false),
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
@@ -622,20 +622,14 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     return true;
 }
 
-bool util::log::ShouldDebugLog(Category category)
+bool util::log::hooks::ShouldLog(Logger* log, Category category, Level level)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Debug);
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
+    return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
 }
 
-bool util::log::ShouldTraceLog(Category category)
+void util::log::hooks::Log(Logger* log, const Options& options, Entry entry)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Trace);
-}
-
-void util::log::Log(util::log::Entry entry)
-{
-    BCLog::Logger& logger{LogInstance()};
-    if (logger.Enabled()) {
-        logger.LogPrint(std::move(entry));
-    }
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
+    logger.LogPrint(options, std::move(entry));
 }
