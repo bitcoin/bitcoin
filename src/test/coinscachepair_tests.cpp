@@ -195,4 +195,47 @@ BOOST_AUTO_TEST_CASE(linked_list_set_state)
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n1);
 }
 
+BOOST_AUTO_TEST_CASE(linked_list_flags_preserve_pointers)
+{
+    // The flags (DIRTY/FRESH) are packed into the low bits of the prev pointer.
+    // Setting both flags on every node must not corrupt the list pointers, and
+    // the pointers must not corrupt the flags. Verify the whole chain stays
+    // intact in both directions with both flags set on every node.
+    CoinsCachePair sentinel;
+    sentinel.second.SelfRef(sentinel);
+    auto nodes{CreatePairs(sentinel)};
+
+    // Set the second flag bit on every node so all are DIRTY and FRESH.
+    for (auto& node : nodes) {
+        CCoinsCacheEntry::SetFresh(node, sentinel);
+        BOOST_CHECK(node.second.IsDirty() && node.second.IsFresh());
+    }
+
+    // Forward traversal still matches insertion order.
+    auto fwd{sentinel.second.Next()};
+    for (const auto& expected : nodes) {
+        BOOST_CHECK_EQUAL(&expected, fwd);
+        BOOST_CHECK(fwd->second.IsDirty() && fwd->second.IsFresh());
+        fwd = fwd->second.Next();
+    }
+    BOOST_CHECK_EQUAL(fwd, &sentinel);
+
+    // Backward traversal matches reverse order (exercises the packed prev ptr).
+    auto bwd{sentinel.second.Prev()};
+    for (auto it{nodes.rbegin()}; it != nodes.rend(); ++it) {
+        BOOST_CHECK_EQUAL(&(*it), bwd);
+        bwd = bwd->second.Prev();
+    }
+    BOOST_CHECK_EQUAL(bwd, &sentinel);
+
+    // Clearing collapses the list back to the self-referential sentinel and
+    // resets all flags.
+    for (auto& node : nodes) {
+        node.second.SetClean();
+        BOOST_CHECK(!node.second.IsDirty() && !node.second.IsFresh());
+    }
+    BOOST_CHECK_EQUAL(sentinel.second.Next(), &sentinel);
+    BOOST_CHECK_EQUAL(sentinel.second.Prev(), &sentinel);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

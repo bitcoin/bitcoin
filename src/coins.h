@@ -17,6 +17,7 @@
 #include <util/check.h>
 #include <util/overflow.h>
 #include <util/hasher.h>
+#include <util/pointer_tag_pair.h>
 
 #include <cassert>
 #include <cstdint>
@@ -118,24 +119,28 @@ private:
      * the parent cache for batch writing. This is a performance optimization
      * compared to giving all entries in the cache to the parent and having the
      * parent scan for only modified entries.
+     *
+     * The flags (DIRTY/FRESH) are packed into the low 2 bits of the previous
+     * pointer via PointerTagPair, avoiding a separate uint8_t flags member and
+     * its trailing padding (sizeof(CCoinsCacheEntry) 80 -> 72 bytes). m_prev is
+     * empty (zero) iff the entry is clean and not part of the list.
      */
-    CoinsCachePair* m_prev{nullptr};
+    PointerTagPair<CoinsCachePair, 2> m_prev{};
     CoinsCachePair* m_next{nullptr};
-    uint8_t m_flags{0};
 
     //! Adding a flag requires a reference to the sentinel of the flagged pair linked list.
     static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
     {
         Assume(flags & (DIRTY | FRESH));
-        if (!pair.second.m_flags) {
-            Assume(!pair.second.m_prev && !pair.second.m_next);
-            pair.second.m_prev = sentinel.second.m_prev;
+        if (!pair.second.m_prev.tag()) {
+            Assume(!pair.second.m_prev.pointer() && !pair.second.m_next);
+            pair.second.m_prev.set_pointer(sentinel.second.m_prev.pointer());
             pair.second.m_next = &sentinel;
-            sentinel.second.m_prev = &pair;
-            pair.second.m_prev->second.m_next = &pair;
+            sentinel.second.m_prev.set_pointer(&pair);
+            pair.second.m_prev.pointer()->second.m_next = &pair;
         }
-        Assume(pair.second.m_prev && pair.second.m_next);
-        pair.second.m_flags |= flags;
+        Assume(pair.second.m_prev.pointer() && pair.second.m_next);
+        pair.second.m_prev.set_tag(pair.second.m_prev.tag() | flags);
     }
 
 public:
@@ -174,39 +179,45 @@ public:
 
     void SetClean() noexcept
     {
-        if (!m_flags) return;
-        m_next->second.m_prev = m_prev;
-        m_prev->second.m_next = m_next;
-        m_flags = 0;
-        m_prev = m_next = nullptr;
+        if (!m_prev.tag()) return;
+        m_next->second.m_prev.set_pointer(m_prev.pointer());
+        m_prev.pointer()->second.m_next = m_next;
+        m_prev.clear();
+        m_next = nullptr;
     }
-    bool IsDirty() const noexcept { return m_flags & DIRTY; }
-    bool IsFresh() const noexcept { return m_flags & FRESH; }
+    bool IsDirty() const noexcept { return m_prev.tag() & DIRTY; }
+    bool IsFresh() const noexcept { return m_prev.tag() & FRESH; }
 
     //! Only call Next when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Next() const noexcept
     {
-        Assume(m_flags);
+        Assume(m_prev.tag());
         return m_next;
     }
 
     //! Only call Prev when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Prev() const noexcept
     {
-        Assume(m_flags);
-        return m_prev;
+        Assume(m_prev.tag());
+        return m_prev.pointer();
     }
 
     //! Only use this for initializing the linked list sentinel
     void SelfRef(CoinsCachePair& pair) noexcept
     {
         Assume(&pair.second == this);
-        m_prev = &pair;
+        m_prev.set_pointer(&pair);
         m_next = &pair;
         // Set sentinel to DIRTY so we can call Next on it
-        m_flags = DIRTY;
+        m_prev.set_tag(DIRTY);
     }
 };
+
+// The 2-bit tag in m_prev requires CoinsCachePair to be aligned to at least 4
+// bytes so those low pointer bits are genuinely free. Checked here, where
+// CoinsCachePair is a complete type.
+static_assert(alignof(CoinsCachePair) >= 4,
+              "CCoinsCacheEntry packs 2 flag bits into the low bits of a CoinsCachePair*");
 
 /**
  * PoolAllocator's MAX_BLOCK_SIZE_BYTES parameter here uses sizeof the data, and adds the size
