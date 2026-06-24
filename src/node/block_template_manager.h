@@ -6,11 +6,16 @@
 #define BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 
 #include <node/mining_types.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <util/hasher.h>
 #include <util/time.h>
 
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 class CBlock;
 class ChainstateManager;
@@ -36,6 +41,11 @@ private:
     ChainstateManager& m_chainman;
     KernelNotifications& m_notifications;
     const BlockCreateOptions m_block_create_args;
+    mutable Mutex m_mutex;
+    using TxTemplateMap = std::unordered_map<CTransactionRef, size_t, CTransactionRefSaltedHash, CTransactionRefComp>;
+    /** Track how many templates (which we hold on to on behalf of connected
+     *  IPC clients) are referencing each transaction, keyed by wtxid. */
+    TxTemplateMap m_template_tx_refs GUARDED_BY(m_mutex);
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
@@ -48,6 +58,18 @@ public:
 
     /** Create a fresh block template, applying init-time defaults to any unset options. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** Track transaction references held by a live block template. */
+    void TrackTemplateTransactions(const std::vector<CTransactionRef>& txs)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Stop tracking transaction references held by a live block template. */
+    void StopTrackingTemplateTransactions(const std::vector<CTransactionRef>& txs)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Check internal tracking invariants. */
+    void SanityCheck() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
      *  @return whether the block was accepted as a new valid block. */
