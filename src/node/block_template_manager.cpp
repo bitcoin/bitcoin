@@ -25,6 +25,7 @@
 #include <compare>
 #include <condition_variable>
 #include <numeric>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -46,6 +47,37 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
         &m_mempool,
         MergeMiningOptions(options, m_block_create_args),
     }.CreateNewBlock();
+}
+
+void BlockTemplateManager::TrackTemplateTransactions(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    // Don't track the dummy coinbase, because it can be modified in-place
+    // by submitSolution()
+    for (const CTransactionRef& tx : txs | std::views::drop(1)) {
+        ++m_template_tx_refs[tx];
+    }
+}
+
+void BlockTemplateManager::StopTrackingTemplateTransactions(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    for (const CTransactionRef& tx : txs | std::views::drop(1)) {
+        auto ref_count{m_template_tx_refs.find(tx)};
+        if (!Assume(ref_count != m_template_tx_refs.end())) continue;
+        if (--ref_count->second == 0) {
+            m_template_tx_refs.erase(ref_count);
+        }
+    }
+}
+
+void BlockTemplateManager::SanityCheck() const
+{
+    LOCK(m_mutex);
+    for (const auto& [tx_ref, count] : m_template_tx_refs) {
+        Assume(tx_ref);
+        Assume(count > 0);
+    }
 }
 
 namespace {
