@@ -11,6 +11,7 @@
 #include <util/hasher.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -69,6 +70,16 @@ public:
 
     /** Check internal tracking invariants. */
     void SanityCheck() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Estimate non-mempool memory footprint of transaction data referenced by block
+     * templates.
+     *
+     * Result is not guaranteed to be an accurate snapshot, because it does not
+     * lock mempool.cs while iterating over transaction references.
+     */
+    size_t GetTemplateMemoryUsage() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Submit a block via ProcessNewBlock and capture validation state.

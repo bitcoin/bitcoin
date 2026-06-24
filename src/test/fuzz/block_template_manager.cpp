@@ -7,6 +7,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <core_memusage.h>
 #include <interfaces/types.h>
 #include <kernel/mempool_entry.h>
 #include <node/miner.h>
@@ -38,6 +39,7 @@
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -223,6 +225,9 @@ FUZZ_TARGET(block_template_manager, .init = initialize_block_template_manager)
         assert(block_template);
         block_template_manager.TrackTemplateTransactions(block_template->block.vtx);
         block_template_manager.SanityCheck();
+        // The mempool still contains every tracked transaction, so no
+        // additional memory usage is reported.
+        assert(block_template_manager.GetTemplateMemoryUsage() == 0);
         const auto resolved{node::FlattenMiningOptions(merged_options)};
         const CBlock& block{block_template->block};
         // Coinbase is first; the per-tx vectors exclude it and track the block.
@@ -325,6 +330,16 @@ FUZZ_TARGET(block_template_manager, .init = initialize_block_template_manager)
                 assert(reason == "high-hash");
                 assert(debug == "proof of work failed");
             }
+        }
+        if (fuzzed_data_provider.ConsumeBool()) {
+            // Evict all mempool transactions. The template now holds the only
+            // references, so their full memory usage is reported.
+            WITH_LOCK(mempool.cs, mempool.TrimToSize(0));
+            size_t expected_usage{0};
+            for (const CTransactionRef& tx : block.vtx | std::views::drop(1)) {
+                expected_usage += RecursiveDynamicUsage(*tx);
+            }
+            assert(block_template_manager.GetTemplateMemoryUsage() == expected_usage);
         }
         block_template_manager.StopTrackingTemplateTransactions(block_template->block.vtx);
         block_template_manager.SanityCheck();
