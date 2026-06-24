@@ -605,8 +605,8 @@ public:
         if (!res) return util::Error{util::ErrorString(res)};
         WalletMigrationResult out{
             .wallet = MakeWallet(m_context, res->wallet),
-            .watchonly_wallet_name = res->watchonly_wallet ? std::make_optional(res->watchonly_wallet->GetName()) : std::nullopt,
-            .solvables_wallet_name = res->solvables_wallet ? std::make_optional(res->solvables_wallet->GetName()) : std::nullopt,
+            .watchonly_wallet_name = res->watchonly_wallet_name,
+            .solvables_wallet_name = res->solvables_wallet_name,
             .backup_path = res->backup_path,
         };
         return out;

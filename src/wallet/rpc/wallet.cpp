@@ -595,6 +595,7 @@ static RPCMethod migratewallet()
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to migrate. If provided both here and in the RPC endpoint, the two must be identical."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The wallet passphrase"},
+            {"load_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "Load the wallet after migration."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -619,19 +620,21 @@ static RPCMethod migratewallet()
                 wallet_pass = std::string_view{request.params[1].get_str()};
             }
 
+            const bool loadwallet = self.Arg<bool>("load_wallet");
+
             WalletContext& context = EnsureWalletContext(request.context);
-            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context);
+            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
             if (!res) {
                 throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
             }
 
             UniValue r{UniValue::VOBJ};
             r.pushKV("wallet_name", res->wallet_name);
-            if (res->watchonly_wallet) {
-                r.pushKV("watchonly_name", res->watchonly_wallet->GetName());
+            if (res->watchonly_wallet_name.has_value()) {
+                r.pushKV("watchonly_name", res->watchonly_wallet_name.value());
             }
-            if (res->solvables_wallet) {
-                r.pushKV("solvables_name", res->solvables_wallet->GetName());
+            if (res->solvables_wallet_name.has_value()) {
+                r.pushKV("solvables_name", res->solvables_wallet_name.value());
             }
             r.pushKV("backup_path", res->backup_path.utf8string());
 
