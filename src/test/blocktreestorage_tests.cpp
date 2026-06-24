@@ -246,6 +246,17 @@ BOOST_AUTO_TEST_CASE(BlockTreeStoreInvalidFiles)
     BlockTreeStore{block_tree_store_dir};
 }
 
+BOOST_AUTO_TEST_CASE(BlockTreeStoreIsWriteExclusive)
+{
+    fs::path block_tree_store_dir{m_args.GetDataDirBase()};
+    BlockTreeStore store_write{block_tree_store_dir};
+    BlockTreeStore store_read{block_tree_store_dir, BlockTreeStore::OpenMode::READ};
+    LOCK(cs_main);
+    BOOST_CHECK_THROW(store_read.WriteBatchSync({}, {}), std::logic_error);
+    BOOST_CHECK_THROW(store_read.WriteReindexing(true), std::logic_error);
+    BOOST_CHECK_THROW(store_read.WritePruned(true), std::logic_error);
+}
+
 BOOST_AUTO_TEST_CASE(BlockTreeStoreIncompleteWrites)
 {
     LOCK(::cs_main);
