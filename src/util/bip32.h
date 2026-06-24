@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_BIP32_H
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -15,5 +16,8 @@
 /** Write HD keypaths as strings */
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe = false);
 std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe = false);
+
+/** Whether a parsed HD keypath contains at least one hardened derivation step. */
+bool HasHardenedDerivation(std::span<const uint32_t> keypath);
 
 #endif // BITCOIN_UTIL_BIP32_H

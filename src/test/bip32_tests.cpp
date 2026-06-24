@@ -215,6 +215,18 @@ BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
     BOOST_CHECK(!DeriveExtKey(max_depth, {0}));
 }
 
+BOOST_AUTO_TEST_CASE(bip32_has_hardened_derivation)
+{
+    const std::vector<uint32_t> empty;
+    const std::vector<uint32_t> unhardened{0, 1, 2};
+    const std::vector<uint32_t> hardened{0x80000000U};
+    const std::vector<uint32_t> mixed{0, 1 | 0x80000000U, 2};
+    BOOST_CHECK(!HasHardenedDerivation(empty));
+    BOOST_CHECK(!HasHardenedDerivation(unhardened));
+    BOOST_CHECK(HasHardenedDerivation(hardened));
+    BOOST_CHECK(HasHardenedDerivation(mixed));
+}
+
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     CExtKey key_parent{DecodeExtKey(test1.vDerive[0].prv)}, key_child;
     CExtPubKey pubkey_parent{DecodeExtPubKey(test1.vDerive[0].pub)}, pubkey_child;
