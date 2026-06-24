@@ -195,7 +195,7 @@ std::optional<std::string> CCoinsViewDB::GetDBProperty(const std::string& proper
     return m_db->GetProperty(property);
 }
 
-std::shared_future<void> CCoinsViewDB::CompactFull()
+std::shared_future<void> CCoinsViewDB::CompactFullAsync()
 {
     AssertLockHeld(::cs_main);
     if (m_compaction.valid() && m_compaction.wait_for(std::chrono::seconds{0}) != std::future_status::ready) return m_compaction;
