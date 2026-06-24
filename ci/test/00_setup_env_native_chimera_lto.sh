@@ -11,8 +11,9 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_chimera_musl
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/chimeralinux/chimera"
-export CI_BASE_PACKAGES="ccache chimerautils chimerautils-extra clang cmake curl e2fsprogs git gmake gtar linux-headers ninja pkgconf procps python-devel python-pip rsync util-linux util-linux-lscpu xz"
+export CI_BASE_PACKAGES="ccache chimerautils chimerautils-extra clang cmake curl e2fsprogs git gmake gtar linux-headers procps python-devel python-pip rsync util-linux util-linux-lscpu"
 export PIP_PACKAGES="--break-system-packages pyzmq pycapnp"
+# NO_QT=1 because Qt needs various patches: https://github.com/chimera-linux/cports/tree/master/main/qt6-qtbase/patches
 export DEP_OPTS="build_CC=clang build_CXX=clang++ build_TAR=gtar AR=llvm-ar CC=clang CXX=clang++ NM=llvm-nm RANLIB=llvm-ranlib STRIP=llvm-strip NO_QT=1"
 export GOAL="install"
 export BITCOIN_CONFIG="\
