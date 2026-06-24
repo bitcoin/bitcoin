@@ -11,8 +11,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_set_vars
-  $(package)_config_opts = -DBOOST_INCLUDE_LIBRARIES="multi_index;test"
-  $(package)_config_opts += -DBOOST_TEST_HEADERS_ONLY=ON
+  $(package)_config_opts = -DBOOST_INCLUDE_LIBRARIES="multi_index"
   $(package)_config_opts += -DBOOST_ENABLE_MPI=OFF
   $(package)_config_opts += -DBOOST_ENABLE_PYTHON=OFF
   $(package)_config_opts += -DBOOST_INSTALL_LAYOUT=system
