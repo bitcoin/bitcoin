@@ -36,12 +36,6 @@ function(add_boost_if_needed)
     # We don't use multi_index serialization.
     BOOST_MULTI_INDEX_DISABLE_SERIALIZATION
   )
-  if(DEFINED VCPKG_TARGET_TRIPLET)
-    # Workaround for https://github.com/microsoft/vcpkg/issues/36955.
-    target_compile_definitions(Boost::headers INTERFACE
-      BOOST_NO_USER_CONFIG
-    )
-  endif()
 
   # Prevent use of std::unary_function, which was removed in C++17,
   # and will generate warnings with newer compilers for Boost
@@ -60,12 +54,6 @@ function(add_boost_if_needed)
     target_compile_definitions(Boost::headers INTERFACE
       BOOST_NO_CXX98_FUNCTION_BASE
     )
-  endif()
-
-  # Some package managers, such as vcpkg, vendor Boost.Test separately
-  # from the rest of the headers, so we have to check for it individually.
-  if(BUILD_TESTS AND DEFINED VCPKG_TARGET_TRIPLET)
-    find_package(boost_included_unit_test_framework ${Boost_VERSION} EXACT REQUIRED CONFIG)
   endif()
 
 endfunction()
