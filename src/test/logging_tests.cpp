@@ -167,11 +167,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     for (const auto& category_name : category_names) {
         const auto trimmed_category_name = TrimString(category_name);
         const auto category{*Assert(BCLog::Logger::GetLogCategory(trimmed_category_name))};
-        if (category & BCLog::LogFlags::ALL) {
-            expected_category_names.emplace_back(category, trimmed_category_name);
-        } else {
-            BOOST_CHECK(category & BCLog::LogFlags::DEPRECATED);
-        }
+        expected_category_names.emplace_back(category, trimmed_category_name);
     }
 
     std::vector<std::string> expected;
@@ -271,6 +267,13 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
         BOOST_CHECK(http_it != category_levels.end());
         BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Info);
+    }
+
+    // Removed categories (like "libevent") should not store a category-specific level
+    {
+        ResetLogger();
+        BOOST_CHECK(LogInstance().SetCategoryLogLevel(/*category_str=*/"libevent", /*level_str=*/"trace"));
+        BOOST_CHECK(LogInstance().CategoryLevels().empty());
     }
 }
 
