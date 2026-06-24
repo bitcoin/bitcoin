@@ -75,7 +75,7 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey)
 {
     CExtPubKey extpub;
     extpub.nDepth = 0;
-    std::memset(extpub.vchFingerprint, 0, 4);
+    extpub.fingerprint.fill(0);
     extpub.nChild = 0;
     extpub.chaincode = MUSIG_CHAINCODE;
     extpub.pubkey = pubkey;

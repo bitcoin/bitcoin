@@ -159,7 +159,7 @@ std::set<std::pair<CPubKey, KeyOriginInfo>> GetKeyOriginData(const FlatSigningPr
             bytes[0] = 0x02;
             CPubKey norm_pubkey{bytes};
             KeyOriginInfo norm_origin = data.second;
-            std::fill(std::begin(norm_origin.fingerprint), std::end(norm_origin.fingerprint), 0); // fingerprints don't necessarily match.
+            norm_origin.fingerprint.fill(0); // fingerprints don't necessarily match.
             ret.emplace(norm_pubkey, norm_origin);
         } else {
             ret.insert(data);
@@ -560,7 +560,7 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
             std::vector<std::span<const char>> origin_split = Split(origin_sp, "/");
             std::string fpr_str(origin_split[0].begin(), origin_split[0].end());
             auto fpr_bytes = ParseHex(fpr_str);
-            std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
+            std::copy_n(fpr_bytes.begin(), info.fingerprint.size(), info.fingerprint.begin());
             for (size_t i = 1; i < origin_split.size(); ++i) {
                 std::span<const char> elem = origin_split[i];
                 bool hardened = false;
