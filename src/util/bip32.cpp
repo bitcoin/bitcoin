@@ -7,9 +7,11 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <optional>
+#include <span>
 #include <sstream>
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
@@ -71,4 +73,11 @@ std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe)
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe)
 {
     return "m" + FormatHDKeypath(keypath, apostrophe);
+}
+
+bool HasHardenedDerivation(std::span<const uint32_t> keypath)
+{
+    return std::any_of(keypath.begin(), keypath.end(), [](uint32_t index) {
+        return index >> 31;
+    });
 }
