@@ -14,23 +14,15 @@ This is a wrapper around find_package()/pkg_check_modules() commands that:
 
 #]=======================================================================]
 
-find_package(PkgConfig QUIET)
-if(PKG_CONFIG_FOUND)
-  pkg_check_modules(PC_QRencode QUIET libqrencode)
-endif()
-
 find_path(QRencode_INCLUDE_DIR
   NAMES qrencode.h
-  HINTS ${PC_QRencode_INCLUDE_DIRS}
 )
 
 find_library(QRencode_LIBRARY_RELEASE
   NAMES qrencode
-  HINTS ${PC_QRencode_LIBRARY_DIRS}
 )
 find_library(QRencode_LIBRARY_DEBUG
   NAMES qrencoded qrencode
-  HINTS ${PC_QRencode_LIBRARY_DIRS}
 )
 include(SelectLibraryConfigurations)
 select_library_configurations(QRencode)
@@ -38,7 +30,6 @@ select_library_configurations(QRencode)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(QRencode
   REQUIRED_VARS QRencode_LIBRARY QRencode_INCLUDE_DIR
-  VERSION_VAR PC_QRencode_VERSION
 )
 
 if(QRencode_FOUND)
