@@ -40,6 +40,8 @@ GETDATA_TX_INTERVAL = 60  # seconds
 MAX_GETDATA_RANDOM_DELAY = 2  # seconds
 INBOUND_PEER_TX_DELAY = 2  # seconds
 MAX_GETDATA_IN_FLIGHT = 100
+MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16
+MAX_NOTFOUND_SIZE = MAX_GETDATA_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER
 TX_EXPIRY_INTERVAL = GETDATA_TX_INTERVAL * 10
 
 # Python test constants
@@ -142,13 +144,21 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info('Check that spurious notfound is ignored')
         self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(1, 1)]))
 
+    def test_oversized_notfound(self):
+        self.log.info('Check that oversized notfound increases misbehavior score')
+        oversized_notfound_count = MAX_NOTFOUND_SIZE + 1
+        invs = [CInv(t=1, h=i) for i in range(oversized_notfound_count)]
+        with self.nodes[0].assert_debug_log(["Misbehaving", f"notfound message size = {oversized_notfound_count}"]):
+            self.nodes[0].p2ps[0].send_message(msg_notfound(vec=invs))
+            self.nodes[0].p2ps[0].sync_with_ping()
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
         self.wallet.rescan_utxos()
 
         # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.
-        for test in [self.test_spurious_notfound, self.test_in_flight_max, self.test_inv_block, self.test_tx_requests]:
+        for test in [self.test_spurious_notfound, self.test_oversized_notfound, self.test_in_flight_max, self.test_inv_block, self.test_tx_requests]:
             self.stop_nodes()
             self.start_nodes()
             self.connect_nodes(1, 0)

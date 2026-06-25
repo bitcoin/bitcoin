@@ -5597,24 +5597,27 @@ void PeerManagerImpl::ProcessMessage(
     }
     if (msg_type == NetMsgType::NOTFOUND) {
         // Remove the NOTFOUND transactions from the peer
-        LOCK(cs_main);
-        CNodeState *state = State(pfrom.GetId());
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() <= MAX_PEER_OBJECT_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-            for (CInv &inv : vInv) {
-                if (inv.IsKnownType()) {
-                    // If we receive a NOTFOUND message for a txid we requested, erase
-                    // it from our data structures for this peer.
-                    auto in_flight_it = state->m_object_download.m_object_in_flight.find(inv);
-                    if (in_flight_it == state->m_object_download.m_object_in_flight.end()) {
-                        // Skip any further work if this is a spurious NOTFOUND
-                        // message.
-                        continue;
-                    }
-                    state->m_object_download.m_object_in_flight.erase(in_flight_it);
-                    state->m_object_download.m_object_announced.erase(inv);
+        if (vInv.size() > MAX_PEER_OBJECT_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+            Misbehaving(pfrom.GetId(), 20, strprintf("notfound message size = %u", vInv.size()));
+            return;
+        }
+
+        LOCK(cs_main);
+        CNodeState *state = State(pfrom.GetId());
+        for (CInv &inv : vInv) {
+            if (inv.IsKnownType()) {
+                // If we receive a NOTFOUND message for a txid we requested, erase
+                // it from our data structures for this peer.
+                auto in_flight_it = state->m_object_download.m_object_in_flight.find(inv);
+                if (in_flight_it == state->m_object_download.m_object_in_flight.end()) {
+                    // Skip any further work if this is a spurious NOTFOUND
+                    // message.
+                    continue;
                 }
+                state->m_object_download.m_object_in_flight.erase(in_flight_it);
+                state->m_object_download.m_object_announced.erase(inv);
             }
         }
         return;
