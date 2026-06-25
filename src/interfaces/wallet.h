@@ -10,18 +10,22 @@
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
+#include <key.h>
 #include <primitives/transaction_identifier.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
+#include <wallet/types.h>
 
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -101,6 +105,11 @@ public:
 
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
+
+    //! Generate and add a new HD key to the wallet.
+    //! Requires the wallet to be unlocked.
+    //! Return the master xpub for the added HD key, or a `WalletError` on failure.
+    virtual util::Expected<CExtPubKey, wallet::WalletError> addHDKey(const std::optional<CExtKey>& key) = 0;
 
     //! Sign message
     virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
