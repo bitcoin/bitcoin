@@ -332,6 +332,7 @@ BASE_SCRIPTS = [
     'feature_loadblock.py',
     'wallet_assumeutxo.py',
     'p2p_add_connections.py',
+    'p2p_duplicate_manual_connections.py',
     'feature_bind_port_discover.py',
     'p2p_unrequested_blocks.py',
     'p2p_message_capture.py',
