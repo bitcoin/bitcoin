@@ -43,6 +43,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <unordered_set>
@@ -1563,6 +1564,10 @@ private:
      */
     bool AttemptToEvictConnection(bool evict_tx_relay_peer_only, std::optional<NodeId> protect_peer = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
+    std::string ManualConnectionKey(const std::string& dest) const;
+    bool MarkManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    void ClearManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
     /**
      * Open a new P2P connection.
      * @param[in] addrConnect Address to connect to, if `pszDest` is `nullptr`.
@@ -1662,6 +1667,7 @@ private:
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable Mutex m_nodes_mutex;
+    std::unordered_set<std::string> m_manual_connection_in_progress GUARDED_BY(m_nodes_mutex);
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
