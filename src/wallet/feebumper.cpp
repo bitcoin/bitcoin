@@ -159,7 +159,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<std::pair<CTxDestination, CAmount>>& outputs, std::optional<uint32_t> original_change_index)
 {
     // For now, cannot specify both new outputs to use and an output index to send change
     if (!outputs.empty() && original_change_index.has_value()) {
@@ -245,23 +245,65 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
 
     old_fee = input_value - output_value;
 
+    // Refuse RBF if the tx was a silent payments tx but the recipient data is missing
+    if (wtx.IsSilentPaymentsTx() && wtx.m_sprecipients.empty()) {
+        errors.emplace_back(Untranslated("Unable to bump fee: silent payments recipient data is missing for this transaction"));
+        return Result::WALLET_ERROR;
+    }
+
+    // Obtain original silent payments destinations from wallet tx by
+    // matching tx outputs against recomputed silent payments outputs.
+    // This will allow the outputs in the new transaction to be
+    // correctly computed if new inputs are added.
+    std::map<CScript, size_t> sp_scripts;
+    if (!wtx.m_sprecipients.empty()) {
+        std::map<size_t, V0SilentPaymentsDestination> sp_dests;
+        for (size_t i = 0; i < wtx.m_sprecipients.size(); ++i) {
+            sp_dests.emplace(i, wtx.m_sprecipients[i]);
+        }
+        OutputSet input_coins;
+        for (const CTxIn& txin : wtx.tx->vin) {
+            const Coin& coin = coins.at(txin.prevout);
+            input_coins.insert(std::make_shared<COutput>(txin.prevout, coin.out, /*depth=*/1, /*input_bytes=*/-1,
+                /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true));
+        }
+        bilingual_str sp_error;
+        if (const auto sp_result = CreateSilentPaymentsOutputs(wallet, sp_dests, input_coins, sp_error)) {
+            for (const auto& [idx, taproot_dest] : *sp_result) {
+                sp_scripts.emplace(GetScriptForDestination(taproot_dest), idx);
+            }
+        }
+    }
+
     // Fill in recipients (and preserve a single change key if there
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
     CAmount new_outputs_value = 0;
-    const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
-    for (size_t i = 0; i < txouts.size(); ++i) {
-        const CTxOut& output = txouts.at(i);
-        CTxDestination dest;
-        ExtractDestination(output.scriptPubKey, dest);
-        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
-            new_coin_control.destChange = dest;
-        } else {
-            CRecipient recipient = {dest, output.nValue, false};
-            recipients.push_back(recipient);
+    if (!outputs.empty()) {
+        for (const auto& [dest, amount] : outputs) {
+            if (DestinationIsChange(wallet, dest)) new_coin_control.destChange = dest;
+            else recipients.push_back({dest, amount, false});
+            if (IsSilentPaymentsDestination(dest)) new_coin_control.m_silent_payments = true;
+            new_outputs_value += amount;
         }
-        new_outputs_value += output.nValue;
+    } else {
+        for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            const CTxOut& output = wtx.tx->vout[i];
+
+            CTxDestination dest;
+            if (const auto it = sp_scripts.find(output.scriptPubKey); it != sp_scripts.end()) {
+                dest = wtx.m_sprecipients[it->second];
+                new_coin_control.m_silent_payments = true;
+            } else ExtractDestination(output.scriptPubKey, dest);
+
+            if (original_change_index.has_value() ? original_change_index.value() == i : OutputIsChange(wallet, output)) {
+                new_coin_control.destChange = dest;
+            } else {
+                recipients.push_back({dest, output.nValue, false});
+            }
+            new_outputs_value += output.nValue;
+        }
     }
 
     // If no recipients, means that we are sending coins to a change address
@@ -287,7 +329,14 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
             txin.scriptSig.clear();
             txin.scriptWitness.SetNull();
         }
-        temp_mtx.vout = txouts;
+        if (!outputs.empty()) {
+            temp_mtx.vout.clear();
+            for (const auto& [dest, amount] : outputs) {
+                temp_mtx.vout.emplace_back(amount, GetScriptForDestination(
+                    IsSilentPaymentsDestination(dest) ? CTxDestination{WitnessV1Taproot{}} : dest));
+            }
+        }
+
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
         Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
@@ -373,7 +422,13 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
     mapValue_t mapValue = oldWtx.mapValue;
     mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
 
-    wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm);
+    wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, oldWtx.m_sprecipients);
+
+    // Erase the old tx's SP recipients record; the replacement tx has its own record.
+    if (oldWtx.IsSilentPaymentsTx()) {
+        WalletBatch batch(wallet.GetDatabase());
+        batch.EraseSpRecipients(oldWtx.GetHash());
+    }
 
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();

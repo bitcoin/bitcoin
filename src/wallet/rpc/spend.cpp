@@ -93,7 +93,7 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
     return sffo_set;
 }
 
-static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
+static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx, mapValue_t extra_mapvalue = {}, std::vector<V0SilentPaymentsDestination> sp_recipients = {})
 {
     bool can_anti_fee_snipe = !options.exists("locktime");
 
@@ -139,7 +139,7 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
         CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
         result.pushKV("txid", tx->GetHash().GetHex());
         if (add_to_wallet && !psbt_opt_in) {
-            pwallet->CommitTransaction(tx, {}, /*orderForm=*/{});
+            pwallet->CommitTransaction(tx, std::move(extra_mapvalue), /*orderForm=*/{}, std::move(sp_recipients));
         } else {
             result.pushKV("hex", hex);
         }
@@ -200,7 +200,14 @@ UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRec
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
     }
     const CTransactionRef& tx = res->tx;
-    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{});
+    std::vector<V0SilentPaymentsDestination> sp_dests;
+    sp_dests.reserve(recipients.size());
+    for (const auto& r : recipients) {
+        if (const auto* sp = std::get_if<V0SilentPaymentsDestination>(&r.dest)) {
+            sp_dests.emplace_back(*sp);
+        }
+    }
+    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{}, std::move(sp_dests));
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
@@ -1062,7 +1069,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
     CCoinControl coin_control;
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
-    std::vector<CTxOut> outputs;
+    std::vector<std::pair<CTxDestination, CAmount>> outputs;
 
     std::optional<uint32_t> original_change_index;
 
@@ -1094,14 +1101,11 @@ static RPCMethod bumpfee_helper(std::string method_name)
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
-        // Prepare new outputs by creating a temporary tx and calling AddOutputs().
         if (!options["outputs"].isNull()) {
             if (options["outputs"].isArray() && options["outputs"].empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array");
             }
-            CMutableTransaction tempTx;
-            AddOutputs(tempTx, options["outputs"]);
-            outputs = tempTx.vout;
+            outputs = ParseOutputs(NormalizeOutputs(options["outputs"]));
         }
 
         if (options.exists("original_change_index")) {
@@ -1311,8 +1315,15 @@ RPCMethod send()
             rawTx.vout.clear();
             auto txr = FundTransaction(*pwallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/false);
 
+            std::vector<V0SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(recipients.size());
+            for (const auto& r : recipients) {
+                if (const auto* sp = std::get_if<V0SilentPaymentsDestination>(&r.dest)) {
+                    sp_dests.emplace_back(*sp);
+                }
+            }
             CMutableTransaction tx = CMutableTransaction(*txr.tx);
-            return FinishTransaction(pwallet, options, tx);
+            return FinishTransaction(pwallet, options, tx, {}, std::move(sp_dests));
         }
     };
 }
@@ -1638,7 +1649,12 @@ RPCMethod sendall()
                 }
             }
 
-            return FinishTransaction(pwallet, options, rawTx);
+            std::vector<V0SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(sp_destinations.size());
+            for (auto& [idx, dest] : sp_destinations) {
+                sp_dests.emplace_back(std::move(dest));
+            }
+            return FinishTransaction(pwallet, options, rawTx, {}, std::move(sp_dests));
         }
     };
 }

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <addresstype.h>
 #include <key.h>
 #include <primitives/transaction_identifier.h>
 #include <script/sign.h>
@@ -83,6 +84,7 @@ extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
+extern const std::string SP_RECIPIENTS;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
 
@@ -258,6 +260,9 @@ public:
 
     bool WriteLockedUTXO(const COutPoint& output);
     bool EraseLockedUTXO(const COutPoint& output);
+
+    bool WriteSpRecipients(const Txid& txid, const std::vector<V0SilentPaymentsDestination>& recipients);
+    bool EraseSpRecipients(const Txid& txid);
 
     bool WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent);
     bool WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request);

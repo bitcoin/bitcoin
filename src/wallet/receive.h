@@ -20,6 +20,7 @@ CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout);
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx);
 
 bool ScriptIsChange(const CWallet& wallet, const CScript& script) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+bool DestinationIsChange(const CWallet& wallet, const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool OutputIsChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx);

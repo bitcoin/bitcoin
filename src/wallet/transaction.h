@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_TRANSACTION_H
 #define BITCOIN_WALLET_TRANSACTION_H
 
+#include <addresstype.h>
 #include <attributes.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
@@ -187,6 +188,38 @@ public:
     }
 };
 
+template<typename T>
+struct SpRecipientsProxy {
+    T& m_recipients;
+
+    template<typename Stream>
+    void Serialize(Stream& s) const {
+        WriteCompactSize(s, m_recipients.size());
+        for (const auto& dest : m_recipients) {
+            s << dest.GetScanPubKey() << dest.GetSpendPubKey();
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        if (s.empty()) return;
+        m_recipients.clear();
+        uint64_t n{ReadCompactSize(s)};
+        m_recipients.reserve(n);
+        for (uint64_t i = 0; i < n; ++i) {
+            CPubKey scan_key, spend_key;
+            s >> scan_key >> spend_key;
+            m_recipients.emplace_back(scan_key, spend_key);
+        }
+    }
+};
+
+inline SpRecipientsProxy<const std::vector<V0SilentPaymentsDestination>>
+SerializeSpRecipients(const std::vector<V0SilentPaymentsDestination>& recipients) { return {recipients}; }
+
+inline SpRecipientsProxy<std::vector<V0SilentPaymentsDestination>>
+DeserializeSpRecipients(std::vector<V0SilentPaymentsDestination>& recipients) { return {recipients}; }
+
 /**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
@@ -218,8 +251,11 @@ public:
      *     "timesmart"       - serialized nTimeSmart value
      *     "spent"           - serialized vfSpent value that existed prior to
      *                         2014 (removed in commit 93a18a3)
+     *     "sp"              - serialized m_is_sp_tx flag
      */
     mapValue_t mapValue;
+    std::vector<V0SilentPaymentsDestination> m_sprecipients; //!< original SP recipients used for RBF output recomputation
+    bool m_is_sp_tx{false}; //!< true if this tx sends to at least one silent payments address
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int nTimeReceived; //!< time received by this node
     /**
@@ -258,6 +294,8 @@ public:
     void Init()
     {
         mapValue.clear();
+        m_sprecipients.clear();
+        m_is_sp_tx = false;
         vOrderForm.clear();
         nTimeReceived = 0;
         nTimeSmart = 0;
@@ -265,6 +303,8 @@ public:
         nChangeCached = 0;
         nOrderPos = -1;
     }
+
+    bool IsSilentPaymentsTx() const { return m_is_sp_tx; }
 
     CTransactionRef tx;
     TxState m_state;
@@ -292,6 +332,9 @@ public:
         }
         if (nTimeSmart) {
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
+        }
+        if (m_is_sp_tx) {
+            mapValueCopy["sp"] = "1";
         }
 
         std::vector<uint8_t> dummy_vector1; // Used to be vMerkleBranch
@@ -322,11 +365,13 @@ public:
         nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
         const auto it_ts = mapValue.find("timesmart");
         nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi<int64_t>(it_ts->second)) : 0;
+        m_is_sp_tx = mapValue.contains("sp");
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
         mapValue.erase("n");
         mapValue.erase("timesmart");
+        mapValue.erase("sp");
     }
 
     void SetTx(CTransactionRef arg)
