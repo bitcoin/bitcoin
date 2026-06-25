@@ -3874,7 +3874,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
-    std::vector<Txid> txids_to_delete;
     std::unique_ptr<WalletBatch> watchonly_batch;
     if (data.watchonly_wallet) {
         watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
@@ -3915,7 +3914,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
-                    txids_to_delete.push_back(hash);
                     continue;
                 }
             }
@@ -3926,13 +3924,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
         local_wallet_batch.WriteTxMetadata(*wtx);
-    }
-
-    // Do the removes
-    if (txids_to_delete.size() > 0) {
-        if (auto res = RemoveTxs(local_wallet_batch, txids_to_delete); !res) {
-            return util::Error{_("Error: Could not delete watchonly transactions. ") + util::ErrorString(res)};
-        }
     }
 
     // Pair external wallets with their corresponding db handler
