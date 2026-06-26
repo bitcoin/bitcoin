@@ -95,7 +95,8 @@ def get_bind_addrs(pid):
             if conn[3] == STATE_LISTEN and conn[4] in inodes:
                 bind_addrs.append(conn[1])
         return bind_addrs
-    elif sys.platform.startswith(("darwin", "freebsd", "netbsd", "openbsd")):
+    # OpenBSD is not included, as it does not ship the lsof utility.
+    elif sys.platform.startswith(("darwin", "freebsd", "netbsd")):
         import re
         import subprocess
         output = subprocess.check_output(["lsof",
