@@ -64,6 +64,8 @@ enum class BlockPolicyEstimateReason {
     CONSERVATIVE,
 };
 
+std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason);
+
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
 {
