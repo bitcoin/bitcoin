@@ -72,15 +72,15 @@ int Sock::Listen(int backlog) const
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
 #ifdef WIN32
-    static constexpr auto ERR = INVALID_SOCKET;
+    static constexpr auto accept_error = INVALID_SOCKET;
 #else
-    static constexpr auto ERR = SOCKET_ERROR;
+    static constexpr auto accept_error = SOCKET_ERROR;
 #endif
 
     std::unique_ptr<Sock> sock;
 
     const auto socket = accept(m_socket, addr, addr_len);
-    if (socket != ERR) {
+    if (socket != accept_error) {
         try {
             sock = std::make_unique<Sock>(socket);
         } catch (const std::exception&) {
