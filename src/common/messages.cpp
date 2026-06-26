@@ -27,12 +27,9 @@ namespace common {
 std::string StringForFeeReason(FeeReason reason)
 {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
+        {FeeReason::FEE_RATE_ESTIMATOR, "Fee Rate Estimator"},
         {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
+        {FeeReason::USER_SPECIFIED, "User Specified Fee"},
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
     };
@@ -41,6 +38,23 @@ std::string StringForFeeReason(FeeReason reason)
     if (reason_string == fee_reason_strings.end()) return "Unknown";
 
     return reason_string->second;
+}
+
+std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason)
+{
+    switch (reason) {
+    case BlockPolicyEstimateReason::NONE:
+        return "None";
+    case BlockPolicyEstimateReason::HALF_ESTIMATE:
+        return "Half Target 60% Threshold";
+    case BlockPolicyEstimateReason::FULL_ESTIMATE:
+        return "Target 85% Threshold";
+    case BlockPolicyEstimateReason::DOUBLE_ESTIMATE:
+        return "Double Target 95% Threshold";
+    case BlockPolicyEstimateReason::CONSERVATIVE:
+        return "Conservative Double Target longer horizon";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()

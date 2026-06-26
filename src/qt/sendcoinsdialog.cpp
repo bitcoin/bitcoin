@@ -21,11 +21,11 @@
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 #include <array>
