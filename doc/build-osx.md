@@ -50,7 +50,7 @@ See [dependencies.md](dependencies.md) for a complete overview.
 To install, run the following from your terminal:
 
 ``` bash
-brew install cmake boost pkgconf capnp
+brew install cmake boost capnp
 ```
 
 #### Wallet Dependencies
@@ -110,7 +110,7 @@ Support for ZMQ notifications requires the following dependency.
 Skip if you do not need ZMQ functionality.
 
 ``` bash
-brew install zeromq
+brew install zeromq pkgconf
 ```
 
 Check out the [further configuration](#further-configuration) section for more information.
