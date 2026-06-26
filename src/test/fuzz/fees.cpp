@@ -15,7 +15,6 @@
 #include <vector>
 
 using common::StringForFeeReason;
-using common::StringForBlockPolicyEstimateReason;
 
 FUZZ_TARGET(fees)
 {

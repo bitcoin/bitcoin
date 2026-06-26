@@ -6,7 +6,6 @@
 #include <common/messages.h>
 #include <common/types.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
@@ -38,23 +37,6 @@ std::string StringForFeeReason(FeeReason reason)
     if (reason_string == fee_reason_strings.end()) return "Unknown";
 
     return reason_string->second;
-}
-
-std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason)
-{
-    switch (reason) {
-    case BlockPolicyEstimateReason::NONE:
-        return "None";
-    case BlockPolicyEstimateReason::HALF_ESTIMATE:
-        return "Half Target 60% Threshold";
-    case BlockPolicyEstimateReason::FULL_ESTIMATE:
-        return "Target 85% Threshold";
-    case BlockPolicyEstimateReason::DOUBLE_ESTIMATE:
-        return "Double Target 95% Threshold";
-    case BlockPolicyEstimateReason::CONSERVATIVE:
-        return "Conservative Double Target longer horizon";
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
