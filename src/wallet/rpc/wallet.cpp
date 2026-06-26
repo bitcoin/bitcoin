@@ -27,6 +27,9 @@
 
 namespace wallet {
 
+using HDPubKeyMap = CWallet::HDPubKeyMap;
+using HDKeyFilter = CWallet::HDKeyFilter;
+
 static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
     {WALLET_FLAG_AVOID_REUSE,
      "You need to rescan the blockchain in order to correctly mark used "
@@ -689,31 +692,15 @@ RPCMethod gethdkeys()
                 EnsureWalletIsUnlocked(*wallet);
             }
 
-
-            std::set<ScriptPubKeyMan*> spkms;
-            if (active_only) {
-                spkms = wallet->GetActiveScriptPubKeyMans();
-            } else {
-                spkms = wallet->GetAllScriptPubKeyMans();
-            }
-
             std::map<CExtPubKey, std::set<std::tuple<std::string, bool, bool>>> wallet_xpubs;
             std::map<CExtPubKey, CExtKey> wallet_xprvs;
-            for (auto* spkm : spkms) {
-                auto* desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
-                CHECK_NONFATAL(desc_spkm);
-                LOCK(desc_spkm->cs_desc_man);
-                WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
-
-                // Retrieve the pubkeys from the descriptor
-                std::set<CPubKey> desc_pubkeys;
-                std::set<CExtPubKey> desc_xpubs;
-                w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
-                for (const CExtPubKey& xpub : desc_xpubs) {
+            for (const auto& [xpub, spkms] : wallet->GetHDPubKeys(active_only ? HDKeyFilter::Active : HDKeyFilter::All)) {
+                for (auto* desc_spkm : spkms) {
+                    LOCK(desc_spkm->cs_desc_man);
                     std::string desc_str;
                     bool ok = desc_spkm->GetDescriptorString(desc_str, /*priv=*/false);
                     CHECK_NONFATAL(ok);
-                    wallet_xpubs[xpub].emplace(desc_str, wallet->IsActiveScriptPubKeyMan(*spkm), desc_spkm->HasPrivKey(xpub.pubkey.GetID()));
+                    wallet_xpubs[xpub].emplace(desc_str, wallet->IsActiveScriptPubKeyMan(*desc_spkm), desc_spkm->HasPrivKey(xpub.pubkey.GetID()));
                     if (std::optional<CKey> key = priv ? desc_spkm->GetKey(xpub.pubkey.GetID()) : std::nullopt) {
                         wallet_xprvs[xpub] = CExtKey(xpub, *key);
                     }
@@ -800,11 +787,11 @@ static RPCMethod createwalletdescriptor()
 
             CExtPubKey xpub;
             if (hdkey.isNull()) {
-                std::set<CExtPubKey> active_xpubs = pwallet->GetActiveHDPubKeys();
+                HDPubKeyMap active_xpubs = pwallet->GetHDPubKeys(HDKeyFilter::Active);
                 if (active_xpubs.size() != 1) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'");
                 }
-                xpub = *active_xpubs.begin();
+                xpub = active_xpubs.begin()->first;
             } else {
                 xpub = DecodeExtPubKey(hdkey.get_str());
                 if (!xpub.pubkey.IsValid()) {
