@@ -2939,6 +2939,8 @@ void TxGraphImpl::SanityCheck() const
     std::set<GraphIndex> expected_removed[MAX_LEVELS];
     /** Which Cluster::m_sequence values have been encountered. */
     std::set<uint64_t> sequences;
+    /** Which Clusters are live in ClusterSet::m_clusters up to the level being checked. */
+    std::set<const Cluster*> live_clusters;
     /** Which GraphIndexes ought to occur in m_main_chunkindex, based on m_entries. */
     std::set<GraphIndex> expected_chunkindex;
     /** Whether compaction is possible in the current state. */
@@ -3000,6 +3002,7 @@ void TxGraphImpl::SanityCheck() const
             // ... for all clusters in them ...
             for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
                 const auto& cluster = *quality_clusters[setindex];
+                live_clusters.insert(&cluster);
                 // The number of transactions in a Cluster cannot exceed m_max_cluster_count.
                 assert(cluster.GetTxCount() <= m_max_cluster_count);
                 // The level must match the Cluster's own idea of what level it is in (but GetLevel
@@ -3062,6 +3065,16 @@ void TxGraphImpl::SanityCheck() const
         // Verify that the actually encountered clusters match the ones occurring in Entry vector.
         assert(actual_clusters == expected_clusters[level]);
 
+        // Validate m_group_data cluster pointers refer to live clusters at this
+        // level or below (staging group data may reference not-yet-pulled-in
+        // main clusters).
+        if (clusterset.m_group_data.has_value()) {
+            for (const Cluster* cl : clusterset.m_group_data->m_group_clusters) {
+                assert(live_clusters.contains(cl));
+                assert(cl->GetTxCount() > 0);
+                assert(FindCluster(cl->GetClusterEntry(0), level) == cl);
+            }
+        }
         // Verify that the contents of m_removed matches what was expected based on the Entry vector.
         std::set<GraphIndex> actual_removed(clusterset.m_removed.begin(), clusterset.m_removed.end());
         for (auto i : expected_unlinked) {
