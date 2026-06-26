@@ -1071,8 +1071,9 @@ public:
 
     //! Which descriptors GetHDPubKeys() should consider.
     enum class HDKeyFilter {
-        Active, //!< Only active descriptors
-        All,    //!< All descriptors
+        Active,    //!< Only active descriptors
+        All,       //!< All descriptors
+        UnusedKey, //!< Only unused(KEY) descriptors
     };
     using HDPubKeyMap = std::map<CExtPubKey, std::set<DescriptorScriptPubKeyMan*>>;
     //! Retrieve descriptor xpubs matching the requested filter.
