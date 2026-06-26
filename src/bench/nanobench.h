@@ -2654,9 +2654,9 @@ private:
     std::map<uint64_t, Target> mIdToTarget{};
 
     // start with minimum size of 3 for read_format
-    std::vector<uint64_t> mCounters{3};
-    std::vector<uint64_t> mCalibratedOverhead{3};
-    std::vector<uint64_t> mLoopOverhead{3};
+    std::vector<uint64_t> mCounters = std::vector<uint64_t>(3);
+    std::vector<uint64_t> mCalibratedOverhead = std::vector<uint64_t>(3);
+    std::vector<uint64_t> mLoopOverhead = std::vector<uint64_t>(3);
 
     uint64_t mTimeEnabledNanos = 0;
     uint64_t mTimeRunningNanos = 0;
