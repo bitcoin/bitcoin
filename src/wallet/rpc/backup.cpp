@@ -174,7 +174,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorR
         }
 
         // Range check
-        std::optional<bool> is_ranged;
+        bool is_ranged{false};
         int64_t range_start = 0, range_end = 1, next_index = 0;
         if (!parsed_descs.at(0)->IsRange() && request.range) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
@@ -206,7 +206,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorR
         }
 
         // Ranged descriptors should not have a label
-        if (is_ranged.has_value() && is_ranged.value() && !request.label.empty()) {
+        if (is_ranged && !request.label.empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptors should not have a label");
         }
 
