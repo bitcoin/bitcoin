@@ -33,11 +33,6 @@ ATTACK_BANDWIDTH = 6000000000
 # headers storage to grow at 1.2 header per BLOCK_INTERVAL.
 ATTACK_FRACTION = 0.2
 
-# When this is set, the mapping from period size to memory usage (at optimal buffer size for that
-# period) is assumed to be convex. This greatly speeds up the computation, and does not appear
-# to influence the outcome. Set to False for a stronger guarantee to get the optimal result.
-ASSUME_CONVEX = True
-
 # Explanation:
 #
 #  The headerssync module implements a DoS protection against low-difficulty header spam which does
@@ -297,17 +292,15 @@ def compute(max_headers, minchainwork_headers, attack_headers):
             maps.append((period, bufsize))
             mem = memory_usage(period, bufsize, max_headers, minchainwork_headers)
             assert mem <= best[2]
-            if ASSUME_CONVEX:
-                # Remove all periods that are on the other side of the former best as the new
-                # best.
-                periods = [p for p in periods if (p < best[0]) == (period < best[0])]
+            # Remove all periods that are on the other side of the former best as the new
+            # best.
+            periods = [p for p in periods if (p < best[0]) == (period < best[0])]
             best = (period, bufsize, mem)
         else:
             # The (period, bufsize) configuration we found is worse than what we already had.
-            if ASSUME_CONVEX:
-                # Remove all periods that are on the other side of the tried configuration as the
-                # best one.
-                periods = [p for p in periods if (p < period) == (best[0] < period)]
+            # Remove all periods that are on the other side of the tried configuration as the
+            # best one.
+            periods = [p for p in periods if (p < period) == (best[0] < period)]
 
     # Break ties deterministically toward the smallest period (the memory usage as a function of
     # period can be flat over several adjacent periods), so the result does not depend on the random
