@@ -125,14 +125,14 @@ RPCMethod removeprunedfunds()
     };
 }
 
-static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
+static std::optional<int64_t> GetImportTimestamp(const UniValue& data)
 {
     if (data.exists("timestamp")) {
         const UniValue& timestamp = data["timestamp"];
         if (timestamp.isNum()) {
             return timestamp.getInt<int64_t>();
         } else if (timestamp.isStr() && timestamp.get_str() == "now") {
-            return now;
+            return std::nullopt; // std::nullopt means use the current best block's MTP time
         }
         throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
     }
@@ -409,7 +409,7 @@ RPCMethod importdescriptors()
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
             // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+            const int64_t timestamp = std::max(GetImportTimestamp(request).value_or(now), minimum_timestamp);
             const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
             response.push_back(result);
 
@@ -448,14 +448,15 @@ RPCMethod importdescriptors()
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
+                const int64_t timestamp = GetImportTimestamp(request).value_or(now);
+                if (scanned_time <= timestamp || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
                             "was an error reading a block from time %d, which is after or within %d seconds "
                             "of key creation, and could contain transactions pertaining to the desc. As a "
                             "result, transactions and coins using this desc may not appear in the wallet.",
-                            GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
+                            timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
                     if (pwallet->chain().havePruned()) {
                         error_msg += strprintf(" This error could be caused by pruning or data corruption "
                                 "(see bitcoind log for details) and could be dealt with by downloading and "
