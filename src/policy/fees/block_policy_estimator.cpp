@@ -919,7 +919,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true, &tempResult);
     if (feeCalc) {
         feeCalc->est = tempResult;
-        feeCalc->reason = FeeReason::HALF_ESTIMATE;
+        feeCalc->reason = BlockPolicyEstimateReason::HALF_ESTIMATE;
     }
     median = halfEst;
     double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true, &tempResult);
@@ -927,7 +927,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         median = actualEst;
         if (feeCalc) {
             feeCalc->est = tempResult;
-            feeCalc->reason = FeeReason::FULL_ESTIMATE;
+            feeCalc->reason = BlockPolicyEstimateReason::FULL_ESTIMATE;
         }
     }
     double doubleEst = estimateCombinedFee(2 * confTarget, DOUBLE_SUCCESS_PCT, !conservative, &tempResult);
@@ -935,7 +935,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         median = doubleEst;
         if (feeCalc) {
             feeCalc->est = tempResult;
-            feeCalc->reason = FeeReason::DOUBLE_ESTIMATE;
+            feeCalc->reason = BlockPolicyEstimateReason::DOUBLE_ESTIMATE;
         }
     }
 
@@ -945,7 +945,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
             median = consEst;
             if (feeCalc) {
                 feeCalc->est = tempResult;
-                feeCalc->reason = FeeReason::CONSERVATIVE;
+                feeCalc->reason = BlockPolicyEstimateReason::CONSERVATIVE;
             }
         }
     }

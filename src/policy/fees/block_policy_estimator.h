@@ -56,15 +56,12 @@ static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
 
 /* Enumeration of reason for returned fee estimate */
-enum class FeeReason {
+enum class BlockPolicyEstimateReason {
     NONE,
     HALF_ESTIMATE,
     FULL_ESTIMATE,
     DOUBLE_ESTIMATE,
     CONSERVATIVE,
-    MEMPOOL_MIN,
-    FALLBACK,
-    REQUIRED,
 };
 
 /* Used to return detailed information about a feerate bucket */
@@ -90,7 +87,7 @@ struct EstimationResult
 struct FeeCalculation
 {
     EstimationResult est;
-    FeeReason reason = FeeReason::NONE;
+    BlockPolicyEstimateReason reason = BlockPolicyEstimateReason::NONE;
     int desiredTarget = 0;
     int returnedTarget = 0;
     unsigned int best_height{0};

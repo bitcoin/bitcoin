@@ -4,7 +4,6 @@
 
 #include <consensus/amount.h>
 #include <key.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <script/solver.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

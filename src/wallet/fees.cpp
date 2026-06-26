@@ -5,9 +5,13 @@
 
 #include <wallet/fees.h>
 
+#include <policy/feerate.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <util/fees.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
+#include <optional>
 
 namespace wallet {
 CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
@@ -16,9 +20,9 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
 }
 
 
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
+CAmount GetMinimumFee(const MinimumFeeRateResult& min_fee_rate, unsigned int nTxBytes)
 {
-    return GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(static_cast<int32_t>(nTxBytes));
+    return min_fee_rate.fee_rate.GetFee(static_cast<int32_t>(nTxBytes));
 }
 
 CFeeRate GetRequiredFeeRate(const CWallet& wallet)
@@ -26,7 +30,7 @@ CFeeRate GetRequiredFeeRate(const CWallet& wallet)
     return std::max(wallet.m_min_fee, wallet.chain().relayMinFee());
 }
 
-CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc)
+MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control)
 {
     /* User control of how to calculate fee uses the following parameter precedence:
        1. coin_control.m_feerate
@@ -34,45 +38,53 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
        3. m_confirm_target (user-set member variable of wallet)
        The first parameter that is set is used.
     */
-    CFeeRate feerate_needed;
     if (coin_control.m_feerate) { // 1.
-        feerate_needed = *(coin_control.m_feerate);
+        CFeeRate fee_rate{*coin_control.m_feerate};
         // Allow to override automatic min/max check over coin control instance
-        if (coin_control.fOverrideFeeRate) return feerate_needed;
-    }
-    else { // 2. or 3.
-        // We will use smart fee estimation
-        unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : wallet.m_confirm_target;
-        // By default estimates are economical iff we are signaling opt-in-RBF
-        bool conservative_estimate = !coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf);
-        // Allow to override the default fee estimate mode over the CoinControl instance
-        if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
-        else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
+        if (coin_control.fOverrideFeeRate) return {fee_rate, FeeReason::USER_SPECIFIED, std::nullopt};
 
-        feerate_needed = wallet.chain().estimateSmartFee(target, conservative_estimate, feeCalc);
-        if (feerate_needed == CFeeRate(0)) {
-            // if we don't have enough data for estimateSmartFee, then use fallback fee
-            feerate_needed = wallet.m_fallback_fee;
-            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
+        CFeeRate required_feerate = GetRequiredFeeRate(wallet);
+        if (required_feerate > fee_rate) return {required_feerate, FeeReason::REQUIRED, std::nullopt};
 
-            // directly return if fallback fee is disabled (feerate 0 == disabled)
-            if (wallet.m_fallback_fee == CFeeRate(0)) return feerate_needed;
-        }
-        // Obey mempool min fee when using smart fee estimation
-        CFeeRate min_mempool_feerate = wallet.chain().mempoolMinFee();
-        if (feerate_needed < min_mempool_feerate) {
-            feerate_needed = min_mempool_feerate;
-            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
-        }
+        return {fee_rate, FeeReason::USER_SPECIFIED, std::nullopt};
     }
 
-    // prevent user from paying a fee below the required fee rate
+    // We will use smart fee estimation
+    unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : wallet.m_confirm_target;
+    // By default estimates are economical iff we are signaling opt-in-RBF
+    bool conservative_estimate = !coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf);
+    // Allow to override the default fee estimate mode over the CoinControl instance
+    if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE)
+        conservative_estimate = true;
+    else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL)
+        conservative_estimate = false;
+
+    FeeCalculation feeCalc;
+    CFeeRate fee_rate{wallet.chain().estimateSmartFee(target, conservative_estimate, &feeCalc)};
+    FeeReason fee_reason{FeeReason::FEE_RATE_ESTIMATOR};
+    // Only fee rate estimator results have a returned target.
+    std::optional<int> returned_target{feeCalc.returnedTarget};
+    if (fee_rate == CFeeRate(0)) {
+        // if we don't have enough data for estimateSmartFee, then use fallback fee
+        fee_rate = wallet.m_fallback_fee;
+        fee_reason = FeeReason::FALLBACK;
+        returned_target = std::nullopt;
+        // directly return if fallback fee is disabled (feerate 0 == disabled)
+        if (wallet.m_fallback_fee == CFeeRate(0)) return {fee_rate, FeeReason::FALLBACK, std::nullopt};
+    }
+
+    // Obey mempool min fee when using smart fee estimation or fallback fee
+    CFeeRate min_mempool_feerate = wallet.chain().mempoolMinFee();
+    if (fee_rate < min_mempool_feerate) {
+        fee_rate = min_mempool_feerate;
+        fee_reason = FeeReason::MEMPOOL_MIN;
+        returned_target = std::nullopt;
+    }
+
     CFeeRate required_feerate = GetRequiredFeeRate(wallet);
-    if (required_feerate > feerate_needed) {
-        feerate_needed = required_feerate;
-        if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
-    }
-    return feerate_needed;
+    if (required_feerate > fee_rate) return {required_feerate, FeeReason::REQUIRED, std::nullopt};
+
+    return {fee_rate, fee_reason, returned_target};
 }
 
 CFeeRate GetDiscardRate(const CWallet& wallet)
