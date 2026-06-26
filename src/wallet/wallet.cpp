@@ -4578,6 +4578,14 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
     return std::nullopt;
 }
 
+std::optional<CExtKey> CWallet::GetExtKey(const CExtPubKey& xpub) const
+{
+    if (std::optional<CKey> key = GetKey(xpub.pubkey.GetID())) {
+        return CExtKey{xpub, *key};
+    }
+    return std::nullopt;
+}
+
 void CWallet::WriteBestBlock() const
 {
     AssertLockHeld(cs_wallet);

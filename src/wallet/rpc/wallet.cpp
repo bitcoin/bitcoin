@@ -701,8 +701,10 @@ RPCMethod gethdkeys()
                     bool ok = desc_spkm->GetDescriptorString(desc_str, /*priv=*/false);
                     CHECK_NONFATAL(ok);
                     wallet_xpubs[xpub].emplace(desc_str, wallet->IsActiveScriptPubKeyMan(*desc_spkm), desc_spkm->HasPrivKey(xpub.pubkey.GetID()));
-                    if (std::optional<CKey> key = priv ? desc_spkm->GetKey(xpub.pubkey.GetID()) : std::nullopt) {
-                        wallet_xprvs[xpub] = CExtKey(xpub, *key);
+                }
+                if (priv) {
+                    if (std::optional<CExtKey> xprv = wallet->GetExtKey(xpub)) {
+                        wallet_xprvs[xpub] = *xprv;
                     }
                 }
             }
