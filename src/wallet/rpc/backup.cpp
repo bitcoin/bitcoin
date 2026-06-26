@@ -166,155 +166,208 @@ static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, s
     return request;
 }
 
-static UniValue ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+ImportResult ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    UniValue warnings(UniValue::VARR);
-    UniValue result(UniValue::VOBJ);
+    AssertLockHeld(wallet.cs_wallet);
 
-    try {
-        // Parse descriptor string
-        FlatSigningProvider keys;
-        std::string error;
-        auto parsed_descs = Parse(request.descriptor, keys, error, /*require_checksum=*/true);
-        if (parsed_descs.empty()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
-        }
-        if (request.internal && parsed_descs.size() > 1) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot have multipath descriptor while also specifying \'internal\'");
-        }
+    std::vector<std::string> warnings;
 
-        // Range check
-        bool is_ranged{false};
-        int64_t range_start = 0, range_end = 1, next_index = 0;
-        if (!parsed_descs.at(0)->IsRange() && request.range) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
-        } else if (parsed_descs.at(0)->IsRange()) {
-            if (request.range.has_value()) {
-                range_start = request.range->first;
-                range_end = request.range->second + 1; // Specified range end is inclusive, but we need range end as exclusive
-            } else {
-                warnings.push_back("Range not given, using default keypool range");
-                range_start = 0;
-                range_end = wallet.m_keypool_size;
-            }
-            next_index = request.next_index.value_or(range_start);
-            is_ranged = true;
-
-            if (next_index < range_start || next_index >= range_end) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");
-            }
-        }
-
-        // Active descriptors must be ranged
-        if (request.active && !parsed_descs.at(0)->IsRange()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
-        }
-
-        // Multipath descriptors should not have a label
-        if (parsed_descs.size() > 1 && !request.label.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Multipath descriptors should not have a label");
-        }
-
-        // Ranged descriptors should not have a label
-        if (is_ranged && !request.label.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptors should not have a label");
-        }
-
-        bool desc_internal = request.internal.value_or(false);
-        // Internal addresses should not have a label either
-        if (desc_internal && !request.label.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
-        }
-
-        // Combo descriptor check
-        if (request.active && !parsed_descs.at(0)->IsSingleType()) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Combo descriptors cannot be set to active");
-        }
-
-        // If the wallet disabled private keys, abort if private keys exist
-        if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.keys.empty()) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
-        }
-
-        for (size_t j = 0; j < parsed_descs.size(); ++j) {
-            auto parsed_desc = std::move(parsed_descs[j]);
-            if (parsed_descs.size() == 2) {
-                desc_internal = j == 1;
-            } else if (parsed_descs.size() > 2) {
-                CHECK_NONFATAL(!desc_internal);
-            }
-            // Expand to check whether the descriptor can be derived at the first index.
-            FlatSigningProvider expand_keys;
-            std::vector<CScript> scripts;
-            if (!parsed_desc->Expand(0, keys, scripts, expand_keys)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot expand descriptor. Probably because of hardened derivations without private keys provided");
-            }
-
-            for (const auto& w : parsed_desc->Warnings()) {
-               warnings.push_back(w);
-            }
-
-            // If private keys are enabled, check some things.
-            if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-                if (keys.keys.empty()) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
-                }
-                if (!parsed_desc->HavePrivateKeys(keys)) {
-                    warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
-                }
-            }
-
-            // If this is an unused(KEY) descriptor, check that the wallet doesn't already have other descriptors with this key
-            if (!parsed_desc->HasScripts()) {
-                if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import unused() to wallet without private keys enabled");
-                }
-                // Unused descriptors must contain a single key.
-                // Earlier checks will have enforced that this key is either a private key when private keys are enabled,
-                // or that this key is a public key when private keys are disabled.
-                // If we can retrieve the corresponding private key from the wallet, then this key is already in the wallet
-                // and we should not import it.
-                std::set<CPubKey> pubkeys;
-                std::set<CExtPubKey> extpubs;
-                parsed_desc->GetPubKeys(pubkeys, extpubs);
-                std::transform(extpubs.begin(), extpubs.end(), std::inserter(pubkeys, pubkeys.begin()), [](const CExtPubKey& xpub) { return xpub.pubkey; });
-                CHECK_NONFATAL(pubkeys.size() == 1);
-                if (wallet.GetKey(pubkeys.begin()->GetID())) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import an unused() descriptor when its private key is already in the wallet");
-                }
-            }
-
-            WalletDescriptor w_desc(std::move(parsed_desc), request.timestamp.value(), range_start, range_end, next_index);
-
-            // Add descriptor to the wallet
-            auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, request.label, desc_internal);
-
-            if (!spk_manager_res) {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s': %s", request.descriptor, util::ErrorString(spk_manager_res).original));
-            }
-
-            auto& spk_manager = spk_manager_res.value().get();
-
-            // Set descriptor as active if necessary
-            if (request.active) {
-                if (!w_desc.descriptor->GetOutputType()) {
-                    warnings.push_back("Unknown output type, cannot set descriptor to active.");
-                } else {
-                    wallet.AddActiveScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
-                }
-            } else {
-                if (w_desc.descriptor->GetOutputType()) {
-                    wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
-                }
-            }
-        }
-
-        result.pushKV("success", UniValue(true));
-    } catch (const UniValue& e) {
-        result.pushKV("success", UniValue(false));
-        result.pushKV("error", e);
+    // Parse descriptor string
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_descs = Parse(request.descriptor, keys, error, /*require_checksum=*/true);
+    if (parsed_descs.empty()) {
+        return ImportResult(WalletErrorCode::InvalidDescriptor, error, warnings);
     }
-    PushWarnings(warnings, result);
+
+    if (request.internal.has_value() && parsed_descs.size() > 1) {
+        return ImportResult(
+            WalletErrorCode::InvalidDescriptor,
+            "Cannot have multipath descriptor while also specifying 'internal'",
+            warnings
+        );
+    }
+
+    // Range check
+    bool is_ranged{false};
+    int64_t range_start = 0, range_end = 1, next_index = 0;
+    if (!parsed_descs.at(0)->IsRange() && request.range.has_value()) {
+        return ImportResult(
+            WalletErrorCode::InvalidParameter,
+            "Range should not be specified for an un-ranged descriptor",
+            warnings
+        );
+    } else if (parsed_descs.at(0)->IsRange()) {
+        if (request.range.has_value()) {
+            range_start = request.range->first;
+            range_end = request.range->second + 1; // Specified range end is inclusive, but we need range end as exclusive
+        } else {
+            warnings.emplace_back("Range not given, using default keypool range");
+            range_start = 0;
+            range_end = wallet.m_keypool_size;
+        }
+        next_index = request.next_index.value_or(range_start);
+        is_ranged = true;
+
+        if (next_index < range_start || next_index >= range_end) {
+            return ImportResult(
+                WalletErrorCode::InvalidParameter,
+                "next_index is out of range",
+                warnings
+            );
+        }
+    }
+
+    // Active descriptors must be ranged
+    if (request.active && !parsed_descs.at(0)->IsRange()) {
+        return ImportResult(
+            WalletErrorCode::InvalidParameter,
+            "Active descriptors must be ranged",
+            warnings
+        );
+    }
+
+    // Multipath descriptors should not have a label
+    if (parsed_descs.size() > 1 && !request.label.empty()) {
+        return ImportResult(
+            WalletErrorCode::InvalidParameter,
+            "Multipath descriptors should not have a label",
+            warnings
+        );
+    }
+
+    // Ranged descriptors should not have a label
+    if (is_ranged && !request.label.empty()) {
+        return ImportResult(
+            WalletErrorCode::InvalidParameter,
+            "Ranged descriptors should not have a label",
+            warnings
+        );
+    }
+
+    bool desc_internal = request.internal.value_or(false);
+    // Internal addresses should not have a label either
+    if (desc_internal && !request.label.empty()) {
+        return ImportResult(
+            WalletErrorCode::InvalidParameter,
+            "Internal addresses should not have a label",
+            warnings
+        );
+    }
+
+    // Combo descriptor check
+    if (request.active && !parsed_descs.at(0)->IsSingleType()) {
+        return ImportResult(
+            WalletErrorCode::GenericError,
+            "Combo descriptors cannot be set to active",
+            warnings
+        );
+    }
+
+    // If the wallet disabled private keys, abort if private keys exist
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.keys.empty()) {
+        return ImportResult(
+            WalletErrorCode::GenericError,
+            "Cannot import private keys to a wallet with private keys disabled",
+            warnings
+        );
+    }
+
+    for (size_t j = 0; j < parsed_descs.size(); ++j) {
+        auto parsed_desc = std::move(parsed_descs[j]);
+        if (parsed_descs.size() == 2) {
+            desc_internal = j == 1;
+        } else if (parsed_descs.size() > 2) {
+            CHECK_NONFATAL(!desc_internal);
+        }
+        // ExpandPrivate to whether the descriptor can be derived at the first index.
+        FlatSigningProvider expand_keys;
+        std::vector<CScript> scripts;
+        if (!parsed_desc->Expand(0, keys, scripts, expand_keys)) {
+            return ImportResult(
+                WalletErrorCode::GenericError,
+                "Cannot expand descriptor. Probably because of hardened derivations without private keys provided",
+                warnings
+            );
+        }
+
+        for (const auto& w : parsed_desc->Warnings()) {
+            warnings.push_back(w);
+        }
+
+        // If private keys are enabled, check some things.
+        if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            if (keys.keys.empty()) {
+                return ImportResult(
+                    WalletErrorCode::GenericError,
+                    "Cannot import descriptor without private keys to a wallet with private keys enabled",
+                    warnings
+                );
+            }
+            if (!parsed_desc->HavePrivateKeys(keys)) {
+                warnings.emplace_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
+            }
+        }
+        // If this is an unused(KEY) descriptor, check that the wallet doesn't already have other descriptors with this key
+        if (!parsed_desc->HasScripts()) {
+            if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                return ImportResult(
+                    WalletErrorCode::GenericError,
+                    "Cannot import unused() to wallet without private keys enabled",
+                    warnings
+                );
+            }
+            // Unused descriptors must contain a single key.
+            // Earlier checks will have enforced that this key is either a private key when private keys are enabled,
+            // or that this key is a public key when private keys are disabled.
+            // If we can retrieve the corresponding private key from the wallet, then this key is already in the wallet
+            // and we should not import it.
+            std::set<CPubKey> pubkeys;
+            std::set<CExtPubKey> extpubs;
+            parsed_desc->GetPubKeys(pubkeys, extpubs);
+            std::transform(extpubs.begin(), extpubs.end(), std::inserter(pubkeys, pubkeys.begin()), [](const CExtPubKey& xpub) { return xpub.pubkey; });
+            CHECK_NONFATAL(pubkeys.size() == 1);
+            if (wallet.GetKey(pubkeys.begin()->GetID())) {
+                return ImportResult(
+                    WalletErrorCode::GenericError,
+                    "Cannot import an unused() descriptor when its private key is already in the wallet",
+                    warnings
+                );
+            }
+        }
+
+        Assume(request.timestamp.has_value());
+        WalletDescriptor w_desc(std::move(parsed_desc), request.timestamp.value(), range_start, range_end, next_index);
+
+        // Add descriptor to the wallet
+        auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, request.label, desc_internal);
+
+        if (!spk_manager_res) {
+            return ImportResult(
+                WalletErrorCode::GenericError,
+                strprintf("Could not add descriptor '%s': %s", request.descriptor, util::ErrorString(spk_manager_res).original),
+                warnings
+            );
+        }
+
+        auto& spk_manager = spk_manager_res.value().get();
+
+        // Set descriptor as active if necessary
+        if (request.active) {
+            if (!w_desc.descriptor->GetOutputType()) {
+                warnings.emplace_back("Unknown output type, cannot set descriptor to active.");
+            } else {
+                wallet.AddActiveScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+            }
+        } else {
+            if (w_desc.descriptor->GetOutputType()) {
+                wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+            }
+        }
+    }
+
+    ImportResult result;
+    result.warnings = warnings;
     return result;
 }
 
@@ -427,14 +480,34 @@ RPCMethod importdescriptors()
         // Get all timestamps and extract the lowest timestamp
         for (auto& [i, request] : requests) {
             request.timestamp = request.timestamp.value_or(now);
-            results[i] = ProcessDescriptorImport(*pwallet, request);
+            const ImportResult& import_result = ProcessDescriptorImport(*pwallet, request);
 
             if (lowest_timestamp > request.timestamp.value()) {
                 lowest_timestamp = request.timestamp.value();
             }
 
+            // Translate the ImportResult into the per-input UniValue result.
+            UniValue& result = results[i];
+            result = UniValue(UniValue::VOBJ);
+            UniValue warnings(UniValue::VARR);
+            if (import_result.has_error()) {
+                const WalletError& error = import_result.error.value().wallet_error;
+                auto write_error = [&result, &error](int code) {
+                    result.pushKV("success", false);
+                    result.pushKV("error", JSONRPCError(code, error.message.original));
+                };
+                if (error.code == WalletErrorCode::UnlockNeeded) NONFATAL_UNREACHABLE();
+                write_error(HandleWalletErrorCode(error.code));
+            } else {
+                result.pushKV("success", true);
+            }
+            for (const auto& w : import_result.warnings) {
+                warnings.push_back(w);
+            }
+            PushWarnings(warnings, result);
+
             // If we know the chain tip, and at least one request was successful then allow rescan
-            if (!rescan && results[i]["success"].get_bool()) {
+            if (!rescan && !import_result.has_error()) {
                 rescan = true;
             }
         }
