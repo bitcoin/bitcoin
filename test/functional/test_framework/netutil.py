@@ -149,7 +149,7 @@ def all_interfaces():
         return [
             (m["iface"].encode(), ip)
             for m in re.finditer(r"(?m)^(?P<iface>\S+):(?P<block>[^\n]*(?:\n[ \t]+[^\n]*)*)", output)
-            for ip in re.findall(r"inet (\S+)", m["block"])
+            for ip in re.findall(r"inet ([^\s/]+)", m["block"])
         ]
     else:
         raise NotImplementedError(f"all_interfaces is not supported on {sys.platform}")
