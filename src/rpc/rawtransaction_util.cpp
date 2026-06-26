@@ -47,7 +47,7 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optio
 
         uint32_t nSequence;
 
-        if (rbf.value_or(true)) {
+        if (rbf.value_or(false)) {
             nSequence = MAX_BIP125_RBF_SEQUENCE; /* CTxIn::SEQUENCE_FINAL - 2 */
         } else if (rawTx.nLockTime) {
             nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; /* CTxIn::SEQUENCE_FINAL - 1 */
