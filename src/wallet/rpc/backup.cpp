@@ -22,6 +22,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/export.h>
+#include <wallet/imports.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
@@ -149,85 +150,84 @@ static std::optional<int64_t> GetImportTimestamp(const UniValue& data)
     throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
 }
 
-static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, std::optional<int64_t> timestamp)
+{
+    ImportDescriptorRequest request;
+    if (!data.exists("desc")) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor not found.");
+    }
+    request.descriptor = data["desc"].get_str();
+    request.label = LabelFromValue(data["label"]);
+    request.timestamp = timestamp;
+    if (data.exists("active")) request.active = data["active"].get_bool();
+    if (data.exists("internal")) request.internal = data["internal"].get_bool();
+    if (data.exists("range")) request.range = ParseDescriptorRange(data["range"]);
+    if (data.exists("next_index")) request.next_index = data["next_index"].getInt<int64_t>();
+    return request;
+}
+
+static UniValue ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     UniValue warnings(UniValue::VARR);
     UniValue result(UniValue::VOBJ);
 
     try {
-        if (!data.exists("desc")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor not found.");
-        }
-
-        const std::string& descriptor = data["desc"].get_str();
-        const bool active = data.exists("active") ? data["active"].get_bool() : false;
-        const std::string label{LabelFromValue(data["label"])};
-
         // Parse descriptor string
         FlatSigningProvider keys;
         std::string error;
-        auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+        auto parsed_descs = Parse(request.descriptor, keys, error, /*require_checksum=*/true);
         if (parsed_descs.empty()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
         }
-        std::optional<bool> internal;
-        if (data.exists("internal")) {
-            if (parsed_descs.size() > 1) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot have multipath descriptor while also specifying \'internal\'");
-            }
-            internal = data["internal"].get_bool();
+        if (request.internal && parsed_descs.size() > 1) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot have multipath descriptor while also specifying \'internal\'");
         }
 
         // Range check
         bool is_ranged{false};
         int64_t range_start = 0, range_end = 1, next_index = 0;
-        if (!parsed_descs.at(0)->IsRange() && data.exists("range")) {
+        if (!parsed_descs.at(0)->IsRange() && request.range) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
         } else if (parsed_descs.at(0)->IsRange()) {
-            if (data.exists("range")) {
-                auto range = ParseDescriptorRange(data["range"]);
-                range_start = range.first;
-                range_end = range.second + 1; // Specified range end is inclusive, but we need range end as exclusive
+            if (request.range.has_value()) {
+                range_start = request.range->first;
+                range_end = request.range->second + 1; // Specified range end is inclusive, but we need range end as exclusive
             } else {
                 warnings.push_back("Range not given, using default keypool range");
                 range_start = 0;
                 range_end = wallet.m_keypool_size;
             }
-            next_index = range_start;
+            next_index = request.next_index.value_or(range_start);
             is_ranged = true;
 
-            if (data.exists("next_index")) {
-                next_index = data["next_index"].getInt<int64_t>();
-                // bound checks
-                if (next_index < range_start || next_index >= range_end) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");
-                }
+            if (next_index < range_start || next_index >= range_end) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");
             }
         }
 
         // Active descriptors must be ranged
-        if (active && !parsed_descs.at(0)->IsRange()) {
+        if (request.active && !parsed_descs.at(0)->IsRange()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
         }
 
         // Multipath descriptors should not have a label
-        if (parsed_descs.size() > 1 && data.exists("label")) {
+        if (parsed_descs.size() > 1 && !request.label.empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Multipath descriptors should not have a label");
         }
 
         // Ranged descriptors should not have a label
-        if (is_ranged && data.exists("label")) {
+        if (is_ranged && !request.label.empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptors should not have a label");
         }
 
-        bool desc_internal = internal.has_value() && internal.value();
+        bool desc_internal = request.internal.value_or(false);
         // Internal addresses should not have a label either
-        if (desc_internal && data.exists("label")) {
+        if (desc_internal && !request.label.empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
         }
 
         // Combo descriptor check
-        if (active && !parsed_descs.at(0)->IsSingleType()) {
+        if (request.active && !parsed_descs.at(0)->IsSingleType()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Combo descriptors cannot be set to active");
         }
 
@@ -284,19 +284,19 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 }
             }
 
-            WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
+            WalletDescriptor w_desc(std::move(parsed_desc), request.timestamp.value(), range_start, range_end, next_index);
 
             // Add descriptor to the wallet
-            auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
+            auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, request.label, desc_internal);
 
             if (!spk_manager_res) {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s': %s", descriptor, util::ErrorString(spk_manager_res).original));
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s': %s", request.descriptor, util::ErrorString(spk_manager_res).original));
             }
 
             auto& spk_manager = spk_manager_res.value().get();
 
             // Set descriptor as active if necessary
-            if (active) {
+            if (request.active) {
                 if (!w_desc.descriptor->GetOutputType()) {
                     warnings.push_back("Unknown output type, cannot set descriptor to active.");
                 } else {
@@ -392,11 +392,32 @@ RPCMethod importdescriptors()
     // the passphrase is used to top up the keypool.
     LOCK(pwallet->m_relock_mutex);
 
-    const UniValue& requests = main_request.params[0];
+    const UniValue& univalue_requests = main_request.params[0];
+    // One result per input, in input order.
+    std::vector<UniValue> results(univalue_requests.size());
+    // Successfully parsed requests, each with the index of the input it came from.
+    struct ParsedRequest {
+        size_t input_index;
+        ImportDescriptorRequest request;
+    };
+    std::vector<ParsedRequest> requests;
+
+    // Malformed inputs (e.g. invalid label) are returned as per-item failures.
+    for (size_t i = 0; i < univalue_requests.size(); ++i) {
+        // Throws a top-level RPC error if "timestamp" is missing or invalid
+        std::optional<int64_t> timestamp = GetImportTimestamp(univalue_requests[i]);
+        try {
+            requests.push_back({i, ProcessUniValueDescriptor(univalue_requests[i], timestamp)});
+        } catch (const UniValue& e) {
+            results[i] = UniValue(UniValue::VOBJ);
+            results[i].pushKV("success", UniValue(false));
+            results[i].pushKV("error", e);
+        }
+    }
+
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
     bool rescan = false;
-    UniValue response(UniValue::VARR);
     {
         LOCK(pwallet->cs_wallet);
         EnsureWalletIsUnlocked(*pwallet);
@@ -404,18 +425,16 @@ RPCMethod importdescriptors()
         CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
 
         // Get all timestamps and extract the lowest timestamp
-        for (const UniValue& request : requests.getValues()) {
-            // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = GetImportTimestamp(request).value_or(now);
-            const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
-            response.push_back(result);
+        for (auto& [i, request] : requests) {
+            request.timestamp = request.timestamp.value_or(now);
+            results[i] = ProcessDescriptorImport(*pwallet, request);
 
-            if (lowest_timestamp > timestamp ) {
-                lowest_timestamp = timestamp;
+            if (lowest_timestamp > request.timestamp.value()) {
+                lowest_timestamp = request.timestamp.value();
             }
 
             // If we know the chain tip, and at least one request was successful then allow rescan
-            if (!rescan && result["success"].get_bool()) {
+            if (!rescan && results[i]["success"].get_bool()) {
                 rescan = true;
             }
         }
@@ -433,22 +452,15 @@ RPCMethod importdescriptors()
         }
 
         if (scanned_time > lowest_timestamp) {
-            std::vector<UniValue> results = response.getValues();
-            response.clear();
-            response.setArray();
-
             // Compose the response
-            for (unsigned int i = 0; i < requests.size(); ++i) {
-                const UniValue& request = requests.getValues().at(i);
-
+            for (const auto& [i, request] : requests) {
+                UniValue& result = results[i];
                 // If the descriptor timestamp is within the successfully scanned
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                const int64_t timestamp = GetImportTimestamp(request).value_or(now);
-                if (scanned_time <= timestamp || results.at(i).exists("error")) {
-                    response.push_back(results.at(i));
-                } else {
+                const int64_t timestamp = request.timestamp.value();
+                if (scanned_time > timestamp && !result.exists("error")) {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
                             "was an error reading a block from time %d, which is after or within %d seconds "
                             "of key creation, and could contain transactions pertaining to the desc. As a "
@@ -466,16 +478,18 @@ RPCMethod importdescriptors()
                         error_msg += strprintf(" This error could potentially caused by data corruption. If "
                                 "the issue persists you may want to reindex (see -reindex option).");
                     }
-
-                    UniValue result = UniValue(UniValue::VOBJ);
+                    result = UniValue(UniValue::VOBJ);
                     result.pushKV("success", UniValue(false));
                     result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, error_msg));
-                    response.push_back(std::move(result));
                 }
             }
         }
     }
 
+    UniValue response(UniValue::VARR);
+    for (UniValue& result : results) {
+        response.push_back(std::move(result));
+    }
     return response;
 },
     };

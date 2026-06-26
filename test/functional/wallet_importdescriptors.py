@@ -472,6 +472,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               error_code=-8,
                               error_message='Ranged descriptors should not have a label')
 
+        self.log.info("Ranged descriptors can have an explicitly empty label")
+        self.test_importdesc({"desc":descsum_create("sh(wpkh(" + xpub + "/0/1/*))"),
+                              "timestamp": "now",
+                              "range": [0, 100],
+                              "label": ""},
+                              success=True)
+
         self.log.info("Ranged descriptors cannot have labels - even if range not provided by user and only implied by asterisk (*)")
         self.test_importdesc({"desc":descsum_create("wpkh(" + xpub + "/100/0/*)"),
                               "timestamp": "now",
