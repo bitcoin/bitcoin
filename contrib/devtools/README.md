@@ -75,16 +75,6 @@ For example:
 BUILDDIR=$PWD/my-build-dir contrib/devtools/gen-manpages.py
 ```
 
-headerssync-params.py
-=====================
-
-A script to generate optimal parameters for the headerssync module (stored in src/kernel/chainparams.cpp). It takes no command-line
-options, as all its configuration is set at the top of the file. It runs many times faster inside PyPy. Invocation:
-
-```bash
-pypy3 contrib/devtools/headerssync-params.py
-```
-
 gen-bitcoin-conf.sh
 ===================
 

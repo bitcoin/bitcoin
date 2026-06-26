@@ -129,6 +129,10 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
+    /** Block height at which nMinimumChainWork was taken, i.e. the number of headers corresponding
+     *  to the minimum-chain-work threshold. Used to size the headers sync DoS-protection
+     *  parameters. */
+    int minchainwork_height;
     /** By default assume that the signatures in ancestors of this block are valid */
     uint256 defaultAssumeValid;
 
