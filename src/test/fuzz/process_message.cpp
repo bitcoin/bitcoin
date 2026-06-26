@@ -14,6 +14,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/headerssync.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
@@ -90,6 +91,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
                                      PeerManager::Options{
                                          .reconcile_txs = true,
                                          .deterministic_rng = true,
+                                         .headers_sync_params = FUZZ_HEADERS_SYNC_PARAMS,
                                      });
 
     connman.SetMsgProc(node.peerman.get());
