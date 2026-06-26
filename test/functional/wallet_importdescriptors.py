@@ -330,6 +330,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             error_code=-3,
             error_message='Expected number or "now" timestamp value for key. got type string')
 
+        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
+            "timestamp": -1,
+            "label": "Descriptor import test"}
+        self.test_importdesc(import_request,
+            success=False,
+            global_error=True,
+            error_code=-8,
+            error_message="Timestamp must not be negative")
+
         # # Test importing of a P2PKH descriptor
         key = get_generate_key()
         self.log.info("Should import a p2pkh descriptor")

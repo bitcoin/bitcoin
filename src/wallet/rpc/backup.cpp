@@ -142,7 +142,11 @@ static std::optional<int64_t> GetImportTimestamp(const UniValue& data)
     if (data.exists("timestamp")) {
         const UniValue& timestamp = data["timestamp"];
         if (timestamp.isNum()) {
-            return timestamp.getInt<int64_t>();
+            const int64_t value{timestamp.getInt<int64_t>()};
+            if (value < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Timestamp must not be negative");
+            }
+            return value;
         } else if (timestamp.isStr() && timestamp.get_str() == "now") {
             return std::nullopt; // std::nullopt means use the current best block's MTP time
         }
@@ -395,7 +399,6 @@ RPCMethod importdescriptors()
     LOCK(pwallet->m_relock_mutex);
 
     const UniValue& requests = main_request.params[0];
-    const int64_t minimum_timestamp = 1;
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
     bool rescan = false;
@@ -409,7 +412,7 @@ RPCMethod importdescriptors()
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
             // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request).value_or(now), minimum_timestamp);
+            const int64_t timestamp = GetImportTimestamp(request).value_or(now);
             const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
             response.push_back(result);
 
