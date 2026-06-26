@@ -395,7 +395,7 @@ RPCMethod importdescriptors()
     LOCK(pwallet->m_relock_mutex);
 
     const UniValue& requests = main_request.params[0];
-    const int64_t minimum_timestamp = 1;
+    const int64_t minimum_timestamp = 0;
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
     bool rescan = false;
