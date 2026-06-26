@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     server.StartSocketsThreads();
 
     // Prepare initial requests
-    int num_requests = 3;
+    int num_requests = 2;
     // Use keep-alive so the server holds the connection open for all requests.
     std::string keepalive_request{full_request};
     keepalive_request.replace(keepalive_request.find("Connection: close"), 17, "Connection: keep-alive");
@@ -730,7 +730,34 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     // Wait up to one minute for the last reply from the server
     std::string actual;
     char buf[0x10000] = {};
-    int attempts = 1000;
+    int attempts = 6000;
+    while (attempts > 0)
+    {
+        ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
+        if (bytes_read > 0) {
+            actual.append(buf, bytes_read);
+            if (actual.find(strprintf("height: %d", num_requests - 1)) != std::string::npos) {
+                break;
+            }
+        }
+        std::this_thread::sleep_for(10ms);
+        --attempts;
+    }
+
+    // Send the third request.
+    // If there was a race between WriteReply() in the worker thread setting m_send_ready=true
+    // and SocketHandlerConnected() in the I/O thread flushing the send buffer,
+    // then the socket would be stuck in write mode with nothing to write,
+    // the server would never read from the socket, and this request would time out.
+    // Wait a second to ensure both the worker thread and I/O thread are idle.
+    // If we send the next request too soon it might get accepted by the server before
+    // it gets wedged shut.
+    std::this_thread::sleep_for(1000ms);
+    mock_client_socket_pipes->recv.PushBytes(keepalive_request.data(), keepalive_request.size());
+    num_requests++;
+
+    // Wait up to one minute for reply
+    attempts = 6000;
     while (attempts > 0)
     {
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
