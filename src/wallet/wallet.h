@@ -1091,6 +1091,10 @@ public:
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const;
 
+    //! Reconstruct the extended private key for an HD xpub. Returns nullopt when
+    //! no descriptor has the private key, or the wallet is locked.
+    std::optional<CExtKey> GetExtKey(const CExtPubKey& xpub) const;
+
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
 };
