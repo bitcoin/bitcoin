@@ -8,6 +8,7 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <util/string.h>
+#include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -631,11 +632,20 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 
 BOOST_AUTO_TEST_CASE(http_socket_error_tests)
 {
+    // Create a tiny threadpool for the HTTPRequest handler
+    ThreadPool workers("http");
+    workers.Start(1);
+
     // Hard-code the server's request handler to respond to each request with
-    // an incremented block count.
-    int height{0};
+    // an incremented block count. Handle the replies in the worker thread.
+    std::atomic<int> height{0};
     HTTPServer server{[&](std::shared_ptr<HTTPRequest> req) {
-        req->WriteReply(HTTP_OK, strprintf("height: %d\n", height++));
+        auto item = [req, &height]() {
+            const int h = height.fetch_add(1);
+            req->WriteReply(HTTP_OK, strprintf("height: %d\n", h));
+        };
+        // Can't call BOOST_REQUIRE from worker thread
+        Assert(workers.Submit(std::move(item)));
     }};
 
     // All replies will be the same size
@@ -741,6 +751,8 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
 
     // Close the keep-alive connection
     server.DisconnectAllClients();
+
+    workers.Stop();
 
     server.InterruptNet();
     server.JoinSocketsThreads();
