@@ -415,37 +415,32 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
              *  is the number being computed. */
             double rate{0.0};
 
-            // Iterate over all {period} possible alignments of commitments w.r.t. the first batch.
-            // Since the offset is randomized, the attacker cannot know/choose it, so we try all
-            // values, computing the average attack rate over them by dividing each contribution by
-            // period.
-            for (int64_t align = 0; align < period; ++align) {
-                // These state variables capture the situation after receiving the first batch.
-                /** The number of headers received after the last commitment for an honest block
-                 *  (adding {period} before the modulo keeps the dividend non-negative). */
-                int64_t after_good_commit = HEADER_BATCH_COUNT - honest + (honest + period - align - 1) % period;
-                /** The number of forged headers in the redownload buffer. */
-                int64_t forged_in_buf = HEADER_BATCH_COUNT - honest;
-
-                // Now iterate over the next batches of headers received, adding contributions to rate.
-                while (true) {
-                    // Process the first HEADER_BATCH_COUNT headers in the buffer:
-                    const int64_t accept_forged_headers = std::max<int64_t>(forged_in_buf - bufsize, 0);
-                    forged_in_buf -= accept_forged_headers;
-                    if (accept_forged_headers) {
-                        /** The probability the attack has not been detected yet at this point. */
-                        const double prob = std::ldexp(1.0, -int(after_good_commit / period));
-                        // Update attack rate, divided by period to average over the alignments.
-                        rate += accept_forged_headers * prob / period;
-                        // If this means we exceed limit, bail out early (performance optimization).
-                        if (limit && rate >= *limit) return rate;
-                        // Stop once an upper bound on all remaining batches' contribution is
-                        // negligible compared to rate.
-                        if (future_limit * prob < 1.0e-16 * rate) break;
-                    }
-                    // Update state from a new incoming batch (which is all forged).
-                    after_good_commit += HEADER_BATCH_COUNT;
-                    forged_in_buf += HEADER_BATCH_COUNT;
+            // Now iterate over the batches of headers received, adding contributions to the rate.
+            for (int64_t batch = 0;; ++batch) {
+                /** The forged headers received so far, up to and including this batch. */
+                const int64_t forged_headers = (batch + 1) * HEADER_BATCH_COUNT - honest;
+                /** The number of forged headers that would be accepted if the commitments in this
+                 *  batch and all earlier batches verify correctly. */
+                const int accept_forged_headers = std::clamp<int>(forged_headers - bufsize, 0, HEADER_BATCH_COUNT);
+                if (accept_forged_headers > 0) {
+                    /** The minimum number of commitments that fall within the forged headers,
+                     *  independent of where those commitments fall. */
+                    const int min_commitments = forged_headers / period;
+                    /** The number of forged headers that may be covered by an extra commitment,
+                     *  depending on where those commitments fall. */
+                    const int extra = forged_headers - min_commitments * period;
+                    /** The probability this batch (and all previous ones) gets accepted, averaged
+                     *  over all places where the commitments may fall. Out of all {period} possible
+                     *  offsets for the commitments, {extra} of them have {min_commitments + 1}
+                     *  commitments, and the rest have only {min_commitments}. */
+                    const double prob = std::ldexp(1.0 - 0.5 * extra / period, -min_commitments);
+                    // Add the contribution of this batch to the attacker's accept rate.
+                    rate += accept_forged_headers * prob;
+                    // If this means we exceed limit, bail out early (performance optimization).
+                    if (limit && rate >= *limit) return rate;
+                    // Stop once an upper bound on all remaining batches' total contribution is
+                    // negligible compared to the contribution from already-processed batches.
+                    if (future_limit * prob < 1.0e-16 * rate) break;
                 }
             }
 
