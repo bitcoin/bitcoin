@@ -10,12 +10,14 @@ from test_framework.blocktools import (
 from test_framework.descriptors import (
     descsum_create,
 )
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import generate_keypair
 
 
 class ListDescriptorsTest(BitcoinTestFramework):
@@ -55,9 +57,11 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(descriptor_strings, sorted(descriptor_strings))
 
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
-        xprv = 'tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg'
-        xpub_acc = 'tpubDCMVLhErorrAGfApiJSJzEKwqeaf2z3NrkVMxgYQjZLzMjXMBeRw2muGNYbvaekAE8rUFLftyEar4LdrG2wXyyTJQZ26zptmeTEjPTaATts'
+        extended_key = ExtendedPrivateKey.generate()
+        xprv = extended_key.to_string()
+        xprv_fingerprint = extended_key._fingerprint().hex()
         hardened_path = '/84h/1h/0h'
+        xpub_acc = extended_key.derive_path(f"m{hardened_path}").pubkey().to_string()
         wallet = node.get_wallet_rpc('w2')
         wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
@@ -66,7 +70,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         expected = {
             'wallet_name': 'w2',
             'descriptors': [
-                {'desc': descsum_create('wpkh([80002067' + hardened_path + ']' + xpub_acc + '/0/*)'),
+                {'desc': descsum_create('wpkh([' + xprv_fingerprint + hardened_path + ']' + xpub_acc + '/0/*)'),
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
@@ -129,15 +133,20 @@ class ListDescriptorsTest(BitcoinTestFramework):
         self.log.info('Test taproot descriptor do not have mixed hardened derivation marker')
         node.createwallet(wallet_name='w5', descriptors=True, disable_private_keys=True)
         wallet = node.get_wallet_rpc('w5')
+        derivation_path = "/48'/1'/0'/2'"
+        xprvs = [ExtendedPrivateKey.generate() for _ in range(0, 2)]
+        xprv_fingerprints = [xprv._fingerprint().hex() for xprv in xprvs]
+        desc_xpubs = [xprv.derive_path(f"m{derivation_path}").pubkey().to_string() for xprv in xprvs]
         wallet.importdescriptors([{
-            'desc': "tr([1dce71b2/48'/1'/0'/2']tpubDEeP3GefjqbaDTTaVAF5JkXWhoFxFDXQ9KuhVrMBViFXXNR2B3Lvme2d2AoyiKfzRFZChq2AGMNbU1qTbkBMfNv7WGVXLt2pnYXY87gXqcs/0/*,and_v(v:pk([c658b283/48'/1'/0'/2']tpubDFL5wzgPBYK5pZ2Kh1T8qrxnp43kjE5CXfguZHHBrZSWpkfASy5rVfj7prh11XdqkC1P3kRwUPBeX7AHN8XBNx8UwiprnFnEm5jyswiRD4p/0/*),older(65535)))#xl20m6md",
+            'desc': descsum_create(f"tr([{xprv_fingerprints[0]}{derivation_path}]{desc_xpubs[0]}/0/*,and_v(v:pk([{xprv_fingerprints[1]}{derivation_path}]{desc_xpubs[1]}/0/*),older(65535)))"),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
+        derivation_path_alternate = "/48h/1h/0h/2h"
         expected = {
             'wallet_name': 'w5',
             'descriptors': [
                 {'active': False,
-                 'desc': 'tr([1dce71b2/48h/1h/0h/2h]tpubDEeP3GefjqbaDTTaVAF5JkXWhoFxFDXQ9KuhVrMBViFXXNR2B3Lvme2d2AoyiKfzRFZChq2AGMNbU1qTbkBMfNv7WGVXLt2pnYXY87gXqcs/0/*,and_v(v:pk([c658b283/48h/1h/0h/2h]tpubDFL5wzgPBYK5pZ2Kh1T8qrxnp43kjE5CXfguZHHBrZSWpkfASy5rVfj7prh11XdqkC1P3kRwUPBeX7AHN8XBNx8UwiprnFnEm5jyswiRD4p/0/*),older(65535)))#m4uznndk',
+                 'desc': descsum_create(f'tr([{xprv_fingerprints[0]}{derivation_path_alternate}]{desc_xpubs[0]}/0/*,and_v(v:pk([{xprv_fingerprints[1]}{derivation_path_alternate}]{desc_xpubs[1]}/0/*),older(65535)))'),
                  'timestamp': TIME_GENESIS_BLOCK,
                  'range': [0, 0],
                  'next': 0,
@@ -150,16 +159,22 @@ class ListDescriptorsTest(BitcoinTestFramework):
         node.createwallet(wallet_name='w6', blank=True)
         wallet = node.get_wallet_rpc('w6')
 
+        xprvs = []
+        xpubs = []
+        for _ in range(0, 8):
+            xprvs.append(ExtendedPrivateKey.generate().to_string())
+            xpubs.append(ExtendedPrivateKey.generate().pubkey().to_string())
+
+        _, pubkey_bytes = generate_keypair()
+        pubkey = pubkey_bytes.hex()
+
         expected_descs = {
-            descsum_create('tr(' + node.get_deterministic_priv_key().key +
-                ',{pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204)' +
-                ',pk([d34db33f/44h/0h/0h]tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0)})'),
-            descsum_create('wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,' + node.get_deterministic_priv_key().key +
-                ',tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0)))'),
-            descsum_create('tr(03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,pk(musig(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV,tpubD6NzVbkrYhZ4XcACN3PEwNjRpR1g4tZjBVk5pdMR2B6dbd3HYhdGVZNKofAiFZd9okBserZvv58A6tBX4pE64UpXGNTSesfUW7PpW36HuKz)/7/8/*))'),
-            descsum_create('tr(03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,pk(musig(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/10,tpubD6NzVbkrYhZ4XcACN3PEwNjRpR1g4tZjBVk5pdMR2B6dbd3HYhdGVZNKofAiFZd9okBserZvv58A6tBX4pE64UpXGNTSesfUW7PpW36HuKz/11)/*))'),
-            descsum_create('tr(03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,{pk(musig(tpubD6NzVbkrYhZ4Wo2WcFSgSqRD9QWkGxddo6WSqsVBx7uQ8QEtM7WncKDRjhFEexK119NigyCsFygA4b7sAPQxqebyFGAZ9XVV1BtcgNzbCRR,tprv8ZgxMBicQKsPen4PGtDwURYnCtVMDejyE8vVwMGhQWfVqB2FBPdekhTacDW4vmsKTsgC1wsncVqXiZdX2YFGAnKoLXYf42M78fQJFzuDYFN)/12/*),pk(musig(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV,tpubD6NzVbkrYhZ4XWb6fGPjyhgLxapUhXszv7ehQYrQWDgDX4nYWcNcbgWcM2RhYo9s2mbZcfZJ8t5LzYcr24FK79zVybsw5Qj3Rtqug8jpJMy)/13/*)})'),
-            descsum_create('tr(03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,{pk(musig(tpubD6NzVbkrYhZ4Wo2WcFSgSqRD9QWkGxddo6WSqsVBx7uQ8QEtM7WncKDRjhFEexK119NigyCsFygA4b7sAPQxqebyFGAZ9XVV1BtcgNzbCRR,tpubD6NzVbkrYhZ4Wc3i6L6N1Pp7cyVeyMcdLrFGXGDGzCfdCa5F4Zs3EY46N72Ws8QDEUYBVwXfDfda2UKSseSdU1fsBegJBhGCZyxkf28bkQ6)/12/*),pk(musig(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV,tpubD6NzVbkrYhZ4XWb6fGPjyhgLxapUhXszv7ehQYrQWDgDX4nYWcNcbgWcM2RhYo9s2mbZcfZJ8t5LzYcr24FK79zVybsw5Qj3Rtqug8jpJMy)/13/*)})')
+            descsum_create(f'tr({node.get_deterministic_priv_key().key},{{pk({pubkey}),pk([d34db33f/44h/0h/0h]{xpubs[0]}/0)}})'),
+            descsum_create(f'wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,{node.get_deterministic_priv_key().key},{xpubs[1]}/0)))'),
+            descsum_create(f'tr({pubkey},pk(musig({xprvs[0]},{xpubs[2]})/7/8/*))'),
+            descsum_create(f'tr({pubkey},pk(musig({xprvs[1]}/10,{xpubs[3]}/11)/*))'),
+            descsum_create(f'tr({pubkey},{{pk(musig({xpubs[4]},{xprvs[2]})/12/*),pk(musig({xprvs[3]},{xpubs[4]})/13/*)}})'),
+            descsum_create(f'tr({pubkey},{{pk(musig({xpubs[5]},{xpubs[6]})/12/*),pk(musig({xprvs[4]},{xpubs[7]})/13/*)}})')
         }
 
         descs_to_import = []
