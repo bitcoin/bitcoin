@@ -50,11 +50,11 @@ enum class HTTPRequestMethod {
     PUT
 };
 
-namespace http_bitcoin {
+namespace bitcoin_http {
     class HTTPRequest;
 }
 /** Handler for requests to a certain HTTP path */
-using HTTPRequestHandler = std::function<void(http_bitcoin::HTTPRequest* req, const std::string&)>;
+using HTTPRequestHandler = std::function<void(bitcoin_http::HTTPRequest* req, const std::string&)>;
 
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
@@ -64,7 +64,7 @@ void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPR
 /** Unregister handler for prefix */
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
-namespace http_bitcoin {
+namespace bitcoin_http {
 using util::LineReader;
 
 //! Shortest valid request line, used by libevent in evhttp_parse_request_line()
@@ -577,6 +577,6 @@ void InterruptHTTPServer();
 
 /** Stop HTTP server */
 void StopHTTPServer();
-} // namespace http_bitcoin
+} // namespace bitcoin_http
 
 #endif // BITCOIN_HTTPSERVER_H

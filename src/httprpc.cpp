@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-using http_bitcoin::HTTPRequest;
+using bitcoin_http::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 

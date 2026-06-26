@@ -12,14 +12,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-using http_bitcoin::GetQueryParameterFromUri;
-using http_bitcoin::HTTPHeaders;
-using http_bitcoin::HTTPRemoteClient;
-using http_bitcoin::HTTPRequest;
-using http_bitcoin::HTTPResponse;
-using http_bitcoin::HTTPServer;
-using http_bitcoin::MAX_BODY_SIZE;
-using http_bitcoin::MAX_HEADERS_SIZE;
+using bitcoin_http::GetQueryParameterFromUri;
+using bitcoin_http::HTTPHeaders;
+using bitcoin_http::HTTPRemoteClient;
+using bitcoin_http::HTTPRequest;
+using bitcoin_http::HTTPResponse;
+using bitcoin_http::HTTPServer;
+using bitcoin_http::MAX_BODY_SIZE;
+using bitcoin_http::MAX_HEADERS_SIZE;
 using util::LineReader;
 
 // HTTP request captured from bitcoin-cli
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         LineReader reader(request, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), http_bitcoin::ContentTooLargeError, HasReason{"Max body size exceeded"});
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), bitcoin_http::ContentTooLargeError, HasReason{"Max body size exceeded"});
     }
     {
         // Content-Length exactly on the limit
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         LineReader reader(excessive_chunk_size, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), http_bitcoin::ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), bitcoin_http::ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
     }
     {
         // Allow (but ignore) Chunk Extensions
