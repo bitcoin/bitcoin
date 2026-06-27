@@ -164,6 +164,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     FakeNodeClock clock{1610000000s};
+    FakeSteadyClock steady_clock;
 
     auto setup = g_setup;
     auto& mempool = *setup->m_node.mempool;
@@ -189,7 +190,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
     std::vector<CNode*> peers;
     for (int i = 0; i < 4; ++i) {
-        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
+        peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, steady_clock, i).release());
         CNode& p2p_node = *peers.back();
         FillNode(fuzzed_data_provider, connman, p2p_node);
         connman.AddTestNode(p2p_node);

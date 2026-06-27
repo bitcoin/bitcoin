@@ -111,13 +111,12 @@ P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcep
 template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 
-FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
+FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock)
     : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
       m_fuzzed_data_provider{fuzzed_data_provider},
       m_selectable{fuzzed_data_provider.ConsumeBool()},
-      m_time{MockableSteadyClock::INITIAL_MOCK_TIME}
+      m_clock{clock}
 {
-    ElapseTime(std::chrono::seconds(0)); // start mocking the steady clock.
 }
 
 FuzzedSock::~FuzzedSock()
@@ -127,12 +126,6 @@ FuzzedSock::~FuzzedSock()
     // Avoid closing an arbitrary file descriptor (m_socket is just a random very high number which
     // theoretically may concide with a real opened file descriptor).
     m_socket = INVALID_SOCKET;
-}
-
-void FuzzedSock::ElapseTime(std::chrono::milliseconds duration) const
-{
-    m_time += duration;
-    MockableSteadyClock::SetMockTime(m_time);
 }
 
 FuzzedSock& FuzzedSock::operator=(Sock&& other)
@@ -340,7 +333,7 @@ std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) co
             }
         }
     }
-    return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
+    return std::make_unique<FuzzedSock>(m_fuzzed_data_provider, m_clock);
 }
 
 int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
@@ -428,7 +421,7 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         // FuzzedDataProvider runs out of data.
         *occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : requested;
     }
-    ElapseTime(timeout);
+    m_clock += timeout;
     return true;
 }
 
@@ -441,7 +434,7 @@ bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& even
         // FuzzedDataProvider runs out of data.
         events.occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : events.requested;
     }
-    ElapseTime(timeout);
+    m_clock += timeout;
     return true;
 }
 

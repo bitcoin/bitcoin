@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/time.h>
 
 #include <common/pcp.h>
 #include <logging.h>
@@ -31,11 +32,12 @@ void port_map_target_init()
 FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    FakeSteadyClock steady_clock;
 
     // Create a mocked socket between random (and potentially invalid) client and gateway addresses.
     CreateSock = [&](int domain, int type, int protocol) {
         if ((domain == AF_INET || domain == AF_INET6) && type == SOCK_DGRAM && protocol == IPPROTO_UDP) {
-            return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+            return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
         }
         return std::unique_ptr<FuzzedSock>();
     };
@@ -59,11 +61,12 @@ FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
 FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    FakeSteadyClock steady_clock;
 
     // Create a mocked socket between random (and potentially invalid) client and gateway addresses.
     CreateSock = [&](int domain, int type, int protocol) {
         if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) {
-            return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+            return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
         }
         return std::unique_ptr<FuzzedSock>();
     };
