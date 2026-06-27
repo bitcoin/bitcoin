@@ -8,10 +8,9 @@
 
 #include <zmq.h>
 
-#include <cerrno>
 #include <string>
 
 void zmqError(const std::string& str)
 {
-    LogDebug(BCLog::ZMQ, "Error: %s, msg: %s\n", str, zmq_strerror(errno));
+    LogDebug(BCLog::ZMQ, "Error: %s, msg: %s\n", str, zmq_strerror(zmq_errno()));
 }

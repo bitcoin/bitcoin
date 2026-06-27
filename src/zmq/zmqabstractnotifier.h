@@ -33,6 +33,7 @@ public:
     void SetType(const std::string &t) { type = t; }
     std::string GetAddress() const { return address; }
     void SetAddress(const std::string &a) { address = a; }
+    const std::string& GetFatalError() const { return m_fatal_error; }
     int GetOutboundMessageHighWaterMark() const { return outbound_message_high_water_mark; }
     void SetOutboundMessageHighWaterMark(const int sndhwm) {
         if (sndhwm >= 0) {
@@ -60,6 +61,7 @@ protected:
     void* psocket{nullptr};
     std::string type;
     std::string address;
+    std::string m_fatal_error;
     int outbound_message_high_water_mark{DEFAULT_ZMQ_SNDHWM}; // aka SNDHWM
 };
 

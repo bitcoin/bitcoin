@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
 import os
+import re
 import struct
 import tempfile
 from io import BytesIO
@@ -17,6 +18,7 @@ from test_framework.blocktools import (
     create_block,
 )
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 from test_framework.messages import (
     CBlock,
     hash256,
@@ -116,9 +118,10 @@ class ZMQTest (BitcoinTestFramework):
         self.skip_if_no_bitcoind_zmq()
 
     def run_test(self):
-        self.wallet = MiniWallet(self.nodes[0])
         self.ctx = zmq.Context()
         try:
+            self.test_address_already_in_use()
+            self.wallet = MiniWallet(self.nodes[0])
             self.test_basic()
             if test_unix_socket():
                 self.test_basic(unix=True)
@@ -180,6 +183,21 @@ class ZMQTest (BitcoinTestFramework):
             self.sync_blocks()
 
         return subscribers
+
+    def test_address_already_in_use(self):
+        self.log.info("Test that ZMQ fails startup if the address is already in use")
+        address = f"tcp://127.0.0.1:{self.zmq_port_base + 3}"
+        self.restart_node(0, [f"-zmqpubrawblock={address}"])
+        self.stop_node(1)
+
+        self.nodes[1].assert_start_raises_init_error(
+            extra_args=[f"-zmqpubrawblock={address}"],
+            expected_msg=re.escape(f"Error: Unable to bind ZMQ address {address}"),
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
+        self.restart_node(0)
+        self.start_node(1)
 
     def test_basic(self, unix = False):
         self.log.info(f"Running basic test with {'ipc' if unix else 'tcp'} protocol")
