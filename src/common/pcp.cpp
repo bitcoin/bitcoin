@@ -247,7 +247,7 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
         while ((cur_time = time_point_cast<milliseconds>(MockableSteadyClock::now())) < deadline) {
             if (interrupt) return std::nullopt;
             Sock::Event occurred = 0;
-            if (!sock.Wait(deadline - cur_time, Sock::RECV, &occurred)) {
+            if (!sock.Wait(deadline - cur_time, Sock::RecvEvent, &occurred)) {
                 LogWarning("%s: Could not wait on socket: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
                 return std::nullopt; // Network-level error, probably no use retrying.
             }

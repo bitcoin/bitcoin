@@ -191,14 +191,14 @@ public:
               Event* occurred = nullptr) const override
     {
         // Only handles receive events.
-        if (AtEndOfScript() || requested != Sock::RECV) {
+        if (AtEndOfScript() || requested != Sock::RecvEvent) {
             m_clock += timeout;
         } else {
             std::chrono::milliseconds delay = std::min(m_time_left, timeout);
             m_clock += delay;
             m_time_left -= delay;
             if (CurOp().op == TestOp::RECV && m_time_left == 0s && occurred != nullptr) {
-                *occurred = Sock::RECV;
+                *occurred = Sock::RecvEvent;
             }
             if (CurOp().op == TestOp::NOP) {
                 // This was a pure delay operation, move to the next op.

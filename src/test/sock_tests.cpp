@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(wait)
 {
     TcpSocketPair socks = TcpSocketPair{};
 
-    std::thread waiter([&socks]() { (void)socks.receiver.Wait(24h, Sock::RECV); });
+    std::thread waiter([&socks]() { (void)socks.receiver.Wait(24h, Sock::RecvEvent); });
 
     BOOST_REQUIRE_EQUAL(socks.sender.Send("a", 1, 0), 1);
 

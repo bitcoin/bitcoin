@@ -333,8 +333,8 @@ private:
     struct IOReadiness {
         /**
          * Map of socket -> socket events. For example:
-         * socket1 -> { requested = SEND|RECV, occurred = RECV }
-         * socket2 -> { requested = SEND, occurred = SEND }
+         * socket1 -> { requested = SendEvent|RecvEvent, occurred = RecvEvent }
+         * socket2 -> { requested = SendEvent, occurred = SendEvent }
          */
         Sock::EventsPerSock events_per_sock;
 

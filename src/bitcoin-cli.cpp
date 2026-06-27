@@ -912,11 +912,11 @@ bool HTTPClient::SendRequest(std::string_view request)
         Sock::Event event{0};
         auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
             deadline - std::chrono::steady_clock::now());
-        if (time_left.count() <= 0 || !m_socket->Wait(time_left, Sock::SEND, &event)) {
+        if (time_left.count() <= 0 || !m_socket->Wait(time_left, Sock::SendEvent, &event)) {
             return false;
         }
 
-        if (!(event & Sock::SEND)) {
+        if (!(event & Sock::SendEvent)) {
             continue;
         }
 
@@ -1122,10 +1122,10 @@ std::optional<std::string> HTTPClient::Recv(const std::chrono::time_point<std::c
 {
     auto wait_for_readable{[this](std::chrono::milliseconds timeout) -> bool {
         Sock::Event event{0};
-        if (!m_socket->Wait(timeout, Sock::RECV, &event)) {
+        if (!m_socket->Wait(timeout, Sock::RecvEvent, &event)) {
             return false;
         }
-        return (event & Sock::RECV) != 0;
+        return (event & Sock::RecvEvent) != 0;
     }};
 
     auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -2089,7 +2089,7 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
     Sock::EventsPerSock events_per_sock;
 
     for (const ListenSocket& hListenSocket : vhListenSocket) {
-        events_per_sock.emplace(hListenSocket.sock, Sock::Events{Sock::RECV});
+        events_per_sock.emplace(hListenSocket.sock, Sock::Events{Sock::RecvEvent});
     }
 
     for (CNode* pnode : nodes) {
@@ -2107,7 +2107,7 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
 
         LOCK(pnode->m_sock_mutex);
         if (pnode->m_sock) {
-            Sock::Event event = (select_send ? Sock::SEND : 0) | (select_recv ? Sock::RECV : 0);
+            Sock::Event event = (select_send ? Sock::SendEvent : 0) | (select_recv ? Sock::RecvEvent : 0);
             events_per_sock.emplace(pnode->m_sock, Sock::Events{event});
         }
     }
@@ -2169,9 +2169,9 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
             const auto it = events_per_sock.find(pnode->m_sock);
             if (it != events_per_sock.end()) {
-                recvSet = it->second.occurred & Sock::RECV;
-                sendSet = it->second.occurred & Sock::SEND;
-                errorSet = it->second.occurred & Sock::ERR;
+                recvSet = it->second.occurred & Sock::RecvEvent;
+                sendSet = it->second.occurred & Sock::SendEvent;
+                errorSet = it->second.occurred & Sock::ErrorEvent;
             }
         }
 
@@ -2255,7 +2255,7 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
             return;
         }
         const auto it = events_per_sock.find(listen_socket.sock);
-        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
+        if (it != events_per_sock.end() && it->second.occurred & Sock::RecvEvent) {
             AcceptConnection(listen_socket);
         }
     }

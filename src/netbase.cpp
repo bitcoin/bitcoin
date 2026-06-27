@@ -333,7 +333,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::m
                 // we're approaching the end of the specified total timeout
                 const auto remaining = std::chrono::milliseconds{endTime - curTime};
                 const auto timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-                if (!sock.Wait(timeout, Sock::RECV)) {
+                if (!sock.Wait(timeout, Sock::RecvEvent)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {
@@ -603,7 +603,7 @@ static bool ConnectToSocket(const Sock& sock,
             // Connection didn't actually fail, but is being established
             // asynchronously. Thus, use async I/O api (select/poll)
             // synchronously to check for successful connection with a timeout.
-            const Sock::Event requested = Sock::RECV | Sock::SEND;
+            const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent;
             Sock::Event occurred;
             if (!sock.Wait(timeout, requested, &occurred)) {
                 LogInfo("wait for connect to %s failed: %s\n",
