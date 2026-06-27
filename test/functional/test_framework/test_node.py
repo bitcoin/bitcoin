@@ -946,6 +946,13 @@ class TestNodeCLI():
             if match:
                 code, message = match.groups()
                 raise JSONRPCException(dict(code=int(code), message=message))
+            match = re.match(r'error: Server response: (.*)\n?$', cli_stderr)
+            if match:
+                message = match.group(1)
+                raise JSONRPCException(dict(
+                    code=-342,
+                    message=f"non-JSON HTTP response with '503 Service Unavailable' from server: {message}",
+                ))
             # Ignore cli_stdout, raise with cli_stderr
             raise subprocess.CalledProcessError(returncode, p_args, output=cli_stderr)
         try:
