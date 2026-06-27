@@ -8,10 +8,9 @@ import json
 import os
 from dataclasses import dataclass
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than_or_equal
+from test_framework.util import JSONRPCException, assert_equal, assert_greater_than_or_equal
 from threading import Thread
 from typing import Optional
-import subprocess
 
 
 RPC_INVALID_PARAMETER      = -8
@@ -83,8 +82,8 @@ def test_work_queue_getblock(node, got_exceeded_error):
     while not got_exceeded_error:
         try:
             node.cli("waitfornewblock", "500").send_cli()
-        except subprocess.CalledProcessError as e:
-            assert_equal(e.output, 'error: Server response: Work queue depth exceeded\n')
+        except JSONRPCException as e:
+            assert_equal(e.error["message"], "non-JSON HTTP response with '503 Service Unavailable' from server: Work queue depth exceeded")
             got_exceeded_error.append(True)
 
 
