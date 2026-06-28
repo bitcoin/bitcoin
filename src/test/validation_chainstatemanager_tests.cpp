@@ -16,11 +16,11 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
-#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/result.h>
+#include <util/time.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -173,19 +173,21 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTestingSetup)
 {
-    // Freeze the clock to avoid a race where Now<NodeSeconds>() in test setup
-    // and Now<NodeSeconds>() inside IsTipRecent() straddle a second boundary,
-    // causing a spurious failure in the tip_recent=true case.
-    FakeNodeClock clock{};
-
     CBlockIndex tip;
     ChainstateManager& chainman{*Assert(m_node.chainman)};
+    // Freeze the chainman's clock so the Now() call inside UpdateIBDStatus
+    // always agrees with the tip time we set below, eliminating any race
+    // across a second boundary that would cause the tip_recent=true case to
+    // spuriously fail.
+    const NodeSeconds frozen_now{Now<NodeSeconds>()};
+    chainman.m_clock_now_seconds.store(frozen_now.time_since_epoch(), std::memory_order_relaxed);
+
     auto apply{[&](bool cached_is_ibd, bool loading_blocks, bool tip_exists, bool enough_work, bool tip_recent) {
         LOCK(::cs_main);
         chainman.ResetChainstates();
         chainman.InitializeChainstate(m_node.mempool.get());
 
-        const auto recent_time{Now<NodeSeconds>() - chainman.m_options.max_tip_age};
+        const auto recent_time{frozen_now - chainman.m_options.max_tip_age};
 
         chainman.m_cached_is_ibd.store(cached_is_ibd, std::memory_order_relaxed);
         chainman.m_blockman.m_importing = loading_blocks;
