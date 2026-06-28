@@ -40,9 +40,9 @@ private:
     ClientModel* m_client_model;
 
     enum class StatusLevel {
-        INFO,
-        WARN,
-        ERR
+        Info,
+        Warn,
+        Error
     };
 
     size_t couldSignInputs(const PartiallySignedTransaction &psbtx);

@@ -841,9 +841,9 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         }
         const std::shared_ptr<HTTPRemoteClient>& client{it->second};
 
-        bool send_ready = events.occurred & Sock::SEND;
-        bool recv_ready = events.occurred & Sock::RECV;
-        bool err_ready = events.occurred & Sock::ERR;
+        bool send_ready = events.occurred & Sock::SendEvent;
+        bool recv_ready = events.occurred & Sock::RecvEvent;
+        bool err_ready = events.occurred & Sock::ErrorEvent;
 
         if (send_ready) {
             // Try to send as much data as is ready for this client.
@@ -909,7 +909,7 @@ void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_so
             return;
         }
         const auto it = events_per_sock.find(sock);
-        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
+        if (it != events_per_sock.end() && it->second.occurred & Sock::RecvEvent) {
             CService addr_accepted;
 
             auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
@@ -926,7 +926,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
     IOReadiness io_readiness;
 
     for (const auto& sock : m_listen) {
-        io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RECV});
+        io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RecvEvent});
     }
 
     for (const auto& http_client : m_connected) {
@@ -935,7 +935,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
 
         // Check if client is ready to send data. Don't try to receive again
         // until the send buffer is cleared (all data sent to client).
-        Sock::Event event = (http_client->m_send_ready ? Sock::SEND : Sock::RECV);
+        Sock::Event event = (http_client->m_send_ready ? Sock::SendEvent : Sock::RecvEvent);
         io_readiness.events_per_sock.emplace(sock, Sock::Events{event});
         io_readiness.httpclients_per_sock.emplace(sock, http_client);
     }

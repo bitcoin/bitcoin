@@ -133,16 +133,16 @@ bool TorControlConnection::WaitForData(std::chrono::milliseconds timeout)
     if (!m_sock) return false;
 
     Sock::Event event{0};
-    if (!m_sock->Wait(timeout, Sock::RECV, &event)) {
+    if (!m_sock->Wait(timeout, Sock::RecvEvent, &event)) {
         return false;
     }
-    if (event & Sock::ERR) {
+    if (event & Sock::ErrorEvent) {
         LogDebug(BCLog::TOR, "Socket error detected");
         Disconnect();
         return false;
     }
 
-    return (event & Sock::RECV);
+    return (event & Sock::RecvEvent);
 }
 
 bool TorControlConnection::ReceiveAndProcess()
