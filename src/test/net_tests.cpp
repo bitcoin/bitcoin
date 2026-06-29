@@ -1664,4 +1664,41 @@ BOOST_AUTO_TEST_CASE(v2_short_id_version_negotiation)
     }
 }
 
+//! Regression test for the ThreadSocketHandler busy-loop on receive-paused peers.
+//!
+//! CConnman::SocketHandler() polls sockets with a zero timeout (its "only_poll" fast path)
+//! whenever a node has actionable receive work, so that sockets with buffered data keep getting
+//! drained. A receive-paused peer (fPauseRecv) is skipped by the receive path yet lingers in the
+//! receivable set with its readable flag set, so it must not be counted as actionable work --
+//! otherwise the loop would spin at 100% CPU for the whole pause window. HasUnpausedReceivableNode()
+//! encodes that rule; verify it ignores paused nodes but still reports genuinely drainable ones.
+BOOST_AUTO_TEST_CASE(socket_handler_skips_receive_paused_nodes)
+{
+    auto make_node = [](NodeId id) {
+        return std::make_unique<CNode>(
+            id, /*sock=*/nullptr,
+            CAddress{CService{}, NODE_NONE}, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0,
+            CAddress{}, /*addrNameIn=*/std::string{},
+            ConnectionType::INBOUND, /*inbound_onion=*/false);
+    };
+    auto paused = make_node(1);
+    auto active = make_node(2);
+    paused->fPauseRecv = true;
+    active->fPauseRecv = false;
+
+    std::unordered_map<NodeId, CNode*> receivable;
+    // No receivable nodes -> nothing to drain.
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+    // A lone receive-paused node must NOT count as work (this is the bug being guarded against).
+    receivable.emplace(paused->GetId(), paused.get());
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+    // A node that can actually be drained does count as work.
+    receivable.emplace(active->GetId(), active.get());
+    BOOST_CHECK(HasUnpausedReceivableNode(receivable));
+    // Once the paused node is unpaused (drained by the message handler), it counts again.
+    receivable.erase(active->GetId());
+    paused->fPauseRecv = false;
+    BOOST_CHECK(HasUnpausedReceivableNode(receivable));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -2379,6 +2379,16 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
     return events_per_sock;
 }
 
+bool HasUnpausedReceivableNode(const std::unordered_map<NodeId, CNode*>& receivable_nodes)
+{
+    for (const auto& entry : receivable_nodes) {
+        if (!entry.second->fPauseRecv) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void CConnman::SocketHandler(CMasternodeSync& mn_sync)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
@@ -2389,7 +2399,11 @@ void CConnman::SocketHandler(CMasternodeSync& mn_sync)
         // Check if we have work to do and thus should avoid waiting for events
         READ_LOCK(m_nodes_mutex); // We acquire this to avoid the pointers stored in mapSendableNodes and mapReceivableNodes being invalidated by ThreadSocketHandler
         LOCK(cs_sendable_receivable_nodes);
-        if (!mapReceivableNodes.empty()) {
+        // A receive-paused node lingers here with its readable flag set but is never drained, so
+        // it must not count as work; otherwise this polls with a zero timeout every iteration and
+        // ThreadSocketHandler busy-loops at 100% CPU for the whole (remotely triggerable) pause
+        // window. See HasUnpausedReceivableNode().
+        if (HasUnpausedReceivableNode(mapReceivableNodes)) {
             return true;
         }
         for (const auto& p : mapSendableNodes) {

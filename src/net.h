@@ -49,6 +49,7 @@
 #include <queue>
 #include <thread>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -1177,6 +1178,16 @@ protected:
      */
     ~NetEventsInterface() = default;
 };
+
+/**
+ * Returns true if any node in `receivable_nodes` can currently be drained: it has buffered data
+ * to read (so it is in the receivable set) and is not receive-paused. A receive-paused node
+ * lingers in the set with its readable flag set but is skipped by the receive path, so it must
+ * NOT be treated as actionable work -- otherwise CConnman::SocketHandler() polls with a zero
+ * timeout on every iteration and ThreadSocketHandler busy-loops at 100% CPU for the whole,
+ * remotely triggerable, pause window.
+ */
+bool HasUnpausedReceivableNode(const std::unordered_map<NodeId, CNode*>& receivable_nodes);
 
 class CConnman
 {
