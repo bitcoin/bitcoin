@@ -1660,8 +1660,9 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
     size_t num_for_rebroadcast{0};
     const auto stale_txs = m_tx_for_private_broadcast.GetStale();
     if (!stale_txs.empty()) {
-        LOCK(cs_main);
         for (const auto& stale_tx : stale_txs) {
+            // Only hold lock per single submission
+            LOCK(cs_main);
             auto mempool_acceptable = m_chainman.ProcessTransaction(stale_tx, /*test_accept=*/true);
             if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 LogDebug(BCLog::PRIVBROADCAST,
