@@ -383,7 +383,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 
     if (required < 1 || required > MAX_PUBKEYS_PER_MULTISIG || numkeys < 1 || numkeys > MAX_PUBKEYS_PER_MULTISIG || numkeys < required)
         throw std::runtime_error("multisig parameter mismatch. Required " \
-                            + ToString(required) + " of " + ToString(numkeys) + "signatures.");
+                            + ToString(required) + " of " + ToString(numkeys) + " signatures.");
 
     // extract and validate PUBKEYs
     std::vector<CPubKey> pubkeys;
