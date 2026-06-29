@@ -16,6 +16,7 @@ import subprocess
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
+from pathlib import Path
 
 START_HEIGHT = 199
 # Hardcoded in regtest chainparams
@@ -36,6 +37,29 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         including blocks the other hasn't yet seen."""
         self.add_nodes(2)
         self.start_nodes()
+
+    def writer_lock_test(self):
+        assert self.nodes[0].is_node_stopped() is False
+
+        def run_chainstate(datadir):
+            return subprocess.run(
+                self.get_binaries().chainstate_argv() + ["-regtest", datadir],
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+            )
+
+        self.log.info("Test kernel process refuses a datadir owned by a running node")
+        proc = run_chainstate(self.nodes[0].chain_path)
+        assert proc.returncode != 0
+        expected_message = "Failed to create chainstate manager: Fatal LevelDB error: IO error"
+        assert expected_message in proc.stdout
+
+        self.log.info("Test kernel process on an unrelated datadir is unaffected")
+        other_datadir = Path(self.options.tmpdir) / "chainstate_other"
+        proc = run_chainstate(other_datadir)
+        assert proc.returncode == 0
+        assert expected_message not in proc.stdout
 
     def generate_snapshot_chain(self):
         self.log.info(f"Generate deterministic chain up to block {SNAPSHOT_BASE_BLOCK_HEIGHT} for node0 while node1 disconnected")
@@ -98,6 +122,7 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         self.add_block(datadir, n0.getblock(new_tip_hash, 0), expected_stdout="Block tip changed")
 
     def run_test(self):
+        self.writer_lock_test()
         dump_output = self.generate_snapshot_chain()
         self.basic_test()
         self.assumeutxo_test(dump_output['path'])
