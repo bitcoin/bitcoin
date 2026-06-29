@@ -4398,7 +4398,14 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     // the block files may be pruned, so we can just call this on one
     // chainstate (particularly if we haven't implemented pruning with
     // background validation yet).
-    ActiveChainstate().FlushStateToDisk(state, FlushStateMode::NONE);
+    //
+    // Flush errors (e.g. low disk space during pruning) are ignored, so that
+    // callers can't mistreat a flush failure as a block validation failure.
+    // The fatal error notification inside FlushStateToDisk still fires,
+    // so the node will shut down on unrecoverable flush errors regardless.
+    // For state a dummy value is used, and the return value is ignored.
+    BlockValidationState flush_state_ignore;
+    (void)ActiveChainstate().FlushStateToDisk(flush_state_ignore, FlushStateMode::NONE);
 
     CheckBlockIndex();
 
