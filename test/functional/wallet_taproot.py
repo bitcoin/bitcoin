@@ -64,9 +64,6 @@ class WalletTaprootTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-    def init_wallet(self, *, node):
-        pass
-
     @staticmethod
     def make_desc(pattern, privmap, keys, pub_only = False):
         pat = pattern.replace("$H", H_POINT)
