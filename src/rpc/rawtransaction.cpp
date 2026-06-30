@@ -153,7 +153,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // Look in the txindex
         if (g_txindex) {
             uint256 block_hash;
-            g_txindex->FindTx(psbt_input.prev_txid, block_hash, tx);
+            if (!g_txindex->FindTx(psbt_input.prev_txid, block_hash, tx)) tx.reset();
         }
         // If we still don't have it look in the mempool
         if (!tx) {
