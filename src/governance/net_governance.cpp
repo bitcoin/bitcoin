@@ -75,6 +75,15 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
         vRecv >> nProp;
         vRecv >> filter;
 
+        // The per-object vote-sync path tests this peer-supplied filter against every
+        // cached vote (CBloomFilter::contains() loops nHashFuncs times). An unbounded
+        // nHashFuncs would force billions of MurmurHash3 evaluations per vote while the
+        // message-processing mutex is held. Enforce the same bound filterload uses.
+        if (!filter.IsWithinSizeConstraints()) {
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 100);
+            return;
+        }
+
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
             // Full sync of all governance objects
