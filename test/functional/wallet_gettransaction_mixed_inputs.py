@@ -397,7 +397,77 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
 
         self.test_zero_value_foreign_anchor_input(node, alice, funder)
         self.test_late_zero_value_foreign_parent_import(node, funder, alice)
+        self.test_known_nonzero_foreign_input(node, funder, alice, bob)
         self.test_wallet_change_output(node, funder, alice, bob)
+
+    def test_known_nonzero_foreign_input(self, node, funder, alice, bob):
+        self.log.info("Test known nonzero foreign input values keep accounting conservative")
+        # Refill alice, then have alice fund bob so that the funding transaction
+        # of bob's input is in alice's wallet and its value is known to alice.
+        funder.sendtoaddress(alice.getnewaddress(), Decimal("1.0"))
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        bob_funding_txid = alice.sendtoaddress(bob.getnewaddress(), Decimal("0.3"))
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        before_blockhash = node.getbestblockhash()
+
+        # Premise: alice's wallet contains the transaction funding bob's input
+        assert_equal(alice.gettransaction(bob_funding_txid)["txid"], bob_funding_txid)
+
+        alice_credit = Decimal("0.2")
+        fee = Decimal("0.00002000")
+        alice_input = next(u for u in alice.listunspent() if u["amount"] >= alice_credit)
+        bob_input = next(u for u in bob.listunspent() if u["txid"] == bob_funding_txid)
+        bob_credit = alice_input["amount"] + bob_input["amount"] - alice_credit - fee
+
+        label = "alice_known_foreign"
+        alice_output = alice.getnewaddress(label)
+        bob_output = bob.getnewaddress()
+
+        raw_tx = node.createrawtransaction(
+            inputs=[
+                {"txid": alice_input["txid"], "vout": alice_input["vout"]},
+                {"txid": bob_input["txid"], "vout": bob_input["vout"]},
+            ],
+            outputs={
+                alice_output: alice_credit,
+                bob_output: bob_credit,
+            },
+        )
+        raw_tx = alice.signrawtransactionwithwallet(raw_tx)["hex"]
+        raw_tx = bob.signrawtransactionwithwallet(raw_tx)["hex"]
+
+        txid = node.sendrawtransaction(raw_tx)
+        node.syncwithvalidationinterfacequeue()
+        assert_equal(node.getmempoolentry(txid)["fees"]["base"], fee)
+
+        # Although alice's wallet can compute the total fee (it knows every
+        # input value), the wallet's fee share is still unattributable, so
+        # the transaction must be reported with the conservative aggregate send view.
+        alice_vout = find_vout_for_address(node, txid, alice_output)
+        self.assert_wallet_view(
+            wallet_name="alice",
+            wallet=alice,
+            txid=txid,
+            label=label,
+            address=alice_output,
+            vout=alice_vout,
+            wallet_debit=alice_input["amount"],
+            wallet_credit=alice_credit,
+            before_blockhash=before_blockhash,
+        )
+
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        self.assert_wallet_view(
+            wallet_name="alice",
+            wallet=alice,
+            txid=txid,
+            label=label,
+            address=alice_output,
+            vout=alice_vout,
+            wallet_debit=alice_input["amount"],
+            wallet_credit=alice_credit,
+            before_blockhash=before_blockhash,
+        )
 
     def test_wallet_change_output(self, node, funder, alice, bob):
         self.log.info("Test a wallet-owned change output in a conservative mixed-input transaction is reported as a receive entry")
