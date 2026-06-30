@@ -186,6 +186,7 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
         )
 
         self.test_wallet_change_output(node, funder, alice, bob)
+        self.test_all_outputs_wallet_owned(node, funder, alice, bob)
 
     def test_wallet_change_output(self, node, funder, alice, bob):
         self.log.info("Test a wallet-owned change output in a conservative mixed-input transaction is reported as a receive entry")
@@ -249,6 +250,88 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
         self.generatetoaddress(node, 1, funder.getnewaddress())
         confirmed = [entry for entry in alice.listtransactions("*", 100) if entry["txid"] == txid]
         self.assert_mixed_history_entries(confirmed, txid, expected_net, alice_change_address, change_vout, alice_debit, alice_credit)
+
+    def test_all_outputs_wallet_owned(self, node, funder, alice, bob):
+        """Check mixed-input history when every output belongs to the wallet.
+
+        Vary the fee to cover positive, zero, and negative net changes. Verify
+        that the aggregate send and two labeled receives sum to the net change,
+        preserving output metadata before and after confirmation.
+        """
+        wallet_debit = Decimal("1.00000000")
+        foreign_amount = Decimal("0.00002000")
+        for case, expected_net in [
+            ("positive", Decimal("0.00001000")),
+            ("zero", Decimal("0.00000000")),
+            ("negative", Decimal("-0.00001000")),
+        ]:
+            self.log.info(f"Test all outputs wallet-owned with {case} net change")
+            # Both inputs share a funding transaction, so alice knows the foreign
+            # input's value. The wallet's fee share still cannot be determined.
+            funding_txid = funder.sendmany("", {
+                alice.getnewaddress(): wallet_debit,
+                bob.getnewaddress(): foreign_amount,
+            })
+            self.generatetoaddress(node, 1, funder.getnewaddress())
+            before_blockhash = node.getbestblockhash()
+            alice_input = next(u for u in alice.listunspent() if u["txid"] == funding_txid)
+            bob_input = next(u for u in bob.listunspent() if u["txid"] == funding_txid)
+
+            wallet_credit = wallet_debit + expected_net
+            outputs = {}
+            for i, amount in enumerate((Decimal("0.4"), wallet_credit - Decimal("0.4"))):
+                label = f"all_owned_{case}_{i}"
+                outputs[alice.getnewaddress(label)] = (amount, label)
+            raw_tx = node.createrawtransaction(
+                inputs=[
+                    {"txid": funding_txid, "vout": alice_input["vout"]},
+                    {"txid": funding_txid, "vout": bob_input["vout"]},
+                ],
+                outputs={address: amount for address, (amount, _) in outputs.items()},
+            )
+            raw_tx = alice.signrawtransactionwithwallet(raw_tx)["hex"]
+            signed_tx = bob.signrawtransactionwithwallet(raw_tx)
+            assert_equal(signed_tx["complete"], True)
+            txid = node.sendrawtransaction(signed_tx["hex"])
+            node.syncwithvalidationinterfacequeue()
+            assert_equal(node.getmempoolentry(txid)["fees"]["base"], foreign_amount - expected_net)
+            vouts = {address: find_vout_for_address(node, txid, address) for address in outputs}
+
+            for confirm_before_check in (False, True):
+                if confirm_before_check:
+                    self.generatetoaddress(node, 1, funder.getnewaddress())
+                tx_info = alice.gettransaction(txid)
+                assert_equal(tx_info["amount"], expected_net)
+                self.assert_mixed_fields(tx_info, wallet_debit, wallet_credit)
+                histories = [
+                    (tx_info["details"], False),
+                    ([entry for entry in alice.listtransactions("*", 100) if entry["txid"] == txid], True),
+                    ([entry for entry in alice.listsinceblock(before_blockhash)["transactions"] if entry["txid"] == txid], True),
+                ]
+                for entries, include_txid in histories:
+                    assert_equal(len(entries), 3)
+                    assert_equal(sum(entry["amount"] for entry in entries), expected_net)
+                    send_entries = [entry for entry in entries if entry["category"] == "send"]
+                    assert_equal(len(send_entries), 1)
+                    self.assert_unattributed_aggregate_send(send_entries[0], txid, -wallet_debit, wallet_debit, wallet_credit, include_txid=include_txid)
+                    receive_entries = {entry["address"]: entry for entry in entries if entry["category"] == "receive"}
+                    assert_equal(set(receive_entries), set(outputs))
+                    for address, (amount, label) in outputs.items():
+                        entry = receive_entries[address]
+                        self.assert_receive_entry(entry, txid, address, vouts[address], amount, wallet_debit, wallet_credit, include_txid=include_txid)
+                        assert_equal(entry["label"], label)
+
+                # Label filters retain the matching output credit, not the net
+                # transaction amount or the aggregate debit.
+                for address, (amount, label) in outputs.items():
+                    for history in [
+                        alice.listtransactions(label, 100),
+                        alice.listsinceblock(before_blockhash, label=label)["transactions"],
+                    ]:
+                        entries = [entry for entry in history if entry["txid"] == txid]
+                        assert_equal(len(entries), 1)
+                        self.assert_receive_entry(entries[0], txid, address, vouts[address], amount, wallet_debit, wallet_credit, include_txid=True)
+                        assert_equal(entries[0]["label"], label)
 
 
 if __name__ == '__main__':
