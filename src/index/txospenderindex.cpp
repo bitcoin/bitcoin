@@ -23,15 +23,17 @@
 #include <util/fs.h>
 #include <validation.h>
 
+#include <cstddef>
 #include <cstdio>
 #include <exception>
 #include <ios>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 /* The database is used to find the spending transaction of a given utxo.
- * For every input of every transaction it stores a key that is a pair(siphash(input outpoint), transaction location on disk) and an empty value.
+ * For every input of every transaction it stores a key that is a pair(siphash(input outpoint), transaction location on disk) and a zero-byte value.
  * To find the spending transaction of an outpoint, we perform a range query on siphash(outpoint), and for each returned key load the transaction
  * and return it if it does spend the provided outpoint.
  */
@@ -91,8 +93,9 @@ void TxoSpenderIndex::WriteSpenderInfos(const std::vector<std::pair<COutPoint, C
     CDBBatch batch(*m_db);
     for (const auto& [outpoint, pos] : items) {
         DBKey key(CreateKey(m_siphash_key, outpoint, pos));
-        // key is hash(spent outpoint) | disk pos, value is empty
-        batch.Write(key, "");
+        // The key encodes the spent outpoint hash and disk position. The value is only a marker.
+        // Older entries may contain serialized empty strings; FindSpender() reads only keys.
+        batch.Write(key, std::span<const std::byte>{});
     }
     m_db->WriteBatch(batch);
 }
