@@ -398,7 +398,87 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
         self.test_zero_value_foreign_anchor_input(node, alice, funder)
         self.test_late_zero_value_foreign_parent_import(node, funder, alice)
         self.test_known_nonzero_foreign_input(node, funder, alice, bob)
+        self.test_zero_value_wallet_input(node, funder, alice, bob)
         self.test_wallet_change_output(node, funder, alice, bob)
+
+    def test_zero_value_wallet_input(self, node, funder, alice, bob):
+        self.log.info("Test a mixed-input transaction whose only wallet-owned input has zero value")
+        # Give bob a utxo whose funding transaction is unknown to alice.
+        bob_funding_txid = funder.sendtoaddress(bob.getnewaddress(), Decimal("0.4"))
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+
+        # Create a zero-value output to alice. It is below the dust threshold,
+        # so mine it directly instead of submitting it to the mempool.
+        zero_address = alice.getnewaddress()
+        funder_input = funder.listunspent()[0]
+        funder_change_sat = int(funder_input["amount"] * COIN) - 10000
+
+        parent_tx = CTransaction()
+        parent_tx.vin.append(CTxIn(COutPoint(int(funder_input["txid"], 16), funder_input["vout"]), b"", SEQUENCE_FINAL))
+        parent_tx.vout.append(CTxOut(0, self.script_for_address(alice, zero_address)))
+        parent_tx.vout.append(CTxOut(funder_change_sat, self.script_for_address(funder, funder.getnewaddress())))
+        parent_signed = funder.signrawtransactionwithwallet(parent_tx.serialize().hex())
+        assert_equal(parent_signed["complete"], True)
+        parent_hex = parent_signed["hex"]
+        parent_txid = tx_from_hex(parent_hex).txid_hex
+        self.generateblock(node, output=funder.getnewaddress(), transactions=[parent_hex])
+        before_blockhash = node.getbestblockhash()
+
+        # Premise: bob's input value is unknown to alice's wallet.
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", alice.gettransaction, bob_funding_txid)
+
+        fee = Decimal("0.00002000")
+        alice_credit = Decimal("0.1")
+        bob_input = next(u for u in bob.listunspent() if u["txid"] == bob_funding_txid)
+        bob_credit = bob_input["amount"] - alice_credit - fee
+
+        label = "alice_zero_value_input"
+        alice_output = alice.getnewaddress(label)
+
+        raw_tx = node.createrawtransaction(
+            inputs=[
+                {"txid": parent_txid, "vout": 0},
+                {"txid": bob_input["txid"], "vout": bob_input["vout"]},
+            ],
+            outputs={
+                alice_output: alice_credit,
+                bob.getnewaddress(): bob_credit,
+            },
+        )
+        raw_tx = alice.signrawtransactionwithwallet(raw_tx)["hex"]
+        raw_tx = bob.signrawtransactionwithwallet(raw_tx)["hex"]
+
+        txid = node.sendrawtransaction(raw_tx)
+        node.syncwithvalidationinterfacequeue()
+
+        # Alice spends nothing of value, so the aggregate send summary reports a
+        # zero wallet debit (a zero-amount send) while the received output is
+        # still attributed.
+        alice_vout = find_vout_for_address(node, txid, alice_output)
+        self.assert_wallet_view(
+            wallet_name="alice",
+            wallet=alice,
+            txid=txid,
+            label=label,
+            address=alice_output,
+            vout=alice_vout,
+            wallet_debit=Decimal("0"),
+            wallet_credit=alice_credit,
+            before_blockhash=before_blockhash,
+        )
+
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        self.assert_wallet_view(
+            wallet_name="alice",
+            wallet=alice,
+            txid=txid,
+            label=label,
+            address=alice_output,
+            vout=alice_vout,
+            wallet_debit=Decimal("0"),
+            wallet_credit=alice_credit,
+            before_blockhash=before_blockhash,
+        )
 
     def test_known_nonzero_foreign_input(self, node, funder, alice, bob):
         self.log.info("Test known nonzero foreign input values keep accounting conservative")
