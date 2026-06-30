@@ -165,6 +165,18 @@ CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx)
     return wtx.nChangeCached;
 }
 
+WalletTxHistoryAccounting CachedTxGetHistoryAccounting(const CWallet& wallet, const CWalletTx& wtx)
+{
+    const CAmount debit{CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false)};
+    const CAmount credit{CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false)};
+    const WalletTxInputOwnership input_ownership{CachedTxGetInputOwnership(wallet, wtx)};
+    std::optional<CAmount> fee;
+    if (input_ownership == WalletTxInputOwnership::ALL) {
+        fee = debit - wtx.tx->GetValueOut();
+    }
+    return {input_ownership, debit, credit, fee};
+}
+
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                   std::list<COutputEntry>& listReceived,
                   std::list<COutputEntry>& listSent, CAmount& nFee,
