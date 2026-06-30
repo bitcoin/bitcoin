@@ -29,6 +29,55 @@
     "error_txt": "Could not decode block header",
     "description": ""
   },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-mainnet.hex",
+    "description": "netmagic returns mainnet magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["-regtest", "netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-regtest.hex",
+    "description": "netmagic returns regtest magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["-testnet", "netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-testnet.hex",
+    "description": "netmagic returns testnet magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["-testnet4", "netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-testnet4.hex",
+    "description": "netmagic returns testnet4 magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["-signet", "netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-signet.hex",
+    "description": "netmagic returns signet magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["-signet", "-signetchallenge=512102f7561d208dd9ae99bf497273e16f389bdbd6c4742ddb8e6b216e64fa2928ad8f51ae", "netmagic"],
+    "return_code": 0,
+    "output_cmp": "netmagic-signet-custom.hex",
+    "description": "netmagic returns custom signet magic bytes"
+  },
+  {
+    "exec": "./bitcoin-util",
+    "args": ["netmagic", "extra_arg"],
+    "return_code": 1,
+    "error_txt": "netmagic does not take arguments",
+    "description": "netmagic rejects extra arguments"
+  },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "nversion=1"],
     "output_cmp": "blanktxv1.hex",
