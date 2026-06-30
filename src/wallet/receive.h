@@ -15,6 +15,7 @@ bool InputIsMine(const CWallet& wallet, const CTxIn& txin) EXCLUSIVE_LOCKS_REQUI
 
 /** Returns whether all of the inputs belong to the wallet*/
 bool AllInputsMine(const CWallet& wallet, const CTransaction& tx);
+WalletTxInputOwnership CachedTxGetInputOwnership(const CWallet& wallet, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout);
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx);
