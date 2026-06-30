@@ -35,6 +35,7 @@ FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
     FakeSteadyClock steady_clock;
 
     // Create a mocked socket between random (and potentially invalid) client and gateway addresses.
+    auto CreateSockOrig = CreateSock;
     CreateSock = [&](int domain, int type, int protocol) {
         if ((domain == AF_INET || domain == AF_INET6) && type == SOCK_DGRAM && protocol == IPPROTO_UDP) {
             return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
@@ -56,6 +57,8 @@ FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
         Assert(mapping->internal.GetPort() == port);
         mapping->ToString();
     }
+
+    CreateSock = CreateSockOrig;
 }
 
 FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
@@ -64,6 +67,7 @@ FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
     FakeSteadyClock steady_clock;
 
     // Create a mocked socket between random (and potentially invalid) client and gateway addresses.
+    auto CreateSockOrig = CreateSock;
     CreateSock = [&](int domain, int type, int protocol) {
         if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) {
             return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
@@ -84,4 +88,6 @@ FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
         Assert(mapping->internal.GetPort() == port);
         mapping->ToString();
     }
+
+    CreateSock = CreateSockOrig;
 }
