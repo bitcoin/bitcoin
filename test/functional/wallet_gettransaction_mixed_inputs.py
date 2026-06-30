@@ -18,7 +18,11 @@ from test_framework.messages import (
 from test_framework.script import CScript, OP_RETURN
 from test_framework.script_util import PAY_TO_ANCHOR
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, find_vout_for_address
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    find_vout_for_address,
+)
 
 
 class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
@@ -125,6 +129,119 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
         assert_equal(len(history), 2)
         assert_equal(any(entry["category"] == "send" and ("vout" not in entry or "fee" not in entry) for entry in history), False)
         assert_equal(sum(entry["amount"] for entry in history), expected_amount)
+
+    def import_addr_descriptor(self, node, wallet, address, label, timestamp="now"):
+        result = wallet.importdescriptors([{
+            "desc": node.getdescriptorinfo(f"addr({address})")["descriptor"],
+            "timestamp": timestamp,
+            "label": label,
+        }])
+        assert_equal(result[0]["success"], True)
+
+    def test_late_zero_value_foreign_parent_import(self, node, funder, alice):
+        self.log.info("Test late parent import invalidates mixed-input accounting caches")
+        wallet_input_address = alice.getnewaddress()
+        wallet_receive_address = alice.getnewaddress()
+        parent_import_address = alice.getnewaddress()
+        external_address = funder.getnewaddress()
+
+        funding_txid = funder.sendtoaddress(wallet_input_address, Decimal("1.0"))
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        funding_blockhash = node.getbestblockhash()
+        funding_tx_hex = funder.gettransaction(funding_txid)["hex"]
+        funding_txoutproof = node.gettxoutproof([funding_txid], funding_blockhash)
+
+        wallet_input = next(u for u in alice.listunspent() if u["txid"] == funding_txid)
+        wallet_debit = wallet_input["amount"]
+
+        parent_input = funder.listunspent()[0]
+        parent_import_amount_sat = 10_000_000
+        parent_fee_sat = 1_000
+        parent_change_sat = int(parent_input["amount"] * COIN) - parent_import_amount_sat - parent_fee_sat
+
+        parent_tx = CTransaction()
+        parent_tx.version = 3
+        parent_tx.vin.append(CTxIn(COutPoint(int(parent_input["txid"], 16), parent_input["vout"]), b"", SEQUENCE_FINAL))
+        parent_tx.vout.append(CTxOut(parent_change_sat, self.script_for_address(funder, funder.getrawchangeaddress())))
+        parent_tx.vout.append(CTxOut(0, PAY_TO_ANCHOR))
+        parent_tx.vout.append(CTxOut(parent_import_amount_sat, self.script_for_address(alice, parent_import_address)))
+        parent_signed = funder.signrawtransactionwithwallet(parent_tx.serialize().hex())
+        assert_equal(parent_signed["complete"], True)
+        parent_hex = parent_signed["hex"]
+        parent_tx = tx_from_hex(parent_hex)
+        parent_txid = parent_tx.txid_hex
+
+        wallet_credit = Decimal("0.80000000")
+        fee = Decimal("0.00001000")
+        external_amount = wallet_debit - wallet_credit - fee
+        child_tx = CTransaction()
+        child_tx.version = 3
+        child_tx.vin.append(CTxIn(COutPoint(int(funding_txid, 16), wallet_input["vout"]), b"", SEQUENCE_FINAL))
+        child_tx.vin.append(CTxIn(COutPoint(int(parent_txid, 16), 1), b"", SEQUENCE_FINAL))
+        child_tx.vout.append(CTxOut(int(wallet_credit * COIN), self.script_for_address(alice, wallet_receive_address)))
+        child_tx.vout.append(CTxOut(int(external_amount * COIN), self.script_for_address(funder, external_address)))
+        child_signed = alice.signrawtransactionwithwallet(child_tx.serialize().hex(), [
+            {"txid": funding_txid, "vout": wallet_input["vout"], "scriptPubKey": self.script_for_address(alice, wallet_input_address).hex(), "amount": wallet_debit},
+            {"txid": parent_txid, "vout": 1, "scriptPubKey": PAY_TO_ANCHOR.hex(), "amount": Decimal("0.00000000")},
+        ])
+        assert_equal(child_signed["complete"], True)
+        child_hex = child_signed["hex"]
+        child_tx = tx_from_hex(child_hex)
+        child_txid = child_tx.txid_hex
+
+        self.generateblock(node, output=funder.getnewaddress(), transactions=[parent_hex, child_hex])
+        child_blockhash = node.getbestblockhash()
+        parent_txoutproof = node.gettxoutproof([parent_txid], child_blockhash)
+        child_txoutproof = node.gettxoutproof([child_txid], child_blockhash)
+        import_timestamp = node.getblock(child_blockhash)["time"] + 3 * 60 * 60
+        node.setmocktime(import_timestamp + 60)
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        node.setmocktime(0)
+
+        node.createwallet(wallet_name="late_parent_import", disable_private_keys=True, blank=True)
+        late_wallet = node.get_wallet_rpc("late_parent_import")
+        self.import_addr_descriptor(node, late_wallet, wallet_input_address, "late_input", import_timestamp)
+        self.import_addr_descriptor(node, late_wallet, wallet_receive_address, "late_receive", import_timestamp)
+        self.import_addr_descriptor(node, late_wallet, parent_import_address, "late_parent", import_timestamp)
+
+        late_wallet.importprunedfunds(funding_tx_hex, funding_txoutproof)
+        late_wallet.importprunedfunds(child_hex, child_txoutproof)
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", late_wallet.gettransaction, parent_txid)
+
+        child_vout = 0
+        self.assert_wallet_view(
+            wallet_name="late_parent_import_before_parent",
+            wallet=late_wallet,
+            txid=child_txid,
+            label="late_receive",
+            address=wallet_receive_address,
+            vout=child_vout,
+            wallet_debit=wallet_debit,
+            wallet_credit=wallet_credit,
+            before_blockhash=funding_blockhash,
+        )
+
+        late_wallet.importprunedfunds(parent_hex, parent_txoutproof)
+
+        tx_info = late_wallet.gettransaction(child_txid)
+        assert_equal(tx_info["amount"], -external_amount)
+        assert_equal(tx_info["fee"], -fee)
+        self.assert_mixed_fields(tx_info, wallet_debit, wallet_credit, expect_fee=True)
+
+        send_details = [entry for entry in tx_info["details"] if entry["category"] == "send"]
+        receive_details = [entry for entry in tx_info["details"] if entry["category"] == "receive"]
+        assert_equal(len(send_details), 2)
+        assert_equal(len(receive_details), 1)
+        assert_equal(any("vout" not in entry or "fee" not in entry for entry in send_details), False)
+        for entry in send_details:
+            self.assert_mixed_fields(entry, wallet_debit, wallet_credit, expect_fee=True)
+            assert_equal(entry["fee"], -fee)
+        assert_equal(sum(entry["amount"] for entry in send_details), -wallet_debit + fee)
+        self.assert_receive_entry(receive_details[0], child_txid, wallet_receive_address, child_vout, wallet_credit, wallet_debit, wallet_credit, include_txid=False)
+
+        history = [entry for entry in late_wallet.listtransactions("*", 100) if entry["txid"] == child_txid]
+        assert_equal(len(history), 3)
+        assert_equal(any(entry["category"] == "send" and ("vout" not in entry or "fee" not in entry) for entry in history), False)
 
     def test_zero_value_foreign_anchor_input(self, node, wallet, external_wallet):
         self.log.info("Test zero-value foreign anchor inputs keep wallet fee/send accounting attributable")
@@ -279,6 +396,7 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
         )
 
         self.test_zero_value_foreign_anchor_input(node, alice, funder)
+        self.test_late_zero_value_foreign_parent_import(node, funder, alice)
         self.test_wallet_change_output(node, funder, alice, bob)
 
     def test_wallet_change_output(self, node, funder, alice, bob):
