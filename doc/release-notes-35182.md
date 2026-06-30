@@ -3,9 +3,9 @@ HTTP: RPC / REST
 
 The HTTP server has been rewritten from scratch to replace libevent. (#35182)
 
-`libevent` has been deprecated as a logging category and will be removed in
-a future release. At that time configurations like `debugexclude=libevent` will
-be invalid.
+The `libevent` logging category has been removed. Configurations like
+`-debug=libevent` or `-debugexclude=libevent` will log a deprecation warning
+and be ignored. These configurations will result in an error in a future release.
 
 Certain HTTP edge cases will observe different behavior to be more RFC-compliant:
 

@@ -133,11 +133,6 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
-        if (*flag & DEPRECATED){
-            LogWarning("The logging category `%s` is deprecated, can not be enabled, and will be removed in a future version", str);
-            // Deprecated does not mean unsupported, which may prevent startup
-            return true;
-        }
         EnableCategory(*flag);
         return true;
     }
@@ -152,11 +147,6 @@ void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::DisableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
-        if (*flag & DEPRECATED){
-            LogWarning("The logging category `%s` is deprecated and will be removed in a future version", str);
-            // Deprecated does not mean unsupported, which may prevent startup
-            return true;
-        }
         DisableCategory(*flag);
         return true;
     }
@@ -204,7 +194,6 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"prune", BCLog::PRUNE},
     {"proxy", BCLog::PROXY},
     {"mempoolrej", BCLog::MEMPOOLREJ},
-    {"libevent", BCLog::LIBEVENT},
     {"coindb", BCLog::COINDB},
     {"qt", BCLog::QT},
     {"leveldb", BCLog::LEVELDB},
@@ -242,6 +231,10 @@ std::optional<BCLog::LogFlags> BCLog::Logger::GetLogCategory(std::string_view st
     auto it = LOG_CATEGORIES_BY_STR.find(str);
     if (it != LOG_CATEGORIES_BY_STR.end()) {
         return it->second;
+    }
+    if (str == "libevent") {
+       LogWarning("The logging category `%s` is deprecated, does nothing, and will be removed in a future version", str);
+       return BCLog::NONE;
     }
     return std::nullopt;
 }
@@ -616,6 +609,7 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
 
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
+    if (*flag == BCLog::NONE) return true;
 
     STDLOCK(m_cs);
     m_category_log_levels[*flag] = level.value();
