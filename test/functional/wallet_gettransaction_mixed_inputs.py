@@ -185,6 +185,70 @@ class WalletGetTransactionMixedInputsTest(BitcoinTestFramework):
             mixed_tx=mixed_tx,
         )
 
+        self.test_wallet_change_output(node, funder, alice, bob)
+
+    def test_wallet_change_output(self, node, funder, alice, bob):
+        self.log.info("Test a wallet-owned change output in a conservative mixed-input transaction is reported as a receive entry")
+        # Fund alice and bob with positive-value inputs. The foreign (bob) input
+        # has positive value, so the transaction is always reported conservatively
+        # (the absent fee on the entries below confirms the conservative view).
+        alice_funding_txid = funder.sendtoaddress(alice.getnewaddress(), Decimal("1.0"))
+        bob_funding_txid = funder.sendtoaddress(bob.getnewaddress(), Decimal("1.0"))
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        before_blockhash = node.getbestblockhash()
+
+        alice_input = next(u for u in alice.listunspent() if u["txid"] == alice_funding_txid)
+        bob_input = next(u for u in bob.listunspent() if u["txid"] == bob_funding_txid)
+
+        fee = Decimal("0.00002000")
+        # Alice keeps part of her input as change to a raw change address, so the
+        # wallet classifies the output as change (not a labeled receive); the
+        # remainder funds bob's output.
+        alice_change_amount = Decimal("0.4")
+        alice_change_address = alice.getrawchangeaddress()
+        bob_credit = alice_input["amount"] + bob_input["amount"] - alice_change_amount - fee
+
+        raw_tx = node.createrawtransaction(
+            inputs=[
+                {"txid": alice_input["txid"], "vout": alice_input["vout"]},
+                {"txid": bob_input["txid"], "vout": bob_input["vout"]},
+            ],
+            outputs={
+                alice_change_address: alice_change_amount,
+                bob.getnewaddress(): bob_credit,
+            },
+        )
+        raw_tx = alice.signrawtransactionwithwallet(raw_tx)["hex"]
+        raw_tx = bob.signrawtransactionwithwallet(raw_tx)["hex"]
+        txid = node.sendrawtransaction(raw_tx)
+        node.syncwithvalidationinterfacequeue()
+
+        # Premise: the wallet-owned output is genuinely change, not a labeled receive.
+        assert_equal(alice.getaddressinfo(alice_change_address)["ischange"], True)
+
+        alice_debit = alice_input["amount"]
+        alice_credit = alice_change_amount
+        expected_net = alice_credit - alice_debit
+        change_vout = find_vout_for_address(node, txid, alice_change_address)
+
+        # The conservative aggregate send view does not skip change: the change
+        # output is reported as a receive entry alongside the aggregate send, so
+        # the entry amounts still sum to alice's net change.
+        tx_info = alice.gettransaction(txid)
+        assert_equal(tx_info["amount"], expected_net)
+        self.assert_mixed_fields(tx_info, alice_debit, alice_credit)
+        self.assert_mixed_history_entries(tx_info["details"], txid, expected_net, alice_change_address, change_vout, alice_debit, alice_credit, include_txid=False)
+
+        history = [entry for entry in alice.listtransactions("*", 100) if entry["txid"] == txid]
+        self.assert_mixed_history_entries(history, txid, expected_net, alice_change_address, change_vout, alice_debit, alice_credit)
+
+        since = [entry for entry in alice.listsinceblock(before_blockhash)["transactions"] if entry["txid"] == txid]
+        self.assert_mixed_history_entries(since, txid, expected_net, alice_change_address, change_vout, alice_debit, alice_credit)
+
+        # The same conservative shape holds after confirmation.
+        self.generatetoaddress(node, 1, funder.getnewaddress())
+        confirmed = [entry for entry in alice.listtransactions("*", 100) if entry["txid"] == txid]
+        self.assert_mixed_history_entries(confirmed, txid, expected_net, alice_change_address, change_vout, alice_debit, alice_credit)
 
 
 if __name__ == '__main__':
