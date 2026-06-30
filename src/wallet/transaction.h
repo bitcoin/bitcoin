@@ -228,6 +228,8 @@ public:
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
     // Cached value for whether none, some, or all inputs belong to the wallet
     mutable std::optional<WalletTxInputOwnership> m_cached_input_ownership{std::nullopt};
+    // Cached value for whether every non-wallet input is known to spend a zero-value output
+    mutable std::optional<bool> m_cached_foreign_inputs_zero_value{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -373,6 +375,7 @@ public:
         m_is_cache_empty = true;
         m_cached_from_me = std::nullopt;
         m_cached_input_ownership = std::nullopt;
+        m_cached_foreign_inputs_zero_value = std::nullopt;
     }
 
     /** True if tx is a malleation of this, i.e. it has the exact same version, locktime,
