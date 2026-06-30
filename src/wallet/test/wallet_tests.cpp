@@ -511,6 +511,17 @@ BOOST_FIXTURE_TEST_CASE(CachedInputOwnershipTest, ListCoinsTestingSetup)
     partial_wtx.MarkDirty();
     BOOST_CHECK(!partial_wtx.m_cached_input_ownership.has_value());
     BOOST_CHECK(CachedTxGetInputOwnership(*wallet, partial_wtx) == WalletTxInputOwnership::PARTIAL);
+
+    // The known-zero-value-foreign-inputs classification is computed for mixed
+    // (PARTIAL) transactions by CachedTxGetHistoryAccounting and is likewise
+    // cached and invalidated by MarkDirty(). The foreign input is not a wallet
+    // transaction, so its value is unknown and the classification is false.
+    BOOST_CHECK(!partial_wtx.m_cached_foreign_inputs_zero_value.has_value());
+    CachedTxGetHistoryAccounting(*wallet, partial_wtx);
+    BOOST_CHECK(partial_wtx.m_cached_foreign_inputs_zero_value.has_value());
+    BOOST_CHECK_EQUAL(partial_wtx.m_cached_foreign_inputs_zero_value.value(), false);
+    partial_wtx.MarkDirty();
+    BOOST_CHECK(!partial_wtx.m_cached_foreign_inputs_zero_value.has_value());
 }
 
 void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,

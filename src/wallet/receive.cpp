@@ -58,6 +58,29 @@ WalletTxInputOwnership CachedTxGetInputOwnership(const CWallet& wallet, const CW
     return wtx.m_cached_input_ownership.value();
 }
 
+static bool AllForeignInputsKnownZeroValue(const CWallet& wallet, const CTransaction& tx)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    for (const CTxIn& txin : tx.vin) {
+        if (InputIsMine(wallet, txin)) continue;
+        const CWalletTx* prev{wallet.GetWalletTx(txin.prevout.hash)};
+        if (!prev || txin.prevout.n >= prev->tx->vout.size()) return false;
+        if (prev->tx->vout[txin.prevout.n].nValue != 0) return false;
+    }
+    return true;
+}
+
+static bool CachedTxAllForeignInputsKnownZeroValue(const CWallet& wallet, const CWalletTx& wtx)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    if (!wtx.m_cached_foreign_inputs_zero_value.has_value()) {
+        wtx.m_cached_foreign_inputs_zero_value = AllForeignInputsKnownZeroValue(wallet, *wtx.tx);
+    }
+    return wtx.m_cached_foreign_inputs_zero_value.value();
+}
+
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout)
 {
     if (!MoneyRange(txout.nValue))
@@ -171,9 +194,14 @@ WalletTxHistoryAccounting CachedTxGetHistoryAccounting(const CWallet& wallet, co
     const CAmount debit{CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false)};
     const CAmount credit{CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false)};
     const WalletTxInputOwnership input_ownership{CachedTxGetInputOwnership(wallet, wtx)};
+
+    // Foreign input values only need to be inspected for mixed-input transactions;
+    // for fully-owned or fully-foreign transactions the fee is decided by ownership alone.
     std::optional<CAmount> fee;
     if (input_ownership == WalletTxInputOwnership::ALL) {
         fee = debit - wtx.tx->GetValueOut();
+    } else if (input_ownership == WalletTxInputOwnership::PARTIAL) {
+        CachedTxAllForeignInputsKnownZeroValue(wallet, wtx);
     }
     return {input_ownership, debit, credit, fee};
 }
