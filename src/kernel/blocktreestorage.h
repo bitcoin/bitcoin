@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -81,6 +82,19 @@ public:
     explicit BlockTreeStoreError(const std::string& msg) : std::runtime_error(msg) {}
 };
 
+//! Excludes other processes writing to the block tree store.
+class WriterLock
+{
+    fs::path m_dir;
+
+public:
+    explicit WriterLock(const fs::path& dir);
+    ~WriterLock();
+
+    WriterLock(const WriterLock&) = delete;
+    WriterLock& operator=(const WriterLock&) = delete;
+};
+
 class BlockTreeStore
 {
 private:
@@ -95,6 +109,7 @@ private:
     bool m_incomplete_log_write{false};
     bool m_incomplete_log_apply{false};
 
+    std::optional<WriterLock> m_writer_lock;
     mutable Mutex m_mutex;
 
     void WriteFlag(const fs::path& path, bool value, bool directory_commit) const;

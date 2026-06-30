@@ -36,6 +36,8 @@ namespace kernel {
 using Checksum = uint32_t;
 using FilePosition = int64_t;
 
+static constexpr const char* WRITER_LOCK_NAME{".writer-lock"};
+
 /** A wrapper for creating a constant-sized serialization without varint encoding */
 struct BlockFileInfoWrapper : CBlockFileInfo {
     static constexpr size_t SERIALIZED_SIZE{36};
@@ -57,6 +59,23 @@ struct BlockFileInfoWrapper : CBlockFileInfo {
         READWRITE(obj.nTimeLast);
     }
 };
+
+WriterLock::WriterLock(const fs::path& dir) : m_dir{dir}
+{
+    switch (util::LockDirectory(m_dir, WRITER_LOCK_NAME)) {
+    case util::LockResult::Success:
+        return;
+    case util::LockResult::ErrorWrite:
+        throw BlockTreeStoreError(strprintf(
+            "Cannot create writer-lock file in %s", fs::PathToString(m_dir)));
+    case util::LockResult::ErrorLock:
+        throw BlockTreeStoreError(strprintf(
+            "Another process is already writing to the block tree store in %s.", fs::PathToString(m_dir)));
+    }
+    assert(0);
+}
+
+WriterLock::~WriterLock() { UnlockDirectory(m_dir, WRITER_LOCK_NAME); }
 
 static FilePosition CalculateBlockFileInfoPosition(int file_index)
 {
@@ -152,6 +171,7 @@ BlockTreeStore::BlockTreeStore(const fs::path& path, const OpenMode open_mode)
 
     LOCK(m_mutex);
     fs::create_directories(path);
+    m_writer_lock.emplace(path);
 
     if (open_mode == OpenMode::WIPE) {
         fs::remove(m_header_file_path);
