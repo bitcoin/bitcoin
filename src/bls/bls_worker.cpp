@@ -711,7 +711,11 @@ std::future<bool> CBLSWorker::AsyncVerifyContributionShare(const CBLSId& forId,
                                                            const BLSVerificationVectorPtr& vvec,
                                                            const CBLSSecretKey& skContribution)
 {
-    if (!forId.IsValid() || !VerifyVerificationVector(*vvec)) {
+    // vvec may be null when the verification vector for that member was never
+    // received (e.g. a non-member observer that did not get the member's QCONTRIB).
+    // Dereferencing it here is a remote-triggerable crash; treat a missing vvec as a
+    // failed verification, mirroring the null check in VerifyVerificationVectors().
+    if (!forId.IsValid() || vvec == nullptr || !VerifyVerificationVector(*vvec)) {
         auto p = BuildFutureDoneCallback<bool>();
         p.first(false);
         return std::move(p.second);

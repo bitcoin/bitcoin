@@ -4,6 +4,7 @@
 
 #include <bls/bls.h>
 #include <bls/bls_batchverifier.h>
+#include <bls/bls_worker.h>
 #include <clientversion.h>
 #include <random.h>
 #include <streams.h>
@@ -471,6 +472,41 @@ BOOST_AUTO_TEST_CASE(bls_threshold_signature_tests)
 {
     FuncThresholdSignature(true);
     FuncThresholdSignature(false);
+}
+
+// Regression test: a DKG justification path can reach
+// CBLSWorker::AsyncVerifyContributionShare() with a null verification vector when
+// the corresponding member's contribution was never received (e.g. on a non-member
+// observer). The singular overload dereferenced *vvec with no null check and aborted
+// the process; it must instead treat a missing vvec as a failed verification, like
+// the plural VerifyVerificationVectors() path. A *valid* id is required so the guard
+// does not short-circuit before reaching the (previously) unguarded dereference.
+void FuncVerifyContributionShareNullVvec(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start();
+
+    const CBLSId id{uint256::ONE};
+    BOOST_REQUIRE(id.IsValid());
+
+    CBLSSecretKey sk;
+    sk.MakeNewKey();
+
+    const BLSVerificationVectorPtr null_vvec; // default-constructed null shared_ptr
+    BOOST_REQUIRE(null_vvec == nullptr);
+
+    // Must return false (verification failed) instead of dereferencing the null vvec.
+    BOOST_CHECK(worker.AsyncVerifyContributionShare(id, null_vvec, sk).get() == false);
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_verify_contribution_share_null_vvec_tests)
+{
+    FuncVerifyContributionShareNullVvec(true);
+    FuncVerifyContributionShareNullVvec(false);
 }
 
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
