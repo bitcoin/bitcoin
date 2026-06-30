@@ -122,7 +122,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             if (!txn_available[idit->second]) {
                 txn_available[idit->second] = txit->GetSharedTx();
                 mempool_count++;
-            } else if (txn_available[idit->second]) {
+            } else {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
@@ -153,8 +153,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // but eating a round-trip due to FillBlock failure would be annoying
                 // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
-                if (txn_available[idit->second] &&
-                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                if (txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                     txn_available[idit->second].reset();
                     mempool_count--;
                     extra_count--;
