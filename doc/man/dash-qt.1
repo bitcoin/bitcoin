@@ -128,13 +128,13 @@ Do not keep transactions in the mempool longer than <n> hours (default:
 .HP
 \fB\-par=\fR<n>
 .IP
-Set the number of script verification threads (\fB\-14\fR to 15, 0 = auto, <0 =
-leave that many cores free, default: 0)
+Set the number of script verification threads (0 = auto, <0 = leave that many
+cores free, max: 15, default: 0)
 .HP
 \fB\-parbls=\fR<n>
 .IP
-Set the number of BLS verification threads (\fB\-14\fR to 33, 0 = auto, <0 =
-leave that many cores free, default: 0)
+Set the number of BLS verification threads (0 = auto, <0 = leave that many
+cores free, max: 33, default: 0)
 .HP
 \fB\-persistmempool\fR
 .IP
