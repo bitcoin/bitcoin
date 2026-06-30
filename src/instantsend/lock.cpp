@@ -29,7 +29,7 @@ uint256 InstantSendLock::GetRequestId() const
  */
 bool InstantSendLock::TriviallyValid() const
 {
-    if (txid.IsNull() || inputs.empty()) {
+    if (txid.IsNull() || inputs.empty() || inputs.size() > MAX_INPUTS) {
         return false;
     }
 

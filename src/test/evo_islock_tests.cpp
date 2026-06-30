@@ -208,4 +208,28 @@ BOOST_AUTO_TEST_CASE(geninputlockrequestid_edge_cases)
     BOOST_CHECK(nullRequestId != maxIndexRequestId);
 }
 
+// Regression test for the islock input cap: an oversized input vector must be
+// rejected by TriviallyValid(), while the cap is derived so it can never reject a valid lock.
+BOOST_AUTO_TEST_CASE(trivially_valid_input_cap)
+{
+    // A lock with a non-null txid and a few unique inputs is trivially valid.
+    instantsend::InstantSendLock islock;
+    islock.txid = uint256::ONE;
+    islock.inputs = {COutPoint(uint256::ONE, 0), COutPoint(uint256::ONE, 1)};
+    BOOST_CHECK(islock.TriviallyValid());
+
+    // MAX_INPUTS is derived from MaxBlockSize(): a consensus-valid transaction must fit in a
+    // block and each input is >=41 bytes on the wire, so it can never carry more than
+    // MaxBlockSize() / 41 inputs. The cap thus cannot reject a legitimate islock, and it
+    // tracks any future block-size change.
+    BOOST_CHECK_EQUAL(instantsend::InstantSendLock::MAX_INPUTS, MaxBlockSize() / 41);
+
+    // A lock carrying more than MAX_INPUTS inputs is rejected up front, before any O(n)
+    // hashing/dedup work, so a peer cannot pin an oversized input vector.
+    instantsend::InstantSendLock oversized;
+    oversized.txid = uint256::ONE;
+    oversized.inputs.assign(instantsend::InstantSendLock::MAX_INPUTS + 1, COutPoint(uint256::ONE, 0));
+    BOOST_CHECK(!oversized.TriviallyValid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

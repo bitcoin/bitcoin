@@ -76,6 +76,14 @@ private:
 
     std::atomic<instantsend::InstantSendSigner*> m_signer{nullptr};
 
+    // Hard ceiling on the number of peer-supplied InstantSend locks retained in each of
+    // the pending queues -- pendingInstantSendLocks (received, not yet BLS-verified) and
+    // pendingNoTxInstantSendLocks (verified, awaiting the locked transaction). The work
+    // thread drains continuously, so normal operation keeps only a handful pending; this
+    // never triggers legitimately, but it bounds memory if a peer floods locks faster than
+    // they can be processed.
+    static constexpr size_t MAX_PENDING_INSTANTSEND_LOCKS{1024};
+
     mutable Mutex cs_pendingLocks;
     // Incoming and not verified yet
     Uint256HashMap<instantsend::PendingISLockFromPeer> pendingInstantSendLocks GUARDED_BY(cs_pendingLocks);

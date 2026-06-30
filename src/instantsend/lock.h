@@ -6,6 +6,7 @@
 #define BITCOIN_INSTANTSEND_LOCK_H
 
 #include <bls/bls.h>
+#include <consensus/consensus.h>
 #include <serialize.h>
 #include <uint256.h>
 
@@ -18,6 +19,15 @@ class COutPoint;
 namespace instantsend {
 struct InstantSendLock {
     static constexpr uint8_t CURRENT_VERSION{1};
+    // An islock pins the same outpoints as the locked transaction's inputs, so it can
+    // never carry more inputs than a consensus-valid transaction. Such a transaction must
+    // fit in a block (MaxBlockSize()) and each transaction input (CTxIn) serializes to at
+    // least 41 bytes (COutPoint 36 + scriptSig length 1 + nSequence 4), bounding it at
+    // MaxBlockSize() / 41 inputs; the islock stores those inputs as 36-byte COutPoints.
+    // Deriving from MaxBlockSize() keeps this cap in lockstep with any future block-size
+    // change. The ceiling can never reject a valid islock, but it lets us drop oversized
+    // locks before the O(n) hashing/dedup work and bounds each retained pending entry.
+    static constexpr size_t MAX_INPUTS{MaxBlockSize() / 41};
 
     uint8_t nVersion{CURRENT_VERSION};
     std::vector<COutPoint> inputs;

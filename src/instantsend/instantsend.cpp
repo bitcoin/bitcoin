@@ -86,6 +86,13 @@ void CInstantSendManager::EnqueueInstantSendLock(NodeId from, const uint256& has
     }
 
     LOCK(cs_pendingLocks);
+    if (pendingInstantSendLocks.size() >= MAX_PENDING_INSTANTSEND_LOCKS) {
+        // Drop instead of growing the queue without bound. A peer cannot pin
+        // unbounded memory with unverified islocks; honest islocks are re-relayed.
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- pending islock queue full (%d), dropping islock=%s peer=%d\n",
+                 __func__, pendingInstantSendLocks.size(), hash.ToString(), from);
+        return;
+    }
     pendingInstantSendLocks.emplace(hash, instantsend::PendingISLockFromPeer{from, std::move(islock)});
 }
 
@@ -175,7 +182,15 @@ std::variant<uint256, CTransactionRef, std::monostate> CInstantSendManager::Proc
     } else {
         // put it in a separate pending map and try again later
         LOCK(cs_pendingLocks);
-        pendingNoTxInstantSendLocks.try_emplace(hash, instantsend::PendingISLockFromPeer{from, islock});
+        if (pendingNoTxInstantSendLocks.size() >= MAX_PENDING_INSTANTSEND_LOCKS) {
+            // Bound this queue too: a malicious quorum could otherwise mint valid islocks
+            // for transactions that never arrive, growing it without limit.
+            // Honest islocks are re-relayed, so dropping under flood is not fatal.
+            LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- no-tx pending islock queue full (%d), dropping islock=%s peer=%d\n",
+                     __func__, pendingNoTxInstantSendLocks.size(), hash.ToString(), from);
+        } else {
+            pendingNoTxInstantSendLocks.try_emplace(hash, instantsend::PendingISLockFromPeer{from, islock});
+        }
     }
 
     // This will also add children TXs to pendingRetryTxs

@@ -9,7 +9,7 @@
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_LEGACY_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_DIP0001_BLOCK_SIZE = 2000000;
-inline unsigned int MaxBlockSize(bool fDIP0001Active = true)
+constexpr unsigned int MaxBlockSize(bool fDIP0001Active = true)
 {
     return fDIP0001Active ? MAX_DIP0001_BLOCK_SIZE : MAX_LEGACY_BLOCK_SIZE;
 }

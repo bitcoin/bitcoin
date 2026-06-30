@@ -212,6 +212,15 @@ void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     vRecv >> *islock;
 
     const NodeId from = pfrom.GetId();
+
+    // Reject oversized locks before any O(n) work (hashing, dedup). A consensus-valid
+    // transaction -- and therefore a valid islock -- can never exceed MAX_INPUTS inputs,
+    // so this cannot drop a legitimate lock.
+    if (islock->inputs.size() > instantsend::InstantSendLock::MAX_INPUTS) {
+        m_peer_manager->PeerMisbehaving(from, INVALID_ISLOCK_MISBEHAVIOR_SCORE);
+        return;
+    }
+
     uint256 hash = ::SerializeHash(*islock);
 
     WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(from, CInv{MSG_ISDLOCK, hash}));
