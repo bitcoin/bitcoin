@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CHAINPARAMSBASE_H
 #define BITCOIN_CHAINPARAMSBASE_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
 

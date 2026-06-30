@@ -5,6 +5,7 @@
 #ifndef BITCOIN_EVO_CHAINHELPER_H
 #define BITCOIN_EVO_CHAINHELPER_H
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <unordered_map>
