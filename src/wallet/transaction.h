@@ -19,6 +19,7 @@
 #include <bitset>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -163,6 +164,11 @@ struct CachableAmount
     }
 };
 
+enum class WalletTxInputOwnership {
+    NONE,
+    PARTIAL,
+    ALL,
+};
 
 typedef std::map<std::string, std::string> mapValue_t;
 
@@ -234,6 +240,8 @@ public:
     unsigned int nTimeSmart;
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
+    // Cached value for whether none, some, or all inputs belong to the wallet
+    mutable std::optional<WalletTxInputOwnership> m_cached_input_ownership{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -342,6 +350,7 @@ public:
         fChangeCached = false;
         m_is_cache_empty = true;
         m_cached_from_me = std::nullopt;
+        m_cached_input_ownership = std::nullopt;
     }
 
     /** True if only scriptSigs are different */

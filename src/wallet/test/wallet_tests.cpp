@@ -479,6 +479,40 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
 }
 
+BOOST_FIXTURE_TEST_CASE(CachedInputOwnershipTest, ListCoinsTestingSetup)
+{
+    LOCK(wallet->cs_wallet);
+
+    const COutPoint mine_outpoint{m_coinbase_txns[0]->GetHash(), 0};
+    const COutPoint foreign_outpoint{Txid::FromUint256(uint256::ONE), 0};
+    BOOST_CHECK(InputIsMine(*wallet, CTxIn{mine_outpoint}));
+
+    const auto make_wtx = [](const std::vector<COutPoint>& prevouts) {
+        CMutableTransaction tx;
+        for (const COutPoint& prevout : prevouts) tx.vin.emplace_back(prevout);
+        tx.vout.emplace_back(1 * COIN, CScript() << OP_TRUE);
+        return CWalletTx(MakeTransactionRef(std::move(tx)), TxStateInactive{});
+    };
+
+    CWalletTx none_wtx{make_wtx({foreign_outpoint})};
+    BOOST_CHECK(CachedTxGetInputOwnership(*wallet, none_wtx) == WalletTxInputOwnership::NONE);
+
+    CWalletTx all_wtx{make_wtx({mine_outpoint})};
+    BOOST_CHECK(CachedTxGetInputOwnership(*wallet, all_wtx) == WalletTxInputOwnership::ALL);
+
+    CWalletTx partial_wtx{make_wtx({mine_outpoint, foreign_outpoint})};
+    BOOST_CHECK(CachedTxGetInputOwnership(*wallet, partial_wtx) == WalletTxInputOwnership::PARTIAL);
+
+    CWalletTx empty_wtx{make_wtx({})};
+    BOOST_CHECK(CachedTxGetInputOwnership(*wallet, empty_wtx) == WalletTxInputOwnership::NONE);
+
+    // The classification is cached and invalidated by MarkDirty().
+    BOOST_CHECK(partial_wtx.m_cached_input_ownership.has_value());
+    partial_wtx.MarkDirty();
+    BOOST_CHECK(!partial_wtx.m_cached_input_ownership.has_value());
+    BOOST_CHECK(CachedTxGetInputOwnership(*wallet, partial_wtx) == WalletTxInputOwnership::PARTIAL);
+}
+
 void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
                      std::map<OutputType, size_t>& expected_coins_sizes)
 {
