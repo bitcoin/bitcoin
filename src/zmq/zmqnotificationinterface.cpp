@@ -79,7 +79,7 @@ util::Result<std::unique_ptr<CZMQNotificationInterface>> CZMQNotificationInterfa
         notificationInterface->notifiers = std::move(notifiers);
 
         if (notificationInterface->Initialize()) {
-            return std::move(notificationInterface);
+            return notificationInterface;
         }
         if (!notificationInterface->m_fatal_error.empty()) {
             return util::Error{Untranslated(notificationInterface->m_fatal_error)};
