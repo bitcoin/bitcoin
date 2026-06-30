@@ -46,7 +46,7 @@ struct WalletTxHistoryAccounting
 };
 WalletTxHistoryAccounting CachedTxGetHistoryAccounting(const CWallet& wallet, const CWalletTx& wtx)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
+WalletTxHistoryAccounting CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         std::list<COutputEntry>& listReceived,
                         std::list<COutputEntry>& listSent,
                         CAmount& nFee,
