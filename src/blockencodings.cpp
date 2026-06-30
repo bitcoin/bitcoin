@@ -113,25 +113,21 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     if (shorttxids.size() != cmpctblock.shorttxids.size())
         return READ_STATUS_FAILED; // Short ID collision
 
-    std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
     for (const auto& [wtxid, txit] : pool->txns_randomized) {
         uint64_t shortid = cmpctblock.GetShortID(wtxid);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
-            if (!have_txn[idit->second]) {
+            if (!txn_available[idit->second]) {
                 txn_available[idit->second] = txit->GetSharedTx();
-                have_txn[idit->second]  = true;
                 mempool_count++;
-            } else {
+            } else if (txn_available[idit->second]) {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
-                if (txn_available[idit->second]) {
-                    txn_available[idit->second].reset();
-                    mempool_count--;
-                }
+                txn_available[idit->second].reset();
+                mempool_count--;
             }
         }
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
@@ -146,9 +142,8 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         uint64_t shortid = cmpctblock.GetShortID(extra_txn[i].first);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
-            if (!have_txn[idit->second]) {
+            if (!txn_available[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
-                have_txn[idit->second]  = true;
                 mempool_count++;
                 extra_count++;
             } else {
