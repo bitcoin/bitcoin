@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/dkgmessages.h>
 #include <llmq/options.h>
 #include <llmq/params.h>
 #include <llmq/utils.h>
@@ -28,6 +29,86 @@ namespace llmq
 static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
+
+namespace {
+// Upper bound on the serialized size of a well-formed DKG message of the given
+// type for the given quorum params. Used to reject oversized payloads at intake
+// before any deserialization or retention, which closes the low-cost memory
+// amplification window (a legitimate message is bounded by quorum params, far
+// below the 3 MiB transport cap). Generous slack is added and the result is
+// clamped to a hard ceiling so a future params change can never silently re-open
+// the full transport window.
+size_t MaxDKGMessageSize(std::string_view msg_type, const Consensus::LLMQParams& params)
+{
+    constexpr size_t COMPACT = 5;          // max CompactSize for any realistic count
+    constexpr size_t PREFIX = 1 + 32 + 32; // llmqType + quorumHash + proTxHash
+    constexpr size_t PUBKEY = BLS_CURVE_PUBKEY_SIZE; // 48
+    constexpr size_t SIG = BLS_CURVE_SIG_SIZE;       // 96
+    constexpr size_t SECKEY = BLS_CURVE_SECKEY_SIZE; // 32
+    constexpr size_t BLOB = COMPACT + 128; // encrypted seckey blob, generous
+    constexpr size_t SLACK = 1024;
+    constexpr size_t HARD_CEILING = size_t{1} << 20; // 1 MiB
+
+    const size_t size = params.size > 0 ? static_cast<size_t>(params.size) : 0;
+    const size_t threshold = params.threshold > 0 ? static_cast<size_t>(params.threshold) : 0;
+
+    size_t cap = 0;
+    if (msg_type == NetMsgType::QCONTRIB) {
+        // llmqType/quorumHash/proTxHash + vvec + contributions(IES) + sig
+        cap = PREFIX + (COMPACT + threshold * PUBKEY) + (PUBKEY + 32 + COMPACT + size * BLOB) + SIG;
+    } else if (msg_type == NetMsgType::QJUSTIFICATION) {
+        // ... + contributions(index u32 + seckey) + sig
+        cap = PREFIX + (COMPACT + size * (4 + SECKEY)) + SIG;
+    } else if (msg_type == NetMsgType::QCOMPLAINT) {
+        // ... + 2 dynamic bitsets (badMembers, complainForMembers) + sig
+        cap = PREFIX + 2 * (COMPACT + (size + 7) / 8) + SIG;
+    } else if (msg_type == NetMsgType::QPCOMMITMENT) {
+        // ... + validMembers bitset + quorumPublicKey + quorumVvecHash + quorumSig + sig
+        cap = PREFIX + (COMPACT + (size + 7) / 8) + PUBKEY + 32 + 2 * SIG;
+    } else {
+        return HARD_CEILING;
+    }
+    cap += SLACK;
+    return cap < HARD_CEILING ? cap : HARD_CEILING;
+}
+
+// Cheap, param-only structural validation of a pushed DKG message, run at intake
+// before retention. Deserializes a COPY of the payload (leaving the caller's bytes
+// intact for the pending queue and its inventory hash) and checks only invariants
+// derived from quorum params: no member-list lookup and no signature verification,
+// which remain on the DKG worker thread. Deserializing the copy does decompress the
+// BLS points carried in the payload, but that work is bounded by the size cap applied
+// just before this check. Rejects malformed or wrong-shaped payloads before retention.
+bool CheckDKGMessageStructure(std::string_view msg_type, const CDataStream& vRecv, const Consensus::LLMQParams& params)
+{
+    const size_t size = params.size > 0 ? static_cast<size_t>(params.size) : 0;
+    const size_t threshold = params.threshold > 0 ? static_cast<size_t>(params.threshold) : 0;
+    try {
+        CDataStream s(vRecv); // copy; deserialization does not advance the caller's stream
+        if (msg_type == NetMsgType::QCONTRIB) {
+            CDKGContribution qc;
+            s >> qc;
+            return qc.vvec != nullptr && qc.vvec->size() == threshold &&
+                   qc.contributions != nullptr && qc.contributions->blobs.size() == size;
+        } else if (msg_type == NetMsgType::QCOMPLAINT) {
+            CDKGComplaint qc;
+            s >> qc;
+            return qc.badMembers.size() == size && qc.complainForMembers.size() == size;
+        } else if (msg_type == NetMsgType::QJUSTIFICATION) {
+            CDKGJustification qj;
+            s >> qj;
+            return qj.contributions.size() <= size;
+        } else if (msg_type == NetMsgType::QPCOMMITMENT) {
+            CDKGPrematureCommitment qc;
+            s >> qc;
+            return qc.validMembers.size() == size;
+        }
+        return false;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+} // anonymous namespace
 
 CDKGSessionManager::CDKGSessionManager(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                                        const ChainstateManager& chainman, const CSporkManager& sporkman,
@@ -104,6 +185,14 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
         return MisbehavingError{10};
     }
 
+    // Pushed DKG messages (QCONTRIB/QCOMPLAINT/QJUSTIFICATION/QPCOMMITMENT) retain
+    // attacker-controlled payloads, so they must originate from an MNAuth-verified
+    // masternode. qwatch is unauthenticated (any peer can set it via QWATCH) and is
+    // only meaningful for pull/observation paths; it must not bypass this gate.
+    if (pfrom.GetVerifiedProRegTxHash().IsNull()) {
+        return MisbehavingError{10, "DKG message from non-verified peer"};
+    }
+
     if (vRecv.empty()) {
         return MisbehavingError{100};
     }
@@ -164,6 +253,20 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     }
 
     assert(quorumIndex != -1);
+
+    // Reject oversized payloads before any deserialization or retention. A
+    // well-formed DKG message is bounded by quorum params; anything larger is an
+    // amplification attempt against the per-peer pending queue.
+    if (vRecv.size() > MaxDKGMessageSize(msg_type, llmq_params)) {
+        return MisbehavingError{100, "oversized DKG message"};
+    }
+
+    // Cheap structural pre-validation before retention. Validates a copy so the
+    // original bytes (and their inventory hash) are preserved for the worker.
+    if (!CheckDKGMessageStructure(msg_type, vRecv, llmq_params)) {
+        return MisbehavingError{100, "malformed DKG message"};
+    }
+
     WITH_LOCK(cs_indexedQuorumsCache, indexedQuorumsCache[llmqType].insert(quorumHash, quorumIndex));
     return Assert(dkgSessionHandlers.at({llmqType, quorumIndex}))->ProcessMessage(pfrom.GetId(), msg_type, vRecv);
 }

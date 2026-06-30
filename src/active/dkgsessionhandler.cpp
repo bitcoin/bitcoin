@@ -275,6 +275,18 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
             continue;
         }
 
+        // An invalid signature must never reach AggregateInsecure(), which asserts
+        // that both operands are valid. Mark the sender bad and skip it instead of
+        // aggregating it. This guard is mandatory: it covers every
+        // message type the batch verifier is instantiated for, including those whose
+        // per-message PreVerifyMessage does not (yet) reject invalid signatures.
+        // Note: 'first' below tracks the first *accumulated* (valid) signature, not
+        // the first *examined* message, so skipping leading invalid sigs is safe.
+        if (!msg->sig.IsValid()) {
+            ret.emplace(nodeId);
+            continue;
+        }
+
         if (first) {
             aggSig = msg->sig;
         } else {
@@ -298,6 +310,12 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
         messageHashes.emplace_back(msgHash);
     }
     if (!revertToSingleVerification) {
+        if (pubKeys.empty()) {
+            // Every message had an unknown member or invalid signature; all such
+            // senders are already in ret. VerifyInsecureAggregated() asserts that
+            // the pubkey/hash spans are non-empty, so bail out here.
+            return ret;
+        }
         if (aggSig.VerifyInsecureAggregated(pubKeys, messageHashes)) {
             // all good
             return ret;
@@ -322,6 +340,13 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
         }
 
         auto member = session.GetMember(msg->proTxHash);
+        if (member == nullptr || !msg->sig.IsValid()) {
+            // Examined messages with these properties are already in ret, but the
+            // early break on a duplicate hash above can leave some unexamined.
+            // Stay defensive: never dereference a null member or verify an invalid sig.
+            ret.emplace(nodeId);
+            continue;
+        }
         bool valid = msg->sig.VerifyInsecure(member->dmn->pdmnState->pubKeyOperator.Get(), msg->GetSignHash());
         if (!valid) {
             ret.emplace(nodeId);
