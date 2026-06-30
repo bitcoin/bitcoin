@@ -13,7 +13,6 @@ from test_framework.blocktools import MAX_FUTURE_BLOCK_TIME
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
@@ -156,6 +155,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info('Check "coin-join" transaction')
         input_0 = next(i for i in self.nodes[0].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
         input_1 = next(i for i in self.nodes[1].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
+        output_0 = self.nodes[0].getnewaddress()
         raw_hex = self.nodes[0].createrawtransaction(
             inputs=[
                 {
@@ -168,17 +168,62 @@ class ListTransactionsTest(BitcoinTestFramework):
                 },
             ],
             outputs={
-                self.nodes[0].getnewaddress(): 0.123,
+                output_0: 0.123,
                 self.nodes[1].getnewaddress(): 0.123,
             },
         )
         raw_hex = self.nodes[0].signrawtransactionwithwallet(raw_hex)["hex"]
         raw_hex = self.nodes[1].signrawtransactionwithwallet(raw_hex)["hex"]
         txid_join = self.nodes[0].sendrawtransaction(hexstring=raw_hex, maxfeerate=0)
-        fee_join = self.nodes[0].getmempoolentry(txid_join)["fees"]["base"]
-        # Fee should be correct: assert_equal(fee_join, self.nodes[0].gettransaction(txid_join)['fee'])
-        # But it is not, see for example https://github.com/bitcoin/bitcoin/issues/14136:
-        assert_not_equal(fee_join, self.nodes[0].gettransaction(txid_join)["fee"])
+        expected_credit = Decimal("0.123")
+        expected_amount = expected_credit - input_0["amount"]
+        tx_info = self.nodes[0].gettransaction(txid_join)
+
+        assert_equal(tx_info["amount"], expected_amount)
+        assert "fee" not in tx_info
+        assert_equal(tx_info["involves_mixed_inputs"], True)
+        assert_equal(tx_info["wallet_debit"], input_0["amount"])
+        assert_equal(tx_info["wallet_credit"], expected_credit)
+        send_details = [detail for detail in tx_info["details"] if detail["category"] == "send"]
+        assert_equal(len(send_details), 1)
+        assert_equal(sum(detail["amount"] for detail in tx_info["details"]), expected_amount)
+        assert_array_result(tx_info["details"], {"category": "send"}, {
+            "amount": -input_0["amount"],
+            "wallet_debit": input_0["amount"],
+            "wallet_credit": expected_credit,
+            "involves_mixed_inputs": True,
+        })
+        assert "address" not in send_details[0]
+        assert "vout" not in send_details[0]
+        assert "fee" not in send_details[0]
+        assert_array_result(tx_info["details"], {"category": "receive"}, {
+            "address": output_0,
+            "amount": expected_credit,
+            "involves_mixed_inputs": True,
+        })
+
+        # The unfiltered history reports a single unattributed aggregate send
+        # plus a receive entry for the wallet-owned output.
+        history = [entry for entry in self.nodes[0].listtransactions("*", 100) if entry["txid"] == txid_join]
+        assert_equal(len(history), 2)
+        history_send = [entry for entry in history if entry["category"] == "send"]
+        assert_equal(len(history_send), 1)
+        assert_equal(sum(entry["amount"] for entry in history), expected_amount)
+        assert_array_result(history, {"category": "send"}, {
+            "amount": -input_0["amount"],
+            "wallet_debit": input_0["amount"],
+            "wallet_credit": expected_credit,
+            "involves_mixed_inputs": True,
+        })
+        assert_array_result(history, {"category": "receive"}, {
+            "address": output_0,
+            "amount": expected_credit,
+            "involves_mixed_inputs": True,
+        })
+        for entry in history:
+            assert "fee" not in entry
+        assert "address" not in history_send[0]
+        assert "vout" not in history_send[0]
 
     def run_invalid_parameters_test(self):
         self.log.info("Test listtransactions RPC parameter validity")
@@ -204,7 +249,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         wallet = self.nodes[0].get_wallet_rpc("fromme")
 
-        # The 'fee' field of gettransaction is only added when the transaction is 'from me'
+        # The 'fee' field of gettransaction is only added when the wallet-attributable fee is known.
         # Run twice, once for a transaction in the mempool, again when it confirms
         for confirm in [False, True]:
             key = get_generate_key()
@@ -235,12 +280,24 @@ class ListTransactionsTest(BitcoinTestFramework):
 
             import_res = wallet.importdescriptors([{"desc": descriptor, "timestamp": "now"}])
             assert_equal(import_res[0]["success"], True)
-            # TODO: We should check that the fee matches, but since the transaction spends inputs
-            # not known to the wallet, it is incorrectly calculating the fee.
-            # assert_equal(wallet.gettransaction(txid)["fee"], fee)
             tx_info = wallet.gettransaction(txid)
-            assert "fee" in tx_info
-            assert_equal(any(detail["category"] == "send" for detail in tx_info["details"]), True)
+            assert_equal(tx_info["amount"], Decimal("0.5"))
+            assert "fee" not in tx_info
+            assert_equal(tx_info["involves_mixed_inputs"], True)
+            assert_equal(tx_info["wallet_debit"], Decimal("1"))
+            assert_equal(tx_info["wallet_credit"], Decimal("1.5"))
+            send_details = [detail for detail in tx_info["details"] if detail["category"] == "send"]
+            assert_equal(len(send_details), 1)
+            assert_equal(sum(detail["amount"] for detail in tx_info["details"]), Decimal("0.5"))
+            assert_array_result(tx_info["details"], {"category": "send"}, {
+                "amount": Decimal("-1"),
+                "wallet_debit": Decimal("1"),
+                "wallet_credit": Decimal("1.5"),
+                "involves_mixed_inputs": True,
+            })
+            assert "address" not in send_details[0]
+            assert "vout" not in send_details[0]
+            assert "fee" not in send_details[0]
 
 if __name__ == '__main__':
     ListTransactionsTest(__file__).main()

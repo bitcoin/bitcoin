@@ -166,6 +166,7 @@ CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx)
 }
 
 WalletTxHistoryAccounting CachedTxGetHistoryAccounting(const CWallet& wallet, const CWalletTx& wtx)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     const CAmount debit{CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false)};
     const CAmount credit{CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false)};
@@ -181,29 +182,28 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                   std::list<COutputEntry>& listReceived,
                   std::list<COutputEntry>& listSent, CAmount& nFee,
                   bool include_change)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     nFee = 0;
     listReceived.clear();
     listSent.clear();
+    const WalletTxHistoryAccounting accounting{CachedTxGetHistoryAccounting(wallet, wtx)};
+    const bool all_inputs_mine{accounting.input_ownership == WalletTxInputOwnership::ALL};
 
     // Compute fee:
-    CAmount nDebit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
-    if (nDebit > 0) // debit>0 means we signed/sent this transaction
-    {
-        CAmount nValueOut = wtx.tx->GetValueOut();
-        nFee = nDebit - nValueOut;
+    if (accounting.fee.has_value()) {
+        nFee = *accounting.fee;
     }
 
-    LOCK(wallet.cs_wallet);
     // Sent/received.
     for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
         const CTxOut& txout = wtx.tx->vout[i];
         bool ismine = wallet.IsMine(txout);
-        // Only need to handle txouts if AT LEAST one of these is true:
-        //   1) they debit from us (sent)
-        //   2) the output is to us (received)
-        if (nDebit > 0)
+        // Only need to handle txouts if either:
+        //   1) every input is ours, so the output can be reported as sent
+        //   2) the output is ours, so it can be reported as received
+        if (all_inputs_mine)
         {
             if (!include_change && OutputIsChange(wallet, txout))
                 continue;
@@ -223,8 +223,8 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
         COutputEntry output = {address, txout.nValue, (int)i};
 
-        // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
+        // Only transactions fully funded by the wallet have attributable sent outputs.
+        if (all_inputs_mine)
             listSent.push_back(output);
 
         // If we are receiving the output, add it as a "received" entry
