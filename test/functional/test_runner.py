@@ -388,6 +388,7 @@ BASE_SCRIPTS = [
     'interface_ipc_cli.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
+    'wallet_gettransaction_mixed_inputs.py',
     'feature_framework_startup_failures.py',
     'feature_shutdown.py',
     'wallet_migration.py',
