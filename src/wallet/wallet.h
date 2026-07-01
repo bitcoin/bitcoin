@@ -706,7 +706,7 @@ public:
     );
 
     /** Pass this transaction to node for optional mempool insertion and relay to peers. */
-    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method) const
+    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method)
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Updates wallet birth time if 'time' is below it */
