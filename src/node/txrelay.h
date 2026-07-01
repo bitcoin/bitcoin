@@ -164,12 +164,32 @@ public:
         return m_tx_inventory_to_send.empty() && m_next_inv_send_time == std::chrono::microseconds{0};
     }
 
-    struct TxInventoryBatch {
+    class TxInventoryBatch
+    {
+        friend class TxRelay;
+
+        TxInventoryBatch() = default;
+
         bool m_send_trickle{false};
         bool m_send_mempool{false};
         bool m_inv_send_time_reached{false};
         CAmount m_fee_filter_received{0};
         std::vector<Wtxid> m_tx_inventory_to_send;
+
+    public:
+        TxInventoryBatch(const TxInventoryBatch&) = delete;
+        TxInventoryBatch& operator=(const TxInventoryBatch&) = delete;
+        TxInventoryBatch(TxInventoryBatch&&) noexcept = default;
+        TxInventoryBatch& operator=(TxInventoryBatch&&) noexcept = default;
+
+        bool SendTrickle() const { return m_send_trickle; }
+        bool SendMempool() const { return m_send_mempool; }
+        bool InvSendTimeReached() const { return m_inv_send_time_reached; }
+        CAmount FeeFilterReceived() const { return m_fee_filter_received; }
+        std::vector<Wtxid> QueuedCandidates() const { return m_tx_inventory_to_send; }
+        std::vector<Wtxid> TakeQueuedCandidates() { return std::exchange(m_tx_inventory_to_send, {}); }
+        void ClearQueued() { m_tx_inventory_to_send.clear(); }
+        void EraseQueued(const Wtxid& wtxid) { std::erase(m_tx_inventory_to_send, wtxid); }
     };
 
     /** Snapshot inventory for a relay attempt.
@@ -212,8 +232,16 @@ public:
         return batch;
     }
 
-    void ReturnTxInventory(std::vector<Wtxid> tx_inventory_to_send) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    TxInventoryBatch StartTxInventoryBatch(bool send_trickle)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
+        return StartTxInventoryBatch(send_trickle, std::chrono::microseconds::min());
+    }
+
+    void ReturnTxInventory(TxInventoryBatch&& batch) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        auto tx_inventory_to_send{std::move(batch.m_tx_inventory_to_send)};
+
         LOCK(m_tx_inventory_mutex);
         if (m_tx_inventory_to_send.empty()) {
             m_tx_inventory_to_send.swap(tx_inventory_to_send);

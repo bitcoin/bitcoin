@@ -6264,7 +6264,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             // The g_msgproc_mutex held by SendMessages() serializes this entire
             // batch workflow, including scheduling and announcement decisions.
             auto tx_inventory_batch{tx_relay->StartTxInventoryBatch(node.HasPermission(NetPermissionFlags::NoBan), current_time)};
-            if (tx_inventory_batch.m_inv_send_time_reached) {
+            if (tx_inventory_batch.InvSendTimeReached()) {
                 if (node.IsInboundConn()) {
                     tx_relay->SetNextInvSendTime(NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL, node.m_network_key));
                 } else {
@@ -6273,17 +6273,17 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
 
             // Respond to BIP35 mempool requests
-            if (tx_inventory_batch.m_send_trickle && tx_inventory_batch.m_send_mempool) {
+            if (tx_inventory_batch.SendTrickle() && tx_inventory_batch.SendMempool()) {
                 auto vtxinfo = m_mempool.infoAll();
 
                 // Ensure we'll respond to GETDATA requests for anything we're about to announce
                 const uint64_t mempool_sequence{WITH_LOCK(m_mempool.cs, return m_mempool.GetSequence())};
                 tx_relay->SetLastInvSequence(mempool_sequence);
 
-                const CFeeRate filterrate{tx_inventory_batch.m_fee_filter_received};
+                const CFeeRate filterrate{tx_inventory_batch.FeeFilterReceived()};
 
                 // we'll send everything in the mempool momentarily, so this is redundant
-                tx_inventory_batch.m_tx_inventory_to_send.clear();
+                tx_inventory_batch.ClearQueued();
 
                 for (const auto& txinfo : vtxinfo) {
                     const Txid& txid{txinfo.tx->GetHash()};
@@ -6307,19 +6307,16 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
 
             // Determine transactions to relay
-            if (tx_inventory_batch.m_send_trickle) {
+            if (tx_inventory_batch.SendTrickle()) {
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // (sorted from higher priority to lowest, skipping low fee)
-                const CFeeRate filterrate{tx_inventory_batch.m_fee_filter_received};
+                const CFeeRate filterrate{tx_inventory_batch.FeeFilterReceived()};
 
                 auto inv_tx = [&]() {
-                    auto& invs = tx_inventory_batch.m_tx_inventory_to_send;
+                    auto invs = tx_inventory_batch.TakeQueuedCandidates();
                     std::vector<CTransactionRef> res;
 
                     if (invs.size() == 0) return res;
-
-                    // if previous allocations were excessive, shrink to the current size
-                    if (invs.capacity() > 2 * invs.size()) invs.shrink_to_fit();
 
                     LOCK(m_mempool.cs);
                     auto txiters = m_mempool.ExtractBestByMiningScoreWithTopology(invs, invs.size());
@@ -6357,7 +6354,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     tx_relay->AddKnownTx(inv.hash);
                 }
 
-                tx_relay->ReturnTxInventory(std::move(tx_inventory_batch.m_tx_inventory_to_send));
+                tx_relay->ReturnTxInventory(std::move(tx_inventory_batch));
             }
         }
         if (!vInv.empty())
