@@ -56,7 +56,7 @@ struct CompressedHeader {
 };
 
 
-/** Find the best (period, bufsize) headers synchronization configuration for:
+/** Find a near-optimal (period, bufsize) headers synchronization configuration for:
  *
  * - A specified timespan between genesis and the tip of the chain.
  * - A specified number of headers in the minchainwork chain.
@@ -68,7 +68,7 @@ struct CompressedHeader {
 std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers);
 
 
-/** Find the best (period, bufsize) headers synchronization configuration for:
+/** Find a near-optimal (period, bufsize) headers synchronization configuration for:
  *
  * - No more than max_headers headers are possible.
  * - There are minchainwork_headers in the minchainwork chain.

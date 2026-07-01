@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
-#include <iterator>
 
 BOOST_FIXTURE_TEST_SUITE(headerssync_tests, BasicTestingSetup)
 
@@ -89,13 +88,11 @@ BOOST_AUTO_TEST_CASE(compute_headers_sync_params)
         {6168635190, 1335470, 2.876811767724857e-05, 811, 19828},
         {1709740236, 57056, 3.177749891774726e-07, 389, 11475},
     };
-    // Temporary: the random search the optimizer uses at this point is too slow to run every case
-    // on each test run, so for now only check one randomly chosen case. A later commit replaces
-    // the random search with a much faster algorithm, making it fast enough to check all of them.
-    const auto& cas = cases[m_rng.randrange(std::size(cases))];
-    const auto [period, bufsize] = ComputeHeadersSyncParamsInner(cas.max_headers, cas.minchainwork_headers, cas.attack_headers);
-    BOOST_CHECK_EQUAL(period, cas.expected_period);
-    BOOST_CHECK_EQUAL(bufsize, cas.expected_bufsize);
+    for (const auto& cas : cases) {
+        const auto [period, bufsize] = ComputeHeadersSyncParamsInner(cas.max_headers, cas.minchainwork_headers, cas.attack_headers);
+        BOOST_CHECK_EQUAL(period, cas.expected_period);
+        BOOST_CHECK_EQUAL(bufsize, cas.expected_bufsize);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

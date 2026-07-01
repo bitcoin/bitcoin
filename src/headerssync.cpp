@@ -5,7 +5,6 @@
 #include <headerssync.h>
 
 #include <pow.h>
-#include <random.h>
 #include <util/check.h>
 #include <util/log.h>
 #include <util/time.h>
@@ -17,7 +16,6 @@
 #include <numbers>
 #include <optional>
 #include <utility>
-#include <vector>
 
 HeadersSyncState::HeadersSyncState(NodeId id,
                                    const Consensus::Params& consensus_params,
@@ -350,7 +348,7 @@ CBlockLocator HeadersSyncState::NextHeadersRequestLocator() const
 //      change as well.
 //
 //  The question is what these {period} and {bufsize} parameters need to be set to. The code
-//  below computes the optimal choice, taking into account:
+//  below computes a near-optimal choice, taking into account:
 //
 //  - Minimizing the (maximum of) two scenarios that trigger per-peer memory usage:
 //
@@ -399,12 +397,20 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
     Assume(minchainwork_headers > 0);
     // Some small attacker success rate is inevitable.
     Assume(attack_headers > 0);
+    // Step 1 below relies on this to guarantee the two memory-usage curves intersect.
+    Assume(max_headers > 2 * minchainwork_headers);
 
     /** Maximal accepted headers per attack in a (period, bufsize) configuration.
      *
      * If limit is provided, the computation is stopped early when the result is known to exceed the
-     * value in limit. */
-    auto attack_rate = [&](int64_t period, int64_t bufsize, std::optional<double> limit = std::nullopt) noexcept -> double {
+     * value in limit.
+     *
+     * The period and bufsize arguments are generalized to accept floating-point inputs. This is
+     * meaningless on its own, as the actual algorithm can only operate with integer values. It is
+     * however used to find the optimum of the continuous extension below, around which the
+     * returned integer solution is searched.
+     */
+    auto attack_rate = [&](double period, double bufsize, std::optional<double> limit = std::nullopt) noexcept -> double {
         /** Each batch's probability is a factor 2^(HEADER_BATCH_COUNT/period) smaller than the
          *  previous one, so the contributions of all future batches form a geometric series.
          *  future_limit bounds the ratio of that sum to a single batch's HEADER_BATCH_COUNT*prob.
@@ -426,14 +432,14 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
                 const int64_t forged_headers = (batch + 1) * HEADER_BATCH_COUNT - honest;
                 /** The number of forged headers that would be accepted if the commitments in this
                  *  batch and all earlier batches verify correctly. */
-                const int accept_forged_headers = std::clamp<int>(forged_headers - bufsize, 0, HEADER_BATCH_COUNT);
-                if (accept_forged_headers > 0) {
+                const double accept_forged_headers = std::clamp<double>(forged_headers - bufsize, 0.0, HEADER_BATCH_COUNT);
+                if (accept_forged_headers > 0.0) {
                     /** The minimum number of commitments that fall within the forged headers,
                      *  independent of where those commitments fall. */
                     const int min_commitments = forged_headers / period;
                     /** The number of forged headers that may be covered by an extra commitment,
                      *  depending on where those commitments fall. */
-                    const int extra = forged_headers - min_commitments * period;
+                    const double extra = forged_headers - min_commitments * period;
                     /** The probability this batch (and all previous ones) gets accepted, averaged
                      *  over all places where the commitments may fall. Out of all {period} possible
                      *  offsets for the commitments, {extra} of them have {min_commitments + 1}
@@ -491,89 +497,154 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
         return fail_buf;
     };
 
-    /** Solve the equation x*exp(x)=value (x > 0, value > 0). */
-    constexpr auto lambert_w = [](double value) noexcept -> double {
-        // Initial approximation.
-        double approx = std::max(std::log(value), 0.0);
+    // The overall strategy to solve our problem (minimizing peak memory usage while staying under
+    // the acceptable attack rate), is as follows:
+    //
+    // Step 1: assume that period and bufsize can be arbitrary real numbers, and accurately find
+    //         the optimal solution to that continuous relaxation of the problem.
+    // Step 2: try the integer periods near the rounded continuous-optimal period, and return the
+    //         one whose memory usage is lowest (breaking ties toward the smallest period).
+    //
+    // The result is not guaranteed to be exactly optimal, as the true integer optimum could in
+    // principle fall outside the range tried in Step 2. It is guaranteed to be very close,
+    // however: rounding the continuous solution to integers increases its memory usage by only a
+    // tiny fraction, and the continuous optimum is a lower bound on what any integer solution can
+    // achieve.
+
+    // Step 1: find the optimum solution to the continuous relaxation of the problem, and round
+    //         the resulting real period to an integer, to serve as the center of Step 2's range.
+    const int64_t cont_period = [&]() -> int64_t {
+        // Abstractly, our goal is to find (period, bufsize):
+        // (1) such that attack_rate(period, bufsize) <= attack_headers
+        // (2) such that memory_usage(period, bufsize) is minimal
+        //
+        // Both of these turn into exact equalities in the continuous relaxation:
+        // (1) becomes attack_rate(period, bufsize) = attack_headers, because there is no need to
+        //     overshoot.
+        // (2) becomes mem_timewarp(period, bufsize) = mem_mainchain(period, bufsize), because
+        //     timewarp memory generally goes down with increasing period, and mainchain memory
+        //     generally goes up with increasing period (with bufsize set to keep the attack rate
+        //     constant). The maximum of the two is therefore minimized exactly where they
+        //     intersect. This can be shown to be the case whenever max_headers is larger than
+        //     2 * minchainwork_headers, which is practically always true.
+        //
+        // (2) written out and simplified is:
+        //
+        //    (max_headers - minchainwork_headers) / COMPACT_HEADER_SIZE = bufsize * period
+        //
+        // With the introduction of
+        const double memory_factor = std::sqrt(double(max_headers - minchainwork_headers) / COMPACT_HEADER_SIZE);
+        // (the square root of the left-hand side) and gamma = sqrt(bufsize / period), we get:
+        //
+        //    period = memory_factor / gamma
+        //    bufsize = memory_factor * gamma
+        //    period * bufsize = memory_factor^2
+        //
+        // If we now define
+        //
+        //    phi(gamma) = log2(attack_rate(period, bufsize) / attack_headers)
+        //               = log2(attack_rate(memory_factor / gamma, memory_factor * gamma) / attack_headers)
+        //
+        // In other words, phi(gamma) is the number of bits of security still missing to bring the
+        // attack rate down to attack_headers.
+        //
+        // Then equation (1) becomes just solving an equation in one variable:
+        //
+        //    phi(gamma) = 0
+        //
+        // We will use Newton-Raphson iterations to find gamma, but this requires knowing the
+        // derivative of the attack_rate w.r.t. gamma, which we cannot easily compute. We can
+        // however approximate it as equation (3):
+        //
+        //   attack_rate(period, bufsize) =~ kappa * period * 2^-(bufsize/period)
+        //
+        // for some constant kappa. To see why, consider that every x'th header arriving has
+        // approximately (x / period) commitments on it, and thus a probability of 2^-(x / period)
+        // of being accepted, if x >= bufsize. The integral of 2^(-x/period) over
+        // x=bufsize..infinity is period * 2^-(bufsize/period) / log(2). Thus, we get (3) with
+        // kappa = 1/log(2).
+        //
+        // In reality kappa also needs to capture discreteness effects (integer commitment counts,
+        // and headers arriving in groups of HEADER_BATCH_COUNT); an approximation that takes those
+        // into account is:
+        //
+        //   kappa = 2^(r / (2^r - 1)) / (2 * e * log(2)^3), with r = HEADER_BATCH_COUNT / period
+        //
+        // For simplicity we treat kappa as an unknown constant however, and using (1) and (3), we
+        // get:
+        //
+        //   phi(gamma) =~ log2(kappa * memory_factor / attack_headers) - log2(gamma) - gamma^2
+        //
+        // Its derivative w.r.t. gamma is -(2 * gamma + log2(e) / gamma), and thus Newton-Raphson
+        // iterations become:
+        //
+        //   gamma += phi(gamma) / (2 * gamma + log2(e) / gamma)
+        //
+        // Kappa disappeared from this expression, but only because we treated it as a constant that
+        // is independent of gamma. In reality this is not correct, but we can compensate for that
+        // by computing phi(gamma) exactly using attack_rate(), rather than through the
+        // approximation. This effectively updates the implicit kappa on every iteration.
+
+        using std::numbers::log2e;
+        // Compute an initial guess for gamma^2 (the bufsize/period ratio), assuming kappa = 0.7.
+        // Setting phi(gamma) = 0 and solving for the gamma^2 term gives the fixed-point equation
+        //
+        //   gamma^2 = log2(kappa * memory_factor / attack_headers) - 0.5 * log2(gamma^2)
+        //
+        // ratio0 below is this with the small log2(gamma^2) correction dropped; substituting ratio0
+        // into that correction once then gives a refined starting point.
+        constexpr double kappa0 = 0.7;
+        const double ratio0 = std::log2(kappa0 * memory_factor / attack_headers);
+        double gamma = std::sqrt(ratio0 - 0.5 * std::log2(ratio0));
+        // And the corresponding period:
+        double period = memory_factor / gamma;
+
+        // Newton-Raphson step on phi(gamma). Stop once the period moves by less than 0.1, so
+        // that the rounded result is accurate enough to serve as the center of Step 2's search
+        // range. Also add a limit of 10 iterations as protection against non-converging input.
         for (int i = 0; i < 10; ++i) {
-            // Newton-Raphson iteration steps.
-            approx += (value * std::exp(-approx) - approx) / (approx + 1.0);
+            // Compute bufsize corresponding to current gamma.
+            const double bufsize = memory_factor * gamma;
+            // Evaluate phi(gamma) using the actual (continuous) attack_rate.
+            const double phi = std::log2(attack_rate(period, bufsize) / attack_headers);
+            // Actual Newton-Raphson step.
+            gamma += phi / (2.0 * gamma + log2e / gamma);
+            // The step may overshoot arbitrarily (even to negative gamma, when the continuous
+            // optimum lies at a tiny period), from where the next iteration would be
+            // meaningless. Clamp gamma to a broad range to keep the iteration well-defined.
+            gamma = std::clamp(gamma, 1.0 / 64, 64.0);
+            // Compute the period corresponding to the updated gamma, and stop iterating once it
+            // barely changes anymore.
+            const auto old_period = period;
+            period = memory_factor / gamma;
+            if (std::abs(period - old_period) < 0.1) break;
         }
-        return approx;
-    };
+        return std::clamp<int64_t>(std::round(period), 1, minchainwork_headers);
+    }();
 
-    // When period*bufsize = memory_scale, the per-peer memory for a mainchain sync and a maximally
-    // long low-difficulty header sync are equal.
-    const double memory_scale = double(max_headers - minchainwork_headers) / COMPACT_HEADER_SIZE;
-    // Compute approximation for {bufsize/period}, using a formula for a simplified problem.
-    const double approx_ratio = lambert_w(std::log(4.0) * memory_scale / (attack_headers * attack_headers)) / std::log(4.0);
-    // Use those for a first attempt.
-    int64_t period = int64_t(std::sqrt(memory_scale / approx_ratio) + 0.5);
-    int64_t bufsize = find_bufsize(period);
-    int64_t best_period = period;
-    int64_t best_bufsize = bufsize;
-    int64_t best_mem = memory_usage(period, bufsize);
-    // (period, bufsize) configurations found so far, used to lower-bound find_bufsize.
-    std::vector<std::pair<int64_t, int64_t>> maps{{period, bufsize}};
-
-    // Consider all period values between 1 and minchainwork_headers, except the one just tried.
-    std::vector<int64_t> periods;
-    periods.reserve(minchainwork_headers);
-    for (int64_t iv = 1; iv <= minchainwork_headers; ++iv) {
-        if (iv != period) periods.push_back(iv);
-    }
-
-    // The search order is randomized; the result is the true optimum regardless of seed.
-    InsecureRandomContext rng(/*seedval=*/0);
-    // Iterate, picking a random element from periods, computing its corresponding bufsize, and
-    // then using the result to shrink the period.
-    while (true) {
-        // Remove all periods whose memory usage for low-work long chain sync exceed the best
-        // memory usage we've found so far.
-        std::erase_if(periods, [&](int64_t p) { return max_headers / p >= best_mem; });
-        // Stop if there is nothing left to try.
-        if (periods.empty()) break;
-        // Pick a random remaining option for period size, and compute corresponding bufsize.
-        const std::size_t idx = rng.randrange(periods.size());
-        period = periods[idx];
-        periods[idx] = periods.back();
-        periods.pop_back();
-        // The buffer size (at a given attack level) cannot shrink as the period grows. Find the
-        // largest period smaller than the selected one we know the buffer size for, and use that
-        // as a lower bound to find_bufsize.
-        std::pair<int64_t, int64_t> lower{0, 0};
-        for (const auto& entry : maps) {
-            if (entry.first < period && entry > lower) lower = entry;
-        }
-        const int64_t min_bufsize = lower.second;
-        const int64_t bufsize = find_bufsize(period, min_bufsize);
-        const int64_t mem = memory_usage(period, bufsize);
-        if (mem <= best_mem) {
-            // We found a (period, bufsize) configuration with better memory usage than our best
-            // so far. Remember it for future lower bounds.
-            maps.emplace_back(period, bufsize);
-            // Remove all periods that are on the other side of the former best as the new best.
-            std::erase_if(periods, [&](int64_t p) { return (p < best_period) != (period < best_period); });
+    // Step 2: find the integer period in [cont_period - 2, cont_period + 2] (clamped to valid
+    //         values) which, together with its corresponding bufsize, results in the lowest
+    //         memory usage. Iterate upward with a strict improvement condition, so that ties are
+    //         broken toward the smallest period.
+    int64_t best_period = 0;
+    int64_t best_bufsize = 0;
+    int64_t best_max_mem = 0;
+    const auto low_period = std::max<int64_t>(cont_period - 2, 1);
+    const auto high_period = std::min<int64_t>(cont_period + 2, minchainwork_headers);
+    int64_t prev_bufsize = 1;
+    for (int64_t period = low_period; period <= high_period; ++period) {
+        // The bufsize needed can only grow as the period increases (fewer commitments fall
+        // within any given number of headers), so seed each search with the previous period's
+        // result, minus one so that even a floating-point-level violation of that argument
+        // cannot change the outcome.
+        const auto bufsize = find_bufsize(period, std::max<int64_t>(prev_bufsize - 1, 1));
+        prev_bufsize = bufsize;
+        const auto mem = memory_usage(period, bufsize);
+        if (best_period == 0 || mem < best_max_mem) {
             best_period = period;
             best_bufsize = bufsize;
-            best_mem = mem;
-        } else {
-            // The (period, bufsize) configuration we found is worse than what we already had.
-            // Remove all periods that are on the other side of the tried configuration as the
-            // best one.
-            std::erase_if(periods, [&](int64_t p) { return (p < period) != (best_period < period); });
+            best_max_mem = mem;
         }
-    }
-
-    // Break ties deterministically toward the smallest period (the convex memory curve can be flat
-    // over several adjacent periods), so the result does not depend on the random search order.
-    while (best_period > 1) {
-        const int64_t cand_bufsize = find_bufsize(best_period - 1);
-        const int64_t cand_mem = memory_usage(best_period - 1, cand_bufsize);
-        if (cand_mem != best_mem) break;
-        best_period -= 1;
-        best_bufsize = cand_bufsize;
-        best_mem = cand_mem;
     }
 
     return {size_t(best_period), size_t(best_bufsize)};
@@ -610,8 +681,11 @@ std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan
     Assume(minchainwork_headers > 0);
 
     /** Maximum number of headers a valid Bitcoin chain can have over the given timespan (from genesis
-     *  to now). When exploiting the timewarp attack, this can be up to 6 per second since genesis. */
-    const int64_t max_headers = 6 * timespan.count();
+     *  to now). When exploiting the timewarp attack, this can be up to 6 per second since genesis.
+     *  Clamp below such that max_headers > 2 * minchainwork_headers, which the optimizer relies on.
+     *  Any consistent clock satisfies this by a wide margin (the chain demonstrably reached
+     *  minchainwork_headers), but mocked or badly wrong clocks may not. */
+    const int64_t max_headers = std::max<int64_t>(6 * timespan.count(), 2 * minchainwork_headers + 1);
 
     return ComputeHeadersSyncParamsInner(max_headers, minchainwork_headers,
                                          LIMIT_FRACTION * minchainwork_headers);
