@@ -463,37 +463,15 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
         return std::max(mem_timewarp, mem_mainchain);
     };
 
-    /** Determine how big bufsize needs to be given a specific period length.
-     *
-     * This is the smallest bufsize such that the attack rate against (period, bufsize) is below
-     * attack_headers. If max_mem is provided and no such bufsize exists that needs less than
-     * max_mem bits of memory, std::nullopt is returned.
-     *
-     * min_bufsize is the minimal result to be considered.
-     */
-    auto find_bufsize = [&](int64_t period, std::optional<int64_t> max_mem = std::nullopt, int64_t min_bufsize = 1) noexcept -> std::optional<int64_t> {
-        int64_t succ_buf, fail_buf;
-        if (!max_mem) {
-            succ_buf = min_bufsize - 1;
-            fail_buf = min_bufsize;
-            // First double iteratively until an upper bound for failure is found.
-            while (attack_rate(period, fail_buf, attack_headers) >= attack_headers) {
-                const int64_t next_fail = 3 * fail_buf - 2 * succ_buf;
-                succ_buf = fail_buf;
-                fail_buf = next_fail;
-            }
-        } else {
-            // If a long low-work header chain exists that exceeds max_mem already, give up.
-            if (max_headers / period > *max_mem) return std::nullopt;
-            // Otherwise, verify that the maximal buffer size that permits a mainchain sync with less
-            // than max_mem memory is sufficient to get the attack rate below attack_headers. If not,
-            // also give up.
-            const int64_t max_buf = (*max_mem - (minchainwork_headers / period)) / COMPACT_HEADER_SIZE;
-            if (max_buf < min_bufsize) return std::nullopt;
-            if (attack_rate(period, max_buf, attack_headers) >= attack_headers) return std::nullopt;
-            // If it is sufficient, that's an upper bound to start our search.
-            succ_buf = min_bufsize - 1;
-            fail_buf = max_buf;
+    /** Smallest bufsize whose attack rate against (period, bufsize) is below attack_headers. */
+    auto find_bufsize = [&](int64_t period) noexcept -> int64_t {
+        int64_t succ_buf{0};
+        int64_t fail_buf{1};
+        // First double iteratively until an upper bound for failure is found.
+        while (attack_rate(period, fail_buf, attack_headers) >= attack_headers) {
+            const int64_t next_fail = 3 * fail_buf - 2 * succ_buf;
+            succ_buf = fail_buf;
+            fail_buf = next_fail;
         }
         // Then perform a bisection search to narrow it down.
         while (fail_buf > succ_buf + 1) {
@@ -525,7 +503,7 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
     const double approx_ratio = lambert_w(std::log(4.0) * memory_scale / (attack_headers * attack_headers)) / std::log(4.0);
     // Use those for a first attempt.
     int64_t period = int64_t(std::sqrt(memory_scale / approx_ratio) + 0.5);
-    int64_t bufsize = find_bufsize(period).value();
+    int64_t bufsize = find_bufsize(period);
     int64_t best_period = period;
     int64_t best_bufsize = bufsize;
     int64_t best_mem = memory_usage(period, bufsize);
@@ -561,15 +539,12 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
         for (const auto& entry : maps) {
             if (entry.first < period && entry > lower) lower = entry;
         }
-        const int64_t min_bufsize = lower.second;
-        const std::optional<int64_t> found = find_bufsize(period, best_mem, min_bufsize);
-        if (found) {
+        const int64_t bufsize = find_bufsize(period);
+        const int64_t mem = memory_usage(period, bufsize);
+        if (mem <= best_mem) {
             // We found a (period, bufsize) configuration with better memory usage than our best
             // so far. Remember it for future lower bounds.
-            bufsize = *found;
             maps.emplace_back(period, bufsize);
-            const int64_t mem = memory_usage(period, bufsize);
-            Assume(mem <= best_mem);
             // Remove all periods that are on the other side of the former best as the new best.
             std::erase_if(periods, [&](int64_t p) { return (p < best_period) != (period < best_period); });
             best_period = period;
@@ -586,7 +561,7 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
     // Break ties deterministically toward the smallest period (the convex memory curve can be flat
     // over several adjacent periods), so the result does not depend on the random search order.
     while (best_period > 1) {
-        const int64_t cand_bufsize = find_bufsize(best_period - 1).value();
+        const int64_t cand_bufsize = find_bufsize(best_period - 1);
         const int64_t cand_mem = memory_usage(best_period - 1, cand_bufsize);
         if (cand_mem != best_mem) break;
         best_period -= 1;
