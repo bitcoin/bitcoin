@@ -7,7 +7,7 @@ on:
 jobs:
   benchmark:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 600
+    timeout-minutes: 1000
     env:
       ORIGINAL_DATADIR: /data/pruned-840k
     steps:

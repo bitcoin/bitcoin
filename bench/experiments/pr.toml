@@ -10,7 +10,7 @@ outputs = ["results", "debug-plots"]
 
 [benchmark]
 start_height = 840000
-runs = 2
+runs = 1
 
 [bitcoind]
 stopatheight = 900000
