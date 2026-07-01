@@ -843,6 +843,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.",
             encrypted_wallet.importdescriptors, [descriptor])
 
+        self.log.info("A locked wallet rejects an empty importdescriptors request")
+        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.",
+            encrypted_wallet.importdescriptors, [])
+
+        self.log.info("An unlocked wallet accepts an empty importdescriptors request")
+        self.nodes[0].createwallet("unencrypted_wallet", blank=True)
+        unencrypted_wallet = self.nodes[0].get_wallet_rpc("unencrypted_wallet")
+        assert_equal(unencrypted_wallet.importdescriptors([]), [])
+
         descriptor["timestamp"] = 0
         descriptor["next_index"] = 0
 
