@@ -11,11 +11,12 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # issues: write is required so the action can manage labels and post comments on PRs
+  issues: write
   # Enforce other not needed permissions are off
   actions: none
   checks: none
   deployments: none
-  issues: none
   #metadata: read
   packages: none
   repository-projects: none
@@ -27,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check if prs are dirty
-        uses: eps1lon/actions-label-merge-conflict@releases/2.x
+        uses: eps1lon/actions-label-merge-conflict@v3.1.0
         with:
           dirtyLabel: "needs rebase"
           repoToken: "${{ secrets.GITHUB_TOKEN }}"

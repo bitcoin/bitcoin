@@ -1,7 +1,10 @@
 name: Check Merge Fast-Forward Only
 
 permissions:
+  contents: read
   pull-requests: write
+  # Required so we can apply labels to PRs (labels go through the issues API)
+  issues: write
 
 on:
   push:
@@ -42,11 +45,16 @@ jobs:
           fi
 
       - name: add labels
-        uses: actions-ecosystem/action-add-labels@v1
-        if: failure()
+        uses: actions/github-script@v8
+        if: failure() && github.event.pull_request
         with:
-          labels: |
-            needs rebase
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['needs rebase']
+            });
 
       - name: comment
         uses: mshick/add-pr-comment@v2
