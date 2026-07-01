@@ -5549,11 +5549,11 @@ class CompareInvMempoolOrder
 public:
     explicit CompareInvMempoolOrder(CTxMemPool* mempool) : m_mempool{mempool} {}
 
-    bool operator()(std::set<Wtxid>::iterator a, std::set<Wtxid>::iterator b)
+    bool operator()(const Wtxid& a, const Wtxid& b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * higher mining score to sort later. */
-        return m_mempool->CompareMiningScoreWithTopology(*b, *a);
+        return m_mempool->CompareMiningScoreWithTopology(b, a);
     }
 };
 } // namespace
@@ -6000,7 +6000,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
             auto tx_inventory_batch{tx_relay->StartTxInventoryBatch(node.HasPermission(NetPermissionFlags::NoBan), current_time)};
-            if (tx_inventory_batch.m_inv_send_time_reached) {
+            if (tx_inventory_batch.InvSendTimeReached()) {
                 if (node.IsInboundConn()) {
                     tx_relay->SetNextInvSendTime(NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL, node.m_network_key));
                 } else {
@@ -6009,9 +6009,9 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
 
             // Respond to BIP35 mempool requests
-            if (tx_inventory_batch.m_send_trickle && tx_inventory_batch.m_send_mempool) {
+            if (tx_inventory_batch.SendTrickle() && tx_inventory_batch.SendMempool()) {
                 auto vtxinfo = m_mempool.infoAll();
-                const CFeeRate filterrate{tx_inventory_batch.m_fee_filter_received};
+                const CFeeRate filterrate{tx_inventory_batch.FeeFilterReceived()};
 
                 for (const auto& txinfo : vtxinfo) {
                     const Txid& txid{txinfo.tx->GetHash()};
@@ -6019,7 +6019,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     const auto inv = peer.m_wtxid_relay ?
                                          CInv{MSG_WTX, wtxid.ToUint256()} :
                                          CInv{MSG_TX, txid.ToUint256()};
-                    tx_inventory_batch.m_tx_inventory_to_send.erase(wtxid);
+                    tx_inventory_batch.EraseQueued(wtxid);
 
                     // Don't send transactions that peers will not put into their mempool
                     if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
@@ -6036,14 +6036,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
 
             // Determine transactions to relay
-            if (tx_inventory_batch.m_send_trickle) {
+            if (tx_inventory_batch.SendTrickle()) {
                 // Produce a vector with all candidates for sending
-                std::vector<std::set<Wtxid>::iterator> vInvTx;
-                vInvTx.reserve(tx_inventory_batch.m_tx_inventory_to_send.size());
-                for (std::set<Wtxid>::iterator it = tx_inventory_batch.m_tx_inventory_to_send.begin(); it != tx_inventory_batch.m_tx_inventory_to_send.end(); it++) {
-                    vInvTx.push_back(it);
-                }
-                const CFeeRate filterrate{tx_inventory_batch.m_fee_filter_received};
+                std::vector<Wtxid> vInvTx{tx_inventory_batch.QueuedCandidates()};
+                const CFeeRate filterrate{tx_inventory_batch.FeeFilterReceived()};
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // A heap is used so that not all items need sorting if only a few are being sent.
                 CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
@@ -6051,16 +6047,15 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 // No reason to drain out at many times the network's capacity,
                 // especially since we have many peers and some will draw much shorter delays.
                 unsigned int nRelayedTransactions = 0;
-                size_t broadcast_max{INVENTORY_BROADCAST_TARGET + (tx_inventory_batch.m_tx_inventory_to_send.size()/1000)*5};
+                size_t broadcast_max{INVENTORY_BROADCAST_TARGET + (vInvTx.size()/1000)*5};
                 broadcast_max = std::min<size_t>(INVENTORY_BROADCAST_MAX, broadcast_max);
                 while (!vInvTx.empty() && nRelayedTransactions < broadcast_max) {
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                    std::set<Wtxid>::iterator it = vInvTx.back();
+                    auto wtxid = vInvTx.back();
                     vInvTx.pop_back();
-                    auto wtxid = *it;
                     // Remove it from the to-be-sent set
-                    tx_inventory_batch.m_tx_inventory_to_send.erase(it);
+                    tx_inventory_batch.EraseQueued(wtxid);
                     // Not in the mempool anymore? don't bother sending it.
                     auto txinfo = m_mempool.info(wtxid);
                     if (!txinfo.tx) {
@@ -6091,7 +6086,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     tx_relay->AddKnownTx(inv.hash);
                 }
 
-                tx_relay->ReturnTxInventory(std::move(tx_inventory_batch.m_tx_inventory_to_send));
+                tx_relay->ReturnTxInventory(std::move(tx_inventory_batch));
 
                 // Ensure we'll respond to GETDATA requests for anything we've just announced
                 const uint64_t mempool_sequence{WITH_LOCK(m_mempool.cs, return m_mempool.GetSequence())};
