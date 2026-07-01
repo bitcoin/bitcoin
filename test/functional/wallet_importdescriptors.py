@@ -47,13 +47,21 @@ class ImportDescriptorsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def test_importdesc(self, req, success, error_code=None, error_message=None, warnings=None, wallet=None):
+    def test_importdesc(self, req, success, global_error=False, error_code=None, error_message=None, warnings=None, wallet=None):
         """Run importdescriptors and assert success"""
         if warnings is None:
             warnings = []
         wrpc = self.nodes[1].get_wallet_rpc('w1')
         if wallet is not None:
             wrpc = wallet
+
+        if global_error and not success:
+            try:
+                result = wrpc.importdescriptors([req])
+            except JSONRPCException as e:
+                assert_equal(e.error["code"], error_code)
+                assert_equal(e.error["message"], error_message)
+                return
 
         result = wrpc.importdescriptors([req])
         observed_warnings = []
@@ -219,6 +227,25 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=False,
                              error_code=-8,
                              error_message='Descriptor not found.')
+
+        # # Test import fails if one timestamp is invalid or missing
+        self.log.info("Import should fail if timestamp is missing or an invalid timestamp is present in the request")
+        key = get_generate_key()
+        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"), "label": "Descriptor import test"}
+        self.test_importdesc(import_request,
+            success=False,
+            global_error=True,
+            error_code=-3,
+            error_message="Missing required timestamp field for key")
+
+        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
+            "timestamp": "this_is_not_a_valid_timestamp",
+            "label": "Descriptor import test"}
+        self.test_importdesc(import_request,
+            success=False,
+            global_error=True,
+            error_code=-3,
+            error_message='Expected number or "now" timestamp value for key. got type string')
 
         # # Test importing of a P2PKH descriptor
         key = get_generate_key()
