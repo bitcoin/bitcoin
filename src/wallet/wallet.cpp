@@ -3843,6 +3843,57 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
     return std::reference_wrapper(*spk_man);
 }
 
+util::Result<CExtPubKey> CWallet::AddHDKey(const std::optional<CExtKey>& key)
+{
+    LOCK(cs_wallet);
+
+    if (key && !key->key.IsValid()) {
+        return util::Error{_("Invalid HD key")};
+    }
+
+    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        return util::Error{_("addhdkey is not available for wallets without private keys")};
+    }
+
+    if (IsLocked()) {
+        return util::Error{_("Wallet needs to be unlocked to perform this operation.")};
+    }
+
+    CExtKey hdkey;
+    if (key) {
+        hdkey = *key;
+    } else {
+        CKey seed_key = GenerateRandomKey();
+        hdkey.SetSeed(seed_key);
+    }
+
+    std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
+    FlatSigningProvider keys;
+    std::string error;
+    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, /*require_checksum=*/false);
+    Assume(!descs.empty());
+    WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+
+    if (GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
+        return util::Error{_("HD key already exists")};
+    }
+
+    auto spkm = AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
+    if (!spkm) {
+        return util::Error{util::ErrorString(spkm)};
+    }
+
+    const DescriptorScriptPubKeyMan& desc_spkm = spkm->get();
+    LOCK(desc_spkm.cs_desc_man);
+    std::set<CPubKey> pubkeys;
+    std::set<CExtPubKey> extpubs;
+    desc_spkm.GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+    Assume(pubkeys.empty());
+    Assume(extpubs.size() == 1);
+
+    return *extpubs.begin();
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);

@@ -11,11 +11,13 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/cs_main.h>
+#include <key.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
+#include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
@@ -1046,6 +1048,13 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Add an HD key to the wallet and return its master xpub.
+    //! Requires the wallet to be unlocked.
+    //! @param[in] key Optional extended private key to add. If not provided,
+    //!                a new random HD key will be generated.
+    //! @return The master xpub for the added HD key, or an error on failure.
+    util::Result<CExtPubKey> AddHDKey(const std::optional<CExtKey>& key);
 
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.

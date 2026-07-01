@@ -874,13 +874,12 @@ RPCMethod addhdkey()
 
             EnsureWalletIsUnlocked(*wallet);
 
-            CExtKey hdkey;
-            if (request.params[0].isNull()) {
-                CKey seed_key = GenerateRandomKey();
-                hdkey.SetSeed(seed_key);
-            } else {
-                hdkey = DecodeExtKey(request.params[0].get_str());
-                if (!hdkey.key.IsValid()) {
+            std::optional<CExtKey> key;
+
+            if (!request.params[0].isNull()) {
+                key = DecodeExtKey(request.params[0].get_str());
+
+                if (!key->key.IsValid()) {
                     // Check if the user gave us an xpub and give a more descriptive error if so
                     CExtPubKey xpub = DecodeExtPubKey(request.params[0].get_str());
                     if (xpub.pubkey.IsValid()) {
@@ -891,32 +890,13 @@ RPCMethod addhdkey()
                 }
             }
 
-            LOCK(wallet->cs_wallet);
-            std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
-            FlatSigningProvider keys;
-            std::string error;
-            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
-            CHECK_NONFATAL(!descs.empty());
-            WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), 0, 0, 0);
-            if (wallet->GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
-            }
-
-            auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
-            if (!spkm) {
-                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(spkm).original);
+            auto res = wallet->AddHDKey(key);
+            if (!res) {
+                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
             }
 
             UniValue response(UniValue::VOBJ);
-            const DescriptorScriptPubKeyMan& desc_spkm = spkm->get();
-            LOCK(desc_spkm.cs_desc_man);
-            std::set<CPubKey> pubkeys;
-            std::set<CExtPubKey> extpubs;
-            desc_spkm.GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
-            CHECK_NONFATAL(pubkeys.size() == 0);
-            CHECK_NONFATAL(extpubs.size() == 1);
-            response.pushKV("xpub", EncodeExtPubKey(*extpubs.begin()));
-
+            response.pushKV("xpub", EncodeExtPubKey(*res));
             return response;
         },
     };
