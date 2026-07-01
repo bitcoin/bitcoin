@@ -1059,11 +1059,13 @@ public:
     util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Add an HD key to the wallet and return its master xpub.
-    //! Requires the wallet to be unlocked.
+    //! Requires the wallet to be unlocked. Returns a `WalletError` with code
+    //! `WalletErrorCode::UnlockNeeded` if the wallet is locked.
+    //!
     //! @param[in] key Optional extended private key to add. If not provided,
-    //!                a new random HD key will be generated.
-    //! @return The master xpub for the added HD key, or an error on failure.
-    util::Result<CExtPubKey> AddHDKey(const std::optional<CExtKey>& key);
+    //!            a new random HD key will be generated.
+    //! @return The master xpub for the added HD key, or a `WalletError` on failure.
+    util::Expected<CExtPubKey, WalletError> AddHDKey(const std::optional<CExtKey>& key);
 
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.
