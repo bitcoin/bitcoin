@@ -36,8 +36,8 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
             wallet_descriptor.creation_time,
             wallet.IsActiveScriptPubKeyMan(*desc_spk_man),
             wallet.IsInternalScriptPubKeyMan(desc_spk_man),
-            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
-            wallet_descriptor.next_index
+            is_range ? std::optional(std::make_pair(wallet_descriptor.GetStart(), wallet_descriptor.GetEnd())) : std::nullopt,
+            wallet_descriptor.GetNext()
         );
     }
     return wallet_descriptors;
