@@ -45,6 +45,11 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         if (!number) {
             return false;
         }
+        // A BIP32 child index is 31 bits; the top bit is reserved for the
+        // hardened marker, so the numeric part must not exceed 2^31 - 1.
+        if (*number > 0x7fffffff) {
+            return false;
+        }
         path |= *number;
 
         keypath.push_back(path);
