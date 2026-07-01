@@ -2032,7 +2032,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
 bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
                                          std::string& err_string,
-                                         node::TxBroadcast broadcast_method) const
+                                         node::TxBroadcast broadcast_method)
 {
     AssertLockHeld(cs_wallet);
 
