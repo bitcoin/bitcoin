@@ -7,6 +7,7 @@
 
 #include <kernel/bitcoinkernel.h>
 
+#include <algorithm>
 #include <array>
 #include <exception>
 #include <functional>
@@ -118,6 +119,19 @@ enum class BlockCheckFlags : btck_BlockCheckFlags {
     POW = btck_BlockCheckFlags_POW,
     MERKLE = btck_BlockCheckFlags_MERKLE,
     ALL = btck_BlockCheckFlags_ALL
+};
+
+enum class ScriptTraceFrameKind : btck_ScriptTraceFrameKind {
+    BEGIN = btck_ScriptTraceFrameKind_BEGIN,
+    STEP = btck_ScriptTraceFrameKind_STEP,
+    END = btck_ScriptTraceFrameKind_END,
+};
+
+enum class SigVersion : btck_SigVersion {
+    BASE = btck_SigVersion_BASE,
+    WITNESS_V0 = btck_SigVersion_WITNESS_V0,
+    TAPROOT = btck_SigVersion_TAPROOT,
+    TAPSCRIPT = btck_SigVersion_TAPSCRIPT,
 };
 
 template <typename T>
@@ -1357,6 +1371,71 @@ public:
         return btck_block_spent_outputs_read(get(), entry.get());
     }
 };
+
+struct ScriptTraceFrame {
+    ScriptTraceFrameKind m_kind;
+    std::vector<std::vector<unsigned char>> m_stack;
+    std::vector<std::vector<unsigned char>> m_altstack;
+    std::vector<unsigned char> m_script;
+    std::optional<std::array<unsigned char, 32>> m_tapleaf_hash;
+    uint32_t m_opcode_pos;
+    bool m_exec;
+    uint8_t m_opcode;
+    int m_op_count;
+    SigVersion m_sig_version;
+    uint32_t m_codeseparator_pos;
+    int32_t m_script_error;
+
+    explicit ScriptTraceFrame(const btck_ScriptTraceFrame& frame)
+        : m_kind{static_cast<ScriptTraceFrameKind>(frame.kind)},
+          m_script(frame.script, frame.script + frame.script_size),
+          m_opcode_pos{frame.opcode_pos},
+          m_exec{frame.f_exec != 0},
+          m_opcode{frame.opcode},
+          m_op_count{frame.op_count},
+          m_sig_version{static_cast<SigVersion>(frame.sig_version)},
+          m_codeseparator_pos{frame.codeseparator_pos},
+          m_script_error{frame.script_error}
+    {
+        m_stack.reserve(frame.stack_size);
+        for (size_t i = 0; i < frame.stack_size; ++i) {
+            m_stack.emplace_back(frame.stack_items[i],
+                                 frame.stack_items[i] + frame.stack_item_sizes[i]);
+        }
+
+        m_altstack.reserve(frame.altstack_size);
+        for (size_t i = 0; i < frame.altstack_size; ++i) {
+            m_altstack.emplace_back(frame.altstack_items[i],
+                                    frame.altstack_items[i] + frame.altstack_item_sizes[i]);
+        }
+
+        if (frame.tapleaf_hash) {
+            m_tapleaf_hash.emplace();
+            std::copy_n(frame.tapleaf_hash, 32, m_tapleaf_hash->begin());
+        }
+    }
+};
+
+template <typename T>
+concept ScriptTraceT = requires(T a, ScriptTraceFrame trace) {
+    { a.ScriptTrace(trace) } -> std::same_as<void>;
+};
+
+template <ScriptTraceT T>
+void ScriptTraceSetCallback(std::unique_ptr<T> trace)
+{
+    if (btck_script_trace_register_callback(
+            +[](void* user_data, const btck_ScriptTraceFrame* trace) { static_cast<T*>(user_data)->ScriptTrace(ScriptTraceFrame{*trace}); },
+            trace.release(),
+            +[](void* user_data) { delete static_cast<T*>(user_data); }) != 0) {
+        throw std::runtime_error("Script Tracing is not available. Compile bitcoin kernel with ENABLE_SCRIPT_TRACE");
+    }
+}
+
+inline void ScriptTraceUnsetCallback()
+{
+    btck_script_trace_unregister_callback();
+}
 
 } // namespace btck
 

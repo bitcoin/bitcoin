@@ -1972,6 +1972,88 @@ BITCOINKERNEL_API void btck_block_header_destroy(btck_BlockHeader* header);
 
 ///@}
 
+/** @name ScriptTrace
+ * Functions for script execution tracing.
+ */
+///@{
+
+typedef uint8_t btck_ScriptTraceFrameKind;
+#define btck_ScriptTraceFrameKind_BEGIN ((btck_ScriptTraceFrameKind)(0))
+#define btck_ScriptTraceFrameKind_STEP  ((btck_ScriptTraceFrameKind)(1))
+#define btck_ScriptTraceFrameKind_END   ((btck_ScriptTraceFrameKind)(2))
+
+typedef uint8_t btck_SigVersion;
+#define btck_SigVersion_BASE       ((btck_SigVersion)(0))
+#define btck_SigVersion_WITNESS_V0 ((btck_SigVersion)(1))
+#define btck_SigVersion_TAPROOT    ((btck_SigVersion)(2))
+#define btck_SigVersion_TAPSCRIPT  ((btck_SigVersion)(3))
+
+/**
+ * Snapshot of script execution state passed to the trace callback.
+ */
+typedef struct {
+    btck_ScriptTraceFrameKind kind;             //!< Whether this is a begin, step, or end frame.
+    const unsigned char* const* stack_items;    //!< The stack has stack_size items. Item i has stack_item_sizes[i] size.
+    const size_t* stack_item_sizes;
+    size_t stack_size;
+    const unsigned char* script;                //!< The script being evaluated.
+    size_t script_size;
+    uint32_t opcode_pos;                        //!< Index of the current opcode (counting opcodes, not bytes).
+    const unsigned char* const* altstack_items; //!< The altstack has altstack_size items. Item i has altstack_item_sizes[i] size.
+    const size_t* altstack_item_sizes;
+    size_t altstack_size;
+    int f_exec;                                 //!< Non-zero if this opcode is evaluated. Zero if it is skipped in a conditional branch.
+    uint8_t opcode;                             //!< The current opcode under evaluation. Only meaningful in step frames.
+    int op_count;                               //!< Counter towards the ops per script limit.
+    btck_SigVersion sig_version;                //!< Signature version.
+    const unsigned char* tapleaf_hash;          //!< Either null if not evaluating a tapleaf, or points to exactly 32 bytes (and sig_version is TAPSCRIPT).
+    uint32_t codeseparator_pos;                 //!< Opcode position of the last evaluated OP_CODESEPARATOR. 0xFFFFFFFF if none.
+    int32_t script_error;                       //!< Script error code. Only meaningful in end frames.
+} btck_ScriptTraceFrame;
+
+/**
+ * Callback function type for script trace frames.
+ *
+ * Called during script execution with the current execution state.
+ *
+ * @param[in] user_data  User-defined opaque pointer passed through from registration.
+ * @param[in] state      Pointer to the current execution state snapshot. Data
+ *                       in the struct is only valid for the duration of this callback.
+ */
+typedef void (*btck_ScriptTraceCallback)(
+    void* user_data,
+    const btck_ScriptTraceFrame* state);
+
+/**
+ * @brief Register a global script trace callback.
+ *
+ * Only one callback can be registered at a time. Registering a new callback
+ * replaces the previous one. The callback fires on entry of the script
+ * evaluator, on exit, and once per instruction - after the opcode is decoded
+ * and before it is dispatched/executed.
+ *
+ * @param[in] callback                   The callback function to register.
+ * @param[in] user_data                  User-defined opaque pointer passed to the callback.
+ * @param[in] user_data_destroy_callback Nullable, function for freeing the user data.
+ * @return                               0 if the script trace feature is available.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_script_trace_register_callback(
+    btck_ScriptTraceCallback callback,
+    void* user_data,
+    btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Unregister the global script trace callback.
+ *
+ * Unregistration is not synchronized with callback execution. Script
+ * evaluations already in progress complete with the previously registered
+ * callback. Script evaluations started after this call won't invoke the
+ * callback anymore.
+ */
+BITCOINKERNEL_API void btck_script_trace_unregister_callback();
+
+///@}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

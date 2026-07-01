@@ -24,6 +24,10 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
+#ifdef ENABLE_SCRIPT_TRACE
+#include <script/trace.h>
+#endif
 #include <script/verify_flags.h>
 #include <serialize.h>
 #include <streams.h>
@@ -682,13 +686,14 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     }
 
     if (status) *status = btck_ScriptVerifyStatus_OK;
+    ScriptError error = ScriptError::SCRIPT_ERR_OK;
 
     bool result = VerifyScript(tx.vin[input_index].scriptSig,
                                btck_ScriptPubkey::get(script_pubkey),
                                &tx.vin[input_index].scriptWitness,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
-                               nullptr);
+                               &error);
     return result ? 1 : 0;
 }
 
@@ -1498,4 +1503,68 @@ int btck_transaction_check(const btck_Transaction* tx, btck_TxValidationState* v
     state = TxValidationState{};
     const bool ok = CheckTransaction(*btck_Transaction::get(tx), state);
     return ok ? 1 : 0;
+}
+
+int btck_script_trace_register_callback(btck_ScriptTraceCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+{
+#ifndef ENABLE_SCRIPT_TRACE
+    (void)callback;
+    if (user_data_destroy_callback) user_data_destroy_callback(user_data);
+    return 1;
+#else
+    std::shared_ptr<void> owned_user_data{user_data, [user_data_destroy_callback](void* user_data) {
+        if (user_data && user_data_destroy_callback) user_data_destroy_callback(user_data);
+    }};
+
+    auto wrapper = [owned_user_data, callback](const ScriptTraceFrame& frame) {
+        std::vector<const unsigned char*> stack_ptrs;
+        std::vector<size_t> stack_sizes;
+        stack_ptrs.reserve(frame.stack.size());
+        stack_sizes.reserve(frame.stack.size());
+        for (const auto& item : frame.stack) {
+            stack_ptrs.push_back(item.data());
+            stack_sizes.push_back(item.size());
+        }
+
+        std::vector<const unsigned char*> altstack_ptrs;
+        std::vector<size_t> altstack_sizes;
+        altstack_ptrs.reserve(frame.altstack.size());
+        altstack_sizes.reserve(frame.altstack.size());
+        for (const auto& item : frame.altstack) {
+            altstack_ptrs.push_back(item.data());
+            altstack_sizes.push_back(item.size());
+        }
+
+        btck_ScriptTraceFrame btck_frame;
+        btck_frame.kind = static_cast<btck_ScriptTraceFrameKind>(frame.kind);
+        btck_frame.stack_items = stack_ptrs.data();
+        btck_frame.stack_item_sizes = stack_sizes.data();
+        btck_frame.stack_size = frame.stack.size();
+        btck_frame.script = frame.script.data();
+        btck_frame.script_size = frame.script.size();
+        btck_frame.opcode_pos = frame.opcode_pos;
+        btck_frame.altstack_items = altstack_ptrs.data();
+        btck_frame.altstack_item_sizes = altstack_sizes.data();
+        btck_frame.altstack_size = frame.altstack.size();
+        btck_frame.f_exec = frame.exec ? 1 : 0;
+        btck_frame.opcode = frame.opcode;
+        btck_frame.op_count = frame.op_count;
+        btck_frame.sig_version = frame.sig_version;
+        btck_frame.tapleaf_hash = frame.tapleaf_hash;
+        btck_frame.codeseparator_pos = frame.codeseparator_pos;
+        btck_frame.script_error = frame.script_error;
+
+        callback(owned_user_data.get(), &btck_frame);
+    };
+
+    ScriptTraceRegisterCallback(std::move(wrapper));
+    return 0;
+#endif // ENABLE_SCRIPT_TRACE
+}
+
+void btck_script_trace_unregister_callback()
+{
+#ifdef ENABLE_SCRIPT_TRACE
+    ScriptTraceRegisterCallback(nullptr);
+#endif // ENABLE_SCRIPT_TRACE
 }
