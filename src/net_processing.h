@@ -138,9 +138,9 @@ public:
 
     /**
      * Initiate a transaction broadcast to eligible peers.
-     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
-     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
-     * the transaction is in the mempool, an `INV` about it may be sent to the peer.
+     * Queue the witness transaction id for each peer. Later, depending on the peer's
+     * scheduled inventory relay time and if the transaction is in the mempool, an
+     * `INV` about it may be sent to the peer.
      */
     virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
 
