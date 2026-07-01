@@ -299,8 +299,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].createrawtransaction, [], {address: -1})
         assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], multidict([(address, 1), (address, 1)]))
         assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], [{address: 1}, {address: 1}])
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data", self.nodes[0].createrawtransaction, [], [{"data": 'aa'}, {"data": "bb"}])
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data", self.nodes[0].createrawtransaction, [], multidict([("data", 'aa'), ("data", "bb")]))
+        for outputs in (
+            [{"data": "aa"}, {"data": "bb"}],
+            multidict([("data", "aa"), ("data", "bb")]),
+        ):
+            tx = tx_from_hex(self.nodes[0].createrawtransaction([{"txid": TXID, "vout": 9}], outputs))
+            assert_equal(
+                [txout.scriptPubKey for txout in tx.vout],
+                [
+                    CScript([OP_RETURN, bytes.fromhex("aa")]),
+                    CScript([OP_RETURN, bytes.fromhex("bb")]),
+                ],
+            )
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair must contain exactly one key", self.nodes[0].createrawtransaction, [], [{'a': 1, 'b': 2}])
         assert_raises_rpc_error(-8, "Invalid parameter, key-value pair not an object as expected", self.nodes[0].createrawtransaction, [], [['key-value pair1'], ['2']])
 

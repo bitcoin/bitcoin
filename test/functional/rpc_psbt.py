@@ -44,7 +44,13 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
+from test_framework.script import (
+    CScript,
+    OP_RETURN,
+    OP_TRUE,
+    SIGHASH_ALL,
+    SIGHASH_ANYONECANPAY,
+)
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -504,6 +510,21 @@ class PSBTTest(BitcoinTestFramework):
             ]
             for p in rt_psbts:
                 assert_equal(psbt, p)
+
+    def test_multiple_data_outputs(self):
+        psbt = self.nodes[0].createpsbt(
+            inputs=[],
+            outputs=[{"data": "aa"}, {"data": "bb"}],
+            psbt_version=2,
+        )
+        decoded = self.nodes[0].decodepsbt(psbt)
+        assert_equal(
+            [output["script"]["hex"] for output in decoded["outputs"]],
+            [
+                CScript([OP_RETURN, bytes.fromhex("aa")]).hex(),
+                CScript([OP_RETURN, bytes.fromhex("bb")]).hex(),
+            ],
+        )
 
     def test_psbt_version(self):
         tobump = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -1418,6 +1439,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_sighash_adding()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
+        self.test_multiple_data_outputs()
         self.test_psbt_version()
 
 if __name__ == '__main__':

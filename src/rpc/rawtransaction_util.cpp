@@ -104,26 +104,25 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
     // Duplicate checking
     std::set<CTxDestination> destinations;
     std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs;
-    bool has_data{false};
-    for (const std::string& name_ : outputs.getKeys()) {
-        if (name_ == "data") {
-            if (has_data) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data");
-            }
-            has_data = true;
-            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+    const std::vector<std::string>& keys{outputs.getKeys()};
+    const std::vector<UniValue>& values{outputs.getValues()};
+    for (size_t i{0}; i < keys.size(); ++i) {
+        const std::string& name{keys[i]};
+        const UniValue& value{values[i]};
+        if (name == "data") {
+            std::vector<unsigned char> data = ParseHexV(value.getValStr(), "Data");
             CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
             CAmount amount{0};
             parsed_outputs.emplace_back(destination, amount);
         } else {
-            CTxDestination destination{DecodeDestination(name_)};
-            CAmount amount{AmountFromValue(outputs[name_])};
+            CTxDestination destination{DecodeDestination(name)};
+            CAmount amount{AmountFromValue(value)};
             if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name);
             }
 
             if (!destinations.insert(destination).second) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name);
             }
             parsed_outputs.emplace_back(destination, amount);
         }
