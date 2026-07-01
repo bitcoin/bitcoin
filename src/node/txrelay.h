@@ -28,13 +28,15 @@ namespace node {
 class TxRelay
 {
 private:
-    mutable RecursiveMutex m_bloom_filter_mutex;
+    // Inventory-locking methods exclude both mutexes so helper calls also
+    // enforce the inventory-before-bloom lock order.
+    mutable Mutex m_bloom_filter_mutex ACQUIRED_AFTER(m_tx_inventory_mutex);
     /** Whether we relay transactions to this peer. */
     bool m_relay_txs GUARDED_BY(m_bloom_filter_mutex){false};
     /** A bloom filter for which transactions to announce to the peer. See BIP37. */
     std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
 
-    mutable RecursiveMutex m_tx_inventory_mutex;
+    mutable Mutex m_tx_inventory_mutex ACQUIRED_BEFORE(m_bloom_filter_mutex);
     /** A filter of all the (w)txids that the peer has announced to
      *  us or we have announced to the peer. We use this to avoid announcing
      *  the same (w)txid to a peer that already has the transaction. */
@@ -103,24 +105,24 @@ public:
         return CMerkleBlock{block, *m_bloom_filter};
     }
 
-    void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_tx_inventory_known_filter.insert(hash);
     }
 
-    uint64_t GetLastInvSequence() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    uint64_t GetLastInvSequence() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         return WITH_LOCK(m_tx_inventory_mutex, return m_last_inv_sequence);
     }
 
-    void SetLastInvSequence(uint64_t sequence) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    void SetLastInvSequence(uint64_t sequence) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_last_inv_sequence = sequence;
     }
 
-    void SetSendMempool() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    void SetSendMempool() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_send_mempool = true;
@@ -131,13 +133,13 @@ public:
         size_t m_inv_to_send;
     };
 
-    InventoryStats GetInventoryStats() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    InventoryStats GetInventoryStats() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         return {m_last_inv_sequence, m_tx_inventory_to_send.size()};
     }
 
-    void SetNextInvSendTime(std::chrono::microseconds next_time) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    void SetNextInvSendTime(std::chrono::microseconds next_time) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_next_inv_send_time = next_time;
@@ -149,7 +151,7 @@ public:
      *  at risk of leaking to a spy, if the spy is able to distinguish
      *  transactions received during the handshake from the rest in the
      *  announcement. */
-    bool PushInventory(std::span<const Wtxid> wtxids) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    bool PushInventory(std::span<const Wtxid> wtxids) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         if (m_next_inv_send_time == std::chrono::microseconds{0}) return false;
@@ -158,7 +160,7 @@ public:
     }
 
     /** Returns true if the inventory is empty and no send has been scheduled. */
-    bool IsInventoryPristine() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    bool IsInventoryPristine() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         return m_tx_inventory_to_send.empty() && m_next_inv_send_time == std::chrono::microseconds{0};
@@ -203,7 +205,7 @@ public:
      * Producers may call PushInventory() concurrently with batch processing.
      */
     TxInventoryBatch StartTxInventoryBatch(bool send_trickle, std::chrono::microseconds current_time)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         TxInventoryBatch batch;
         batch.m_fee_filter_received = m_fee_filter_received.load();
@@ -238,7 +240,7 @@ public:
         return StartTxInventoryBatch(send_trickle, std::chrono::microseconds::min());
     }
 
-    void ReturnTxInventory(TxInventoryBatch&& batch) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    void ReturnTxInventory(TxInventoryBatch&& batch) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         auto tx_inventory_to_send{std::move(batch.m_tx_inventory_to_send)};
 
@@ -250,7 +252,7 @@ public:
         }
     }
 
-    bool TxInventoryKnownContains(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    bool TxInventoryKnownContains(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex, !m_bloom_filter_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         return m_tx_inventory_known_filter.contains(hash);
