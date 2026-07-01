@@ -1195,7 +1195,7 @@ static RPCMethod gettxout()
         "gettxout",
         "Returns details about an unspent transaction output.\n",
         {
-            {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
             {"n", RPCArg::Type::NUM, RPCArg::Optional::NO, "vout number"},
             {"include_mempool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include the mempool. Note that an unspent output that is spent in the mempool won't appear."},
         },

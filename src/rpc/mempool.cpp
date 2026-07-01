@@ -430,7 +430,7 @@ static std::vector<RPCResult> ClusterDescription()
         RPCResult{RPCResult::Type::ARR, "chunks", "chunks in this cluster (in mining order)",
             {RPCResult{RPCResult::Type::OBJ, "chunk", "",
                 {
-                    RPCResult{RPCResult::Type::NUM, "chunkfee", "fees of the transactions in this chunk"},
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "chunkfee", "fees of the transactions in this chunk"},
                     RPCResult{RPCResult::Type::NUM, "chunkweight", "sigops-adjusted weight of all transactions in this chunk"},
                     RPCResult{RPCResult::Type::ARR, "txs", "transactions in this chunk in mining order",
                         {RPCResult{RPCResult::Type::STR_HEX, "txid", "transaction id"}}},
@@ -635,7 +635,7 @@ static RPCMethod getmempoolfeeratediagram()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::NUM, "weight", "cumulative sigops-adjusted weight"},
-                            {RPCResult::Type::NUM, "fee", "cumulative fee"}
+                            {RPCResult::Type::STR_AMOUNT, "fee", "cumulative fee"}
                         }
                     }
                 }
@@ -1099,7 +1099,7 @@ static RPCMethod getmempoolinfo()
                     {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
                     {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
                     {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
-                    {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                    {RPCResult::Type::STR_AMOUNT, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                     {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
                     {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
                     {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
