@@ -1812,7 +1812,7 @@ void CWallet::MaybeUpdateBirthTime(int64_t time)
 
 bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
                                          std::string& err_string,
-                                         node::TxBroadcast broadcast_method) const
+                                         node::TxBroadcast broadcast_method)
 {
     AssertLockHeld(cs_wallet);
 
