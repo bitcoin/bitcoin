@@ -126,6 +126,41 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              wallet=wallet)
         wallet.unloadwallet()
 
+    def test_per_item_errors_are_reported_in_order(self):
+        self.log.info("Test that imports results are in the same order as the original request")
+        self.nodes[0].createwallet(wallet_name="test_order_import", blank=True)
+        wallet = self.nodes[0].get_wallet_rpc('test_order_import')
+        cases = [
+            ({
+                "timestamp": "now"
+            }, False),
+            ({
+                "desc": descsum_create(f"pkh({get_generate_key().privkey})"),
+                "timestamp": 1,
+                "label": "Valid descriptor1",
+            }, True),
+            ({
+                "desc": descsum_create(f"pkh({get_generate_key().privkey})"),
+                "timestamp": "now",
+                "internal": True,
+            }, True),
+            ({
+                "desc": descsum_create(f"pkh({get_generate_key().pubkey})"),
+                "timestamp": "now",
+                "label": "Invalid descriptor 2",
+                "internal": True,
+            }, False),
+            ({
+                "desc": descsum_create(f"pkh( {get_generate_key().pubkey})"),
+                "timestamp": "now",
+                "internal": True,
+            }, False),
+        ]
+
+        descriptors, expected = map(list, zip(*cases))
+        result = wallet.importdescriptors(descriptors)
+        assert_equal([r["success"] for r in result], expected)
+
     def test_rescan_fails_import(self):
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
 
@@ -995,6 +1030,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_import_unused_key()
         self.test_import_unused_key_existing()
         self.test_import_unused_noprivs()
+        self.test_per_item_errors_are_reported_in_order()
         self.test_rescan_fails_import()
 
 if __name__ == '__main__':
