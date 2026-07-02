@@ -31,5 +31,5 @@ export BITCOIN_CONFIG="\
  -DREDUCE_EXPORTS=ON \
  -DWITH_USDT=OFF \
 "
-export RUN_UNIT_TESTS="false"
-export RUN_FUNCTIONAL_TESTS="false"
+export RUN_UNIT_TESTS=false
+export RUN_FUNCTIONAL_TESTS=false
