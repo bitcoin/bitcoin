@@ -167,6 +167,11 @@ if [ -n "${CI_LIMIT_STACK_SIZE}" ]; then
   ulimit -s 512
 fi
 
+if [[ ${BARE_METAL_RISCV} == "true" ]]; then
+    export BASE_BUILD_DIR
+    "${BASE_ROOT_DIR}/ci/test/link-riscv.sh"
+fi
+
 if [ -n "$USE_VALGRIND" ]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.py"
 fi

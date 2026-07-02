@@ -529,6 +529,12 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_msan.sh'
 
+          - name: 'riscv32 bare metal, static libbitcoin_consensus'
+            warp-runner: 'warp-ubuntu-latest-x64-16x'
+            fallback-runner: 'ubuntu-latest'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_riscv_bare_cross.sh'
+
     steps:
       - *ANNOTATION_PR_NUMBER
 

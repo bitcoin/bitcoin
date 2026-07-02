@@ -87,6 +87,14 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   rm -rf /llvm-project
 fi
 
+if [[ ${BARE_METAL_RISCV} == "true" ]]; then
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2026.06.06 /riscv/gcc
+    ( cd /riscv/gcc;
+      ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32 --disable-gdb;
+      make "$MAKEJOBS"; )
+    rm -rf /riscv/gcc
+fi
+
 if [[ "${RUN_IWYU}" == true ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${IWYU_LLVM_V}" /include-what-you-use
   pushd /include-what-you-use
