@@ -189,7 +189,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
     def test_mixing_uncompressed_and_compressed_keys(self, node):
         self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
-        pk0, pk1, pk2 = [getnewdestination('bech32')[0].hex() for _ in range(3)]
+        pk0, pk1, pk2 = [getnewdestination('bech32')[0][1].hex() for _ in range(3)]
 
         # decompress pk2
         pk_obj = ECPubKey()
