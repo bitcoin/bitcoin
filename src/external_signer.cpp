@@ -48,6 +48,9 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
             throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
         const std::string& fingerprintStr{fingerprint.get_str()};
+        if (fingerprintStr.size() != 8 || !IsHex(fingerprintStr)) {
+            throw std::runtime_error(strprintf("'%s' received invalid fingerprint, must be 8 hex characters", command));
+        }
         // Skip duplicate signer
         bool duplicate = false;
         for (const ExternalSigner& signer : signers) {
