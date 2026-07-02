@@ -1806,8 +1806,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
         );
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
-    BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    (void)active_chainstate.FlushStateToDisk(FlushStateMode::PERIODIC);
     return result;
 }
 
@@ -1838,8 +1837,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
         }
     }
     // Ensure the coins cache is still within limits.
-    BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    (void)active_chainstate.FlushStateToDisk(FlushStateMode::PERIODIC);
     return result;
 }
 
@@ -2145,12 +2143,6 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     return true;
 }
 
-bool FatalError(Notifications& notifications, BlockValidationState& state, const bilingual_str& message)
-{
-    notifications.fatalError(message);
-    return state.Error(message.original);
-}
-
 /**
  * Restore the UTXO in a Coin at a given COutPoint
  * @param undo The Coin to be restored.
@@ -2304,7 +2296,7 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+util::Expected<BlockValidationState, kernel::FatalError> Chainstate::ConnectBlock(const CBlock& block, CBlockIndex* pindex,
                                CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
@@ -2313,6 +2305,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
 
+    BlockValidationState state;
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
 
@@ -2334,10 +2327,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
             // problems.
-            return FatalError(m_chainman.GetNotifications(), state, _("Corrupt block found indicating potential hardware failure."));
+            return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Corrupt block found indicating potential hardware failure."));
         }
         LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
-        return false;
+        return state;
     }
 
     // verify that the view's current state corresponds to the previous block
@@ -2351,7 +2344,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (block_hash == params.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
-        return true;
+        return state;
     }
 
     const char* script_check_reason;
@@ -2631,7 +2624,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     }
     if (!state.IsValid()) {
         LogInfo("Block validation error: %s", state.ToString());
-        return false;
+        return state;
     }
     const auto time_4{SteadyClock::now()};
     m_chainman.time_verify += time_4 - time_2;
@@ -2642,11 +2635,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(m_chainman.time_verify) / m_chainman.num_blocks_total);
 
     if (fJustCheck) {
-        return true;
+        return state;
     }
 
-    if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
-        return false;
+    if (auto res{m_blockman.WriteBlockUndo(blockundo, *pindex)}; !res) {
+        return util::Unexpected(res.error());
     }
 
     const auto time_5{SteadyClock::now()};
@@ -2680,7 +2673,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         Ticks<std::chrono::nanoseconds>(time_5 - time_start)
     );
 
-    return true;
+    return state;
 }
 
 CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()
@@ -2710,8 +2703,7 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-bool Chainstate::FlushStateToDisk(
-    BlockValidationState &state,
+util::Expected<void, kernel::FatalError> Chainstate::FlushStateToDisk(
     FlushStateMode mode,
     int nManualPruneHeight)
 {
@@ -2786,7 +2778,7 @@ bool Chainstate::FlushStateToDisk(
 
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Disk space is too low!"));
             }
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
@@ -2819,7 +2811,7 @@ bool Chainstate::FlushStateToDisk(
                 // an overestimation, as most will delete an existing entry or
                 // overwrite one. Still, use a conservative safety factor of 2.
                 if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetDirtyCount())) {
-                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                    return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Disk space is too low!"));
                 }
                 // Flush the chainstate (which may refer to block index entries).
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
@@ -2853,25 +2845,23 @@ bool Chainstate::FlushStateToDisk(
         }
     }
     } catch (const std::runtime_error& e) {
-        return FatalError(m_chainman.GetNotifications(), state, strprintf(_("System error while flushing: %s"), e.what()));
+        return kernel::FatalError::Raise(m_chainman.GetNotifications(), strprintf(_("System error while flushing: %s"), e.what()));
     }
-    return true;
+    return {};
 }
 
 void Chainstate::ForceFlushStateToDisk(bool wipe_cache)
 {
-    BlockValidationState state;
-    if (!this->FlushStateToDisk(state, wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC)) {
-        LogWarning("Failed to force flush state (%s)", state.ToString());
+    if (auto res{this->FlushStateToDisk(wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC)}; !res) {
+        LogWarning("Failed to force flush state (%s)", res.error().message());
     }
 }
 
 void Chainstate::PruneAndFlush()
 {
-    BlockValidationState state;
     m_blockman.m_check_for_pruning = true;
-    if (!this->FlushStateToDisk(state, FlushStateMode::NONE)) {
-        LogWarning("Failed to flush state (%s)", state.ToString());
+    if (auto res{this->FlushStateToDisk(FlushStateMode::NONE)}; !res) {
+        LogWarning("Failed to flush state (%s)", res.error().message());
     }
 }
 
@@ -2946,7 +2936,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
   * disconnectpool (note that the caller is responsible for mempool consistency
   * in any case).
   */
-bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool)
+util::Expected<void, std::string> Chainstate::DisconnectTip(DisconnectedBlockTransactions* disconnectpool)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -2959,7 +2949,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     CBlock& block = *pblock;
     if (!m_blockman.ReadBlock(block, *pindexDelete)) {
         LogError("DisconnectTip(): Failed to read block\n");
-        return false;
+        return util::Unexpected(std::string{"Failed to read block"});
     }
     // Apply the block atomically to the chain state.
     const auto time_start{SteadyClock::now()};
@@ -2968,7 +2958,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK) {
             LogError("DisconnectTip(): DisconnectBlock %s failed\n", pindexDelete->GetBlockHash().ToString());
-            return false;
+            return util::Unexpected(std::string{"DisconnectBlock failed."});
         }
         view.Flush(/*reallocate_cache=*/false); // local CCoinsViewCache goes out of scope
     }
@@ -2987,8 +2977,8 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
-        return false;
+    if (auto res{FlushStateToDisk(FlushStateMode::IF_NEEDED)}; !res) {
+        return util::Unexpected(res.error().message());
     }
 
     if (disconnectpool && m_mempool) {
@@ -3008,7 +2998,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     if (m_chainman.m_options.signals) {
         m_chainman.m_options.signals->BlockDisconnected(std::move(pblock), pindexDelete);
     }
-    return true;
+    return {};
 }
 
 struct ConnectedBlock {
@@ -3022,8 +3012,7 @@ struct ConnectedBlock {
  *
  * The block is added to connected_blocks if connection succeeds.
  */
-bool Chainstate::ConnectTip(
-    BlockValidationState& state,
+util::Expected<BlockValidationState, kernel::FatalError> Chainstate::ConnectTip(
     CBlockIndex* pindexNew,
     std::shared_ptr<const CBlock> block_to_connect,
     std::vector<ConnectedBlock>& connected_blocks,
@@ -3038,7 +3027,7 @@ bool Chainstate::ConnectTip(
     if (!block_to_connect) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlock(*pblockNew, *pindexNew)) {
-            return FatalError(m_chainman.GetNotifications(), state, _("Failed to read block."));
+            return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Failed to read block."));
         }
         block_to_connect = std::move(pblockNew);
     } else {
@@ -3054,15 +3043,15 @@ bool Chainstate::ConnectTip(
     {
         CoinsViewOverlay& view{*m_coins_views->m_connect_block_view};
         const auto reset_guard{view.StartFetching(*block_to_connect)};
-        bool rv = ConnectBlock(*block_to_connect, state, pindexNew, view);
-        if (m_chainman.m_options.signals) {
-            m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
+        auto res{ConnectBlock(*block_to_connect, pindexNew, view)};
+        if (m_chainman.m_options.signals && res) {
+            m_chainman.m_options.signals->BlockChecked(block_to_connect, *res);
         }
-        if (!rv) {
-            if (state.IsInvalid())
-                InvalidBlockFound(pindexNew, state);
-            LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
-            return false;
+        if (!res) return util::Unexpected(res.error());
+        if (res->IsInvalid()) {
+            InvalidBlockFound(pindexNew, *res);
+            LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), res->ToString());
+            return std::move(*res);
         }
         time_3 = SteadyClock::now();
         m_chainman.time_connect_total += time_3 - time_2;
@@ -3080,8 +3069,8 @@ bool Chainstate::ConnectTip(
              Ticks<SecondsDouble>(m_chainman.time_flush),
              Ticks<MillisecondsDouble>(m_chainman.time_flush) / m_chainman.num_blocks_total);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
-        return false;
+    if (auto res{FlushStateToDisk(FlushStateMode::IF_NEEDED)}; !res) {
+        return util::Unexpected(res.error());
     }
     const auto time_5{SteadyClock::now()};
     m_chainman.time_chainstate += time_5 - time_4;
@@ -3124,7 +3113,7 @@ bool Chainstate::ConnectTip(
     m_chainman.MaybeValidateSnapshot(*this, current_cs);
 
     connected_blocks.emplace_back(pindexNew, std::move(block_to_connect));
-    return true;
+    return BlockValidationState{}; // success
 }
 
 /**
@@ -3204,7 +3193,7 @@ void Chainstate::PruneBlockIndexCandidates() {
  *
  * @returns true unless a system error occurred
  */
-bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
+util::Expected<void, kernel::FatalError> Chainstate::ActivateBestChainStep(CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -3216,7 +3205,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
     bool fBlocksDisconnected = false;
     DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
     while (m_chain.Tip() && m_chain.Tip() != pindexFork) {
-        if (!DisconnectTip(state, &disconnectpool)) {
+        if (auto res{DisconnectTip(&disconnectpool)}; !res) {
             // This is likely a fatal error, but keep the mempool consistent,
             // just in case. Only remove from the mempool in this case.
             MaybeUpdateMempoolForReorg(disconnectpool, false);
@@ -3224,8 +3213,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
             // rather than stay on a less work chain.
-            FatalError(m_chainman.GetNotifications(), state, _("Failed to disconnect block."));
-            return false;
+            return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Failed to disconnect block."));
         }
         fBlocksDisconnected = true;
     }
@@ -3249,30 +3237,29 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
-            if (!ConnectTip(state, pindexConnect, pindexConnect == &index_most_work ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)) {
-                if (state.IsInvalid()) {
-                    // The block violates a consensus rule.
-                    if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
-                        InvalidChainFound(vpindexToConnect.front());
-                    }
-                    state = BlockValidationState();
-                    fInvalidFound = true;
-                    fContinue = false;
-                    break;
-                } else {
-                    // A system error occurred (disk space, database error, ...).
-                    // Make the mempool consistent with the current tip, just in case
-                    // any observers try to use it before shutdown.
-                    MaybeUpdateMempoolForReorg(disconnectpool, false);
-                    return false;
+            auto res{ConnectTip(pindexConnect, pindexConnect == &index_most_work ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)};
+            if (!res) {
+                // A system error occurred (disk space, database error, ...).
+                // Make the mempool consistent with the current tip, just in case
+                // any observers try to use it before shutdown.
+                MaybeUpdateMempoolForReorg(disconnectpool, false);
+                return util::Unexpected(res.error());
+            }
+            if (res->IsInvalid()) {
+                // The block violates a consensus rule.
+                if (res->GetResult() != BlockValidationResult::BLOCK_MUTATED) {
+                    InvalidChainFound(vpindexToConnect.front());
                 }
-            } else {
-                PruneBlockIndexCandidates();
-                if (!pindexOldTip || m_chain.Tip()->nChainWork > pindexOldTip->nChainWork) {
-                    // We're in a better position than we were. Return temporarily to release the lock.
-                    fContinue = false;
-                    break;
-                }
+                fInvalidFound = true;
+                fContinue = false;
+                break;
+            }
+            // Block connected successfully
+            PruneBlockIndexCandidates();
+            if (!pindexOldTip || m_chain.Tip()->nChainWork > pindexOldTip->nChainWork) {
+                // We're in a better position than we were. Return temporarily to release the lock.
+                fContinue = false;
+                break;
             }
         }
     }
@@ -3286,7 +3273,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
     CheckForkWarningConditions();
 
-    return true;
+    return {};
 }
 
 static SynchronizationState GetSynchronizationState(bool init, bool blockfiles_indexed)
@@ -3336,7 +3323,7 @@ static void LimitValidationInterfaceQueue(ValidationSignals& signals) LOCKS_EXCL
     }
 }
 
-bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<const CBlock> pblock)
+util::Expected<void, kernel::FatalError> Chainstate::ActivateBestChain(std::shared_ptr<const CBlock> pblock)
 {
     AssertLockNotHeld(m_chainstate_mutex);
 
@@ -3356,7 +3343,8 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // chainstate past the target block.
     if (WITH_LOCK(::cs_main, return m_target_utxohash)) {
         LogError("%s", STR_INTERNAL_BUG("m_target_utxohash is set - this chainstate should not be in operation."));
-        return Assume(false);
+        Assume(false);
+        return kernel::FatalError::Raise(m_chainman.GetNotifications(), Untranslated("m_target_utxohash is set - this chainstate should not be in operation"));
     }
 
     CBlockIndex *pindexMostWork = nullptr;
@@ -3399,9 +3387,9 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 // in case snapshot validation is completed during ActivateBestChainStep, the
                 // result of GetRole() changes from BACKGROUND to NORMAL.
                const ChainstateRole chainstate_role{this->GetRole()};
-                if (!ActivateBestChainStep(state, *pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)) {
+                if (auto res{ActivateBestChainStep(*pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)}; !res) {
                     // A system error occurred
-                    return false;
+                    return util::Unexpected(res.error());
                 }
                 blocks_connected = true;
 
@@ -3422,7 +3410,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                     break;
                 }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
-            if (!blocks_connected) return true;
+            if (!blocks_connected) return {};
 
             const CBlockIndex* pindexFork = starting_tip ? m_chain.FindFork(*starting_tip) : nullptr;
             bool still_in_ibd = m_chainman.IsInitialBlockDownload();
@@ -3470,8 +3458,8 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             }
 
             // Write changes periodically to disk, after relay.
-            if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-                return false;
+            if (auto res{FlushStateToDisk(FlushStateMode::PERIODIC)}; !res) {
+                return util::Unexpected(res.error());
             }
 
             reached_target = ReachedTarget();
@@ -3500,10 +3488,10 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
     m_chainman.CheckBlockIndex();
 
-    return true;
+    return {};
 }
 
-bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+util::Expected<void, kernel::FatalError> Chainstate::PreciousBlock(CBlockIndex* pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
@@ -3511,7 +3499,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
         LOCK(cs_main);
         if (pindex->nChainWork < m_chain.Tip()->nChainWork) {
             // Nothing to do, this block is not at the tip.
-            return true;
+            return {};
         }
         if (m_chain.Tip()->nChainWork > m_chainman.nLastPreciousChainwork) {
             // The chain has been extended since the last call, reset the counter.
@@ -3531,17 +3519,17 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
         }
     }
 
-    return ActivateBestChain(state, std::shared_ptr<const CBlock>());
+    return ActivateBestChain();
 }
 
-bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const pindex)
+util::Expected<void, std::string> Chainstate::InvalidateBlock(CBlockIndex* const pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
 
     // Genesis block can't be invalidated
     assert(pindex);
-    if (pindex->nHeight == 0) return false;
+    if (pindex->nHeight == 0) return util::Unexpected(std::string{"Genesis block can't be invalidated."});
 
     // We do not allow ActivateBestChain() to run while InvalidateBlock() is
     // running, as that could cause the tip to change while we disconnect
@@ -3596,14 +3584,14 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
         DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
-        bool ret = DisconnectTip(state, &disconnectpool);
+        auto ret{DisconnectTip(&disconnectpool)};
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding
         // transactions back to the mempool if disconnecting was successful,
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
-        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
-        if (!ret) return false;
+        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && bool(ret));
+        if (!ret) return util::Unexpected(ret.error());
         CBlockIndex* new_tip{m_chain.Tip()};
         assert(disconnected_tip->pprev == new_tip);
 
@@ -3663,7 +3651,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         LOCK(cs_main);
         if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
-            return false;
+            return util::Unexpected(std::string{"Unable to invalidate block."});
         }
 
         // Mark pindex as invalid if it never was in the main chain
@@ -3709,7 +3697,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
             m_chainman.m_options.signals->ActiveTipChange(*Assert(m_chain.Tip()), m_chainman.IsInitialBlockDownload());
         }
     }
-    return true;
+    return {};
 }
 
 void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
@@ -4199,9 +4187,10 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     return true;
 }
 
-bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked)
+BlockValidationState ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, CBlockIndex** ppindex, bool min_pow_checked)
 {
     AssertLockHeld(cs_main);
+    BlockValidationState state;
 
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -4214,15 +4203,15 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_VALID) {
                 LogDebug(BCLog::VALIDATION, "%s: block %s is marked invalid\n", __func__, hash.ToString());
-                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid",
+                state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid",
                                      strprintf("block %s was previously marked invalid", hash.ToString()));
             }
-            return true;
+            return state;
         }
 
         if (!CheckBlockHeader(block, state, GetConsensus())) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
-            return false;
+            return state;
         }
 
         // Get prev block index
@@ -4230,44 +4219,45 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         BlockMap::iterator mi{m_blockman.m_block_index.find(block.hashPrevBlock)};
         if (mi == m_blockman.m_block_index.end()) {
             LogDebug(BCLog::VALIDATION, "header %s has prev block not found: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
-            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
+            state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
+            return state;
         }
         pindexPrev = &((*mi).second);
         if (pindexPrev->nStatus & BLOCK_FAILED_VALID) {
             LogDebug(BCLog::VALIDATION, "header %s has prev block invalid: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
+            state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
+            return state;
         }
         if (!ContextualCheckBlockHeader(block, state, *this, pindexPrev)) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
-            return false;
+            return state;
         }
     }
     if (!min_pow_checked) {
         LogDebug(BCLog::VALIDATION, "%s: not adding new block header %s, missing anti-dos proof-of-work validation\n", __func__, hash.ToString());
-        return state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
+        state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
+        return state;
     }
     CBlockIndex* pindex{m_blockman.AddToBlockIndex(block, m_best_header)};
 
     if (ppindex)
         *ppindex = pindex;
 
-    return true;
+    return state;
 }
 
 // Exposed wrapper for AcceptBlockHeader
-bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex)
+BlockValidationState ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
+    BlockValidationState state;
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
+            state = AcceptBlockHeader(header, &pindex, min_pow_checked);
             CheckBlockIndex();
-
-            if (!accepted) {
-                return false;
-            }
+            if (state.IsInvalid()) return state;
             if (ppindex) {
                 *ppindex = pindex;
             }
@@ -4282,7 +4272,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
             LogInfo("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
         }
     }
-    return true;
+    return state;
 }
 
 void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
@@ -4311,9 +4301,10 @@ void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
+util::Expected<BlockValidationState, kernel::FatalError> ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
     const CBlock& block = *pblock;
+    BlockValidationState state;
 
     if (fNewBlock) *fNewBlock = false;
     AssertLockHeld(cs_main);
@@ -4321,11 +4312,11 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    bool accepted_header{AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
+    state = AcceptBlockHeader(block, &pindex, min_pow_checked);
     CheckBlockIndex();
 
-    if (!accepted_header)
-        return false;
+    if (state.IsInvalid())
+        return state;
 
     // Check all requested blocks that we do not already have for validity and
     // save them to disk. Skip processing of unrequested blocks as an anti-DoS
@@ -4348,17 +4339,17 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
-    if (fAlreadyHave) return true;
+    if (fAlreadyHave) return state;
     if (!fRequested) {  // If we didn't ask for it:
-        if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
-        if (fTooFarAhead) return true;        // Block height is too high
+        if (pindex->nTx != 0) return state;    // This is a previously-processed block that was pruned
+        if (!fHasMoreOrSameWork) return state; // Don't process less-work chains
+        if (fTooFarAhead) return state;        // Block height is too high
 
         // Protect against DoS attacks from low-work chains.
         // If our tip is behind, a peer could try to send us
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
-        if (pindex->nChainWork < MinimumChainWork()) return true;
+        if (pindex->nChainWork < MinimumChainWork()) return state;
     }
 
     const CChainParams& params{GetParams()};
@@ -4369,7 +4360,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             ActiveChainstate().InvalidBlockFound(pindex, state);
         }
         LogError("%s: %s\n", __func__, state.ToString());
-        return false;
+        return state;
     }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
@@ -4386,15 +4377,15 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             blockPos = *dbp;
             m_blockman.UpdateBlockInfo(block, pindex->nHeight, blockPos);
         } else {
-            blockPos = m_blockman.WriteBlock(block, pindex->nHeight);
-            if (blockPos.IsNull()) {
-                state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
-                return false;
+            auto res{m_blockman.WriteBlock(block, pindex->nHeight)};
+            if (!res) {
+                return util::Unexpected(std::move(res).error());
             }
+            blockPos = *res;
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        return FatalError(GetNotifications(), state, strprintf(_("System error while saving block to disk: %s"), e.what()));
+        return kernel::FatalError::Raise(GetNotifications(), strprintf(_("System error while saving block to disk: %s"), e.what()));
     }
 
     // TODO: FlushStateToDisk() handles flushing of both block and chainstate
@@ -4409,23 +4400,22 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     // callers can't mistreat a flush failure as a block validation failure.
     // The fatal error notification inside FlushStateToDisk still fires,
     // so the node will shut down on unrecoverable flush errors regardless.
-    // For state a dummy value is used, and the return value is ignored.
-    BlockValidationState flush_state_ignore;
-    (void)ActiveChainstate().FlushStateToDisk(flush_state_ignore, FlushStateMode::NONE);
+    // The return value is ignored.
+    (void)ActiveChainstate().FlushStateToDisk(FlushStateMode::NONE);
 
     CheckBlockIndex();
 
-    return true;
+    return state;
 }
 
-bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+util::Expected<BlockValidationState, kernel::FatalError> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
     AssertLockNotHeld(cs_main);
 
+    BlockValidationState state;
     {
         CBlockIndex *pindex = nullptr;
         if (new_block) *new_block = false;
-        BlockValidationState state;
 
         // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
         // Therefore, the following critical section must include the CheckBlock() call as well.
@@ -4436,36 +4426,38 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
         // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
         // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
-        bool ret = CheckBlock(*block, state, GetConsensus());
-        if (ret) {
+        if (CheckBlock(*block, state, GetConsensus())) {
             // Store to disk
-            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            auto res{AcceptBlock(block, &pindex, force_processing, nullptr, new_block, min_pow_checked)};
+            if (!res) return util::Unexpected(res.error());
+            state = std::move(*res);
         }
-        if (!ret) {
+
+        if (!state.IsValid()) {
             if (m_options.signals) {
                 m_options.signals->BlockChecked(block, state);
             }
             LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
-            return false;
+            return state;
         }
     }
 
     NotifyHeaderTip();
 
-    BlockValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!ActiveChainstate().ActivateBestChain(state, block)) {
-        LogError("%s: ActivateBestChain failed (%s)\n", __func__, state.ToString());
-        return false;
+    if (auto res{ActiveChainstate().ActivateBestChain(block)}; !res) {
+        LogError("%s: ActivateBestChain failed (%s)\n", __func__, res.error().message());
+        return util::Unexpected(res.error());
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
-    BlockValidationState bg_state;
-    if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
-        LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        return false;
-     }
+    if (bg_chain) {
+        if (auto res{bg_chain->ActivateBestChain(block)}; !res) {
+            LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, res.error().message());
+            return util::Unexpected(res.error());
+        }
+    }
 
-    return true;
+    return state;
 }
 
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
@@ -4483,7 +4475,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
 }
 
 
-BlockValidationState TestBlockValidity(
+util::Expected<BlockValidationState, kernel::FatalError> TestBlockValidity(
     Chainstate& chainstate,
     const CBlock& block,
     const bool check_pow,
@@ -4545,24 +4537,21 @@ BlockValidationState TestBlockValidity(
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
     // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
-    }
+    auto res{chainstate.ConnectBlock(block, &index_dummy, view_dummy, /*fJustCheck=*/true)};
+    if (!res) return util::Unexpected(std::move(res).error());
 
-    // Ensure no check returned successfully while also setting an invalid state.
+    // Ensure the out-param checks above did not report success while leaving an
+    // invalid state (ConnectBlock's verdict is carried in res, not state).
     if (!state.IsValid()) NONFATAL_UNREACHABLE();
 
-    return state;
+    return std::move(*res);
 }
 
 /* This function is called from the RPC code for pruneblockchain */
 void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
 {
-    BlockValidationState state;
-    if (!active_chainstate.FlushStateToDisk(
-            state, FlushStateMode::NONE, nManualPruneHeight)) {
-        LogWarning("Failed to flush state after manual prune (%s)", state.ToString());
+    if (auto res{active_chainstate.FlushStateToDisk(FlushStateMode::NONE, nManualPruneHeight)}; !res) {
+        LogWarning("Failed to flush state after manual prune (%s)", res.error().message());
     }
 }
 
@@ -4751,8 +4740,8 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (!chainstate.ConnectBlock(block, state, pindex, coins)) {
-                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+            if (auto res{chainstate.ConnectBlock(block, pindex, coins)}; !res || res->IsInvalid()) {
+                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), res ? res->ToString() : res.error().message());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
             if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
@@ -4964,13 +4953,13 @@ bool ChainstateManager::LoadGenesisBlock()
     }
 
     try {
-        FlatFilePos blockPos{m_blockman.WriteBlock(genesis_block, 0)};
-        if (blockPos.IsNull()) {
-            LogError("Writing genesis block to disk failed");
+        auto blockPos{m_blockman.WriteBlock(genesis_block, 0)};
+        if (!blockPos) {
+            LogError("Writing genesis block to disk failed (%s)", blockPos.error().message());
             return false;
         }
         CBlockIndex* pindex{m_blockman.AddToBlockIndex(genesis_block, m_best_header)};
-        ReceivedBlockTransactions(genesis_block, pindex, blockPos);
+        ReceivedBlockTransactions(genesis_block, pindex, *blockPos);
     } catch (const std::runtime_error& e) {
         LogError("Failed to write genesis block: %s", e.what());
         return false;
@@ -5058,12 +5047,10 @@ void ChainstateManager::LoadExternalBlockFile(
                         blkdat >> TX_WITH_WITNESS(*pblock);
                         nRewind = blkdat.GetPos();
 
-                        BlockValidationState state;
-                        if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr, true)) {
+                        auto res{AcceptBlock(pblock, nullptr, true, dbp, nullptr, true)};
+                        if (!res) break;
+                        if (res->IsValid()) {
                             nLoaded++;
-                        }
-                        if (state.IsError()) {
-                            break;
                         }
                     } else if (hash != params.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
                         LogDebug(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
@@ -5078,8 +5065,7 @@ void ChainstateManager::LoadExternalBlockFile(
                 // without assumevalid in the case of a continuation of a reindex that
                 // was interrupted by the user.
                 if (hash == params.GetConsensus().hashGenesisBlock && WITH_LOCK(::cs_main, return ActiveHeight()) == -1) {
-                    BlockValidationState state;
-                    if (!ActiveChainstate().ActivateBestChain(state, nullptr)) {
+                    if (auto res{ActiveChainstate().ActivateBestChain(nullptr)}; !res) {
                         break;
                     }
                 }
@@ -5116,8 +5102,7 @@ void ChainstateManager::LoadExternalBlockFile(
                             const auto& block_hash{pblockrecursive->GetHash()};
                             LogDebug(BCLog::REINDEX, "%s: Processing out of order child %s of %s", __func__, block_hash.ToString(), head.ToString());
                             LOCK(cs_main);
-                            BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)) {
+                            if (auto res{AcceptBlock(pblockrecursive, nullptr, true, &it->second, nullptr, true)}; res && res->IsValid()) {
                                 nLoaded++;
                                 queue.push_back(block_hash);
                             }
@@ -5499,17 +5484,13 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     LogInfo("[%s] resized coinstip cache to %.1f MiB",
         this->ToString(), coinstip_size / double(1_MiB));
 
-    BlockValidationState state;
-    bool ret;
-
     if (coinstip_size > old_coinstip_size) {
         // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
+        return FlushStateToDisk(FlushStateMode::IF_NEEDED).has_value();
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH);
+        return FlushStateToDisk(FlushStateMode::FORCE_FLUSH).has_value();
     }
-    return ret;
 }
 
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
@@ -6421,10 +6402,9 @@ util::Result<void> ChainstateManager::ActivateBestChains()
         }
     }
     for (Chainstate* chainstate : chainstates) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
+        if (auto res{chainstate->ActivateBestChain(nullptr)}; !res) {
             LOCK(GetMutex());
-            return util::Error{Untranslated(strprintf("%s Failed to connect best block (%s)", chainstate->ToString(), state.ToString()))};
+            return util::Error{Untranslated(strprintf("%s Failed to connect best block (%s)", chainstate->ToString(), res.error().message()))};
         }
     }
     return {};

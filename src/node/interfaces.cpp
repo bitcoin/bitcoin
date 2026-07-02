@@ -61,6 +61,7 @@
 #include <univalue.h>
 #include <util/btcsignals.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -1018,10 +1019,15 @@ public:
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
     {
         LOCK(chainman().GetMutex());
-        BlockValidationState state{TestBlockValidity(chainman().ActiveChainstate(), block, /*check_pow=*/options.check_pow, /*check_merkle_root=*/options.check_merkle_root)};
-        reason = state.GetRejectReason();
-        debug = state.GetDebugMessage();
-        return state.IsValid();
+        auto res{TestBlockValidity(chainman().ActiveChainstate(), block, /*check_pow=*/options.check_pow, /*check_merkle_root=*/options.check_merkle_root)};
+        if (!res) {
+            // A fatal error occurred
+            reason = res.error().message();
+            return false;
+        }
+        reason = res->GetRejectReason();
+        debug = res->GetDebugMessage();
+        return res->IsValid();
     }
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override

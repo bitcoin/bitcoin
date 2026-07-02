@@ -365,9 +365,8 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
 
     m_node.notifications->setChainstateLoaded(true);
 
-    BlockValidationState state;
-    if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
-        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
+    if (auto res{chainman.ActiveChainstate().ActivateBestChain()}; !res) {
+        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", res.error().message()));
     }
 }
 
@@ -470,7 +469,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 {
     CBlock block = this->CreateBlock(txns, scriptPubKey);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    (void)Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 
     return block;
 }
