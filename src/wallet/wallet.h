@@ -23,6 +23,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/log.h>
@@ -881,7 +882,7 @@ public:
      */
     void postInitProcess();
 
-    bool BackupWallet(const std::string& strDest) const;
+    [[nodiscard]] bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;

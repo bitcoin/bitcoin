@@ -247,6 +247,9 @@ public:
 
     /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
     virtual size_t GetKeyCount() const { return 1; }
+
+    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
+    virtual bool CanSelfExpand() const = 0;
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -317,6 +320,7 @@ public:
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
     }
+    bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -381,6 +385,7 @@ public:
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
+    bool CanSelfExpand() const final { return true; }
 };
 
 enum class DeriveType {
@@ -607,6 +612,7 @@ public:
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
+    bool CanSelfExpand() const override { return !IsHardened(); }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -810,6 +816,15 @@ public:
     {
         return 1 + m_participants.size();
     }
+    bool CanSelfExpand() const override
+    {
+        // Participants must be self expandable for all MuSig expressions to be self expandable; the aggregate pubkey cannot be stored
+        // in the descriptor cache, so even aggregate-then-derive still requires the self expansion of participants prior to aggregation.
+        for (const auto& key : m_participants) {
+            if (!key->CanSelfExpand()) return false;
+        }
+        return true;
+    }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -824,7 +839,7 @@ protected:
     std::vector<std::string> m_warnings;
 
     //! The sub-descriptor arguments (empty for everything but SH and WSH).
-    //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
+    //! In doc/descriptors.md this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
     //! Subdescriptors can only ever generate a single script.
     const std::vector<std::unique_ptr<DescriptorImpl>> m_subdescriptor_args;
@@ -1098,6 +1113,18 @@ public:
             }
         }
         return count;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    bool CanSelfExpand() const override
+    {
+        for (const auto& key : m_pubkey_args) {
+            if (!key->CanSelfExpand()) return false;
+        }
+        for (const auto& sub : m_subdescriptor_args) {
+            if (!sub->CanSelfExpand()) return false;
+        }
+        return true;
     }
 };
 
