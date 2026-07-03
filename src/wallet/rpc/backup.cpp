@@ -544,7 +544,6 @@ RPCMethod listdescriptors()
         if (!desc_spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
         }
-        LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
         CHECK_NONFATAL(desc_spk_man->GetDescriptorString(descriptor, priv));

@@ -3510,7 +3510,6 @@ std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& scrip
     std::vector<WalletDescriptor> descs;
     for (const auto spk_man: GetScriptPubKeyMans(script)) {
         if (const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man)) {
-            LOCK(desc_spk_man->cs_desc_man);
             descs.push_back(desc_spk_man->GetWalletDescriptor());
         }
     }
@@ -3782,7 +3781,6 @@ std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man)
         throw std::runtime_error(std::string(__func__) + ": unexpected ScriptPubKeyMan type.");
     }
 
-    LOCK(desc_spk_man->cs_desc_man);
     const auto& type = desc_spk_man->GetWalletDescriptor().descriptor->GetOutputType();
     assert(type.has_value());
 
@@ -4545,7 +4543,6 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
     for (const auto& spkm : GetActiveScriptPubKeyMans()) {
         const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
         assert(desc_spkm);
-        LOCK(desc_spkm->cs_desc_man);
         WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
 
         std::set<CPubKey> desc_pubkeys;
@@ -4563,7 +4560,6 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
     for (const auto& spkm : GetAllScriptPubKeyMans()) {
         const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
         assert(desc_spkm);
-        LOCK(desc_spkm->cs_desc_man);
         if (std::optional<CKey> key = desc_spkm->GetKey(keyid)) {
             return key;
         }
