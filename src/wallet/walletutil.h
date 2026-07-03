@@ -62,14 +62,40 @@ fs::path GetWalletDir();
 /** Descriptor with some wallet metadata */
 class WalletDescriptor
 {
+private:
+    int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
+    int32_t next_index = 0; // Position of the next item to generate
+    int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
 public:
     std::shared_ptr<Descriptor> descriptor;
     uint256 id; // Descriptor ID (calculated once at descriptor initialization/deserialization)
     uint64_t creation_time = 0;
-    int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
-    int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
-    int32_t next_index = 0; // Position of the next item to generate
     DescriptorCache cache;
+
+    int32_t GetStart() const { return range_start; }
+    int32_t GetNext() const { return next_index; }
+    int32_t GetEnd() const { return range_end; }
+
+    //! Increments the next_index of the descriptor.
+    void IncNext()
+    {
+        next_index++;
+    }
+
+    //! Increments the next_index of the descriptor.
+    void DecNext()
+    {
+        next_index--;
+    }
+
+    //! Sets the range_end of the descriptor.
+    void SetEnd(int32_t end)
+    {
+        if (!descriptor->IsRange()) {
+            CHECK_NONFATAL(end == 1);
+        }
+        range_end = end;
+    }
 
     void DeserializeDescriptor(const std::string& str)
     {
@@ -95,7 +121,13 @@ public:
     }
 
     WalletDescriptor() = default;
-    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), id(DescriptorID(*descriptor)), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) { }
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index)
+    : range_start(descriptor->IsRange() ? range_start : 0),
+      next_index(next_index),
+      range_end(descriptor->IsRange() ? range_end : 1),
+      descriptor(descriptor),
+      id(DescriptorID(*descriptor)),
+      creation_time(creation_time) {}
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);

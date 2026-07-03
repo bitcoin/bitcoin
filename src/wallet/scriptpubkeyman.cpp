@@ -871,6 +871,42 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNe
     return spkm;
 }
 
+void DescriptorScriptPubKeyMan::IncIndex()
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.IncNext();
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
+}
+
+void DescriptorScriptPubKeyMan::DecIndex()
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.DecNext();
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
+}
+
+void DescriptorScriptPubKeyMan::SetRangeEnd(int32_t end)
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.SetEnd(end);
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
@@ -891,11 +927,11 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
         // Get the scriptPubKey from the descriptor
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
-        if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
+        if (m_wallet_descriptor.GetEnd() <= m_max_cached_index && !TopUp(1)) {
             // We can't generate anymore keys
             return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
-        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
+        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, out_keys)) {
             // We can't generate anymore keys
             return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
@@ -904,7 +940,7 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
         if (!ExtractDestination(scripts_temp[0], dest)) {
             return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
-        m_wallet_descriptor.next_index++;
+        IncIndex();
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
         return dest;
     }
@@ -975,7 +1011,7 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(c
 {
     LOCK(cs_desc_man);
     auto op_dest = GetNewDestination(type);
-    index = m_wallet_descriptor.next_index - 1;
+    index = m_wallet_descriptor.GetNext() - 1;
     return op_dest;
 }
 
@@ -983,11 +1019,10 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
 {
     LOCK(cs_desc_man);
     // Only return when the index was the most recent
-    if (m_wallet_descriptor.next_index - 1 == index) {
-        m_wallet_descriptor.next_index--;
+    if (m_wallet_descriptor.GetNext() - 1 == index) {
+        DecIndex();
     }
     WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
-    NotifyCanGetAddressesChanged();
 }
 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
@@ -1060,13 +1095,11 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
     }
 
     // Calculate the new range_end
-    int32_t new_range_end = std::max(m_wallet_descriptor.next_index + (int32_t)target_size, m_wallet_descriptor.range_end);
+    int32_t new_range_end = std::max(m_wallet_descriptor.GetNext() + (int32_t)target_size, m_wallet_descriptor.GetEnd());
 
     // If the descriptor is not ranged, we actually just want to fill the first cache item
     if (!m_wallet_descriptor.descriptor->IsRange()) {
         new_range_end = 1;
-        m_wallet_descriptor.range_end = 1;
-        m_wallet_descriptor.range_start = 0;
     }
 
     FlatSigningProvider provider;
@@ -1102,14 +1135,13 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         }
         m_max_cached_index++;
     }
-    m_wallet_descriptor.range_end = new_range_end;
+    SetRangeEnd(new_range_end);
     batch.WriteDescriptor(GetID(), m_wallet_descriptor);
 
     // By this point, the cache size should be the size of the entire range
-    assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
+    assert(m_wallet_descriptor.GetEnd() - 1 == m_max_cached_index);
 
     m_storage.TopUpCallback(new_spks, this);
-    NotifyCanGetAddressesChanged();
     return true;
 }
 
@@ -1119,18 +1151,18 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
     std::vector<WalletDestination> result;
     if (IsMine(script)) {
         int32_t index = m_map_script_pub_keys[script];
-        if (index >= m_wallet_descriptor.next_index) {
+        if (index >= m_wallet_descriptor.GetNext()) {
             WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
             auto out_keys = std::make_unique<FlatSigningProvider>();
             std::vector<CScript> scripts_temp;
-            while (index >= m_wallet_descriptor.next_index) {
-                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
+            while (index >= m_wallet_descriptor.GetNext()) {
+                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
                     throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor from cache");
                 }
                 CTxDestination dest;
                 ExtractDestination(scripts_temp[0], dest);
                 result.push_back({dest, std::nullopt});
-                m_wallet_descriptor.next_index++;
+                IncIndex();
             }
         }
         if (!TopUp()) {
@@ -1222,7 +1254,7 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_desc_man);
     return m_wallet_descriptor.descriptor->IsSingleType() &&
            m_wallet_descriptor.descriptor->IsRange() &&
-           (HavePrivateKeys() || m_wallet_descriptor.next_index < m_wallet_descriptor.range_end);
+           (HavePrivateKeys() || m_wallet_descriptor.GetNext() < m_wallet_descriptor.GetEnd());
 }
 
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
@@ -1240,7 +1272,7 @@ bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);
-    return m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
+    return m_wallet_descriptor.GetEnd() - m_wallet_descriptor.GetNext();
 }
 
 int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
@@ -1479,7 +1511,7 @@ void DescriptorScriptPubKeyMan::Load()
 {
     LOCK(cs_desc_man);
     std::set<CScript> new_spks;
-    for (int32_t i = m_wallet_descriptor.range_start; i < m_wallet_descriptor.range_end; ++i) {
+    for (int32_t i = m_wallet_descriptor.GetStart(); i < m_wallet_descriptor.GetEnd(); ++i) {
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(i, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
@@ -1645,12 +1677,12 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
         return true;
     }
 
-    if (descriptor.range_start > m_wallet_descriptor.range_start ||
-        descriptor.range_end < m_wallet_descriptor.range_end) {
+    if (descriptor.GetStart() > m_wallet_descriptor.GetStart() ||
+        descriptor.GetEnd() < m_wallet_descriptor.GetEnd()) {
         // Use inclusive range for error
         error = strprintf("new range must include current range = [%d,%d]",
-                          m_wallet_descriptor.range_start,
-                          m_wallet_descriptor.range_end - 1);
+                          m_wallet_descriptor.GetStart(),
+                          m_wallet_descriptor.GetEnd() - 1);
         return false;
     }
 
