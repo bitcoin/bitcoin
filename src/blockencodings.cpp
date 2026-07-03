@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
+#include <logging/categories.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -69,8 +70,13 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     header = cmpctblock.header;
     txn_available.resize(cmpctblock.BlockTxCount());
 
+    const bool debug_log{util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)};
+    // Track the prefills which were not already present in the mempool or extrapool.
+    std::map<Wtxid, size_t> leftover_prefills;
+
     int32_t lastprefilledindex = -1;
-    for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
+    prefilled_count = cmpctblock.prefilledtxn.size();
+    for (size_t i = 0; i < prefilled_count; i++) {
         if (cmpctblock.prefilledtxn[i].tx->IsNull())
             return READ_STATUS_INVALID;
 
@@ -83,9 +89,17 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             // have neither a prefilled txn or a shorttxid!
             return READ_STATUS_INVALID;
         }
+
+        if (debug_log) {
+            const CTransactionRef& tx{cmpctblock.prefilledtxn[i].tx};
+            const size_t tx_size{tx->ComputeTotalSize()};
+            prefilled_size += tx_size;
+
+            leftover_prefills.emplace(tx->GetWitnessHash(), tx_size);
+        }
         txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
     }
-    prefilled_count = cmpctblock.prefilledtxn.size();
+
 
     // Calculate map of txids -> positions and check mempool to see what we have (or don't)
     // Because well-formed cmpctblock messages will have a (relatively) uniform distribution
@@ -118,6 +132,18 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     size_t available_count = 0;
     {
     LOCK(pool->cs);
+    if (debug_log) {
+        for (auto it{leftover_prefills.begin()}; it != leftover_prefills.end();) {
+            if (pool->GetIter(it->first)) {
+                ++redundant_prefilled_mempool_count;
+                redundant_prefilled_mempool_size += it->second;
+                it = leftover_prefills.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
     for (const auto& [wtxid, txit] : pool->txns_randomized) {
         uint64_t shortid = cmpctblock.GetShortID(wtxid);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
@@ -171,15 +197,29 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
 
-    if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
+
+    if (debug_log) {
+        for (const auto& [id, tx] : extra_txn) {
+            if (!tx) continue;
+            const auto it{leftover_prefills.find(id)};
+            if (it == leftover_prefills.end()) continue;
+            ++redundant_prefilled_extrapool_count;
+            redundant_prefilled_extrapool_size += it->second;
+            leftover_prefills.erase(it);
+        }
+
         Assume(txn_available.size() == tx_source.size());
         for (size_t i = 0; i < txn_available.size(); i++) {
             switch (tx_source[i]) {
                 case TxSource::MEMPOOL:
                     ++mempool_count;
+                    Assume(txn_available[i]);
+                    mempool_size += txn_available[i]->ComputeTotalSize();
                     break;
                 case TxSource::EXTRA:
                     ++extra_count;
+                    Assume(txn_available[i]);
+                    extra_size += txn_available[i]->ComputeTotalSize();
                     break;
                 default:
                     break;
@@ -237,7 +277,27 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         const uint256 hash{block.GetHash()};
         uint32_t tx_missing_size{0};
         for (const auto& tx : vtx_missing) { tx_missing_size += tx->ComputeTotalSize(); }
-        LogDebug(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %u txn prefilled, %u txn from mempool (incl at least %u from extra pool) and %u txn (%u bytes) requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size(), tx_missing_size);
+        LogDebug(BCLog::CMPCTBLOCK,
+            "Successfully reconstructed block %s with %u txn prefilled (%u bytes), "
+            "%u txn from mempool (%u bytes), "
+            "%u txn from extrapool (%u bytes), "
+            "and %u txn requested (%u bytes)",
+            hash.ToString(),
+            prefilled_count, prefilled_size,
+            mempool_count, mempool_size,
+            extra_count, extra_size,
+            vtx_missing.size(), tx_missing_size);
+        LogDebug(BCLog::CMPCTBLOCK,
+            "Block %s prefill redundancy statistics: "
+            "%u txn (%u bytes) of the prefill were redundant, "
+            "%u txn (%u bytes) were present in the mempool, "
+            "%u txn (%u bytes) were present in the extrapool.",
+            hash.ToString(),
+            redundant_prefilled_mempool_count + redundant_prefilled_extrapool_count,
+            redundant_prefilled_mempool_size + redundant_prefilled_extrapool_size,
+            redundant_prefilled_mempool_count, redundant_prefilled_mempool_size,
+            redundant_prefilled_extrapool_count, redundant_prefilled_extrapool_size);
+
         if (util::log::ShouldTraceLog(BCLog::CMPCTBLOCK)) {
             const std::string missing_txids{util::Join(vtx_missing, ", ", [](const auto& tx) { return tx->GetHash().ToString(); })};
             LogTrace(BCLog::CMPCTBLOCK, "Reconstructed block %s required requesting the following transactions: %s\n", hash.ToString(), missing_txids);
