@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
+#include <logging/categories.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -69,6 +70,22 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     header = cmpctblock.header;
     txn_available.resize(cmpctblock.BlockTxCount());
 
+    std::vector<Wtxid> extra_wtxids{};
+
+    bool debug_log = util::log::ShouldDebugLog(BCLog::CMPCTBLOCK);
+
+    if (debug_log) {
+        prefilled_count = cmpctblock.prefilledtxn.size();
+
+        // A sorted vec of extra_txn's for cheaply checking if prefills
+        // were redundant with the extrapool.
+        for (const auto& [id, tx] : extra_txn) {
+            extra_wtxids.push_back(id);
+        }
+        std::sort(extra_wtxids.begin(), extra_wtxids.end());
+    }
+
+
     int32_t lastprefilledindex = -1;
     for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
         if (cmpctblock.prefilledtxn[i].tx->IsNull())
@@ -83,9 +100,22 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             // have neither a prefilled txn or a shorttxid!
             return READ_STATUS_INVALID;
         }
+
+        if (debug_log) {
+            size_t tx_size = cmpctblock.prefilledtxn[i].tx->ComputeTotalSize();
+            prefilled_size += tx_size;
+
+            auto tx_wtxid =  cmpctblock.prefilledtxn[i].tx->GetWitnessHash();
+            if (pool->exists(tx_wtxid)) {
+                redundant_prefilled_mp_count++;
+                redundant_prefilled_mp_size += tx_size;
+            } else if (std::binary_search(extra_wtxids.begin(), extra_wtxids.end(), tx_wtxid)) {
+                redundant_prefilled_ep_count++;
+                redundant_prefilled_ep_size += tx_size;
+            }
+        }
         txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
     }
-    prefilled_count = cmpctblock.prefilledtxn.size();
 
     // Calculate map of txids -> positions and check mempool to see what we have (or don't)
     // Because well-formed cmpctblock messages will have a (relatively) uniform distribution
@@ -124,14 +154,18 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 txn_available[idit->second] = txit->GetSharedTx();
                 have_txn[idit->second]  = true;
                 mempool_count++;
-            } else {
+                if (debug_log) {
+                    mempool_size += txn_available[idit->second]->ComputeTotalSize();
+                }
+            } else if (txn_available[idit->second]) {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
-                if (txn_available[idit->second]) {
-                    txn_available[idit->second].reset();
-                    mempool_count--;
+                if (debug_log) {
+                    mempool_size -= txn_available[idit->second]->ComputeTotalSize();
                 }
+                txn_available[idit->second].reset();
+                mempool_count--;
             }
         }
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
@@ -150,6 +184,9 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 txn_available[idit->second] = extra_txn[i].second;
                 have_txn[idit->second]  = true;
                 extra_count++;
+                if (debug_log) {
+                    extra_size += txn_available[idit->second]->ComputeTotalSize();
+                }
             } else {
                 // If we find two mempool/extra txn that match the short id, just
                 // request it.
@@ -159,6 +196,9 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // trigger this case, so we compare witness hashes first
                 if (txn_available[idit->second] &&
                         txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                    if (debug_log) {
+                        extra_size -= txn_available[idit->second]->ComputeTotalSize();
+                    }
                     txn_available[idit->second].reset();
                     extra_count--;
                 }
@@ -221,7 +261,26 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         const uint256 hash{block.GetHash()};
         uint32_t tx_missing_size{0};
         for (const auto& tx : vtx_missing) { tx_missing_size += tx->ComputeTotalSize(); }
-        LogDebug(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %u txn prefilled, %u txn from mempool, %u txn from extrapool, and %u txn (%u bytes) requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size(), tx_missing_size);
+        LogDebug(BCLog::CMPCTBLOCK,
+            "Successfully reconstructed block %s with %u txn prefilled (%u bytes), "
+            "%u txn from mempool (%u bytes), "
+            "%u txn from extrapool (%u bytes), "
+            "and %u txn requested (%u bytes)",
+            hash.ToString(),
+            prefilled_count, prefilled_size,
+            mempool_count, mempool_size,
+            extra_count, extra_size,
+            vtx_missing.size(), tx_missing_size);
+        LogDebug(BCLog::CMPCTBLOCK,
+            "%u txn (%u bytes) of the prefill were redundant, "
+            "%u txn (%u bytes) were present in the mempool, "
+            "%u txn (%u bytes) were present in the extrapool. ",
+            redundant_prefilled_mp_count + redundant_prefilled_ep_count,
+            redundant_prefilled_mp_size + redundant_prefilled_ep_size,
+            redundant_prefilled_mp_count, redundant_prefilled_mp_size,
+            redundant_prefilled_ep_count, redundant_prefilled_ep_size);
+
+
         if (util::log::ShouldTraceLog(BCLog::CMPCTBLOCK)) {
             for (const auto& tx : vtx_missing) {
                 LogTrace(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
