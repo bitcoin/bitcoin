@@ -123,7 +123,8 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
                 assert(ipc.m_client->passScript(script) == expected);
             },
             [&] {
-                UniValue value = ConsumeUniValue(fuzzed_data_provider);
+                UniValue value;
+                if (!value.read(fuzzed_data_provider.ConsumeRandomLengthString(512))) return;
                 assert(ipc.m_client->passUniValue(value).write() == value.write());
             },
             [&] {
