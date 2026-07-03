@@ -715,6 +715,12 @@ const btck_WitnessStack* btck_transaction_input_get_witness_stack(const btck_Tra
     return btck_WitnessStack::ref(&btck_TransactionInput::get(input).scriptWitness);
 }
 
+int btck_transaction_input_get_script_sig(const btck_TransactionInput* input, btck_WriteBytes writer, void* user_data)
+{
+    const auto& script_sig{btck_TransactionInput::get(input).scriptSig};
+    return writer(script_sig.data(), script_sig.size(), user_data);
+}
+
 void btck_transaction_input_destroy(btck_TransactionInput* input)
 {
     delete input;
