@@ -483,11 +483,14 @@ public:
     /// @}
 
     /**
-     * Set true by worker threads after writing a response to m_send_buffer.
-     * Set false by the HTTPServer I/O thread after flushing m_send_buffer.
-     * Checked in the HTTPServer I/O loop to avoid locking m_send_mutex if there's nothing to send.
-     */
-    std::atomic_bool m_send_ready{false};
+    * Set true by worker threads after writing a response to m_send_buffer.
+    * Set false by the HTTPServer I/O thread after flushing m_send_buffer.
+    * Checked in the HTTPServer I/O loop to decide whether to poll the socket for
+    * writeability or readability.
+    * Guarded by m_send_mutex so it stays consistent with m_send_buffer's emptiness:
+    * the two must always be updated together under the same lock.
+    */
+    bool m_send_ready GUARDED_BY(m_send_mutex){false};
 
     /**
      * Mutex that serializes the Send() and Recv() calls on `m_sock`. Reading

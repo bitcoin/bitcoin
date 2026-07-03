@@ -257,10 +257,18 @@ public:
     ~SocketTestingSetup();
 
     /**
-     * Connect to the socket with a mock client (a DynSock) and send pre-loaded data.
+     * Connect to the socket with a mock client and send pre-loaded data.
      * Returns the I/O pipes from the mock client so we can read response data sent to it.
+     * Template parameter selects the socket type: DynSock by default.
      */
-    std::shared_ptr<DynSock::Pipes> ConnectClient(std::span<const std::byte> data);
+    template <typename T = DynSock>
+    std::shared_ptr<typename T::Pipes> ConnectClient(std::span<const std::byte> data)
+    {
+        auto connected_socket_pipes(std::make_shared<typename T::Pipes>());
+        connected_socket_pipes->recv.PushBytes(data.data(), data.size());
+        m_accepted_sockets.Push(std::make_unique<T>(connected_socket_pipes));
+        return connected_socket_pipes;
+    }
 
 private:
     //! Save the original value of CreateSock here and restore it when the test ends.
