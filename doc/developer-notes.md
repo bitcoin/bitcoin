@@ -183,12 +183,12 @@ The output is denoised of errors from external dependencies.
 To run clang-tidy on all source files using the checks mentioned in the `./src/.clang-tidy` file:
 
 ```sh
-( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) )
+( cd ./src/ && run-clang-tidy -p ../build )
 ```
 
 To run clang-tidy on one file:
 ```sh
-( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) ./path/to/single_file.cpp )
+( cd ./src/ && run-clang-tidy -p ../build ./path/to/single_file.cpp )
 ```
 
 Optionally, append the `run-clang-tidy` command with the `-quiet` option to suppress printing of statistics and ignored warnings that can clutter the output. The `-fix` option also comes in handy to apply the fixes suggested by the tool but need to ensure that unrelated changes in the file are not committed.
