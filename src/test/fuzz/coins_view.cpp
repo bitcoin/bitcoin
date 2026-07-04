@@ -214,8 +214,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                     bool fresh{dirty && !coins_cache_entry.coin.IsSpent() && !coins_view_cache.PeekCoin(random_out_point) && fuzzed_data_provider.ConsumeBool()};
                     auto [it, inserted]{coins_map.emplace(random_out_point, std::move(coins_cache_entry))};
                     if (dirty && inserted) {
-                        CCoinsCacheEntry::SetDirty(*it, sentinel);
-                        if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                        CCoinsCacheEntry::SetDirty(*it, sentinel, fresh);
                         ++dirty_count;
                     }
                 }
