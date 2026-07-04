@@ -463,8 +463,9 @@ public:
      * Spend a coin. Pass moveto in order to get the deleted data.
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
+     * @return true if an unspent coin was spent.
      */
-    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
+    [[nodiscard]] bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base and wipe local state.
