@@ -180,8 +180,14 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    /**
+     * Mark an entry dirty and set its resulting freshness.
+     * Existing freshness cannot be cleared.
+     */
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh) noexcept
+    {
+        AddFlags(DIRTY | (fresh ? FRESH : 0), pair, sentinel);
+    }
 
     void SetClean() noexcept
     {
