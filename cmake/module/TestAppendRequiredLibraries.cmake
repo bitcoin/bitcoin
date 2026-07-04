@@ -15,7 +15,6 @@ function(test_append_socket_library target)
   endif()
 
   set(check_socket_source "
-    #include <sys/types.h>
     #include <ifaddrs.h>
 
     int main() {

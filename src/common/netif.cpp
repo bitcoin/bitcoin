@@ -30,7 +30,6 @@
 #endif
 
 #ifdef HAVE_IFADDRS
-#include <sys/types.h>
 #include <ifaddrs.h>
 #endif
 
