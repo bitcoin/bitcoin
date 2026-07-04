@@ -367,7 +367,7 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
                 const bool real{caches.back()->SpendCoin(data.outpoints[outpointidx], nullptr)};
                 // Apply to simulation data.
                 sim_caches[caches.size()].entry[outpointidx].entrytype = EntryType::SPENT;
-                assert(!sim.has_value() || real); // TODO: A missing unspent output must not report a successful spend
+                assert(real == sim.has_value());
             },
 
             [&]() { // SpendCoin (with moveto)
@@ -379,7 +379,7 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
                 const bool real{caches.back()->SpendCoin(data.outpoints[outpointidx], &realcoin)};
                 // Apply to simulation data.
                 sim_caches[caches.size()].entry[outpointidx].entrytype = EntryType::SPENT;
-                assert(!sim.has_value() || real); // TODO: A missing unspent output must not report a successful spend
+                assert(real == sim.has_value());
                 // Compare *moveto with the value expected based on simulation data.
                 if (!sim.has_value()) {
                     assert(realcoin.IsSpent());

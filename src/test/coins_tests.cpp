@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(ccoins_access)
 static void CheckSpendCoins(const CAmount base_value, const MaybeCoin& cache_coin, const MaybeCoin& expected)
 {
     SingleEntryCacheTest test{base_value, cache_coin};
-    const bool spent{cache_coin.has_value() || base_value == VALUE1}; // TODO: A cached spent entry must not report a successful spend
+    const bool spent{cache_coin ? cache_coin->value != SPENT : base_value == VALUE1};
     BOOST_CHECK_EQUAL(test.cache.SpendCoin(OUTPOINT), spent);
     test.cache.SelfTest();
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(test.cache.map()), expected);
@@ -720,9 +720,9 @@ BOOST_AUTO_TEST_CASE(ccoins_spend)
     SingleEntryCacheTest test{ABSENT, SPENT_DIRTY};
     Coin moveout{CTxOut{VALUE3, CScript{}}, 1, false};
     const Coin unchanged{moveout};
-    BOOST_CHECK(test.cache.SpendCoin(OUTPOINT, &moveout)); // TODO: An already-spent output cannot be spent again
+    BOOST_CHECK(!test.cache.SpendCoin(OUTPOINT, &moveout));
     test.cache.SelfTest();
-    BOOST_CHECK(moveout != unchanged); // TODO: A failed spend must preserve caller-owned output
+    BOOST_CHECK(moveout == unchanged);
 }
 
 static void CheckAddCoin(const CAmount base_value, const MaybeCoin& cache_coin, const CAmount modify_value, const CoinOrError& expected, const bool coinbase)
