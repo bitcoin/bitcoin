@@ -19,7 +19,8 @@ std::list<CoinsCachePair> CreatePairs(CoinsCachePair& sentinel)
         nodes.emplace_back();
 
         auto node{std::prev(nodes.end())};
-        CCoinsCacheEntry::SetDirty(*node, sentinel);
+        BOOST_CHECK(!node->second.IsFresh());
+        CCoinsCacheEntry::SetDirty(*node, sentinel, /*fresh=*/false);
 
         BOOST_CHECK(node->second.IsDirty() && !node->second.IsFresh());
         BOOST_CHECK_EQUAL(node->second.Next(), &sentinel);
@@ -147,7 +148,8 @@ BOOST_AUTO_TEST_CASE(linked_list_set_state)
     CoinsCachePair n2;
 
     // Check that setting DIRTY inserts it into linked list and sets state
-    CCoinsCacheEntry::SetDirty(n1, sentinel);
+    BOOST_CHECK(!n1.second.IsFresh());
+    CCoinsCacheEntry::SetDirty(n1, sentinel, /*fresh=*/false);
     BOOST_CHECK(n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(n1.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
@@ -187,7 +189,8 @@ BOOST_AUTO_TEST_CASE(linked_list_set_state)
     BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
 
     // Adding DIRTY re-inserts it after n2
-    CCoinsCacheEntry::SetDirty(n1, sentinel);
+    BOOST_CHECK(!n1.second.IsFresh());
+    CCoinsCacheEntry::SetDirty(n1, sentinel, /*fresh=*/false);
     BOOST_CHECK(n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(n2.second.Next(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &n2);
