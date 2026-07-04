@@ -17,8 +17,6 @@
 #elif defined(__FreeBSD__)
 #include <osreldate.h>
 #if __FreeBSD_version >= 1400000
-// Workaround https://github.com/freebsd/freebsd-src/pull/1070.
-#define typeof __typeof
 #include <netlink/netlink.h>
 #include <netlink/netlink_route.h>
 #endif
