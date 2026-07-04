@@ -552,21 +552,33 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
     def check_whitespace_in_headers(self):
         self.log.info("Check that requests with whitespace in headers are rejected")
+
+        def assert_rejects_bad_header(auth_header_prefix):
+            conn = BitcoinHTTPConnection(self.node)
+            body = '{"method": "getbestblockhash"}'
+            raw = (
+                f"POST / HTTP/1.1\r\n"
+                f"Host: {conn.url.hostname}\r\n"
+                f"{auth_header_prefix}{str_to_b64str(conn.authpair)}\r\n"
+                f"Content-Length: {len(body)}\r\n"
+                f"\r\n"
+                f"{body}"
+            ).encode("ascii")
+            conn.send_raw(raw)
+            response = conn.recv_raw().decode()
+            assert response.startswith("HTTP/1.1 400")
+
         # Extra whitespace before colon in header.
-        conn = BitcoinHTTPConnection(self.node)
-        conn.headers = {"Authorization ": f"Basic {str_to_b64str(conn.authpair)}"}
-        response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.BAD_REQUEST)
+        assert_rejects_bad_header("Authorization : Basic ")
+        assert_rejects_bad_header("Authorization\t: Basic ")
 
         # Extra whitespace at start of new line.
         # "line folding" as defined in
         # https://www.rfc-editor.org/rfc/rfc2616#section-2.2
         # is considered unsafe and is explicitly deprecated in
         # https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
-        conn = BitcoinHTTPConnection(self.node)
-        conn.headers = {"Authorization": f"Basic \n {str_to_b64str(conn.authpair)}"}
-        response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.BAD_REQUEST)
+        assert_rejects_bad_header("Authorization: Basic \r\n ")
+        assert_rejects_bad_header("Authorization: Basic \r\n\t")
 
 
 if __name__ == '__main__':
