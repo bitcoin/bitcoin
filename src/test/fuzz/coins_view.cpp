@@ -209,13 +209,15 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                         }
                         coins_cache_entry.coin = *opt_coin;
                     }
-                    // Avoid setting FRESH for an outpoint that already exists unspent in the parent view.
-                    bool fresh{!coins_view_cache.PeekCoin(random_out_point) && fuzzed_data_provider.ConsumeBool()};
-                    bool dirty{fresh || fuzzed_data_provider.ConsumeBool()};
-                    auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
-                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
-                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
-                    dirty_count += dirty;
+                    bool dirty{fuzzed_data_provider.ConsumeBool()};
+                    // Avoid setting FRESH for spent coins or outpoints that already exist unspent in the parent view.
+                    bool fresh{dirty && !coins_cache_entry.coin.IsSpent() && !coins_view_cache.PeekCoin(random_out_point) && fuzzed_data_provider.ConsumeBool()};
+                    auto [it, inserted]{coins_map.emplace(random_out_point, std::move(coins_cache_entry))};
+                    if (dirty && inserted) {
+                        CCoinsCacheEntry::SetDirty(*it, sentinel);
+                        if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                        ++dirty_count;
+                    }
                 }
                 auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, coins_map, /*will_erase=*/true)};
                 uint256 best_block{coins_view_cache.GetBestBlock()};

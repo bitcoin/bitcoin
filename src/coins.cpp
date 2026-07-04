@@ -189,29 +189,26 @@ void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& in
 {
     for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
         assert(it->second.IsDirty());
+        if (it->second.IsFresh() && it->second.coin.IsSpent()) throw std::logic_error("A FRESH coin was not removed when it was spent");
         auto [itUs, inserted]{cacheCoins.try_emplace(it->first)};
         if (inserted) {
-            if (it->second.IsFresh() && it->second.coin.IsSpent()) {
-                cacheCoins.erase(itUs); // TODO fresh coins should have been removed at spend
+            // The parent cache does not have an entry, while the child cache does.
+            // Move the data up and mark it as dirty.
+            CCoinsCacheEntry& entry{itUs->second};
+            assert(entry.coin.DynamicMemoryUsage() == 0);
+            if (cursor.WillErase(*it)) {
+                // Since this entry will be erased,
+                // we can move the coin into us instead of copying it
+                entry.coin = std::move(it->second.coin);
             } else {
-                // The parent cache does not have an entry, while the child cache does.
-                // Move the data up and mark it as dirty.
-                CCoinsCacheEntry& entry{itUs->second};
-                assert(entry.coin.DynamicMemoryUsage() == 0);
-                if (cursor.WillErase(*it)) {
-                    // Since this entry will be erased,
-                    // we can move the coin into us instead of copying it
-                    entry.coin = std::move(it->second.coin);
-                } else {
-                    entry.coin = it->second.coin;
-                }
-                // We can mark it FRESH in the parent if it was FRESH in the child
-                // Otherwise it might have just been flushed from the parent's cache
-                // and already exist in the grandparent
-                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel, it->second.IsFresh());
-                ++m_dirty_count;
-                cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
+                entry.coin = it->second.coin;
             }
+            // We can mark it FRESH in the parent if it was FRESH in the child
+            // Otherwise it might have just been flushed from the parent's cache
+            // and already exist in the grandparent
+            CCoinsCacheEntry::SetDirty(*itUs, m_sentinel, it->second.IsFresh());
+            ++m_dirty_count;
+            cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
         } else {
             // Found the entry in the parent cache
             if (it->second.IsFresh() && !itUs->second.coin.IsSpent()) {
