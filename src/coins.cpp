@@ -188,9 +188,7 @@ void CCoinsViewCache::SetBestBlock(const uint256& in_block_hash)
 void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& in_block_hash)
 {
     for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
-        if (!it->second.IsDirty()) { // TODO a cursor can only contain dirty entries
-            continue;
-        }
+        assert(it->second.IsDirty());
         auto [itUs, inserted]{cacheCoins.try_emplace(it->first)};
         if (inserted) {
             if (it->second.IsFresh() && it->second.coin.IsSpent()) {
