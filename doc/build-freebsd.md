@@ -1,8 +1,8 @@
 # FreeBSD Build Guide
 
-**Updated for FreeBSD [15.0](https://www.freebsd.org/releases/15.0R/announce/)**
+Bitcoin Core is supported on all [supported FreeBSD releases](https://www.freebsd.org/security/#sup).
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
+This guide describes how to build bitcoind, command-line utilities, and GUI on the most recent production release.
 
 ## Preparation
 

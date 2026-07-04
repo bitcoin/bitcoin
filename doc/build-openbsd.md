@@ -1,8 +1,8 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.8](https://www.openbsd.org/78.html)**
+Bitcoin Core is supported on [the two most recent OpenBSD releases](https://www.openbsd.org/faq/faq5.html#Flavors).
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
+This guide describes how to build bitcoind, command-line utilities, and GUI on the latest release.
 
 ## Preparation
 
