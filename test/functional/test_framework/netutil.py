@@ -212,6 +212,37 @@ def format_addr_port(addr, port):
     else:
         return f"{addr}:{port}"
 
+def format_sock(sock, *, local):
+    '''
+    Format either local or remote side of a socket to a human readable string, e.g.
+    1.2.3.4:8333 or
+    [11:22::33]:8333 or
+    /path/to/socket or
+    @abstract-socket
+    '''
+    try:
+        if local:
+            name = sock.getsockname()
+        else:
+            name = sock.getpeername()
+    except Exception:
+        return "n/a"
+
+    if sock.family == socket.AF_INET:
+        return f"{name[0]}:{name[1]}"
+
+    if sock.family == socket.AF_INET6:
+        return f"[{name[0]}]:{name[1]}"
+
+    if sock.family == socket.AF_UNIX:
+        if isinstance(name, bytes):
+            name = name.decode(errors="backslashreplace")
+        if name.startswith("\0"):
+            return f"@{name[1:]}"
+        return name
+
+    return str(name)
+
 
 def set_ephemeral_port_range(sock):
     '''On FreeBSD, set socket to use the high ephemeral port range (49152-65535).

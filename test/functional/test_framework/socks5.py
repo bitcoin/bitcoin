@@ -12,6 +12,7 @@ import logging
 
 from .netutil import (
     format_addr_port,
+    format_sock,
     set_ephemeral_port_range,
 )
 
@@ -55,6 +56,12 @@ def forward_sockets(a, b, wakeup_socket, serv):
     Monitors wakeup_socket for a shutdown signal and checks serv.is_running()
     to exit gracefully when the server is stopping.
     """
+    # Prefix messages with e.g.:
+    # forward_sockets(a{remote=127.0.0.1:36935, local=127.0.0.1:9050} <-> b{local=127.0.0.1:33424, remote=127.0.0.1:8333})
+    log_prefix = ("forward_sockets("
+                  f"a{{remote={format_sock(a, local=False)}, local={format_sock(a, local=True)}}} <-> "
+                  f"b{{local={format_sock(b, local=True)}, remote={format_sock(b, local=False)}}}): ")
+
     # Mark as non-blocking so that we do not end up in a deadlock-like situation
     # where we block and wait on data from `a` while there is data ready to be
     # received on `b` and forwarded to `a`. And at the same time the application
@@ -63,24 +70,26 @@ def forward_sockets(a, b, wakeup_socket, serv):
     a.setblocking(False)
     b.setblocking(False)
     sockets = [a, b, wakeup_socket]
-    done = False
-    while not done:
+    while True:
         # Blocking select with timeout
         rlist, _, xlist = select.select(sockets, [], sockets, 2)
         if not serv.is_running():
-            logger.debug("forward_sockets: Exit due to shutdown")
+            logger.debug(f"{log_prefix}Exit due to shutdown")
             return
         if len(xlist) > 0:
-            raise IOError('Exceptional condition on socket')
+            raise IOError(f"{log_prefix}Exceptional condition on socket")
         for s in rlist:
-            data = s.recv(4096)
-            if data is None or len(data) == 0:
-                done = True
-                break
-            if s == a:
-                sendall(b, data)
-            elif s == b:
-                sendall(a, data)
+            try:
+                data = s.recv(4096)
+                if data is None or len(data) == 0:
+                    return
+                if s == a:
+                    sendall(b, data)
+                elif s == b:
+                    sendall(a, data)
+            except (BrokenPipeError, ConnectionResetError) as e:
+                logger.debug(f"{log_prefix}cannot send or receive data on socket {'a' if s == a else 'b'}: {str(e)}")
+                return
 
 # Implementation classes
 class Socks5Configuration():
@@ -129,7 +138,12 @@ class Socks5Connection():
 
     def handle(self):
         """Handle socks5 request according to RFC1928."""
+        log_exception_prefix = "Socks5Connection.handle(): "
         try:
+            log_exception_prefix = ("Socks5Connection.handle("
+                                    f"client={format_sock(self.conn, local=False)}, "
+                                    f"proxy={format_sock(self.conn, local=True)}): ")
+
             # Verify socks version
             ver = recvall(self.conn, 1)[0]
             if ver != 0x05:
@@ -203,9 +217,12 @@ class Socks5Connection():
                 else:
                     logger.debug(f"Can't serve the connection to {requested_to}: no destinations factory")
 
-            # Fall through to disconnect
+            # Disconnect happens in the "finally" block below.
+
+        except (BrokenPipeError, ConnectionResetError) as e:
+            logger.debug(f"{log_exception_prefix}abnormal connection close: {str(e)}")
         except Exception as e:
-            logger.exception(f"socks5 request handling failed (running {self.serv.is_running()})")
+            logger.exception(f"{log_exception_prefix}exception: {str(e)} (running {self.serv.is_running()})")
             if self.serv.is_running():
                 self.serv.queue.put(e)
         finally:
