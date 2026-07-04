@@ -175,7 +175,18 @@ public:
     bool m_use_unsafe_sync;
 };
 
+/** An in-memory SQLiteDatabase. Used as a temporary build artifact where no
+ *  on-disk persistence is needed. */
+class InMemoryWalletDatabase : public SQLiteDatabase
+{
+public:
+    InMemoryWalletDatabase();
+    std::vector<fs::path> Files() override { return {}; }
+};
+
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+
+std::unique_ptr<WalletDatabase> MakeInMemoryWalletDatabase();
 
 std::string SQLiteDatabaseVersion();
 } // namespace wallet
