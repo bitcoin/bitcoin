@@ -44,7 +44,7 @@ inline void CleanupRun(CleanupList& fns) {
     }
 }
 
-//! Event loop smart pointer automatically managing m_num_clients.
+//! Event loop smart pointer automatically managing m_num_refs.
 //! If a lock pointer argument is passed, the specified lock will be used,
 //! otherwise EventLoop::m_mutex will be locked when needed.
 class EventLoopRef
@@ -304,20 +304,31 @@ struct ProxyServerMethodTraits : public ProxyMethodTraits<MethodParams>
 {
 };
 
-static constexpr int FIELD_IN = 1;
-static constexpr int FIELD_OUT = 2;
-static constexpr int FIELD_OPTIONAL = 4;
-static constexpr int FIELD_REQUESTED = 8;
-static constexpr int FIELD_BOXED = 16;
+static constexpr int FIELD_IN = 1;        //!< See Accessor::in.
+static constexpr int FIELD_OUT = 2;       //!< See Accessor::out.
+static constexpr int FIELD_OPTIONAL = 4;  //!< See Accessor::optional.
+static constexpr int FIELD_REQUESTED = 8; //!< See Accessor::requested.
+static constexpr int FIELD_BOXED = 16;    //!< See Accessor::boxed.
 
 //! Accessor type holding flags that determine how to access a message field.
 template <typename Field, int flags>
 struct Accessor : public Field
 {
+    //! Field is present from the Cap'n Proto Params struct (client -> server).
     static const bool in = flags & FIELD_IN;
+    //! Field is present from the Cap'n Proto Results struct (server -> client).
     static const bool out = flags & FIELD_OUT;
+    //! Field has a companion has{Name} boolean field in the Cap'n Proto struct.
+    //! This is used to represent optional primitive values (e.g. C++
+    //! std::optional<int>) because Cap'n Proto doesn't allow primitive fields to
+    //! be unset.
     static const bool optional = flags & FIELD_OPTIONAL;
+    //! Results field has a companion want{Name} boolean field in the Params
+    //! struct. Used for optional output parameters (e.g. C++ int*) and set to
+    //! true if the caller passed a non-null pointer and wants the result.
     static const bool requested = flags & FIELD_REQUESTED;
+    //! Field is a Cap'n Proto pointer type (struct, list, text, data,
+    //! interface) as opposed to a primitive type (bool, int, float, enum).
     static const bool boxed = flags & FIELD_BOXED;
 };
 
