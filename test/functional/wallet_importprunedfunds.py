@@ -77,6 +77,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
         proof3 = self.nodes[0].gettxoutproof([txnid3])
 
+        txnid4 = self.nodes[0].sendtoaddress(address2, 0.0125)
+        self.generate(self.nodes[0], 1)
+        rawtxn4 = self.nodes[0].gettransaction(txnid4)['hex']
+        proof4 = self.nodes[0].gettxoutproof([txnid4])
+
         self.sync_all()
 
         # Import with no affiliated address
@@ -90,7 +95,10 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         wwatch = self.nodes[1].get_wallet_rpc('wwatch')
         wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(address2)["desc"], "timestamp": "now"}])
         wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
-        assert txnid2 in [tx['txid'] for tx in wwatch.listtransactions()]
+        wwatch.importprunedfunds(rawtransaction=rawtxn4, txoutproof=proof4)
+        wwatch_txids = [tx['txid'] for tx in wwatch.listtransactions()]
+        assert txnid2 in wwatch_txids
+        assert txnid4 in wwatch_txids
 
         # Import with private key with no rescan
         w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
@@ -112,9 +120,20 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
         assert txnid1 not in [tx['txid'] for tx in w1.listtransactions()]
 
-        wwatch.removeprunedfunds(txnid2)
-        assert txnid2 not in [tx['txid'] for tx in wwatch.listtransactions()]
+        # Removal is atomic: if any txid in the array fails, none are removed
+        assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, [txnid3, txnid1])
+        assert txnid3 in [tx['txid'] for tx in w1.listtransactions()]
 
+        assert_raises_rpc_error(-8, 'txids must not be empty', w1.removeprunedfunds, [])
+        assert_raises_rpc_error(-8, 'txid must be of length 64', w1.removeprunedfunds, ['beef'])
+
+        # Remove multiple transactions in one call
+        wwatch.removeprunedfunds([txnid2, txnid4])
+        wwatch_txids = [tx['txid'] for tx in wwatch.listtransactions()]
+        assert txnid2 not in wwatch_txids
+        assert txnid4 not in wwatch_txids
+
+        # A single txid passed as a plain string remains supported
         w1.removeprunedfunds(txnid3)
         assert txnid3 not in [tx['txid'] for tx in w1.listtransactions()]
 

@@ -295,6 +295,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importmempool", 1, "apply_unbroadcast_set" },
     { "importdescriptors", 0, "requests" },
     { "listdescriptors", 0, "private" },
+    { "removeprunedfunds", 0, "txids", ParamFormat::JSON_OR_STRING },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
     { "getblockstats", 0, "hash_or_height", ParamFormat::JSON_OR_STRING },

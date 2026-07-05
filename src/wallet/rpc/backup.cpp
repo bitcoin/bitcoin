@@ -96,15 +96,25 @@ RPCMethod removeprunedfunds()
 {
     return RPCMethod{
         "removeprunedfunds",
-        "Deletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
+        "Deletes the specified transactions from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n"
+        "Removal is atomic: if any of the given transactions cannot be removed, none are.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded id of the transaction you are deleting"},
+                    {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex-encoded id of the transaction you are deleting, or an array of ids",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded id of a transaction you are deleting"},
+                        },
+                        RPCArgOptions{
+                            .skip_type_check = true,
+                            .type_str = {"", "string or json array"},
+                        }},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
                     HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
+            "\nRemove multiple transactions in one atomic batch\n"
+            + HelpExampleCli("removeprunedfunds", "'[\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\", \"9414f1681fb1255bd168a806254321a837008dd4480c02226063183deb100204\"]'") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+            + HelpExampleRpc("removeprunedfunds", "[\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\", \"9414f1681fb1255bd168a806254321a837008dd4480c02226063183deb100204\"]")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -113,10 +123,20 @@ RPCMethod removeprunedfunds()
 
     LOCK(pwallet->cs_wallet);
 
-    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
-    std::vector<Txid> vHash;
-    vHash.push_back(hash);
-    if (auto res = pwallet->RemoveTxs(vHash); !res) {
+    std::vector<Txid> txids;
+    if (request.params[0].isArray()) {
+        const UniValue& txids_univalue{request.params[0].get_array()};
+        if (txids_univalue.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "txids must not be empty");
+        }
+        txids.reserve(txids_univalue.size());
+        for (const UniValue& txid : txids_univalue.getValues()) {
+            txids.push_back(Txid::FromUint256(ParseHashV(txid, "txid")));
+        }
+    } else {
+        txids.push_back(Txid::FromUint256(ParseHashV(request.params[0], "txid")));
+    }
+    if (auto res = pwallet->RemoveTxs(txids); !res) {
         throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
     }
 
