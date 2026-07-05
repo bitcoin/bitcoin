@@ -15,7 +15,7 @@ Libmultiprocess acts as a pure wrapper or layer over the underlying protocol. Cl
 
 ## Core Architecture
 
-The `ProxyClient` and `ProxyServer` generated classes are not directly exposed to the user, as described in [usage.md](usage.md). Instead, they wrap C++ interfaces and appear to the user as pointers to an interface. They are first instantiated when calling `ConnectStream` and `ServeStream` respectively for creating the `InitInterface`. These methods establish connections through sockets, internally creating `Connection` objects wrapping a `capnp::RpcSystem` configured for client and server mode respectively.
+The `ProxyServer` generated class is not directly exposed to the user. The `ProxyClient` generated class inherits from the C++ interface class, so user code interacts with it through the abstract interface type, and the `ProxyClient` type itself is generally not visible or accessible without a cast. `ConnectStream` returns a `unique_ptr<ProxyClient<InitInterface>>` as an exception for the root Init interface, but even there users typically treat it as a pointer to the abstract `InitInterface`. For all interfaces returned by Init methods (e.g., `Printer`, `Calculator`), the return type is the abstract class pointer, hiding the underlying `ProxyClient` entirely. They are first instantiated when calling `ConnectStream` and `ServeStream` respectively for creating the `InitInterface`. These methods establish connections through sockets, internally creating `Connection` objects wrapping a `capnp::RpcSystem` configured for client and server mode respectively.
 
 The `InitInterface` interface will typically have methods which return other interfaces, giving the connecting process the ability to call other functions in the serving process. Interfaces can also have methods accepting other interfaces as parameters, giving serving processes the ability to call back and invoke functions in connecting processes. Creating new interfaces does not create new connections, and typically many interface objects will share the same connection.
 
@@ -133,6 +133,8 @@ sequenceDiagram
     SF2->>SF1: return
     SF1->>serverInvoke: return
 ```
+
+Destroy methods are a special case: a capnp interface can declare a `destroy` method that is handled by `ServerDestroy` instead of `ServerCall`. Rather than dispatching through the `ServerField`/`ServerRet`/`ServerCall` chain to a C++ interface method, `ServerDestroy` calls `invokeDestroy()` on the `ProxyServer`, which resets `m_impl` and runs any registered cleanup functions, giving the client a way to synchronously destroy the wrapped object on the server side.
 
 ## Advanced Features
 

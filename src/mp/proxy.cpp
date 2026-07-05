@@ -22,9 +22,11 @@
 #include <kj/async-prelude.h>
 #include <kj/common.h>
 #include <kj/debug.h>
+#include <kj/exception.h>
 #include <kj/function.h>
 #include <kj/memory.h>
 #include <kj/string.h>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -35,6 +37,7 @@
 #include <tuple>
 #include <unistd.h>
 #include <utility>
+#include <vector>
 
 namespace mp {
 
@@ -50,7 +53,7 @@ EventLoopRef::EventLoopRef(EventLoop& loop, Lock* lock) : m_loop(&loop), m_lock(
 {
     auto loop_lock{PtrOrValue{m_lock, m_loop->m_mutex}};
     loop_lock->assert_locked(m_loop->m_mutex);
-    m_loop->m_num_clients += 1;
+    m_loop->m_num_refs += 1;
 }
 
 // Due to the conditionals in this function, MP_NO_TSA is required to avoid
@@ -62,8 +65,8 @@ void EventLoopRef::reset(bool relock) MP_NO_TSA
         m_loop = nullptr;
         auto loop_lock{PtrOrValue{m_lock, loop->m_mutex}};
         loop_lock->assert_locked(loop->m_mutex);
-        assert(loop->m_num_clients > 0);
-        loop->m_num_clients -= 1;
+        assert(loop->m_num_refs > 0);
+        loop->m_num_refs -= 1;
         if (loop->done()) {
             loop->m_cv.notify_all();
             int post_fd{loop->m_post_fd};
@@ -217,7 +220,7 @@ EventLoop::~EventLoop()
     KJ_ASSERT(!m_async_fns);
     KJ_ASSERT(m_wait_fd == -1);
     KJ_ASSERT(m_post_fd == -1);
-    KJ_ASSERT(m_num_clients == 0);
+    KJ_ASSERT(m_num_refs == 0);
 
     // Spin event loop. wait for any promises triggered by RPC shutdown.
     // auto cleanup = kj::evalLater([]{});
@@ -245,7 +248,12 @@ void EventLoop::loop()
         if (read_bytes != 1) throw std::logic_error("EventLoop wait_stream closed unexpectedly");
         Lock lock(m_mutex);
         if (m_post_fn) {
-            Unlock(lock, *m_post_fn);
+            // m_post_fn throwing is never expected. If it does happen, the caller
+            // of EventLoop::post() will return without any indication of failure,
+            // which will likely cause other bugs. Log the error and continue.
+            KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() MP_REQUIRES(m_mutex) { Unlock(lock, *m_post_fn); })) {
+                MP_LOG(*this, Log::Error) << "EventLoop: m_post_fn threw: " << kj::str(*exception).cStr();
+            }
             m_post_fn = nullptr;
             m_cv.notify_all();
         } else if (done()) {
@@ -314,8 +322,8 @@ void EventLoop::startAsyncThread()
 
 bool EventLoop::done() const
 {
-    assert(m_num_clients >= 0);
-    return m_num_clients == 0 && m_async_fns->empty();
+    assert(m_num_refs >= 0);
+    return m_num_refs == 0 && m_async_fns->empty();
 }
 
 std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connection* connection, const std::function<Thread::Client()>& make_thread)
@@ -408,6 +416,29 @@ kj::Promise<void> ProxyServer<Thread>::getName(GetNameContext context)
 }
 
 ProxyServer<ThreadMap>::ProxyServer(Connection& connection) : m_connection(connection) {}
+
+kj::Promise<void> ProxyServer<ThreadMap>::makePool(MakePoolContext context)
+{
+    if (!m_connection.m_thread_pool.empty()) {
+        throw std::runtime_error("makePool called on connection with existing pool");
+    }
+    EventLoop& loop{*m_connection.m_loop};
+    const uint32_t count = context.getParams().getCount();
+    for (uint32_t i = 0; i < count; ++i) {
+        const std::string thread_name = "pool/" + std::to_string(i);
+        std::promise<ThreadContext*> thread_context;
+        std::thread thread([&loop, &thread_context, thread_name]() {
+            g_thread_context.thread_name = ThreadName(loop.m_exe_name) + " (" + thread_name + ")";
+            g_thread_context.waiter = std::make_unique<Waiter>();
+            Lock lock(g_thread_context.waiter->m_mutex);
+            thread_context.set_value(&g_thread_context);
+            g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
+        });
+        auto thread_server = kj::heap<ProxyServer<Thread>>(m_connection, *thread_context.get_future().get(), std::move(thread));
+        m_connection.m_thread_pool.push_back({m_connection.m_threads.add(kj::mv(thread_server))});
+    }
+    return kj::READY_NOW;
+}
 
 kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
 {
