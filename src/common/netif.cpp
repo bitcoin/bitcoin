@@ -10,7 +10,6 @@
 #include <util/check.h>
 #include <util/log.h>
 #include <util/sock.h>
-#include <util/syserror.h>
 
 #if defined(__linux__)
 #include <linux/rtnetlink.h>
@@ -238,12 +237,12 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     // The size of the available data is determined by calling sysctl() with oldp=nullptr. See sysctl(3).
     size_t l = 0;
     if (sysctl(/*name=*/mib, /*namelen=*/sizeof(mib) / sizeof(int), /*oldp=*/nullptr, /*oldlenp=*/&l, /*newp=*/nullptr, /*newlen=*/0) < 0) {
-        LogError("Could not get sysctl length of routing table: %s\n", SysErrorString(errno));
+        LogError("Could not get sysctl length of routing table: %s\n", NetworkErrorString(errno));
         return std::nullopt;
     }
     std::vector<std::byte> buf(l);
     if (sysctl(/*name=*/mib, /*namelen=*/sizeof(mib) / sizeof(int), /*oldp=*/buf.data(), /*oldlenp=*/&l, /*newp=*/nullptr, /*newlen=*/0) < 0) {
-        LogError("Could not get sysctl data of routing table: %s\n", SysErrorString(errno));
+        LogError("Could not get sysctl data of routing table: %s\n", NetworkErrorString(errno));
         return std::nullopt;
     }
     // Iterate over messages (each message is a routing table entry).
