@@ -87,6 +87,18 @@ public:
 
     /** Construct a new block template */
     std::unique_ptr<CBlockTemplate> CreateNewBlock();
+    /**
+     * Create a coinbase transaction and insert it into block.vtx[0].
+     *
+     * @param[in,out] block       Block whose coinbase transaction is replaced.
+     * @param[in]     pindexPrev  Previous block index. Used to derive the
+     *                            coinbase height, subsidy, and commitment.
+     * @param[in]     fees        Fees to add to the block subsidy.
+     * @return                    Metadata describing the inserted coinbase.
+     */
+    CoinbaseTx CreateCoinbaseTx(CBlock& block,
+                                const CBlockIndex& pindexPrev,
+                                CAmount fees);
 
     /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
