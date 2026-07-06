@@ -12,6 +12,7 @@
 #include <primitives/block.h>
 #include <uint256.h>
 #include <util/bitdeque.h>
+#include <util/expected.h>
 #include <util/hasher.h>
 
 #include <deque>
@@ -128,6 +129,8 @@ public:
     /** Return the amount of work in the chain received during the PRESYNC phase. */
     arith_uint256 GetPresyncWork() const { return m_current_chain_work; }
 
+    static util::Expected<uint64_t, std::string> ComputeMaxCommitments(const HeadersSyncParams& params, const CBlockIndex& chain_start);
+
     /** Construct a HeadersSyncState object representing a headers sync via this
      *  download-twice mechanism).
      *
@@ -138,7 +141,8 @@ public:
      */
     HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
                      const HeadersSyncParams& params, const CBlockIndex& chain_start,
-                     const arith_uint256& minimum_required_work);
+                     const arith_uint256& minimum_required_work,
+                     uint64_t max_commitments);
 
     /** Result data structure for ProcessNextHeaders. */
     struct ProcessingResult {

@@ -11,6 +11,7 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <cstddef>
@@ -82,14 +83,18 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
 
     HeadersSyncState CreateState()
     {
-        return {/*id=*/0,
-                Params().GetConsensus(),
-                HeadersSyncParams{
-                    .commitment_period = COMMITMENT_PERIOD,
-                    .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
-                },
-                chain_start,
-                /*minimum_required_work=*/CHAIN_WORK};
+        const HeadersSyncParams params{
+            .commitment_period = COMMITMENT_PERIOD,
+            .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
+        };
+        util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(params, chain_start)};
+
+        return HeadersSyncState{/*id=*/0,
+                                Params().GetConsensus(),
+                                params,
+                                chain_start,
+                                /*minimum_required_work=*/CHAIN_WORK,
+                                /*max_commitments=*/*max_commitments};
     }
 
 private:
