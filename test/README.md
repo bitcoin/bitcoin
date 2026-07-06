@@ -29,19 +29,45 @@ See [/doc/fuzzing.md](/doc/fuzzing.md)
 
 ### Dependencies and prerequisites
 
-The ZMQ functional test requires a python ZMQ library. To install it:
+The functional tests require Python to be installed. For the minimum required Python version, refer to [Dependencies](/doc/dependencies.md#build-1).
 
-- on Unix, run `sudo apt-get install python3-zmq`
-- on mac OS, run `pip3 install pyzmq`
+#### Python optional modules
 
-The IPC functional test requires a python IPC library. `pip3 install pycapnp` may work, but if not, install it from source:
+Some tests require optional modules. The optional modules can be installed with any suitable tool,
+like the system package manager, `pip` in a virtual environment, or `uv`.
+
+If a module is not installed, the tests will be skipped rather than failed.
+
+##### `sqlite3`
+
+Required for wallet tests.
+
+Most Python installations include the [`sqlite3`](https://docs.python.org/3/library/sqlite3.html) optional module by default.
+If that is not the case, look for documentation from your OS package manager, as it might be vendored as a separate package.
+For instance, FreeBSD ships `databases/py-sqlite3`.
+
+##### `zmq`
+
+Required for ZMQ tests.
+
+The `zmq` module is generally available as the [`pyzmq`](https://pypi.org/project/pyzmq/) Python package.
+
+Mainstream Linux distributions also provide native packages. For example, it is available as `python3-zmq` on Debian/Ubuntu.
+
+##### `capnp`
+
+Required for IPC tests.
+
+The `capnp` module is generally available as the [`pycapnp`](https://pypi.org/project/pycapnp/) Python package.
+
+If installing the package via `pip` fails, install it from source:
 
 ```sh
 git clone -b v2.2.1 https://github.com/capnproto/pycapnp
 pip3 install ./pycapnp
 ```
 
-If that does not work, try adding `-C force-bundled-libcapnp=True` to the `pip` command.
+If that does not work, try adding `-C force-bundled-libcapnp=True` to the `pip3` command.
 Depending on the system, it may be necessary to install and run in a venv:
 
 ```sh
