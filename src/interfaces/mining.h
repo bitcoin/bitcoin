@@ -37,12 +37,15 @@ public:
     // it may not match a transaction constructed from getCoinbaseTx().
     virtual CBlock getBlock() = 0;
 
-    // Fees per transaction, not including coinbase transaction.
+    // Fees per transaction, not including coinbase transaction. Throws for
+    // externally generated templates.
     virtual std::vector<CAmount> getTxFees() = 0;
-    // Sigop cost per transaction, not including coinbase transaction.
+    // Sigop cost per transaction, not including coinbase transaction. Throws
+    // for externally generated templates.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
-    /** Return fields needed to construct a coinbase transaction */
+    /** Return fields needed to construct a coinbase transaction.
+     * Throws for externally generated templates. */
     virtual node::CoinbaseTx getCoinbaseTx() = 0;
 
     /**
@@ -93,6 +96,8 @@ public:
      *
      * On testnet this will additionally return a template with difficulty 1 if
      * the tip is more than 20 minutes old.
+     *
+     * Throws for externally generated templates.
      */
     virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}) = 0;
 

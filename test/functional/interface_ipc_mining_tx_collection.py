@@ -85,6 +85,20 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 block = await mining_get_block(template, ctx0)
                 assert_equal(len(block.vtx), 1)
 
+                self.log.debug("Externally generated templates should reject coinbase, fee, sigop, and waitNext accessors")
+                for method_name, method in (
+                    ("getCoinbaseTx", template.getCoinbaseTx),
+                    ("getTxFees", template.getTxFees),
+                    ("getTxSigops", template.getTxSigops),
+                    ("waitNext", template.waitNext),
+                ):
+                    try:
+                        await method(ctx0)
+                        raise AssertionError(f"{method_name} unexpectedly succeeded on external template")
+                    except capnp.lib.capnp.KjException as e:
+                        assert_equal(e.description, f"remote exception: std::exception: {method_name} is unavailable for externally generated templates")
+                        assert_equal(e.type, "FAILED")
+
             self.log.debug("Run the TxCollection workflow")
             remote_wallet.rescan_utxos()
             self.log.debug("Create a transaction that is shared by both mempools before disconnecting")
