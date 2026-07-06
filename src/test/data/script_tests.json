@@ -2569,6 +2569,10 @@
     "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the second key"
 ],
 
+["CHECKSIGVERIFY and CHECKMULTISIGVERIFY failure tests"],
+["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIGVERIFY 1", "P2SH,STRICTENC", "CHECKSIGVERIFY", "CHECKSIGVERIFY fails with its own error code when the signature check fails"],
+["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIGVERIFY 1", "P2SH,STRICTENC", "CHECKMULTISIGVERIFY", "CHECKMULTISIGVERIFY fails with its own error code when the signature check fails"],
+
 ["CHECKSEQUENCEVERIFY tests"],
 ["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],
 ["-1", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
