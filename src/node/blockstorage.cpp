@@ -1305,7 +1305,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogInfo("Reindexing finished");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        chainman.ActiveChainstate().LoadGenesisBlock();
+        (void)chainman.LoadGenesisBlock();
     }
 
     // -loadblock=

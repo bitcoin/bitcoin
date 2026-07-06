@@ -809,8 +809,6 @@ public:
 
     /** Whether the chain state needs to be redownloaded due to lack of witness data */
     [[nodiscard]] bool NeedsRedownload() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
-    bool LoadGenesisBlock();
 
     /** Add a block to the candidate set if it has as much work as the current tip. */
     void TryAddBlockIndexCandidate(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -1084,6 +1082,9 @@ public:
     //! The total number of bytes available for us to use across all leveldb
     //! coins databases. This will be split somehow across chainstates.
     size_t m_total_coinsdb_cache{0};
+
+    /// Ensures a genesis block is in the block tree, possibly writing one to disk.
+    [[nodiscard]] bool LoadGenesisBlock();
 
     //! Instantiate a new chainstate.
     //!
