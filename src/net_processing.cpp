@@ -2819,7 +2819,12 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             // of headers is known, some header in this set must be new, so
             // advancing to the first unknown header would be a small effect.
 
-            const util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(m_chainparams.HeadersSync(), chain_start_header)};
+            const util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(m_chainparams.HeadersSync(), chain_start_header, Now<NodeSeconds>())};
+            if (!max_commitments) {
+                m_chainman.GetNotifications().fatalError(Untranslated(max_commitments.error()));
+                headers = {};
+                return true;
+            }
             LOCK(peer.m_headers_sync_mutex);
             peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
                 m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work,

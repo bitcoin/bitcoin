@@ -63,7 +63,8 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     CBlockHeader genesis_header{Params().GenesisBlock()};
     CBlockIndex start_index(genesis_header);
 
-    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast())};
+    const NodeSeconds now{ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast() - 2 * MAX_FUTURE_BLOCK_TIME)};
+    FakeNodeClock clock{now};
 
     const uint256 genesis_hash = genesis_header.GetHash();
     start_index.phashBlock = &genesis_hash;
@@ -72,7 +73,11 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
         .commitment_period = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, Params().HeadersSync().commitment_period * 2),
         .redownload_buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, Params().HeadersSync().redownload_buffer_size * 2),
     };
-    const util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(params, start_index)};
+    const util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(params, start_index, now)};
+    if (!max_commitments) {
+        assert(now < NodeSeconds{std::chrono::seconds{start_index.GetMedianTimePast() - MAX_FUTURE_BLOCK_TIME}});
+        return;
+    }
     arith_uint256 min_work{UintToArith256(ConsumeUInt256(fuzzed_data_provider))};
     FuzzedHeadersSyncState headers_sync(
         params,

@@ -10,8 +10,8 @@
 #include <pow.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
-#include <test/util/time.h>
 #include <util/expected.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <cstddef>
@@ -81,13 +81,14 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
         return second_chain;
     }
 
-    HeadersSyncState CreateState()
+    util::Expected<HeadersSyncState, std::string> CreateState(NodeSeconds now = Now<NodeSeconds>())
     {
         const HeadersSyncParams params{
             .commitment_period = COMMITMENT_PERIOD,
             .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
         };
-        util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(params, chain_start)};
+        util::Expected max_commitments{HeadersSyncState::ComputeMaxCommitments(params, chain_start, now)};
+        if (!max_commitments) return util::Unexpected{std::move(max_commitments.error())};
 
         return HeadersSyncState{/*id=*/0,
                                 Params().GetConsensus(),
@@ -154,7 +155,7 @@ BOOST_AUTO_TEST_CASE(sneaky_redownload)
 
     // Feed the first chain to HeadersSyncState, by delivering 1 header
     // initially and then the rest.
-    HeadersSyncState hss{CreateState()};
+    HeadersSyncState hss{*CreateState()};
 
     // Just feed one header and check state.
     // Pretend the message is still "full", so we don't abort.
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(happy_path)
     // Headers message that moves us to the next state doesn't need to be full.
     for (const bool full_headers_message : {false, true}) {
         // This time we feed the first chain twice.
-        HeadersSyncState hss{CreateState()};
+        HeadersSyncState hss{*CreateState()};
 
         // Sufficient work transitions us from PRESYNC to REDOWNLOAD:
         const auto genesis_hash{genesis.GetHash()};
@@ -235,7 +236,7 @@ BOOST_AUTO_TEST_CASE(too_little_work)
 
     // Verify that just trying to process the second chain would not succeed
     // (too little work).
-    HeadersSyncState hss{CreateState()};
+    HeadersSyncState hss{*CreateState()};
     BOOST_REQUIRE_EQUAL(hss.GetState(), State::PRESYNC);
 
     // Pretend just the first message is "full", so we don't abort.
@@ -260,14 +261,9 @@ BOOST_AUTO_TEST_CASE(too_little_work)
 
 BOOST_AUTO_TEST_CASE(system_clock_lagging_behind_chain_start)
 {
-    FakeNodeClock clock{(genesis.GetBlockTime() - MAX_FUTURE_BLOCK_TIME - 1) * 1s};
-    HeadersSyncState hss{CreateState()};
-
-    CHECK_RESULT(hss.ProcessNextHeaders({{FirstChain().front()}}, /*full_headers_message=*/true),
-        hss, /*exp_state=*/State::PRESYNC,
-        /*exp_success=*/true, /*exp_request_more=*/true,
-        /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
-        /*exp_locator_hash=*/FirstChain().front().GetHash());
+    const NodeSeconds boundary{(genesis.GetBlockTime() - MAX_FUTURE_BLOCK_TIME) * 1s};
+    BOOST_CHECK(CreateState(boundary));
+    BOOST_CHECK(!CreateState(boundary - 1s));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
