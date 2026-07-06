@@ -6,6 +6,7 @@
 #include <test/data/tx_valid.json.h>
 #include <test/util/setup_common.h>
 
+#include <chainparams.h>
 #include <checkqueue.h>
 #include <clientversion.h>
 #include <consensus/amount.h>
@@ -20,6 +21,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <services/assetconsensus.h>
 #include <streams.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
@@ -380,6 +382,85 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
     BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+}
+
+// Post-fork canonical asset commitment rules (CheckAssetAllocationCanonical).
+BOOST_AUTO_TEST_CASE(syscoin_reject_noncanonical_asset_commitments)
+{
+    const uint32_t nForkHeight = (uint32_t)Params().GetConsensus().nCLReceiptStartBlock;
+
+    // Two assets (guids differ) each assigning output index 1, on a burn-to-NEVM (version 141)
+    // transaction. The single-asset rule fires before the duplicate-output rule.
+    {
+        const std::string tx_hex =
+            "8d000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e1029000000000000000002a6a280286c340010191cf96e30004010191cf96e3001471b216bd593c215cf3d1617718e364908755476900000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        TxValidationState state;
+        NEVMMintTxSet setMintTxs;
+        CAssetsMap mapAssetIn;
+        CAssetsMap mapAssetOut;
+        BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+            nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-single-asset");
+    }
+
+    // A single asset whose commitment assigns output index 1 twice: passes the single-asset
+    // rule, rejected by the duplicate-output rule. Also proves the rule is fork-gated: the
+    // same transaction is accepted one block before the fork height (historically such
+    // commitments deserialized with last-writer-wins semantics).
+    {
+        const std::string tx_hex =
+            "8d000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e102900000000000000000286a260186c340020191cf96e3000191cf96e3001471b216bd593c215cf3d1617718e364908755476900000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        {
+            TxValidationState state;
+            NEVMMintTxSet setMintTxs;
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+            BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-duplicate-output");
+        }
+        // Pre-fork the canonical rules must NOT apply (deserialization stays permissive and
+        // no consensus rule rejects the duplicate assignment), or reindex of historical
+        // blocks would fail.
+        {
+            TxValidationState state;
+            NEVMMintTxSet setMintTxs;
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            BOOST_CHECK(CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                nForkHeight - 1, true, setMintTxs, mapAssetIn, mapAssetOut));
+            BOOST_CHECK(state.IsValid());
+        }
+    }
+
+    // The same asset guid serialized as two CAssetOut entries with *different* output
+    // indexes. This is the exact shape a distinct-asset-count check (mapAssetOut.size())
+    // would have missed: the two entries collapse to one map key. Uses an allocation send
+    // (version 142) because on burn-to-NEVM/mint the single-asset rule fires first;
+    // post-fork the duplicate-asset rule must reject it for every asset tx version.
+    {
+        const std::string tx_hex =
+            "8e000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e10290000000000000000017" "6a150286c340010091cf96e30086c340010191cf96e300" "00000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        TxValidationState state;
+        NEVMMintTxSet setMintTxs;
+        CAssetsMap mapAssetIn;
+        CAssetsMap mapAssetOut;
+        BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+            nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-duplicate-asset");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_Get)

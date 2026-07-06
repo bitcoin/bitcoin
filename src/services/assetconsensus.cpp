@@ -16,9 +16,42 @@
 #include <key_io.h>
 #include <logging.h>
 #include <core_io.h>
+
+#include <unordered_set>
+
 std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 const arith_uint256 nMax = arith_uint256(MAX_MONEY);
+
+static bool CheckAssetAllocationCanonical(
+    const CTransaction& tx,
+    TxValidationState& state,
+    const bool& fJustCheck,
+    const bool& fRequireSingleAsset
+) {
+    const CAssetAllocation allocation(tx);
+    if (allocation.IsNull()) {
+        return FormatSyscoinErrorMessage(state, "assetallocation-unserialize-failed", fJustCheck);
+    }
+    if (fRequireSingleAsset && allocation.voutAssets.size() != 1) {
+        return FormatSyscoinErrorMessage(state, "assetallocation-single-asset", fJustCheck);
+    }
+
+    std::unordered_set<uint64_t> setAssets;
+    std::unordered_set<uint32_t> setOutputs;
+    for (const auto& asset : allocation.voutAssets) {
+        if (!setAssets.insert(asset.key).second) {
+            return FormatSyscoinErrorMessage(state, "assetallocation-duplicate-asset", fJustCheck);
+        }
+        for (const auto& output : asset.values) {
+            if (!setOutputs.insert(output.n).second) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-duplicate-output", fJustCheck);
+            }
+        }
+    }
+    return true;
+}
+
 bool CheckSyscoinMintInternal(
     const CMintSyscoin &mintSyscoin,
     TxValidationState &state,
@@ -280,29 +313,37 @@ bool CheckSyscoinMint(
     if (!bFoundDest) {
         return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", fJustCheck);
     }
+    const bool fCLReceiptActive = nHeight >= (uint32_t)Params().GetConsensus().nCLReceiptStartBlock;
+    if (fCLReceiptActive) {
+        // Enforce that that it consumes no asset inputs.
+        if (mapAssetOut.size() != 1) {
+            return FormatSyscoinErrorMessage(state, "mint-single-asset", fJustCheck);
+        }
+        if (!mapAssetIn.empty()) {
+            return FormatSyscoinErrorMessage(state, "mint-no-asset-inputs", fJustCheck);
+        }
+    }
     // check that there is an output from the asset in the log
     auto itOut = mapAssetOut.find(nAssetFromLog);
     if (itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "mint-asset-output-notfound", fJustCheck);
     }
 
-    // If there's also an input for this asset, remove it and see how much was net minted
     CAmount nTotalMinted;
-    // if there is an input from this asset then there must be change so calculate the minted amount by subtracting outputs of the asset from input
-    auto itIn = mapAssetIn.find(nAssetFromLog);
-    if (itIn != mapAssetIn.end()) {
-        nTotalMinted = itOut->second - itIn->second;
-        // if there is input from this asset we find total minted and remove input
-        mapAssetIn.erase(itIn);
-    } else {
-        // otherwise assume its a new output (no asset input) so the minted amount is the new output
+    if (fCLReceiptActive) {
+        // simply the asset's total output.
         nTotalMinted = itOut->second;
+    } else {
+        // net minted amount by subtracting matching inputs.
+        auto itIn = mapAssetIn.find(nAssetFromLog);
+        if (itIn != mapAssetIn.end()) {
+            nTotalMinted = itOut->second - itIn->second;
+            mapAssetIn.erase(itIn);
+        } else {
+            nTotalMinted = itOut->second;
+        }
     }
-    // we only need to find nTotalMinted then we can remove asset from output (we enforce that input of the asset is also removed).
-    // This is important because we now will have assets in and out (minus this asset). 
-    // Since we may create a new asset output without an input via this function, 
-    // we cannot gaurantee in==out unless we remove the asset from in and out. 
-    // The same pattern is used with SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION where sysx(asset) is minted by burning sys (non-asset).
+    // Remove the minted asset from the output map so the caller's in==out equality check holds.
     mapAssetOut.erase(itOut);
 
     // Must match the bridging "outputAmount"
@@ -340,6 +381,12 @@ bool CheckSyscoinInputs(const Consensus::Params& params, const CTransaction& tx,
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY1)
         return false;
     try{
+        if (nHeight >= (uint32_t)params.nCLReceiptStartBlock && tx.HasAssets()) {
+            const bool fRequireSingleAsset = IsSyscoinMintTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM;
+            if (!CheckAssetAllocationCanonical(tx, state, fJustCheck, fRequireSingleAsset)) {
+                return false;
+            }
+        }
         if(IsSyscoinMintTx(tx.nVersion)) {
             good = CheckSyscoinMint(tx, txHash, state, nHeight, fJustCheck, setMintTxs, mapAssetIn, mapAssetOut);
         }
@@ -404,6 +451,15 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             const CAmount &nBurnAmount = tx.vout[nOut].assetInfo.nValue;
             if (nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", fJustCheck);
+            }
+            if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM && nHeight >= (uint32_t)Params().GetConsensus().nCLReceiptStartBlock) {
+                // Structural bounds.
+                if (tx.vin.size() >= 100) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-nevm-too-many-inputs", fJustCheck);
+                }
+                if (tx.vout.size() >= 10) {
+                    return FormatSyscoinErrorMessage(state, "assetallocation-nevm-too-many-outputs", fJustCheck);
+                }
             }
             if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
                 if(nOut == 0) {
