@@ -14,6 +14,10 @@
 #include <util/subprocess.h>
 #endif // ENABLE_EXTERNAL_SIGNER
 
+#include <sstream>
+#include <stdexcept>
+#include <utility>
+
 UniValue RunCommandParseJSON(const std::vector<std::string>& cmd_args, const std::string& str_std_in)
 {
 #ifdef ENABLE_EXTERNAL_SIGNER
