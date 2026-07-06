@@ -4,16 +4,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/messages.h>
+
 #include <common/types.h>
 #include <node/types.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
 
-#include <cassert>
 #include <map>
 #include <string>
 #include <string_view>

@@ -12,7 +12,9 @@
 #include <string>
 #include <vector>
 
-class UniValue;
+// Users of this header need to explicitly #include <univalue.h>
+// IWYU pragma: no_include <univalue.h>
+class UniValue; // IWYU pragma: keep
 
 namespace common {
 
