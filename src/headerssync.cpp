@@ -16,7 +16,7 @@
 // CompressedHeader (we should re-calculate parameters if we compress further).
 static_assert(sizeof(CompressedHeader) == 48);
 
-util::Expected<uint64_t, std::string> HeadersSyncState::ComputeMaxCommitments(const HeadersSyncParams& params, const CBlockIndex& chain_start)
+util::Expected<uint64_t, std::string> HeadersSyncState::ComputeMaxCommitments(const HeadersSyncParams& params, const CBlockIndex& chain_start, NodeSeconds now)
 {
     Assert(params.commitment_period > 0);
 
@@ -28,8 +28,20 @@ util::Expected<uint64_t, std::string> HeadersSyncState::ComputeMaxCommitments(co
     // exceeds this bound, because it's not possible for a consensus-valid
     // chain to be longer than this (at the current time -- in the future we
     // could try again, if necessary, to sync a longer chain).
-    const auto max_seconds_since_start{(Ticks<std::chrono::seconds>(NodeClock::now() - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}}))
-                                       + MAX_FUTURE_BLOCK_TIME};
+    const int64_t max_seconds_since_start{Ticks<std::chrono::seconds>(now - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}})
+                                          + MAX_FUTURE_BLOCK_TIME};
+    if (max_seconds_since_start < 0) {
+        // Typically we would expect the chain state loading logic to
+        // already have verified that the tip of the locally stored
+        // chain is <= system clock + MAX_FUTURE_BLOCK_TIME. Getting
+        // here is really unexpected.
+        return util::Unexpected{strprintf(
+            "Failure when attempting to initiate headers sync: system clock is "
+            "more than %d minutes behind chain start MTP (%s vs %s).",
+            MAX_FUTURE_BLOCK_TIME / 60,
+            FormatISO8601DateTime(TicksSinceEpoch<std::chrono::seconds>(now)),
+            FormatISO8601DateTime(chain_start.GetMedianTimePast()))};
+    }
     return 6 * max_seconds_since_start / params.commitment_period;
 }
 
