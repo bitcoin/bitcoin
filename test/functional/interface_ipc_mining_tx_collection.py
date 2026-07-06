@@ -85,6 +85,26 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 block = await mining_get_block(template, ctx0)
                 assert_equal(len(block.vtx), 1)
 
+                self.log.debug("Externally generated templates should reject unavailable accessors")
+                for method_name, method in (
+                    ("getCoinbaseTx", template.getCoinbaseTx),
+                    ("getTxFees", template.getTxFees),
+                    ("getTxSigops", template.getTxSigops),
+                    ("waitNext", template.waitNext),
+                ):
+                    try:
+                        await method(ctx0)
+                        raise AssertionError(f"{method_name} unexpectedly succeeded on external template")
+                    except capnp.lib.capnp.KjException as e:
+                        assert_equal(e.description, f"remote exception: std::exception: {method_name} is unavailable for externally generated templates")
+                        assert_equal(e.type, "FAILED")
+                try:
+                    await template.interruptWait()
+                    raise AssertionError("interruptWait unexpectedly succeeded on external template")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: interruptWait is unavailable for externally generated templates")
+                    assert_equal(e.type, "FAILED")
+
             remote_wallet.rescan_utxos()
             self.log.debug("TxCollection should retain transactions after they leave the mempool")
             snapshot_tx = remote_wallet.send_self_transfer(
