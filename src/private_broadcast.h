@@ -23,7 +23,7 @@
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
- * - Query whether a given recipient node has confirmed reception
+ * - Mark that a given recipient node has disconnected, dropping its per-node state
  * - Query whether any transactions that need sending are currently on the list
  */
 class PrivateBroadcast
@@ -56,6 +56,11 @@ public:
     struct TxBroadcastInfo {
         CTransactionRef tx;
         NodeClock::time_point time_added;
+        /// Total number of times the transaction was sent to a peer.
+        size_t num_sent{0};
+        /// Total number of peers that confirmed reception (by PONG).
+        size_t num_confirmed{0};
+        /// Send details for currently connected peers only.
         std::vector<PeerSendInfo> peers;
     };
 
@@ -104,8 +109,8 @@ public:
 
     /**
      * Get the transaction that was picked for sending to a given node by PickTxForSend().
-     * @param[in] nodeid Node to which a transaction is being (or was) sent.
-     * @return Transaction or nullopt if the nodeid is unknown.
+     * @param[in] nodeid Node to which a transaction is being sent.
+     * @return Transaction or nullopt if the nodeid is unknown (or has disconnected).
      */
     std::optional<CTransactionRef> GetTxForNode(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -119,11 +124,13 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Check if the node has confirmed reception of the transaction.
-     * @retval true Node has confirmed, `NodeConfirmedReception()` has been called.
-     * @retval false Node has not confirmed, `NodeConfirmedReception()` has not been called.
+     * Mark that the node has disconnected and drop its per-node state (if any).
+     * The transaction's cumulative send/confirm counters are unaffected.
+     * @param[in] nodeid Node that disconnected.
+     * @retval true The node had confirmed reception, `NodeConfirmedReception()` has been called.
+     * @retval false The node had not confirmed reception (or is unknown).
      */
-    bool DidNodeConfirmReception(const NodeId& nodeid)
+    bool NodeDisconnected(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -145,20 +152,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
-    /// Status of a transaction sent to a given node.
-    struct SendStatus {
-        /// Node to which the transaction will be sent (or was sent).
-        const NodeId nodeid;
-        /// Address of the node.
-        const CService address;
-        /// When was the transaction picked for sending to the node.
-        const NodeClock::time_point picked;
-        /// When was the transaction reception confirmed by the node (by PONG).
-        std::optional<NodeClock::time_point> confirmed;
-
-        SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
-    };
-
     /// Cumulative stats from all the send attempts for a transaction. Used to prioritize transactions.
     struct Priority {
         size_t num_picked{0}; ///< Number of times the transaction was picked for sending.
@@ -174,12 +167,6 @@ private:
             return std::tie(other.num_picked, other.num_confirmed, other.last_picked, other.last_confirmed) <=>
                    std::tie(num_picked, num_confirmed, last_picked, last_confirmed);
         }
-    };
-
-    /// A pair of a transaction and a sent status for a given node. Convenience return type of GetSendStatusByNode().
-    struct TxAndSendStatusForNode {
-        const CTransactionRef& tx;
-        SendStatus& send_status;
     };
 
     // No need for salted hasher because we are going to store just a bunch of locally originating transactions.
@@ -198,28 +185,32 @@ private:
         }
     };
 
-    /**
-     * Derive the sending priority of a transaction.
-     * @param[in] sent_to List of nodes that the transaction has been sent to.
-     */
-    static Priority DerivePriority(const std::vector<SendStatus>& sent_to);
-
-    /**
-     * Find which transaction we sent to a given node (marked by PickTxForSend()).
-     * @return That transaction together with the send status or nullopt if we did not
-     * send any transaction to the given node.
-     */
-    std::optional<TxAndSendStatusForNode> GetSendStatusByNode(const NodeId& nodeid)
-        EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-    struct TxSendStatus {
+    /// Per-transaction state: when it was added and cumulative send stats.
+    struct TxState {
         const NodeClock::time_point time_added{NodeClock::now()};
-        std::vector<SendStatus> send_statuses;
+        Priority priority;
     };
+
+    /// Status of a send to a currently connected node.
+    struct NodeSend {
+        /// Transaction that will be sent (or was sent) to the node. Always present in m_transactions.
+        CTransactionRef tx;
+        /// Address of the node.
+        CService address;
+        /// When was the transaction picked for sending to the node.
+        NodeClock::time_point sent;
+        /// When was the transaction reception confirmed by the node (by PONG).
+        std::optional<NodeClock::time_point> confirmed;
+    };
+
     /// Cap on the number of simultaneously tracked transactions (see Add()).
     const size_t m_max_transactions;
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxState, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
+    /// Sends to currently connected nodes. Bounded
+    /// by the number of live private broadcast connections.
+    std::unordered_map<NodeId, NodeSend> m_by_node GUARDED_BY(m_mutex);
 };
 
 #endif // BITCOIN_PRIVATE_BROADCAST_H
