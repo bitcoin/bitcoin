@@ -94,7 +94,8 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     fs::create_directories(path);
 
     m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
-    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+    const uint32_t chunk_size{HasTestOption(gArgs, "blockfilterindex_small_chunks") ? 1024  : FLTR_FILE_CHUNK_SIZE};
+    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", chunk_size);
 }
 
 interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
