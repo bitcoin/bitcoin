@@ -919,6 +919,7 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
+        if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
         std::string reason;
         std::string debug;
@@ -1032,6 +1033,32 @@ public:
         // for validity. Treat duplicates as errors for mining clients, and only
         // return success when validation completed without setting a reason.
         return accepted && new_block && reason.empty();
+    }
+
+    std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
+    {
+        if (!m_node.mempool) return {};
+
+        std::vector<CTransactionRef> results;
+        results.reserve(txids.size());
+        LOCK(m_node.mempool->cs);
+        for (const auto& txid : txids) {
+            results.emplace_back(m_node.mempool->get(txid));
+        }
+        return results;
+    }
+
+    std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) override
+    {
+        if (!m_node.mempool) return {};
+
+        std::vector<CTransactionRef> results;
+        results.reserve(wtxids.size());
+        LOCK(m_node.mempool->cs);
+        for (const auto& wtxid : wtxids) {
+            results.emplace_back(m_node.mempool->get(wtxid));
+        }
+        return results;
     }
 
     const NodeContext* context() override { return &m_node; }

@@ -368,6 +368,9 @@ class IPCMiningTest(BitcoinTestFramework):
         asyncio.run(capnp.run(async_routine()))
         asyncio.run(capnp.run(async_routine_check_max_reserved_weight()))
         asyncio.run(capnp.run(async_routine_check_sigops_limit()))
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
+        self.miniwallet.rescan_utxos()
 
     def run_waitnext_mining_policy_test(self):
         """Verify that waitNext() preserves the mining policy from -blockmintxfee
@@ -510,9 +513,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 # lets node 2 accept/reject complete blocks independently.
                 self.disconnect_nodes(1, 2)
 
+                self.log.debug("submitSolution should reject an empty coinbase")
+                submitted = (await template.submitSolution(ctx, 0, 0, 0, b"")).result
+                assert_equal(submitted, False)
+
                 self.log.debug("Submit solution that can't be deserialized")
                 try:
-                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    await template.submitSolution(ctx, 0, 0, 0, b"\x00")
                     raise AssertionError("submitSolution unexpectedly succeeded")
                 except capnp.lib.capnp.KjException as e:
                     assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
@@ -653,7 +660,47 @@ class IPCMiningTest(BitcoinTestFramework):
                 raise AssertionError("submitBlock unexpectedly succeeded")
             except capnp.lib.capnp.KjException as e:
                 assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
+
+            self.log.debug("Submit empty block data")
+            try:
+                await mining2.submitBlock(ctx2, b"")
+                raise AssertionError("submitBlock unexpectedly succeeded")
+            except capnp.lib.capnp.KjException as e:
+                assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
             assert_equal(self.nodes[2].is_node_stopped(), False)
+
+        asyncio.run(capnp.run(async_routine()))
+
+    def run_transaction_lookup_test(self):
+        """Test getTransactionsByTxID() and getTransactionsByWitnessID()."""
+        self.log.info("Running transaction lookup test")
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            tx1 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+            tx2 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0], utxo_to_spend=tx1["new_utxo"])
+
+            self.log.debug("getTransactionsByTxID() returns mempool txs and nulls")
+            raw_txs_txid = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid, tx2["tx"].txid, bytes(32)])
+            assert_equal(len(raw_txs_txid.result), 3)
+            assert_equal(raw_txs_txid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_txid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_txid.result[2], b'')
+
+            self.log.debug("getTransactionsByWitnessID() returns mempool txs and nulls")
+            raw_txs_wtxid = await mining.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid, tx2["tx"].wtxid, bytes(32)])
+            assert_equal(len(raw_txs_wtxid.result), 3)
+            assert_equal(raw_txs_wtxid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_wtxid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_wtxid.result[2], b'')
+
+            self.log.debug("Mined transactions are not returned")
+            self.generate(self.nodes[0], 1)
+            self.sync_all()
+            raw_txs = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0], b'')
+            raw_txs = await mining.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid])
+            assert_equal(raw_txs.result[0], b'')
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -714,6 +761,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_waitnext_mining_policy_test()
         self.run_block_max_weight_test()
         self.run_ipc_option_override_test()
+        self.run_transaction_lookup_test()
 
         # Needs to run last because it resets the chain.
         self.run_low_height_test()

@@ -26,6 +26,8 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     checkBlock @5 (context :Proxy.Context, block: Data, options: BlockCheckOptions) -> (reason: Text, debug: Text, result: Bool);
     interrupt @6 () -> ();
     submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
+    getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
+    getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {

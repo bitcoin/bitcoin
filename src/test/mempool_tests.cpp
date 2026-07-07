@@ -24,6 +24,32 @@ public:
     using CTxMemPool::GetMinFee;
 };
 
+BOOST_AUTO_TEST_CASE(MempoolLookupTest)
+{
+    auto& pool = static_cast<MemPoolTest&>(*Assert(m_node.mempool));
+    LOCK2(cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+
+    CMutableTransaction tx = CMutableTransaction();
+    tx.vin.resize(1);
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout.resize(1);
+    tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
+    tx.vout[0].nValue = 10 * COIN;
+
+    // Not in the mempool, so can't find it by txid or wtxid
+    BOOST_CHECK(!pool.get(tx.GetHash()));
+    BOOST_CHECK(!pool.get(CTransaction(tx).GetWitnessHash()));
+
+    TryAddToMempool(pool, entry.Fee(1000LL).FromTx(tx));
+
+    // Lookup by Txid
+    BOOST_CHECK(pool.get(tx.GetHash()));
+
+    // Lookup by Wtxid
+    BOOST_CHECK(pool.get(CTransaction(tx).GetWitnessHash()));
+}
+
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 {
     // Test CTxMemPool::remove functionality
