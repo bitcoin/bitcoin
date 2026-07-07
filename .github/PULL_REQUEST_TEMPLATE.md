@@ -1,12 +1,13 @@
 <!--
 *** Please remove the following help text before submitting: ***
 
-Pull requests without a rationale and clear improvement may be closed
-immediately.
+Pull requests may be closed immediately if they:
+- do not have a rationale and clear improvement
+- do not adhere to doc/AI_POLICY.md
 
 GUI-related pull requests should be opened against
-https://github.com/bitcoin-core/gui
-first. See CONTRIBUTING.md
+https://github.com/bitcoin-core/gui first.
+See CONTRIBUTING.md
 -->
 
 <!--

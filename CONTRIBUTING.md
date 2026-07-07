@@ -19,6 +19,10 @@ Getting Started
 
 New contributors are very welcome and needed.
 
+If you use AI tools while contributing, please read and follow the [AI
+policy](/doc/AI_POLICY.md). Contributors are responsible for understanding and
+explaining their own work in their own words.
+
 In-depth reviewing and testing are the bottleneck of the project, and are the
 most effective way anyone can start to contribute. It will teach you much more
 about the code and process than opening pull requests, and may help you uncover
