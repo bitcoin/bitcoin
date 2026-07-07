@@ -273,7 +273,7 @@ void BaseIndex::Sync()
     }
 }
 
-bool BaseIndex::Commit()
+void BaseIndex::Commit()
 {
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
@@ -288,9 +288,7 @@ bool BaseIndex::Commit()
     }
     if (!ok) {
         LogError("Failed to commit latest %s state", GetName());
-        return false;
     }
-    return true;
 }
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
