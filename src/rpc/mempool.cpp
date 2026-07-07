@@ -146,7 +146,8 @@ static RPCMethod getprivatebroadcastinfo()
 {
     return RPCMethod{
         "getprivatebroadcastinfo",
-        "Returns information about transactions that are currently being privately broadcast.\n"
+        "Returns information about transactions tracked for private broadcast.\n"
+        "Transactions that have reached the send-attempt limit remain in the result with attempts_remaining=0.\n"
         "This method is only available when running with -privatebroadcast enabled.\n",
         {},
         RPCResult{
@@ -160,6 +161,7 @@ static RPCMethod getprivatebroadcastinfo()
                                 {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
                                 {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"},
                                 {RPCResult::Type::NUM_TIME, "time_added", "The time this transaction was added to the private broadcast queue (seconds since epoch)"},
+                                {RPCResult::Type::NUM, "attempts_remaining", "The number of additional private broadcast send attempts allowed for this transaction"},
                                 {RPCResult::Type::ARR, "peers", "Per-peer send and acknowledgment information for this transaction",
                                     {
                                         {RPCResult::Type::OBJ, "", "",
@@ -193,6 +195,7 @@ static RPCMethod getprivatebroadcastinfo()
                 o.pushKV("wtxid", tx_info.tx->GetWitnessHash().ToString());
                 o.pushKV("hex", EncodeHexTx(*tx_info.tx));
                 o.pushKV("time_added", TicksSinceEpoch<std::chrono::seconds>(tx_info.time_added));
+                o.pushKV("attempts_remaining", tx_info.attempts_remaining);
                 UniValue peers(UniValue::VARR);
                 for (const auto& peer : tx_info.peers) {
                     UniValue p(UniValue::VOBJ);

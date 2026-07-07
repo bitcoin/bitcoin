@@ -47,6 +47,7 @@ from test_framework.wallet import (
 
 P2P_PRIVATE_VERSION = 70016
 NUM_PRIVATE_BROADCAST_PER_TX = 3
+MAX_PRIVATE_BROADCAST_ATTEMPTS = 1000
 
 
 class NoRelayP2PInterface(P2PInterface):
@@ -227,7 +228,8 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_equal(len(pending), 1)
         assert_equal(pending[0]["hex"].lower(), tx["hex"].lower())
         peers = pending[0]["peers"]
-        assert len(peers) >= NUM_PRIVATE_BROADCAST_PER_TX
+        assert_greater_than_or_equal(len(peers), NUM_PRIVATE_BROADCAST_PER_TX)
+        assert_equal(pending[0]["attempts_remaining"], MAX_PRIVATE_BROADCAST_ATTEMPTS - len(peers))
         assert all("address" in p and "sent" in p for p in peers)
         assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
 
