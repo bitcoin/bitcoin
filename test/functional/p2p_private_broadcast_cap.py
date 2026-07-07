@@ -71,7 +71,7 @@ class PrivateBroadcastCapTest(BitcoinTestFramework):
         # queue is left unchanged (nothing evicted to make room).
         self.log.info(f"Submitting {OVER_CAP} more; each should be rejected (queue full)")
         for child in children[MAX_TRANSACTIONS:]:
-            assert_raises_rpc_error(-7, "Private broadcast queue is full",
+            assert_raises_rpc_error(-37, "Private broadcast queue is full",
                                     node.sendrawtransaction, child["hex"])
 
         assert_equal(pbinfo["transactions"], node.getprivatebroadcastinfo()["transactions"])

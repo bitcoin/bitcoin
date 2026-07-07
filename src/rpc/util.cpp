@@ -396,7 +396,7 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
         case TransactionError::ALREADY_IN_UTXO_SET:
             return RPC_VERIFY_ALREADY_IN_UTXO_SET;
         case TransactionError::PRIVATE_BROADCAST_FULL:
-            return RPC_OUT_OF_MEMORY;
+            return RPC_LIMIT_EXCEEDED;
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
