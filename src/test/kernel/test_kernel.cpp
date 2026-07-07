@@ -120,16 +120,6 @@ public:
         BOOST_CHECK_GT(timestamp, 0);
     }
 
-    void WarningSetHandler(Warning warning, std::string_view message) override
-    {
-        std::cout << "Kernel warning is set: " << message << std::endl;
-    }
-
-    void WarningUnsetHandler(Warning warning) override
-    {
-        std::cout << "Kernel warning was unset." << std::endl;
-    }
-
     void FlushErrorHandler(std::string_view error) override
     {
         std::cout << error << std::endl;
@@ -649,6 +639,13 @@ BOOST_AUTO_TEST_CASE(logging_tests)
         Logger logger_2{std::make_unique<TestLog>()};
     }
     Logger logger{std::make_unique<TestLog>()};
+}
+
+BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
+{
+    ChainParams params_signet{ChainType::SIGNET};
+    ChainParams params_signet_challenge{hex_string_to_byte_vec("51")};
+    CheckHandle(params_signet, params_signet_challenge);
 }
 
 BOOST_AUTO_TEST_CASE(btck_context_tests)
