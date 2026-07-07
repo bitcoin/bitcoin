@@ -228,7 +228,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         cc.m_feerate = CFeeRate{AmountFromValue(fee_rate, /*decimals=*/3)};
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
-        if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = true;
+        if (!cc.m_signal_bip125_rbf.has_value()) cc.m_signal_bip125_rbf = true;
         return;
     }
     if (!estimate_mode.isNull() && !FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
