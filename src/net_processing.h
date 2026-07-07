@@ -121,11 +121,17 @@ public:
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
 
-    /** Get info about transactions currently being privately broadcast. */
+    /**
+     * Get info about transactions currently being privately broadcast.
+     * Should only be called when the `PeerManager` has been constructed with
+     * `PeerManager::Options::private_broadcast == true`.
+     */
     virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;
 
     /**
      * Abort private broadcast attempts for transactions currently being privately broadcast.
+     * Should only be called when the `PeerManager` has been constructed with
+     * `PeerManager::Options::private_broadcast == true`.
      *
      * @param[in] id A transaction identifier. It will be matched against both txid and wtxid for
      *               all transactions in the private broadcast queue.
@@ -147,6 +153,8 @@ public:
     /**
      * Initiate a private transaction broadcast. This is done
      * asynchronously via short-lived connections to peers on privacy networks.
+     * Should only be called when the `PeerManager` has been constructed with
+     * `PeerManager::Options::private_broadcast == true`.
      */
     virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
 
