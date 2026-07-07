@@ -16,13 +16,7 @@ void CustomBuildField(TypeList<std::set<LocalType>>,
     Value&& value,
     Output&& output)
 {
-    // FIXME dededup with vector handler above
-    auto list = output.init(value.size());
-    size_t i = 0;
-    for (const auto& elem : value) {
-        BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
-        ++i;
-    }
+    BuildList(TypeList<LocalType>(), invoke_context, output, value);
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
@@ -32,16 +26,12 @@ decltype(auto) CustomReadField(TypeList<std::set<LocalType>>,
     Input&& input,
     ReadDest&& read_dest)
 {
-    return read_dest.update([&](auto& value) {
-        auto data = input.get();
-        value.clear();
-        for (auto item : data) {
-            ReadField(TypeList<LocalType>(), invoke_context, Make<ValueField>(item),
-                ReadDestEmplace(TypeList<const LocalType>(), [&](auto&&... args) -> auto& {
-                    return *value.emplace(std::forward<decltype(args)>(args)...).first;
-                }));
-        }
-    });
+    return ReadList(
+        TypeList<LocalType>(), invoke_context, input, read_dest,
+        [&](auto& value, size_t) { value.clear(); },
+        [&](auto& value, auto&&... args) -> auto& {
+            return *value.emplace(std::forward<decltype(args)>(args)...).first;
+        });
 }
 } // namespace mp
 

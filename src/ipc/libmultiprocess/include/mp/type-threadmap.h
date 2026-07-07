@@ -14,6 +14,7 @@ struct ProxyServer<ThreadMap> final : public virtual ThreadMap::Server
 public:
     ProxyServer(Connection& connection);
     kj::Promise<void> makeThread(MakeThreadContext context) override;
+    kj::Promise<void> makePool(MakePoolContext context) override;
     Connection& m_connection;
 };
 

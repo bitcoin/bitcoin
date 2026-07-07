@@ -281,6 +281,32 @@ struct ListOutput<::capnp::List<T, kind>>
 };
 
 template <typename LocalType, typename Value, typename Output>
+void BuildList(TypeList<LocalType>, InvokeContext& invoke_context, Output&& output, Value&& value)
+{
+    auto list = output.init(value.size());
+    size_t i = 0;
+    for (const auto& elem : value) {
+        BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
+        ++i;
+    }
+}
+
+template <typename LocalType, typename Input, typename ReadDest, typename InitFn, typename EmplaceFn>
+decltype(auto) ReadList(TypeList<LocalType>, InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest, InitFn&& init, EmplaceFn&& emplace)
+{
+    return read_dest.update([&](auto& value) {
+        auto data = input.get();
+        init(value, data.size());
+        for (auto item : data) {
+            ReadField(TypeList<LocalType>(), invoke_context, Make<ValueField>(item),
+                      ReadDestEmplace(TypeList<LocalType>(), [&emplace, &value](auto&&... args) -> decltype(auto) {
+                          return emplace(value, std::forward<decltype(args)>(args)...);
+                      }));
+        }
+    });
+}
+
+template <typename LocalType, typename Value, typename Output>
 void CustomBuildField(TypeList<LocalType>, Priority<0>, InvokeContext& invoke_context, Value&& value, Output&& output)
 {
     output.set(BuildPrimitive(invoke_context, std::forward<Value>(value), TypeList<decltype(output.get())>()));
@@ -644,17 +670,13 @@ struct CapRequestTraits<::capnp::Request<_Params, _Results>>
 template <typename Client>
 void clientDestroy(Client& client)
 {
-    if (client.m_context.connection) {
-        MP_LOG(*client.m_context.loop, Log::Debug) << "IPC client destroy " << typeid(client).name();
-    } else {
-        KJ_LOG(INFO, "IPC interrupted client destroy", typeid(client).name());
-    }
+    MP_LOG(*client.m_context.loop, Log::Debug) << "IPC client destroy " << CxxTypeName(client);
 }
 
 template <typename Server>
 void serverDestroy(Server& server)
 {
-    MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server destroy " << typeid(server).name();
+    MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server destroy " << CxxTypeName(server);
 }
 
 //! Entry point called by generated client code that looks like:
@@ -780,10 +802,11 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
     using Params = decltype(params);
     using Results = typename decltype(call_context.getResults())::Builds;
 
+    EventLoop& loop = *server.m_context.loop;
     int req = ++server_reqs;
-    MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server recv request  #" << req << " "
-                                     << TypeName<typename Params::Reads>();
-    MP_LOG(*server.m_context.loop, Log::Trace) << "request data: "
+    MP_LOG(loop, Log::Debug) << "IPC server recv request  #" << req << " "
+        << TypeName<typename Params::Reads>();
+    MP_LOG(loop, Log::Trace) << "request data: "
         << LogEscape(params.toString(), server.m_context.loop->m_log_opts.max_chars);
 
     try {
@@ -799,16 +822,23 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
         // and waiting for it to complete.
         return ReplaceVoid([&]() { return fn.invoke(server_context, ArgList()); },
             [&]() { return kj::Promise<CallContext>(kj::mv(call_context)); })
-            .then([&server, req](CallContext call_context) {
-                MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server send response #" << req << " " << TypeName<Results>();
-                MP_LOG(*server.m_context.loop, Log::Trace) << "response data: "
-                    << LogEscape(call_context.getResults().toString(), server.m_context.loop->m_log_opts.max_chars);
+            .then([&loop, req](CallContext call_context) {
+                MP_LOG(loop, Log::Debug) << "IPC server send response #" << req << " " << TypeName<Results>();
+                MP_LOG(loop, Log::Trace) << "response data: "
+                    << LogEscape(call_context.getResults().toString(), loop.m_log_opts.max_chars);
+            }).catch_([&loop, req](::kj::Exception&& e) -> kj::Promise<void> {
+                // Call failed for some reason. Cap'n Proto will try to send
+                // this error to the client as well, but it is good to log the
+                // failure early here and include the request number.
+                MP_LOG(loop, Log::Error) << "IPC server error request #" << req << " " << TypeName<Results>()
+                    << " " << kj::str("kj::Exception: ", e.getDescription()).cStr();
+                return kj::mv(e);
             });
     } catch (const std::exception& e) {
-        MP_LOG(*server.m_context.loop, Log::Error) << "IPC server unhandled exception: " << e.what();
+        MP_LOG(loop, Log::Error) << "IPC server unhandled exception: " << e.what();
         throw;
     } catch (...) {
-        MP_LOG(*server.m_context.loop, Log::Error) << "IPC server unhandled exception";
+        MP_LOG(loop, Log::Error) << "IPC server unhandled exception";
         throw;
     }
 }
