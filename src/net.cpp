@@ -3627,7 +3627,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
             std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAcceptIncoming(); });
     }
 
-    if (gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
+    if (connOptions.m_start_private_broadcast_thread) {
         threadPrivateBroadcast =
             std::thread(&util::TraceThread, "privbcast", [this] { ThreadPrivateBroadcast(); });
     }

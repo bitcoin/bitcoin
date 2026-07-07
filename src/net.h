@@ -1110,6 +1110,7 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        bool m_start_private_broadcast_thread{false};
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
