@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
 
     // A previously-removed tx can be added again as a brand-new entry.
     BOOST_REQUIRE(pb.Remove(fresh).has_value());
-    BOOST_CHECK_EQUAL(pb.Add(txs[0]), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(fresh), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
