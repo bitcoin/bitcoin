@@ -47,7 +47,7 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
 
         with (
             simulate_io_error(node.blocks_path),
-            node.assert_debug_log(["EXCEPTION: "]),
+            node.assert_debug_log(["Unable to query disk space"]),
         ):
             self.log.info("Mock scheduler to run disk space check")
             try:
@@ -58,7 +58,7 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
             node.wait_until_stopped(
                 expect_error=True,
                 expected_ret_code=-6,
-                expected_stderr=re.compile(".*EXCEPTION: .*"),
+                expected_stderr=re.compile("Unable to query disk space.*"),
             )
 
     def test_blockfilterindex_allocation_failure(self):
@@ -81,7 +81,7 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
 
         with (
             simulate_io_error(index_path),
-            node.assert_debug_log(["EXCEPTION: "]),
+            node.assert_debug_log(["Unable to query disk space"]),
         ):
             try:
                 self.generate(node, 1)
@@ -91,7 +91,7 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
             node.wait_until_stopped(
                 expect_error=True,
                 expected_ret_code=-6,
-                expected_stderr=re.compile(".*EXCEPTION: .*"),
+                expected_stderr=re.compile("Unable to query disk space.*"),
             )
 
     def test_block_file_out_of_space_error(self):
@@ -105,7 +105,7 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
 
         with (
             simulate_io_error(node.blocks_path),
-            node.assert_debug_log(["System error while saving block"]),
+            node.assert_debug_log(["Unable to query disk space"]),
         ):
             try:
                 self.generateblock(
@@ -116,10 +116,8 @@ class BlockstoreIOErrorTest(BitcoinTestFramework):
 
             node.wait_until_stopped(
                 expect_error=True,
-                expected_stderr=re.compile(
-                    r"Error: A fatal internal error occurred, see debug.log for details: "
-                    r"System error while saving block to disk: .*"
-                ),
+                expected_ret_code=-6,
+                expected_stderr=re.compile("Unable to query disk space.*"),
             )
 
     def run_test(self):
