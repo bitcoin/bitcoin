@@ -116,4 +116,11 @@ public:
     size_t operator()(const std::span<const unsigned char>& script) const;
 };
 
+struct CTransactionRefComp {
+    bool operator()(const CTransactionRef& a, const CTransactionRef& b) const
+    {
+        return a->GetWitnessHash() == b->GetWitnessHash(); // If wtxid equals, then txid also equals.
+    }
+};
+
 #endif // BITCOIN_UTIL_HASHER_H
