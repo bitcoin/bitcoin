@@ -801,6 +801,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
 
             std::vector<unsigned char> ser_xpub(BIP32_EXTKEY_SIZE);
             value >> ser_xpub;
+            if (ser_xpub.size() != BIP32_EXTKEY_SIZE) {
+                err = "Error reading wallet database: descriptor cache xpub has an unexpected length";
+                return DBErrors::CORRUPT;
+            }
             CExtPubKey xpub;
             xpub.Decode(ser_xpub.data());
             if (parent) {
@@ -824,6 +828,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
 
             std::vector<unsigned char> ser_xpub(BIP32_EXTKEY_SIZE);
             value >> ser_xpub;
+            if (ser_xpub.size() != BIP32_EXTKEY_SIZE) {
+                err = "Error reading wallet database: descriptor cache xpub has an unexpected length";
+                return DBErrors::CORRUPT;
+            }
             CExtPubKey xpub;
             xpub.Decode(ser_xpub.data());
             cache.CacheLastHardenedExtPubKey(key_exp_index, xpub);
