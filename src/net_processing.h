@@ -68,6 +68,7 @@ class PeerManagerInternal
 {
 public:
     virtual void PeerMisbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") = 0;
+    virtual bool PeerIsBanned(const NodeId node_id) = 0;
     virtual void PeerEraseObjectRequest(const NodeId nodeid, const CInv& inv) = 0;
     virtual void PeerRelayInv(const CInv& inv) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) = 0;

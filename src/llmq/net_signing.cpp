@@ -143,6 +143,10 @@ void NetSigning::WorkThreadMain()
         constexpr auto CLEANUP_INTERVAL{5s};
         if (cleanupThrottler.TryCleanup(CLEANUP_INTERVAL)) {
             m_sig_manager.Cleanup();
+            // Drop pending recovered sigs queued by banned peers so a flood's backlog does not
+            // persist after the peer is banned (RemoveBannedNodeStates only cleans the sig-shares
+            // subsystem, not m_sig_manager's pending recovered sigs).
+            m_sig_manager.RemoveNodesIf([this](NodeId node_id) { return m_peer_manager->PeerIsBanned(node_id); });
         }
 
         // TODO Wakeup when pending signing is needed?
