@@ -9,7 +9,18 @@
 #include <util/time.h>
 
 #include <algorithm>
+#include <ostream>
 #include <boost/test/unit_test.hpp>
+
+std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
+{
+    switch (r) {
+    case PrivateBroadcast::AddResult::Added: return os << "Added";
+    case PrivateBroadcast::AddResult::AlreadyPresent: return os << "AlreadyPresent";
+    case PrivateBroadcast::AddResult::QueueFull: return os << "QueueFull";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)
 
@@ -44,15 +55,15 @@ BOOST_AUTO_TEST_CASE(basic)
     // Make a transaction and add it.
     const auto tx1{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
 
-    BOOST_CHECK(pb.Add(tx1) == PrivateBroadcast::AddResult::Added);
-    BOOST_CHECK(pb.Add(tx1) == PrivateBroadcast::AddResult::AlreadyPresent);
+    BOOST_CHECK_EQUAL(pb.Add(tx1), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(tx1), PrivateBroadcast::AddResult::AlreadyPresent);
 
     // Make another transaction with same txid, different wtxid and add it.
     const auto tx2{MakeDummyTx(/*id=*/1, /*num_witness=*/1)};
     BOOST_REQUIRE(tx1->GetHash() == tx2->GetHash());
     BOOST_REQUIRE(tx1->GetWitnessHash() != tx2->GetWitnessHash());
 
-    BOOST_CHECK(pb.Add(tx2) == PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(tx2), PrivateBroadcast::AddResult::Added);
     const auto find_tx_info{[](auto& infos, const CTransactionRef& tx) -> const PrivateBroadcast::TxBroadcastInfo& {
         const auto it{std::ranges::find(infos, tx->GetWitnessHash(), [](const auto& info) { return info.tx->GetWitnessHash(); })};
         BOOST_REQUIRE(it != infos.end());
@@ -146,7 +157,7 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
 
     PrivateBroadcast pb;
     const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
-    BOOST_REQUIRE(pb.Add(tx) == PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
 
     // Unpicked transactions use the longer INITIAL_STALE_DURATION.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
@@ -169,7 +180,7 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     txs.reserve(num_cap);
     for (size_t i{0}; i < num_cap; ++i) {
         auto tx{MakeDummyTx(/*id=*/static_cast<uint32_t>(i), /*num_witness=*/0)};
-        BOOST_REQUIRE(pb.Add(tx) == PrivateBroadcast::AddResult::Added);
+        BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
         txs.push_back(std::move(tx));
     }
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
@@ -177,7 +188,7 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     // Further distinct transactions are rejected, and the queue is unchanged.
     for (size_t i{0}; i < num_over; ++i) {
         const auto tx{MakeDummyTx(/*id=*/static_cast<uint32_t>(num_cap + i), /*num_witness=*/0)};
-        BOOST_CHECK(pb.Add(tx) == PrivateBroadcast::AddResult::QueueFull);
+        BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::QueueFull);
     }
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 
@@ -194,19 +205,19 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     }
 
     // Re-adding an already-present tx is AlreadyPresent even at the cap (not QueueFull).
-    BOOST_CHECK(pb.Add(txs[0]) == PrivateBroadcast::AddResult::AlreadyPresent);
+    BOOST_CHECK_EQUAL(pb.Add(txs[0]), PrivateBroadcast::AddResult::AlreadyPresent);
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 
     // Removing one frees exactly one slot for a new transaction.
     BOOST_REQUIRE(pb.Remove(txs[0]).has_value());
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap - 1);
     const auto fresh{MakeDummyTx(/*id=*/0xffffffff, /*num_witness=*/0)};
-    BOOST_CHECK(pb.Add(fresh) == PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(fresh), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 
-    // A previously-removed tx can be added again as a brand-new entry
+    // A previously-removed tx can be added again as a brand-new entry.
     BOOST_REQUIRE(pb.Remove(fresh).has_value());
-    BOOST_CHECK(pb.Add(txs[0]) == PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(txs[0]), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
