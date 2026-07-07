@@ -143,6 +143,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::INVALID_PACKAGE:
             return Untranslated("Transaction rejected due to invalid package");
+        case TransactionError::PRIVATE_BROADCAST_FULL:
+            return Untranslated("Private broadcast queue is full");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
