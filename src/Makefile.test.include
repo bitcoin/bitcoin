@@ -119,6 +119,7 @@ BITCOIN_TESTS =\
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
+  test/governance_inv_tests.cpp \
   test/governance_validators_tests.cpp \
   test/coinjoin_inouts_tests.cpp \
   test/coinjoin_dstxmanager_tests.cpp \

@@ -31,7 +31,7 @@ namespace {
 constexpr std::chrono::seconds GOVERNANCE_DELETION_DELAY{10min};
 constexpr std::chrono::seconds GOVERNANCE_ORPHAN_EXPIRATION_TIME{10min};
 constexpr std::chrono::seconds MAX_TIME_FUTURE_DEVIATION{1h};
-constexpr std::chrono::seconds RELIABLE_PROPAGATION_TIME{1min};
+using governance::RELIABLE_PROPAGATION_TIME;
 
 class ScopedLockBool
 {
@@ -597,6 +597,13 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest reached end, returning true\n");
     return true;
+}
+
+size_t CGovernanceManager::RequestedHashCacheSizeForTesting() const
+{
+    AssertLockNotHeld(cs_store);
+    LOCK(cs_store);
+    return m_requested_hash_time.size();
 }
 
 std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const

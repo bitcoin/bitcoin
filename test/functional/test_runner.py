@@ -339,7 +339,6 @@ BASE_SCRIPTS = [
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
     'feature_governance_objects.py',
-    'p2p_governance_invs.py',
     'p2p_govsync_bloom.py',
     'rpc_uptime.py',
     'feature_discover.py',
