@@ -529,4 +529,67 @@ BOOST_AUTO_TEST_CASE(decode_provider_payload_without_netinfo)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(extnetinfo_validate_deser, RegTestingSetup)
+{
+    // The in-memory builder (AddEntry/ProcessCandidate) refuses duplicates, domains
+    // on non-HTTPS purposes, and lists exceeding MAX_ENTRIES_EXTNETINFO. None of those
+    // checks run on deserialization, so Validate() must catch them itself.
+    const uint16_t port{9998};
+
+    auto write_header = [](CDataStream& ds, size_t n_purposes) {
+        ds << uint8_t{1}; // current version
+        WriteCompactSize(ds, n_purposes);
+    };
+
+    {
+        // Two identical entries under the same purpose
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        write_header(ds, 1);
+        ds << NetInfoPurpose::CORE_P2P;
+        WriteCompactSize(ds, 2);
+        const NetInfoEntry entry{LookupNumeric("1.1.1.1", port)};
+        BOOST_CHECK(entry.IsTriviallyValid());
+        ds << entry << entry;
+
+        ExtNetInfo netInfo;
+        ds >> netInfo;
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Duplicate);
+    }
+
+    {
+        // List exceeds MAX_ENTRIES_EXTNETINFO per purpose
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        write_header(ds, 1);
+        ds << NetInfoPurpose::CORE_P2P;
+        WriteCompactSize(ds, MAX_ENTRIES_EXTNETINFO + 1);
+        for (size_t i = 1; i <= MAX_ENTRIES_EXTNETINFO + 1; ++i) {
+            const NetInfoEntry entry{LookupNumeric(strprintf("1.1.1.%d", i), port)};
+            BOOST_CHECK(entry.IsTriviallyValid());
+            ds << entry;
+        }
+
+        ExtNetInfo netInfo;
+        ds >> netInfo;
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::MaxLimit);
+    }
+
+    {
+        // Domain entry under a non-PLATFORM_HTTPS purpose
+        DomainPort domain;
+        BOOST_CHECK_EQUAL(domain.Set("example.com", 443), DomainPort::Status::Success);
+        const NetInfoEntry entry{domain};
+        BOOST_CHECK(entry.IsTriviallyValid());
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        write_header(ds, 1);
+        ds << NetInfoPurpose::CORE_P2P;
+        WriteCompactSize(ds, 1);
+        ds << entry;
+
+        ExtNetInfo netInfo;
+        ds >> netInfo;
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::BadInput);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

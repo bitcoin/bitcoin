@@ -595,6 +595,11 @@ NetInfoStatus ExtNetInfo::Validate() const
             // Purpose if present in map must have at least one entry
             return NetInfoStatus::Malformed;
         }
+        if (entries.size() > MAX_ENTRIES_EXTNETINFO) {
+            // Per-purpose entry count is bounded at insertion; a deserialized object
+            // may exceed it and must be rejected here
+            return NetInfoStatus::MaxLimit;
+        }
         if (HasAddrDuplicates(entries)) {
             return NetInfoStatus::Duplicate;
         }

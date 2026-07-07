@@ -786,11 +786,13 @@ static bool CheckService(const ProTx& proTx, TxValidationState& state)
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
     case NetInfoStatus::Success:
         return true;
-    // Shouldn't be possible during self-checks
+    // Reachable through a serialized netInfo that bypasses the in-memory builder's checks
     case NetInfoStatus::BadInput:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-entry");
     case NetInfoStatus::Duplicate:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
     case NetInfoStatus::MaxLimit:
-        assert(false);
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-maxlimit");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
