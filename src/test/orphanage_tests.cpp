@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
 
     BOOST_CHECK(orphanage->AddTx(child_normal, peer));
     // EraseTx fails as transaction by this wtxid doesn't exist.
-    BOOST_CHECK_EQUAL(orphanage->EraseTx(mutated_wtxid), 0);
+    BOOST_CHECK(!orphanage->EraseTx(mutated_wtxid));
     BOOST_CHECK(orphanage->HaveTx(normal_wtxid));
     BOOST_CHECK(orphanage->GetTx(normal_wtxid) == child_normal);
     BOOST_CHECK(!orphanage->HaveTx(mutated_wtxid));
@@ -549,11 +549,11 @@ BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
     BOOST_CHECK(EqualTxns(expected_children, orphanage->GetChildrenFromSamePeer(parent, peer)));
 
     // Erase by wtxid: mutated first
-    BOOST_CHECK_EQUAL(orphanage->EraseTx(mutated_wtxid), 1);
+    BOOST_CHECK(orphanage->EraseTx(mutated_wtxid));
     BOOST_CHECK(orphanage->HaveTx(normal_wtxid));
     BOOST_CHECK(!orphanage->HaveTx(mutated_wtxid));
 
-    BOOST_CHECK_EQUAL(orphanage->EraseTx(normal_wtxid), 1);
+    BOOST_CHECK(orphanage->EraseTx(normal_wtxid));
     BOOST_CHECK(!orphanage->HaveTx(normal_wtxid));
     BOOST_CHECK(!orphanage->HaveTx(mutated_wtxid));
 }
@@ -862,7 +862,7 @@ BOOST_AUTO_TEST_CASE(peer_worksets)
         BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(node0), nullptr);
 
         // Delete this tx, clearing the orphanage.
-        BOOST_CHECK_EQUAL(orphanage->EraseTx(orphan_wtxid), 1);
+        BOOST_CHECK(orphanage->EraseTx(orphan_wtxid));
         BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 0);
         for (NodeId node = node0; node <= node2; ++node) {
             BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(node), nullptr);
