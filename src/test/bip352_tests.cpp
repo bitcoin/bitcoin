@@ -12,7 +12,7 @@
 
 #include <test/util/setup_common.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <test/util/json.h>
 #include <vector>
 #include <util/chaintype.h>

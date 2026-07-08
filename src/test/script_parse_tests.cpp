@@ -7,7 +7,7 @@
 #include <util/strencodings.h>
 #include <test/util/common.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_AUTO_TEST_SUITE(script_parse_tests)
 BOOST_AUTO_TEST_CASE(parse_script)
