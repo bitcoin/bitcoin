@@ -10,7 +10,7 @@
 
 #include <algorithm>
 #include <ostream>
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
 {
