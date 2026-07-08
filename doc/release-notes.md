@@ -1,6 +1,6 @@
-Bitcoin Core version 29.4rc1 is now available from:
+Bitcoin Core version 29.4 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.4/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.4/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
