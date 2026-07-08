@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 // amounts 0.00000001 .. 0.00100000
 #define NUM_MULTIPLES_UNIT 100000
