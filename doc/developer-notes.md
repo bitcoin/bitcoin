@@ -1142,6 +1142,9 @@ To fully verify or update a subtree, add it as a remote:
 git remote add libmultiprocess https://github.com/bitcoin-core/libmultiprocess.git
 ```
 
+When possible, a subtree update PR should be based on the previous subtree
+merge commit, not the current `master`. This makes backporting easier.
+
 To update the subtree:
 
 ```sh
