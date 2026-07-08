@@ -58,8 +58,8 @@ brew install cmake boost capnp
 If you do not need wallet functionality, you can use `-DENABLE_WALLET=OFF` in
 the `cmake -B` step below.
 
-SQLite is required, but since macOS ships with a useable `sqlite` package, you don't need to
-install anything.
+SQLite is required, but since macOS ships with a usable `sqlite` package, you
+don't need to install anything.
 
 #### IPC Dependencies
 
