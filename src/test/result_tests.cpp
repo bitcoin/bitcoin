@@ -4,7 +4,9 @@
 
 #include <util/result.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
+
+#include <memory>
 
 inline bool operator==(const bilingual_str& a, const bilingual_str& b)
 {

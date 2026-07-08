@@ -15,7 +15,7 @@
 
 #include <util/subprocess.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <string>
 
@@ -63,7 +63,7 @@ static std::vector<std::string> mock_executable(const std::string& name)
 #else
     setenv(MOCK_PROCESS_ENV, name.c_str(), /*overwrite=*/1);
 #endif
-    return {boost::unit_test::framework::master_test_suite().argv[0]};
+    return {framework::executable_path()};
 }
 
 BOOST_AUTO_TEST_CASE(run_command)
