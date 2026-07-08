@@ -17,7 +17,7 @@
 #include <util/asmap.h>
 #include <util/string.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cstdint>
 #include <optional>

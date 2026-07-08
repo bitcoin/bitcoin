@@ -22,7 +22,7 @@
 #include <kj/test.h>
 #include <stdexcept>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());

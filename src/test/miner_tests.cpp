@@ -38,7 +38,7 @@
 #include <validation.h>
 #include <versionbits.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cstddef>
 #include <cstdint>
