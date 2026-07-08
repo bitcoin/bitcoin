@@ -995,8 +995,6 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     const Txid& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
-    CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-
     CTxMemPool::setEntries all_conflicts;
 
     // Calculate all conflicting entries and enforce Rule #5.

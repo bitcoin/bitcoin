@@ -535,13 +535,11 @@ void BerkeleyRODatabase::Open()
         throw std::runtime_error("BerkeleyRODatabase: Failed to open database file");
     }
 
-    uint32_t page_size = 4096; // Default page size
-
     // Read the outer metapage
     // Expected page number is 0
     MetaPage outer_meta(0);
     db_file >> outer_meta;
-    page_size = outer_meta.pagesize;
+    uint32_t page_size = outer_meta.pagesize;
 
     // Verify the size of the file is a multiple of the page size
     const int64_t size{db_file.size()};

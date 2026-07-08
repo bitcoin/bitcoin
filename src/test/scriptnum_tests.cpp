@@ -55,10 +55,6 @@ static void CheckAdd(const int64_t& num1, const int64_t& num2)
     const CScriptNum10 bignum2(num2);
     const CScriptNum scriptnum1(num1);
     const CScriptNum scriptnum2(num2);
-    CScriptNum10 bignum3(num1);
-    CScriptNum10 bignum4(num1);
-    CScriptNum scriptnum3(num1);
-    CScriptNum scriptnum4(num1);
 
     // int64_t overflow is undefined.
     bool invalid = (((num2 > 0) && (num1 > (std::numeric_limits<int64_t>::max() - num2))) ||

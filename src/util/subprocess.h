@@ -483,9 +483,8 @@ namespace util
         total_bytes_read += rd_bytes;
         buffer += total_bytes_read;
 
-      } else { // Partial data ? Continue reading
+      } else { // Partial read or EOF, done reading
         total_bytes_read += rd_bytes;
-        fill_sz -= rd_bytes;
         break;
       }
     }
@@ -1260,7 +1259,6 @@ namespace detail {
 
 #ifndef WIN32
   inline void Child::execute_child() {
-    int sys_ret = -1;
     auto& stream = parent_->stream_;
 
     try {
@@ -1304,8 +1302,7 @@ namespace detail {
         subprocess_close(stream.err_write_);
 
       // Replace the current image with the executable
-      sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
-
+      int sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
       if (sys_ret == -1) throw OSError("execve failed", errno);
 
     } catch (const OSError& exp) {

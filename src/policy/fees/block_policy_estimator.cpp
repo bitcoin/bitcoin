@@ -878,7 +878,6 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         feeCalc->best_height = nBestSeenHeight;
     }
 
-    double median = -1;
     EstimationResult tempResult;
 
     // Return failure if trying to analyze a target we're not tracking
@@ -921,7 +920,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         feeCalc->est = tempResult;
         feeCalc->reason = FeeReason::HALF_ESTIMATE;
     }
-    median = halfEst;
+    double median = halfEst;
     double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true, &tempResult);
     if (actualEst > median) {
         median = actualEst;
