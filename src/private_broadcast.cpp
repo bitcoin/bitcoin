@@ -9,7 +9,7 @@
 #include <algorithm>
 
 
-[[nodiscard]] PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
+PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
