@@ -14,7 +14,7 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <chrono>
 #include <fstream>
