@@ -14,7 +14,7 @@
 #include <util/readwritefile.h>
 #include <util/threadinterrupt.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <memory>
 #include <string>
