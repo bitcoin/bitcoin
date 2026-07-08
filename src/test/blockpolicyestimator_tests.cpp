@@ -12,7 +12,7 @@
 #include <util/time.h>
 #include <validationinterface.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_FIXTURE_TEST_SUITE(blockpolicyestimator_tests, ChainTestingSetup)
 

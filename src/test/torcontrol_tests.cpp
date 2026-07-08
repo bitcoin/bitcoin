@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <map>
 #include <string>

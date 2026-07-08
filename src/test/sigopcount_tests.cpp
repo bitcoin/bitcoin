@@ -16,7 +16,7 @@
 
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 // Helpers:
 static std::vector<unsigned char>

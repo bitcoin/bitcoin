@@ -5,7 +5,7 @@
 #include <util/feefrac.h>
 #include <random.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_AUTO_TEST_SUITE(feefrac_tests)
 
