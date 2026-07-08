@@ -135,15 +135,53 @@ def _config_from_profile_name(profile: str) -> dict[str, Any]:
 
 def _format_config_snapshot(config: dict[str, Any]) -> str:
     """Format a run config snapshot for display."""
-    return format_config_display(
+    bitcoind = config.get("bitcoind", {})
+    display = format_config_display(
         _dbcache_from_config(config),
         instrumentation=_instrumentation_from_config(config),
     )
+    extra_args = _extra_bitcoind_args(bitcoind)
+    if extra_args:
+        display += ", " + ", ".join(f"{key}={value}" for key, value in extra_args)
+    return display
 
 
 def _summary_config_label(config: dict[str, Any]) -> str:
     """Format a compact config label for PR comments."""
-    return f"{_dbcache_from_config(config)} MB"
+    bitcoind = config.get("bitcoind", {})
+    label = f"dbcache={_dbcache_from_config(config)}MiB"
+    extra_args = _extra_bitcoind_args(bitcoind)
+    if extra_args:
+        label += ", " + ", ".join(f"{key}={value}" for key, value in extra_args)
+    return label
+
+
+def _config_key(config: dict[str, Any]) -> str:
+    """Return a stable key for a full benchmark config snapshot."""
+    return json.dumps(config, sort_keys=True, separators=(",", ":"))
+
+
+def _extra_bitcoind_args(bitcoind: dict[str, Any]) -> list[tuple[str, Any]]:
+    """Return bitcoind args that distinguish matrix entries in reports."""
+    baseline_args = {
+        "chain",
+        "connect",
+        "daemon",
+        "dbcache",
+        "printtoconsole",
+        "prune",
+        "stopatheight",
+    }
+    return sorted(
+        (key, value)
+        for key, value in bitcoind.items()
+        if key not in baseline_args and value not in (None, "")
+    )
+
+
+def _nightly_comparable_config(config: dict[str, Any]) -> bool:
+    """Return whether nightly history currently compares this config exactly."""
+    return not _extra_bitcoind_args(config.get("bitcoind", {}))
 
 
 def format_comparison_summary(
@@ -177,6 +215,15 @@ def format_comparison_summary(
             line += " (no nightly baseline)"
         lines.append(line)
 
+    return "\n- ".join(lines)
+
+
+def format_run_times_summary(runs: list["BenchmarkRun"]) -> str:
+    """Format all run times for PR comments."""
+    lines = [
+        f"{_summary_config_label(run.config)}: {run.mean / 60:.1f} min"
+        for run in sorted(runs, key=lambda r: _summary_config_label(r.config))
+    ]
     return "\n- ".join(lines)
 
 
@@ -276,13 +323,14 @@ class ReportGenerator:
         results_file.write_text(json.dumps(combined_results, indent=2))
 
         summary_file = output_dir / "summary.txt"
-        summary_file.write_text(
-            format_comparison_summary(
+        if nightly_comparison:
+            summary = format_comparison_summary(
                 nightly_comparison,
                 has_nightly_history=self.nightly_history is not None,
             )
-            + "\n"
-        )
+        else:
+            summary = format_run_times_summary(all_runs)
+        summary_file.write_text(summary + "\n")
 
         speedups = {
             config: data["speedup_percent"]
@@ -436,7 +484,10 @@ class ReportGenerator:
             if _instrumentation_from_config(run.config) != "uninstrumented":
                 continue
 
-            config = str(_dbcache_from_config(run.config))
+            if not _nightly_comparable_config(run.config):
+                continue
+
+            config = _config_key(run.config)
 
             # Get PR result mean
             pr_mean = run.mean
