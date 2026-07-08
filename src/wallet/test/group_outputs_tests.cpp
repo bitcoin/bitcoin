@@ -9,7 +9,7 @@
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(group_outputs_tests, TestingSetup)

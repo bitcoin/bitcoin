@@ -12,7 +12,7 @@
 #include <util/obfuscation.h>
 #include <util/strencodings.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 using namespace std::string_literals;
 using namespace util::hex_literals;

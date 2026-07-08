@@ -7,7 +7,7 @@
 #include <univalue.h>
 #include <wallet/rpc/util.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <optional>
 #include <string>

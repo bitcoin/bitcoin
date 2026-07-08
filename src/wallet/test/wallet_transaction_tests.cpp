@@ -7,7 +7,7 @@
 #include <test/util/common.h>
 #include <wallet/test/wallet_test_fixture.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(wallet_transaction_tests, WalletTestingSetup)

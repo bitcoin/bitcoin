@@ -10,7 +10,7 @@
 
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_FIXTURE_TEST_SUITE(cluster_linearize_tests, BasicTestingSetup)
 

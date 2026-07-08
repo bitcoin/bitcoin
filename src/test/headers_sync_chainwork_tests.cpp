@@ -15,7 +15,7 @@
 #include <cstddef>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 using State = HeadersSyncState::State;
 

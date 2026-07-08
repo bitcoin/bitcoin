@@ -10,7 +10,7 @@
 #include <util/check.h>
 #include <validation.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 // Tests of generic BaseIndex functionality that is independent of which
 // concrete index is being used. CoinStatsIndex is used here merely as a

@@ -9,7 +9,7 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cassert>
 #include <thread>
