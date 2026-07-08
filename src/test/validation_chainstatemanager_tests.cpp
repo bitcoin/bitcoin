@@ -619,9 +619,9 @@ BOOST_FIXTURE_TEST_CASE(loadblockindex_invalid_descendants, TestChain100Setup)
     m_node.chainman->LoadBlockIndex();
 
     // check grand_parent, parent, child is marked as BLOCK_FAILED_VALID after reloading the block index
-    BOOST_CHECK(grand_parent->nStatus & BLOCK_FAILED_VALID);
-    BOOST_CHECK(parent->nStatus & BLOCK_FAILED_VALID);
-    BOOST_CHECK(child->nStatus & BLOCK_FAILED_VALID);
+    BOOST_CHECK((grand_parent->nStatus & BLOCK_FAILED_VALID));
+    BOOST_CHECK((parent->nStatus & BLOCK_FAILED_VALID));
+    BOOST_CHECK((child->nStatus & BLOCK_FAILED_VALID));
 }
 
 //! Verify that ReconsiderBlock clears failure flags for the target block, its ancestors, and descendants,
@@ -686,11 +686,11 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block_and_reconsider_fork, TestChain100Setup)
     {
         LOCK(chainman.GetMutex());
         // block98 and all descendants of block98 are marked BLOCK_FAILED_VALID
-        BOOST_CHECK(block98->nStatus & BLOCK_FAILED_VALID);
-        BOOST_CHECK(block99->nStatus & BLOCK_FAILED_VALID);
-        BOOST_CHECK(block100->nStatus & BLOCK_FAILED_VALID);
-        BOOST_CHECK(fork_block99->nStatus & BLOCK_FAILED_VALID);
-        BOOST_CHECK(fork_block100->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK((block98->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK((block99->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK((block100->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK((fork_block99->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK((fork_block100->nStatus & BLOCK_FAILED_VALID));
     }
 
     // Reconsider block99. ResetBlockFailureFlags clears BLOCK_FAILED_VALID from
@@ -707,8 +707,8 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block_and_reconsider_fork, TestChain100Setup)
         BOOST_CHECK(!(block98->nStatus & BLOCK_FAILED_VALID));
         BOOST_CHECK(!(block99->nStatus & BLOCK_FAILED_VALID));
         BOOST_CHECK(!(block100->nStatus & BLOCK_FAILED_VALID));
-        BOOST_CHECK(fork_block99->nStatus & BLOCK_FAILED_VALID);
-        BOOST_CHECK(fork_block100->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK((fork_block99->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK((fork_block100->nStatus & BLOCK_FAILED_VALID));
     }
 }
 
