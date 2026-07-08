@@ -9,7 +9,7 @@
 #include <serialize.h>
 #include <streams.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cmath>
 #include <limits>

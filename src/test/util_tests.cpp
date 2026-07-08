@@ -47,7 +47,7 @@
 #include <sys/wait.h>
 #endif
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 using namespace std::literals;
 using namespace util::hex_literals;

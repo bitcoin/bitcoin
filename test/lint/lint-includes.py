@@ -30,8 +30,6 @@ EXPECTED_BOOST_INCLUDES = [
                            "boost/multi_index/tag.hpp",
                            "boost/multi_index_container.hpp",
                            "boost/operators.hpp",
-                           "boost/test/included/unit_test.hpp",
-                           "boost/test/unit_test.hpp",
                            "boost/tuple/tuple.hpp",
                           ]
 

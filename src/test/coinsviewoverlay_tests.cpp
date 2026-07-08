@@ -13,7 +13,7 @@
 #include <util/hasher.h>
 #include <util/threadpool.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cstdint>
 #include <cstring>
