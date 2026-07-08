@@ -333,6 +333,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void AddGovernanceObject(CGovernanceObject& govobj, const CNode* pfrom = nullptr) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
+    /** Test-only helper: inserts an object into the syncable object store without
+     *  running collateral or chain validation. */
+    void AddGovernanceObjectForTesting(const CGovernanceObject& govobj)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
     // Superblocks
     bool GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
@@ -349,6 +353,10 @@ public:
                            int nBlockHeight) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool HaveObjectForHash(const uint256& nHash) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool HaveObjectForFetch(const uint256& nHash) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool HaveSyncableObjectForHash(const uint256& nHash) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool HaveVoteForHash(const uint256& nHash) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);

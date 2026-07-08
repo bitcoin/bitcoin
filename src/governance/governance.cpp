@@ -33,6 +33,12 @@ constexpr std::chrono::seconds GOVERNANCE_ORPHAN_EXPIRATION_TIME{10min};
 constexpr std::chrono::seconds MAX_TIME_FUTURE_DEVIATION{1h};
 using governance::RELIABLE_PROPAGATION_TIME;
 
+bool IsSyncableObject(const std::shared_ptr<CGovernanceObject>& govobj)
+{
+    const auto& obj = *Assert(govobj);
+    return !obj.IsSetCachedDelete() && !obj.IsSetExpired();
+}
+
 class ScopedLockBool
 {
     bool& ref;
@@ -129,6 +135,38 @@ bool CGovernanceManager::HaveObjectForHash(const uint256& nHash) const
 {
     LOCK(cs_store);
     return (mapObjects.count(nHash) == 1 || mapPostponedObjects.count(nHash) == 1);
+}
+
+bool CGovernanceManager::HaveObjectForFetch(const uint256& nHash) const
+{
+    LOCK(cs_store);
+
+    if (mapErasedGovernanceObjects.count(nHash) != 0) {
+        return false;
+    }
+
+    auto it = mapObjects.find(nHash);
+    if (it != mapObjects.end()) {
+        return IsSyncableObject(it->second);
+    }
+
+    it = mapPostponedObjects.find(nHash);
+    if (it != mapPostponedObjects.end()) {
+        return IsSyncableObject(it->second);
+    }
+
+    return false;
+}
+
+bool CGovernanceManager::HaveSyncableObjectForHash(const uint256& nHash) const
+{
+    LOCK(cs_store);
+    const auto it = mapObjects.find(nHash);
+    if (it == mapObjects.end()) {
+        return false;
+    }
+
+    return IsSyncableObject(it->second);
 }
 
 bool CGovernanceManager::SerializeObjectForHash(const uint256& nHash, CDataStream& ss) const
@@ -326,6 +364,13 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, const CN
 {
     LOCK2(::cs_main, cs_store);
     AddGovernanceObjectInternal(govobj, pfrom);
+}
+
+void CGovernanceManager::AddGovernanceObjectForTesting(const CGovernanceObject& govobj)
+{
+    AssertLockNotHeld(cs_store);
+    LOCK(cs_store);
+    mapObjects.emplace(govobj.GetHash(), std::make_shared<CGovernanceObject>(govobj));
 }
 
 void CGovernanceManager::CheckAndRemove()
@@ -615,14 +660,14 @@ std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, 
         return {};
     }
 
-    const auto& govobj = *Assert(it->second);
-    if (govobj.IsSetCachedDelete() || govobj.IsSetExpired()) {
+    if (!IsSyncableObject(it->second)) {
         return {};
     }
 
     std::vector<CInv> invs;
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
 
+    const auto& govobj = *Assert(it->second);
     LOCK(govobj.cs);
     const auto& fileVotes = govobj.GetVoteFile();
     for (const auto& vote : fileVotes.GetVotes()) {
@@ -647,7 +692,7 @@ std::vector<CInv> CGovernanceManager::GetSyncableObjectInvs() const
     invs.reserve(mapObjects.size());
 
     for (const auto& [nHash, govobj] : mapObjects) {
-        if (Assert(govobj)->IsSetCachedDelete() || govobj->IsSetExpired()) {
+        if (!IsSyncableObject(govobj)) {
             continue;
         }
         invs.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
