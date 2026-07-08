@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     c1.InitCoinsDB(
         /*cache_size_bytes=*/8_MiB, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(8_MiB));
-    BOOST_REQUIRE(c1.LoadGenesisBlock()); // Need at least one block loaded to be able to flush caches
+    BOOST_REQUIRE(manager.LoadGenesisBlock()); // Need at least one block loaded to be able to flush caches
 
     // Add a coin to the in-memory cache, upsize once, then downsize.
     {
