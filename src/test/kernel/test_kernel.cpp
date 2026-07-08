@@ -7,8 +7,8 @@
 #include <util/byte_units.h>
 #include <util/fs.h>
 
-#define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
-#include <boost/test/included/unit_test.hpp>
+#define BITCOIN_TEST_MAIN
+#include <test/util/framework.h>
 
 #include <test/kernel/block_data.h>
 #include <test/util/common.h>

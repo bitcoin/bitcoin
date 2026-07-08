@@ -15,7 +15,7 @@
 
 #include <array>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_AUTO_TEST_SUITE(txdownload_tests)
 

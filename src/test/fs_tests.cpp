@@ -6,7 +6,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <fstream>
 #include <ios>
