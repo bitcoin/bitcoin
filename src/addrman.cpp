@@ -910,7 +910,10 @@ void AddrManImpl::ResolveCollisions_()
             int tried_bucket_pos = info_new.GetBucketPosition(nKey, false, tried_bucket);
             if (!info_new.IsValid()) { // id_new may no longer map to a valid address
                 erase_collision = true;
-            } else if (vvTried[tried_bucket][tried_bucket_pos] != -1) { // The position in the tried bucket is not empty
+            } else {
+                // A pending tried collision implies that the destination tried slot
+                // remains occupied until we resolve it.
+                Assume(vvTried[tried_bucket][tried_bucket_pos] != -1);
 
                 // Get the to-be-evicted address that is being tested
                 nid_type id_old = vvTried[tried_bucket][tried_bucket_pos];
@@ -939,9 +942,6 @@ void AddrManImpl::ResolveCollisions_()
                     Good_(info_new, false, current_time);
                     erase_collision = true;
                 }
-            } else { // Collision is not actually a collision anymore
-                Good_(info_new, false, Now<NodeSeconds>());
-                erase_collision = true;
             }
         }
 
@@ -977,6 +977,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision_()
     int tried_bucket = newInfo.GetTriedBucket(nKey, m_netgroupman);
     int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
 
+    Assume(vvTried[tried_bucket][tried_bucket_pos] != -1);
     const AddrInfo& info_old = mapInfo[vvTried[tried_bucket][tried_bucket_pos]];
     return {info_old, info_old.m_last_try};
 }
