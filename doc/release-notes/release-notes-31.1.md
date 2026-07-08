@@ -53,7 +53,7 @@ the enabled privacy network.
 
 ### Leveldb
 
-- #61(bitcoin-core/leveldb): Disable seek compaction
+- bitcoin-core/leveldb-subtree#61: Disable seek compaction
 
 ### P2P
 
