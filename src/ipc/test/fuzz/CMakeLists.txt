@@ -3,4 +3,4 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 target_sources(fuzz PRIVATE ${PROJECT_SOURCE_DIR}/src/ipc/test/fuzz/ipc.cpp)
-target_link_libraries(fuzz bitcoin_ipc_fuzz multiprocess)
+target_link_libraries(fuzz bitcoin_ipc_fuzz Libmultiprocess::multiprocess)
