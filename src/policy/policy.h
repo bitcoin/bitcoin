@@ -148,8 +148,8 @@ std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate);
 // Changing the default transaction version requires a two step process: first
 // adapting relay policy by bumping TX_MAX_STANDARD_VERSION, and then later
 // allowing the new transaction version in the wallet/RPC.
-static constexpr decltype(CTransaction::version) TX_MIN_STANDARD_VERSION{1};
-static constexpr decltype(CTransaction::version) TX_MAX_STANDARD_VERSION{3};
+static constexpr uint32_t TX_MIN_STANDARD_VERSION{1};
+static constexpr uint32_t TX_MAX_STANDARD_VERSION{3};
 
 /**
 * Check for standard transaction types

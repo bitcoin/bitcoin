@@ -84,13 +84,13 @@ FUZZ_TARGET(utxo_total_supply)
         // get last tx
         const CTransaction& tx = *current_block->vtx.back();
         // get last out
-        const uint32_t i = tx.vout.size() - 1;
+        const uint32_t i = tx.GetOutputs().size() - 1;
         // store it
-        txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));
-        if (current_block->vtx.size() == 1 && tx.vout.at(i).scriptPubKey[0] == OP_RETURN) {
+        txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.GetOutputs().at(i));
+        if (current_block->vtx.size() == 1 && tx.GetOutputs().at(i).scriptPubKey[0] == OP_RETURN) {
             // also store coinbase
-            const uint32_t i = tx.vout.size() - 2;
-            txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));
+            const uint32_t i = tx.GetOutputs().size() - 2;
+            txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.GetOutputs().at(i));
         }
     };
     const auto AppendRandomTxo = [&](CMutableTransaction& tx) {
@@ -172,7 +172,7 @@ FUZZ_TARGET(utxo_total_supply)
                 if (was_valid) {
                     if (duplicate_coinbase_height == ActiveHeight()) {
                         // we mined the duplicate coinbase
-                        assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
+                        assert(current_block->vtx.at(0)->GetInputs().at(0).scriptSig == duplicate_coinbase_script);
                     }
 
                     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());

@@ -48,12 +48,12 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t index, const CKey& key, const CScript& pubkey)
 {
     CMutableTransaction mtx;
-    mtx.vout.emplace_back(from.vout[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey);
+    mtx.vout.emplace_back(from.GetOutputs()[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey);
     mtx.vin.push_back({CTxIn{from.GetHash(), index}});
     FillableSigningProvider keystore;
     keystore.AddKey(key);
     std::map<COutPoint, Coin> coins;
-    coins[mtx.vin[0].prevout].out = from.vout[index];
+    coins[mtx.vin[0].prevout].out = from.GetOutputs()[index];
     std::map<int, bilingual_str> input_errors;
     BOOST_CHECK(SignTransaction(mtx, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors));
     return mtx;
@@ -489,7 +489,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
     // Lock outputs so they are not spent in follow-up transactions
-    for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i}, /*persist=*/false);
+    for (uint32_t i = 0; i < wtx.tx->GetOutputs().size(); i++) context.wallet->LockCoin({wtx.GetHash(), i}, /*persist=*/false);
     for (const auto& [type, size] : expected_coins_sizes) BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
 }
 

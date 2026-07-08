@@ -42,7 +42,7 @@ FUZZ_TARGET(script_flags)
         ds >> fuzzed_flags;
 
         std::vector<CTxOut> spent_outputs;
-        for (unsigned i = 0; i < tx.vin.size(); ++i) {
+        for (unsigned i = 0; i < tx.GetInputs().size(); ++i) {
             CTxOut prevout;
             ds >> prevout;
             if (!MoneyRange(prevout.nValue)) {
@@ -54,12 +54,12 @@ FUZZ_TARGET(script_flags)
         PrecomputedTransactionData txdata;
         txdata.Init(tx, std::move(spent_outputs));
 
-        for (unsigned i = 0; i < tx.vin.size(); ++i) {
+        for (unsigned i = 0; i < tx.GetInputs().size(); ++i) {
             const CTxOut& prevout = txdata.m_spent_outputs.at(i);
             const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;
-            const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);
+            const bool ret = VerifyScript(tx.GetInputs().at(i).scriptSig, prevout.scriptPubKey, &tx.GetInputs().at(i).scriptWitness, verify_flags, checker, &serror);
             assert(ret == (serror == SCRIPT_ERR_OK));
 
             // Verify that removing flags from a passing test or adding flags to a failing test does not change the result
@@ -71,7 +71,7 @@ FUZZ_TARGET(script_flags)
             if (!IsValidFlagCombination(verify_flags)) return;
 
             ScriptError serror_fuzzed;
-            const bool ret_fuzzed = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror_fuzzed);
+            const bool ret_fuzzed = VerifyScript(tx.GetInputs().at(i).scriptSig, prevout.scriptPubKey, &tx.GetInputs().at(i).scriptWitness, verify_flags, checker, &serror_fuzzed);
             assert(ret_fuzzed == (serror_fuzzed == SCRIPT_ERR_OK));
 
             assert(ret_fuzzed == ret);

@@ -431,14 +431,14 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
-    entry.pushKV("version", tx.version);
+    entry.pushKV("version", tx.GetVersion());
     entry.pushKV("size", tx.ComputeTotalSize());
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
     entry.pushKV("weight", GetTransactionWeight(tx));
-    entry.pushKV("locktime", tx.nLockTime);
+    entry.pushKV("locktime", tx.GetLockTime());
 
     UniValue vin{UniValue::VARR};
-    vin.reserve(tx.vin.size());
+    vin.reserve(tx.GetInputs().size());
 
     // If available, use Undo data to calculate the fee. Note that txundo == nullptr
     // for coinbase transactions and for transactions where undo data is unavailable.
@@ -446,8 +446,8 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     CAmount amt_total_in = 0;
     CAmount amt_total_out = 0;
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const CTxIn& txin = tx.vin[i];
+    for (unsigned int i = 0; i < tx.GetInputs().size(); i++) {
+        const CTxIn& txin = tx.GetInputs()[i];
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase()) {
             in.pushKV("coinbase", HexStr(txin.scriptSig));
@@ -459,10 +459,10 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", std::move(o));
         }
-        if (!tx.vin[i].scriptWitness.IsNull()) {
+        if (!tx.GetInputs()[i].scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
-            txinwitness.reserve(tx.vin[i].scriptWitness.stack.size());
-            for (const auto& item : tx.vin[i].scriptWitness.stack) {
+            txinwitness.reserve(tx.GetInputs()[i].scriptWitness.stack.size());
+            for (const auto& item : tx.GetInputs()[i].scriptWitness.stack) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
@@ -491,9 +491,9 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("vin", std::move(vin));
 
     UniValue vout(UniValue::VARR);
-    vout.reserve(tx.vout.size());
-    for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        const CTxOut& txout = tx.vout[i];
+    vout.reserve(tx.GetOutputs().size());
+    for (unsigned int i = 0; i < tx.GetOutputs().size(); i++) {
+        const CTxOut& txout = tx.GetOutputs()[i];
 
         UniValue out(UniValue::VOBJ);
 

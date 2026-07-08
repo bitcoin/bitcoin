@@ -257,7 +257,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
             [&] {
                 const CTransaction transaction{random_mutable_transaction};
                 bool is_spent = false;
-                for (const CTxOut& tx_out : transaction.vout) {
+                for (const CTxOut& tx_out : transaction.GetOutputs()) {
                     if (Coin{tx_out, 0, transaction.IsCoinBase()}.IsSpent()) {
                         is_spent = true;
                     }
@@ -269,7 +269,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 }
                 const int height{int(fuzzed_data_provider.ConsumeIntegral<uint32_t>() >> 1)};
                 const bool check_for_overwrite{transaction.IsCoinBase() || [&] {
-                    for (uint32_t i{0}; i < transaction.vout.size(); ++i) {
+                    for (uint32_t i{0}; i < transaction.GetOutputs().size(); ++i) {
                         if (coins_view_cache.PeekCoin(COutPoint{transaction.GetHash(), i})) return true;
                     }
                     return fuzzed_data_provider.ConsumeBool();
@@ -314,7 +314,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                     return;
                 }
                 const auto flags = script_verify_flags::from_int(fuzzed_data_provider.ConsumeIntegral<script_verify_flags::value_type>());
-                if (!transaction.vin.empty() && (flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
+                if (!transaction.GetInputs().empty() && (flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
                     // Avoid:
                     // script/interpreter.cpp:1705: size_t CountWitnessSigOps(const CScript &, const CScript &, const CScriptWitness &, unsigned int): Assertion `(flags & SCRIPT_VERIFY_P2SH) != 0' failed.
                     return;

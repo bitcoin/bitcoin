@@ -397,7 +397,7 @@ public:
     : m_wtx(wtx),
     m_output(output)
     {
-        Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
+        Assume(std::ranges::find(wtx.tx->GetOutputs(), output) != wtx.tx->GetOutputs().end());
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }
