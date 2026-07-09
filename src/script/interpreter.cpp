@@ -1410,11 +1410,9 @@ uint256 GetSpentScriptsSHA256(const std::vector<CTxOut>& outputs_spent)
 } // namespace
 
 template <class T>
-void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
+PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
+    : m_spent_outputs{std::move(spent_outputs)}
 {
-    assert(!m_spent_outputs_ready);
-
-    m_spent_outputs = std::move(spent_outputs);
     if (!m_spent_outputs.empty()) {
         assert(m_spent_outputs.size() == txTo.vin.size());
         m_spent_outputs_ready = true;
@@ -1461,15 +1459,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     }
 }
 
-template <class T>
-PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
-{
-    Init(txTo, std::move(spent_outputs), force);
-}
-
 // explicit instantiation
-template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
-template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 
