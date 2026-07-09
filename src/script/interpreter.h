@@ -182,9 +182,7 @@ struct PrecomputedTransactionData
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
-    PrecomputedTransactionData() = default;
-
-    /** Initialize this PrecomputedTransactionData with transaction data.
+    /** Construct this PrecomputedTransactionData with transaction data.
      *
      * @param[in]   tx             The transaction for which data is being precomputed.
      * @param[in]   spent_outputs  The CTxOuts being spent, one for each tx.vin, in order.
@@ -192,10 +190,11 @@ struct PrecomputedTransactionData
      *                             regardless of what is in the inputs (used at signing
      *                             time, when the inputs aren't filled in yet). */
     template <class T>
-    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false);
-
-    template <class T>
     explicit PrecomputedTransactionData(const T& tx, std::vector<CTxOut>&& spent_outputs = {}, bool force = false);
+
+private:
+    template <class T>
+    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force);
 };
 
 enum class SigVersion
