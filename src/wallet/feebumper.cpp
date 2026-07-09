@@ -209,8 +209,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     }
 
     // Figure out if we need to compute the input weight, and do so if necessary
-    PrecomputedTransactionData txdata;
-    txdata.Init(*wtx.tx, std::move(spent_outputs), /* force=*/ true);
+    PrecomputedTransactionData txdata{*wtx.tx, std::move(spent_outputs), /*force=*/true};
     for (unsigned int i = 0; i < wtx.tx->vin.size(); ++i) {
         const CTxIn& txin = wtx.tx->vin.at(i);
         const Coin& coin = coins.at(txin.prevout);

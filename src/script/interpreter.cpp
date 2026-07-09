@@ -1462,16 +1462,16 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
 }
 
 template <class T>
-PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
+PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
 {
-    Init(txTo, {});
+    Init(txTo, std::move(spent_outputs), force);
 }
 
 // explicit instantiation
 template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
-template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
-template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 
 const HashWriter HASHER_TAPSIGHASH{TaggedHash("TapSighash")};
 const HashWriter HASHER_TAPLEAF{TaggedHash("TapLeaf")};

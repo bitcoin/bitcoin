@@ -141,8 +141,7 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     const CScript& scriptSig = signet_txs->m_to_sign.vin[0].scriptSig;
     const CScriptWitness& witness = signet_txs->m_to_sign.vin[0].scriptWitness;
 
-    PrecomputedTransactionData txdata;
-    txdata.Init(signet_txs->m_to_sign, {signet_txs->m_to_spend.vout[0]});
+    PrecomputedTransactionData txdata{signet_txs->m_to_sign, {signet_txs->m_to_spend.vout[0]}};
     TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /* nInIn= */ 0, /* amountIn= */ signet_txs->m_to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
 
     if (!VerifyScript(scriptSig, signet_txs->m_to_spend.vout[0].scriptPubKey, &witness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
