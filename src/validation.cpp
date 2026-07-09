@@ -148,10 +148,10 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
-                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       bool cacheFullScriptStore, std::optional<PrecomputedTransactionData>& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
-                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
 {
@@ -402,10 +402,10 @@ void Chainstate::MaybeUpdateMempoolForReorg(
 * transaction again during block validation.
 * */
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationState& state,
-                const CCoinsViewCache& view, const CTxMemPool& pool,
-                script_verify_flags flags, PrecomputedTransactionData& txdata, CCoinsViewCache& coins_tip,
-                ValidationCache& validation_cache)
-                EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
+                                           const CCoinsViewCache& view, const CTxMemPool& pool,
+                                           script_verify_flags flags, std::optional<PrecomputedTransactionData>& txdata, CCoinsViewCache& coins_tip,
+                                           ValidationCache& validation_cache)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(pool.cs);
@@ -667,7 +667,7 @@ private:
         TxValidationState m_state;
         /** A temporary cache containing serialized transaction data for signature verification.
          * Reused across PolicyScriptChecks and ConsensusScriptChecks. */
-        PrecomputedTransactionData m_precomputed_txdata;
+        std::optional<PrecomputedTransactionData> m_precomputed_txdata;
     };
 
     // Run the policy checks on a given transaction, excluding any script checks.
@@ -2072,7 +2072,7 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, cons
  */
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
-                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       bool cacheFullScriptStore, std::optional<PrecomputedTransactionData>& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks)
 {
@@ -2095,7 +2095,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         return true;
     }
 
-    if (!txdata.m_spent_outputs_ready) {
+    if (!txdata) {
         std::vector<CTxOut> spent_outputs;
         spent_outputs.reserve(tx.vin.size());
 
@@ -2105,9 +2105,9 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             assert(!coin.IsSpent());
             spent_outputs.emplace_back(coin.out);
         }
-        txdata.Init(tx, std::move(spent_outputs));
+        txdata.emplace(tx, std::move(spent_outputs));
     }
-    assert(txdata.m_spent_outputs.size() == tx.vin.size());
+    assert(txdata->m_spent_outputs.size() == tx.vin.size());
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
@@ -2118,7 +2118,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // spent being checked as a part of CScriptCheck.
 
         // Verify signature
-        CScriptCheck check(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &txdata);
+        CScriptCheck check(txdata->m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &*txdata);
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));
         } else if (auto result = check(); result.has_value()) {
@@ -2520,10 +2520,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
-    // in multiple threads). Preallocate the vector size so a new allocation
+    // in multiple threads). Preallocate the vector when checks can run so emplacing txdata
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
-    std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
+    std::vector<std::optional<PrecomputedTransactionData>> txsdata(fScriptChecks ? block.vtx.size() : 0);
+
     std::optional<CCheckQueueControl<CScriptCheck>> control;
     if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
 
