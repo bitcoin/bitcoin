@@ -10,6 +10,7 @@ include(GNUInstallDirs)
 #       which are absolutely necessary.
 add_library(bitcoinkernel
   bitcoinkernel.cpp
+  blocktreestorage.cpp
   chain.cpp
   checks.cpp
   chainparams.cpp

@@ -54,6 +54,7 @@ add_executable(bench_bitcoin
   txorphanage.cpp
   util_time.cpp
   verify_script.cpp
+  write_block_index.cpp
 )
 
 add_windows_application_manifest(bench_bitcoin)

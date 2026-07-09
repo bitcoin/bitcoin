@@ -37,6 +37,7 @@
 #include <interfaces/node.h>
 #include <ipc/exception.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/blocktreestorage.h>
 #include <kernel/caches.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
@@ -1154,11 +1155,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         BlockManager::Options blockman_opts_dummy{
             .chainparams = chainman_opts_dummy.chainparams,
             .blocks_dir = args.GetBlocksDirPath(),
+            .block_tree_dir = args.GetDataDirNet() / "blocks" / "index",
             .notifications = chainman_opts_dummy.notifications,
-            .block_tree_db_params = DBParams{
-                .path = args.GetDataDirNet() / "blocks" / "index",
-                .cache_bytes = 0,
-            },
         };
         auto blockman_result{ApplyArgsManOptions(args, blockman_opts_dummy)};
         if (!blockman_result) {
@@ -1359,12 +1357,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
     BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = args.GetBlocksDirPath(),
+        .block_tree_dir = args.GetDataDirNet() / "blocks" / "index",
+        .wipe_block_tree_data = do_reindex,
         .notifications = chainman_opts.notifications,
-        .block_tree_db_params = DBParams{
-            .path = args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = cache_sizes.block_tree_db,
-            .wipe_data = do_reindex,
-        },
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
 
@@ -1374,7 +1369,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     Assert(!node.chainman); // Was reset above
     try {
         node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
-    } catch (dbwrapper_error& e) {
+    } catch (kernel::BlockTreeStoreError& e) {
         LogError("%s", e.what());
         return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
     } catch (std::exception& e) {
@@ -1853,7 +1848,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const auto [index_cache_sizes, kernel_cache_sizes] = CalculateCacheSizes(args, g_enabled_filter_types.size());
 
     LogInfo("Cache configuration:");
-    LogInfo("* Using %.1f MiB for block index database", kernel_cache_sizes.block_tree_db / double(1_MiB));
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         LogInfo("* Using %.1f MiB for transaction index database", index_cache_sizes.tx_index / double(1_MiB));
     }

@@ -365,6 +365,7 @@ BASE_SCRIPTS = [
     'interface_ipc_mining.py',
     'feature_anchors.py',
     'mempool_datacarrier.py',
+    'feature_blocktree_migration.py',
     'feature_coinstatsindex.py',
     'feature_coinstatsindex_compatibility.py',
     'wallet_orphanedreward.py',

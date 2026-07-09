@@ -10,11 +10,11 @@
 #include <dbwrapper.h>
 #include <flatfile.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/blocktreestorage.h>
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
 #include <primitives/block.h>
-#include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
@@ -56,58 +56,15 @@ class SignalInterrupt;
 } // namespace util
 
 namespace kernel {
-class CBlockFileInfo
-{
-public:
-    uint32_t nBlocks{};      //!< number of blocks stored in file
-    uint32_t nSize{};        //!< number of used bytes of block file
-    uint32_t nUndoSize{};    //!< number of used bytes in the undo file
-    uint32_t nHeightFirst{}; //!< lowest height of block in file
-    uint32_t nHeightLast{};  //!< highest height of block in file
-    uint64_t nTimeFirst{};   //!< earliest time of block in file
-    uint64_t nTimeLast{};    //!< latest time of block in file
 
-    SERIALIZE_METHODS(CBlockFileInfo, obj)
-    {
-        READWRITE(VARINT(obj.nBlocks));
-        READWRITE(VARINT(obj.nSize));
-        READWRITE(VARINT(obj.nUndoSize));
-        READWRITE(VARINT(obj.nHeightFirst));
-        READWRITE(VARINT(obj.nHeightLast));
-        READWRITE(VARINT(obj.nTimeFirst));
-        READWRITE(VARINT(obj.nTimeLast));
-    }
-
-    CBlockFileInfo() = default;
-
-    std::string ToString() const;
-
-    /** update statistics (does not update nSize) */
-    void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn)
-    {
-        if (nBlocks == 0 || nHeightFirst > nHeightIn)
-            nHeightFirst = nHeightIn;
-        if (nBlocks == 0 || nTimeFirst > nTimeIn)
-            nTimeFirst = nTimeIn;
-        nBlocks++;
-        if (nHeightIn > nHeightLast)
-            nHeightLast = nHeightIn;
-        if (nTimeIn > nTimeLast)
-            nTimeLast = nTimeIn;
-    }
-};
-
-/** Access to the block database (blocks/index/) */
+/** Access to the legacy block database (blocks/index/) used during migration*/
 class BlockTreeDB : public CDBWrapper
 {
 public:
     using CDBWrapper::CDBWrapper;
-    void WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo& info);
     bool ReadLastBlockFile(int& nFile);
-    void WriteReindexing(bool fReindexing);
     void ReadReindexing(bool& fReindexing);
-    void WriteFlag(const std::string& name, bool fValue);
     bool ReadFlag(const std::string& name, bool& fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -301,6 +258,8 @@ private:
 
     BlockfileType BlockfileTypeForHeight(int height);
 
+    std::unique_ptr<kernel::BlockTreeStore> CreateAndMigrateBlockTree();
+
     const kernel::BlockManagerOpts m_opts;
 
     const FlatFileSeq m_block_file_seq;
@@ -356,7 +315,7 @@ public:
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
     void AddUnlinkedBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
+    std::unique_ptr<kernel::BlockTreeStore> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
