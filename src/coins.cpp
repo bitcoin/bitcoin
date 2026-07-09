@@ -5,10 +5,15 @@
 #include <coins.h>
 
 #include <consensus/consensus.h>
+#include <primitives/block.h>
 #include <random.h>
 #include <uint256.h>
 #include <util/log.h>
+#include <util/threadpool.h>
 #include <util/trace.h>
+
+#include <ranges>
+#include <unordered_set>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
@@ -359,6 +364,44 @@ void CCoinsViewCache::SanityCheck() const
     }
     assert(count_dirty == count_linked && count_dirty == m_dirty_count);
     assert(recomputed_usage == cachedCoinsUsage);
+}
+
+CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
+{
+    Assert(m_futures.empty());
+    Assert(m_inputs.empty());
+    Assert(m_input_head.load(std::memory_order_relaxed) == 0);
+    Assert(m_input_tail == 0);
+    if (const auto workers_count{m_thread_pool->WorkersCount()}; workers_count > 0) {
+        // Loop through the block inputs and set their prevouts in the queue.
+        // Filter inputs that spend outputs created earlier in the same block. These outputs will be created
+        // directly in the cache from the tx that creates them, so they will not be requested from a base view.
+        std::unordered_set<Txid, SaltedTxidHasher> earlier_txids;
+        earlier_txids.reserve(block.vtx.size());
+        for (const auto& tx : block.vtx | std::views::drop(1)) {
+            for (const auto& input : tx->vin) {
+                if (!earlier_txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
+            }
+            earlier_txids.emplace(tx->GetHash());
+        }
+        // Only submit tasks if we have something to fetch.
+        if (m_inputs.size()) {
+            std::vector<std::function<void()>> tasks(workers_count, [this] {
+                while (ProcessInput()) {}
+            });
+            if (auto futures{m_thread_pool->Submit(std::move(tasks))}) {
+                m_futures = std::move(*futures);
+            } else {
+                // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
+                // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
+                // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
+                LogWarning("Failed to submit prevout fetch tasks; falling back to single-threaded fetching for this block.");
+                m_inputs.clear();
+                StopFetching(); // Assert nothing changed if we failed to start tasks.
+            }
+        }
+    }
+    return CreateResetGuard();
 }
 
 static const uint64_t MIN_TRANSACTION_OUTPUT_WEIGHT{WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut())};

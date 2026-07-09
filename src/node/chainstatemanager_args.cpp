@@ -60,6 +60,13 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     // Subtract 1 because the main thread counts towards the par threads.
     opts.worker_threads_num = script_threads - 1;
 
+    if (auto value{args.GetArg<int32_t>("-prevoutfetchthreads")}) {
+        if (*value < 0) {
+            return util::Error{Untranslated(strprintf("-prevoutfetchthreads must be non-negative (got %d). Use 0 to disable parallel input fetching.", *value))};
+        }
+        opts.prevoutfetch_threads_num = std::min(*value, MAX_PREVOUTFETCH_THREADS);
+    }
+
     if (auto max_size = args.GetIntArg("-maxsigcachesize")) {
         // 1. When supplied with a max_size of 0, both the signature cache and
         //    script execution cache create the minimum possible cache (2

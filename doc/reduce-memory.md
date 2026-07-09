@@ -49,6 +49,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 
 - `-par=<n>` - the number of script verification threads, defaults to the number of cores in the system minus one.
 - `-rpcthreads=<n>` - the number of threads used for processing RPC requests, defaults to `16`.
+- `-prevoutfetchthreads=<n>` - the number of threads used to fetch block input prevouts, defaults to `8`.
 
 ## Linux specific
 

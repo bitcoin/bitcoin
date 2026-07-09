@@ -89,6 +89,9 @@ static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES{550_MiB};
 /** Maximum number of dedicated script-checking threads allowed */
 static constexpr int MAX_SCRIPTCHECK_THREADS{15};
 
+/** Maximum number of dedicated threads allowed for prefetching block input prevouts */
+static constexpr int32_t MAX_PREVOUTFETCH_THREADS{16};
+
 /** Current sync state passed to tip changed callbacks. */
 enum class SynchronizationState {
     INIT_REINDEX,
@@ -503,7 +506,7 @@ public:
     CoinsViews(DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
-    void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void InitCache(int32_t prevoutfetch_threads) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 enum class CoinsCacheSizeState
