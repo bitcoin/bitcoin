@@ -1864,7 +1864,7 @@ void CoinsViews::InitCache(int32_t prevoutfetch_threads)
 {
     AssertLockHeld(::cs_main);
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
-    auto thread_pool{std::make_shared<ThreadPool>("prevout")};
+    util::NotNull thread_pool{std::make_shared<ThreadPool>("prevout")};
     if (prevoutfetch_threads > 0) {
         thread_pool->Start(prevoutfetch_threads);
         LogInfo("Block input prevout fetching uses %d additional threads", prevoutfetch_threads);

@@ -90,7 +90,7 @@ public:
 
 // Reuse a single global thread pool across fuzz iterations. Creating and destroying a pool every
 // iteration leaks memory, since iterations can run faster than the OS can tear down the threads.
-std::shared_ptr<ThreadPool> g_thread_pool{std::make_shared<ThreadPool>("view_fuzz")};
+util::NotNull g_thread_pool{std::make_shared<ThreadPool>("view_fuzz")};
 
 void StartPoolIfNeeded()
 {
