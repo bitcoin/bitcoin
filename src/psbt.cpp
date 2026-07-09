@@ -630,18 +630,14 @@ std::optional<PrecomputedTransactionData> PrecomputePSBTData(const PartiallySign
         return std::nullopt;
     }
     const CMutableTransaction& tx = *unsigned_tx;
-    bool have_all_spent_outputs = true;
     std::vector<CTxOut> utxos;
     for (const PSBTInput& input : psbt.inputs) {
-        if (!input.GetUTXO(utxos.emplace_back())) have_all_spent_outputs = false;
+        if (!input.GetUTXO(utxos.emplace_back())) {
+            utxos.clear();
+            break;
+        }
     }
-    PrecomputedTransactionData txdata;
-    if (have_all_spent_outputs) {
-        txdata.Init(tx, std::move(utxos), true);
-    } else {
-        txdata.Init(tx, {}, true);
-    }
-    return txdata;
+    return PrecomputedTransactionData{tx, std::move(utxos), /*force=*/true};
 }
 
 PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, const common::PSBTFillOptions& options,  SignatureData* out_sigdata)

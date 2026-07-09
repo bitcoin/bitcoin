@@ -1648,8 +1648,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             utxos.emplace_back(amount, script);
         }
 
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>{utxos}, true);
+        PrecomputedTransactionData txdata{tx, std::vector<CTxOut>{utxos}, /*force=*/true};
 
         BOOST_CHECK(txdata.m_bip341_taproot_ready);
         BOOST_CHECK_EQUAL(HexStr(txdata.m_spent_amounts_single_hash), vec["intermediary"]["hashAmounts"].get_str());
