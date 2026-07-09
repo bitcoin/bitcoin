@@ -625,21 +625,16 @@ btck_PrecomputedTransactionData* btck_precomputed_transaction_data_create(
 {
     try {
         const CTransaction& tx{*btck_Transaction::get(tx_to)};
-        auto txdata{btck_PrecomputedTransactionData::create()};
+        std::vector<CTxOut> spent_outputs;
         if (spent_outputs_ != nullptr && spent_outputs_len > 0) {
             assert(spent_outputs_len == tx.vin.size());
-            std::vector<CTxOut> spent_outputs;
             spent_outputs.reserve(spent_outputs_len);
             for (size_t i = 0; i < spent_outputs_len; i++) {
                 const CTxOut& tx_out{btck_TransactionOutput::get(spent_outputs_[i])};
                 spent_outputs.push_back(tx_out);
             }
-            btck_PrecomputedTransactionData::get(txdata).Init(tx, std::move(spent_outputs));
-        } else {
-            btck_PrecomputedTransactionData::get(txdata).Init(tx, {});
         }
-
-        return txdata;
+        return btck_PrecomputedTransactionData::create(tx, std::move(spent_outputs));
     } catch (...) {
         return nullptr;
     }
