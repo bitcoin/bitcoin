@@ -41,6 +41,11 @@ inline constexpr int DEFAULT_HTTP_WORKQUEUE=64;
 
 inline constexpr int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
+/**
+ * Maximum number of connected HTTP clients
+ */
+inline constexpr int MAX_HTTP_CONNECTIONS = 16;
+
 enum class HTTPRequestMethod {
     UNKNOWN,
     GET,
