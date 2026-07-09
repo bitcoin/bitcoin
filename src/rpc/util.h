@@ -39,6 +39,9 @@ struct bilingual_str;
 namespace common {
 enum class PSBTError;
 } // namespace common
+namespace kernel {
+class FatalError;
+} // namespace kernel
 namespace node {
 enum class TransactionError;
 } // namespace node
@@ -56,6 +59,13 @@ static constexpr bool DEFAULT_RPC_DOC_CHECK{
  * constant for consistency.
  */
 extern const std::string UNIX_EPOCH_TIME;
+
+/**
+ * Surface a kernel::FatalError as an RPC_INTERNAL_ERROR. A fatal error means
+ * the node itself failed (disk error, corruption, ...) and is already shutting
+ * down; it is not a verdict on the RPC's inputs.
+ */
+[[noreturn]] void ThrowFatalError(const kernel::FatalError& err);
 
 /**
  * Example bech32 addresses for the RPCExamples help documentation. They are intentionally

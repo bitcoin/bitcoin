@@ -186,7 +186,9 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
 
     if (!process_new_block) return true;
 
-    if (auto res{chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)}; !res || !res->IsValid()) {
+    if (auto res{chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)}; !res) {
+        ThrowFatalError(res.error());
+    } else if (!res->IsValid()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -424,7 +426,7 @@ static RPCMethod generateblock()
         auto res{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)};
         // Fatal error
         if (!res) {
-            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", res.error().message()));
+            ThrowFatalError(res.error());
         }
 
         // Consensus reject reason - block invalid
@@ -787,7 +789,7 @@ static RPCMethod getblocktemplate()
             auto res{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/true)};
             // Fatal error
             if (!res) {
-                throw JSONRPCError(RPC_VERIFY_ERROR, res.error().message());
+                ThrowFatalError(res.error());
             }
 
             return BIP22ValidationResult(*res);
@@ -1140,7 +1142,7 @@ static RPCMethod submitblock()
     if (!res) {
         // A fatal (system) error occurred; the BlockChecked signal never fired,
         // so surface the error directly instead of reporting "inconclusive".
-        throw JSONRPCError(RPC_VERIFY_ERROR, res.error().message());
+        ThrowFatalError(res.error());
     }
     if (!new_block && accepted) {
         return "duplicate";

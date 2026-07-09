@@ -8,6 +8,7 @@
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <kernel/fatal_error.h>
 #include <key_io.h>
 #include <node/types.h>
 #include <outputtype.h>
@@ -42,6 +43,11 @@ using util::TrimString;
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
+
+void ThrowFatalError(const kernel::FatalError& err)
+{
+    throw JSONRPCError(RPC_INTERNAL_ERROR, err.message());
+}
 
 std::string GetAllOutputTypes()
 {

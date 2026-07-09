@@ -1714,7 +1714,7 @@ static RPCMethod preciousblock()
     }
 
     if (auto res{chainman.ActiveChainstate().PreciousBlock(pblockindex)}; !res) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, res.error().message());
+        ThrowFatalError(res.error());
     }
 
     return UniValue::VNULL;
@@ -1736,7 +1736,7 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
         throw JSONRPCError(RPC_DATABASE_ERROR, res.error());
     }
     if (auto res{chainman.ActiveChainstate().ActivateBestChain()}; !res) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, res.error().message());
+        ThrowFatalError(res.error());
     }
 }
 
@@ -1778,7 +1778,7 @@ void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
     }
 
     if (auto res{chainman.ActiveChainstate().ActivateBestChain()}; !res) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, res.error().message());
+        ThrowFatalError(res.error());
     }
 }
 
