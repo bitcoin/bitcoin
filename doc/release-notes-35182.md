@@ -14,3 +14,6 @@ Certain HTTP edge cases will observe different behavior to be more RFC-compliant
 - "Line Folding" is rejected (whitespace at start of a header line)
 - Tolerate `%` at the end of requested URLs
 - Multiple "Content-Length" headers with different values are rejected
+
+A new configuration option `-rpcmaxconnections` (default `128`) limits the
+number of simultaneously connected HTTP clients to the server.

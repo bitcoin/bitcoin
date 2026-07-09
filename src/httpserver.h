@@ -43,7 +43,7 @@ static const int DEFAULT_HTTP_WORKQUEUE=64;
 /**
  * Maximum number of connected HTTP clients
  */
-static const size_t MAX_HTTP_CONNECTIONS = 128;
+static const int DEFAULT_MAX_HTTP_CONNECTIONS = 128;
 
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
@@ -287,6 +287,11 @@ public:
     void SetServerTimeout(std::chrono::seconds seconds) { m_rpcservertimeout = seconds; }
 
     /**
+     * Set the maximum amount of connected HTTPClients (-rpcmaxconnections)
+     */
+    void SetMaxConnections(int max_conn) { m_rpcmaxconnections = max_conn; }
+
+    /**
      * Force-remove all remaining clients from m_connected without waiting for
      * graceful disconnection. Must only be called after JoinSocketsThreads().
      */
@@ -380,6 +385,11 @@ private:
      * Idle timeout after which clients are disconnected
      */
     std::chrono::seconds m_rpcservertimeout{DEFAULT_HTTP_SERVER_TIMEOUT};
+
+    /**
+     * Maximum amount of concurrent connections
+     */
+    int m_rpcmaxconnections{DEFAULT_MAX_HTTP_CONNECTIONS};
 
     /**
      * Accept a connection.
