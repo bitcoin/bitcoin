@@ -954,11 +954,16 @@ private:
         Assume(m_chunk_idxs[bottom_idx]);
         auto& top_chunk_info = m_set_info[top_idx];
         auto& bottom_chunk_info = m_set_info[bottom_idx];
-        // Count the number of dependencies between bottom_chunk and top_chunk.
+        // Count the number of dependencies between bottom_chunk and top_chunk, remembering the
+        // per-transaction counts so the picking loop below does not need to recompute the
+        // intersections.
         unsigned num_deps{0};
+        std::array<SetIdx, SetType::Size()> counts;
         for (auto tx_idx : top_chunk_info.transactions) {
             auto& tx_data = m_tx_data[tx_idx];
-            num_deps += (tx_data.children & bottom_chunk_info.transactions).Count();
+            auto count = (tx_data.children & bottom_chunk_info.transactions).Count();
+            counts[tx_idx] = count;
+            num_deps += count;
         }
         m_cost.MergeChunksMid(/*num_txns=*/top_chunk_info.transactions.Count());
         Assume(num_deps > 0);
@@ -967,10 +972,10 @@ private:
         unsigned num_steps = 0;
         for (auto tx_idx : top_chunk_info.transactions) {
             ++num_steps;
-            auto& tx_data = m_tx_data[tx_idx];
-            auto intersect = tx_data.children & bottom_chunk_info.transactions;
-            auto count = intersect.Count();
+            auto count = counts[tx_idx];
             if (pick < count) {
+                auto& tx_data = m_tx_data[tx_idx];
+                auto intersect = tx_data.children & bottom_chunk_info.transactions;
                 for (auto child_idx : intersect) {
                     if (pick == 0) {
                         m_cost.MergeChunksEnd(/*num_steps=*/num_steps);
