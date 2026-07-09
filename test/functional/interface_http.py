@@ -136,6 +136,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_null_byte_in_uri()
         self.check_invalid_http_version()
         self.check_whitespace_in_headers()
+        self.check_connection_limit()
 
 
     def check_default_connection(self):
@@ -567,6 +568,51 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.headers = {"Authorization": f"Basic \n {str_to_b64str(conn.authpair)}"}
         response = conn.post('/', '{"method": "getbestblockhash"}')
         assert_equal(response.status, http.client.BAD_REQUEST)
+
+
+    def check_connection_limit(self):
+        self.log.info("Check connection limits")
+
+        # Disable timeout so the initial batch of clients stays connected
+        # until the end of the test.
+        self.restart_node(0, extra_args=["-rpcservertimeout=0"])
+
+        # Close the persistent HTTP connection to this node by replacing it with
+        # a new AuthServiceProxy, reducing HTTPServer::GetConnectionsCount() to 0.
+        # The new AuthServiceProxy won't actually open an HTTP connection until
+        # it needs to send an RPC (for example, to stop the node at the end of the test).
+        self.node._rpc = self.node.create_new_rpc_connection(mode="AUTHPROXY")
+
+        MAX_HTTP_CONNECTIONS = 128
+        connections = []
+
+        # Connections all succeed up to the limit
+        with self.node.assert_debug_log(
+            expected_msgs = [f"method=invalidrpc_{i}" for i in range(1, MAX_HTTP_CONNECTIONS + 1)]
+        ):
+            for i in range(1, MAX_HTTP_CONNECTIONS + 1):
+                conn = BitcoinHTTPConnection(self.node)
+                # Each client makes a unique request so it's easy to find in the log
+                conn.post('/', f'{{"method": "invalidrpc_{i}"}}', connection_header='keep-alive').read()
+                connections.append(conn)
+
+        # The next connection is over the limit, expect it to timeout
+        with self.node.assert_debug_log(
+            expected_msgs = [],
+            unexpected_msgs = ["method=never_accepted"]
+        ):
+            conn = BitcoinHTTPConnection(self.node)
+            conn.set_timeout(5)
+            try:
+                conn.post('/', '{"method": "never_accepted"}', connection_header='keep-alive').read()
+                assert False, "Connection succeeded unexpectedly"
+            except TimeoutError:
+                pass
+
+        # Original 128 clients are still connected
+        assert_equal(len(connections), MAX_HTTP_CONNECTIONS)
+        for client in connections:
+            assert not client.sock_closed()
 
 
 if __name__ == '__main__':
