@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(sighash_caching)
     }
 }
 
-static_assert(std::is_default_constructible_v<PrecomputedTransactionData>); // TODO: Require transaction data at construction
+static_assert(!std::is_default_constructible_v<PrecomputedTransactionData>);
 
 BOOST_AUTO_TEST_CASE(precomputed_transaction_data_constructor)
 {
