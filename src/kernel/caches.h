@@ -8,24 +8,25 @@
 #include <util/byte_units.h>
 
 #include <algorithm>
+#include <cstdint>
 
 //! Suggested default amount of cache reserved for the kernel (bytes)
-static constexpr size_t DEFAULT_KERNEL_CACHE{450_MiB};
+static constexpr uint64_t DEFAULT_KERNEL_CACHE{450_MiB};
 //! Default LevelDB write batch size
-static constexpr size_t DEFAULT_DB_CACHE_BATCH{32_MiB};
+static constexpr uint64_t DEFAULT_DB_CACHE_BATCH{32_MiB};
 
 //! Max memory allocated to block tree DB specific cache (bytes)
-static constexpr size_t MAX_BLOCK_DB_CACHE{2_MiB};
+static constexpr uint64_t MAX_BLOCK_DB_CACHE{2_MiB};
 //! Max memory allocated to coin DB specific cache (bytes)
-static constexpr size_t MAX_COINS_DB_CACHE{8_MiB};
+static constexpr uint64_t MAX_COINS_DB_CACHE{8_MiB};
 
 namespace kernel {
 struct CacheSizes {
-    size_t block_tree_db;
-    size_t coins_db;
-    size_t coins;
+    uint64_t block_tree_db;
+    uint64_t coins_db;
+    uint64_t coins;
 
-    CacheSizes(size_t total_cache)
+    CacheSizes(uint64_t total_cache)
     {
         block_tree_db = std::min(total_cache / 8, MAX_BLOCK_DB_CACHE);
         total_cache -= block_tree_db;

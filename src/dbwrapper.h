@@ -12,11 +12,14 @@
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/obfuscation.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <exception>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 
@@ -39,7 +42,7 @@ struct DBParams {
     //! Location in the filesystem where leveldb data will be stored.
     fs::path path;
     //! Configures various leveldb cache settings.
-    size_t cache_bytes;
+    uint64_t cache_bytes;
     //! If true, use leveldb's memory environment.
     bool memory_only = false;
     //! If true, remove all existing data.

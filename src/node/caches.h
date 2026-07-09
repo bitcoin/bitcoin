@@ -9,20 +9,21 @@
 #include <util/byte_units.h>
 
 #include <cstddef>
+#include <cstdint>
 
 class ArgsManager;
 
 //! min. -dbcache (bytes)
-static constexpr size_t MIN_DB_CACHE{4_MiB};
+static constexpr uint64_t MIN_DB_CACHE{4_MiB};
 //! -dbcache default (bytes)
-static constexpr size_t DEFAULT_DB_CACHE{DEFAULT_KERNEL_CACHE};
+static constexpr uint64_t DEFAULT_DB_CACHE{DEFAULT_KERNEL_CACHE};
 
 namespace node {
-size_t GetDefaultDBCache();
+uint64_t GetDefaultDBCache();
 struct IndexCacheSizes {
-    size_t tx_index{0};
-    size_t filter_index{0};
-    size_t txospender_index{0};
+    uint64_t tx_index{0};
+    uint64_t filter_index{0};
+    uint64_t txospender_index{0};
 };
 struct CacheSizes {
     IndexCacheSizes index;
