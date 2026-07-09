@@ -181,7 +181,7 @@ class CiInterfaceTests(unittest.TestCase):
             self.assertNotIn("dbcache=0MB", result.index_file.read_text())
             self.assertEqual(
                 (output_dir / "summary.txt").read_text().strip(),
-                "450 MB: 2 min (nightly median of 1: 3 min, "
+                "dbcache=450MiB: 2 min (nightly median of 1: 3 min, "
                 "2026-06-01 to 2026-06-01) -> +33.3% faster",
             )
             combined = json.loads((output_dir / "results.json").read_text())
