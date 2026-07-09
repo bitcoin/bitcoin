@@ -15,6 +15,7 @@
 #define BITCOIN_WALLET_TYPES_H
 
 #include <policy/fees/block_policy_estimator.h>
+#include <util/translation.h>
 
 namespace wallet {
 /**
@@ -40,6 +41,32 @@ struct CreatedTransactionResult
 
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
             : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+};
+
+//! Machine-readable wallet error codes.
+//!
+//! @note Add new codes only when callers need to handle the condition
+//! differently. For errors that should only be displayed to the user, use
+//! WALLET_ERROR and provide the user-facing details in WalletError::message.
+enum class WalletErrorCode {
+    //! Generic wallet error. Callers may present the accompanying message to the user.
+    WALLET_ERROR,
+
+    //! The wallet is locked and the operation requires access to private keys.
+    //! Callers may ask the user to unlock the wallet and retry the operation.
+    WALLET_UNLOCK_NEEDED,
+};
+
+//! Wallet-layer error with both programmatic and user-facing information.
+//!
+//! Wallet methods should return a specific WalletErrorCode only when callers
+//! can handle that condition differently. Otherwise, use WalletErrorCode::WALLET_ERROR
+//! and describe the failure in `message`.
+struct WalletError {
+    //! Machine-readable error code for callers that need programmatic handling.
+    WalletErrorCode code;
+    //! User-facing translated error message
+    bilingual_str message;
 };
 
 } // namespace wallet
