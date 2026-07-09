@@ -15,6 +15,29 @@
 
 namespace wallet {
 
+struct ImportError {
+    WalletError wallet_error;
+    //! Set to true when a wallet-wide precondition failed before any descriptor was
+    //! processed (e.g. wallet is already rescanning, or wallet is locked).
+    //! Callers that support top-level errors should surface this as a
+    //! top-level / call-wide error rather than a per-descriptor failure.
+    bool is_general_error;
+
+    ImportError(WalletErrorCode r, bilingual_str e, bool is_wallet_error)
+        : wallet_error{r, std::move(e)},
+        is_general_error{is_wallet_error}
+    {};
+};
+
+struct ImportResult {
+    std::vector<std::string> warnings;
+    std::optional<ImportError> error;
+
+    bool has_error() const {
+        return error.has_value();
+    }
+};
+
 //! Information about a descriptor to be imported.
 struct ImportDescriptorRequest {
     std::string descriptor;

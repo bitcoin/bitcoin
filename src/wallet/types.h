@@ -55,6 +55,12 @@ enum class WalletErrorCode {
     //! The wallet is locked and the operation requires access to private keys.
     //! Callers may ask the user to unlock the wallet and retry the operation.
     WALLET_UNLOCK_NEEDED,
+
+    //! TODO Add correct descriptions to each error.
+    //! At the moment only used by ImportDescriptors.
+    INVALID_DESCRIPTOR,
+    INVALID_PARAMETER,
+    MISC_ERROR,
 };
 
 //! Wallet-layer error with both programmatic and user-facing information.
