@@ -539,9 +539,15 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
 
         // Check if request has QUORUM_VERIFICATION_VECTOR data
         if (request.GetDataMask() & CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR) {
-
+            // Reject the wire count before decoding any BLS G1 element so a bogus
+            // count cannot spend arbitrary CPU on doomed decodes. A mismatch — over
+            // or under — is a protocol violation worth a full ban.
+            const size_t expected_vvec_size{static_cast<size_t>(pQuorum->params.threshold)};
             std::vector<CBLSPublicKey> verificationVector;
-            vRecv >> verificationVector;
+            if (!UnserializeVectorWithMaxSize(vRecv, verificationVector, expected_vvec_size) ||
+                verificationVector.size() != expected_vvec_size) {
+                return MisbehavingError{100, "invalid quorum verification vector size"};
+            }
 
             if (pQuorum->SetVerificationVector(verificationVector)) {
                 QueueQuorumForWarming(pQuorum);
