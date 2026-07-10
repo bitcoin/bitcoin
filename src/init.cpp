@@ -2220,9 +2220,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.peerman->AddExtraHandler(std::move(cj_server));
     } else {
         assert(!node.cj_walletman);
-        // Can return nullptr if built without wallet support, must check before use
+        // Only constructed in wallet-enabled builds; stays null otherwise, must check before use
+#ifdef ENABLE_WALLET
         node.cj_walletman = CJWalletManager::make(chainman, *node.dmnman, *node.mn_metaman, *node.mempool, *node.mn_sync,
                                                   *node.llmq_ctx->isman, !ignores_incoming_txs);
+#endif
     }
 
     if (node.cj_walletman) {

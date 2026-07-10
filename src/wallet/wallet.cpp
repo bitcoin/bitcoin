@@ -1591,13 +1591,19 @@ void CWallet::UnsetBlankWalletFlag(WalletBatch& batch)
     UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
 }
 
+bool CWallet::StartMixing()
+{
+    // Refuse to start mixing on a wallet that is locked for mixing
+    if (IsLocked(/*fForMixing=*/true)) {
+        return false;
+    }
+    bool expected{false};
+    return m_mixing.compare_exchange_strong(expected, true);
+}
+
 void CWallet::NewKeyPoolCallback()
 {
-    // Note: GetClient(*this) can return nullptr when this wallet is in the middle of its creation.
-    // Skipping stopMixing() is fine in this case.
-    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_available() ? coinjoin_loader().GetClient(GetName()) : nullptr) {
-        coinjoin_client->stopMixing();
-    }
+    StopMixing();
     nKeysLeftSinceAutoBackup = 0;
 }
 

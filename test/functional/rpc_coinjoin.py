@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
     assert_raises_rpc_error,
+    force_finish_mnsync,
 )
 
 # See coinjoin/options.h
@@ -30,12 +31,16 @@ class CoinJoinTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
+        # The framework's keypool=1 and -createwalletbackups=0 defaults would
+        # trip CheckAutomaticBackup() and stop mixing before the maintenance
+        # thread gets to mix (see test_newkeypool_stops_mixing)
+        self.extra_args = [['-keypool=200', '-createwalletbackups=10']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
     def run_test(self):
@@ -49,6 +54,18 @@ class CoinJoinTest(BitcoinTestFramework):
         self.test_setcoinjoinrounds(w1)
         self.test_coinjoinsalt(w1)
         w1.unloadwallet()
+
+        if not self.options.descriptors:
+            node.createwallet(wallet_name='w_keypool', blank=False, disable_private_keys=False)
+            w_keypool = node.get_wallet_rpc('w_keypool')
+            # Leave IBD and advance the tip so WaitForAnotherBlock() lets the
+            # mixing maintenance thread proceed
+            self.generate(self.nodes[0], 2)
+            force_finish_mnsync(self.nodes[0])
+            self.test_newkeypool_stops_mixing(w_keypool)
+            w_keypool.unloadwallet()
+        else:
+            self.log.info('Skip "newkeypool" mixing test, command is incompatible with descriptor wallets')
 
         node.createwallet(wallet_name='w2', blank=True, disable_private_keys=True)
         w2 = node.get_wallet_rpc('w2')
@@ -84,6 +101,20 @@ class CoinJoinTest(BitcoinTestFramework):
 
         # Reset mix session
         assert_equal(node.coinjoin('reset'), "Mixing was reset")
+
+    def test_newkeypool_stops_mixing(self, node):
+        self.log.info('"newkeypool" should stop mixing')
+        # Wait until the scheduler thread runs a mixing attempt for the wallet:
+        # "Not enough funds to mix." is logged while it holds cs_wallet. Before
+        # the wallet manager lock-order fix that happened under
+        # cs_wallet_manager_map, so the newkeypool call below, which acquires
+        # cs_wallet_manager_map while holding cs_wallet, would abort
+        # -DDEBUG_LOCKORDER builds with a potential-deadlock error.
+        with self.nodes[0].wait_for_debug_log([b'Not enough funds to mix.']):
+            node.coinjoin('start')
+            assert_equal(node.getcoinjoininfo()['running'], True)
+        node.newkeypool()
+        assert_equal(node.getcoinjoininfo()['running'], False)
 
     def test_setcoinjoinamount(self, node):
         self.log.info('"setcoinjoinamount" should update mixing target')

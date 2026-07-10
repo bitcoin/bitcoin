@@ -401,6 +401,9 @@ private:
      */
     void InitCJSaltFromDb();
 
+    //! Whether the CoinJoin client is mixing with this wallet
+    std::atomic<bool> m_mixing{false};
+
     /** Height of last block processed is used by wallet to know depth of transactions
      * without relying on Chain interface beyond asynchronous updates. For safety, we
      * initialize it to -1. Height is a pointer on node's tip and doesn't imply
@@ -451,6 +454,12 @@ public:
      * is the responsibility of the caller.
      **/
     bool SetCoinJoinSalt(const uint256& cj_salt);
+
+    /** Mark the wallet as mixing, see m_mixing. Returns false if the wallet
+     *  is locked for mixing or was mixing already. */
+    bool StartMixing();
+    void StopMixing() { m_mixing = false; }
+    bool IsMixing() const { return m_mixing; }
 
     // Map from governance object hash to governance object, they are added by gobject_prepare.
     std::map<uint256, Governance::Object> m_gobjects;
