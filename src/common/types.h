@@ -49,6 +49,16 @@ struct PSBTFillOptions {
      * Whether to fill in bip32 derivation information if available.
      */
     bool bip32_derivs{true};
+
+    /**
+     * Whether to only use the key path for taproot spending.
+     */
+    bool keypath_only{false};
+
+    /**
+     * Optional taproot script to spend (if provided, only this script path will be signed).
+     */
+    std::optional<std::vector<unsigned char>> taproot_script_path{std::nullopt};
 };
 
 } // namespace common

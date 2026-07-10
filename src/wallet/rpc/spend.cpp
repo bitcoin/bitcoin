@@ -1610,6 +1610,8 @@ RPCMethod walletprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only use the key path for taproot spending"},
+                    {"taproot_script_path", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "Optional taproot script to spend (if provided, only this script path will be signed)"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1646,11 +1648,16 @@ RPCMethod walletprocesspsbt()
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    bool keypath_only = request.params[5].isNull() ? false : request.params[5].get_bool();
+    std::optional<std::vector<unsigned char>> taproot_script_path = std::nullopt;
+    if (!request.params[6].isNull() && !request.params[6].get_str().empty()) {
+        taproot_script_path = ParseHexV(request.params[6], "taproot_script_path");
+    }
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs, .keypath_only = keypath_only, .taproot_script_path = taproot_script_path}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }

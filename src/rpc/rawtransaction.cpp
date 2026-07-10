@@ -125,7 +125,7 @@ static std::vector<RPCArg> CreateTxDoc()
 
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize, bool keypath_only = false, std::optional<std::vector<unsigned char>> taproot_script_path = std::nullopt)
 {
     // Unserialize the transactions
     util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(psbt_string);
@@ -196,7 +196,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
         // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
-        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize}, /*out_sigdata=*/nullptr) == common::PSBTError::SIGHASH_MISMATCH) {
+        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize, .keypath_only = keypath_only, .taproot_script_path = taproot_script_path}, /*out_sigdata=*/nullptr) == common::PSBTError::SIGHASH_MISMATCH) {
             throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
         }
     }
@@ -2089,6 +2089,8 @@ RPCMethod descriptorprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only use the key path for taproot spending"},
+                    {"taproot_script_path", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "Optional taproot script to spend (if provided, only this script path will be signed)"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2116,12 +2118,20 @@ RPCMethod descriptorprocesspsbt()
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
 
+    bool keypath_only = request.params[5].isNull() ? false : request.params[5].get_bool();
+    std::optional<std::vector<unsigned char>> taproot_script_path = std::nullopt;
+    if (!request.params[6].isNull() && !request.params[6].get_str().empty()) {
+        taproot_script_path = ParseHexV(request.params[6], "taproot_script_path");
+    }
+
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
         sighash_type,
-        finalize);
+        finalize,
+        keypath_only,
+        taproot_script_path);
 
     // Check whether or not all of the inputs are now signed
     bool complete = true;

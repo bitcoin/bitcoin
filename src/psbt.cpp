@@ -661,6 +661,18 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
     SignatureData sigdata;
     input.FillSignatureData(sigdata);
 
+    if (options.keypath_only) {
+        sigdata.tr_spenddata.scripts.clear();
+    } else if (options.taproot_script_path.has_value()) {
+        auto scripts_copy = sigdata.tr_spenddata.scripts;
+        sigdata.tr_spenddata.scripts.clear();
+        for (const auto& [key, blocks] : scripts_copy) {
+            if (key.first == *options.taproot_script_path) {
+                sigdata.tr_spenddata.scripts.emplace(key, blocks);
+            }
+        }
+    }
+
     // Get UTXO
     bool require_witness_sig = false;
     CTxOut utxo;
