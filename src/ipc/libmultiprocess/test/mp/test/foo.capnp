@@ -39,6 +39,10 @@ interface FooInterface $Proxy.wrap("mp::test::FooImplementation") {
     passDataPointers @22 (arg :List(Data)) -> (result :List(Data));
 }
 
+interface FooInit $Proxy.wrap("mp::test::FooInit") {
+    construct @0 () -> ();
+}
+
 interface FooCallback $Proxy.wrap("mp::test::FooCallback") {
     destroy @0 (context :Proxy.Context) -> ();
     call @1 (context :Proxy.Context, arg :Int32) -> (result :Int32);
@@ -66,6 +70,7 @@ struct FooStruct $Proxy.wrap("mp::test::FooStruct") {
 struct FooCustom $Proxy.wrap("mp::test::FooCustom") {
     v1 @0 :Text;
     v2 @1 :Int32;
+    v3 @2 :List(Int32);
 }
 
 struct FooEmpty $Proxy.wrap("mp::test::FooEmpty") {

@@ -25,6 +25,7 @@
 #include <kj/test.h>
 #include <map>
 #include <memory>
+#include <mp/config.h>
 #include <mp/proxy.h>
 #include <mp/proxy.capnp.h>
 #include <mp/proxy-io.h>
@@ -233,9 +234,11 @@ KJ_TEST("Call FooInterface methods")
     FooCustom custom_in;
     custom_in.v1 = "v1";
     custom_in.v2 = 5;
+    custom_in.v3 = {10, 20, 30};
     FooCustom custom_out = foo->passCustom(custom_in);
     KJ_EXPECT(custom_in.v1 == custom_out.v1);
     KJ_EXPECT(custom_in.v2 == custom_out.v2);
+    KJ_EXPECT(custom_in.v3 == custom_out.v3);
 
     foo->passEmpty(FooEmpty{});
 
@@ -288,7 +291,16 @@ KJ_TEST("Calling IPC method after server connection is closed")
     KJ_EXPECT(foo->add(1, 2) == 3);
     setup.server_disconnect();
 
-    EXPECT_EXCEPTION(foo->add(1, 2), "IPC client method call interrupted by disconnect.");
+    try {
+        foo->add(1, 2);
+        KJ_EXPECT(false);
+    } catch (const std::runtime_error& e) {
+        std::string_view reason{e.what()};
+
+        // The disconnect handler may delete the connection before the
+        // call is processed or while the call is in flight, both errors are possible.
+        KJ_EXPECT(reason == "IPC client method called after disconnect." || reason == "IPC client method call interrupted by disconnect.");
+    }
 }
 
 KJ_TEST("Calling IPC method and disconnecting during the call")
@@ -462,7 +474,7 @@ KJ_TEST("Make simultaneous IPC calls on single remote thread")
     // that will be used for the test.
     setup.server->m_impl->m_fn = [&] {};
     foo->callFnAsync();
-    ThreadContext& tc{g_thread_context};
+    ThreadContext& tc{CurrentThread()};
     Thread::Client *callback_thread, *request_thread;
     foo->m_context.loop->sync([&] {
         Lock lock(tc.waiter->m_mutex);
@@ -516,7 +528,7 @@ KJ_TEST("Call async IPC method dispatched to pool thread")
     foo->initThreadMap();
     setup.server->m_impl->m_int_fn = [](int n) { return n * 2; };
 
-    ThreadContext& tc{g_thread_context};
+    ThreadContext& tc{CurrentThread()};
     std::atomic<size_t> running{3};
     std::promise<void> pool_ready;
     foo->m_context.loop->sync([&] {
@@ -549,6 +561,68 @@ KJ_TEST("Call async IPC method dispatched to pool thread")
         tc.waiter->wait(lock, [&running] { return running == 0; });
     }
 }
+
+#ifdef HAVE_PTHREAD_GETNAME_NP
+KJ_TEST("Worker thread has OS thread name")
+{
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+
+    std::promise<std::string> thread_name;
+    setup.server->m_impl->m_fn = [&] { thread_name.set_value(ThreadName("")); };
+    foo->callFnAsync();
+
+    const std::string name{thread_name.get_future().get()};
+    KJ_EXPECT(name.find("/capnp-worker-") != std::string::npos, name);
+}
+
+KJ_TEST("Pool thread has OS thread name")
+{
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+
+    std::promise<std::string> thread_name;
+    setup.server->m_impl->m_fn = [&] { thread_name.set_value(ThreadName("")); };
+
+    std::promise<void> pool_ready;
+    foo->m_context.loop->sync([&] {
+        auto pool_req = foo->m_context.connection->m_thread_map.makePoolRequest();
+        pool_req.setCount(1);
+        foo->m_context.loop->m_task_set->add(
+            pool_req.send().then([&](auto&&) { pool_ready.set_value(); }));
+    });
+    pool_ready.get_future().get();
+
+    std::promise<void> done;
+    foo->m_context.loop->sync([&] {
+        auto request{foo->m_client.callFnAsyncRequest()};
+        foo->m_context.loop->m_task_set->add(
+            request.send().then([&](auto&&) { done.set_value(); }));
+    });
+    // Wait for the reply before returning, so the connection is not torn down
+    // while the request is still in flight.
+    done.get_future().get();
+
+    const std::string name{thread_name.get_future().get()};
+    KJ_EXPECT(name.find("/capnp-pool-0-") != std::string::npos, name);
+}
+
+KJ_TEST("Async cleanup thread has OS thread name")
+{
+    std::promise<std::string> thread_name;
+    {
+        TestSetup setup;
+        // FooInterface has no destroy method, so the server ProxyServer runs
+        // its cleanup functions on the async thread when it is destroyed.
+        setup.server->m_context.cleanup_fns.emplace_front(
+            [&] { thread_name.set_value(ThreadName("")); });
+    }
+    const std::string name{thread_name.get_future().get()};
+    KJ_EXPECT(name.find("/capnp-async-") != std::string::npos, name);
+}
+#endif // HAVE_PTHREAD_GETNAME_NP
 
 KJ_TEST("Call async IPC method without thread or pool errors correctly")
 {
