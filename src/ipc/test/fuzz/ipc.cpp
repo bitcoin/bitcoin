@@ -5,7 +5,6 @@
 #include <primitives/transaction.h>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
-#include <ipc/util.h>
 #include <kj/memory.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy.h>
