@@ -54,7 +54,6 @@
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 
 namespace miner_tests {
@@ -219,11 +218,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
     // Can't use the Mining interface because it needs access to m_package_feerates.
-    const auto block_package_feerates = BlockAssembler{
-        m_node.chainman->ActiveChainstate(),
-        &tx_mempool,
-        MergeMiningOptions(options, Assert(m_node.block_template_manager)->BlockCreateArgs()),
-    }.CreateNewBlock()->m_package_feerates;
+    const auto block_package_feerates = Assert(m_node.block_template_manager)->CreateNewTemplate(options)->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
     // parent_tx and high_fee_tx are added to the block as a package.
