@@ -3,7 +3,36 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import struct
+
+from test_framework.messages import ser_compact_size
+from test_framework.p2p import MESSAGEMAP, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
+
+
+class msg_spork_raw:
+    __slots__ = ("raw",)
+    msgtype = b"spork"
+
+    def __init__(self):
+        self.raw = b""
+
+    def deserialize(self, f):
+        self.raw = f.read()
+
+    def serialize(self):
+        return self.raw
+
+    def __repr__(self):
+        return f"msg_spork_raw(len={len(self.raw)})"
+
+
+class SporkP2PInterface(P2PInterface):
+    def on_inv(self, message):
+        pass
+
+    def on_spork(self, message):
+        pass
 
 '''
 '''
@@ -60,6 +89,15 @@ class SporkTest(BitcoinTestFramework):
         self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
         assert "" not in self.nodes[0].spork('show').keys()
+
+        # Oversized signature length prefix must trigger disconnect, not silent drop.
+        MESSAGEMAP[b"spork"] = msg_spork_raw
+        MAX_SIZE = 0x02000000
+        bad_spork = msg_spork_raw()
+        bad_spork.raw = struct.pack("<iqq", 10001, 0, 0) + ser_compact_size(MAX_SIZE)
+        bad_peer = self.nodes[0].add_p2p_connection(SporkP2PInterface())
+        bad_peer.send_message(bad_spork)
+        bad_peer.wait_for_disconnect()
 
 
 if __name__ == '__main__':
