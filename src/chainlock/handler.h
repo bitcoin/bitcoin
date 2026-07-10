@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CHAINLOCK_HANDLER_H
 #define BITCOIN_CHAINLOCK_HANDLER_H
 
+#include <limitedmap.h>
 #include <net_types.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
@@ -59,10 +60,12 @@ private:
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};
 
+    static constexpr size_t MAX_SEEN_CHAINLOCKS{1024};
+
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs){nullptr};
     Uint256HashMap<std::chrono::seconds> txFirstSeenTime GUARDED_BY(cs);
 
-    std::map<uint256, std::chrono::seconds> seenChainLocks GUARDED_BY(cs);
+    unordered_limitedmap<uint256, std::chrono::seconds, StaticSaltedHasher> seenChainLocks GUARDED_BY(cs);
 
     CleanupThrottler<NodeClock> cleanupThrottler;
 
@@ -79,6 +82,8 @@ public:
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    size_t SeenChainLockCacheSizeForTesting() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    size_t SeenChainLockCacheMaxSizeForTesting() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
                                                               const llmq::CQuorumManager& qman,
