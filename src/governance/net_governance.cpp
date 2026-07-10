@@ -203,7 +203,15 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
     else if (msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
         CGovernanceVote vote;
-        vRecv >> vote;
+        // Catch malformed/truncated votes locally so the wire-cap rejection
+        // in CGovernanceVote scores the peer instead of falling through to
+        // the outer log-only handler.
+        try {
+            vRecv >> vote;
+        } catch (const std::ios_base::failure&) {
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 100, "malformed governance vote");
+            return;
+        }
 
         uint256 nHash = vote.GetHash();
 

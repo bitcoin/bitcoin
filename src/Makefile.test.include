@@ -121,6 +121,7 @@ BITCOIN_TESTS =\
   test/getarg_tests.cpp \
   test/governance_inv_tests.cpp \
   test/governance_validators_tests.cpp \
+  test/governance_vote_wire_tests.cpp \
   test/coinjoin_inouts_tests.cpp \
   test/coinjoin_dstxmanager_tests.cpp \
   test/coinjoin_basemanager_tests.cpp \

@@ -7,6 +7,7 @@
 
 #include <hash.h>
 #include <primitives/transaction.h>
+#include <serialize.h>
 #include <uint256.h>
 #include <util/string.h>
 
@@ -60,6 +61,13 @@ class CGovernanceVote
     friend bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
 
     friend bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
+
+public:
+    // Wire-valid signature encodings: compact ECDSA voting key (FUNDING)
+    // or BLS operator key (other signals). Kept in sync via static_assert
+    // against CPubKey::COMPACT_SIGNATURE_SIZE / CBLSSignature::SerSize in vote.cpp.
+    static constexpr size_t COMPACT_SIG_SIZE = 65;
+    static constexpr size_t BLS_SIG_SIZE = 96;
 
 private:
     COutPoint masternodeOutpoint;
@@ -124,7 +132,17 @@ public:
     {
         READWRITE(obj.masternodeOutpoint, obj.nParentHash, obj.nVoteOutcome, obj.nVoteSignal, obj.nTime);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.vchSig);
+            // Network reads: cap the signature vector before allocation and require
+            // one of the two legitimate encodings. Other paths (disk, hash, write)
+            // keep the unbounded default.
+            if (ser_action.ForRead() && (s.GetType() & SER_NETWORK)) {
+                READWRITE(LIMITED_VECTOR(obj.vchSig, BLS_SIG_SIZE));
+                if (obj.vchSig.size() != COMPACT_SIG_SIZE && obj.vchSig.size() != BLS_SIG_SIZE) {
+                    throw std::ios_base::failure("bad governance vote signature size");
+                }
+            } else {
+                READWRITE(obj.vchSig);
+            }
         }
         SER_READ(obj, obj.UpdateHash());
     }
