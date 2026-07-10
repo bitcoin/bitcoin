@@ -4,7 +4,7 @@
 
 # See test/lint/README.md for usage.
 
-FROM mirror.gcr.io/ubuntu:24.04
+FROM mirror.gcr.io/ubuntu:26.04
 
 # Pin uv and ruff to minor version to avoid breaking changes
 # https://docs.astral.sh/uv/reference/policies/versioning/
