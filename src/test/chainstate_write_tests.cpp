@@ -2,12 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/blockstorage.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cstdlib>
 
 using kernel::ChainstateRole;
 
@@ -103,6 +107,26 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK_EQUAL(sub->m_flushed_at_block, second_from_tip);
     BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), second_from_tip);
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
+{
+    const auto inject_file_open_failure{[](const fs::path& file) { Assert(fs::remove(file)); Assert(fs::create_directory(file)); }};
+    auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
+    BlockValidationState state{};
+
+    BOOST_REQUIRE(chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH) && state.IsValid());
+    const auto* old_flushed{WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock())};
+
+    mineBlocks(1);
+    const auto* new_tip{WITH_LOCK(::cs_main, return chainstate.m_chain.Tip())};
+    BOOST_REQUIRE_NE(old_flushed, new_tip);
+    inject_file_open_failure(WITH_LOCK(::cs_main, return chainstate.m_blockman.GetBlockPosFilename(new_tip->GetBlockPos())));
+
+    const bool flushed{chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH)};
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_FAILURE);
+    BOOST_CHECK(flushed && state.IsValid()); // TODO: Return the flush error
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), new_tip); // TODO: Keep the previous flushed block
 }
 
 BOOST_AUTO_TEST_SUITE_END()
