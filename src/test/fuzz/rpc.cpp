@@ -79,6 +79,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "enumeratesigners",
     "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
     "exportasmap",          // avoid writing to disk
+    "generateblock",        // avoid chain state changes and disk writes (mines and submits a block)
     "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
@@ -113,7 +114,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "estimatesmartfee",
     "finalizepsbt",
     "generate",
-    "generateblock",
     "getaddednodeinfo",
     "getaddrmaninfo",
     "getbestblockhash",

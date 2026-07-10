@@ -5,8 +5,6 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
-#include <interfaces/mining.h>
-
 #include <addresstype.h>
 #include <arith_uint256.h>
 #include <chain.h>
@@ -79,8 +77,6 @@
 #include <vector>
 
 using interfaces::BlockRef;
-using interfaces::BlockTemplate;
-using interfaces::Mining;
 using node::BlockAssembler;
 using node::GetMinimumTime;
 using node::NodeContext;
@@ -193,15 +189,15 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
+static UniValue generateBlocks(ChainstateManager& chainman, node::BlockTemplateManager& block_template_manager, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
 {
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }, /*cooldown=*/false));
+        std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.coinbase_output_script = coinbase_output_script})};
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
-        if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
+        if (!GenerateBlock(chainman, CBlock{block_template->block}, nMaxTries, block_out, /*process_new_block=*/true)) {
             break;
         }
 
@@ -278,10 +274,10 @@ static RPCMethod generatetodescriptor()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
     ChainstateManager& chainman = EnsureChainman(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, block_template_manager, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -324,12 +320,12 @@ static RPCMethod generatetoaddress()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
     ChainstateManager& chainman = EnsureChainman(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, block_template_manager, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -377,7 +373,7 @@ static RPCMethod generateblock()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
@@ -409,10 +405,10 @@ static RPCMethod generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script}, /*cooldown=*/false)};
+            std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
             CHECK_NONFATAL(block_template);
 
-            block = block_template->getBlock();
+            block = block_template->block;
         }
 
         CHECK_NONFATAL(block.vtx.size() == 1);
