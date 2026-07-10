@@ -83,6 +83,9 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "savemempool",          // disabled as a precautionary measure: may take a file path argument in the future
     "setban",               // avoid DNS lookups
     "stop",                 // avoid shutdown state
+    "waitforblock",         // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
+    "waitforblockheight",   // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
+    "waitfornewblock",      // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
 };
 
 // RPC commands which are safe for fuzzing.
@@ -184,9 +187,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "verifychain",
     "verifymessage",
     "verifytxoutproof",
-    "waitforblock",
-    "waitforblockheight",
-    "waitfornewblock",
 };
 
 UniValue ConsumeBasicRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
