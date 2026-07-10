@@ -56,7 +56,7 @@ public:
 
 /** A WalletDatabase whose contents and return values can be modified as needed for testing
  **/
-class MockableSQLiteDatabase : public SQLiteDatabase
+class MockableSQLiteDatabase : public InMemoryWalletDatabase
 {
 public:
     MockableSQLiteDatabase();
@@ -64,7 +64,6 @@ public:
     bool Backup(const std::string& strDest) const override { return true; }
 
     std::string Filename() override { return "mockable"; }
-    std::vector<fs::path> Files() override { return {}; }
     std::string Format() override { return "sqlite-mock"; }
     std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<MockableSQLiteBatch>(*this); }
 };

@@ -9,6 +9,7 @@
 #include <util/expected.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/context.h>
+#include <wallet/sqlite.h>
 #include <wallet/wallet.h>
 
 #include <fstream>
@@ -69,40 +70,15 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
         return util::Error{_("Error: Wallet has no descriptors to export")};
     }
 
-    // Setup DatabaseOptions to create a new sqlite database
-    DatabaseOptions options;
-    options.require_existing = false;
-    options.require_create = true;
-    options.require_format = DatabaseFormat::SQLITE;
-
     // Make the wallet with the same flags as this wallet, but without private keys
-    options.create_flags = wallet.GetWalletFlags() | WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+    const uint64_t create_flags = wallet.GetWalletFlags() | WALLET_FLAG_DISABLE_PRIVATE_KEYS;
 
-    // Make the watchonly wallet
-    DatabaseStatus status;
+    // Create the temporary watchonly wallet in memory to avoid leaving files on disk
     std::vector<bilingual_str> warnings;
-    std::string wallet_name = wallet.GetName() + "_watchonly_temp";
     bilingual_str error;
-    std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-    if (!database) {
-        return util::Error{strprintf(_("Wallet file creation failed: %s"), error)};
-    }
-
-    // Always remove the temporary wallet files, even when returning early on error.
-    std::shared_ptr<CWallet> watchonly_wallet;
-    fs::path wallet_path = fs::PathFromString(database->Filename()).parent_path();
-    std::vector<fs::path> cleanup_files = database->Files();
-    auto cleanup_watchonly_wallet = interfaces::MakeCleanupHandler([&watchonly_wallet, &wallet_path, &cleanup_files] {
-        if (watchonly_wallet) watchonly_wallet.reset();
-        for (const auto& file : cleanup_files) {
-            fs::remove(file);
-        }
-        fs::remove(wallet_path);
-    });
-
     WalletContext empty_context;
     empty_context.args = context.args;
-    watchonly_wallet = CWallet::CreateNew(empty_context, wallet_name, std::move(database), options.create_flags, /*born_encrypted=*/false, error, warnings);
+    std::shared_ptr<CWallet> watchonly_wallet = CWallet::CreateNew(empty_context, /*name=*/wallet.GetName() + "_watchonly_temp", MakeInMemoryWalletDatabase(), create_flags, /*born_encrypted=*/false, error, warnings);
     if (!watchonly_wallet) {
         return util::Error{strprintf(_("Error: Failed to create new watchonly wallet. %s"), error)};
     }

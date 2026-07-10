@@ -297,5 +297,14 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     BOOST_CHECK_EQUAL(read_value, value2);
 }
 
+BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
+{
+    // Reopening an in-memory database would create a fresh empty connection,
+    // silently losing all data. Open() must throw instead.
+    InMemoryWalletDatabase database;
+    database.Close();
+    BOOST_CHECK_THROW(database.Open(), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

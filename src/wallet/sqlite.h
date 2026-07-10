@@ -103,9 +103,13 @@ public:
 class SQLiteDatabase : public WalletDatabase
 {
 private:
+    friend class SQLiteBatch;
+
     const fs::path m_dir_path;
 
     const std::string m_file_path;
+
+    const int m_additional_flags;
 
     /**
      * This mutex protects SQLite initialization and shutdown.
@@ -171,7 +175,18 @@ public:
     bool m_use_unsafe_sync;
 };
 
+/** An in-memory SQLiteDatabase. Used as a temporary build artifact where no
+ *  on-disk persistence is needed. */
+class InMemoryWalletDatabase : public SQLiteDatabase
+{
+public:
+    InMemoryWalletDatabase();
+    std::vector<fs::path> Files() override { return {}; }
+};
+
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+
+std::unique_ptr<WalletDatabase> MakeInMemoryWalletDatabase();
 
 std::string SQLiteDatabaseVersion();
 } // namespace wallet
