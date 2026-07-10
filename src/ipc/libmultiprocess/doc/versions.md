@@ -7,8 +7,24 @@ Library versions are tracked with simple
 Versioning policy is described in the [version.h](../include/mp/version.h)
 include.
 
-## v11
+## v12
 - Current unstable version.
+- Adds an optional per-listener `max_connections` parameter to `ListenConnections()`
+  so servers can stop accepting new connections when a local connection cap is reached,
+  and resume accepting after existing connections disconnect.
+
+## [v11.0](https://github.com/bitcoin-core/libmultiprocess/commits/v11.0)
+- Adds `makePool` method on `ThreadMap` to support thread pool routing, allowing requests without a specific client thread to be dispatched to a pool using a shortest-queue strategy ([#283](https://github.com/bitcoin-core/libmultiprocess/pull/283)).
+- Adds `std::unordered_set` support, a `BuildList` helper, and a `ReadList` helper to reduce duplication in list build and read handlers ([#277](https://github.com/bitcoin-core/libmultiprocess/pull/277), [#285](https://github.com/bitcoin-core/libmultiprocess/pull/285)).
+- Adds support for translating C++ `std::optional<T>` struct fields to pairs of `T` + `hasT :Bool` Cap'n Proto struct fields, allowing unset optional primitive fields to be represented ([#243](https://github.com/bitcoin-core/libmultiprocess/pull/243)).
+- Produces more readable log output for Proxy object lifecycle events and IPC server-side failures ([#218](https://github.com/bitcoin-core/libmultiprocess/pull/218)).
+- Handles exceptions thrown by `destroy` methods by logging instead of aborting ([#273](https://github.com/bitcoin-core/libmultiprocess/pull/273)). This can prevent server crashes when non-libmultiprocess clients disconnect without destroying objects, in the case where a server object owns client objects and the server destructor tries to call the disconnected client to free them ([#219](https://github.com/bitcoin-core/libmultiprocess/issues/219)).
+- Handles unexpected exceptions thrown by callbacks (that should never happen) by logging errors instead of deadlocking ([#260](https://github.com/bitcoin-core/libmultiprocess/pull/260)).
+- Fixes a rare mptest hang on musl builds caused by a lost wakeup bug in `Waiter` ([#295](https://github.com/bitcoin-core/libmultiprocess/pull/295)).
+- Fixes a race condition in a log print detected by TSan ([#286](https://github.com/bitcoin-core/libmultiprocess/pull/286)).
+- Build improvements: makes `target_capnp_sources` work correctly when libmultiprocess is used as a CMake subproject ([#289](https://github.com/bitcoin-core/libmultiprocess/pull/289)), adds `mp_headers` target for better lint tool support ([#291](https://github.com/bitcoin-core/libmultiprocess/pull/291)), and fixes compatibility with recent Nix and CMake 4.0 ([#238](https://github.com/bitcoin-core/libmultiprocess/pull/238)).
+- Test, CI, documentation, and minor code improvements: design document corrections ([#278](https://github.com/bitcoin-core/libmultiprocess/pull/278)), field constant comments ([#279](https://github.com/bitcoin-core/libmultiprocess/pull/279)), clang-tidy fix ([#292](https://github.com/bitcoin-core/libmultiprocess/pull/292)), new smoke test for double-precision float values ([#294](https://github.com/bitcoin-core/libmultiprocess/pull/294)), new test for recursive async IPC calls ([#301](https://github.com/bitcoin-core/libmultiprocess/pull/301)), removal of libevent from Core CI builds ([#299](https://github.com/bitcoin-core/libmultiprocess/pull/299)), and rename of `EventLoop::m_num_clients` to `m_num_refs` ([#302](https://github.com/bitcoin-core/libmultiprocess/pull/302)).
+- Used in Bitcoin Core master branch, pulled in by [#35661](https://github.com/bitcoin/bitcoin/pull/35661).
 
 ## [v10.0](https://github.com/bitcoin-core/libmultiprocess/commits/v10.0)
 - Increases spawn test timeout to avoid spurious failures.
