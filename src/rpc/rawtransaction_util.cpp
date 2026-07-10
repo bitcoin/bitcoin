@@ -22,6 +22,27 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+PSBTKeyOriginMode ParseBip32DerivsMode(const UniValue& value)
+{
+    if (value.isBool()) {
+        return value.get_bool() ? PSBTKeyOriginMode::Add : PSBTKeyOriginMode::Preserve;
+    }
+    if (!value.isStr()) {
+        throw JSONRPCError(
+            RPC_TYPE_ERROR,
+            "bip32derivs must be a boolean or one of \"add\", \"preserve\", or \"strip\"");
+    }
+
+    const std::string& mode{value.get_str()};
+    if (mode == "add") return PSBTKeyOriginMode::Add;
+    if (mode == "preserve") return PSBTKeyOriginMode::Preserve;
+    if (mode == "strip") return PSBTKeyOriginMode::Strip;
+
+    throw JSONRPCError(
+        RPC_INVALID_PARAMETER,
+        "bip32derivs must be \"add\", \"preserve\", or \"strip\"");
+}
+
 void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
 {
     UniValue inputs;

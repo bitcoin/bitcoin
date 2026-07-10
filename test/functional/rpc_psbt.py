@@ -28,6 +28,7 @@ from test_framework.psbt import (
     PSBT_GLOBAL_PROPRIETARY,
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_GLOBAL_VERSION,
+    PSBT_GLOBAL_XPUB,
     PSBT_IN_RIPEMD160,
     PSBT_IN_SHA256,
     PSBT_IN_SIGHASH_TYPE,
@@ -101,6 +102,16 @@ class PSBTTest(BitcoinTestFramework):
         # output map
         psbt.o = [PSBTMap(outputs)]
         return psbt
+
+    @staticmethod
+    def add_dummy_global_xpub(psbt):
+        psbt_obj = PSBT.from_base64(psbt)
+        serialized_xpub = bytes.fromhex(
+            "043587cf000000000000000000180c998615636cd875aa70c71cfa6b7bf570187a56d8c6d054e60b644d13e9d3023e4740d0ba639e28963f3476157b7cf2fb7c6fdf4254f97099cf8670b505ea59"
+        )
+        assert_equal(len(serialized_xpub), 78)
+        psbt_obj.g.map[bytes([PSBT_GLOBAL_XPUB]) + serialized_xpub] = bytes.fromhex("0c5f9a1e")
+        return psbt_obj.to_base64()
 
     def test_psbt_incomplete_after_invalid_modification(self):
         self.log.info("Check that PSBT is correctly marked as incomplete after invalid modification")
@@ -842,6 +853,144 @@ class PSBTTest(BitcoinTestFramework):
         # Check that BIP32 paths were not added
         assert "bip32_derivs" not in psbt2_decoded['inputs'][1]
 
+        self.log.info("Test walletprocesspsbt key-origin modes")
+        psbt_without_derivs = self.nodes[0].createpsbt([utxo1], {self.nodes[1].getnewaddress(): 12.999})
+
+        added = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="add",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(added)
+        assert "bip32_derivs" in decoded["inputs"][0]
+        assert "bip32_derivs" in decoded["outputs"][0]
+
+        defaulted = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            finalize=False,
+        )["psbt"]
+        add_alias = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs=True,
+            finalize=False,
+        )["psbt"]
+        assert_equal(defaulted, added)
+        assert_equal(add_alias, added)
+
+        preserved_empty = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(preserved_empty)
+        assert "bip32_derivs" not in decoded["inputs"][0]
+        assert "bip32_derivs" not in decoded["outputs"][0]
+
+        preserve_alias = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs=False,
+            finalize=False,
+        )["psbt"]
+        assert_equal(preserve_alias, preserved_empty)
+
+        psbt_with_derivs = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=True,
+            sighashtype="ALL",
+            bip32derivs="add",
+            finalize=False,
+        )["psbt"]
+        psbt_with_derivs = self.add_dummy_global_xpub(psbt_with_derivs)
+        decoded = self.nodes[0].decodepsbt(psbt_with_derivs)
+        assert "bip32_derivs" in decoded["inputs"][0]
+        assert "bip32_derivs" in decoded["outputs"][0]
+        assert_equal(len(decoded["global_xpubs"]), 1)
+
+        signed_stripped = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_without_derivs,
+            sign=True,
+            sighashtype="ALL",
+            bip32derivs="strip",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(signed_stripped)
+        assert "partial_signatures" in decoded["inputs"][0]
+        assert "bip32_derivs" not in decoded["inputs"][0]
+        assert "bip32_derivs" not in decoded["outputs"][0]
+        assert_equal(decoded["global_xpubs"], [])
+
+        preserved = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_with_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(preserved)
+        assert "bip32_derivs" in decoded["inputs"][0]
+        assert "bip32_derivs" in decoded["outputs"][0]
+        assert_equal(len(decoded["global_xpubs"]), 1)
+
+        stripped = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_with_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="strip",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(stripped)
+        assert "partial_signatures" in decoded["inputs"][0]
+        assert "bip32_derivs" not in decoded["inputs"][0]
+        assert "bip32_derivs" not in decoded["outputs"][0]
+        assert_equal(decoded["global_xpubs"], [])
+
+        assert_raises_rpc_error(
+            -8,
+            'bip32derivs must be "add", "preserve", or "strip"',
+            self.nodes[1].walletprocesspsbt,
+            psbt=psbt_with_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="invalid",
+            finalize=False,
+        )
+        assert_raises_rpc_error(
+            -3,
+            'bip32derivs must be a boolean or one of "add", "preserve", or "strip"',
+            self.nodes[1].walletprocesspsbt,
+            psbt=psbt_without_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs=1,
+            finalize=False,
+        )
+
+        psbt_obj = PSBT.from_base64(psbt_with_derivs)
+        unknown_key = b"\xf0\x01"
+        proprietary_key = bytes([PSBT_IN_PROPRIETARY]) + ser_compact_size(2) + b"pn" + ser_compact_size(1)
+        psbt_obj.i[0].map[unknown_key] = b"unknown"
+        psbt_obj.i[0].map[proprietary_key] = b"proprietary"
+        stripped = self.nodes[1].walletprocesspsbt(
+            psbt=psbt_obj.to_base64(),
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="strip",
+            finalize=False,
+        )["psbt"]
+        stripped_obj = PSBT.from_base64(stripped)
+        assert_equal(stripped_obj.i[0].map[unknown_key], b"unknown")
+        assert_equal(stripped_obj.i[0].map[proprietary_key], b"proprietary")
+
         # Sign PSBTs (workaround issue #18039)
         psbt1 = self.nodes[1].walletprocesspsbt(psbt_orig)['psbt']
         psbt2 = self.nodes[2].walletprocesspsbt(psbt_orig)['psbt']
@@ -1294,7 +1443,38 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test that walletprocesspsbt both updates and signs a non-updated psbt containing Taproot inputs")
         addr = self.nodes[0].getnewaddress("", "bech32m")
         utxo = self.create_outpoints(self.nodes[0], outputs=[{addr: 1}])[0]
-        psbt = self.nodes[0].createpsbt([utxo], [{self.nodes[0].getnewaddress(): 0.9999}])
+        psbt = self.nodes[0].createpsbt([utxo], [{self.nodes[0].getnewaddress("", "bech32m"): 0.9999}])
+        psbt_with_derivs = self.nodes[0].walletprocesspsbt(
+            psbt=psbt,
+            sign=True,
+            sighashtype="ALL",
+            bip32derivs="add",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(psbt_with_derivs)
+        assert "taproot_bip32_derivs" in decoded["inputs"][0]
+        assert "taproot_bip32_derivs" in decoded["outputs"][0]
+        preserved = self.nodes[0].walletprocesspsbt(
+            psbt=psbt_with_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(preserved)
+        assert "taproot_bip32_derivs" in decoded["inputs"][0]
+        assert "taproot_bip32_derivs" in decoded["outputs"][0]
+        stripped = self.nodes[0].walletprocesspsbt(
+            psbt=psbt_with_derivs,
+            sign=False,
+            sighashtype="ALL",
+            bip32derivs="strip",
+            finalize=False,
+        )["psbt"]
+        decoded = self.nodes[0].decodepsbt(stripped)
+        assert "taproot_key_path_sig" in decoded["inputs"][0]
+        assert "taproot_bip32_derivs" not in decoded["inputs"][0]
+        assert "taproot_bip32_derivs" not in decoded["outputs"][0]
         signed = self.nodes[0].walletprocesspsbt(psbt)
         rawtx = signed["hex"]
         self.nodes[0].sendrawtransaction(rawtx)
@@ -1400,17 +1580,79 @@ class PSBTTest(BitcoinTestFramework):
         decoded = self.nodes[2].decodepsbt(alt_psbt)
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo'])
 
+        self.log.info("Test descriptorprocesspsbt stripping of standard key origin fields")
         # Test that the psbt is not finalized and does not have bip32_derivs unless specified
-        processed_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=True, finalize=False)
+        processed_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="add",
+            finalize=False,
+        )
         decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'partial_signatures', 'bip32_derivs'])
+
+        processed_preserved_empty = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=False,
+        )
+        decoded = self.nodes[2].decodepsbt(processed_preserved_empty["psbt"])
+        test_psbt_input_keys(decoded["inputs"][0], ["witness_utxo", "non_witness_utxo", "partial_signatures"])
+
+        psbt_with_derivs = self.add_dummy_global_xpub(processed_psbt['psbt'])
+        decoded = self.nodes[2].decodepsbt(psbt_with_derivs)
+        assert "bip32_derivs" in decoded['inputs'][0]
+        assert_equal(len(decoded['global_xpubs']), 1)
+
+        processed_without_new_derivs = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt_with_derivs,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=False,
+        )
+        decoded = self.nodes[2].decodepsbt(processed_without_new_derivs['psbt'])
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'partial_signatures', 'bip32_derivs'])
+        assert_equal(len(decoded['global_xpubs']), 1)
+
+        processed_without_derivs = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt_with_derivs,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="strip",
+            finalize=False,
+        )
+        decoded = self.nodes[2].decodepsbt(processed_without_derivs['psbt'])
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'partial_signatures'])
+        assert_equal(decoded['global_xpubs'], [])
+
+        assert_raises_rpc_error(
+            -8,
+            'bip32derivs must be "add", "preserve", or "strip"',
+            self.nodes[2].descriptorprocesspsbt,
+            psbt=psbt_with_derivs,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="invalid",
+            finalize=False,
+        )
 
         # If psbt not finalized, test that result does not have hex
         assert "hex" not in processed_psbt
 
-        processed_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=False, finalize=True)
+        processed_psbt = self.nodes[2].descriptorprocesspsbt(
+            psbt=psbt_with_derivs,
+            descriptors=[descriptor],
+            sighashtype="ALL",
+            bip32derivs="preserve",
+            finalize=True,
+        )
         decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'final_scriptwitness'])
+        assert_equal(len(decoded["global_xpubs"]), 1)
 
         # Test psbt is complete
         assert_equal(processed_psbt['complete'], True)
