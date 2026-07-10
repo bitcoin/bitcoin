@@ -33,7 +33,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
-#include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
 #include <kernel/blockmanager_opts.h>
@@ -1228,9 +1227,6 @@ bool AppInitLockDirectories()
 bool AppInitInterfaces(NodeContext& node)
 {
     node.chain = interfaces::MakeChain(node);
-    // Specify wait_loaded=false so internal mining interface can be initialized
-    // on early startup and does not need to be tied to chainstate loading.
-    node.mining = interfaces::MakeMining(node, /*wait_loaded=*/false);
     return true;
 }
 
