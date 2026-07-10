@@ -83,7 +83,7 @@ function(target_capnp_sources target include_prefix)
     add_custom_command(
       OUTPUT ${capnp_file}.c++ ${capnp_file}.h ${capnp_file}.proxy-client.c++ ${capnp_file}.proxy-types.h ${capnp_file}.proxy-server.c++ ${capnp_file}.proxy-types.c++ ${capnp_file}.proxy.h
       COMMAND ${MPGEN_BINARY} ${CMAKE_CURRENT_SOURCE_DIR} ${include_prefix} ${CMAKE_CURRENT_SOURCE_DIR}/${capnp_file} ${TCS_IMPORT_PATHS} ${mp_include_dir}
-      DEPENDS ${capnp_file}
+      DEPENDS ${capnp_file} ${MPGEN_BINARY}
       VERBATIM
     )
     # Skip linting for capnp-generated files but keep it for mpgen-generated ones

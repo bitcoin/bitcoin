@@ -7,14 +7,15 @@
 
 #include <cerrno>
 #include <cstdio>
-#include <filesystem>
-#include <iostream>
+#include <fcntl.h>
 #include <kj/common.h>
+#include <kj/debug.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
 #include <sstream>
 #include <string>
 #include <sys/types.h>
+#include <spawn.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -32,7 +33,7 @@
 #include <pthread_np.h>
 #endif // HAVE_PTHREAD_GETTHREADID_NP
 
-namespace fs = std::filesystem;
+extern "C" char **environ; // NOLINT(readability-redundant-declaration)
 
 namespace mp {
 namespace {
@@ -57,6 +58,18 @@ size_t MaxFd()
     } else {
         return 1023;
     }
+}
+
+//! Report an error and exit from the post-fork child of a multi-threaded
+//! process, where only async-signal-safe calls (like write and _exit) are
+//! allowed. Accepting only a reference to a char array (in practice a string
+//! literal) ensures no allocation is needed at the call site.
+template <std::size_t N>
+[[noreturn]] void ChildFail(const char (&msg)[N]) noexcept
+{
+    const ssize_t written = ::write(STDERR_FILENO, msg, N - 1);
+    (void)written;
+    _exit(126);
 }
 
 } // namespace
@@ -116,12 +129,9 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
     return result;
 }
 
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
+std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_info_to_args)
 {
-    int fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
-        throw std::system_error(errno, std::system_category(), "socketpair");
-    }
+    auto fds{SocketPair()};
 
     // Evaluate the callback and build the argv array before forking.
     //
@@ -129,10 +139,10 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
     // locks at fork time. In that case, running code that allocates memory or
     // takes locks in the child between fork() and exec() can deadlock
     // indefinitely. Precomputing arguments in the parent avoids this.
-    const std::vector<std::string> args{fd_to_args(fds[0])};
+    const std::vector<std::string> args{connect_info_to_args(std::to_string(fds[0]))};
     const std::vector<char*> argv{MakeArgv(args)};
 
-    pid = fork();
+    ProcessId pid = fork();
     if (pid == -1) {
         throw std::system_error(errno, std::system_category(), "fork");
     }
@@ -144,10 +154,7 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
             (void)close(fds[1]);
             throw std::system_error(errno, std::system_category(), "close");
         }
-        static constexpr char msg[] = "SpawnProcess(child): close(fds[1]) failed\n";
-        const ssize_t writeResult = ::write(STDERR_FILENO, msg, sizeof(msg) - 1);
-        (void)writeResult;
-        _exit(126);
+        ChildFail("SpawnProcess(child): close(fds[1]) failed\n");
     }
 
     if (!pid) {
@@ -160,6 +167,16 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
             }
         }
 
+        // Clear FD_CLOEXEC on socket 0 so it survives exec. Doing this here
+        // rather than in the parent before forking avoids a window where a
+        // concurrent fork in another thread would leak the descriptor into an
+        // unrelated child process (which would not clear it).
+        // fcntl is async-signal-safe.
+        const int fds0_flags = fcntl(fds[0], F_GETFD);
+        if (fds0_flags == -1 || fcntl(fds[0], F_SETFD, fds0_flags & ~FD_CLOEXEC) == -1) {
+            ChildFail("SpawnProcess(child): clearing FD_CLOEXEC failed\n");
+        }
+
         execvp(argv[0], argv.data());
         // NOTE: perror() is not async-signal-safe; calling it here in a
         // post-fork child may deadlock in multithreaded parents.
@@ -168,22 +185,39 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
         perror("execvp failed");
         _exit(127);
     }
-    return fds[1];
+    return {pid, fds[1]};
 }
 
-void ExecProcess(const std::vector<std::string>& args)
+SocketId StartSpawned(const SpawnConnectInfo& connect_info)
 {
-    const std::vector<char*> argv{MakeArgv(args)};
-    if (execvp(argv[0], argv.data()) != 0) {
-        perror("execvp failed");
-        if (errno == ENOENT && !args.empty()) {
-            std::cerr << "Missing executable: " << fs::weakly_canonical(args.front()) << '\n';
-        }
-        _exit(1);
+    try {
+        return std::stoi(connect_info);
+    } catch (const std::exception&) {
+        throw std::system_error(EINVAL, std::system_category(),
+            std::string("StartSpawned: invalid connect_info '") + connect_info + "'");
     }
 }
 
-int WaitProcess(int pid)
+std::array<SocketId, 2> SocketPair()
+{
+    int pair[2];
+    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
+    KJ_SYSCALL(fcntl(pair[0], F_SETFD, FD_CLOEXEC));
+    KJ_SYSCALL(fcntl(pair[1], F_SETFD, FD_CLOEXEC));
+    return {pair[0], pair[1]};
+}
+
+ProcessId StartProcess(const std::vector<std::string>& args)
+{
+    const std::vector<char*> argv{MakeArgv(args)};
+    ProcessId pid;
+    if (int err = posix_spawnp(&pid, argv[0], nullptr, nullptr, argv.data(), ::environ)) {
+        KJ_FAIL_SYSCALL("posix_spawnp", err, args.front());
+    }
+    return pid;
+}
+
+int WaitProcess(ProcessId pid)
 {
     int status;
     if (::waitpid(pid, &status, /*options=*/0) != pid) {
