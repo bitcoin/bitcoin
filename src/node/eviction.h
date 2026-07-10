@@ -30,6 +30,7 @@ struct NodeEvictionCandidate {
     Network m_network;
     bool m_noban;
     ConnectionType m_conn_type;
+    bool m_provided_recent_tx{false};
 };
 
 /**

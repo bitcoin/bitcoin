@@ -4542,6 +4542,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions);
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
+            m_connman.AddRecentTxProvider(pfrom.GetId());
         }
         if (state.IsInvalid()) {
             if (auto package_to_validate{ProcessInvalidTx(pfrom.GetId(), ptx, state, /*first_time_failure=*/true)}) {

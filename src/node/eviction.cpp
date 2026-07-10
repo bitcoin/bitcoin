@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <random.h>
 #include <vector>
 
 
@@ -35,14 +36,7 @@ static bool CompareNodeBlockTime(const NodeEvictionCandidate &a, const NodeEvict
     return a.m_connected > b.m_connected;
 }
 
-static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-{
-    // There is a fall-through here because it is common for a node to have more than a few peers that have not yet relayed txn.
-    if (a.m_last_tx_time != b.m_last_tx_time) return a.m_last_tx_time < b.m_last_tx_time;
-    if (a.m_relay_txs != b.m_relay_txs) return b.m_relay_txs;
-    if (a.fBloomFilter != b.fBloomFilter) return a.fBloomFilter;
-    return a.m_connected > b.m_connected;
-}
+
 
 // Pick out the potential block-relay only peers, and sort them by last block time.
 static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
@@ -189,9 +183,31 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // Protect the 8 nodes with the lowest minimum ping time.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
     EraseLastKElements(vEvictionCandidates, ReverseCompareNodeMinPingTime, 8);
-    // Protect 4 nodes that most recently sent us novel transactions accepted into our mempool.
+    // Protect up to 4 nodes that recently sent us novel transactions accepted into our mempool.
     // An attacker cannot manipulate this metric without performing useful work.
-    EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
+    // We use a rolling window of recent transactions (m_provided_recent_tx) to prevent
+    // a spy from discovering if a transaction was accepted into our mempool.
+    // We randomly select up to 4 candidates from the rolling window.
+    {
+        std::vector<NodeId> tx_providers;
+        for (const auto& cand : vEvictionCandidates) {
+            if (cand.m_provided_recent_tx) {
+                tx_providers.push_back(cand.id);
+            }
+        }
+        FastRandomContext rng;
+        std::shuffle(tx_providers.begin(), tx_providers.end(), rng);
+        size_t protected_count = 0;
+        for (const NodeId id : tx_providers) {
+            if (protected_count >= 4) break;
+            auto it = std::find_if(vEvictionCandidates.begin(), vEvictionCandidates.end(),
+                                   [id](const NodeEvictionCandidate& n) { return n.id == id; });
+            if (it != vEvictionCandidates.end()) {
+                vEvictionCandidates.erase(it);
+                protected_count++;
+            }
+        }
+    }
     // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, 8,
                        [](const NodeEvictionCandidate& n) { return !n.m_relay_txs && n.fRelevantServices; });

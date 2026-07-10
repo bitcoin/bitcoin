@@ -1415,7 +1415,13 @@ public:
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
+    void AddRecentTxProvider(NodeId id);
+
 private:
+    Mutex m_recent_tx_mutex;
+    std::vector<NodeId> m_recent_tx_providers GUARDED_BY(m_recent_tx_mutex);
+    size_t m_recent_tx_idx GUARDED_BY(m_recent_tx_mutex){0};
+
     struct ListenSocket {
     public:
         std::shared_ptr<Sock> sock;

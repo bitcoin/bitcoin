@@ -1695,6 +1695,13 @@ bool CConnman::AttemptToEvictConnection()
 {
     AssertLockNotHeld(m_nodes_mutex);
 
+    std::vector<NodeId> recent_tx_providers;
+    {
+        LOCK(m_recent_tx_mutex);
+        recent_tx_providers = m_recent_tx_providers;
+    }
+    std::set<NodeId> recent_tx_providers_set(recent_tx_providers.begin(), recent_tx_providers.end());
+
     std::vector<NodeEvictionCandidate> vEvictionCandidates;
     {
 
@@ -1717,6 +1724,7 @@ bool CConnman::AttemptToEvictConnection()
                 .m_network = node->ConnectedThroughNetwork(),
                 .m_noban = node->HasPermission(NetPermissionFlags::NoBan),
                 .m_conn_type = node->m_conn_type,
+                .m_provided_recent_tx = recent_tx_providers_set.count(node->GetId()) > 0,
             };
             vEvictionCandidates.push_back(candidate);
         }
@@ -2025,12 +2033,68 @@ void CConnman::NotifyNumConnectionsChanged()
         }
     }
 }
+void CConnman::AddRecentTxProvider(NodeId id)
+{
+    LOCK(m_recent_tx_mutex);
+    if (m_recent_tx_providers.size() < 1000) {
+        m_recent_tx_providers.push_back(id);
+    } else {
+        m_recent_tx_providers[m_recent_tx_idx] = id;
+        m_recent_tx_idx = (m_recent_tx_idx + 1) % 1000;
+    }
+}
 
+/**
+ * Return true if we should disconnect the peer for failing an inactivity check.
+ */
 bool CConnman::ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const
 {
     return node.m_connected + m_peer_connect_timeout < now;
 }
 
+/**
+ * Return true if we have multiple manual or full-relay outbound connections to a given network.
+ */
+bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
+{
+    int count = 0;
+    for (const CNode* node : m_nodes) {
+        if (!node->fDisconnect && node->IsOutboundOrManualConn() && !node->IsBlockOnlyConn() &&
+            node->ConnectedThroughNetwork() == net) {
+            ++count;
+        }
+        if (count >= 2) return true;
+    }
+    return false;
+}
+
+/**
+ * Try to find a connection to evict.
+ *
+ * This checks the netgroup of a node, and the uptime, min ping time,
+ * last block time, and last tx time of a node.
+ * It's protected by the m_nodes_mutex.
+ *
+ * It will protect up to 4 nodes which have sent us novel transactions,
+ * and up to 4 nodes which have sent us novel blocks.
+ * It will also protect up to 4 nodes with the best ping time, and up
+ * to 4 nodes with the best network group.
+ * It will also protect up to 4 nodes which are the oldest.
+ *
+ * It will then evict the node which is the youngest, or the one with
+ * the worst network group.
+ *
+ * This provides a degree of protection from an attacker who wants to
+ * eclipse the node by making a large number of inbound connections.
+ * By protecting a diverse set of peers, we ensure that an attacker
+ * must expend resources to forge these characteristics for their
+ * connections.
+ *
+ * The protection logic is defined in node/eviction.cpp and guarantees
+ * for each of several distinct characteristics which are difficult
+ * to forge.  In order to partition a node the attacker must be
+ * simultaneously better at all of them than honest peers.
+ */
 bool CConnman::InactivityCheck(const CNode& node, NodeClock::time_point now) const
 {
     // Tests that see disconnects after using mocktime can start nodes with a
