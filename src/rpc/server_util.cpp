@@ -6,7 +6,6 @@
 
 #include <chain.h>
 #include <common/args.h>
-#include <interfaces/mining.h>
 #include <net_processing.h>
 #include <node/block_template_manager.h>
 #include <node/context.h>
@@ -105,14 +104,6 @@ CConnman& EnsureConnman(const NodeContext& node)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
     return *node.connman;
-}
-
-interfaces::Mining& EnsureMining(const NodeContext& node)
-{
-    if (!node.mining) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node miner not found");
-    }
-    return *node.mining;
 }
 
 node::BlockTemplateManager& EnsureBlockTemplateManager(const NodeContext& node)
