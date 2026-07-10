@@ -20,7 +20,6 @@ namespace mp {
 // Definitions that can be deleted when libmultiprocess subtree is updated to
 // v14. Having these allows Bitcoin Core changes to be decoupled from
 // libmultiprocess changes so they don't have to be reviewed in a single PR.
-#if MP_MAJOR_VERSION < 14
 class EventLoop;
 using ProcessId = int;
 using SocketId = int;
@@ -52,7 +51,6 @@ inline SocketId StartSpawned(const std::string& connect_info)
     if (!socket) throw std::invalid_argument(strprintf("Invalid socket descriptor '%s'", connect_info));
     return *socket;
 }
-#endif
 } // namespace mp
 
 #endif // BITCOIN_IPC_UTIL_H
