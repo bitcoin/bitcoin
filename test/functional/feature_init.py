@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import os
 import platform
+import re
 import shutil
 import signal
 import subprocess
@@ -362,6 +363,51 @@ class InitTest(BitcoinTestFramework):
         self.log.info("Testing node startup with fd limit above INT_MAX")
         self.restart_node_with_fd_limit(1 << 31)
 
+    def init_fd_overflow_test(self):
+        node = self.nodes[1]
+        if node.running:
+            self.stop_node(1)
+
+        # A value larger than any possible int saturates to INT_MAX during arg parsing.
+        # Adding in other file descriptor requirements is guaranteed to overflow,
+        # so expect an InitError before RaiseFileDescriptorLimit() is called.
+        self.log.info("Checking -rpcmaxconnections setting that would overflow int is rejected")
+        node.assert_start_raises_init_error(
+            extra_args=[f"-rpcmaxconnections={2**64}"],
+            expected_msg="Error: Too many file descriptors requested.",
+            match=ErrorMatch.PARTIAL_REGEX
+        )
+
+        if self.RLIM_INFINITY is not None:
+            # Get the platform's file descriptor limit, if possible
+            import resource
+            soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+
+            # Lower the hard limit so RaiseFileDescriptorLimit() has a ceiling.
+            # The hard limit can not be raised again without root privilges,
+            # so this test should always be left for last in the process.
+            try:
+                resource.setrlimit(resource.RLIMIT_NOFILE, (soft, soft))
+            except (ValueError, OSError):
+                self.log.info(f"Skipping rlimit test: cannot reduce hard limit (soft={soft}, hard={hard})")
+                return
+
+            self.log.info("Checking that large -maxconnections setting gets adjusted for available file descriptors")
+            # Note this prints a message to the log and stderr but does not abort the process
+            with node.assert_debug_log(expected_msgs=[f"Reducing -maxconnections from {soft} "]):
+                self.restart_node(1, extra_args=[f"-maxconnections={soft}"])
+            self.stop_node(1, expected_stderr=re.compile(fr"Reducing -maxconnections from {soft} "))
+
+            # From httpserver.h
+            DEFAULT_MAX_HTTP_CONNECTIONS = 16
+
+            self.log.info("Checking -rpcmaxconnections gets blamed if available file descriptors are insufficient")
+            node.assert_start_raises_init_error(
+                extra_args=[f"-rpcmaxconnections={DEFAULT_MAX_HTTP_CONNECTIONS + 1}", f"-maxconnections={soft}"],
+                expected_msg="Not enough file descriptors available. Try reducing -rpcmaxconnections",
+                match=ErrorMatch.PARTIAL_REGEX
+            )
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
@@ -370,6 +416,7 @@ class InitTest(BitcoinTestFramework):
         self.init_empty_test()
         self.init_rlimit_test()
         self.init_rlimit_large_test()
+        self.init_fd_overflow_test()
 
 
 if __name__ == '__main__':
