@@ -139,8 +139,11 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
 static leveldb::Options GetOptions(size_t nCacheSize)
 {
     leveldb::Options options;
-    options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
-    options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
+    constexpr bool cache_table_blocks{sizeof(void*) < 8};
+    // LevelDB does not cache mmap-backed uncompressed table blocks.
+    options.block_cache = leveldb::NewLRUCache(cache_table_blocks ? nCacheSize / 2 : 0);
+    // Up to two write buffers may be held in memory simultaneously.
+    options.write_buffer_size = nCacheSize / (cache_table_blocks ? 4 : 2);
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.info_log = new CBitcoinLevelDBLogger();
