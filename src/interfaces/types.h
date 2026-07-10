@@ -37,6 +37,13 @@ struct BlockInfo {
     // attaching to the chain. False if notification comes from the validation
     // interface queue.
     bool background_sync{false};
+    // Whether block data has been flushed and saved to disk yet. FLUSHED_TIP
+    // and FLUSHED both indicate that block data has been flushed, but
+    // FLUSHED_TIP additionally means this block is the *latest* block that's
+    // been flushed. FLUSHED_TIP is useful for chain clients that are syncing
+    // with the node and want to flush their state at the same points as the
+    // node, without flushing too frequently.
+    enum { UNFLUSHED, FLUSHED, FLUSHED_TIP } status{UNFLUSHED};
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };

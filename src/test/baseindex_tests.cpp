@@ -61,13 +61,34 @@ static const std::vector<std::pair<std::string, IndexFactory>> INDEX_FACTORIES{
 // concrete index is being used.
 BOOST_AUTO_TEST_SUITE(baseindex_tests)
 
-// Test that the index does not commit ahead of the chainstate's last
-// flushed block. If it did, a subsequent unclean shutdown would corrupt
-// the index, because during reverting it would require blocks that were
+// Test that the index commits up to, but never ahead of, the chainstate's last
+// flushed block. Committing ahead of the flush would corrupt the index on an
+// unclean shutdown: on the next startup the index would be ahead of the chainstate
+// and, when reverting to catch back up, would need undo data for blocks that were
 // never flushed to disk.
+//
+// History of the end-of-sync commit behavior this exercises:
+//   - Originally the index committed at the chain tip at the end of a background
+//     sync unconditionally. That could commit ahead of the flushed chainstate and
+//     cause the corruption described above.
+//   - PR #34897 (commit 3679f1ecf5e "index: Don't commit ahead of the flushed
+//     chainstate") fixed the corruption by skipping the end-of-sync commit whenever
+//     the index best block was ahead of the flushed best block. Safe, but it can
+//     leave the index committed behind the flush point, i.e. stale on disk.
+//   - Current code commits at the flushed best block instead: up to the flush,
+//     never ahead. That avoids both the corruption (not ahead) and the staleness
+//     (not needlessly behind).
 BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    // Chainstate's last-flushed best block height, which (per the behavior history
+    // above) is the height each index is expected to commit at the end of sync.
+    // It is declared outside the loop because all the indexes share the same node
+    // chainstate: a flush performed while testing one index is still in effect when
+    // testing the next. So an index's expected commit height depends on flushes done
+    // by earlier iterations, not just its own -- only the first index (before any
+    // flush) is expected to commit nothing (flushed_height == 0).
+    int flushed_height{0};
     for (const auto& [index_name, make_index] : INDEX_FACTORIES) {
         BOOST_TEST_INFO_SCOPE(index_name);
         const int tip_height{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight)};
@@ -95,23 +116,27 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
             index->Stop();
         };
 
-        // Part 1: Sync, then "crash" (stop without flushing). Models a node that
-        // started up, had its index catch up, but never flushed before going down.
-        // The end-of-sync Commit() runs at the chain tip but m_last_flushed_block
-        // is null, so it is skipped.
-        sync_index(false, tip_height, 0);
+        // Part 1: Sync, then "crash" (stop without flushing this round). Models a
+        // node that started up, had its index catch up, but never flushed before
+        // going down. At the end of sync the index commits up to the chainstate's
+        // last flushed block -- never ahead of it. For the first index that is
+        // genesis (flushed_height == 0, so nothing is committed); for later indexes
+        // it is the height flushed by a previous iteration.
+        sync_index(false, tip_height, flushed_height);
 
-        // Part 2: Restart cleanly. Sync, force a chainstate flush, and drain the
-        // validation queue so the index's ChainStateFlushed callback runs.
-        // Now m_last_flushed_block == tip and the index can commit.
+        // Part 2: Restart cleanly. Sync, force a chainstate flush at the tip, and
+        // drain the validation queue so the index's ChainStateFlushed callback runs.
+        // Now the last flushed block == tip and the index can commit at the tip.
         sync_index(true, tip_height, tip_height);
+        flushed_height = tip_height;
 
-        // Part 3: Connect a new block on the chain without flushing
-        // (m_last_flushed_block stays at tip_height). For a real node this would
-        // happen in parallel with Sync(). Here we do it before Sync() to make the
-        // race state deterministic.
+        // Part 3: Connect a new block on the chain without flushing (the last
+        // flushed block stays at flushed_height). For a real node this would happen
+        // in parallel with Sync(). Here we do it before Sync() to make the race
+        // state deterministic. The index syncs the new block but still only commits
+        // up to flushed_height, not ahead of the flush.
         CreateAndProcessBlock({}, CScript() << OP_TRUE);
-        sync_index(false, tip_height + 1, tip_height);
+        sync_index(false, tip_height + 1, flushed_height);
     }
 }
 
