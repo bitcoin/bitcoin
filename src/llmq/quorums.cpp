@@ -30,10 +30,10 @@ uint256 BuildSignHash(const uint256& quorumHash, const uint256& id, const uint25
 
 CQuorumManager* quorumManager;
 
-static uint256 MakeQuorumKey(const CQuorum& q)
+uint256 CQuorumManager::MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
-    hw << q.qc->quorumHash;
+    hw << ::SerializeHash(*q.qc);
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;
     }
@@ -116,7 +116,7 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
 
 void CQuorum::WriteContributions(std::unique_ptr<CEvoDB<uint256, std::vector<CBLSPublicKey>, StaticSaltedHasher>>& evoDb_vvec, std::unique_ptr<CEvoDB<uint256, CBLSSecretKey, StaticSaltedHasher>>& evoDb_sk)
 {
-    uint256 dbKey = MakeQuorumKey(*this);
+    uint256 dbKey = CQuorumManager::MakeQuorumKey(*this);
     LOCK(cs_vvec_shShare);
     if (HasVerificationVectorInternal()) {
         evoDb_vvec->WriteCache(dbKey, *quorumVvec);
@@ -128,7 +128,7 @@ void CQuorum::WriteContributions(std::unique_ptr<CEvoDB<uint256, std::vector<CBL
 
 bool CQuorum::ReadContributions(std::unique_ptr<CEvoDB<uint256, std::vector<CBLSPublicKey>, StaticSaltedHasher>>& evoDb_vvec, std::unique_ptr<CEvoDB<uint256, CBLSSecretKey, StaticSaltedHasher>>& evoDb_sk)
 {
-    uint256 dbKey = MakeQuorumKey(*this);
+    uint256 dbKey = CQuorumManager::MakeQuorumKey(*this);
     std::vector<CBLSPublicKey> qv;
     if (evoDb_vvec->ReadCache(dbKey, qv)) {
         WITH_LOCK(cs_vvec_shShare, quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv)));
@@ -208,17 +208,14 @@ void CQuorumManager::EnsureQuorumConnections(const CBlockIndex* pindexNew)
     }
 }
 
-CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const CBlockIndex* pQuorumBaseBlockIndex)
+CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(
+    const CBlockIndex* pQuorumBaseBlockIndex,
+    CFinalCommitmentPtr qc,
+    const uint256& minedBlockHash)
 {
     assert(pQuorumBaseBlockIndex);
 
-    const uint256& quorumHash{pQuorumBaseBlockIndex->GetBlockHash()};
-    uint256 minedBlockHash;
-    CFinalCommitmentPtr qc = quorumBlockProcessor->GetMinedCommitment(quorumHash, minedBlockHash);
-    if (qc == nullptr) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- No mined commitment for nHeight[%d] quorumHash[%s]\n", __func__, pQuorumBaseBlockIndex->nHeight, pQuorumBaseBlockIndex->GetBlockHash().ToString());
-        return nullptr;
-    }
+    assert(qc != nullptr);
     assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
     auto quorum = std::make_shared<CQuorum>(blsWorker);
@@ -295,6 +292,24 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(size_t nCountRequested)
     return ScanQuorums(pindex, nCountRequested);
 }
 
+bool CQuorumManager::IsQuorumMinedOnChain(
+    const CQuorum& quorum,
+    const CBlockIndex* pindexStart)
+{
+    if (pindexStart == nullptr || quorum.m_quorum_base_block_index == nullptr) {
+        return false;
+    }
+    for (const CBlockIndex* pindex = pindexStart;
+         pindex != nullptr &&
+         pindex->nHeight > quorum.m_quorum_base_block_index->nHeight;
+         pindex = pindex->pprev) {
+        if (pindex->GetBlockHash() == quorum.minedBlockHash) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested)
 {
     if (pindexStart == nullptr || nCountRequested == 0) {
@@ -315,7 +330,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(const CBlockIndex* pindexSt
     // Iterate through blocks using dkgInterval to gather the required number of quorums
     while (vecResultQuorums.size() < nCountRequested && pIndex != nullptr) {
         CQuorumCPtr quorum = GetQuorum(pIndex);
-        if (quorum != nullptr) {
+        if (quorum != nullptr && IsQuorumMinedOnChain(*quorum, pindexStart)) {
             vecResultQuorums.emplace_back(quorum);
         }
         // Move to the previous block at the interval of nDKGInterval
@@ -337,10 +352,14 @@ CQuorumCPtr CQuorumManager::GetQuorum(const uint256& quorumHash)
     return GetQuorum(pQuorumBaseBlockIndex);
 }
 
-std::vector<CQuorumCPtr>::iterator CQuorumManager::FindQuorumByHash(const uint256& blockHash) {
+std::vector<CQuorumCPtr>::iterator CQuorumManager::FindQuorum(
+    const uint256& quorumHash,
+    const uint256& minedBlockHash)
+{
     AssertLockHeld(cs_quorums);
-    return std::find_if(vecQuorumsCache.begin(), vecQuorumsCache.end(), [&blockHash](const CQuorumCPtr& quorum) {
-        return quorum->m_quorum_base_block_index->GetBlockHash() == blockHash;
+    return std::find_if(vecQuorumsCache.begin(), vecQuorumsCache.end(), [&](const CQuorumCPtr& quorum) {
+        return quorum->m_quorum_base_block_index->GetBlockHash() == quorumHash &&
+               quorum->minedBlockHash == minedBlockHash;
     });
 }
 
@@ -348,21 +367,30 @@ CQuorumCPtr CQuorumManager::GetQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
     assert(pQuorumBaseBlockIndex);
 
-    auto quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
-
-    // we must check this before we look into the cache. Reorgs might have happened which would mean we might have
-    // cached quorums which are not in the active chain anymore
-    if (!HasQuorum(quorumHash)) {
+    const uint256 quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
+    uint256 minedBlockHash;
+    CFinalCommitmentPtr qc =
+        quorumBlockProcessor->GetMinedCommitment(quorumHash, minedBlockHash);
+    if (qc == nullptr) {
         return nullptr;
     }
     {
         LOCK(cs_quorums);
-        auto it = FindQuorumByHash(quorumHash);
+        auto it = FindQuorum(quorumHash, minedBlockHash);
         if (it != vecQuorumsCache.end()) {
             return *it;
         }
+        vecQuorumsCache.erase(
+            std::remove_if(
+                vecQuorumsCache.begin(),
+                vecQuorumsCache.end(),
+                [&](const CQuorumCPtr& quorum) {
+                    return quorum->m_quorum_base_block_index->GetBlockHash() == quorumHash;
+                }),
+            vecQuorumsCache.end());
     }
-    return BuildQuorumFromCommitment(pQuorumBaseBlockIndex);
+    return BuildQuorumFromCommitment(
+        pQuorumBaseBlockIndex, std::move(qc), minedBlockHash);
 }
 
 void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const

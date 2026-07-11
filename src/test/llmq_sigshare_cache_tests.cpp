@@ -4,7 +4,9 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_btccheckpoints.h>
+#include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_commitment.h>
 #include <chainparams.h>
 #include <random.h>
 #include <test/util/setup_common.h>
@@ -16,6 +18,69 @@
 
 namespace llmq_tests
 {
+
+class CQuorumManagerTestAccess
+{
+public:
+    static llmq::CQuorumPtr MakeQuorum(
+        llmq::CQuorumManager& manager,
+        const CBlockIndex* base,
+        const uint256& mined_block_hash,
+        const uint256& commitment_tag)
+    {
+        auto commitment = std::make_unique<llmq::CFinalCommitment>(base->GetBlockHash());
+        commitment->quorumVvecHash = commitment_tag;
+        auto quorum = std::make_shared<llmq::CQuorum>(manager.blsWorker);
+        quorum->Init(
+            std::move(commitment),
+            base,
+            mined_block_hash,
+            Span<CDeterministicMNCPtr>{});
+        return quorum;
+    }
+
+    static void CacheQuorum(
+        llmq::CQuorumManager& manager,
+        const llmq::CQuorumCPtr& quorum)
+    {
+        LOCK(manager.cs_quorums);
+        manager.vecQuorumsCache.emplace_back(quorum);
+    }
+
+    static void RemoveCachedBase(
+        llmq::CQuorumManager& manager,
+        const uint256& quorum_hash)
+    {
+        LOCK(manager.cs_quorums);
+        manager.vecQuorumsCache.erase(
+            std::remove_if(
+                manager.vecQuorumsCache.begin(),
+                manager.vecQuorumsCache.end(),
+                [&](const llmq::CQuorumCPtr& quorum) {
+                    return quorum->m_quorum_base_block_index->GetBlockHash() == quorum_hash;
+                }),
+            manager.vecQuorumsCache.end());
+    }
+
+    static llmq::CQuorumCPtr GetQuorum(
+        llmq::CQuorumManager& manager,
+        const CBlockIndex* base)
+    {
+        return manager.GetQuorum(base);
+    }
+
+    static uint256 MakeQuorumKey(const llmq::CQuorum& quorum)
+    {
+        return llmq::CQuorumManager::MakeQuorumKey(quorum);
+    }
+
+    static bool IsQuorumMinedOnChain(
+        const llmq::CQuorum& quorum,
+        const CBlockIndex* tip)
+    {
+        return llmq::CQuorumManager::IsQuorumMinedOnChain(quorum, tip);
+    }
+};
 
 class CChainLocksHandlerTestAccess
 {
@@ -39,7 +104,12 @@ public:
         std::pair<int, llmq::CQuorumCPtr>& ret,
         const uint256& hash)
     {
-        return handler.VerifyChainLockShare(clsig, pindexScan, idIn, ret, hash);
+        llmq::CChainLocksHandler::CQuorumContext context;
+        if (!handler.BuildQuorumContext(pindexScan, context)) {
+            return false;
+        }
+        return handler.VerifyChainLockShare(
+            clsig, idIn, ret, hash, context);
     }
 
     static bool IsCandidateStillAdmissible(
@@ -61,6 +131,28 @@ public:
     {
         return llmq::CChainLocksHandler::SelectAlternativeSigningTarget(
             height, current_index, previous_share, previous_share_index, dkg_interval);
+    }
+
+    static bool IsAlternativeCommitmentWindowStable(
+        int32_t height,
+        int32_t common_height,
+        int32_t dkg_interval,
+        int32_t mining_window_start,
+        int32_t mining_window_end)
+    {
+        return llmq::CChainLocksHandler::IsAlternativeCommitmentWindowStable(
+            height,
+            common_height,
+            dkg_interval,
+            mining_window_start,
+            mining_window_end);
+    }
+
+    static bool SameQuorumIdentity(
+        const llmq::CQuorumCPtr& lhs,
+        const llmq::CQuorumCPtr& rhs)
+    {
+        return llmq::CChainLocksHandler::SameQuorumIdentity(lhs, rhs);
     }
 };
 
@@ -93,6 +185,102 @@ public:
 } // namespace llmq_tests
 
 BOOST_FIXTURE_TEST_SUITE(llmq_sigshare_cache_tests, RegTestingSetup)
+
+BOOST_AUTO_TEST_CASE(quorum_cache_distinguishes_reorg_commitments)
+{
+    BOOST_REQUIRE(llmq::quorumManager != nullptr);
+    BOOST_REQUIRE(llmq::quorumBlockProcessor != nullptr);
+
+    const uint256 base_hash = GetRandHash();
+    CBlockIndex base;
+    base.phashBlock = &base_hash;
+    base.nHeight = 0;
+
+    const uint256 old_mined_hash = GetRandHash();
+    const uint256 new_mined_hash = GetRandHash();
+    auto old_quorum = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
+        *llmq::quorumManager, &base, old_mined_hash, GetRandHash());
+    auto new_quorum = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
+        *llmq::quorumManager, &base, new_mined_hash, GetRandHash());
+
+    llmq_tests::CQuorumManagerTestAccess::CacheQuorum(
+        *llmq::quorumManager, old_quorum);
+    llmq_tests::CQuorumManagerTestAccess::CacheQuorum(
+        *llmq::quorumManager, new_quorum);
+    llmq::quorumBlockProcessor->m_commitment_evoDb.WriteCache(
+        base_hash, std::make_pair(*new_quorum->qc, new_mined_hash));
+
+    const auto resolved = llmq_tests::CQuorumManagerTestAccess::GetQuorum(
+        *llmq::quorumManager, &base);
+
+    llmq::quorumBlockProcessor->m_commitment_evoDb.EraseCache(base_hash);
+    llmq_tests::CQuorumManagerTestAccess::RemoveCachedBase(
+        *llmq::quorumManager, base_hash);
+
+    BOOST_REQUIRE(resolved != nullptr);
+    BOOST_CHECK_EQUAL(resolved->minedBlockHash, new_mined_hash);
+    BOOST_CHECK_EQUAL(
+        ::SerializeHash(*resolved->qc),
+        ::SerializeHash(*new_quorum->qc));
+}
+
+BOOST_AUTO_TEST_CASE(quorum_contribution_key_is_commitment_specific)
+{
+    BOOST_REQUIRE(llmq::quorumManager != nullptr);
+
+    const uint256 base_hash = GetRandHash();
+    CBlockIndex base;
+    base.phashBlock = &base_hash;
+    base.nHeight = 0;
+
+    auto quorum_a = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
+        *llmq::quorumManager, &base, GetRandHash(), GetRandHash());
+    auto quorum_b = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
+        *llmq::quorumManager, &base, GetRandHash(), GetRandHash());
+
+    BOOST_CHECK(
+        llmq_tests::CQuorumManagerTestAccess::MakeQuorumKey(*quorum_a) !=
+        llmq_tests::CQuorumManagerTestAccess::MakeQuorumKey(*quorum_b));
+    BOOST_CHECK(llmq_tests::CChainLocksHandlerTestAccess::SameQuorumIdentity(
+        quorum_a, quorum_a));
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::SameQuorumIdentity(
+        quorum_a, quorum_b));
+}
+
+BOOST_AUTO_TEST_CASE(quorum_mining_block_must_be_in_target_ancestry)
+{
+    BOOST_REQUIRE(llmq::quorumManager != nullptr);
+
+    std::array<CBlockIndex, 4> branch_a;
+    std::array<uint256, 4> branch_a_hashes;
+    std::array<CBlockIndex, 3> branch_b;
+    std::array<uint256, 3> branch_b_hashes;
+    for (size_t i = 0; i < branch_a.size(); ++i) {
+        branch_a_hashes[i] = GetRandHash();
+        branch_a[i].phashBlock = &branch_a_hashes[i];
+        branch_a[i].nHeight = i;
+        branch_a[i].pprev = i == 0 ? nullptr : &branch_a[i - 1];
+    }
+    for (size_t i = 0; i < branch_b.size(); ++i) {
+        branch_b_hashes[i] = GetRandHash();
+        branch_b[i].phashBlock = &branch_b_hashes[i];
+        branch_b[i].nHeight = i + 1;
+        branch_b[i].pprev = i == 0 ? &branch_a[0] : &branch_b[i - 1];
+    }
+
+    auto quorum = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
+        *llmq::quorumManager,
+        &branch_a[0],
+        branch_a[2].GetBlockHash(),
+        GetRandHash());
+
+    BOOST_CHECK(llmq_tests::CQuorumManagerTestAccess::IsQuorumMinedOnChain(
+        *quorum, &branch_a[3]));
+    BOOST_CHECK(!llmq_tests::CQuorumManagerTestAccess::IsQuorumMinedOnChain(
+        *quorum, &branch_a[1]));
+    BOOST_CHECK(!llmq_tests::CQuorumManagerTestAccess::IsQuorumMinedOnChain(
+        *quorum, &branch_b[2]));
+}
 
 BOOST_AUTO_TEST_CASE(chainlock_share_cache_hit_requires_signer_context)
 {
@@ -285,6 +473,32 @@ BOOST_AUTO_TEST_CASE(chainlock_alternative_tip_selects_exact_signing_hash)
     lower_winner.blockHash = fork_blocks.front().GetBlockHash();
     BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
         active_chain, lower_winner, signing_candidate, selected));
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_alternative_rejects_unresolved_commitment_window)
+{
+    constexpr int32_t interval = 24;
+    constexpr int32_t mining_start = 10;
+    constexpr int32_t mining_end = 18;
+    const auto stable = [&](int32_t height, int32_t common_height) {
+        return llmq_tests::CChainLocksHandlerTestAccess::
+            IsAlternativeCommitmentWindowStable(
+                height,
+                common_height,
+                interval,
+                mining_start,
+                mining_end);
+    };
+
+    BOOST_CHECK(stable(9, 4));
+    BOOST_CHECK(!stable(12, 7));
+    BOOST_CHECK(!stable(20, 15));
+    BOOST_CHECK(stable(20, 18));
+
+    // The current round has not started at height 25, but a fork before the
+    // preceding round's end can still replace that round's final commitment.
+    BOOST_CHECK(!stable(25, 17));
+    BOOST_CHECK(stable(25, 18));
 }
 
 BOOST_AUTO_TEST_CASE(btccheckpoint_share_cache_hit_requires_signer_context)

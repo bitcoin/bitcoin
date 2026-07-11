@@ -133,6 +133,13 @@ public:
     bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
+    struct CQuorumContext
+    {
+        std::vector<CQuorumCPtr> quorums;
+        uint256 fingerprint;
+        const CBlockIndex* active_tip{nullptr};
+    };
+
     // these require locks to be held already
     static bool IsCandidateStillAdmissible(
         const CChain& active_chain,
@@ -150,8 +157,34 @@ private:
 
     void AddRecentChainLock(const CChainLockSig& clsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool BuildQuorumContext(
+        const CBlockIndex* candidate_index,
+        CQuorumContext& context) const EXCLUSIVE_LOCKS_REQUIRED(!cs_main, !cs);
+    static bool SameQuorumIdentity(
+        const CQuorumCPtr& lhs,
+        const CQuorumCPtr& rhs);
+    static bool IsAlternativeCommitmentWindowStable(
+        int32_t height,
+        int32_t common_height,
+        int32_t dkg_interval,
+        int32_t mining_window_start,
+        int32_t mining_window_end);
+    bool TryUpdateBestChainLock(
+        const CBlockIndex* pindex,
+        const std::vector<CQuorumCPtr>* quorums = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool VerifyChainLockShare(
+        const CChainLockSig& clsig,
+        const uint256& idIn,
+        std::pair<int, CQuorumCPtr>& ret,
+        const uint256& hash,
+        const CQuorumContext& context,
+        bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedChainLock(
+        const CChainLockSig& clsig,
+        const CBlockIndex* pindexScan,
+        const uint256& hash,
+        const CQuorumContext& context,
+        bool* retSigVerifyAttempted) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void MarkRejectedChainLock(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
