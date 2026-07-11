@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/ipc.h>
 #include <ipc/process.h>
 #include <ipc/test/ipc_test.h>
+#include <ipc/types.h>
 
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -15,6 +17,7 @@ BOOST_AUTO_TEST_CASE(ipc_tests)
     IpcPipeTest();
     IpcSocketPairTest();
     IpcSocketTest(m_args.GetDataDirNet());
+    IpcSocketMaxConnectionsTest(m_args.GetDataDirNet());
 }
 
 // Test address parsing.
@@ -38,6 +41,32 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
                   "unix:/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
                   "Unix address path \"/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
     check_address("invalid", "invalid", "Unrecognized address 'invalid'");
+
+    auto check_listen_address{[](const std::string& configured_address, const std::string& expected_address, size_t expected_max_connections, const std::string& expected_error) {
+        auto listen_address{interfaces::Ipc::parseListenAddress(configured_address)};
+        if (!expected_error.empty()) {
+            BOOST_CHECK(!listen_address);
+            BOOST_CHECK_EQUAL(util::ErrorString(listen_address).original, expected_error);
+            return;
+        }
+        BOOST_REQUIRE(listen_address);
+        BOOST_CHECK_EQUAL(listen_address->address, expected_address);
+        BOOST_CHECK_EQUAL(listen_address->max_connections, expected_max_connections);
+    }};
+    check_listen_address("unix", "unix", ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_listen_address("unix:", "unix:", ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_listen_address("unix:,max-connections=8", "unix:", 8, "");
+    check_listen_address("unix:path.sock,max-connections=8", "unix:path.sock", 8, "");
+    check_listen_address("unix:,max-connections=1", "unix:", 1, "");
+    check_listen_address("unix:,max-connections=1048576", "unix:", ipc::MAX_CONNECTIONS, "");
+    check_listen_address("unix:path.sock,max-connections=8,unknown=1", "", 0, "Unknown socket option 'unknown'");
+    check_listen_address("unix:,max-connections=8,", "", 0, "Empty socket option");
+    check_listen_address("unix:,max-connections=0", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=-1", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=-9223372036854775808", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=1048577", "", 0, "max-connections must be at most 1048576");
+    check_listen_address("unix:,max-connections=9223372036854775808", "", 0, "Invalid max-connections value '9223372036854775808'");
+    check_listen_address("unix:,max-connections=", "", 0, "Missing value for max-connections option");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
