@@ -14,7 +14,6 @@
 #ifdef WIN32
 #include <compat/compat.h>
 #include <util/check.h>
-#include <codecvt>
 #include <windows.h>
 #else
 #include <sys/stat.h>
@@ -49,11 +48,7 @@ std::string ShellEscape(const std::string& arg)
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
-#ifndef WIN32
     int nErr = ::system(strCommand.c_str());
-#else
-    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
-#endif
     if (nErr) {
         LogWarning("runCommand error: system(%s) returned %d", strCommand, nErr);
     }

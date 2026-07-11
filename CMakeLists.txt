@@ -471,7 +471,6 @@ if(MSVC)
   try_append_cxx_flags("/wd4805" TARGET warn_interface SKIP_LINK)
   target_compile_definitions(warn_interface INTERFACE
     _CRT_SECURE_NO_WARNINGS
-    _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
   )
 else()
   try_append_cxx_flags("-Wall" TARGET warn_interface SKIP_LINK)
