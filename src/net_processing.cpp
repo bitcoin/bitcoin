@@ -6109,6 +6109,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 // Respond to BIP35 mempool requests
                 if (fSendTrickle && tx_relay->m_send_mempool) {
                     auto vtxinfo = m_mempool.infoAll();
+
+                    // Ensure we'll respond to GETDATA requests for anything we're about to announce
+                    tx_relay->m_last_inv_sequence = WITH_LOCK(m_mempool.cs, return m_mempool.GetSequence());
+
                     tx_relay->m_send_mempool = false;
                     const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
 
