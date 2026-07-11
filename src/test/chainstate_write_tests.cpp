@@ -128,9 +128,9 @@ BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
     ASSERT_DEBUG_LOG("Flushing block file to disk failed");
     bool flushed{chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH)};
     BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_FAILURE);
-    BOOST_CHECK(flushed && state.IsValid()); // TODO: Return the flush error
-    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), new_tip); // TODO: Keep the previous flushed block
-    BOOST_CHECK(WITH_LOCK(::cs_main, return chainstate.CoinsDB().GetBestBlock()) == new_tip->GetBlockHash()); // TODO: Keep the previous on-disk coins tip
+    BOOST_CHECK(!flushed && state.IsError());
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), old_flushed);
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainstate.CoinsDB().GetBestBlock()) == old_flushed->GetBlockHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
