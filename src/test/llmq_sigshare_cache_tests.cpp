@@ -85,10 +85,24 @@ public:
 class CChainLocksHandlerTestAccess
 {
 public:
-    static void MarkSigChecked(llmq::CChainLocksHandler& handler, const uint256& hash)
+    static void MarkSigChecked(
+        llmq::CChainLocksHandler& handler,
+        const uint256& hash,
+        const uint256& fingerprint = uint256())
     {
         LOCK(handler.cs);
-        handler.sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+        handler.sigChecked.emplace(
+            std::make_pair(hash, fingerprint),
+            TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+    }
+
+    static bool IsSigChecked(
+        llmq::CChainLocksHandler& handler,
+        const uint256& hash,
+        const uint256& fingerprint)
+    {
+        LOCK(handler.cs);
+        return handler.sigChecked.count(std::make_pair(hash, fingerprint)) != 0;
     }
 
     static void MarkRejected(llmq::CChainLocksHandler& handler, const uint256& hash)
@@ -322,6 +336,22 @@ BOOST_AUTO_TEST_CASE(chainlock_rejected_cache_suppresses_repeated_requests)
 
     llmq_tests::CChainLocksHandlerTestAccess::MarkRejected(*llmq::chainLocksHandler, hash);
     BOOST_CHECK(llmq::chainLocksHandler->AlreadyHave(hash));
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_signature_cache_is_quorum_context_bound)
+{
+    BOOST_REQUIRE(llmq::chainLocksHandler != nullptr);
+
+    const uint256 hash = GetRandHash();
+    const uint256 old_fingerprint = GetRandHash();
+    const uint256 new_fingerprint = GetRandHash();
+    llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(
+        *llmq::chainLocksHandler, hash, old_fingerprint);
+
+    BOOST_CHECK(llmq_tests::CChainLocksHandlerTestAccess::IsSigChecked(
+        *llmq::chainLocksHandler, hash, old_fingerprint));
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsSigChecked(
+        *llmq::chainLocksHandler, hash, new_fingerprint));
 }
 
 BOOST_AUTO_TEST_CASE(chainlock_aggregate_cache_hit_requires_aggregate_structure)

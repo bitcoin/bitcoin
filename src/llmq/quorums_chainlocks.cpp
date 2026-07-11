@@ -262,7 +262,7 @@ bool CChainLocksHandler::BuildQuorumContext(
 
     context.quorums =
         llmq::quorumManager->ScanQuorums(candidate_index, quorum_count);
-    if (context.quorums.empty()) {
+    if (context.quorums.size() != quorum_count) {
         return false;
     }
 
@@ -500,7 +500,8 @@ bool CChainLocksHandler::VerifyChainLockShare(
     };
     {
         LOCK(cs);
-        if(sigChecked.find(hash) != sigChecked.end()) {
+        if (sigChecked.find(std::make_pair(hash, context.fingerprint)) !=
+            sigChecked.end()) {
             // Cache hits must still resolve signer/quorum context for callers.
             return resolveSignerAndQuorum();
         }
@@ -535,7 +536,10 @@ bool CChainLocksHandler::VerifyChainLockShare(
             ret = std::make_pair(i, quorum);
             {
                 LOCK(cs);
-                sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+                sigChecked.emplace(
+                    std::make_pair(hash, context.fingerprint),
+                    TicksSinceEpoch<std::chrono::milliseconds>(
+                        SystemClock::now()));
             }
             return true;
         }
@@ -580,7 +584,8 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(
 
     {
         LOCK(cs);
-        if(sigChecked.find(hash) != sigChecked.end()) {
+        if (sigChecked.find(std::make_pair(hash, context.fingerprint)) !=
+            sigChecked.end()) {
             return true;
         }
     }
@@ -617,7 +622,9 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(
     bool result = clsig.sig.VerifyInsecureAggregated(quorumPublicKeys, hashes);
     if(result) {
         LOCK(cs);
-        sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+        sigChecked.emplace(
+            std::make_pair(hash, context.fingerprint),
+            TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
     } else {
         LogPrintf("CChainLocksHandler::%s -- aggregated verify failed nHeight=%d blockHash=%s pindexScan=%s signers_count=%d signers_size=%d quorums_scanned=%d\n",
                 __func__,
@@ -906,11 +913,17 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 }
                 return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-invalid-signer-count");
             }
-            auto it = bestChainLockShares.find(clsig.nHeight);
-            if (it == bestChainLockShares.end()) {
-                bestChainLockShares[clsig.nHeight].emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
-            } else {
-                it->second.emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
+            auto& shares = bestChainLockShares[clsig.nHeight];
+            const auto existing_share = std::find_if(
+                shares.begin(),
+                shares.end(),
+                [&](const auto& entry) {
+                    return SameQuorumIdentity(entry.first, ret.second);
+                });
+            if (existing_share == shares.end()) {
+                shares.emplace(
+                    ret.second,
+                    std::make_shared<const CChainLockSig>(clsig));
             }
             mostRecentChainLockShare = clsig;
             if (TryUpdateBestChainLock(
@@ -1063,6 +1076,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
         tryLockChainTipScheduled = true;
         scheduler->scheduleFromNow([&]() {
             CheckActiveState();
+            ProcessPendingRecoveredChainLockSigs();
             bool enforced = false;
             const CBlockIndex* pindex;
             {       
@@ -1233,6 +1247,16 @@ void CChainLocksHandler::TrySignChainTip()
             mapSharesAtTip = it->second;
         }
     }
+    const auto findShareForQuorum =
+        [&](const CQuorumCPtr& expected_quorum) {
+            return std::find_if(
+                mapSharesAtTip.begin(),
+                mapSharesAtTip.end(),
+                [&](const auto& entry) {
+                    return SameQuorumIdentity(
+                        entry.first, expected_quorum);
+                });
+        };
     bool fMemberOfSomeQuorum{false};
     signingState.BumpAttempt();
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
@@ -1250,12 +1274,14 @@ void CChainLocksHandler::TrySignChainTip()
         fMemberOfSomeQuorum = true;
         if (i > 0) {
             int nQuorumIndexPrev = (nQuorumIndex + 1) % quorums_scanned.size();
-            auto it2 = mapSharesAtTip.find(quorums_scanned[nQuorumIndexPrev]);
+            auto it2 =
+                findShareForQuorum(quorums_scanned[nQuorumIndexPrev]);
             if (it2 == mapSharesAtTip.end() && signingState.GetAttempt() > (int)i) {
                 // look deeper after 'i' attempts
                 while (nQuorumIndexPrev != nQuorumIndex) {
                     nQuorumIndexPrev = (nQuorumIndexPrev + 1) % quorums_scanned.size();
-                    it2 = mapSharesAtTip.find(quorums_scanned[nQuorumIndexPrev]);
+                    it2 =
+                        findShareForQuorum(quorums_scanned[nQuorumIndexPrev]);
                     if (it2 != mapSharesAtTip.end()) {
                         break;
                     }
@@ -1327,7 +1353,8 @@ void CChainLocksHandler::TrySignChainTip()
             mapSignedRequestIds.emplace(requestId, std::make_pair(nHeight, targetHash));
         }
         // AsyncSignIfMember can reach quorum manager/cs_main.
-        quorumSigningManager->AsyncSignIfMember(requestId, targetHash, quorum->qc->quorumHash);
+        quorumSigningManager->AsyncSignIfMember(
+            requestId, targetHash, quorum);
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do
@@ -1359,10 +1386,36 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
         clsig.nHeight = it->second.first;
         clsig.blockHash = it->second.second;
         clsig.sig = recoveredSig.sig.Get();
-        mapSignedRequestIds.erase(recoveredSig.getId());
     }
     BlockValidationState state;
-    ProcessNewChainLock(-1, clsig, state, ::SerializeHash(clsig), recoveredSig.getId());
+    if (ProcessNewChainLock(
+            -1,
+            clsig,
+            state,
+            ::SerializeHash(clsig),
+            recoveredSig.getId())) {
+        LOCK(cs);
+        mapSignedRequestIds.erase(recoveredSig.getId());
+    }
+}
+
+void CChainLocksHandler::ProcessPendingRecoveredChainLockSigs()
+{
+    std::vector<uint256> request_ids;
+    {
+        LOCK(cs);
+        request_ids.reserve(mapSignedRequestIds.size());
+        for (const auto& entry : mapSignedRequestIds) {
+            request_ids.emplace_back(entry.first);
+        }
+    }
+    for (const auto& request_id : request_ids) {
+        CRecoveredSig recovered_sig;
+        if (quorumSigningManager->GetRecoveredSigForId(
+                request_id, recovered_sig)) {
+            HandleNewRecoveredSig(recovered_sig);
+        }
+    }
 }
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)

@@ -207,6 +207,11 @@ public:
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l) EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
 
     bool AsyncSignIfMember(const uint256& id, const uint256& msgHash, const uint256& quorumHash = uint256(), bool allowReSign = false);
+    bool AsyncSignIfMember(
+        const uint256& id,
+        const uint256& msgHash,
+        const CQuorumCPtr& quorum,
+        bool allowReSign = false);
     bool HasRecoveredSig(const uint256& id, const uint256& msgHash) const;
     bool HasRecoveredSigForId(const uint256& id) const;
     bool HasRecoveredSigForSession(const uint256& signHash) const;

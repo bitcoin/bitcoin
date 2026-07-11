@@ -223,30 +223,12 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(
 
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 
-    bool hasValidVvec = false;
-    if (WITH_LOCK(cs_db, return quorum->ReadContributions(evoDb_vvec, evoDb_sk))) {
-        hasValidVvec = true;
-    } else {
+    if (!WITH_LOCK(cs_db, return quorum->ReadContributions(evoDb_vvec, evoDb_sk))) {
         if (BuildQuorumContributions(quorum->qc, quorum)) {
             WITH_LOCK(cs_db, quorum->WriteContributions(evoDb_vvec, evoDb_sk));
-            hasValidVvec = true;
         } else {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- quorum.ReadContributions and BuildQuorumContributions for quorumHash[%s] failed\n", __func__, quorum->qc->quorumHash.ToString());
         }
-    }
-
-    if (hasValidVvec) {
-        // pre-populate caches in the background
-        // recovering public key shares is quite expensive and would result in serious lags for the first few signing
-        // sessions if the shares would be calculated on-demand
-        StartCachePopulatorThread(quorum);
-    }
-    {
-        LOCK(cs_quorums);
-        if(vecQuorumsCache.size() >= QUORUM_CACHE_SIZE) {
-            vecQuorumsCache.erase(vecQuorumsCache.begin());
-        }
-        vecQuorumsCache.emplace_back(quorum);
     }
 
     return quorum;
@@ -389,8 +371,48 @@ CQuorumCPtr CQuorumManager::GetQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
                 }),
             vecQuorumsCache.end());
     }
-    return BuildQuorumFromCommitment(
+    CQuorumPtr quorum = BuildQuorumFromCommitment(
         pQuorumBaseBlockIndex, std::move(qc), minedBlockHash);
+    if (quorum == nullptr) {
+        return nullptr;
+    }
+
+    {
+        LOCK(quorumBlockProcessor->m_commitment_evoDb.cs);
+        uint256 currentMinedBlockHash;
+        CFinalCommitmentPtr currentQc =
+            quorumBlockProcessor->GetMinedCommitment(
+                quorumHash, currentMinedBlockHash);
+        if (currentQc == nullptr ||
+            currentMinedBlockHash != minedBlockHash ||
+            ::SerializeHash(*currentQc) != ::SerializeHash(*quorum->qc)) {
+            return nullptr;
+        }
+
+        LOCK(cs_quorums);
+        auto it = FindQuorum(quorumHash, minedBlockHash);
+        if (it != vecQuorumsCache.end()) {
+            return *it;
+        }
+        vecQuorumsCache.erase(
+            std::remove_if(
+                vecQuorumsCache.begin(),
+                vecQuorumsCache.end(),
+                [&](const CQuorumCPtr& cachedQuorum) {
+                    return cachedQuorum->m_quorum_base_block_index
+                               ->GetBlockHash() == quorumHash;
+                }),
+            vecQuorumsCache.end());
+        if (vecQuorumsCache.size() >= QUORUM_CACHE_SIZE) {
+            vecQuorumsCache.erase(vecQuorumsCache.begin());
+        }
+        vecQuorumsCache.emplace_back(quorum);
+    }
+
+    // Recovering public key shares is expensive, so populate them only after
+    // the exact commitment snapshot has been published to the cache.
+    StartCachePopulatorThread(quorum);
+    return quorum;
 }
 
 void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const

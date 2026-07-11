@@ -99,7 +99,7 @@ private:
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
     std::map<uint256, int64_t> rejectedChainLocks GUARDED_BY(cs);
-    std::map<uint256, int64_t> sigChecked GUARDED_BY(cs);
+    std::map<std::pair<uint256, uint256>, int64_t> sigChecked GUARDED_BY(cs);
 
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
@@ -156,6 +156,7 @@ private:
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void AddRecentChainLock(const CChainLockSig& clsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ProcessPendingRecoveredChainLockSigs() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool BuildQuorumContext(
         const CBlockIndex* candidate_index,
