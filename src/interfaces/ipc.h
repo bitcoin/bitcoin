@@ -6,6 +6,7 @@
 #define BITCOIN_INTERFACES_IPC_H
 
 #include <ipc/types.h>
+#include <util/result.h>
 
 #include <functional>
 #include <memory>
@@ -68,6 +69,9 @@ public:
     //! refused but not required ("auto"), and throws an exception if there was
     //! an unexpected error.
     virtual std::unique_ptr<Init> connectAddress(std::string& address) = 0;
+
+    //! Parse an IPC listening address and its per-listener options.
+    static util::Result<ipc::ListenAddress> parseListenAddress(std::string address);
 
     //! Listen on a configured socket address exposing this process's init
     //! interface and accepting at most listen_address.max_connections simultaneous
