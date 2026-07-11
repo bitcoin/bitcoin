@@ -274,19 +274,23 @@ BOOST_AUTO_TEST_CASE(chainlock_alternative_tip_selects_exact_signing_hash)
         fork_blocks[i].pprev = i == 0 ? &active_blocks[4] : &fork_blocks[i - 1];
     }
 
-    previous_share.blockHash = fork_blocks.back().GetBlockHash();
+    previous_share.blockHash = active_blocks.back().GetBlockHash();
     selected = llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
-        10, active_blocks[10].GetBlockHash(), previous_share, &fork_blocks.back());
-    BOOST_REQUIRE(selected == &fork_blocks.back());
+        10, fork_blocks.back().GetBlockHash(), previous_share, &active_blocks.back());
+    BOOST_REQUIRE(selected == &active_blocks.back());
 
     CChain active_chain;
     active_chain.SetTip(active_blocks.back());
-    llmq::CChainLockSig lower_winner;
-    lower_winner.nHeight = 5;
-    lower_winner.blockHash = active_blocks[5].GetBlockHash();
     llmq::CChainLockSig signing_candidate;
     signing_candidate.nHeight = 10;
     signing_candidate.blockHash = selected->GetBlockHash();
+    llmq::CChainLockSig no_winner;
+    BOOST_CHECK(llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, no_winner, signing_candidate, selected));
+
+    llmq::CChainLockSig lower_winner;
+    lower_winner.nHeight = 5;
+    lower_winner.blockHash = fork_blocks.front().GetBlockHash();
     BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
         active_chain, lower_winner, signing_candidate, selected));
 }
