@@ -850,6 +850,12 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
     size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
+    const auto forgetPeerRequest = [&]() {
+        if (from != -1) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(from, hash);
+        }
+    };
     if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
         {
@@ -862,6 +868,7 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         // A part of a multi-quorum CLSIG signed by a single quorum
         CQuorumContext verification_context;
         if (!BuildQuorumContext(pindexScan, verification_context)) {
+            forgetPeerRequest();
             return state.Invalid(
                 BlockValidationResult::BLOCK_CHAINLOCK,
                 "clsig-unstable-quorum-context");
@@ -895,6 +902,7 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         CQuorumContext publication_context;
         if (!BuildQuorumContext(pindexScan, publication_context) ||
             publication_context.fingerprint != verification_context.fingerprint) {
+            forgetPeerRequest();
             return state.Invalid(
                 BlockValidationResult::BLOCK_CHAINLOCK,
                 "stale-clsig-quorum-context");
@@ -969,6 +977,7 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         // An aggregated CLSIG
         CQuorumContext verification_context;
         if (!BuildQuorumContext(pindexScan, verification_context)) {
+            forgetPeerRequest();
             return state.Invalid(
                 BlockValidationResult::BLOCK_CHAINLOCK,
                 "clsig-unstable-quorum-context");
@@ -998,6 +1007,7 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             CQuorumContext publication_context;
             if (!BuildQuorumContext(pindexScan, publication_context) ||
                 publication_context.fingerprint != verification_context.fingerprint) {
+                forgetPeerRequest();
                 return state.Invalid(
                     BlockValidationResult::BLOCK_CHAINLOCK,
                     "stale-clsig-quorum-context");
