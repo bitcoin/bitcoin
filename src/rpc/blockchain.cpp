@@ -845,6 +845,34 @@ static RPCHelpMan getmerkleblocks()
     CBloomFilter filter;
     std::string strFilter = request.params[0].get_str();
     CDataStream ssBloomFilter(ParseHex(strFilter), SER_NETWORK, PROTOCOL_VERSION);
+    // CBloomFilter deserialization is now bounded, so an oversized vData count throws a generic
+    // length-limit error instead of the historical response. Preserve the old behavior by
+    // prechecking the leading vData count without consuming the stream: a fully present oversized
+    // filter (all vData bytes plus the fixed trailing fields) historically deserialized and then
+    // failed IsWithinSizeConstraints(), while a truncated one raised DataStream end-of-data. Only
+    // these two well-formed-count cases are handled here; malformed, noncanonical, and
+    // above-MAX_SIZE prefixes fall through to normal deserialization, which reproduces them.
+    enum { PRECHECK_OK, OVERSIZED_COMPLETE, OVERSIZED_TRUNCATED } precheck{PRECHECK_OK};
+    try {
+        SpanReader prefix{SER_NETWORK, PROTOCOL_VERSION, MakeUCharSpan(ssBloomFilter)};
+        const uint64_t vdata_size{ReadCompactSize(prefix)};
+        if (vdata_size > MAX_BLOOM_FILTER_SIZE) {
+            // Wire size of the fixed fields after vData: nHashFuncs + nTweak (uint32) + nFlags (uint8).
+            constexpr uint64_t FILTER_TRAILER_SIZE{2 * sizeof(uint32_t) + sizeof(uint8_t)};
+            const uint64_t remaining{prefix.size()};
+            const bool complete{remaining >= vdata_size && remaining - vdata_size >= FILTER_TRAILER_SIZE};
+            precheck = complete ? OVERSIZED_COMPLETE : OVERSIZED_TRUNCATED;
+        }
+    } catch (const std::ios_base::failure&) {
+        // Malformed/noncanonical/above-MAX_SIZE count: leave PRECHECK_OK; deserialization reproduces it.
+    }
+    if (precheck == OVERSIZED_COMPLETE) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Filter is not within size constraints");
+    }
+    if (precheck == OVERSIZED_TRUNCATED) {
+        // Reproduce the original end-of-data failure without allocating the oversized vData.
+        throw std::ios_base::failure("DataStream::read(): end of data");
+    }
     ssBloomFilter >> filter;
     if (!filter.IsWithinSizeConstraints()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Filter is not within size constraints");

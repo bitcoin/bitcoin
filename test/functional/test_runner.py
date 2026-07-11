@@ -275,6 +275,7 @@ BASE_SCRIPTS = [
     'wallet_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'rpc_getblockfilter.py',
+    'rpc_getmerkleblocks.py',
     'rpc_getblockfrompeer.py',
     'rpc_invalidateblock.py',
     'feature_txindex.py',
@@ -926,8 +927,6 @@ class RPCCoverage():
         covered_cmds.add('voteraw')
         # TODO: implement functional tests for importelectrumwallet
         covered_cmds.add('importelectrumwallet')
-        # TODO: implement functional tests for getmerkleblocks
-        covered_cmds.add('getmerkleblocks')
 
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")

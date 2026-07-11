@@ -5416,7 +5416,13 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
         CBloomFilter filter;
-        vRecv >> filter;
+        try {
+            vRecv >> filter;
+        } catch (const std::ios_base::failure& e) {
+            // An oversized filter now throws pre-allocation; punish here instead of the outer catch.
+            Misbehaving(pfrom.GetId(), 100, strprintf("misformatted bloom filter. peer=%d error=%s", pfrom.GetId(), e.what()));
+            return;
+        }
 
         if (!filter.IsWithinSizeConstraints())
         {
@@ -5440,15 +5446,19 @@ void PeerManagerImpl::ProcessMessage(
             pfrom.fDisconnect = true;
             return;
         }
-        std::vector<unsigned char> vData;
-        vRecv >> vData;
-
         // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
-        // and thus, the maximum size any matched object can have) in a filteradd message
+        // and thus, the maximum size any matched object can have) in a filteradd message. Bound
+        // the declared length before allocation and punish a bad count here, not the outer catch.
+        std::vector<unsigned char> vData;
+        try {
+            vRecv >> LIMITED_VECTOR(vData, MAX_SCRIPT_ELEMENT_SIZE);
+        } catch (const std::ios_base::failure& e) {
+            Misbehaving(pfrom.GetId(), 100, strprintf("bad filteradd message. peer=%d error=%s", pfrom.GetId(), e.what()));
+            return;
+        }
+
         bool bad = false;
-        if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-            bad = true;
-        } else if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+        if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
             LOCK(tx_relay->m_bloom_filter_mutex);
             if (tx_relay->m_bloom_filter) {
                 tx_relay->m_bloom_filter->insert(vData);

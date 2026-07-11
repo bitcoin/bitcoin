@@ -89,9 +89,16 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
         if (!m_node_sync.IsSynced()) return;
 
         uint256 nProp;
-        CBloomFilter filter;
         vRecv >> nProp;
-        vRecv >> filter;
+
+        CBloomFilter filter;
+        try {
+            vRecv >> filter;
+        } catch (const std::ios_base::failure& e) {
+            // An oversized filter now throws pre-allocation; punish here instead of the outer catch.
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 100, strprintf("misformatted govsync bloom filter. peer=%d error=%s", peer.GetId(), e.what()));
+            return;
+        }
 
         // The per-object vote-sync path tests this peer-supplied filter against every
         // cached vote (CBloomFilter::contains() loops nHashFuncs times). An unbounded
