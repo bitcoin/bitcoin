@@ -9,6 +9,7 @@
 #include <ipc/capnp/protocol.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>
+#include <ipc/types.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/log.h>
@@ -110,10 +111,10 @@ public:
         }
         return m_protocol->connect(m_protocol->makeStream(fd));
     }
-    void listenAddress(std::string& address) override
+    void listenAddress(ListenAddress& listen_address) override
     {
-        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
-        m_protocol->listen(fd, m_init);
+        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, listen_address.address);
+        m_protocol->listen(fd, m_init, listen_address.max_connections);
     }
     void disconnectIncoming() override
     {
