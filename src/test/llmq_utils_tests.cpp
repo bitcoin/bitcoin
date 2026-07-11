@@ -101,6 +101,73 @@ BOOST_AUTO_TEST_CASE(sig_ses_ann_limit_is_per_llmq_type)
     node_state.GetOrCreateSessionFromAnn(other_type_ann);
     BOOST_CHECK_EQUAL(node_state.GetSessionCount(), 2U);
     BOOST_CHECK_EQUAL(node_state.GetSessionCount(Consensus::LLMQType::LLMQ_400_60), 1U);
+
+BOOST_AUTO_TEST_CASE(sig_share_map_size_tracks_mutations)
+{
+    SigShareMap<CSigShare> sig_share_map;
+    const CSigShare sig_share1{MakeSigShare(1)};
+    const CSigShare sig_share2{MakeSigShare(2)};
+
+    BOOST_CHECK(sig_share_map.Add(sig_share1.GetKey(), sig_share1));
+    BOOST_CHECK(!sig_share_map.Add(sig_share1.GetKey(), sig_share1));
+    BOOST_CHECK(sig_share_map.Add(sig_share2.GetKey(), sig_share2));
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 2U);
+
+    sig_share_map.Erase(sig_share1.GetKey());
+    sig_share_map.Erase(sig_share1.GetKey());
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 1U);
+
+    sig_share_map.EraseAllForSignHash(sig_share2.GetSignHash());
+    sig_share_map.EraseAllForSignHash(sig_share2.GetSignHash());
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 0U);
+    BOOST_CHECK(sig_share_map.Empty());
+
+    BOOST_CHECK(sig_share_map.Add(sig_share1.GetKey(), sig_share1));
+    BOOST_CHECK(sig_share_map.Add(sig_share2.GetKey(), sig_share2));
+    sig_share_map.EraseIf([&](const SigShareKey& k, const CSigShare&) { return k == sig_share1.GetKey(); });
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 1U);
+
+    sig_share_map.Clear();
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(sig_share_map_bucket_erase_updates_size)
+{
+    SigShareMap<CSigShare> sig_share_map;
+    const auto sign_hash = MakeSigShare(1).GetSignHash();
+
+    for (uint16_t member = 0; member < 5; ++member) {
+        CSigShare s{Consensus::LLMQType::LLMQ_50_60, GetTestQuorumHash(1), GetTestQuorumHash(2), GetTestQuorumHash(1),
+                    member, CBLSLazySignature{}};
+        s.UpdateKey();
+        BOOST_CHECK_EQUAL(s.GetSignHash(), sign_hash);
+        BOOST_CHECK(sig_share_map.Add(s.GetKey(), s));
+    }
+    BOOST_CHECK_EQUAL(sig_share_map.Size(), 5U);
+
+    sig_share_map.EraseAllForSignHash(sign_hash);
+    BOOST_CHECK(sig_share_map.Empty());
+}
+
+BOOST_AUTO_TEST_CASE(pending_sig_shares_session_removal_updates_count)
+{
+    CSigSharesNodeState node_state;
+    const CSigShare sig_share1{MakeSigShare(1)};
+    const CSigShare sig_share2{MakeSigShare(2)};
+
+    BOOST_CHECK(node_state.pendingIncomingSigShares.Add(sig_share1.GetKey(), sig_share1));
+    BOOST_CHECK(node_state.pendingIncomingSigShares.Add(sig_share2.GetKey(), sig_share2));
+    BOOST_CHECK_EQUAL(node_state.pendingIncomingSigShares.Size(), 2U);
+
+    node_state.RemoveSession(sig_share1.GetSignHash());
+    BOOST_CHECK_EQUAL(node_state.pendingIncomingSigShares.Size(), 1U);
+    BOOST_CHECK(!node_state.pendingIncomingSigShares.Has(sig_share1.GetKey()));
+    BOOST_CHECK(node_state.pendingIncomingSigShares.Has(sig_share2.GetKey()));
+
+    // Removing the same session twice, or a session with no pending shares, is a no-op.
+    node_state.RemoveSession(sig_share1.GetSignHash());
+    node_state.RemoveSession(MakeSigShare(3).GetSignHash());
+    BOOST_CHECK_EQUAL(node_state.pendingIncomingSigShares.Size(), 1U);
 }
 
 BOOST_AUTO_TEST_CASE(deterministic_outbound_connection_test)
