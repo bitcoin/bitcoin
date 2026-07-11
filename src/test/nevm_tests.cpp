@@ -185,6 +185,68 @@ BOOST_AUTO_TEST_CASE(nevmspv_invalid)
     }
 }
 
+BOOST_AUTO_TEST_CASE(nevmspv_rejects_empty_compact_path)
+{
+    // parentNodes contains one two-item MPT node whose compact-path payload is empty.
+    const std::vector<unsigned char> encoded_node{0xc2, 0x80, 0x80};
+    const std::vector<unsigned char> encoded_parent_nodes{0xc3, 0xc2, 0x80, 0x80};
+    const dev::RLP parent_nodes(&encoded_parent_nodes);
+    const dev::h256 node_hash = dev::sha3(
+        dev::bytesConstRef(encoded_node.data(), encoded_node.size()));
+    const dev::bytes node_hash_bytes = node_hash.asBytes();
+    dev::RLPStream root_stream;
+    root_stream.append(dev::bytesConstRef(node_hash_bytes.data(), node_hash_bytes.size()));
+    const dev::RLP root(root_stream.out());
+
+    const std::vector<unsigned char> encoded_value{0x80};
+    const dev::RLP value(&encoded_value);
+    const std::vector<unsigned char> path;
+    BOOST_CHECK(!VerifyProof(
+        dev::bytesConstRef(path.data(), path.size()), value, parent_nodes, root));
+}
+
+BOOST_AUTO_TEST_CASE(nevmspv_authenticates_envelope_type)
+{
+    auto verify = [](const std::optional<uint8_t>& type) {
+        const dev::bytes payload{0xc0}; // Empty RLP list.
+        dev::bytes trie_value;
+        if (type.has_value()) {
+            trie_value.push_back(*type);
+        }
+        trie_value.insert(trie_value.end(), payload.begin(), payload.end());
+
+        dev::RLPStream leaf(2);
+        leaf.append(dev::bytes{0x20}); // Leaf with an empty remaining path.
+        leaf.append(trie_value);
+        const dev::bytes leaf_data = leaf.out();
+
+        dev::RLPStream parents(1);
+        parents.appendRaw(leaf_data);
+        const dev::bytes parent_data = parents.out();
+        const dev::RLP parent_nodes(parent_data);
+
+        const dev::h256 node_hash = dev::sha3(
+            dev::bytesConstRef(leaf_data.data(), leaf_data.size()));
+        const dev::bytes root_bytes = node_hash.asBytes();
+        dev::RLPStream root_stream;
+        root_stream.append(dev::bytesConstRef(root_bytes.data(), root_bytes.size()));
+        const dev::RLP root(root_stream.out());
+        const dev::RLP value(payload);
+        const dev::bytes path;
+
+        std::optional<uint8_t> parsed_type;
+        BOOST_REQUIRE(VerifyProof(
+            dev::bytesConstRef(path.data(), path.size()), value, parent_nodes, root,
+            &parsed_type));
+        BOOST_CHECK(parsed_type == type);
+    };
+
+    verify(std::nullopt);
+    verify(uint8_t{1});
+    verify(uint8_t{2});
+    verify(uint8_t{0x7f});
+}
+
 BOOST_AUTO_TEST_CASE(nevm_blob_versionhash_formats_and_hashes)
 {
     const std::vector<uint8_t> data{'a', 'b', 'c'};
