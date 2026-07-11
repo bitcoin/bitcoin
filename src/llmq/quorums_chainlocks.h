@@ -137,7 +137,7 @@ private:
     {
         std::vector<CQuorumCPtr> quorums;
         uint256 fingerprint;
-        const CBlockIndex* active_tip{nullptr};
+        const CBlockIndex* active_height_index{nullptr};
     };
 
     // these require locks to be held already
@@ -170,6 +170,10 @@ private:
         int32_t dkg_interval,
         int32_t mining_window_start,
         int32_t mining_window_end);
+    static bool IsActiveHeightSnapshotCurrent(
+        const CChain& active_chain,
+        int32_t height,
+        const CBlockIndex* active_height_index);
     bool TryUpdateBestChainLock(
         const CBlockIndex* pindex,
         const std::vector<CQuorumCPtr>* quorums = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);

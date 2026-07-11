@@ -235,6 +235,14 @@ bool CChainLocksHandler::IsAlternativeCommitmentWindowStable(
     return true;
 }
 
+bool CChainLocksHandler::IsActiveHeightSnapshotCurrent(
+    const CChain& active_chain,
+    int32_t height,
+    const CBlockIndex* active_height_index)
+{
+    return height >= 0 && active_chain[height] == active_height_index;
+}
+
 bool CChainLocksHandler::BuildQuorumContext(
     const CBlockIndex* candidate_index,
     CQuorumContext& context) const
@@ -249,8 +257,8 @@ bool CChainLocksHandler::BuildQuorumContext(
     int32_t common_height{-1};
     {
         LOCK(cs_main);
-        context.active_tip = chainman.ActiveChain().Tip();
         active_index = chainman.ActiveChain()[candidate_index->nHeight];
+        context.active_height_index = active_index;
         const CBlockIndex* ancestor = candidate_index;
         while (ancestor != nullptr && !chainman.ActiveChain().Contains(ancestor)) {
             ancestor = ancestor->pprev;
@@ -896,7 +904,10 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             // BLS verification runs without cs_main. Revalidate the mutable
             // chain anchor and winner slot at the publication point so the
             // first valid aggregate remains the unique ChainLock.
-            if (chainman.ActiveChain().Tip() != publication_context.active_tip ||
+            if (!IsActiveHeightSnapshotCurrent(
+                    chainman.ActiveChain(),
+                    clsig.nHeight,
+                    publication_context.active_height_index) ||
                 !IsCandidateStillAdmissible(
                     chainman.ActiveChain(), bestChainLockWithKnownBlock, clsig, pindexScan)) {
                 if (from != -1) {
@@ -995,7 +1006,10 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 LOCK2(cs_main, cs);
                 // Serialize publication with chain activation and competing
                 // verified aggregates. Enforcement never revokes this winner.
-                if (chainman.ActiveChain().Tip() != publication_context.active_tip ||
+                if (!IsActiveHeightSnapshotCurrent(
+                        chainman.ActiveChain(),
+                        clsig.nHeight,
+                        publication_context.active_height_index) ||
                     !IsCandidateStillAdmissible(
                         chainman.ActiveChain(), bestChainLockWithKnownBlock, clsig, pindexScan)) {
                     if (from != -1) {
@@ -1320,7 +1334,8 @@ void CChainLocksHandler::TrySignChainTip()
                             __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), targetHash.ToString(), nHeight);
                     pindex = alternativeTarget;
                     targetHash = alternativeTarget->GetBlockHash();
-                    signing_context.active_tip = alternative_context.active_tip;
+                    signing_context.active_height_index =
+                        alternative_context.active_height_index;
                 } else if (signingState.GetAttempt() <= (int)i) {
                     // previous quorum signed some different hash we have no idea about, bail out for now
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an unknown or an invalid blockHash (%s != %s) at height %d\n",
@@ -1345,7 +1360,10 @@ void CChainLocksHandler::TrySignChainTip()
             CChainLockSig candidate;
             candidate.nHeight = nHeight;
             candidate.blockHash = targetHash;
-            if (chainman.ActiveChain().Tip() != signing_context.active_tip ||
+            if (!IsActiveHeightSnapshotCurrent(
+                    chainman.ActiveChain(),
+                    nHeight,
+                    signing_context.active_height_index) ||
                 !IsCandidateStillAdmissible(
                     chainman.ActiveChain(), bestChainLockWithKnownBlock, candidate, signingTarget)) {
                 return;

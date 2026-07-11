@@ -168,6 +168,15 @@ public:
     {
         return llmq::CChainLocksHandler::SameQuorumIdentity(lhs, rhs);
     }
+
+    static bool IsActiveHeightSnapshotCurrent(
+        const CChain& active_chain,
+        int32_t height,
+        const CBlockIndex* active_height_index)
+    {
+        return llmq::CChainLocksHandler::IsActiveHeightSnapshotCurrent(
+            active_chain, height, active_height_index);
+    }
 };
 
 class CBTCCheckpointsHandlerTestAccess
@@ -383,6 +392,43 @@ BOOST_AUTO_TEST_CASE(chainlock_aggregate_cache_hit_requires_aggregate_structure)
     hash = ::SerializeHash(clsig);
     llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(*llmq::chainLocksHandler, hash);
     BOOST_CHECK(!llmq::chainLocksHandler->VerifyAggregatedChainLock(clsig, pindex_tip, hash));
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_publication_allows_same_chain_tip_extension)
+{
+    std::array<CBlockIndex, 12> active_blocks;
+    std::array<uint256, 12> active_hashes;
+    for (size_t i = 0; i < active_blocks.size(); ++i) {
+        active_hashes[i] = GetRandHash();
+        active_blocks[i].phashBlock = &active_hashes[i];
+        active_blocks[i].nHeight = i;
+        active_blocks[i].pprev = i == 0 ? nullptr : &active_blocks[i - 1];
+    }
+
+    std::array<CBlockIndex, 6> fork_blocks;
+    std::array<uint256, 6> fork_hashes;
+    for (size_t i = 0; i < fork_blocks.size(); ++i) {
+        fork_hashes[i] = GetRandHash();
+        fork_blocks[i].phashBlock = &fork_hashes[i];
+        fork_blocks[i].nHeight = i + 6;
+        fork_blocks[i].pprev = i == 0 ? &active_blocks[5] : &fork_blocks[i - 1];
+    }
+
+    CChain active_chain;
+    active_chain.SetTip(active_blocks[10]);
+    const CBlockIndex* signing_height_snapshot = active_chain[10];
+
+    active_chain.SetTip(active_blocks[11]);
+    BOOST_CHECK(
+        llmq_tests::CChainLocksHandlerTestAccess::
+            IsActiveHeightSnapshotCurrent(
+                active_chain, 10, signing_height_snapshot));
+
+    active_chain.SetTip(fork_blocks.back());
+    BOOST_CHECK(
+        !llmq_tests::CChainLocksHandlerTestAccess::
+            IsActiveHeightSnapshotCurrent(
+                active_chain, 10, signing_height_snapshot));
 }
 
 BOOST_AUTO_TEST_CASE(chainlock_publication_rechecks_anchor_and_winner)
