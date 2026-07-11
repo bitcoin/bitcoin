@@ -288,14 +288,33 @@ bool CChainLocksHandler::IsCandidateStillAdmissible(
 
 const CBlockIndex* CChainLocksHandler::SelectAlternativeSigningTarget(
     int32_t height,
-    const uint256& current_hash,
+    const CBlockIndex* current_index,
     const CChainLockSig& previous_share,
-    const CBlockIndex* previous_share_index)
+    const CBlockIndex* previous_share_index,
+    int32_t dkg_interval)
 {
-    if (previous_share.blockHash == current_hash ||
+    if (current_index == nullptr ||
+        current_index->nHeight != height ||
+        previous_share.nHeight != height ||
+        previous_share.blockHash == current_index->GetBlockHash() ||
         previous_share_index == nullptr ||
         previous_share_index->nHeight != height ||
-        previous_share_index->GetBlockHash() != previous_share.blockHash) {
+        previous_share_index->GetBlockHash() != previous_share.blockHash ||
+        dkg_interval <= 0) {
+        return nullptr;
+    }
+
+    // ScanQuorums derives the active quorum vector by walking DKG-boundary
+    // ancestors. Only join an alternative when both targets therefore produce
+    // the same quorum set and ordering.
+    const int32_t quorum_base_height = height - (height % dkg_interval);
+    const CBlockIndex* current_quorum_base =
+        current_index->GetAncestor(quorum_base_height);
+    const CBlockIndex* alternative_quorum_base =
+        previous_share_index->GetAncestor(quorum_base_height);
+    if (current_quorum_base == nullptr ||
+        alternative_quorum_base == nullptr ||
+        current_quorum_base->GetBlockHash() != alternative_quorum_base->GetBlockHash()) {
         return nullptr;
     }
     return previous_share_index;
@@ -1051,7 +1070,7 @@ void CChainLocksHandler::TrySignChainTip()
                 LOCK(cs_main);
                 auto shareBlockIndex = chainman.m_blockman.LookupBlockIndex(it2->second->blockHash);
                 const CBlockIndex* alternativeTarget = SelectAlternativeSigningTarget(
-                    nHeight, targetHash, *it2->second, shareBlockIndex);
+                    nHeight, pindex, *it2->second, shareBlockIndex, llmqParams.dkgInterval);
                 if (alternativeTarget != nullptr) {
                     // previous quorum signed an alternative chain tip, sign it too instead
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an alternative chaintip (%s != %s) at height %d, join it\n",

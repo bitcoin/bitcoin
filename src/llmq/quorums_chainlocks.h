@@ -141,9 +141,10 @@ private:
         const CBlockIndex* candidate_index);
     static const CBlockIndex* SelectAlternativeSigningTarget(
         int32_t height,
-        const uint256& current_hash,
+        const CBlockIndex* current_index,
         const CChainLockSig& previous_share,
-        const CBlockIndex* previous_share_index);
+        const CBlockIndex* previous_share_index,
+        int32_t dkg_interval);
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 

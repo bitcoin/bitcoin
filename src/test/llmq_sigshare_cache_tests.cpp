@@ -54,12 +54,13 @@ public:
 
     static const CBlockIndex* SelectAlternativeSigningTarget(
         int32_t height,
-        const uint256& current_hash,
+        const CBlockIndex* current_index,
         const llmq::CChainLockSig& previous_share,
-        const CBlockIndex* previous_share_index)
+        const CBlockIndex* previous_share_index,
+        int32_t dkg_interval)
     {
         return llmq::CChainLocksHandler::SelectAlternativeSigningTarget(
-            height, current_hash, previous_share, previous_share_index);
+            height, current_index, previous_share, previous_share_index, dkg_interval);
     }
 };
 
@@ -227,36 +228,6 @@ BOOST_AUTO_TEST_CASE(chainlock_publication_rechecks_anchor_and_winner)
 
 BOOST_AUTO_TEST_CASE(chainlock_alternative_tip_selects_exact_signing_hash)
 {
-    const uint256 current_hash = GetRandHash();
-    const uint256 alternative_hash = GetRandHash();
-    CBlockIndex current;
-    current.phashBlock = &current_hash;
-    current.nHeight = 10;
-    CBlockIndex alternative;
-    alternative.phashBlock = &alternative_hash;
-    alternative.nHeight = 10;
-
-    llmq::CChainLockSig previous_share;
-    previous_share.nHeight = 10;
-    previous_share.blockHash = alternative_hash;
-    const CBlockIndex* selected =
-        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
-            10, current_hash, previous_share, &alternative);
-    BOOST_REQUIRE(selected != nullptr);
-    BOOST_CHECK_EQUAL(selected->GetBlockHash(), alternative_hash);
-
-    alternative.nHeight = 9;
-    BOOST_CHECK(
-        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
-            10, current_hash, previous_share, &alternative) == nullptr);
-    alternative.nHeight = 10;
-    previous_share.blockHash = current_hash;
-    BOOST_CHECK(
-        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
-            10, current_hash, previous_share, &current) == nullptr);
-
-    // A target selected from a previously observed share must still be
-    // rejected before signing if a lower, non-ancestor ChainLock wins.
     std::array<CBlockIndex, 11> active_blocks;
     std::array<uint256, 11> active_hashes;
     for (size_t i = 0; i < active_blocks.size(); ++i) {
@@ -274,9 +245,30 @@ BOOST_AUTO_TEST_CASE(chainlock_alternative_tip_selects_exact_signing_hash)
         fork_blocks[i].pprev = i == 0 ? &active_blocks[4] : &fork_blocks[i - 1];
     }
 
+    llmq::CChainLockSig previous_share;
+    previous_share.nHeight = 10;
+    previous_share.blockHash = fork_blocks.back().GetBlockHash();
+    const CBlockIndex* selected =
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, &active_blocks.back(), previous_share, &fork_blocks.back(), 12);
+    BOOST_REQUIRE(selected == &fork_blocks.back());
+
+    // A DKG boundary after the common ancestor makes ScanQuorums branch-specific.
+    BOOST_CHECK(
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, &active_blocks.back(), previous_share, &fork_blocks.back(), 5) == nullptr);
+
+    previous_share.nHeight = 9;
+    BOOST_CHECK(
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, &active_blocks.back(), previous_share, &fork_blocks.back(), 12) == nullptr);
+
+    // A target selected from a previously observed share must still be
+    // rejected before signing if a lower, non-ancestor ChainLock wins.
+    previous_share.nHeight = 10;
     previous_share.blockHash = active_blocks.back().GetBlockHash();
     selected = llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
-        10, fork_blocks.back().GetBlockHash(), previous_share, &active_blocks.back());
+        10, &fork_blocks.back(), previous_share, &active_blocks.back(), 12);
     BOOST_REQUIRE(selected == &active_blocks.back());
 
     CChain active_chain;
