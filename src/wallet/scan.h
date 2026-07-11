@@ -9,6 +9,7 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -90,8 +91,12 @@ private:
     struct ScanContext {
         //! Defined in scan.cpp where ParallelFilterChecker is complete, as
         //! required by the checker member's destructor.
-        explicit ScanContext(std::optional<int> max_height_in);
+        ScanContext(const WalletRescanReserver& reserver_in, std::chrono::steady_clock::time_point current_time_in, std::optional<int> max_height_in);
 
+        //! Reserver of the scan, used as its clock.
+        const WalletRescanReserver& reserver;
+        //! Time progress was last logged and saved; maintained by Scan().
+        std::chrono::steady_clock::time_point current_time;
         //! Optional height limit of the scan range.
         const std::optional<int> max_height;
         //! The next block to read, if any.
@@ -99,6 +104,10 @@ private:
         //! Checks block filters in parallel on its own thread pool; only set
         //! when the wallet is configured with more than one thread..
         std::unique_ptr<ParallelFilterChecker> checker;
+
+        //! @return true if it is time to log progress and save progress to
+        //!         disk
+        bool IsNextInterval() const;
     };
 
     friend class ParallelFilterChecker;

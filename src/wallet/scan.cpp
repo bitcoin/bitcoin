@@ -19,6 +19,8 @@
 
 using interfaces::FoundBlock;
 
+constexpr auto INTERVAL_TIME{60s};
+
 namespace wallet {
 
 int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
@@ -194,6 +196,7 @@ enum FilterRes {
 class ParallelFilterChecker {
     const FastWalletRescanFilter& m_filter;
     interfaces::Chain& m_chain;
+    const ChainScanner::ScanContext& m_ctx;
     ThreadPool m_pool;
     //! Blocks queued for filter checks, oldest first. Verdicts are produced
     //! in this order; the front block is popped together with its verdict.
@@ -239,8 +242,8 @@ class ParallelFilterChecker {
     }
 
 public:
-    explicit ParallelFilterChecker(const FastWalletRescanFilter& filter, interfaces::Chain& chain, int start_height, const std::string& thread_name, int num_threads)
-        : m_filter(filter), m_chain(chain), m_pool(thread_name), m_last_submitted_height(start_height - 1) {
+    explicit ParallelFilterChecker(const FastWalletRescanFilter& filter, interfaces::Chain& chain, const ChainScanner::ScanContext& ctx, int start_height, const std::string& thread_name, int num_threads)
+        : m_filter(filter), m_chain(chain), m_ctx(ctx), m_pool(thread_name), m_last_submitted_height(start_height - 1) {
         m_pool.Start(num_threads);
     }
 
@@ -343,8 +346,11 @@ public:
     }
 
     //! Whether any queued blocks still need their filter check submitted.
+    //! Submission pauses at interval boundaries so that ReadNextBlocks
+    //! returns and the scan loop can log and save progress.
     bool CanSubmit() const {
-        return !m_blocks.empty() && m_blocks.back().height > m_last_submitted_height;
+        return !m_ctx.IsNextInterval() && !m_blocks.empty()
+            && m_blocks.back().height > m_last_submitted_height;
     }
 
     //! Start filter checks for queued blocks that have not been submitted
@@ -409,7 +415,12 @@ public:
     }
 };
 
-ChainScanner::ScanContext::ScanContext(std::optional<int> max_height_in) : max_height{max_height_in} {}
+ChainScanner::ScanContext::ScanContext(const WalletRescanReserver& reserver_in, std::chrono::steady_clock::time_point current_time_in, std::optional<int> max_height_in)
+    : reserver{reserver_in}, current_time{current_time_in}, max_height{max_height_in} {}
+
+bool ChainScanner::ScanContext::IsNextInterval() const {
+    return reserver.now() >= current_time + INTERVAL_TIME;
+}
 
 std::optional<ChainScanner::QueuedBlock> ChainScanner::ReadNextBlock(ScanContext& ctx) {
     if (!ctx.next_block) return std::nullopt;
@@ -581,20 +592,18 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
 
 ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std::optional<int> max_height,
                               const WalletRescanReserver& reserver, bool save_progress) {
-    constexpr auto INTERVAL_TIME{60s};
-    auto current_time{reserver.now()};
     auto start_time{reserver.now()};
 
     assert(reserver.isReserved());
     auto& chain = m_wallet.chain();
 
-    ScanContext ctx{max_height};
+    ScanContext ctx{reserver, start_time, max_height};
     std::string log_message = "slow variant inspecting all blocks";
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
     if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) {
         fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
         if (m_wallet.m_wallet_par > 1) {
-            ctx.checker = std::make_unique<ParallelFilterChecker>(*fast_rescan_filter, chain, start_height,
+            ctx.checker = std::make_unique<ParallelFilterChecker>(*fast_rescan_filter, chain, ctx, start_height,
                 "walletscan", m_wallet.m_wallet_par);
             log_message = strprintf("fast variant using block filters (%d threads)", m_wallet.m_wallet_par);
         } else {
@@ -623,9 +632,9 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     // Returns whether the interval elapsed.
     const auto update_progress = [&](int height) {
         UpdateProgress(state, progress_current, height);
-        const bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
+        const bool next_interval = ctx.IsNextInterval();
         if (next_interval) {
-            current_time = reserver.now();
+            ctx.current_time = reserver.now();
             m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", height, progress_current);
         }
         return next_interval;
@@ -633,10 +642,15 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     while (!scan_done && (ctx.next_block || (ctx.checker && !ctx.checker->Empty())) && !m_abort && !chain.shutdownRequested()) {
         const auto last_scanned_before = result.last_scanned_height;
         const std::vector<QueuedBlock> blocks_to_scan = ReadNextBlocks(fast_rescan_filter.get(), ctx, result, progress_current);
-        if (blocks_to_scan.empty() && result.last_scanned_height != last_scanned_before) {
-            // Blocks were skipped via the filter: keep the reported progress
-            // and the periodic log current across skipped ranges.
-            block_height = *result.last_scanned_height;
+        if (blocks_to_scan.empty()) {
+            if (result.last_scanned_height != last_scanned_before) {
+                // Blocks were skipped via the filter: keep the reported
+                // progress current across skipped ranges.
+                block_height = *result.last_scanned_height;
+            }
+            // Refresh the interval even when no progress was made: a checker
+            // paused at an interval boundary can return an empty batch, and
+            // only this call resets the interval so submission can resume.
             update_progress(block_height);
         }
         for (const QueuedBlock& block : blocks_to_scan) {
