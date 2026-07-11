@@ -5,6 +5,8 @@
 #ifndef BITCOIN_INTERFACES_IPC_H
 #define BITCOIN_INTERFACES_IPC_H
 
+#include <ipc/types.h>
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -67,9 +69,10 @@ public:
     //! an unexpected error.
     virtual std::unique_ptr<Init> connectAddress(std::string& address) = 0;
 
-    //! Listen on a socket address exposing this process's init interface to
-    //! clients. Throws an exception if there was an error.
-    virtual void listenAddress(std::string& address) = 0;
+    //! Listen on a configured socket address exposing this process's init
+    //! interface and accepting at most listen_address.max_connections simultaneous
+    //! client connections. Throws an exception if there was an error.
+    virtual void listenAddress(const ipc::ListenAddress& listen_address) = 0;
 
     //! Disconnect any incoming connections that are still connected.
     virtual void disconnectIncoming() = 0;
