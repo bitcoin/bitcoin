@@ -10,10 +10,13 @@
 
 #include <atomic>
 #include <functional>
+#include <memory>
+#include <vector>
 #include <optional>
 
 namespace wallet {
 class CWallet;
+class FastWalletRescanFilter;
 
 /** Result of a wallet scan */
 struct ScanResult {
@@ -73,10 +76,35 @@ private:
         uint256 tip_hash;
     };
 
-    //! Locate block_hash in the chain, queueing its active-chain successor
-    //! into next_block if it exists and is within the scan range. Returns
-    //! whether the block itself is still in the active chain.
-    bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
+    //! A block queued for filtering and scanning. still_active records
+    //! whether the block was in the active chain when it was queued.
+    struct QueuedBlock {
+        uint256 hash;
+        int height;
+        bool still_active;
+    };
+
+    //! State of a single Scan() call, local to Scan() and passed through the
+    //! scan helpers.
+    struct ScanContext {
+        explicit ScanContext(std::optional<int> max_height_in) : max_height{max_height_in} {}
+
+        //! Optional height limit of the scan range.
+        const std::optional<int> max_height;
+        //! The next block to read, if any.
+        std::optional<std::pair<uint256, int>> next_block;
+    };
+
+    //! Consume ctx.next_block: record whether it is still in the active
+    //! chain, and queue its active-chain successor into ctx.next_block if it
+    //! exists and is within the scan range.
+    std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
+    /**
+     * Read and filter the next block, recording filter-skipped blocks as
+     * scanned.
+     * @return the blocks that are ready to be scanned
+     */
+    std::vector<QueuedBlock> ReadNextBlocks(FastWalletRescanFilter* filter, ScanContext& ctx, ScanResult& result, double& progress_current);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
     void UpdateTipIfChanged(LoopState& state);

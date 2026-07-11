@@ -73,7 +73,6 @@ void ChainScanner::Release() {
     m_scanning_with_passphrase = false;
 }
 
-namespace {
 class FastWalletRescanFilter
 {
 public:
@@ -129,23 +128,13 @@ private:
     }
 };
 
-static bool ShouldFetchBlock(const FastWalletRescanFilter& filter, const uint256& block_hash, int block_height) {
-    auto matches_block{filter.MatchesBlock(block_hash)};
-    if (matches_block.has_value()) {
-        if (*matches_block) {
-            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
-        return true;
-    }
-}
-} // namespace
+std::optional<ChainScanner::QueuedBlock> ChainScanner::ReadNextBlock(ScanContext& ctx) {
+    if (!ctx.next_block) return std::nullopt;
+    const auto [block_hash, block_height] = *ctx.next_block;
+    ctx.next_block.reset();
 
-bool ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height) {
+    // Look up the block's position separately from reading its data later,
+    // because reading is slow and there might be a reorg while it is read.
     bool block_still_active = false;
     bool has_next_block = false;
     uint256 next_block_hash;
@@ -155,11 +144,41 @@ bool ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, s
     // has caught up with the wallet's tip is checked after the current block
     // is processed, so blocks connected while it was being processed are not
     // missed.
-    if (has_next_block && (!max_height || block_height < *max_height)) {
-        next_block = {{next_block_hash, block_height + 1}};
+    if (has_next_block && (!ctx.max_height || block_height < *ctx.max_height)) {
+        ctx.next_block = {{next_block_hash, block_height + 1}};
     }
 
-    return block_still_active;
+    return QueuedBlock{block_hash, block_height, block_still_active};
+}
+
+std::vector<ChainScanner::QueuedBlock> ChainScanner::ReadNextBlocks(FastWalletRescanFilter* filter, ScanContext& ctx, ScanResult& result, double& progress_current) {
+    const auto block = ReadNextBlock(ctx);
+    if (!block) return {};
+
+    if (!filter) {
+        // Slow scan: no block filter index, inspect all blocks.
+        return {*block};
+    }
+
+    filter->UpdateIfNeeded();
+
+    auto matches_block{filter->MatchesBlock(block->hash)};
+
+    if (matches_block.has_value() && *matches_block) {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block->height, block->hash.ToString());
+        return {*block};
+    } else if (!matches_block.has_value()) {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block->height, block->hash.ToString());
+        return {*block};
+    }
+
+    // No match: this block needs no inspection and is skipped, even if it
+    // left the active chain. Record it as the most recent successfully
+    // scanned block.
+    result.last_scanned_block = block->hash;
+    result.last_scanned_height = block->height;
+    progress_current = m_wallet.chain().guessVerificationProgress(block->hash);
+    return {};
 }
 
 void ChainScanner::UpdateProgress(const LoopState& state, double progress_current, int block_height) {
@@ -238,68 +257,71 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     state.progress_begin = chain.guessVerificationProgress(start_block);
     state.progress_end = chain.guessVerificationProgress(end_hash);
     double progress_current = state.progress_begin;
-    std::optional<std::pair<uint256, int>> next_block = {{start_block, start_height}};
+    ScanContext ctx{max_height};
+    ctx.next_block = {{start_block, start_height}};
     int block_height = start_height;
-    while (!m_abort && !chain.shutdownRequested()) {
-        if (!next_block) break;
-
-        const uint256 block_hash = next_block->first;
-        block_height = next_block->second;
-        next_block.reset();
-        // Look up the current block's position separately from reading its
-        // data below, because reading is slow and there might be a reorg
-        // while it is read.
-        const bool block_still_active = QueueNextBlock(block_hash, block_height, next_block, max_height);
-
-        progress_current = chain.guessVerificationProgress(block_hash);
-        UpdateProgress(state, progress_current, block_height);
-
-        bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
+    bool scan_done = false;
+    // Report progress for the given height, logging every INTERVAL_TIME.
+    // Returns whether the interval elapsed.
+    const auto update_progress = [&](int height) {
+        UpdateProgress(state, progress_current, height);
+        const bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
         if (next_interval) {
             current_time = reserver.now();
-            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
+            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", height, progress_current);
         }
+        return next_interval;
+    };
+    while (!scan_done && ctx.next_block && !m_abort && !chain.shutdownRequested()) {
+        const auto last_scanned_before = result.last_scanned_height;
+        const std::vector<QueuedBlock> blocks_to_scan = ReadNextBlocks(fast_rescan_filter.get(), ctx, result, progress_current);
+        if (blocks_to_scan.empty() && result.last_scanned_height != last_scanned_before) {
+            // Blocks were skipped via the filter: keep the reported progress
+            // and the periodic log current across skipped ranges.
+            block_height = *result.last_scanned_height;
+            update_progress(block_height);
+        }
+        for (const QueuedBlock& block : blocks_to_scan) {
+            block_height = block.height;
 
-        bool fetch_block{true};
-        if (fast_rescan_filter) {
-            fast_rescan_filter->UpdateIfNeeded();
-            fetch_block = ShouldFetchBlock(*fast_rescan_filter, block_hash, block_height);
-        }
+            progress_current = chain.guessVerificationProgress(block.hash);
+            const bool next_interval = update_progress(block_height);
 
-        if (fetch_block && !block_still_active) {
-            // Abort scan if a block that needs to be inspected is no longer
-            // active, to prevent marking transactions as coming from the
-            // wrong block. A block skipped by the filter can stay skipped:
-            // it has no successor in the active chain, so the scan ends
-            // successfully at the reorg point and the replacement blocks are
-            // handled by blockConnected notifications.
-            result.last_failed_block = block_hash;
-            result.status = ScanResult::FAILURE;
-            break;
-        }
-        if (!fetch_block || ScanBlock(block_hash, block_height, save_progress && next_interval)) {
-            // scanned the block, or skipped it via the filter: record it as
-            // the most recent successfully scanned block
-            result.last_scanned_block = block_hash;
-            result.last_scanned_height = block_height;
-        } else {
-            // could not scan block, keep scanning but record this block as the most recent failure
-            result.last_failed_block = block_hash;
-            result.status = ScanResult::FAILURE;
-        }
+            if (!block.still_active) {
+                // Abort scan if a block that needs to be inspected is no longer
+                // active, to prevent marking transactions as coming from the
+                // wrong block. A block skipped by the filter stays skipped:
+                // it has no successor in the active chain, so the scan ends
+                // successfully at the reorg point and the replacement blocks
+                // are handled by blockConnected notifications.
+                result.last_failed_block = block.hash;
+                result.status = ScanResult::FAILURE;
+                scan_done = true;
+                break;
+            }
+            if (ScanBlock(block.hash, block_height, save_progress && next_interval)) {
+                result.last_scanned_block = block.hash;
+                result.last_scanned_height = block_height;
+            } else {
+                // could not scan block, keep scanning but record this block as the most recent failure
+                result.last_failed_block = block.hash;
+                result.status = ScanResult::FAILURE;
+            }
 
-        // Stop scanning once the wallet's tip is reached, re-reading the height
-        // after the block was processed so a tip extension that happened
-        // meanwhile is picked up. If scanning with cs_wallet locked (AttachChain),
-        // blocks connected during rescan are handled after scanning is complete
-        // via blockConnected notifications. Without the lock, newly added blocks
-        // are re-processed here if the notifications were handled and the last
-        // block height was updated.
-        if (block_height >= WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
-            break;
-        }
+            // Stop scanning once the wallet's tip is reached, re-reading the height
+            // after the block was processed so a tip extension that happened
+            // meanwhile is picked up. If scanning with cs_wallet locked (AttachChain),
+            // blocks connected during rescan are handled after scanning is complete
+            // via blockConnected notifications. Without the lock, newly added blocks
+            // are re-processed here if the notifications were handled and the last
+            // block height was updated.
+            if (block_height >= WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
+                scan_done = true;
+                break;
+            }
 
-        if (!max_height) UpdateTipIfChanged(state);
+            if (!ctx.max_height) UpdateTipIfChanged(state);
+        }
     }
     if (!max_height) {
         m_wallet.WalletLogPrintf("Scanning current mempool transactions.\n");
