@@ -111,10 +111,9 @@ public:
         }
         return m_protocol->connect(m_protocol->makeStream(fd));
     }
-    void listenAddress(const ListenAddress& listen_address) override
+    void listenAddress(ListenAddress& listen_address) override
     {
-        std::string address{listen_address.address};
-        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
+        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, listen_address.address);
         m_protocol->listen(fd, m_init, listen_address.max_connections);
     }
     void disconnectIncoming() override

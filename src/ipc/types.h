@@ -24,7 +24,7 @@ inline constexpr size_t DEFAULT_MAX_CONNECTIONS{16};
 //! Maximum accepted client connection limit for an IPC listening socket.
 //! This conservative bound leaves ample room for other file descriptor
 //! reservations.
-inline constexpr size_t MAX_CONNECTIONS{size_t{1} << 20};
+inline constexpr size_t MAX_CONNECTIONS{256};
 
 struct ListenAddress {
     //! Socket address passed to ipc::Process::bind(), with any -ipcbind socket
