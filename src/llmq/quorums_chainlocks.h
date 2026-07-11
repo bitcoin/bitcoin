@@ -10,6 +10,7 @@
 
 
 class CBlockIndex;
+class CChain;
 class CConnman;
 class PeerManager;
 class CScheduler;
@@ -133,6 +134,16 @@ public:
     bool GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
     // these require locks to be held already
+    static bool IsCandidateStillAdmissible(
+        const CChain& active_chain,
+        const CChainLockSig& best_chainlock,
+        const CChainLockSig& candidate,
+        const CBlockIndex* candidate_index);
+    static const CBlockIndex* SelectAlternativeSigningTarget(
+        int32_t height,
+        const uint256& current_hash,
+        const CChainLockSig& previous_share,
+        const CBlockIndex* previous_share_index);
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 

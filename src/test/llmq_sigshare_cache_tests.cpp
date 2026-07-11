@@ -11,6 +11,7 @@
 #include <util/time.h>
 #include <validation.h>
 
+#include <array>
 #include <boost/test/unit_test.hpp>
 
 namespace llmq_tests
@@ -39,6 +40,26 @@ public:
         const uint256& hash)
     {
         return handler.VerifyChainLockShare(clsig, pindexScan, idIn, ret, hash);
+    }
+
+    static bool IsCandidateStillAdmissible(
+        const CChain& active_chain,
+        const llmq::CChainLockSig& best_chainlock,
+        const llmq::CChainLockSig& candidate,
+        const CBlockIndex* candidate_index)
+    {
+        return llmq::CChainLocksHandler::IsCandidateStillAdmissible(
+            active_chain, best_chainlock, candidate, candidate_index);
+    }
+
+    static const CBlockIndex* SelectAlternativeSigningTarget(
+        int32_t height,
+        const uint256& current_hash,
+        const llmq::CChainLockSig& previous_share,
+        const CBlockIndex* previous_share_index)
+    {
+        return llmq::CChainLocksHandler::SelectAlternativeSigningTarget(
+            height, current_hash, previous_share, previous_share_index);
     }
 };
 
@@ -143,6 +164,131 @@ BOOST_AUTO_TEST_CASE(chainlock_aggregate_cache_hit_requires_aggregate_structure)
     hash = ::SerializeHash(clsig);
     llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(*llmq::chainLocksHandler, hash);
     BOOST_CHECK(!llmq::chainLocksHandler->VerifyAggregatedChainLock(clsig, pindex_tip, hash));
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_publication_rechecks_anchor_and_winner)
+{
+    std::array<CBlockIndex, 21> active_blocks;
+    std::array<uint256, 21> active_hashes;
+    for (size_t i = 0; i < active_blocks.size(); ++i) {
+        active_hashes[i] = GetRandHash();
+        active_blocks[i].phashBlock = &active_hashes[i];
+        active_blocks[i].nHeight = i;
+        active_blocks[i].pprev = i == 0 ? nullptr : &active_blocks[i - 1];
+    }
+
+    CChain active_chain;
+    active_chain.SetTip(active_blocks.back());
+
+    llmq::CChainLockSig candidate;
+    candidate.nHeight = 10;
+    candidate.blockHash = active_blocks[10].GetBlockHash();
+    llmq::CChainLockSig no_winner;
+
+    // Tip movement alone must not invalidate an in-flight, anchor-compatible
+    // aggregate. The expected signing height is intentionally not rechecked.
+    BOOST_CHECK(llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, no_winner, candidate, &active_blocks[10]));
+
+    std::array<CBlockIndex, 6> fork_blocks;
+    std::array<uint256, 6> fork_hashes;
+    for (size_t i = 0; i < fork_blocks.size(); ++i) {
+        fork_hashes[i] = GetRandHash();
+        fork_blocks[i].phashBlock = &fork_hashes[i];
+        fork_blocks[i].nHeight = i + 5;
+        fork_blocks[i].pprev = i == 0 ? &active_blocks[4] : &fork_blocks[i - 1];
+    }
+    candidate.blockHash = fork_blocks.back().GetBlockHash();
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, no_winner, candidate, &fork_blocks.back()));
+
+    candidate.blockHash = active_blocks[10].GetBlockHash();
+    llmq::CChainLockSig existing_winner;
+    existing_winner.nHeight = candidate.nHeight;
+    existing_winner.blockHash = candidate.blockHash;
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, existing_winner, candidate, &active_blocks[10]));
+
+    // A higher candidate must descend from the already-published winner, even
+    // while the active chain has not yet enforced that winner.
+    existing_winner.blockHash = fork_blocks.back().GetBlockHash();
+    llmq::CChainLockSig higher_candidate;
+    higher_candidate.nHeight = 15;
+    higher_candidate.blockHash = active_blocks[15].GetBlockHash();
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, existing_winner, higher_candidate, &active_blocks[15]));
+
+    // If the higher window publishes first, the lower candidate cannot replace it.
+    llmq::CChainLockSig higher_winner = higher_candidate;
+    candidate.blockHash = fork_blocks.back().GetBlockHash();
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, higher_winner, candidate, &fork_blocks.back()));
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_alternative_tip_selects_exact_signing_hash)
+{
+    const uint256 current_hash = GetRandHash();
+    const uint256 alternative_hash = GetRandHash();
+    CBlockIndex current;
+    current.phashBlock = &current_hash;
+    current.nHeight = 10;
+    CBlockIndex alternative;
+    alternative.phashBlock = &alternative_hash;
+    alternative.nHeight = 10;
+
+    llmq::CChainLockSig previous_share;
+    previous_share.nHeight = 10;
+    previous_share.blockHash = alternative_hash;
+    const CBlockIndex* selected =
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, current_hash, previous_share, &alternative);
+    BOOST_REQUIRE(selected != nullptr);
+    BOOST_CHECK_EQUAL(selected->GetBlockHash(), alternative_hash);
+
+    alternative.nHeight = 9;
+    BOOST_CHECK(
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, current_hash, previous_share, &alternative) == nullptr);
+    alternative.nHeight = 10;
+    previous_share.blockHash = current_hash;
+    BOOST_CHECK(
+        llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+            10, current_hash, previous_share, &current) == nullptr);
+
+    // A target selected from a previously observed share must still be
+    // rejected before signing if a lower, non-ancestor ChainLock wins.
+    std::array<CBlockIndex, 11> active_blocks;
+    std::array<uint256, 11> active_hashes;
+    for (size_t i = 0; i < active_blocks.size(); ++i) {
+        active_hashes[i] = GetRandHash();
+        active_blocks[i].phashBlock = &active_hashes[i];
+        active_blocks[i].nHeight = i;
+        active_blocks[i].pprev = i == 0 ? nullptr : &active_blocks[i - 1];
+    }
+    std::array<CBlockIndex, 6> fork_blocks;
+    std::array<uint256, 6> fork_hashes;
+    for (size_t i = 0; i < fork_blocks.size(); ++i) {
+        fork_hashes[i] = GetRandHash();
+        fork_blocks[i].phashBlock = &fork_hashes[i];
+        fork_blocks[i].nHeight = i + 5;
+        fork_blocks[i].pprev = i == 0 ? &active_blocks[4] : &fork_blocks[i - 1];
+    }
+
+    previous_share.blockHash = fork_blocks.back().GetBlockHash();
+    selected = llmq_tests::CChainLocksHandlerTestAccess::SelectAlternativeSigningTarget(
+        10, active_blocks[10].GetBlockHash(), previous_share, &fork_blocks.back());
+    BOOST_REQUIRE(selected == &fork_blocks.back());
+
+    CChain active_chain;
+    active_chain.SetTip(active_blocks.back());
+    llmq::CChainLockSig lower_winner;
+    lower_winner.nHeight = 5;
+    lower_winner.blockHash = active_blocks[5].GetBlockHash();
+    llmq::CChainLockSig signing_candidate;
+    signing_candidate.nHeight = 10;
+    signing_candidate.blockHash = selected->GetBlockHash();
+    BOOST_CHECK(!llmq_tests::CChainLocksHandlerTestAccess::IsCandidateStillAdmissible(
+        active_chain, lower_winner, signing_candidate, selected));
 }
 
 BOOST_AUTO_TEST_CASE(btccheckpoint_share_cache_hit_requires_signer_context)
