@@ -6,7 +6,13 @@
 #include <chain.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
+#include <kernel/chain.h>
+#include <kernel/types.h>
+#include <key.h>
+#include <key_io.h>
 #include <node/blockstorage.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -418,6 +424,88 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_tip_extension, TestChain100
     BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
     BOOST_CHECK_EQUAL(result.last_scanned_block, new_tip_hash);
     BOOST_CHECK_EQUAL(*result.last_scanned_height, start_tip_height + 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_resume_after_tip, TestChain100Setup)
+{
+    BOOST_REQUIRE(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true));
+    BlockFilterIndex& filter_index{*Assert(GetBlockFilterIndex(BlockFilterType::BASIC))};
+    BOOST_REQUIRE(filter_index.Init());
+    filter_index.Sync();
+
+    CExtKey master_key;
+    master_key.SetSeed(MakeByteSpan(GenerateRandomKey()));
+    const std::string desc_str{"wpkh(" + EncodeExtKey(master_key) + "/*)"};
+    FlatSigningProvider provider;
+    std::string error;
+    const auto descs{Parse(desc_str, provider, error, /*require_checksum=*/false)};
+    BOOST_REQUIRE_EQUAL(descs.size(), 1U);
+    const auto script_at{[&](int pos) {
+        std::vector<CScript> scripts;
+        FlatSigningProvider out;
+        BOOST_REQUIRE(descs.at(0)->Expand(pos, provider, scripts, out));
+        return scripts.at(0);
+    }};
+
+    // ShowProgress fires at heights that are multiples of 100: the scan
+    // range ends at such a height, in a block paying the descriptor's
+    // first script.
+    while (WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height()) % 100 != 99) {
+        CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    }
+    const CBlock last_block{CreateAndProcessBlock({}, script_at(0))};
+    BOOST_REQUIRE(filter_index.BlockUntilSyncedToCurrentChain());
+
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    // Keep a single unused script, so the second script is only derived
+    // once the scan finds the first one used.
+    wallet.m_keypool_size = 1;
+    uint256 start_hash;
+    int start_height;
+    {
+        LOCK(wallet.cs_wallet);
+        LOCK(Assert(m_node.chainman)->GetMutex());
+        const CBlockIndex* tip{m_node.chainman->ActiveChain().Tip()};
+        wallet.SetLastBlockProcessed(tip->nHeight, tip->GetBlockHash());
+        start_hash = tip->pprev->GetBlockHash();
+        start_height = tip->nHeight - 1;
+    }
+    const DescriptorScriptPubKeyMan* spkm{CreateDescriptor(wallet, desc_str, /*success=*/true)};
+    BOOST_REQUIRE_EQUAL(WITH_LOCK(spkm->cs_desc_man, return spkm->GetEndRange()), 1);
+
+    // While the scan processes the last block, after looking up its
+    // successor, connect a block paying the second script and notify the
+    // wallet, which does not have that script yet. The scan derives it
+    // from the last block and must then scan the new block.
+    uint256 new_tip_hash;
+    Txid new_coinbase_hash;
+    bool extended{false};
+    auto handler = wallet.ShowProgress.connect([&](const std::string&, int progress) {
+        if (extended || progress == 0 || progress == 100) return;
+        extended = true;
+        const CBlock block{CreateAndProcessBlock({}, script_at(1))};
+        BOOST_REQUIRE(filter_index.BlockUntilSyncedToCurrentChain());
+        const CBlockIndex* index{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(block.GetHash()))};
+        wallet.blockConnected(kernel::ChainstateRole{}, kernel::MakeBlockInfo(index, &block));
+        new_tip_hash = block.GetHash();
+        new_coinbase_hash = block.vtx[0]->GetHash();
+        BOOST_REQUIRE(!WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.contains(new_coinbase_hash)));
+    });
+
+    WalletRescanReserver reserver(wallet);
+    reserver.reserve();
+    ScanResult result = wallet.Scanner().Scan(start_hash, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+    handler.disconnect();
+    BOOST_REQUIRE(extended);
+    BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
+    BOOST_CHECK_EQUAL(result.last_scanned_block, new_tip_hash);
+    BOOST_CHECK_EQUAL(*result.last_scanned_height, start_height + 2);
+    LOCK(wallet.cs_wallet);
+    BOOST_CHECK(wallet.mapWallet.contains(last_block.vtx[0]->GetHash()));
+    BOOST_CHECK(wallet.mapWallet.contains(new_coinbase_hash));
+
+    StopIndex(filter_index, m_node);
+    BOOST_REQUIRE(DestroyBlockFilterIndex(BlockFilterType::BASIC));
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_no_progress_saved, TestChain100Setup)
