@@ -214,37 +214,52 @@ BOOST_AUTO_TEST_CASE(quorum_cache_distinguishes_reorg_commitments)
     BOOST_REQUIRE(llmq::quorumManager != nullptr);
     BOOST_REQUIRE(llmq::quorumBlockProcessor != nullptr);
 
-    const uint256 base_hash = GetRandHash();
-    CBlockIndex base;
-    base.phashBlock = &base_hash;
-    base.nHeight = 0;
+    const CBlockIndex* base =
+        WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain()[0]);
+    BOOST_REQUIRE(base != nullptr);
+    const uint256 base_hash = base->GetBlockHash();
 
     const uint256 old_mined_hash = GetRandHash();
     const uint256 new_mined_hash = GetRandHash();
     auto old_quorum = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
-        *llmq::quorumManager, &base, old_mined_hash, GetRandHash());
+        *llmq::quorumManager, base, old_mined_hash, GetRandHash());
     auto new_quorum = llmq_tests::CQuorumManagerTestAccess::MakeQuorum(
-        *llmq::quorumManager, &base, new_mined_hash, GetRandHash());
+        *llmq::quorumManager, base, new_mined_hash, GetRandHash());
 
-    llmq_tests::CQuorumManagerTestAccess::CacheQuorum(
-        *llmq::quorumManager, old_quorum);
-    llmq_tests::CQuorumManagerTestAccess::CacheQuorum(
-        *llmq::quorumManager, new_quorum);
+    llmq_tests::CQuorumManagerTestAccess::RemoveCachedBase(
+        *llmq::quorumManager, base_hash);
+    llmq::quorumBlockProcessor->m_commitment_evoDb.WriteCache(
+        base_hash, std::make_pair(*old_quorum->qc, old_mined_hash));
+
+    const auto resolved_old = llmq_tests::CQuorumManagerTestAccess::GetQuorum(
+        *llmq::quorumManager, base);
+    BOOST_REQUIRE(resolved_old != nullptr);
+    BOOST_CHECK_EQUAL(resolved_old->minedBlockHash, old_mined_hash);
+    BOOST_CHECK_EQUAL(
+        ::SerializeHash(*resolved_old->qc),
+        ::SerializeHash(*old_quorum->qc));
+
+    // Simulate a reorg selecting a different final commitment under the same
+    // DKG base. GetQuorum must reject the stale same-base cache object and
+    // publish a quorum built from the replacement commitment.
     llmq::quorumBlockProcessor->m_commitment_evoDb.WriteCache(
         base_hash, std::make_pair(*new_quorum->qc, new_mined_hash));
-
-    const auto resolved = llmq_tests::CQuorumManagerTestAccess::GetQuorum(
-        *llmq::quorumManager, &base);
+    const auto resolved_new = llmq_tests::CQuorumManagerTestAccess::GetQuorum(
+        *llmq::quorumManager, base);
+    const auto cached_new = llmq_tests::CQuorumManagerTestAccess::GetQuorum(
+        *llmq::quorumManager, base);
 
     llmq::quorumBlockProcessor->m_commitment_evoDb.EraseCache(base_hash);
     llmq_tests::CQuorumManagerTestAccess::RemoveCachedBase(
         *llmq::quorumManager, base_hash);
 
-    BOOST_REQUIRE(resolved != nullptr);
-    BOOST_CHECK_EQUAL(resolved->minedBlockHash, new_mined_hash);
+    BOOST_REQUIRE(resolved_new != nullptr);
+    BOOST_REQUIRE(cached_new != nullptr);
+    BOOST_CHECK_EQUAL(resolved_new->minedBlockHash, new_mined_hash);
     BOOST_CHECK_EQUAL(
-        ::SerializeHash(*resolved->qc),
+        ::SerializeHash(*resolved_new->qc),
         ::SerializeHash(*new_quorum->qc));
+    BOOST_CHECK(resolved_new == cached_new);
 }
 
 BOOST_AUTO_TEST_CASE(quorum_contribution_key_is_commitment_specific)
