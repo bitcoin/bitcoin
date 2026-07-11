@@ -7,8 +7,10 @@
 
 #include <interfaces/init.h>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <typeindex>
 
 namespace ipc {
@@ -37,7 +39,7 @@ public:
     //! Listen for connections on provided socket descriptor, accept them, and
     //! handle requests on accepted connections. This method doesn't block, and
     //! performs I/O on a background thread.
-    virtual void listen(int listen_fd, const char* exe_name, interfaces::Init& init) = 0;
+    virtual void listen(int listen_fd, const char* exe_name, interfaces::Init& init, std::optional<size_t> max_connections = std::nullopt) = 0;
 
     //! Handle requests on provided socket descriptor, forwarding them to the
     //! provided Init interface. Socket communication is handled on the
