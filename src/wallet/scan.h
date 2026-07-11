@@ -11,6 +11,7 @@
 #include <atomic>
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace wallet {
 class CWallet;
@@ -64,14 +65,18 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
-    //! Progress window and tip tracked across Scan loop iterations. The
-    //! current block's progress is a plain local in Scan; only the window
-    //! bounds are shared with the helpers, and UpdateTipIfChanged is the
-    //! sole mutator.
+    //! Progress window and tip tracked across Scan() iterations; only
+    //! UpdateTipIfChanged() mutates them.
     struct LoopState {
         double progress_begin{0};
         double progress_end{0};
         uint256 tip_hash;
+    };
+
+    //! A block queued for filtering and scanning.
+    struct QueuedBlock {
+        uint256 hash;
+        int height;
     };
 
     enum class ScanBlockResult {
@@ -81,9 +86,25 @@ private:
         NOT_ACTIVE,
     };
 
-    //! Queue block_hash's active-chain successor into next_block if it
-    //! exists and is within the scan range.
-    void QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
+    //! State of a single Scan() call, local to Scan() and passed through the
+    //! scan helpers. Defined in scan.cpp.
+    struct ScanContext;
+
+    //! Consume ctx.next_block and queue its active-chain successor into
+    //! ctx.next_block if it exists and is within the scan range.
+    std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
+    //! The active-chain successor of a block, if it exists and is within range.
+    std::optional<std::pair<uint256, int>> FindNextBlock(const ScanContext& ctx, const uint256& block_hash, int block_height);
+    //! Record a block skipped by the filter as the most recent successfully
+    //! scanned block, and set ctx.done if it is at the wallet's tip.
+    void RecordSkipped(ScanContext& ctx, const QueuedBlock& block);
+    //! Set ctx.done once a processed block reaches the wallet's tip.
+    void StopAtWalletTip(ScanContext& ctx, int block_height);
+    //! Read and filter the next block, recording a skipped block as scanned.
+    //! @return the block to scan, if any
+    std::vector<QueuedBlock> NextBlocksSerial(ScanContext& ctx);
+    //! Whether blocks remain to be read.
+    static bool HasPendingBlocks(const ScanContext& ctx);
     ScanBlockResult ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
     void UpdateTipIfChanged(LoopState& state);
