@@ -246,6 +246,11 @@ struct ScriptExecutionData
 inline constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 inline constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
 inline constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+inline constexpr size_t WITNESS_V2_CISA_SIZE = 32;
+
+/** Witness v2 keypath aggregation mode markers (BIP460) */
+inline constexpr uint8_t CISA_MARKER_HALFAGG = 0xbc;
+inline constexpr uint8_t CISA_MARKER_FULLAGG = 0xbd;
 
 inline constexpr uint8_t TAPROOT_LEAF_MASK = 0xfe;
 inline constexpr uint8_t TAPROOT_LEAF_TAPSCRIPT = 0xc0;
@@ -385,6 +390,26 @@ uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const u
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+
+/** A parsed witness v2 keypath witness element (BIP460). */
+struct CISAWitness {
+    //! Marker of the input's group (CISA_MARKER_HALFAGG/FULLAGG), std::nullopt
+    //! for opted-out inputs. Only final inputs carry the marker byte, members
+    //! are classified by element length.
+    std::optional<uint8_t> marker;
+    bool is_final;
+    //! SIGHASH_DEFAULT unless an explicit sighash byte is present. Not
+    //! extracted for opted-out inputs: their sighash byte stays part of the
+    //! signature and is interpreted by the BIP341 rules.
+    uint8_t sighash_type;
+    //! Signature data of an aggregated input, entire BIP341 signature of an
+    //! opted-out input. Points into the element passed to ParseCISAWitness().
+    std::span<const unsigned char> signature;
+};
+
+/** Parse a witness v2 keypath witness element per the BIP460 structure table.
+ *  Returns std::nullopt and sets serror if the element matches no valid form. */
+std::optional<CISAWitness> ParseCISAWitness(std::span<const unsigned char> elem, ScriptError* serror = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness& witness, script_verify_flags flags);
 
