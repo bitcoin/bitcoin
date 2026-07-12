@@ -87,6 +87,7 @@ std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) 
         return OutputType::BECH32;
     }
     if (std::holds_alternative<WitnessV1Taproot>(dest) ||
+        std::holds_alternative<WitnessV2Cisa>(dest) ||
         std::holds_alternative<WitnessUnknown>(dest)) {
         return OutputType::BECH32M;
     }
