@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
+#include <kernel/cs_main.h>
 #include <llmq/quorums_signing.h>
 #include <atomic>
 
