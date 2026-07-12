@@ -109,6 +109,7 @@ add_executable(test_bitcoin
   sock_tests.cpp
   span_tests.cpp
   staletipmessage_tests.cpp
+  staletiprelayman_tests.cpp
   staletiptracker_tests.cpp
   streams_tests.cpp
   sync_tests.cpp

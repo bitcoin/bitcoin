@@ -7,6 +7,7 @@
 
 #include <kernel/cs_main.h>
 #include <node/staletiptracker.h>
+#include <staletipmessage.h>
 #include <sync.h>
 #include <util/chaintype.h>
 
@@ -21,6 +22,11 @@ class BlockManager;
 struct StaleTipRelayOptions {
     ChainType chain_type{ChainType::MAIN};
 };
+
+/** Build the `staletip` message announcing `fork`, compressing the headers
+ *  between `fork.fork_point` (exclusive) and `fork.tip` (inclusive). `fork`
+ *  must be one the tracker returned, so it fits in one message. */
+StaleTipMessage MakeStaleTipMessage(const StaleFork& fork, bool have_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /**
  * Class responsible for deciding which stale tips to track for BIP 332

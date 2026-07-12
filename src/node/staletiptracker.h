@@ -26,6 +26,9 @@ inline constexpr int STALETIP_RECENT_WINDOW{1000};
  *  limits how many previously known stale tips are advertised to a peer. */
 inline constexpr size_t MAX_ADVERTISED_STALETIPS{10};
 
+/** Whether `ancestor` is an ancestor of `block`, or `block` itself. */
+bool HasAncestor(const CBlockIndex& block, const CBlockIndex& ancestor);
+
 /** A stale branch of the block tree, described by its tip and the point where
  *  it forks off the active chain. */
 struct StaleFork {
