@@ -527,11 +527,10 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
     // if witness script we get the next element which should be our MN data
-    if(!vchData.empty() && vchData[0] == 0xaa &&
+    if(vchData.size() >= 36 && vchData[0] == 0xaa &&
         vchData[1] == 0x21 &&
         vchData[2] == 0xa9 &&
-        vchData[3] == 0xed &&
-        vchData.size() >= 36) {
+        vchData[3] == 0xed) {
         if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		    return false;
     }
@@ -612,6 +611,10 @@ int CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData)
     try {
         CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
         Unserialize(dsMS);
+        if (posTx >= vchTxParentNodes.size() || posReceipt >= vchReceiptParentNodes.size()) {
+            SetNull();
+            return -1;
+        }
         return dsMS.size();
     } catch (std::exception &e) {
         SetNull();

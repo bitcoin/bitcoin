@@ -6,6 +6,7 @@
 #include <test/data/tx_valid.json.h>
 #include <test/util/setup_common.h>
 
+#include <chainparams.h>
 #include <checkqueue.h>
 #include <clientversion.h>
 #include <consensus/amount.h>
@@ -13,6 +14,8 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key.h>
+#include <nevm/nevm.h>
+#include <nevm/sha3.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <script/script.h>
@@ -20,6 +23,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <services/assetconsensus.h>
 #include <streams.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
@@ -29,7 +33,10 @@
 #include <util/string.h>
 #include <validation.h>
 
+#include <algorithm>
+#include <array>
 #include <functional>
+#include <limits>
 #include <map>
 #include <string>
 
@@ -380,6 +387,602 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
     BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+}
+
+// Post-fork canonical asset commitment rules (CheckAssetAllocationCanonical).
+BOOST_AUTO_TEST_CASE(syscoin_reject_noncanonical_asset_commitments)
+{
+    const uint32_t nForkHeight = (uint32_t)Params().GetConsensus().nCLReceiptStartBlock;
+
+    // Two assets (guids differ) each assigning output index 1, on a burn-to-NEVM (version 141)
+    // transaction. The single-asset rule fires before the duplicate-output rule.
+    {
+        const std::string tx_hex =
+            "8d000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e1029000000000000000002a6a280286c340010191cf96e30004010191cf96e3001471b216bd593c215cf3d1617718e364908755476900000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        TxValidationState state;
+        NEVMMintTxSet setMintTxs;
+        CAssetsMap mapAssetIn;
+        CAssetsMap mapAssetOut;
+        BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+            nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-single-asset");
+    }
+
+    // A single asset whose commitment assigns output index 1 twice: passes the single-asset
+    // rule, rejected by the duplicate-output rule. Also proves the rule is fork-gated: the
+    // same transaction is accepted one block before the fork height (historically such
+    // commitments deserialized with last-writer-wins semantics).
+    {
+        const std::string tx_hex =
+            "8d000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e102900000000000000000286a260186c340020191cf96e3000191cf96e3001471b216bd593c215cf3d1617718e364908755476900000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        {
+            TxValidationState state;
+            NEVMMintTxSet setMintTxs;
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+            BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-duplicate-output");
+        }
+        {
+            TxValidationState state;
+            NEVMMintTxSet setMintTxs;
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                nForkHeight + 1, true, setMintTxs, mapAssetIn, mapAssetOut));
+            BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-duplicate-output");
+        }
+        // Pre-fork the canonical rules must NOT apply (deserialization stays permissive and
+        // no consensus rule rejects the duplicate assignment), or reindex of historical
+        // blocks would fail.
+        {
+            TxValidationState state;
+            NEVMMintTxSet setMintTxs;
+            CAssetsMap mapAssetIn;
+            CAssetsMap mapAssetOut;
+            BOOST_CHECK(CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                nForkHeight - 1, true, setMintTxs, mapAssetIn, mapAssetOut));
+            BOOST_CHECK(state.IsValid());
+        }
+    }
+
+    // The same asset guid serialized as two CAssetOut entries with *different* output
+    // indexes. This is the exact shape a distinct-asset-count check (mapAssetOut.size())
+    // would have missed: the two entries collapse to one map key. Uses an allocation send
+    // (version 142) because on burn-to-NEVM/mint the single-asset rule fires first;
+    // post-fork the duplicate-asset rule must reject it for every asset tx version.
+    {
+        const std::string tx_hex =
+            "8e000000021c20c6f72930a91983304748f2d4ac2afdaa24caccecaade2ef164dd0b4eb2360000000000fdffffffe7723d25853300be42aa3c4cbed44f7184a9598a3d2e6a7edd6c570e50bd81f10000000000fdffffff02aca4ed902e0000001600144773f668af479ce0a8d8ba5b77e669a732e10290000000000000000017" "6a150286c340010091cf96e30086c340010191cf96e300" "00000000";
+
+        CDataStream stream(ParseHex(tx_hex), SER_NETWORK, PROTOCOL_VERSION);
+        const CTransaction tx(deserialize, stream);
+
+        TxValidationState state;
+        NEVMMintTxSet setMintTxs;
+        CAssetsMap mapAssetIn;
+        CAssetsMap mapAssetOut;
+        BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+            nForkHeight, true, setMintTxs, mapAssetIn, mapAssetOut));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "assetallocation-duplicate-asset");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_data_short_witness_markers)
+{
+    const std::array<unsigned char, 4> marker{0xaa, 0x21, 0xa9, 0xed};
+    for (size_t size = 0; size <= 40; ++size) {
+        std::vector<unsigned char> pushed(size, 0);
+        std::copy_n(marker.begin(), std::min(size, marker.size()), pushed.begin());
+        const CScript script = CScript() << OP_RETURN << pushed;
+        std::vector<unsigned char> parsed;
+        const bool expected = size < 36;
+        BOOST_CHECK_EQUAL(GetSyscoinData(script, parsed), expected);
+        if (expected) {
+            BOOST_CHECK(parsed == pushed);
+        }
+    }
+
+    std::vector<unsigned char> commitment(36, 0);
+    std::copy(marker.begin(), marker.end(), commitment.begin());
+    const std::vector<unsigned char> syscoin_data{1, 2, 3};
+    const CScript script = CScript() << OP_RETURN << commitment << syscoin_data;
+    std::vector<unsigned char> parsed;
+    BOOST_CHECK(GetSyscoinData(script, parsed));
+    BOOST_CHECK(parsed == syscoin_data);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_mint_parent_node_offsets)
+{
+    auto check = [](const std::vector<unsigned char>& tx_nodes, uint16_t pos_tx,
+                    const std::vector<unsigned char>& receipt_nodes, uint16_t pos_receipt,
+                    bool expected) {
+        CMintSyscoin encoded;
+        encoded.voutAssets.emplace_back(1, std::vector<CAssetOutValue>{{0, 1}});
+        encoded.vchTxParentNodes = tx_nodes;
+        encoded.posTx = pos_tx;
+        encoded.vchReceiptParentNodes = receipt_nodes;
+        encoded.posReceipt = pos_receipt;
+        std::vector<unsigned char> data;
+        encoded.SerializeData(data);
+
+        CMintSyscoin decoded;
+        BOOST_CHECK_EQUAL(decoded.UnserializeFromData(data) == 0, expected);
+    };
+
+    check({}, 0, {}, 0, false);
+    check({0x80}, 0, {0x80}, 0, true);
+    check({0x80}, 1, {0x80}, 0, false);
+    check({0x80}, 0, {0x80}, 1, false);
+    check({0x80}, 2, {0x80}, 0, false);
+    check({0x80}, 0, {0x80}, 2, false);
+    check({}, std::numeric_limits<uint16_t>::max(), {}, 0, false);
+    check({}, 0, {}, std::numeric_limits<uint16_t>::max(), false);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_mint_compares_roots_before_proof_parsing)
+{
+    auto previous_roots_db = std::move(pnevmtxrootsdb);
+    auto previous_mint_db = std::move(pnevmtxmintdb);
+    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+        .path = "mint_root_order",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+        .path = "mint_root_order_txs",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+
+    const uint256 block_hash = uint256S("01");
+    NEVMTxRoot stored_roots;
+    stored_roots.nTxRoot = uint256S("02");
+    stored_roots.nReceiptRoot = uint256S("03");
+    pnevmtxrootsdb->FlushDataToCache({{block_hash, stored_roots}});
+
+    CMintSyscoin mint;
+    mint.nBlockHash = block_hash;
+    mint.nTxRoot = uint256S("04");
+    mint.nReceiptRoot = stored_roots.nReceiptRoot;
+    // Empty parent-node buffers are deliberately invalid RLP. Root mismatch must win.
+    TxValidationState state;
+    NEVMMintTxSet mint_txs;
+    uint64_t asset_guid{0};
+    CAmount amount{0};
+    std::string address;
+    BOOST_CHECK(!CheckSyscoinMintInternal(
+        mint, state, true, false, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "mint-mismatching-txroot");
+
+    mint.nTxRoot = stored_roots.nTxRoot;
+    mint.vchTxParentNodes = {0xc1, 0xc0};
+    mint.posTx = 1;
+    mint.vchReceiptParentNodes = {0xc1, 0xc0};
+    mint.posReceipt = 1;
+    const dev::bytes invalid_tx_value{0xc0};
+    const dev::h256 invalid_tx_hash = dev::sha3(
+        dev::bytesConstRef(invalid_tx_value.data(), invalid_tx_value.size()));
+    std::vector<unsigned char> invalid_tx_hash_bytes = invalid_tx_hash.asBytes();
+    std::reverse(invalid_tx_hash_bytes.begin(), invalid_tx_hash_bytes.end());
+    mint.nTxHash = uint256S(HexStr(invalid_tx_hash_bytes));
+    TxValidationState proof_state;
+    BOOST_CHECK(!CheckSyscoinMintInternal(
+        mint, proof_state, true, false, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(proof_state.GetRejectReason(), "mint-verify-receipt-proof");
+
+    pnevmtxmintdb->FlushDataToCache({mint.nTxHash});
+    TxValidationState replay_state;
+    BOOST_CHECK(!CheckSyscoinMintInternal(
+        mint, replay_state, true, false, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(replay_state.GetRejectReason(), "mint-exists");
+
+    mint.nTxHash = uint256S("01");
+    TxValidationState forged_hash_state;
+    BOOST_CHECK(!CheckSyscoinMintInternal(
+        mint, forged_hash_state, true, false, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(forged_hash_state.GetRejectReason(), "mint-verify-tx-hash");
+
+    pnevmtxrootsdb = std::move(previous_roots_db);
+    pnevmtxmintdb = std::move(previous_mint_db);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_mint_canonical_receipt_activation)
+{
+    auto previous_roots_db = std::move(pnevmtxrootsdb);
+    auto previous_mint_db = std::move(pnevmtxmintdb);
+    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+        .path = "mint_canonical_roots",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+        .path = "mint_canonical_txs",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+
+    const dev::bytes manager = Params().GetConsensus().vchSyscoinVaultManager;
+    const dev::bytes freeze_topic = Params().GetConsensus().vchTokenFreezeMethod;
+    dev::bytes guid_topic(32, 0);
+    guid_topic[0] = 1; // Legacy ignores these high bits.
+    guid_topic[31] = 1;
+    dev::RLPStream topics(4);
+    topics.append(freeze_topic);
+    topics.append(guid_topic);
+    topics.append(dev::bytes{1}); // Legacy does not inspect the freezer topic shape.
+    topics.append(dev::bytes{});  // Legacy accepts additional topics.
+
+    const std::string witness{"abc"};
+    dev::bytes event_data(128, 0);
+    event_data[31] = 1; // amount
+    event_data[32] = 1; // Legacy ignores the offset's high bits.
+    event_data[63] = 64;
+    event_data[64] = 1; // Legacy ignores the length's high bits.
+    event_data[95] = witness.size();
+    std::copy(witness.begin(), witness.end(), event_data.begin() + 96);
+
+    dev::RLPStream log(4);
+    log.append(manager);
+    log.appendRaw(topics.out());
+    log.append(event_data);
+    log.append(dev::bytes{}); // Legacy accepts additional log fields.
+    dev::RLPStream logs(1);
+    logs.appendRaw(log.out());
+    dev::RLPStream receipt(4);
+    receipt.append(1U);
+    receipt.append(0U);
+    receipt.append(dev::bytes(256, 0));
+    receipt.appendRaw(logs.out());
+    const dev::bytes receipt_value = receipt.out();
+
+    const uint64_t chain_id = Params().GetConsensus().nNEVMChainID;
+    dev::RLPStream eth_tx(9);
+    eth_tx.append(0U);
+    eth_tx.append(0U);
+    eth_tx.append(0U);
+    eth_tx.append(manager);
+    eth_tx.append(0U);
+    eth_tx.append(dev::bytes{});
+    eth_tx.append(static_cast<unsigned>(chain_id * 2 + 35));
+    eth_tx.append(0U);
+    eth_tx.append(0U);
+    const dev::bytes tx_value = eth_tx.out();
+
+    auto make_proof = [](const dev::bytes& value, uint16_t& value_pos, uint256& root) {
+        dev::RLPStream leaf(2);
+        leaf.append(dev::bytes{0x20}); // Leaf with an empty remaining nibble path.
+        leaf.append(value);
+        const dev::bytes leaf_data = leaf.out();
+        dev::RLPStream parents(1);
+        parents.appendRaw(leaf_data);
+        const dev::bytes parent_data = parents.out();
+        const auto value_it = std::search(parent_data.begin(), parent_data.end(), value.begin(), value.end());
+        BOOST_REQUIRE(value_it != parent_data.end());
+        value_pos = static_cast<uint16_t>(std::distance(parent_data.begin(), value_it));
+        const dev::bytes root_bytes = dev::sha3(
+            dev::bytesConstRef(leaf_data.data(), leaf_data.size())).asBytes();
+        std::copy(root_bytes.begin(), root_bytes.end(), root.begin());
+        return std::vector<unsigned char>(parent_data.begin(), parent_data.end());
+    };
+
+    CMintSyscoin mint;
+    mint.nBlockHash = uint256S("11");
+    mint.vchReceiptParentNodes = make_proof(receipt_value, mint.posReceipt, mint.nReceiptRoot);
+    mint.vchTxParentNodes = make_proof(tx_value, mint.posTx, mint.nTxRoot);
+    const dev::h256 tx_hash = dev::sha3(
+        dev::bytesConstRef(tx_value.data(), tx_value.size()));
+    std::vector<unsigned char> tx_hash_bytes = tx_hash.asBytes();
+    std::reverse(tx_hash_bytes.begin(), tx_hash_bytes.end());
+    mint.nTxHash = uint256S(HexStr(tx_hash_bytes));
+    pnevmtxrootsdb->FlushDataToCache({{mint.nBlockHash, {mint.nTxRoot, mint.nReceiptRoot}}});
+
+    NEVMMintTxSet mint_txs;
+    uint64_t asset_guid{0};
+    CAmount amount{0};
+    std::string address;
+    TxValidationState legacy_state;
+    BOOST_CHECK(CheckSyscoinMintInternal(
+        mint, legacy_state, true, false, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(asset_guid, 1U);
+    BOOST_CHECK_EQUAL(amount, 1);
+    BOOST_CHECK_EQUAL(address, witness);
+
+    TxValidationState canonical_state;
+    BOOST_CHECK(!CheckSyscoinMintInternal(
+        mint, canonical_state, true, true, mint_txs, asset_guid, amount, address));
+    BOOST_CHECK_EQUAL(canonical_state.GetRejectReason(), "mint-log-invalid-field-count");
+
+    pnevmtxrootsdb = std::move(previous_roots_db);
+    pnevmtxmintdb = std::move(previous_mint_db);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_mint_typed_transaction_schemas)
+{
+    auto previous_roots_db = std::move(pnevmtxrootsdb);
+    auto previous_mint_db = std::move(pnevmtxmintdb);
+    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+        .path = "mint_typed_roots",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+        .path = "mint_typed_txs",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+
+    const dev::bytes manager = Params().GetConsensus().vchSyscoinVaultManager;
+    const dev::bytes freeze_topic = Params().GetConsensus().vchTokenFreezeMethod;
+    dev::bytes guid_topic(32, 0);
+    guid_topic[31] = 1;
+    dev::bytes freezer_topic(32, 0);
+    freezer_topic[31] = 1;
+    dev::RLPStream topics(3);
+    topics.append(freeze_topic);
+    topics.append(guid_topic);
+    topics.append(freezer_topic);
+
+    const std::string witness{"abc"};
+    dev::bytes event_data(128, 0);
+    event_data[31] = 1;
+    event_data[63] = 64;
+    event_data[95] = witness.size();
+    std::copy(witness.begin(), witness.end(), event_data.begin() + 96);
+
+    dev::RLPStream log(3);
+    log.append(manager);
+    log.appendRaw(topics.out());
+    log.append(event_data);
+    dev::RLPStream logs(1);
+    logs.appendRaw(log.out());
+    dev::RLPStream receipt(4);
+    receipt.append(1U);
+    receipt.append(0U);
+    receipt.append(dev::bytes(256, 0));
+    receipt.appendRaw(logs.out());
+    const dev::bytes receipt_value = receipt.out();
+
+    const uint64_t chain_id = Params().GetConsensus().nNEVMChainID;
+    const dev::RLPStream empty_list(0);
+    dev::RLPStream type1_tx(11);
+    type1_tx.append(chain_id);
+    type1_tx.append(0U);
+    type1_tx.append(0U);
+    type1_tx.append(0U);
+    type1_tx.append(manager);
+    type1_tx.append(0U);
+    type1_tx.append(dev::bytes{});
+    type1_tx.appendRaw(empty_list.out());
+    type1_tx.append(0U);
+    type1_tx.append(0U);
+    type1_tx.append(0U);
+    const dev::bytes type1_value = type1_tx.out();
+
+    dev::RLPStream type2_tx(12);
+    type2_tx.append(chain_id);
+    type2_tx.append(0U);
+    type2_tx.append(0U);
+    type2_tx.append(0U);
+    type2_tx.append(0U);
+    type2_tx.append(manager);
+    type2_tx.append(0U);
+    type2_tx.append(dev::bytes{});
+    type2_tx.appendRaw(empty_list.out());
+    type2_tx.append(0U);
+    type2_tx.append(0U);
+    type2_tx.append(0U);
+    const dev::bytes type2_value = type2_tx.out();
+
+    auto make_proof = [](const dev::bytes& value,
+                         const std::optional<uint8_t>& envelope_type,
+                         uint16_t& value_pos,
+                         uint256& root) {
+        dev::bytes trie_value;
+        if (envelope_type.has_value()) {
+            trie_value.push_back(*envelope_type);
+        }
+        trie_value.insert(trie_value.end(), value.begin(), value.end());
+
+        dev::RLPStream leaf(2);
+        leaf.append(dev::bytes{0x20});
+        leaf.append(trie_value);
+        const dev::bytes leaf_data = leaf.out();
+        dev::RLPStream parents(1);
+        parents.appendRaw(leaf_data);
+        const dev::bytes parent_data = parents.out();
+        const auto value_it = std::search(
+            parent_data.begin(), parent_data.end(), value.begin(), value.end());
+        BOOST_REQUIRE(value_it != parent_data.end());
+        value_pos = static_cast<uint16_t>(
+            std::distance(parent_data.begin(), value_it));
+        const dev::bytes root_bytes = dev::sha3(
+            dev::bytesConstRef(leaf_data.data(), leaf_data.size())).asBytes();
+        std::copy(root_bytes.begin(), root_bytes.end(), root.begin());
+        return std::vector<unsigned char>(parent_data.begin(), parent_data.end());
+    };
+
+    auto check = [&](const dev::bytes& tx_value,
+                     uint8_t tx_type,
+                     uint8_t receipt_type,
+                     bool expected,
+                     const std::string& reason = "") {
+        CMintSyscoin mint;
+        mint.nBlockHash = uint256S("22");
+        mint.vchReceiptParentNodes = make_proof(
+            receipt_value, receipt_type, mint.posReceipt, mint.nReceiptRoot);
+        mint.vchTxParentNodes = make_proof(
+            tx_value, tx_type, mint.posTx, mint.nTxRoot);
+        const dev::h256 tx_hash = dev::sha3(
+            dev::bytesConstRef(tx_value.data(), tx_value.size()));
+        std::vector<unsigned char> tx_hash_bytes = tx_hash.asBytes();
+        std::reverse(tx_hash_bytes.begin(), tx_hash_bytes.end());
+        mint.nTxHash = uint256S(HexStr(tx_hash_bytes));
+        pnevmtxrootsdb->FlushDataToCache(
+            {{mint.nBlockHash, {mint.nTxRoot, mint.nReceiptRoot}}});
+
+        NEVMMintTxSet mint_txs;
+        uint64_t asset_guid{0};
+        CAmount amount{0};
+        std::string address;
+        TxValidationState state;
+        BOOST_CHECK_EQUAL(CheckSyscoinMintInternal(
+            mint, state, true, true, mint_txs, asset_guid, amount, address), expected);
+        if (expected) {
+            BOOST_CHECK_EQUAL(asset_guid, 1U);
+            BOOST_CHECK_EQUAL(amount, 1);
+            BOOST_CHECK_EQUAL(address, witness);
+        } else {
+            BOOST_CHECK_EQUAL(state.GetRejectReason(), reason);
+        }
+    };
+
+    check(type1_value, 1, 1, true);
+    check(type2_value, 2, 2, true);
+    check(type1_value, 2, 2, false, "mint-unsupported-tx-format");
+    check(type1_value, 1, 2, false, "mint-envelope-type-mismatch");
+    check(type1_value, 3, 3, false, "mint-unsupported-tx-format");
+    check(type1_value, 0x7f, 0x7f, false, "mint-unsupported-tx-format");
+
+    pnevmtxrootsdb = std::move(previous_roots_db);
+    pnevmtxmintdb = std::move(previous_mint_db);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_bridge_raw_allocation_canonicality)
+{
+    const uint32_t fork_height = (uint32_t)Params().GetConsensus().nCLReceiptStartBlock;
+    auto make_tx = [](const std::vector<unsigned char>& data,
+                      int32_t version = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM) {
+        CMutableTransaction mtx;
+        mtx.nVersion = version;
+        mtx.vout.emplace_back(0, CScript() << OP_TRUE);
+        mtx.vout.emplace_back(0, CScript() << OP_RETURN << data);
+        mtx.LoadAssets();
+        return CTransaction(mtx);
+    };
+    auto check = [&](const CTransaction& tx, uint32_t height, const std::string& reason) {
+        TxValidationState state;
+        NEVMMintTxSet set_mint_txs;
+        CAssetsMap assets_in;
+        CAssetsMap assets_out;
+        BOOST_CHECK(!CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                                       height, true, set_mint_txs, assets_in, assets_out));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), reason);
+    };
+    auto check_valid = [&](const CTransaction& tx, uint32_t height) {
+        TxValidationState state;
+        NEVMMintTxSet set_mint_txs;
+        CAssetsMap assets_in;
+        CAssetsMap assets_out;
+        BOOST_CHECK(CheckSyscoinInputs(Params().GetConsensus(), tx, tx.GetHash(), state,
+                                      height, true, set_mint_txs, assets_in, assets_out));
+        BOOST_CHECK(state.IsValid());
+    };
+
+    CAssetAllocation null_guid;
+    null_guid.voutAssets.emplace_back(0, std::vector<CAssetOutValue>{{1, 1}});
+    std::vector<unsigned char> null_guid_data;
+    null_guid.SerializeData(null_guid_data);
+    const CTransaction null_guid_tx = make_tx(null_guid_data);
+    check(null_guid_tx, fork_height, "assetallocation-null-asset");
+    check(null_guid_tx, fork_height + 1, "assetallocation-null-asset");
+
+    CMutableTransaction malformed_script_mtx;
+    malformed_script_mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM;
+    malformed_script_mtx.vout.emplace_back(0, CScript() << OP_TRUE);
+    CScript malformed_script = CScript() << OP_RETURN << null_guid_data;
+    malformed_script.push_back(OP_PUSHDATA1); // Truncated trailing push.
+    malformed_script_mtx.vout.emplace_back(0, malformed_script);
+    malformed_script_mtx.LoadAssets();
+    const CTransaction malformed_script_tx(malformed_script_mtx);
+    check_valid(malformed_script_tx, fork_height - 1);
+    check(malformed_script_tx, fork_height, "assetallocation-noncanonical-script");
+
+    CDataStream noncanonical(SER_NETWORK, PROTOCOL_VERSION);
+    uint64_t asset_count{1};
+    uint64_t asset_guid{1};
+    uint64_t value_count{1};
+    uint64_t output_index{1};
+    uint64_t overflowing_compressed_amount{17073621928676916506ULL};
+    noncanonical << COMPACTSIZE(asset_count) << VARINT(asset_guid)
+                 << COMPACTSIZE(value_count) << COMPACTSIZE(output_index)
+                 << VARINT(overflowing_compressed_amount);
+    const auto noncanonical_span = MakeUCharSpan(noncanonical);
+    std::vector<unsigned char> noncanonical_data(
+        noncanonical_span.begin(), noncanonical_span.end());
+    // Keep the destination valid so this vector isolates amount canonicality.
+    noncanonical_data.push_back(20);
+    noncanonical_data.insert(noncanonical_data.end(), 20, 1);
+    const CTransaction noncanonical_tx = make_tx(noncanonical_data);
+    check(noncanonical_tx, fork_height, "assetallocation-noncanonical-encoding");
+    check(noncanonical_tx, fork_height + 1, "assetallocation-noncanonical-encoding");
+    check_valid(noncanonical_tx, fork_height - 1);
+
+    CAssetAllocation canonical_allocation;
+    canonical_allocation.voutAssets.emplace_back(
+        1, std::vector<CAssetOutValue>{{1, 1}});
+    std::vector<unsigned char> allocation_data;
+    canonical_allocation.SerializeData(allocation_data);
+
+    std::vector<unsigned char> valid_burn_data = allocation_data;
+    valid_burn_data.push_back(20);
+    valid_burn_data.insert(valid_burn_data.end(), 20, 1);
+    check_valid(make_tx(valid_burn_data), fork_height);
+
+    check_valid(make_tx(allocation_data), fork_height - 1);
+    check(make_tx(allocation_data), fork_height,
+          "assetallocation-invalid-nevm-destination");
+
+    std::vector<unsigned char> short_destination = allocation_data;
+    short_destination.push_back(20);
+    short_destination.insert(short_destination.end(), 19, 1);
+    check(make_tx(short_destination), fork_height,
+          "assetallocation-invalid-nevm-destination");
+
+    std::vector<unsigned char> wrong_length = allocation_data;
+    wrong_length.push_back(19);
+    wrong_length.insert(wrong_length.end(), 19, 1);
+    check(make_tx(wrong_length), fork_height,
+          "assetallocation-invalid-nevm-destination");
+
+    std::vector<unsigned char> trailing_data = valid_burn_data;
+    trailing_data.push_back(0);
+    check(make_tx(trailing_data), fork_height,
+          "assetallocation-invalid-nevm-destination");
+
+    std::vector<unsigned char> zero_destination = allocation_data;
+    zero_destination.push_back(20);
+    zero_destination.insert(zero_destination.end(), 20, 0);
+    check(make_tx(zero_destination), fork_height,
+          "assetallocation-null-nevm-destination");
+
+    // The representation mismatch matters at the bridge boundary. Ordinary
+    // SPT accounting uses the decoded, MoneyRange-checked value consistently.
+    const CTransaction noncanonical_send =
+        make_tx(noncanonical_data, SYSCOIN_TX_VERSION_ALLOCATION_SEND);
+    check_valid(noncanonical_send, fork_height);
+}
+
+BOOST_AUTO_TEST_CASE(syscoin_bridge_uses_clreceipt_activation)
+{
+    const auto main = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto testnet = CreateChainParams(*m_node.args, ChainType::TESTNET);
+    BOOST_CHECK_EQUAL(main->GetConsensus().nCLReceiptStartBlock, std::numeric_limits<int>::max());
+    BOOST_CHECK_EQUAL(testnet->GetConsensus().nCLReceiptStartBlock, 1746000);
+
+    ArgsManager args;
+    args.ForceSetArg("-clreceiptstartheight", "123");
+    const auto regtest = CreateChainParams(args, ChainType::REGTEST);
+    BOOST_CHECK_EQUAL(regtest->GetConsensus().nCLReceiptStartBlock, 123);
 }
 
 BOOST_AUTO_TEST_CASE(test_Get)

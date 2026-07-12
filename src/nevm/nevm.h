@@ -6,5 +6,12 @@
 #define SYSCOIN_NEVM_NEVM_H
 #include <nevm/commondata.h>
 #include <nevm/rlp.h>
-bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP& parentNodes, const dev::RLP& root); 
+
+#include <optional>
+
+bool VerifyProof(dev::bytesConstRef path,
+                 const dev::RLP& value,
+                 const dev::RLP& parentNodes,
+                 const dev::RLP& root,
+                 std::optional<uint8_t>* envelope_type = nullptr);
 #endif // SYSCOIN_NEVM_NEVM_H

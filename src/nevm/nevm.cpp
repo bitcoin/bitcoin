@@ -4,7 +4,36 @@
 #include <nevm/nevm.h>
 #include <nevm/sha3.h>
 #include <util/strencodings.h>
+
+static bool MatchProofValue(dev::bytes node_value,
+                            const dev::RLP& expected_value,
+                            std::optional<uint8_t>* envelope_type)
+{
+  if(node_value.empty()) {
+    return false;
+  }
+
+  std::optional<uint8_t> parsed_type;
+  // EIP-2718 values are TransactionType || TransactionPayload, where the
+  // TransactionType range is inclusive: [0x00, 0x7f]. The consensus parser
+  // separately whitelists the authenticated type values it understands.
+  if(node_value[0] <= 0x7f) {
+    parsed_type = node_value[0];
+    node_value.erase(node_value.begin());
+  }
+  if(node_value != expected_value.data().toBytes()) {
+    return false;
+  }
+  if(envelope_type) {
+    *envelope_type = parsed_type;
+  }
+  return true;
+}
+
 int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &path, int pathPtr) {
+  if(encodedPartialPath.empty()) {
+    return -1;
+  }
   std::string partialPath;
   // typecast as the character
   uint8_t partialPathInt; 
@@ -22,7 +51,11 @@ int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &
     return -1;
   }
 }
-bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP& parentNodes, const dev::RLP& root) {
+bool VerifyProof(dev::bytesConstRef path,
+                 const dev::RLP& value,
+                 const dev::RLP& parentNodes,
+                 const dev::RLP& root,
+                 std::optional<uint8_t>* envelope_type) {
   
   dev::RLP currentNode;
   const int len = parentNodes.itemCount();
@@ -45,11 +78,10 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
     switch(currentNode.itemCount()){
       case 17://branch node
         if(pathPtr == (int)pathString.size()){
-          if(currentNode[16].payload().contentsEqual(value.data().toVector())){
-            return true;
-          }else{
-            return false;
-          }
+          // RLP-encoded transaction/receipt indexes are prefix-free, so
+          // canonical Ethereum tries terminate these proofs at leaf nodes.
+          // Keep generic MPT branch-value handling consistent with leaves.
+          return MatchProofValue(currentNode[16].toBytes(), value, envelope_type);
         }
         pathPtrInt[0] = pathString[pathPtr];
         pathPtrInt[1] = '\0';
@@ -60,24 +92,22 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
         pathPtr += 1;
         break;
       case 2:
-        nibbles = nibblesToTraverse(toHex(currentNode[0].payload()), pathString, pathPtr);
+        {
+        const std::string encodedPartialPath = toHex(currentNode[0].payload());
+        if(encodedPartialPath.empty()) {
+          return false;
+        }
+        nibbles = nibblesToTraverse(encodedPartialPath, pathString, pathPtr);
         if(nibbles <= -1) {
           return false;
         }
         pathPtr += nibbles;
         if(pathPtr == (int)pathString.size()) { //leaf node
           dev::bytes nodeVec(currentNode[1].toBytes());
-          // https://eips.ethereum.org/EIPS/eip-2718 first byte less than 0x7f is the transaction type and not part of RLP
-          if(nodeVec[0] < 0x7f) {
-            nodeVec = dev::bytes(nodeVec.begin()+1, nodeVec.end());
-          }
-          if(nodeVec == value.data().toBytes()){
-            return true;
-          } else {
-            return false;
-          }
+          return MatchProofValue(std::move(nodeVec), value, envelope_type);
         } else {//extension node
           nodeKey = currentNode[1];
+        }
         }
         break;
       default:
