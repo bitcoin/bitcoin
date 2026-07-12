@@ -49,6 +49,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 class Chainstate;
@@ -361,10 +362,50 @@ public:
     std::optional<std::pair<ScriptError, std::string>> operator()();
 };
 
-// CScriptCheck is used a lot in std::vector, make sure that's efficient
+/**
+ * Closure representing the transaction-level CISA aggregate signature verification (BIP460)
+ * Note that this stores references to the spending transaction and its precomputed data
+ */
+class CISACheck
+{
+private:
+    const CTransaction* m_tx;
+    const std::vector<CTxOut>* m_spent_outputs;
+    script_verify_flags m_flags;
+    const PrecomputedTransactionData* m_txdata;
+
+public:
+    CISACheck(const CTransaction& tx, const std::vector<CTxOut>& spent_outputs, script_verify_flags flags, const PrecomputedTransactionData& txdata)
+        : m_tx(&tx), m_spent_outputs(&spent_outputs), m_flags(flags), m_txdata(&txdata) {}
+
+    CISACheck(const CISACheck&) = delete;
+    CISACheck& operator=(const CISACheck&) = delete;
+    CISACheck(CISACheck&&) = default;
+    CISACheck& operator=(CISACheck&&) = default;
+
+    std::optional<std::pair<ScriptError, std::string>> operator()();
+};
+
+/**
+ * A check item processed by the validation check queue: either a per-input
+ * script check or a per-transaction CISA aggregate check.
+ */
+struct ValidationCheck : std::variant<CScriptCheck, CISACheck> {
+    using variant::variant;
+
+    std::optional<std::pair<ScriptError, std::string>> operator()()
+    {
+        return std::visit([](auto& check) { return check(); }, static_cast<variant&>(*this));
+    }
+};
+
+// Validation checks are used a lot in std::vector, make sure that's efficient
 static_assert(std::is_nothrow_move_assignable_v<CScriptCheck>);
 static_assert(std::is_nothrow_move_constructible_v<CScriptCheck>);
 static_assert(std::is_nothrow_destructible_v<CScriptCheck>);
+static_assert(std::is_nothrow_move_assignable_v<ValidationCheck>);
+static_assert(std::is_nothrow_move_constructible_v<ValidationCheck>);
+static_assert(std::is_nothrow_destructible_v<ValidationCheck>);
 
 /**
  * Convenience class for initializing and passing the script execution cache
@@ -980,7 +1021,7 @@ private:
     MockableSteadyClock::time_point m_last_presync_update GUARDED_BY(GetMutex()){};
 
     //! A queue for script verifications that have to be performed by worker threads.
-    CCheckQueue<CScriptCheck> m_script_check_queue;
+    CCheckQueue<ValidationCheck> m_script_check_queue;
 
     //! Timers and counters used for benchmarking validation in both background
     //! and active chainstates.
@@ -1377,7 +1418,7 @@ public:
     //! or nullopt if the best header does not extend the tip.
     std::optional<int> BlocksAheadOfTip() const LOCKS_EXCLUDED(::cs_main);
 
-    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    CCheckQueue<ValidationCheck>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
 
