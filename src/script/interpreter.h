@@ -203,10 +203,11 @@ struct PrecomputedTransactionData
 
 enum class SigVersion
 {
-    BASE = 0,        //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
-    WITNESS_V0 = 1,  //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
-    TAPROOT = 2,     //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
-    TAPSCRIPT = 3,   //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
+    BASE = 0,               //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
+    WITNESS_V0 = 1,         //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
+    TAPROOT = 2,            //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
+    TAPSCRIPT = 3,          //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
+    WITNESS_V2_KEYPATH = 4, //!< Witness v2 with 32-byte program, not BIP16 P2SH-wrapped, aggregated key path spending; see BIP460
 };
 
 struct ScriptExecutionData
@@ -235,6 +236,10 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! The aggregation mode marker byte committed to by witness v2 keypath
+    //! signature messages (BIP460). Only used with SigVersion::WITNESS_V2_KEYPATH.
+    uint8_t m_cisa_agg_mode{0};
 };
 
 /** Signature hash sizes */
