@@ -9,8 +9,10 @@
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
+#include <secp256k1_fullagg.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+#include <secp256k1_schnorrsig_halfagg.h>
 #include <span.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -239,6 +241,55 @@ bool XOnlyPubKey::VerifySchnorr(const uint256& msg, std::span<const unsigned cha
     secp256k1_xonly_pubkey pubkey;
     if (!secp256k1_xonly_pubkey_parse(secp256k1_context_static, &pubkey, m_keydata.data())) return false;
     return secp256k1_schnorrsig_verify(secp256k1_context_static, sigbytes.data(), msg.begin(), 32, &pubkey);
+}
+
+bool VerifyHalfAggSchnorr(const std::vector<XOnlyPubKey>& pubkeys, const std::vector<uint256>& msgs, std::span<const unsigned char> aggsig)
+{
+    assert(pubkeys.size() == msgs.size());
+    const size_t n = pubkeys.size();
+    if (n == 0 || aggsig.size() != (n + 1) * 32) return false;
+
+    std::vector<secp256k1_xonly_pubkey> secp_pubkeys(n);
+    std::vector<unsigned char> flat_msgs(n * 32);
+    for (size_t i = 0; i < n; i++) {
+        if (!secp256k1_xonly_pubkey_parse(secp256k1_context_static, &secp_pubkeys[i], pubkeys[i].data())) {
+            return false;
+        }
+        memcpy(flat_msgs.data() + i * 32, msgs[i].begin(), 32);
+    }
+
+    return secp256k1_schnorrsig_aggverify(
+        secp256k1_context_static,
+        secp_pubkeys.data(),
+        flat_msgs.data(),
+        n,
+        aggsig.data(),
+        aggsig.size());
+}
+
+bool VerifyFullAggSchnorr(const std::vector<XOnlyPubKey>& pubkeys, const std::vector<uint256>& msgs, std::span<const unsigned char> sig64)
+{
+    assert(pubkeys.size() == msgs.size());
+    const size_t n = pubkeys.size();
+    if (n == 0 || sig64.size() != 64) return false;
+
+    std::vector<secp256k1_xonly_pubkey> secp_pubkeys(n);
+    std::vector<const secp256k1_xonly_pubkey*> pubkey_ptrs(n);
+    std::vector<const unsigned char*> msg_ptrs(n);
+    for (size_t i = 0; i < n; i++) {
+        if (!secp256k1_xonly_pubkey_parse(secp256k1_context_static, &secp_pubkeys[i], pubkeys[i].data())) {
+            return false;
+        }
+        pubkey_ptrs[i] = &secp_pubkeys[i];
+        msg_ptrs[i] = msgs[i].begin();
+    }
+
+    return secp256k1_fullagg_verify(
+        secp256k1_context_static,
+        sig64.data(),
+        pubkey_ptrs.data(),
+        msg_ptrs.data(),
+        n);
 }
 
 static const HashWriter HASHER_TAPTWEAK{TaggedHash("TapTweak")};
