@@ -536,6 +536,7 @@ static RPCMethod decodescript()
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V1_TAPROOT:
         case TxoutType::ANCHOR:
+        case TxoutType::WITNESS_V2_CISA:
             // Should not be wrapped
             return false;
         } // no default case, so the compiler can warn about missing cases
@@ -579,6 +580,7 @@ static RPCMethod decodescript()
             case TxoutType::WITNESS_V0_SCRIPTHASH:
             case TxoutType::WITNESS_V1_TAPROOT:
             case TxoutType::ANCHOR:
+            case TxoutType::WITNESS_V2_CISA:
                 // Should not be wrapped
                 return false;
             } // no default case, so the compiler can warn about missing cases
