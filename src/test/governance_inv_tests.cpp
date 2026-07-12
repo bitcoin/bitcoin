@@ -155,6 +155,7 @@ CGovernanceVote MakeGovernanceVote(const uint256& parent_hash)
 {
     CGovernanceVote vote{COutPoint{uint256S("11"), 1}, parent_hash, VOTE_SIGNAL_FUNDING, VOTE_OUTCOME_YES};
     vote.SetTime(GetTime<std::chrono::seconds>().count());
+    vote.SetSignature(std::vector<unsigned char>(CGovernanceVote::COMPACT_SIG_SIZE));
     return vote;
 }
 
