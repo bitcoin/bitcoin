@@ -371,8 +371,11 @@ static RPCHelpMan quorum_hasrecsig()
 static bool VerifyRecoveredSigLatestQuorums(const Consensus::LLMQParams& llmq_params, ChainstateManager& chainman,
     int signHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
 {
-    // First check against the current active set, if it fails check against the last active set
-    for (int signOffset : {0, llmq_params.dkgInterval}) {
+    // Reproduce the offset used for signing, first against the current active
+    // set and then against the previous active set.
+    for (int signOffset : {
+             llmq::SIGN_HEIGHT_OFFSET,
+             llmq_params.dkgInterval + llmq::SIGN_HEIGHT_OFFSET}) {
         if (llmq::VerifyRecoveredSig(chainman, signHeight, id, msgHash, sig, signOffset) == llmq::VerifyRecSigStatus::Valid) {
             return true;
         }
