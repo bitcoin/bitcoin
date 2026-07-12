@@ -45,7 +45,7 @@ inline constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 enum class StaleTipRelayMode {
     //! Stale-tip relay disabled.
     NONE,
-    //! Track stale tips and announce their headers to peers.
+    //! Track and announce stale tips, and serve available stale branch blocks.
     HEADERS,
 };
 /** All stale-tip relay modes, in the order -help lists them. */

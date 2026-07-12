@@ -77,6 +77,47 @@ BOOST_AUTO_TEST_CASE(staletip_tracker_returns_tips_in_discovery_order)
     BOOST_CHECK_EQUAL(forks[1].tip, first_child);
 }
 
+BOOST_AUTO_TEST_CASE(staletip_tracker_serve_policy)
+{
+    LOCK(::cs_main);
+
+    BlockTree tree;
+    CBlockIndex* tip{tree.AddChain(/*height=*/4, {.have_data = true})};
+
+    CBlockIndex* stale_parent{tree.Add(Assert(Assert(tip->pprev)->pprev), /*active=*/false)};
+    CBlockIndex* stale{tree.Add(stale_parent, /*active=*/false)};
+    StaleTipTracker tips;
+
+    // A tracked header-only branch is not servable.
+    BOOST_CHECK(tips.AddStaleTip(tree.active_chain, *stale_parent));
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *stale));
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *stale_parent));
+
+    stale_parent->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+    stale_parent->nStatus |= BLOCK_HAVE_DATA;
+    BOOST_CHECK(tips.CanServeStaleBranchBlock(tree.active_chain, *stale_parent));
+    BOOST_CHECK(tips.AddStaleTip(tree.active_chain, *stale));
+    BOOST_CHECK(!tips.IsTracked(*stale_parent));
+    BOOST_CHECK(tips.CanServeStaleBranchBlock(tree.active_chain, *stale_parent));
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *stale));
+
+    stale->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+    stale->nStatus |= BLOCK_HAVE_DATA;
+    BOOST_CHECK(tips.IsTracked(*stale));
+    BOOST_CHECK(tips.CanServeStaleBranchBlock(tree.active_chain, *stale));
+    BOOST_CHECK(tips.CanServeStaleBranchBlock(tree.active_chain, *stale_parent));
+
+    // A block with data that is not on a tracked stale branch is not servable.
+    CBlockIndex* untracked{tree.Add(Assert(tip->pprev), /*active=*/false, {.have_data = true})};
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *untracked));
+
+    // A tracked tip that is no longer eligible (here: reorged onto the
+    // active chain) is not servable.
+    tree.active_chain.SetTip(*stale);
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *stale));
+    BOOST_CHECK(!tips.CanServeStaleBranchBlock(tree.active_chain, *stale_parent));
+}
+
 BOOST_AUTO_TEST_CASE(staletip_tracker_rejects_too_long_branch)
 {
     LOCK(::cs_main);

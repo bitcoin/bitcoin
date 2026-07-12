@@ -117,8 +117,8 @@ bool StaleTipRelayManager::IsAnnouncedStaleBranchBlock(NodeId peer, const CChain
 
 std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
     NodeId peer, const CChain& chain,
-    const PeerHasHeaderFn& peer_has_header,
-    const CanServeBranchFn& can_serve_branch)
+    const CanServeBlockFn& can_serve_block,
+    const PeerHasHeaderFn& peer_has_header)
 {
     AssertLockHeld(::cs_main);
     const auto it{m_peers.find(peer)};
@@ -139,7 +139,22 @@ std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
         // its active tip).
         if (peer_has_header(stale_tip)) continue;
 
-        const bool have_block{can_serve_branch(fork)};
+        // BIP 332: have_block promises the stale tip's block. The peer then
+        // fetches the branch oldest first. A request for a block we lack is
+        // ignored, but one that our serving limits refuse disconnects the
+        // peer, so every block on the branch must be within them. Block
+        // times need not increase, so each block is checked. A tracked
+        // branch may be served whatever its age (see
+        // CanServeStaleBranchBlock()).
+        const bool have_tip_data{(stale_tip.nStatus & BLOCK_HAVE_DATA) != 0};
+        bool within_serve_limits{true};
+        for (const CBlockIndex* block{&stale_tip}; block != fork.fork_point; block = block->pprev) {
+            if (!can_serve_block(*block)) {
+                within_serve_limits = false;
+                break;
+            }
+        }
+        const bool have_block{have_tip_data && within_serve_limits};
         // Signet stale tips can only be validated with the block data, and
         // peers may disconnect for announcements without it.
         if (!have_block && m_opts.chain_type == ChainType::SIGNET) continue;
@@ -152,6 +167,12 @@ std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
     // become eligible again.
     std::erase_if(info.m_staletips_to_peer, [&](const CBlockIndex* tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return !m_tracker.IsTracked(*tip); });
     return announcements;
+}
+
+bool StaleTipRelayManager::CanServeStaleBranchBlock(const CChain& chain, const CBlockIndex& block) const
+{
+    AssertLockHeld(::cs_main);
+    return m_tracker.CanServeStaleBranchBlock(chain, block);
 }
 
 std::vector<StaleFork> StaleTipRelayManager::GetStaleTips(const CChain& chain) const

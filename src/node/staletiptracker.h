@@ -129,6 +129,11 @@ public:
      * @return Whether the tracker was updated to track `stale_tip`.
      */
     bool AddStaleTip(const CChain& active_chain, const CBlockIndex& stale_tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Whether `block` is stored on a tracked, still-eligible stale branch and
+     *  may be served to a peer that negotiated stale-tip relay. */
+    bool CanServeStaleBranchBlock(const CChain& active_chain, const CBlockIndex& block) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     /** Get the tracked tips that are currently eligible, with their fork
      *  points, in the order they were added. */
     std::vector<StaleFork> GetStaleTips(const CChain& active_chain) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

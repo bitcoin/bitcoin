@@ -39,12 +39,12 @@ struct TestPeer {
 };
 
 std::vector<StaleTipMessage> Announce(node::StaleTipRelayManager& manager, const CChain& chain, const TestPeer& peer,
-                                      bool can_serve = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+                                      std::optional<int> max_serve_depth = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     return manager.GetStaleTipsToAnnounce(
         peer.id, chain,
-        [&](const CBlockIndex& block) { return peer.HasHeader(block); },
-        [&](const node::StaleFork&) { return can_serve; });
+        [&](const CBlockIndex& block) { return !max_serve_depth || chain.Height() - block.nHeight <= *max_serve_depth; },
+        [&](const CBlockIndex& block) { return peer.HasHeader(block); });
 }
 
 std::vector<uint256> Tips(const std::vector<StaleTipMessage>& announcements)
@@ -167,9 +167,12 @@ BOOST_AUTO_TEST_CASE(signet_announces_with_block)
     manager.ConnectedPeer(peer.id);
     BOOST_CHECK(manager.AcceptedStaleTip(tree.active_chain, *tip));
 
-    // A signet tip is only announced once its blocks can be served.
-    BOOST_CHECK(Announce(manager, tree.active_chain, peer, /*can_serve=*/false).empty());
-    const auto announcements{Announce(manager, tree.active_chain, peer, /*can_serve=*/true)};
+    // A signet tip is only announced while its block can be served, so not
+    // after its validated block was pruned.
+    tip->nStatus &= ~BLOCK_HAVE_DATA;
+    BOOST_CHECK(Announce(manager, tree.active_chain, peer).empty());
+    tip->nStatus |= BLOCK_HAVE_DATA;
+    const auto announcements{Announce(manager, tree.active_chain, peer)};
     BOOST_REQUIRE_EQUAL(announcements.size(), 1U);
     BOOST_CHECK(announcements.front().have_block);
     manager.DisconnectedPeer(peer.id);
@@ -216,6 +219,61 @@ BOOST_AUTO_TEST_CASE(announced_branch_blocks)
     manager.DisconnectedPeer(0);
     manager.DisconnectedPeer(1);
     BOOST_CHECK(!manager.IsAnnouncedStaleBranchBlock(0, chain, *tip));
+}
+
+BOOST_AUTO_TEST_CASE(announces_servable_branches)
+{
+    LOCK(::cs_main);
+
+    BlockTree tree;
+    CBlockIndex* active{tree.AddChain(/*height=*/5, {.have_data = true})};
+    CBlockIndex* first{tree.Add(active->GetAncestor(2), /*active=*/false)};
+    CBlockIndex* middle{tree.Add(first, /*active=*/false)};
+    CBlockIndex* tip{tree.Add(middle, /*active=*/false)};
+
+    node::StaleTipRelayManager manager{{}};
+    BOOST_CHECK(manager.AcceptedStaleTip(tree.active_chain, *tip));
+    NodeId next_id{0};
+    const auto have_block_by_depth{[&](std::optional<int> max_serve_depth) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        const TestPeer peer{.id = next_id++, .best_known = active};
+        manager.ConnectedPeer(peer.id);
+        const auto announcements{Announce(manager, tree.active_chain, peer, max_serve_depth)};
+        BOOST_REQUIRE_EQUAL(announcements.size(), 1U);
+        return announcements.front().have_block;
+    }};
+
+    // have_block follows the tip's block, even while its ancestors are
+    // missing.
+    BOOST_CHECK(!have_block_by_depth(std::nullopt));
+    tip->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+    tip->nStatus |= BLOCK_HAVE_DATA;
+    BOOST_CHECK(have_block_by_depth(std::nullopt));
+
+    // Every block on the branch must be shallow enough to serve to the peer,
+    // as it fetches them oldest first.
+    const int first_depth{tree.active_chain.Height() - first->nHeight};
+    BOOST_CHECK(have_block_by_depth(first_depth));
+    BOOST_CHECK(!have_block_by_depth(first_depth - 1));
+
+    const auto have_block_by_time{[&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        const TestPeer peer{.id = next_id++, .best_known = active};
+        manager.ConnectedPeer(peer.id);
+        const auto announcements{manager.GetStaleTipsToAnnounce(
+            peer.id, tree.active_chain,
+            // Like the historical block serving limit, refuse blocks older
+            // than a cutoff, here the first block after the fork point.
+            /*can_serve_block=*/[&](const CBlockIndex& block) { return block.GetBlockTime() >= first->GetBlockTime(); },
+            /*peer_has_header=*/[&](const CBlockIndex& block) { return peer.HasHeader(block); })};
+        BOOST_REQUIRE_EQUAL(announcements.size(), 1U);
+        return announcements.front().have_block;
+    }};
+
+    BOOST_CHECK(have_block_by_time());
+
+    // Block times need not increase along the branch, so an interior block
+    // older than both ends is checked too.
+    middle->nTime = first->nTime - 1;
+    BOOST_CHECK(!have_block_by_time());
 }
 
 BOOST_AUTO_TEST_CASE(staletip_make_message)

@@ -1176,6 +1176,9 @@ private:
      * about and we fully-validated them at some point.
      */
     bool BlockRequestAllowed(const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Whether this negotiated peer may fetch a stored block on an eligible
+     *  tracked stale branch, even if it has never been connected. */
+    bool StaleTipBlockRequestAllowed(const Peer& peer, const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
     /** Whether a block is too deep to serve to this peer. When we only signal
      *  NODE_NETWORK_LIMITED, serving deeper blocks would leak our prune height. */
     bool BelowLimitedServingThreshold(const CNode& node, const Peer& peer, const CBlockIndex& block_index) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -2183,6 +2186,14 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex& block_index)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, block_index, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
+bool PeerManagerImpl::StaleTipBlockRequestAllowed(const Peer& peer, const CBlockIndex& block_index)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+    return NegotiatedStaleTip(peer) &&
+           m_staletiprelayman->CanServeStaleBranchBlock(m_chainman.ActiveChain(), block_index);
+}
+
 bool PeerManagerImpl::BelowLimitedServingThreshold(const CNode& node, const Peer& peer, const CBlockIndex& block_index) const
 {
     AssertLockHeld(cs_main);
@@ -2745,7 +2756,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         if (!pindex) {
             return;
         }
-        if (!BlockRequestAllowed(*pindex)) {
+        if (!BlockRequestAllowed(*pindex) && !StaleTipBlockRequestAllowed(peer, *pindex)) {
             LogDebug(BCLog::NET, "%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
             return;
         }
@@ -6032,10 +6043,11 @@ void PeerManagerImpl::MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& st
     // MAX_ADVERTISED_STALETIPS tips, so rebuilding the list each time is cheap.
     const auto announcements{m_staletiprelayman->GetStaleTipsToAnnounce(
         node.GetId(), m_chainman.ActiveChain(),
-        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); },
-        /*can_serve_branch=*/[&](const node::StaleFork& fork) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-            return (fork.tip->nStatus & BLOCK_HAVE_DATA) && BlockRequestAllowed(*fork.tip);
-        })};
+        /*can_serve_block=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            return !BelowLimitedServingThreshold(node, peer, block) &&
+                   !HistoricalServingLimitReached(node, block, /*filtered=*/false);
+        },
+        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); })};
     for (const StaleTipMessage& data : announcements) {
         MakeAndPushMessage(node, NetMsgType::STALETIP, data);
         LogDebug(BCLog::NET, "sending staletip with %u header(s) to peer=%d", data.headers.size(), node.GetId());
