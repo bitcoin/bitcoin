@@ -51,6 +51,7 @@ SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set fo
 
 MAX_PROTOCOL_MESSAGE_LENGTH = 4000000  # Maximum length of incoming protocol messages
 MAX_HEADERS_RESULTS = 2000  # Number of headers sent in one getheaders result
+MAX_STALETIP_HEADERS = 20  # Maximum number of headers in a staletip message (BIP 332)
 MAX_INV_SIZE = 50000  # Maximum number of entries in an 'inv' protocol message
 
 NODE_NONE = 0
@@ -1955,7 +1956,98 @@ class msg_feature:
         return f"msg_feature(feature_id={self.feature_id}, data={self.feature_data.hex()})"
 
 
+class StaleTipCompressedHeader:
+    """Compressed block header for stale-tip relay, omitting hashPrevBlock."""
+    __slots__ = ("nVersion", "hashMerkleRoot", "nTime", "nBits", "nNonce")
+
+    def __init__(self, header=None):
+        if header is None:
+            self.nVersion = 0
+            self.hashMerkleRoot = 0
+            self.nTime = 0
+            self.nBits = 0
+            self.nNonce = 0
+        else:
+            self.nVersion = header.nVersion
+            self.hashMerkleRoot = header.hashMerkleRoot
+            self.nTime = header.nTime
+            self.nBits = header.nBits
+            self.nNonce = header.nNonce
+
+    def deserialize(self, f):
+        self.nVersion = int.from_bytes(f.read(4), "little", signed=True)
+        self.hashMerkleRoot = deser_uint256(f)
+        self.nTime = int.from_bytes(f.read(4), "little")
+        self.nBits = int.from_bytes(f.read(4), "little")
+        self.nNonce = int.from_bytes(f.read(4), "little")
+
+    def serialize(self):
+        r = self.nVersion.to_bytes(4, "little", signed=True)
+        r += ser_uint256(self.hashMerkleRoot)
+        r += self.nTime.to_bytes(4, "little")
+        r += self.nBits.to_bytes(4, "little")
+        r += self.nNonce.to_bytes(4, "little")
+        return r
+
+
+class msg_staletip:
+    """STALETIP message announcing a stale tip."""
+    __slots__ = ("hash_fork_point", "headers", "have_block")
+    msgtype = b"staletip"
+
+    def __init__(self, hash_fork_point=0, headers=None, have_block=False):
+        self.hash_fork_point = hash_fork_point
+        self.headers = [] if headers is None else headers
+        self.have_block = have_block
+
+    def deserialize(self, f):
+        self.hash_fork_point = deser_uint256(f)
+        self.headers = deser_vector(f, StaleTipCompressedHeader)
+        if not 0 < len(self.headers) <= MAX_STALETIP_HEADERS:
+            raise ValueError("staletip invalid header count")
+        have_block = f.read(1)
+        if len(have_block) != 1:
+            raise ValueError("staletip truncated have_block")
+        have_block = int.from_bytes(have_block, "little")
+        if have_block not in (0, 1):
+            raise ValueError("staletip invalid have_block")
+        self.have_block = bool(have_block)
+
+    def serialize(self):
+        r = ser_uint256(self.hash_fork_point)
+        r += ser_vector(self.headers)
+        r += int(self.have_block).to_bytes(1, "little")
+        return r
+
+    def tip_hash(self):
+        """Return the announced tip's hash, reconstructed from the fork point."""
+        prev_hash = self.hash_fork_point
+        for compressed in self.headers:
+            header = CBlockHeader()
+            header.nVersion = compressed.nVersion
+            header.hashPrevBlock = prev_hash
+            header.hashMerkleRoot = compressed.hashMerkleRoot
+            header.nTime = compressed.nTime
+            header.nBits = compressed.nBits
+            header.nNonce = compressed.nNonce
+            prev_hash = header.hash_int
+        return prev_hash
+
+    def __repr__(self):
+        return f"msg_staletip(fork_point={self.hash_fork_point:064x}, headers={len(self.headers)}, have_block={self.have_block})"
+
+
 class TestFrameworkScript(unittest.TestCase):
+    def test_staletip_have_block_decode(self):
+        valid = msg_staletip(hash_fork_point=1, headers=[StaleTipCompressedHeader()], have_block=True).serialize()
+        decoded = msg_staletip()
+        decoded.deserialize(BytesIO(valid))
+        self.assertTrue(decoded.have_block)
+        with self.assertRaises(ValueError):
+            msg_staletip().deserialize(BytesIO(valid[:-1]))
+        with self.assertRaises(ValueError):
+            msg_staletip().deserialize(BytesIO(valid[:-1] + b"\x02"))
+
     def test_addrv2_encode_decode(self):
         def check_addrv2(ip, net):
             addr = CAddress()

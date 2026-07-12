@@ -279,6 +279,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/txoutproof.cpp
   script/sigcache.cpp
   signet.cpp
+  staletipmessage.cpp
   torcontrol.cpp
   txdb.cpp
   txgraph.cpp

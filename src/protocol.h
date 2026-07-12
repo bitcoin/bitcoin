@@ -268,6 +268,13 @@ inline constexpr const char* SENDTXRCNCL{"sendtxrcncl"};
  * BIP 434 Peer feature negotiation
  */
 inline constexpr const char* FEATURE{"feature"};
+/**
+ * Announces a recently seen stale branch of the block tree.
+ * Contains the fork point hash, the compressed headers of the branch and
+ * whether block data is available for its tip.
+ * Only sent after negotiating the staletip feature via BIP 434.
+ */
+inline constexpr const char* STALETIP{"staletip"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -308,6 +315,7 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
     NetMsgType::FEATURE,
+    NetMsgType::STALETIP,
 })};
 
 inline constexpr size_t MAX_FEATUREID_LENGTH{80};

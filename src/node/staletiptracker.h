@@ -8,16 +8,12 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <kernel/cs_main.h>
+#include <staletipmessage.h>
 #include <util/chaintype.h>
 
 #include <cstddef>
 #include <optional>
 #include <vector>
-
-/** Maximum number of blocks a tracked stale branch may have after its fork
- *  point, unless StaleTipTracker is constructed with another limit. From
- *  BIP 332. */
-inline constexpr size_t MAX_STALETIP_HEADERS{20};
 
 namespace node {
 class BlockManager;
