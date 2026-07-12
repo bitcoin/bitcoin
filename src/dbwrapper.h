@@ -50,6 +50,8 @@ struct DBParams {
     //! If true, store data obfuscated via simple XOR. If false, XOR with a
     //! zero'd byte array.
     bool obfuscate = false;
+    //! If true, build a LevelDB bloom filter to accelerate point lookups.
+    bool bloom_filter = true;
     //! Passed-through options.
     DBOptions options{};
     //! If non-null, use this as the leveldb::Env instead of the default.

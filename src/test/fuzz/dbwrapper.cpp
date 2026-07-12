@@ -188,6 +188,7 @@ DBParams ConsumeDBParams(FuzzedDataProvider& provider, leveldb::Env* testing_env
         .path = "dbwrapper_fuzz",
         .cache_bytes = provider.ConsumeIntegralInRange<size_t>(64 << 10, 1_MiB),
         .obfuscate = obfuscate,
+        .bloom_filter = provider.ConsumeBool(),
         .options = options,
         .testing_env = testing_env,
         .max_file_size = provider.ConsumeBool()
