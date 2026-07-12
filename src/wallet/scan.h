@@ -17,6 +17,7 @@
 namespace wallet {
 class CWallet;
 class FastWalletRescanFilter;
+class ParallelFilterChecker;
 
 /** Result of a wallet scan */
 struct ScanResult {
@@ -87,13 +88,20 @@ private:
     //! State of a single Scan() call, local to Scan() and passed through the
     //! scan helpers.
     struct ScanContext {
-        explicit ScanContext(std::optional<int> max_height_in) : max_height{max_height_in} {}
+        //! Defined in scan.cpp where ParallelFilterChecker is complete, as
+        //! required by the checker member's destructor.
+        explicit ScanContext(std::optional<int> max_height_in);
 
         //! Optional height limit of the scan range.
         const std::optional<int> max_height;
         //! The next block to read, if any.
         std::optional<std::pair<uint256, int>> next_block;
+        //! Checks block filters in parallel on its own thread pool; only set
+        //! when the wallet is configured with more than one thread..
+        std::unique_ptr<ParallelFilterChecker> checker;
     };
+
+    friend class ParallelFilterChecker;
 
     //! Consume ctx.next_block: record whether it is still in the active
     //! chain, and queue its active-chain successor into ctx.next_block if it
