@@ -121,8 +121,10 @@ class LLMQSigningTest(DashTestFramework):
         assert node.quorum_verify(id, msgHash, recsig["sig"])
         assert node.quorum_verify(id, msgHash, recsig["sig"], "", height)
         assert not node.quorum_verify(id, msgHashConflict, recsig["sig"])
-        # SYSCOIN will find the right quorum based on latching to dkgInterval from height_bad passed in to ScanQuorums
-        assert node.quorum_verify(id, msgHash, recsig["sig"], "", height_bad)
+        # The quorum's final commitment was mined after its DKG base. A signature
+        # must not verify at the base height because that commitment is not yet in
+        # the candidate chain ancestry.
+        assert not node.quorum_verify(id, msgHash, recsig["sig"], "", height_bad)
         # Use specific quorum
         assert node.quorum_verify(id, msgHash, recsig["sig"], recsig["quorumHash"])
         assert not node.quorum_verify(id, msgHashConflict, recsig["sig"], recsig["quorumHash"])
