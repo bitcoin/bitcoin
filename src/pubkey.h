@@ -310,6 +310,12 @@ public:
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
 };
 
+/** Verify a BIP458 half-aggregate signature over the given pubkeys and messages. */
+bool VerifyHalfAggSchnorr(const std::vector<XOnlyPubKey>& pubkeys, const std::vector<uint256>& msgs, std::span<const unsigned char> aggsig);
+
+/** Verify a BIP459 full-aggregate signature over the given pubkeys and messages. */
+bool VerifyFullAggSchnorr(const std::vector<XOnlyPubKey>& pubkeys, const std::vector<uint256>& msgs, std::span<const unsigned char> sig64);
+
 /** An ElligatorSwift-encoded public key. */
 struct EllSwiftPubKey
 {
