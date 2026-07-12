@@ -174,8 +174,6 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         uint256 nHash = govobj.GetHash();
 
-        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT, nHash}));
-
         if (!m_node_sync.IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
             return;
@@ -185,7 +183,13 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
 
-        if (!m_gov_manager.AcceptMessage(nHash)) {
+        // Only accept an object if this peer announced it or we requested it from this peer. The
+        // net-layer per-peer request tracker is the authorization source (already bounded), so no
+        // separate governance-side request cache is needed. Consume only after the sync gate, so a
+        // message dropped while not synced does not burn the authorization for a later retransmit.
+        const bool announced_or_requested = WITH_LOCK(
+            ::cs_main, return m_peer_manager->PeerConsumeObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT, nHash}));
+        if (!announced_or_requested) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
             return;
         }
@@ -203,8 +207,6 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         uint256 nHash = vote.GetHash();
 
-        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash}));
-
         // Ignore such messages until masternode list is synced
         if (!m_node_sync.IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
@@ -216,7 +218,13 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         std::string strHash = nHash.ToString();
 
-        if (!m_gov_manager.AcceptMessage(nHash)) {
+        // Only accept a vote if this peer announced it or we requested it from this peer. Consume
+        // after the sync gate (see MNGOVERNANCEOBJECT above) so a vote dropped while not synced does
+        // not burn the authorization for a later retransmit.
+        const bool announced_or_requested = WITH_LOCK(
+            ::cs_main,
+            return m_peer_manager->PeerConsumeObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash}));
+        if (!announced_or_requested) {
             LogPrint(BCLog::GOBJECT, /* Continued */
                      "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
                      vote.ToString(tip_mn_list), strHash, peer.GetId());

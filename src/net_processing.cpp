@@ -654,6 +654,7 @@ public:
     void PeerMisbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool PeerIsBanned(const NodeId node_id) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
     void PeerEraseObjectRequest(const NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool PeerConsumeObjectRequest(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void PeerRelayInv(const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -679,6 +680,7 @@ private:
     void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     void EraseObjectRequest(NodeId nodeid, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ConsumeObjectRequest(NodeId nodeid, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time, bool fForce = false)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -1583,6 +1585,26 @@ void PeerManagerImpl::EraseObjectRequest(NodeId nodeid, const CInv& inv)
 
     state->m_object_download.m_object_announced.erase(inv);
     state->m_object_download.m_object_in_flight.erase(inv);
+}
+
+bool PeerManagerImpl::ConsumeObjectRequest(NodeId nodeid, const CInv& inv)
+{
+    AssertLockHeld(cs_main);
+
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
+        return false;
+
+    LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
+    auto& object_download = state->m_object_download;
+    const bool announced = object_download.m_object_announced.erase(inv) != 0;
+    const bool in_flight = object_download.m_object_in_flight.erase(inv) != 0;
+    // Any leftover m_object_process_time entry for this inv is left in place (removing it here
+    // would be an O(n) scan). The SendMessages drain skips queued entries whose per-peer
+    // announced/in-flight state was already consumed, so no redundant GETDATA is issued -- and we
+    // deliberately do not set the global g_erased_object_requests marker (avoids poisoning it via
+    // an unsolicited push).
+    return announced || in_flight;
 }
 
 std::chrono::microseconds GetObjectRequestTime(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -6668,6 +6690,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // Erase this entry from object_process_time (it may be added back for
             // processing at a later time, see below)
             object_process_time.erase(object_process_time.begin());
+            // Drop stale entries whose per-peer request was already consumed or received (no
+            // longer announced or in-flight), so a consumed announcement is not re-requested.
+            // This covers ConsumeObjectRequest, which erases that state without setting the
+            // global g_erased_object_requests marker checked below.
+            if (state.m_object_download.m_object_announced.count(inv) == 0 &&
+                state.m_object_download.m_object_in_flight.count(inv) == 0) {
+                continue;
+            }
             if (g_erased_object_requests.count(inv.hash)) {
                 LogPrint(BCLog::NET, "%s -- GETDATA skipping inv=(%s), peer=%d\n", __func__, inv.ToString(), pto->GetId());
                 state.m_object_download.m_object_announced.erase(inv);
@@ -6726,6 +6756,11 @@ bool PeerManagerImpl::PeerIsBanned(const NodeId node_id)
 void PeerManagerImpl::PeerEraseObjectRequest(const NodeId nodeid, const CInv& inv)
 {
     EraseObjectRequest(nodeid, inv);
+}
+
+bool PeerManagerImpl::PeerConsumeObjectRequest(NodeId nodeid, const CInv& inv)
+{
+    return ConsumeObjectRequest(nodeid, inv);
 }
 
 void PeerManagerImpl::PeerRelayInv(const CInv& inv)

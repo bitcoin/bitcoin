@@ -260,7 +260,6 @@ private:
     object_ref_cm_t cmapVoteToObject;
     std::map<uint256, std::shared_ptr<CGovernanceObject>> mapPostponedObjects;
     std::set<uint256> setAdditionalRelayObjects;
-    std::map<uint256, std::chrono::seconds> m_requested_hash_time;
     bool fRateChecksEnabled{true};
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
@@ -308,10 +307,6 @@ public:
      * false. (Note logic is inverted in AlreadyHave).
      */
     bool ConfirmInventoryRequest(const CInv& inv)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    /** Test-only accessor: number of inv hashes currently tracked by
-     *  ConfirmInventoryRequest pending expiration in CheckAndRemove. */
-    size_t RequestedHashCacheSizeForTesting() const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
@@ -391,8 +386,6 @@ public:
     /** Returns inventory items for syncable votes on a specific object, filtered by bloom filter */
     [[nodiscard]] std::vector<CInv> GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    /// Called to indicate a requested object or vote has been received
-    bool AcceptMessage(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_store, !cs_relay);
 
