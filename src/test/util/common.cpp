@@ -118,6 +118,11 @@ std::ostream& operator<<(std::ostream& os, const WitnessV1Taproot& t)
     return os << strprintf("WitnessV1Taproot(program=%s)", HexStr(t));
 }
 
+std::ostream& operator<<(std::ostream& os, const WitnessV2Cisa& c)
+{
+    return os << strprintf("WitnessV2Cisa(program=%s)", HexStr(c));
+}
+
 std::ostream& operator<<(std::ostream& os, const CTxDestination& dest)
 {
     std::visit([&os](const auto& alt) { os << alt; }, dest);
