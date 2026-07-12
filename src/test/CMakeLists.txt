@@ -32,6 +32,7 @@ add_executable(test_bitcoin
   chain_tests.cpp
   chainstate_write_tests.cpp
   checkqueue_tests.cpp
+  cisa_tests.cpp
   cluster_linearize_tests.cpp
   coins_tests.cpp
   coinscachepair_tests.cpp
@@ -147,6 +148,8 @@ target_json_data_sources(test_bitcoin
   data/base58_encode_decode.json
   data/bip341_wallet_vectors.json
   data/blockfilters.json
+  data/cisa_consensus_vectors.json
+  data/cisa_wallet_vectors.json
   data/key_io_invalid.json
   data/key_io_valid.json
   data/script_tests.json
