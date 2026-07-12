@@ -17,6 +17,7 @@
 namespace wallet {
 class CWallet;
 class FastWalletRescanFilter;
+class ParallelFilterChecker;
 
 /** Result of a wallet scan */
 struct ScanResult {
@@ -68,9 +69,9 @@ private:
     std::atomic<double> m_scanning_progress{0};
 
     //! Progress window and tip tracked across Scan loop iterations. The
-    //! current block's progress is a plain local in Scan; only the window
-    //! bounds are shared with the helpers, and UpdateTipIfChanged is the
-    //! sole mutator.
+    //! current scanning progress lives in ScanContext::progress_current
+    //! instead, since the read/filter helpers need to update it; these
+    //! window bounds are only ever mutated by UpdateTipIfChanged.
     struct LoopState {
         double progress_begin{0};
         double progress_end{0};
@@ -88,24 +89,43 @@ private:
     //! State of a single Scan() call, local to Scan() and passed through the
     //! scan helpers.
     struct ScanContext {
-        explicit ScanContext(std::optional<int> max_height_in) : max_height{max_height_in} {}
+        //! Defined in scan.cpp where ParallelFilterChecker is complete, as
+        //! required by the checker member's destructor.
+        explicit ScanContext(std::optional<int> max_height_in);
 
+        ScanResult result;
         //! Optional height limit of the scan range.
         const std::optional<int> max_height;
         //! The next block to read, if any.
         std::optional<std::pair<uint256, int>> next_block;
+        std::unique_ptr<FastWalletRescanFilter> filter;
+        //! Checks block filters in parallel on its own thread pool; only set
+        //! when the wallet is configured with more than one thread..
+        std::unique_ptr<ParallelFilterChecker> checker;
+        //! Verification progress of the most recently scanned or
+        //! filter-skipped block.
+        double progress_current{0};
     };
+
+    friend class ParallelFilterChecker;
 
     //! Consume ctx.next_block: record whether it is still in the active
     //! chain, and queue its active-chain successor into ctx.next_block if it
     //! exists and is within the scan range.
     std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
     /**
-     * Read and filter the next block, recording filter-skipped blocks as
+     * Read and filter the next block, recording filter-skipped block as
+     * scanned.
+     * @return the next block to be scanned or std::nullopt if there are
+     * no more blocks to read.
+     */
+    std::optional<ChainScanner::QueuedBlock> ReadAndFilterNextBlock(ScanContext& ctx);
+    /**
+     * Read and filter the next batch of blocks, recording filter-skipped blocks as
      * scanned.
      * @return the blocks that are ready to be scanned
      */
-    std::vector<QueuedBlock> ReadNextBlocks(FastWalletRescanFilter* filter, ScanContext& ctx, ScanResult& result, double& progress_current);
+    std::vector<QueuedBlock> ReadAndFilterNextBlocks(ScanContext& ctx);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
     void UpdateTipIfChanged(LoopState& state);
