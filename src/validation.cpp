@@ -3842,6 +3842,17 @@ void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
     }
 }
 
+void ChainstateManager::MaybeNotifyAcceptedStaleTip(const CBlockIndex* pindex)
+{
+    AssertLockHeld(cs_main);
+
+    if (pindex == nullptr || !m_options.signals) return;
+    const CBlockIndex* active_tip{ActiveTip()};
+    if (active_tip != nullptr && pindex->nChainWork <= active_tip->nChainWork && !ActiveChain().Contains(*pindex)) {
+        m_options.signals->AcceptedStaleTip(pindex);
+    }
+}
+
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos)
 {
@@ -3868,6 +3879,8 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     m_blockman.m_dirty_blockindex.insert(pindexNew);
+
+    MaybeNotifyAcceptedStaleTip(pindexNew);
 
     if (pindexNew->pprev == nullptr || pindexNew->pprev->HaveNumChainTxs()) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
@@ -4325,18 +4338,25 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
     AssertLockNotHeld(cs_main);
     {
         LOCK(cs_main);
+        const CBlockIndex* last_new_header{nullptr};
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
+            // AcceptBlockHeader only grows the block index when it adds a new header.
+            const size_t index_size{m_blockman.m_block_index.size()};
             bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
             CheckBlockIndex();
 
             if (!accepted) {
+                // Headers before the rejected one stay in the block index.
+                MaybeNotifyAcceptedStaleTip(last_new_header);
                 return false;
             }
             if (ppindex) {
                 *ppindex = pindex;
             }
+            if (m_blockman.m_block_index.size() != index_size) last_new_header = pindex;
         }
+        MaybeNotifyAcceptedStaleTip(last_new_header);
     }
     if (NotifyHeaderTip()) {
         if (IsInitialBlockDownload() && ppindex && *ppindex) {
@@ -4386,11 +4406,15 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
+    // AcceptBlockHeader only grows the block index when it adds a new header.
+    const size_t index_size{m_blockman.m_block_index.size()};
     bool accepted_header{AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
     CheckBlockIndex();
 
     if (!accepted_header)
         return false;
+
+    if (m_blockman.m_block_index.size() != index_size) MaybeNotifyAcceptedStaleTip(pindex);
 
     // Check all requested blocks that we do not already have for validity and
     // save them to disk. Skip processing of unrequested blocks as an anti-DoS
