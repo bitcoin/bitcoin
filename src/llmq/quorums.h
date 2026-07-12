@@ -22,7 +22,10 @@ class CDeterministicMN;
 class ChainstateManager;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
-
+namespace llmq_tests
+{
+class CQuorumManagerTestAccess;
+}
 namespace llmq
 {
 enum class VerifyRecSigStatus
@@ -136,16 +139,28 @@ public:
     std::vector<CQuorumCPtr> ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
     bool FlushCacheToDisk(bool bForceFlush, bool fSync = true);
 private:
+    static uint256 MakeQuorumKey(const CQuorum& quorum);
+    static bool IsQuorumMinedOnChain(
+        const CQuorum& quorum,
+        const CBlockIndex* pindexStart);
     bool DoMaintenance(bool bForceFlush, bool fSync = true);
-    std::vector<CQuorumCPtr>::iterator FindQuorumByHash(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs_quorums);
+    std::vector<CQuorumCPtr>::iterator FindQuorum(
+        const uint256& quorumHash,
+        const uint256& minedBlockHash) EXCLUSIVE_LOCKS_REQUIRED(cs_quorums);
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(const CBlockIndex *pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
 
-    CQuorumPtr BuildQuorumFromCommitment(const CBlockIndex* pQuorumBaseBlockIndex) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
+    CQuorumPtr BuildQuorumFromCommitment(
+        const CBlockIndex* pQuorumBaseBlockIndex,
+        CFinalCommitmentPtr qc,
+        const uint256& minedBlockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_quorums);
 
     CQuorumCPtr GetQuorum(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
+
+    friend class CQuorum;
+    friend class llmq_tests::CQuorumManagerTestAccess;
 };
 
 // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as

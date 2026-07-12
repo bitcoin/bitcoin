@@ -745,7 +745,21 @@ bool CSigningManager::AsyncSignIfMember(const uint256& id, const uint256& msgHas
             return quorumManager->GetQuorum(quorumHash);
         }
     }();
+    return AsyncSignIfMember(id, msgHash, quorum, allowReSign);
+}
 
+bool CSigningManager::AsyncSignIfMember(
+    const uint256& id,
+    const uint256& msgHash,
+    const CQuorumCPtr& quorum,
+    bool allowReSign)
+{
+    if (!fMasternodeMode ||
+        WITH_LOCK(
+            activeMasternodeInfoCs,
+            return activeMasternodeInfo.proTxHash.IsNull())) {
+        return false;
+    }
     if (!quorum) {
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;

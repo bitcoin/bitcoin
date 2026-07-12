@@ -5,11 +5,13 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
+#include <kernel/cs_main.h>
 #include <llmq/quorums_signing.h>
 #include <atomic>
 
 
 class CBlockIndex;
+class CChain;
 class CConnman;
 class PeerManager;
 class CScheduler;
@@ -98,7 +100,7 @@ private:
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
     std::map<uint256, int64_t> rejectedChainLocks GUARDED_BY(cs);
-    std::map<uint256, int64_t> sigChecked GUARDED_BY(cs);
+    std::map<std::pair<uint256, uint256>, int64_t> sigChecked GUARDED_BY(cs);
 
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
@@ -132,14 +134,63 @@ public:
     bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
+    struct CQuorumContext
+    {
+        std::vector<CQuorumCPtr> quorums;
+        uint256 fingerprint;
+        const CBlockIndex* active_height_index{nullptr};
+    };
+
     // these require locks to be held already
+    static bool IsCandidateStillAdmissible(
+        const CChain& active_chain,
+        const CChainLockSig& best_chainlock,
+        const CChainLockSig& candidate,
+        const CBlockIndex* candidate_index);
+    static const CBlockIndex* SelectAlternativeSigningTarget(
+        int32_t height,
+        const CBlockIndex* current_index,
+        const CChainLockSig& previous_share,
+        const CBlockIndex* previous_share_index,
+        int32_t dkg_interval);
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void AddRecentChainLock(const CChainLockSig& clsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void ProcessPendingRecoveredChainLockSigs() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool BuildQuorumContext(
+        const CBlockIndex* candidate_index,
+        CQuorumContext& context) const EXCLUSIVE_LOCKS_REQUIRED(!cs_main, !cs);
+    static bool SameQuorumIdentity(
+        const CQuorumCPtr& lhs,
+        const CQuorumCPtr& rhs);
+    static bool IsAlternativeCommitmentWindowStable(
+        int32_t height,
+        int32_t common_height,
+        int32_t dkg_interval,
+        int32_t mining_window_start,
+        int32_t mining_window_end);
+    static bool IsActiveHeightSnapshotCurrent(
+        const CChain& active_chain,
+        int32_t height,
+        const CBlockIndex* active_height_index);
+    bool TryUpdateBestChainLock(
+        const CBlockIndex* pindex,
+        const std::vector<CQuorumCPtr>* quorums = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool VerifyChainLockShare(
+        const CChainLockSig& clsig,
+        const uint256& idIn,
+        std::pair<int, CQuorumCPtr>& ret,
+        const uint256& hash,
+        const CQuorumContext& context,
+        bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedChainLock(
+        const CChainLockSig& clsig,
+        const CBlockIndex* pindexScan,
+        const uint256& hash,
+        const CQuorumContext& context,
+        bool* retSigVerifyAttempted) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void MarkRejectedChainLock(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
