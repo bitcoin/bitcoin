@@ -411,6 +411,12 @@ struct CISAWitness {
  *  Returns std::nullopt and sets serror if the element matches no valid form. */
 std::optional<CISAWitness> ParseCISAWitness(std::span<const unsigned char> elem, ScriptError* serror = nullptr);
 
+/** Verify the aggregate signatures of a transaction's witness v2 keypath
+ *  spends (BIP460). Opted-out inputs and script path spends are covered by
+ *  the per-input VerifyScript() checks instead. txdata must have been
+ *  initialized with the transaction's spent outputs. */
+bool VerifyCISATransaction(const CTransaction& tx, const std::vector<CTxOut>& spent_outputs, script_verify_flags flags, const PrecomputedTransactionData& txdata, ScriptError* serror = nullptr);
+
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness& witness, script_verify_flags flags);
 
 int FindAndDelete(CScript& script, const CScript& b);
