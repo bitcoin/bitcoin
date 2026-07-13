@@ -99,6 +99,7 @@ using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
+using node::MiningInfo;
 using util::Join;
 
 namespace node {
@@ -972,6 +973,11 @@ public:
     std::optional<BlockRef> getTip() override
     {
         return GetTip(chainman());
+    }
+
+    std::optional<MiningInfo> getInfo() override
+    {
+        return GetMiningInfo(chainman());
     }
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override

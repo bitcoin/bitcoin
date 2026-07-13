@@ -11,6 +11,7 @@ from decimal import Decimal
 from io import BytesIO
 from test_framework.blocktools import (
     NULL_OUTPOINT,
+    nbits_str,
     script_BIP34_coinbase_height,
     WITNESS_COMMITMENT_HEADER,
 )
@@ -137,6 +138,20 @@ class IPCMiningTest(BitcoinTestFramework):
             blockref = await mining.getTip(ctx)
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
+
+            self.log.debug("Test next block mining info")
+            mock_time = self.nodes[0].getblockchaininfo()["time"] + 1
+            self.nodes[0].setmocktime(mock_time)
+            rpc_info = self.nodes[0].getmininginfo()
+            block_template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
+            ipc_info = await mining.getInfo(ctx)
+            assert ipc_info.hasResult
+            assert_equal(ipc_info.result.tip.height + 1, rpc_info["next"]["height"])
+            assert_equal(bytes(ipc_info.result.tip.hash)[::-1].hex(), block_template["previousblockhash"])
+            assert_equal(nbits_str(ipc_info.result.bits), rpc_info["next"]["bits"])
+            assert_equal(ipc_info.result.minTime, block_template["mintime"])
+            assert_equal(ipc_info.result.time, block_template["curtime"])
+            self.nodes[0].setmocktime(0)
 
             self.log.debug("Mine a block")
             newblockref = (await wait_and_do(

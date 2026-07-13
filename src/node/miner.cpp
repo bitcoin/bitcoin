@@ -514,6 +514,25 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     return nullptr;
 }
 
+std::optional<MiningInfo> GetMiningInfo(ChainstateManager& chainman)
+{
+    LOCK(::cs_main);
+    const CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    if (!tip) return std::nullopt;
+
+    const Consensus::Params& consensus{chainman.GetConsensus()};
+    CBlockHeader next_header;
+    UpdateTime(&next_header, consensus, tip);
+    next_header.nBits = GetNextWorkRequired(tip, &next_header, consensus);
+
+    return MiningInfo{
+        .bits = next_header.nBits,
+        .min_time = GetMinimumTime(tip, consensus.DifficultyAdjustmentInterval()),
+        .time = next_header.GetBlockTime(),
+        .tip = {tip->GetBlockHash(), tip->nHeight},
+    };
+}
+
 std::optional<BlockRef> GetTip(ChainstateManager& chainman)
 {
     LOCK(::cs_main);

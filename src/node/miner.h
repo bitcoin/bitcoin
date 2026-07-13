@@ -148,6 +148,9 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       const BlockCreateOptions& create_options,
                                                       bool& interrupt_wait);
 
+/* Locks cs_main and returns mining-related information for the next block if the active chain has a tip; otherwise, returns nullopt. */
+std::optional<MiningInfo> GetMiningInfo(ChainstateManager& chainman);
+
 /* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
 std::optional<BlockRef> GetTip(ChainstateManager& chainman);
 

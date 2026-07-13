@@ -12,6 +12,7 @@
 #define BITCOIN_NODE_MINING_TYPES_H
 
 #include <consensus/amount.h>
+#include <interfaces/types.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -25,6 +26,20 @@
 #include <vector>
 
 namespace node {
+
+/**
+ * Mining-related information.
+ */
+struct MiningInfo {
+    /** Next block difficulty target in compact form. */
+    uint32_t bits;
+    /** Minimum valid next block timestamp. */
+    int64_t min_time;
+    /** Current next block timestamp, adjusted to satisfy min_time. */
+    int64_t time;
+    /** Current chain tip. */
+    interfaces::BlockRef tip;
+};
 
 /**
  * Block template creation options. These override node defaults, but can't

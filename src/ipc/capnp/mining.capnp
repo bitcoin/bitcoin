@@ -28,6 +28,7 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
     getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
     getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
+    getInfo @10 (context :Proxy.Context) -> (result: MiningInfo, hasResult: Bool);
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
@@ -57,6 +58,13 @@ struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {
 struct BlockCheckOptions $Proxy.wrap("node::BlockCheckOptions") {
     checkMerkleRoot @0 :Bool = true $Proxy.name("check_merkle_root");
     checkPow @1 :Bool = true $Proxy.name("check_pow");
+}
+
+struct MiningInfo $Proxy.wrap("node::MiningInfo") {
+    bits @0 :UInt32;
+    minTime @1 :Int64 $Proxy.name("min_time");
+    time @2 :Int64;
+    tip @3 :Common.BlockRef;
 }
 
 struct CoinbaseTx $Proxy.wrap("node::CoinbaseTx") {

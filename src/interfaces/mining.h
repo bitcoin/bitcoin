@@ -112,6 +112,10 @@ public:
     //! Returns the hash and height for the tip of this chain
     virtual std::optional<BlockRef> getTip() = 0;
 
+    //! Returns mining-related information relevant for the next block,
+    //! or nullopt if there is no tip.
+    virtual std::optional<node::MiningInfo> getInfo() = 0;
+
     /**
      * Waits for the connected tip to change. During node initialization, this will
      * wait until the tip is connected (regardless of `timeout`).
