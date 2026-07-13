@@ -6,7 +6,6 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <atomic>
-#include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -479,10 +478,9 @@ public:
     std::string m_recv_buffer{};
 
     //! Requests from a client must be processed in the order in which
-    //! they were received, blocking on a per-client basis. We won't
-    //! process the next request in the queue if we are currently busy
-    //! handling a previous request.
-    std::deque<std::unique_ptr<HTTPRequest>> m_req_queue;
+    //! they were received, blocking on a per-client basis. We read
+    //! one request at a time from the socket buffer then pass it to a worker.
+    std::unique_ptr<HTTPRequest> m_req;
 
     //! Set to true by the I/O thread when a request is popped off
     //! and passed to a worker thread, reset to false by the worker thread.
@@ -554,6 +552,12 @@ public:
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    //! Release any in-progress request. HTTPRequest holds a shared_ptr back to its
+    //! HTTPRemoteClient to keep the client alive from a worker thread. If a request
+    //! hasn't been moved to a worker yet it will prevent the client from destructing
+    //! and never close the socket. Therefore this must be called when disconnecting.
+    void ReleaseRequest() { m_req.reset(); }
 
     /**
      * Try to read an HTTP request from the receive buffer.
