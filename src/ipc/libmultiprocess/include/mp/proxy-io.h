@@ -13,7 +13,9 @@
 #include <capnp/rpc-twoparty.h>
 
 #include <assert.h>
+#include <algorithm>
 #include <condition_variable>
+#include <cstdlib>
 #include <functional>
 #include <kj/function.h>
 #include <map>
@@ -25,6 +27,7 @@
 
 namespace mp {
 struct ThreadContext;
+struct Listener;
 
 struct InvokeContext
 {
@@ -360,6 +363,12 @@ public:
 
     //! Hook called on the worker thread just before returning results.
     std::function<void()> testing_hook_async_request_done;
+
+    //! Hook called on the event loop thread when a client has connected.
+    std::function<void()> testing_hook_connected;
+
+    //! Hook called on the event loop thread when a client has disconnected.
+    std::function<void()> testing_hook_disconnected;
 };
 
 //! Single element task queue used to handle recursive capnp calls. (If the
@@ -842,8 +851,8 @@ std::unique_ptr<ProxyClient<InitInterface>> ConnectStream(EventLoop& loop, int f
 //! handles requests from the stream by calling the init object. Embed the
 //! ProxyServer in a Connection object that is stored and erased if
 //! disconnected. This should be called from the event loop thread.
-template <typename InitInterface, typename InitImpl>
-void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init)
+template <typename InitInterface, typename InitImpl, typename OnDisconnect>
+void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init, OnDisconnect&& on_disconnect)
 {
     loop.m_incoming_connections.emplace_front(loop, kj::mv(stream), [&](Connection& connection) {
         // Disable deleter so proxy server object doesn't attempt to delete the
@@ -853,23 +862,46 @@ void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init
     });
     auto it = loop.m_incoming_connections.begin();
     MP_LOG(loop, Log::Info) << "IPC server: socket connected.";
-    it->onDisconnect([&loop, it] {
+    if (loop.testing_hook_connected) loop.testing_hook_connected();
+    it->onDisconnect([&loop, it, on_disconnect = std::forward<OnDisconnect>(on_disconnect)]() mutable {
         MP_LOG(loop, Log::Info) << "IPC server: socket disconnected.";
         loop.m_incoming_connections.erase(it);
+        on_disconnect();
+        if (loop.testing_hook_disconnected) loop.testing_hook_disconnected();
     });
 }
 
-//! Given connection receiver and an init object, handle incoming connections by
-//! calling _Serve, to create ProxyServer objects and forward requests to the
-//! init object.
-template <typename InitInterface, typename InitImpl>
-void _Listen(EventLoop& loop, kj::Own<kj::ConnectionReceiver>&& listener, InitImpl& init)
+struct Listener
 {
-    auto* ptr = listener.get();
-    loop.m_task_set->add(ptr->accept().then(
-        [&loop, &init, listener = kj::mv(listener)](kj::Own<kj::AsyncIoStream>&& stream) mutable {
-            _Serve<InitInterface>(loop, kj::mv(stream), init);
-            _Listen<InitInterface>(loop, kj::mv(listener), init);
+    explicit Listener(kj::Own<kj::ConnectionReceiver>&& receiver, std::optional<size_t> max_connections)
+        : m_receiver(kj::mv(receiver)), m_max_connections(max_connections) {}
+
+    bool atCapacity() const
+    {
+        return m_max_connections && m_active_connections >= *m_max_connections;
+    }
+
+    kj::Own<kj::ConnectionReceiver> m_receiver;
+    std::optional<size_t> m_max_connections;
+    size_t m_active_connections{0};
+};
+
+template <typename InitInterface, typename InitImpl>
+void _Listen(const std::shared_ptr<Listener>& listener, EventLoop& loop, InitImpl& init)
+{
+    if (listener->atCapacity()) return;
+
+    auto* receiver = listener->m_receiver.get();
+    loop.m_task_set->add(receiver->accept().then(
+        [&loop, &init, listener](kj::Own<kj::AsyncIoStream>&& stream) {
+            ++listener->m_active_connections;
+            _Serve<InitInterface>(loop, kj::mv(stream), init, [&loop, &init, listener] {
+                const bool resume_accept{listener->atCapacity()};
+                assert(listener->m_active_connections > 0);
+                --listener->m_active_connections;
+                if (resume_accept) _Listen<InitInterface>(listener, loop, init);
+            });
+            _Listen<InitInterface>(listener, loop, init);
         }));
 }
 
@@ -879,18 +911,22 @@ template <typename InitInterface, typename InitImpl>
 void ServeStream(EventLoop& loop, int fd, InitImpl& init)
 {
     _Serve<InitInterface>(
-        loop, loop.m_io_context.lowLevelProvider->wrapSocketFd(fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP), init);
+        loop,
+        loop.m_io_context.lowLevelProvider->wrapSocketFd(fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP),
+        init,
+        [] {});
 }
 
 //! Given listening socket file descriptor and an init object, handle incoming
 //! connections and requests by calling methods on the Init object.
 template <typename InitInterface, typename InitImpl>
-void ListenConnections(EventLoop& loop, int fd, InitImpl& init)
+void ListenConnections(EventLoop& loop, int fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
 {
     loop.sync([&]() {
-        _Listen<InitInterface>(loop,
+        auto listener{std::make_shared<Listener>(
             loop.m_io_context.lowLevelProvider->wrapListenSocketFd(fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP),
-            init);
+            max_connections)};
+        _Listen<InitInterface>(listener, loop, init);
     });
 }
 

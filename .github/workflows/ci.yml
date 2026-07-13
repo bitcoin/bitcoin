@@ -463,6 +463,12 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
+          - name: 'NetBSD Cross'
+            warp-runner: 'warp-ubuntu-latest-x64-8x'
+            fallback-runner: 'ubuntu-latest'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_netbsd_cross.sh'
+
           - name: 'FreeBSD Cross'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
             fallback-runner: 'ubuntu-latest'

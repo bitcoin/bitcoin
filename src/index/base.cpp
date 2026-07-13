@@ -65,13 +65,14 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
     return locator;
 }
 
-BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
+BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom) :
     CDBWrapper{DBParams{
         .path = path,
         .cache_bytes = n_cache_size,
         .memory_only = f_memory,
         .wipe_data = f_wipe,
         .obfuscate = f_obfuscate,
+        .bloom_filter = f_bloom,
         .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
@@ -273,12 +274,23 @@ void BaseIndex::Sync()
     }
 }
 
-bool BaseIndex::Commit()
+void BaseIndex::Commit()
 {
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
     bool ok = m_best_block_index != nullptr;
     if (ok) {
+        // Don't commit if the index best block is not an ancestor of the chainstate's last flushed
+        // block. Otherwise, after an unclean shutdown, the index could be
+        // persisted ahead of a chainstate it can no longer roll back to, which
+        // would corrupt indexes with state (e.g. coinstatsindex).
+        const CBlockIndex* index_tip = m_best_block_index.load();
+        const CBlockIndex* last_flushed = WITH_LOCK(::cs_main, return m_chainstate->GetLastFlushedBlock());
+        if (!last_flushed || last_flushed->GetAncestor(index_tip->nHeight) != index_tip) {
+            LogDebug(BCLog::COINDB, "Skipping commit, index is ahead of flushed chainstate (index height %d, last flush at height %d)",
+                    index_tip->nHeight, last_flushed ? last_flushed->nHeight : -1);
+            return;
+        }
         CDBBatch batch(GetDB());
         ok = CustomCommit(batch);
         if (ok) {
@@ -288,9 +300,7 @@ bool BaseIndex::Commit()
     }
     if (!ok) {
         LogError("Failed to commit latest %s state", GetName());
-        return false;
     }
-    return true;
 }
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)

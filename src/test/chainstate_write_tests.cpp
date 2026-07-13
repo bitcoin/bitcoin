@@ -85,6 +85,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
 
     // Set m_next_write to current time
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::FORCE_FLUSH);
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), second_from_tip->pprev);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
     // The next call to a PERIODIC write will flush
@@ -101,6 +102,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     // inside the outer loop.
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK_EQUAL(sub->m_flushed_at_block, second_from_tip);
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), second_from_tip);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

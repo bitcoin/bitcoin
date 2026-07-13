@@ -116,7 +116,7 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
 }
 
 MockableSQLiteDatabase::MockableSQLiteDatabase()
-    : SQLiteDatabase(fs::PathFromString("mock/"), fs::PathFromString("mock/wallet.dat"), DatabaseOptions(), SQLITE_OPEN_MEMORY)
+    : InMemoryWalletDatabase()
 {}
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase()

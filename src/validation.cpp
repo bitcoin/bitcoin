@@ -2823,6 +2823,7 @@ bool Chainstate::FlushStateToDisk(
                 }
                 // Flush the chainstate (which may refer to block index entries).
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
+                m_last_flushed_block = m_blockman.LookupBlockIndex(CoinsTip().GetBestBlock());
                 full_flush_completed = true;
                 TRACEPOINT(utxocache, flush,
                     int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
@@ -2840,8 +2841,7 @@ bool Chainstate::FlushStateToDisk(
     }
     if (full_flush_completed) {
         if (m_chainman.m_options.signals) {
-            // Update best block in wallet (so we can detect restored wallets).
-            m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_chain.Tip()));
+            m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_last_flushed_block));
         }
 
         if (!m_chainman.m_interrupt && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
@@ -4584,6 +4584,7 @@ bool Chainstate::LoadChainTip()
     }
     m_chain.SetTip(*pindex);
     m_chainman.UpdateIBDStatus();
+    m_last_flushed_block = pindex;
     tip = m_chain.Tip();
 
     // nSequenceId is one of the keys used to sort setBlockIndexCandidates. Ensure all

@@ -118,6 +118,17 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
+if [ -n "$NETBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}" ]; then
+  mkdir -p "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}"
+  for NETBSD_SDK_FILENAME in base.tar.xz comp.tar.xz; do
+    NETBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${NETBSD_SDK_FILENAME}"
+    if [ ! -f "$NETBSD_SDK_PATH" ]; then
+      ${CI_RETRY_EXE} curl --location --fail "https://cdn.netbsd.org/pub/NetBSD/NetBSD-${NETBSD_VERSION}/amd64/binary/sets/${NETBSD_SDK_FILENAME}" -o "$NETBSD_SDK_PATH"
+    fi
+    tar -C "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}" -xf "$NETBSD_SDK_PATH"
+  done
+fi
+
 if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" ]; then
   FREEBSD_SDK_FILENAME="base-${FREEBSD_VERSION}.txz"
   FREEBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${FREEBSD_SDK_FILENAME}"
