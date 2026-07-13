@@ -30,7 +30,6 @@
 #include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
-#include <deque>
 #include <memory>
 #include <optional>
 #include <span>
@@ -983,13 +982,13 @@ void HTTPServer::ThreadSocketHandler()
 
 void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
 {
-    // Try reading (potentially multiple) HTTP requests from the buffer
-    while (!client->m_recv_buffer.empty()) {
+    // Try reading the next HTTP request from the buffer
+    if (!client->m_req) {
         // Create a new request object and try to fill it with data from the receive buffer
         auto req = std::make_unique<HTTPRequest>(client);
         try {
             // Stop reading if we need more data from the client to parse a complete request
-            if (!client->ReadRequest(*req)) break;
+            if (!client->ReadRequest(*req)) return;
         } catch (const ContentTooLargeError& e) {
             LogDebug(
                 BCLog::HTTP,
@@ -1024,8 +1023,8 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
             client->m_origin,
             client->m_id);
 
-        // add request to client queue
-        client->m_req_queue.push_back(std::move(req));
+        // Move request to client
+        client->m_req = std::move(req);
     }
 
     // If we are already handling a request from
@@ -1033,12 +1032,11 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
     // loop iteration.
     if (client->m_req_busy) return;
 
-    // Otherwise, if there is a pending request in the queue, handle it.
-    if (!client->m_req_queue.empty()) {
+    // Otherwise, if there is a request ready to go, handle it.
+    if (client->m_req) {
         LOCK(m_request_dispatcher_mutex);
         client->m_req_busy = true;
-        m_request_dispatcher(std::move(client->m_req_queue.front()));
-        client->m_req_queue.pop_front();
+        m_request_dispatcher(std::move(client->m_req));
     }
 }
 
@@ -1089,6 +1087,7 @@ void HTTPServer::DisconnectClients()
                                                  "Disconnecting HTTP client %s (id=%llu)",
                                                  client->m_origin,
                                                  client->m_id);
+                                        client->ReleaseRequest();
                                         return true;
                                     });
     if (erased > 0) {
@@ -1103,6 +1102,9 @@ void HTTPServer::ClearConnectedClients()
     if (m_connected.empty()) return;
     LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
     m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
+    for (auto& client : m_connected) {
+        client->ReleaseRequest();
+    }
     m_connected.clear();
 }
 
