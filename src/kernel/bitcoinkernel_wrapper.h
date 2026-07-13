@@ -34,13 +34,17 @@ enum class LogCategory : btck_LogCategory {
     RAND = btck_LogCategory_RAND,
     REINDEX = btck_LogCategory_REINDEX,
     VALIDATION = btck_LogCategory_VALIDATION,
-    KERNEL = btck_LogCategory_KERNEL
+    KERNEL = btck_LogCategory_KERNEL,
+    TXPACKAGES = btck_LogCategory_TXPACKAGES,
+    LOCK = btck_LogCategory_LOCK,
 };
 
 enum class LogLevel : btck_LogLevel {
     TRACE_LEVEL = btck_LogLevel_TRACE,
     DEBUG_LEVEL = btck_LogLevel_DEBUG,
-    INFO_LEVEL = btck_LogLevel_INFO
+    INFO_LEVEL = btck_LogLevel_INFO,
+    WARNING_LEVEL = btck_LogLevel_WARNING,
+    ERROR_LEVEL = btck_LogLevel_ERROR,
 };
 
 enum class ChainType : btck_ChainType {

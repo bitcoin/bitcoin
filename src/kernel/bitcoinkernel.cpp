@@ -158,14 +158,20 @@ namespace {
 BCLog::Level get_bclog_level(btck_LogLevel level)
 {
     switch (level) {
-    case btck_LogLevel_INFO: {
-        return BCLog::Level::Info;
+    case btck_LogLevel_TRACE: {
+        return BCLog::Level::Trace;
     }
     case btck_LogLevel_DEBUG: {
         return BCLog::Level::Debug;
     }
-    case btck_LogLevel_TRACE: {
-        return BCLog::Level::Trace;
+    case btck_LogLevel_INFO: {
+        return BCLog::Level::Info;
+    }
+    case btck_LogLevel_WARNING: {
+        return BCLog::Level::Warning;
+    }
+    case btck_LogLevel_ERROR: {
+        return BCLog::Level::Error;
     }
     }
     assert(false);
@@ -204,6 +210,14 @@ BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
     case btck_LogCategory_KERNEL: {
         return BCLog::LogFlags::KERNEL;
     }
+    case btck_LogCategory_TXPACKAGES: {
+        return BCLog::LogFlags::TXPACKAGES;
+    }
+#ifdef DEBUG_LOCKCONTENTION
+    case btck_LogCategory_LOCK: {
+        return BCLog::LogFlags::LOCK;
+    }
+#endif
     case btck_LogCategory_ALL: {
         return BCLog::LogFlags::ALL;
     }
