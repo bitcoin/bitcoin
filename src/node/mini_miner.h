@@ -131,8 +131,8 @@ public:
     std::set<Txid> GetMockTemplateTxids() const { return m_in_block; }
 
     /** Constructor that takes a list of outpoints that may or may not belong to transactions in the
-     * mempool. Copies out information about the relevant transactions in the mempool into
-     * MiniMinerMempoolEntrys.
+     * mempool. Copies information about the relevant transactions from the mempool into
+     * `m_entries_by_txid`.
     */
     MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& outpoints);
 
