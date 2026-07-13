@@ -70,14 +70,13 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
     if (spendable) {
         tx.vout[nInput].scriptPubKey = GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")));
     }
-    Txid txid = tx.GetHash();
 
     LOCK(wallet.cs_wallet);
-    auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
-    assert(ret.second);
-    CWalletTx& wtx = (*ret.first).second;
-    const auto& txout = wtx.GetTx()->vout.at(nInput);
-    available_coins.Add(OutputType::BECH32, {COutPoint(wtx.GetHash(), nInput), txout, nAge, custom_size == 0 ? CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr) : custom_size, /*solvable=*/true, /*safe=*/true, wtx.GetTxTime(), fIsFromMe, feerate});
+
+    CWalletTx* wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), TxStateInactive{});
+    assert(wtx);
+    const auto& txout = wtx->GetTx()->vout.at(nInput);
+    available_coins.Add(OutputType::BECH32, {COutPoint(wtx->GetHash(), nInput), txout, nAge, custom_size == 0 ? CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr) : custom_size, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), fIsFromMe, feerate});
 }
 
 // Helpers
