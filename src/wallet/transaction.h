@@ -382,15 +382,11 @@ public:
     const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return tx->GetWitnessHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
 
-private:
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the
     // wrong copy.
-    CWalletTx(const CWalletTx&) = default;
-    CWalletTx& operator=(const CWalletTx&) = default;
-public:
-    // Instead have an explicit copy function
-    void CopyFrom(const CWalletTx&);
+    CWalletTx(const CWalletTx&) = delete;
+    CWalletTx& operator=(const CWalletTx&) = delete;
 
     // Enable the default move constructor
     CWalletTx(CWalletTx&&) = default;

@@ -55,9 +55,4 @@ void CWalletTx::updateState(interfaces::Chain& chain)
         lookup_block(conf->conflicting_block_hash, conf->conflicting_block_height, m_state);
     }
 }
-
-void CWalletTx::CopyFrom(const CWalletTx& _tx)
-{
-    *this = _tx;
-}
 } // namespace wallet
