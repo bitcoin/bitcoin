@@ -16,7 +16,7 @@
 #include <wallet/coinselection.h>
 #include <wallet/db.h>
 #include <wallet/spend.h>
-#include <wallet/test/util.h>
+#include <wallet/sqlite.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
@@ -50,7 +50,7 @@ static void addCoin(const CAmount& nValue, std::vector<std::unique_ptr<CWalletTx
 static void CoinSelection(benchmark::Bench& bench)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
-    CWallet wallet(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
+    CWallet wallet(test_setup->m_node.chain.get(), "", MakeInMemoryWalletDatabase());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 

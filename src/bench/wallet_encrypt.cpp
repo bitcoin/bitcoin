@@ -16,6 +16,7 @@
 #include <wallet/context.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>
+#include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
@@ -64,7 +65,7 @@ static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)
                 TestUnloadWallet(std::move(wallet));
             }
 
-            std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
+            std::unique_ptr<WalletDatabase> database = MakeInMemoryWalletDatabase();
             wallet = TestCreateWallet(std::move(database), context, create_flags);
 
             {
