@@ -40,10 +40,10 @@ code.
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
   - Constant names are all uppercase, and use `_` to separate words.
-  - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
-    This is a more tolerant policy than the [C++ Core
+  - Enumerator constants may be `snake_case`, or `PascalCase`. They should not
+    be `ALL_CAPS`, according to the [C++ Core
     Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#renum-caps),
-    which recommend using `snake_case`.  Please use what seems appropriate.
+    to avoid clashing with macros.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`. See [Internal interface
     naming style](#internal-interface-naming-style) for an exception to this
