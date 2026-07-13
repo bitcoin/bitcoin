@@ -32,7 +32,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
     Txid hash = wtx.tx->GetHash();
-    std::map<std::string, std::string> mapValue = wtx.value_map;
 
     bool all_from_me = true;
     bool any_from_me = false;
@@ -77,7 +76,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.type = TransactionRecord::SendToOther;
-                    sub.address = mapValue["to"];
+                    sub.address = wtx.comment_to.value_or("");
                 }
 
                 CAmount nValue = txout.nValue;
@@ -112,7 +111,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 {
                     // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
                     sub.type = TransactionRecord::RecvFromOther;
-                    sub.address = mapValue["from"];
+                    sub.address = wtx.from.value_or("");
                 }
                 if (wtx.is_coinbase)
                 {

@@ -402,7 +402,7 @@ public:
             BOOST_CHECK(res);
             tx = res->tx;
         }
-        wallet->CommitTransaction(tx, {}, {});
+        wallet->CommitTransaction(tx);
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
