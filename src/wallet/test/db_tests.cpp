@@ -306,5 +306,12 @@ BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
     BOOST_CHECK_THROW(database.Open(), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(in_memory_database_interface)
+{
+    InMemoryWalletDatabase database;
+    BOOST_CHECK_EQUAL(database.Filename(), ":memory:");
+    BOOST_CHECK(database.Files().empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
