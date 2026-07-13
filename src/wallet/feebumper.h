@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <addresstype.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
 #include <primitives/transaction.h>
@@ -54,7 +56,7 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CAmount& new_fee,
     CMutableTransaction& mtx,
     bool require_mine,
-    const std::vector<CTxOut>& outputs,
+    const std::vector<std::pair<CTxDestination, CAmount>>& outputs,
     std::optional<uint32_t> original_change_index = std::nullopt);
 
 //! Sign the new transaction,

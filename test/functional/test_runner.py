@@ -150,6 +150,7 @@ BASE_SCRIPTS = [
     'feature_config_args.py',
     'wallet_listtransactions.py',
     'wallet_miniscript.py',
+    'wallet_silentpayments_sending.py',
     # vv Tests less than 30s vv
     'wallet_deprecated_rbf.py',
     'p2p_invalid_messages.py',
@@ -382,6 +383,7 @@ BASE_SCRIPTS = [
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
     'rpc_gettxspendingprevout.py',
+    'rpc_scantxforsilentpayments.py',
     'rpc_help.py',
     'feature_framework_testshell.py',
     'tool_rpcauth.py',

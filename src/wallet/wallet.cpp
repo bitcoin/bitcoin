@@ -2288,7 +2288,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
+        if (std::get_if<WitnessV1Taproot>(&recipient.dest) || std::get_if<V0SilentPaymentsDestination>(&recipient.dest)) {
             any_tr = true;
         } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
@@ -2331,7 +2331,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     return m_default_address_type;
 }
 
-void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
+void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::vector<V0SilentPaymentsDestination> sp_recipients)
 {
     LOCK(cs_wallet);
     WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
@@ -2343,8 +2343,18 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         CHECK_NONFATAL(wtx.vOrderForm.empty());
         wtx.mapValue = std::move(mapValue);
         wtx.vOrderForm = std::move(orderForm);
+        wtx.m_sprecipients = std::move(sp_recipients);
+        wtx.m_is_sp_tx = !wtx.m_sprecipients.empty();
         return true;
     });
+
+    if (wtx && !wtx->m_sprecipients.empty()) {
+        WalletBatch batch(GetDatabase());
+        if (!batch.WriteSpRecipients(wtx->GetHash(), wtx->m_sprecipients)) {
+            WalletLogPrintf("CommitTransaction(): Failed to write SP recipients for tx %s\n",
+                wtx->GetHash().ToString());
+        }
+    }
 
     // wtx can only be null if the db write failed.
     if (!wtx) {
@@ -2740,6 +2750,14 @@ void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
 {
     AssertLockHeld(cs_wallet);
     m_locked_coins.emplace(coin, persistent);
+}
+
+void CWallet::LoadSpRecipients(const Txid& txid, std::vector<V0SilentPaymentsDestination> recipients)
+{
+    AssertLockHeld(cs_wallet);
+    auto it = mapWallet.find(txid);
+    if (it == mapWallet.end()) return;
+    it->second.m_sprecipients = std::move(recipients);
 }
 
 bool CWallet::LockCoin(const COutPoint& output, bool persist)

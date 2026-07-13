@@ -13,9 +13,25 @@
 #include <util/hash_type.h>
 
 #include <cassert>
+#include <stdexcept>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
+
+V0SilentPaymentsDestination::V0SilentPaymentsDestination(const CPubKey& scan_pubkey, const CPubKey& spend_pubkey)
+    : m_scan_pubkey(scan_pubkey), m_spend_pubkey(spend_pubkey)
+{
+    if (!scan_pubkey.IsFullyValid() || !scan_pubkey.IsCompressed() ||
+        !spend_pubkey.IsFullyValid() || !spend_pubkey.IsCompressed()) {
+        // throw because an output script cannot be generated from invalid public keys
+        throw std::invalid_argument("V0SilentPaymentsDestination: invalid public key");
+    }
+}
+
+bool IsSilentPaymentsDestination(const CTxDestination& dest) {
+    return std::holds_alternative<V0SilentPaymentsDestination>(dest) ||
+        std::holds_alternative<UnknownSilentPaymentsDestination>(dest);
+}
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
 ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
@@ -108,6 +124,15 @@ namespace {
 class CScriptVisitor
 {
 public:
+    CScript operator()(const V0SilentPaymentsDestination& dest) const
+    {
+        return CScript();
+    }
+
+    CScript operator()(const UnknownSilentPaymentsDestination& dest) const
+    {
+        return CScript();
+    }
     CScript operator()(const CNoDestination& dest) const
     {
         return dest.GetScript();
@@ -156,6 +181,8 @@ public:
     bool operator()(const PubKeyDestination& dest) const { return false; }
     bool operator()(const PKHash& dest) const { return true; }
     bool operator()(const ScriptHash& dest) const { return true; }
+    bool operator()(const V0SilentPaymentsDestination& dest) const { return true; }
+    bool operator()(const UnknownSilentPaymentsDestination& dest) const { return true; }
     bool operator()(const WitnessV0KeyHash& dest) const { return true; }
     bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
     bool operator()(const WitnessV1Taproot& dest) const { return true; }

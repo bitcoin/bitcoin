@@ -58,6 +58,7 @@ const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WALLETDESCRIPTORLHCACHE{"walletdescriptorlhcache"};
 const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
+const std::string SP_RECIPIENTS{"sprecipients"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
@@ -287,6 +288,16 @@ bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
 bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
 {
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
+bool WalletBatch::WriteSpRecipients(const Txid& txid, const std::vector<V0SilentPaymentsDestination>& recipients)
+{
+    return WriteIC(std::make_pair(DBKeys::SP_RECIPIENTS, txid), SerializeSpRecipients(recipients));
+}
+
+bool WalletBatch::EraseSpRecipients(const Txid& txid)
+{
+    return EraseIC(std::make_pair(DBKeys::SP_RECIPIENTS, txid));
 }
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
@@ -1144,6 +1155,32 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load tx records
         result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
+
+        // Load SP recipients records (must come after TX records so mapWallet is populated)
+        std::set<Txid> sp_txids_loaded;
+        LoadResult sp_res = LoadRecords(pwallet, *m_batch, DBKeys::SP_RECIPIENTS,
+            [&sp_txids_loaded](CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+            Txid txid;
+            key >> txid;
+            sp_txids_loaded.insert(txid);
+            auto it = pwallet->mapWallet.find(txid);
+            if (it == pwallet->mapWallet.end()) {
+                return DBErrors::LOAD_OK; // handled in orphan cleanup below
+            }
+            std::vector<V0SilentPaymentsDestination> recipients;
+            value >> DeserializeSpRecipients(recipients);
+            pwallet->LoadSpRecipients(txid, std::move(recipients));
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, sp_res.m_result);
+
+        // Erase SP recipients records that no longer have a matching transaction
+        for (const Txid& txid : sp_txids_loaded) {
+            if (!pwallet->mapWallet.contains(txid)) {
+                pwallet->WalletLogPrintf("Erasing orphaned sprecipients record for tx %s\n", txid.ToString());
+                EraseSpRecipients(txid);
+            }
+        }
     } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.

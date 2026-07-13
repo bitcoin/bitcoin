@@ -93,7 +93,7 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
     return sffo_set;
 }
 
-static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
+static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx, mapValue_t extra_mapvalue = {}, std::vector<V0SilentPaymentsDestination> sp_recipients = {})
 {
     bool can_anti_fee_snipe = !options.exists("locktime");
 
@@ -139,7 +139,7 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
         CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
         result.pushKV("txid", tx->GetHash().GetHex());
         if (add_to_wallet && !psbt_opt_in) {
-            pwallet->CommitTransaction(tx, {}, /*orderForm=*/{});
+            pwallet->CommitTransaction(tx, std::move(extra_mapvalue), /*orderForm=*/{}, std::move(sp_recipients));
         } else {
             result.pushKV("hex", hex);
         }
@@ -168,7 +168,15 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
+static void EnsureSilentPaymentsEnabled(const CWallet &pwallet)
+{
+    if (pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || pwallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) ) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments require access to private keys to build transactions.");
+    }
+    EnsureWalletIsUnlocked(pwallet);
+}
+
+UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -182,6 +190,11 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
 
+    if (std::any_of(recipients.begin(), recipients.end(), [](const auto& r) { return IsSilentPaymentsDestination(r.dest); })) {
+        EnsureSilentPaymentsEnabled(wallet);
+        coin_control.m_silent_payments = true;
+    }
+
     // Shuffle recipient list
     std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
 
@@ -191,7 +204,14 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
     }
     const CTransactionRef& tx = res->tx;
-    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{});
+    std::vector<V0SilentPaymentsDestination> sp_dests;
+    sp_dests.reserve(recipients.size());
+    for (const auto& r : recipients) {
+        if (const auto* sp = std::get_if<V0SilentPaymentsDestination>(&r.dest)) {
+            sp_dests.emplace_back(*sp);
+        }
+    }
+    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{}, std::move(sp_dests));
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
@@ -683,6 +703,11 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
+    if (std::any_of(recipients.begin(), recipients.end(), [](const auto& r) { return IsSilentPaymentsDestination(r.dest); })) {
+        EnsureSilentPaymentsEnabled(wallet);
+        coinControl.m_silent_payments = true;
+    }
+
     auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents, coinControl);
     if (!txr) {
         throw JSONRPCError(RPC_WALLET_ERROR, ErrorString(txr).original);
@@ -1048,7 +1073,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
     CCoinControl coin_control;
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
-    std::vector<CTxOut> outputs;
+    std::vector<std::pair<CTxDestination, CAmount>> outputs;
 
     std::optional<uint32_t> original_change_index;
 
@@ -1080,14 +1105,11 @@ static RPCMethod bumpfee_helper(std::string method_name)
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
-        // Prepare new outputs by creating a temporary tx and calling AddOutputs().
         if (!options["outputs"].isNull()) {
             if (options["outputs"].isArray() && options["outputs"].empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array");
             }
-            CMutableTransaction tempTx;
-            AddOutputs(tempTx, options["outputs"]);
-            outputs = tempTx.vout;
+            outputs = ParseOutputs(NormalizeOutputs(options["outputs"]));
         }
 
         if (options.exists("original_change_index")) {
@@ -1296,8 +1318,15 @@ RPCMethod send()
             rawTx.vout.clear();
             auto txr = FundTransaction(*pwallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/false);
 
+            std::vector<V0SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(recipients.size());
+            for (const auto& r : recipients) {
+                if (const auto* sp = std::get_if<V0SilentPaymentsDestination>(&r.dest)) {
+                    sp_dests.emplace_back(*sp);
+                }
+            }
             CMutableTransaction tx = CMutableTransaction(*txr.tx);
-            return FinishTransaction(pwallet, options, tx);
+            return FinishTransaction(pwallet, options, tx, {}, std::move(sp_dests));
         }
     };
 }
@@ -1389,18 +1418,26 @@ RPCMethod sendall()
             PreventOutdatedOptions(options);
 
 
-            std::set<std::string> addresses_without_amount;
+            std::set<size_t> addresses_without_amount;
             UniValue recipient_key_value_pairs(UniValue::VARR);
+            std::map<size_t, V0SilentPaymentsDestination> sp_destinations;
             const UniValue& recipients{request.params[0]};
             for (unsigned int i = 0; i < recipients.size(); ++i) {
                 const UniValue& recipient{recipients[i]};
+                CTxDestination dest;
                 if (recipient.isStr()) {
                     UniValue rkvp(UniValue::VOBJ);
                     rkvp.pushKV(recipient.get_str(), 0);
+                    dest = DecodeDestination(recipient.get_str());
                     recipient_key_value_pairs.push_back(std::move(rkvp));
-                    addresses_without_amount.insert(recipient.get_str());
+                    addresses_without_amount.insert(i);
                 } else {
+                    const std::string& addr = recipient.getKeys()[0];
+                    dest = DecodeDestination(addr);
                     recipient_key_value_pairs.push_back(recipient);
+                }
+                if (std::holds_alternative<V0SilentPaymentsDestination>(dest)) {
+                    sp_destinations.emplace(i, std::get<V0SilentPaymentsDestination>(dest));
                 }
             }
 
@@ -1439,6 +1476,11 @@ RPCMethod sendall()
                 coin_control.m_max_tx_weight = MAX_STANDARD_TX_WEIGHT;
             }
 
+            if (!sp_destinations.empty()) {
+                EnsureSilentPaymentsEnabled(*pwallet);
+                coin_control.m_silent_payments = true;
+            }
+
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
             FeeCalculation fee_calc_out;
@@ -1467,6 +1509,8 @@ RPCMethod sendall()
 
             CAmount total_input_value(0);
             bool send_max{options.exists("send_max") ? options["send_max"].get_bool() : false};
+            // silent payments input coins
+            OutputSet sp_input_coins;
             if (options.exists("inputs") && options.exists("send_max")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine send_max with specific inputs.");
             } else if (options.exists("inputs") && (options.exists("minconf") || options.exists("maxconf"))) {
@@ -1488,6 +1532,13 @@ RPCMethod sendall()
                         }
                     }
                     total_input_value += tx->tx->vout[input.prevout.n].nValue;
+                    if (!sp_destinations.empty()) {
+                        sp_input_coins.insert(std::make_shared<COutput>(
+                            input.prevout, tx->tx->vout[input.prevout.n],
+                            pwallet->GetTxDepthInMainChain(*tx),
+                            /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true,
+                            /*time=*/0, /*from_me=*/false));
+                    }
                 }
             } else {
                 CoinFilterParams coins_params;
@@ -1503,6 +1554,22 @@ RPCMethod sendall()
                     CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL);
                     rawTx.vin.push_back(input);
                     total_input_value += output.txout.nValue;
+                    if (!sp_destinations.empty()) {
+                        sp_input_coins.insert(std::make_shared<COutput>(output));
+                    }
+                }
+            }
+
+            if (!sp_destinations.empty()) {
+                bilingual_str error;
+                auto sp_result = CreateSilentPaymentsOutputs(*pwallet, sp_destinations, sp_input_coins, error);
+                if (!sp_result) {
+                    // Fail if Silent Payments transaction cannot be created, else
+                    // the receivers cannot find the payments.
+                    throw JSONRPCError(RPC_WALLET_ERROR, error.translated);
+                }
+                for (const auto& [idx, taproot_dest] : *sp_result) {
+                    rawTx.vout[idx].scriptPubKey = GetScriptForDestination(taproot_dest);
                 }
             }
 
@@ -1556,11 +1623,9 @@ RPCMethod sendall()
             const CAmount per_output_without_amount{remainder / (long)addresses_without_amount.size()};
 
             bool gave_remaining_to_first{false};
-            for (CTxOut& out : rawTx.vout) {
-                CTxDestination dest;
-                ExtractDestination(out.scriptPubKey, dest);
-                std::string addr{EncodeDestination(dest)};
-                if (addresses_without_amount.contains(addr)) {
+            for (size_t i = 0; i < rawTx.vout.size(); ++i) {
+                CTxOut& out = rawTx.vout[i];
+                if (addresses_without_amount.contains(i)) {
                     out.nValue = per_output_without_amount;
                     if (!gave_remaining_to_first) {
                         out.nValue += remainder % addresses_without_amount.size();
@@ -1573,6 +1638,7 @@ RPCMethod sendall()
                 } else {
                     if (IsDust(out, pwallet->chain().relayDustFee())) {
                         // Specified output amount is dust
+                        const std::string& addr = recipient_key_value_pairs[i].getKeys()[0];
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Specified output amount to %s is below dust threshold.", addr));
                     }
                 }
@@ -1585,7 +1651,12 @@ RPCMethod sendall()
                 }
             }
 
-            return FinishTransaction(pwallet, options, rawTx);
+            std::vector<V0SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(sp_destinations.size());
+            for (auto& [idx, dest] : sp_destinations) {
+                sp_dests.emplace_back(std::move(dest));
+            }
+            return FinishTransaction(pwallet, options, rawTx, {}, std::move(sp_dests));
         }
     };
 }
