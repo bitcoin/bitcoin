@@ -751,6 +751,11 @@ void btck_witness_stack_destroy(btck_WitnessStack* witness_stack)
     delete witness_stack;
 }
 
+btck_TransactionOutPoint* btck_transaction_out_point_create(const btck_Txid* txid, uint32_t index)
+{
+    return btck_TransactionOutPoint::create(COutPoint{btck_Txid::get(txid), index});
+}
+
 btck_TransactionOutPoint* btck_transaction_out_point_copy(const btck_TransactionOutPoint* out_point)
 {
     return btck_TransactionOutPoint::copy(out_point);
