@@ -644,14 +644,13 @@ std::set<Txid> CWallet::GetConflicts(const Txid& txid) const
     std::set<Txid> result;
     AssertLockHeld(cs_wallet);
 
-    const auto it = mapWallet.find(txid);
-    if (it == mapWallet.end())
+    const CWalletTx* wtx = GetWalletTx(txid);
+    if (!wtx) {
         return result;
-    const CWalletTx& wtx = it->second;
-
+    }
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
 
-    for (const CTxIn& txin : wtx.GetTx()->vin)
+    for (const CTxIn& txin : wtx->GetTx()->vin)
     {
         if (mapTxSpends.count(txin.prevout) <= 1)
             continue;  // No conflict if zero or one spends
@@ -744,10 +743,9 @@ bool CWallet::IsSpent(const COutPoint& outpoint) const
 
     for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
         const Txid& txid = it->second;
-        const auto mit = mapWallet.find(txid);
-        if (mit != mapWallet.end()) {
-            const auto& wtx = mit->second;
-            if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted())
+        const CWalletTx* wtx = GetWalletTx(txid);
+        if (wtx) {
+            if (!wtx->isAbandoned() && !wtx->isBlockConflicted() && !wtx->isMempoolConflicted())
                 return true; // Spent
         }
     }
@@ -763,13 +761,12 @@ CWallet::SpendType CWallet::HowSpent(const COutPoint& outpoint) const
 
     for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
         const Txid& txid = it->second;
-        const auto mit = mapWallet.find(txid);
-        if (mit != mapWallet.end()) {
-            const auto& wtx = mit->second;
-            if (wtx.isConfirmed()) return SpendType::CONFIRMED;
-            if (wtx.InMempool()) {
+        const CWalletTx* wtx = GetWalletTx(txid);
+        if (wtx) {
+            if (wtx->isConfirmed()) return SpendType::CONFIRMED;
+            if (wtx->InMempool()) {
                 st = SpendType::MEMPOOL;
-            } else if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted()) {
+            } else if (!wtx->isAbandoned() && !wtx->isBlockConflicted() && !wtx->isMempoolConflicted()) {
                 if (st == SpendType::UNSPENT) st = SpendType::NONMEMPOOL;
             }
         }
@@ -1148,10 +1145,9 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     AddToSpends(wtx);
     for (const CTxIn& txin : wtx.GetTx()->vin) {
-        auto it = mapWallet.find(txin.prevout.hash);
-        if (it != mapWallet.end()) {
-            CWalletTx& prevtx = it->second;
-            if (auto* prev = prevtx.state<TxStateBlockConflicted>()) {
+        const CWalletTx* prevtx = GetWalletTx(txin.prevout.hash);
+        if (prevtx) {
+            if (auto* prev = prevtx->state<TxStateBlockConflicted>()) {
                 MarkConflicted(prev->conflicting_block_hash, prev->conflicting_block_height, wtx.GetHash());
             }
         }
@@ -1184,7 +1180,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             }
         }
 
-        bool fExisted = mapWallet.contains(tx.GetHash());
+        bool fExisted = bool(GetWalletTx(tx.GetHash()));
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             /* Check if any keys in the wallet keypool that were supposed to be unused
@@ -1554,7 +1550,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
 
             // For all of the spends that conflict with this transaction
             for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it) {
-                CWalletTx& wtx = mapWallet.find(_it->second)->second;
+                const CWalletTx& wtx = *GetWalletTx(_it->second);
 
                 if (!wtx.isBlockConflicted()) continue;
 
@@ -1930,11 +1926,11 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
     // Build coins map
     std::map<COutPoint, Coin> coins;
     for (auto& input : tx.vin) {
-        const auto mi = mapWallet.find(input.prevout.hash);
-        if(mi == mapWallet.end() || input.prevout.n >= mi->second.GetTx()->vout.size()) {
+        const CWalletTx* pwtx = GetWalletTx(input.prevout.hash);
+        if(!pwtx || input.prevout.n >= pwtx->GetTx()->vout.size()) {
             return false;
         }
-        const CWalletTx& wtx = mi->second;
+        const CWalletTx& wtx = *pwtx;
         int prev_height = wtx.state<TxStateConfirmed>() ? wtx.state<TxStateConfirmed>()->confirmed_block_height : 0;
         coins[input.prevout] = Coin(wtx.GetTx()->vout[input.prevout.n], prev_height, wtx.IsCoinBase());
     }
@@ -1972,12 +1968,10 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, co
         // If we have no utxo, grab it from the wallet.
         if (!input.non_witness_utxo) {
             const Txid& txhash = input.prev_txid;
-            const auto it = mapWallet.find(txhash);
-            if (it != mapWallet.end()) {
-                const CWalletTx& wtx = it->second;
+            if (const CWalletTx* wtx = GetWalletTx(txhash)) {
                 // We only need the non_witness_utxo, which is a superset of the witness_utxo.
                 //   The signing code will switch to the smaller witness_utxo if this is ok.
-                input.non_witness_utxo = wtx.GetTx();
+                input.non_witness_utxo = wtx->GetTx();
             }
         }
     }
