@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     };
     CTransactionRef prev_tx1;
     s_prev_tx1 >> TX_WITH_WITNESS(prev_tx1);
-    CWalletTx* wtx1 = m_wallet.AddToWallet(std::move(prev_tx1), TxStateInactive{});
+    std::optional<WalletTxs::iterator> wtx1 = m_wallet.AddToWallet(std::move(prev_tx1), TxStateInactive{});
     assert(wtx1);
 
     DataStream s_prev_tx2{
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     };
     CTransactionRef prev_tx2;
     s_prev_tx2 >> TX_WITH_WITNESS(prev_tx2);
-    CWalletTx* wtx2= m_wallet.AddToWallet(std::move(prev_tx2), TxStateInactive{});
+    std::optional<WalletTxs::iterator> wtx2= m_wallet.AddToWallet(std::move(prev_tx2), TxStateInactive{});
     assert(wtx2);
 
     // Import descriptors for keys and scripts
