@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace interfaces {
-std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* process_argv0, Init& init)
+std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* log_suffix, const char* process_argv0, Init& init)
 {
     return {};
 }
