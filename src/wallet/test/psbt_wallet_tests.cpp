@@ -41,14 +41,16 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     };
     CTransactionRef prev_tx1;
     s_prev_tx1 >> TX_WITH_WITNESS(prev_tx1);
-    m_wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(prev_tx1->GetHash()), std::forward_as_tuple(prev_tx1, TxStateInactive{}));
+    CWalletTx* wtx1 = m_wallet.AddToWallet(std::move(prev_tx1), TxStateInactive{});
+    assert(wtx1);
 
     DataStream s_prev_tx2{
         "0200000001aad73931018bd25f84ae400b68848be09db706eac2ac18298babee71ab656f8b0000000048473044022058f6fc7c6a33e1b31548d481c826c015bd30135aad42cd67790dab66d2ad243b02204a1ced2604c6735b6393e5b41691dd78b00f0c5942fb9f751856faa938157dba01feffffff0280f0fa020000000017a9140fb9463421696b82c833af241c78c17ddbde493487d0f20a270100000017a91429ca74f8a08f81999428185c97b5d852e4063f618765000000"_hex,
     };
     CTransactionRef prev_tx2;
     s_prev_tx2 >> TX_WITH_WITNESS(prev_tx2);
-    m_wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(prev_tx2->GetHash()), std::forward_as_tuple(prev_tx2, TxStateInactive{}));
+    CWalletTx* wtx2= m_wallet.AddToWallet(std::move(prev_tx2), TxStateInactive{});
+    assert(wtx2);
 
     // Import descriptors for keys and scripts
     import_descriptor(m_wallet, "sh(multi(2,xprv9s21ZrQH143K2LE7W4Xf3jATf9jECxSb7wj91ZnmY4qEJrS66Qru9RFqq8xbkgT32ya6HqYJweFdJUEDf5Q6JFV7jMiUws7kQfe6Tv4RbfN/0h/0h/0h,xprv9s21ZrQH143K2LE7W4Xf3jATf9jECxSb7wj91ZnmY4qEJrS66Qru9RFqq8xbkgT32ya6HqYJweFdJUEDf5Q6JFV7jMiUws7kQfe6Tv4RbfN/0h/0h/1h))");
