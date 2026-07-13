@@ -14,13 +14,8 @@
 #if defined(__linux__)
 #include <linux/rtnetlink.h>
 #elif defined(__FreeBSD__)
-#include <osreldate.h>
-#if __FreeBSD_version >= 1400000
-// Workaround https://github.com/freebsd/freebsd-src/pull/1070.
-#define typeof __typeof
 #include <netlink/netlink.h>
 #include <netlink/netlink_route.h>
-#endif
 #elif defined(WIN32)
 #include <iphlpapi.h>
 #elif defined(__APPLE__)
@@ -60,10 +55,8 @@ std::optional<CNetAddr> FromSockAddr(const struct sockaddr* addr, std::optional<
     return std::nullopt;
 }
 
-// Linux and FreeBSD 14.0+. For FreeBSD 13.2 the code can be compiled but
-// running it requires loading a special kernel module, otherwise socket(AF_NETLINK,...)
-// will fail, so we skip that.
-#if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD_version >= 1400000)
+// Linux and FreeBSD.
+#if defined(__linux__) || defined(__FreeBSD__)
 
 // Good for responses containing ~ 10,000-15,000 routes.
 static constexpr ssize_t NETLINK_MAX_RESPONSE_SIZE{1'048'576};

@@ -1,8 +1,8 @@
 # NetBSD Build Guide
 
-**Updated for NetBSD [10.1](https://netbsd.org/releases/formal-10/NetBSD-10.1.html)**
+Bitcoin Core is supported on all [supported NetBSD releases](https://www.netbsd.org/releases/).
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on NetBSD.
+This guide describes how to build bitcoind, command-line utilities, and GUI on the latest release.
 
 ## Preparation
 
