@@ -19,7 +19,7 @@ import concurrent.futures
 import threading
 import time
 
-from test_framework.address import key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
+from test_framework.address import base58_to_byte, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
@@ -50,7 +50,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def test_importdesc(self, req, success, error_code=None, error_message=None, warnings=None, wallet=None):
+    def test_importdesc(self, req, success, error_code=None, error_message=None, warnings=None, wallet=None, expected_priv=None):
         """Run importdescriptors and assert success"""
         if warnings is None:
             warnings = []
@@ -68,6 +68,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+        if expected_priv is not None:
+            priv_descs = wrpc.listdescriptors(True)
+            for desc in priv_descs["descriptors"]:
+                if desc["desc"] == expected_priv:
+                    break
+            else:
+                assert False, "Expected private descriptor was not found in the wallet"
 
     def test_import_unused_key(self):
         self.log.info("Test import of unused(KEY)")
@@ -198,6 +206,54 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             except JSONRPCException as e:
                 assert_equal(e.error["code"], -1)
                 assert_equal(e.error["message"], "Rescan aborted by user.")
+
+    def test_import_noprivs(self):
+        self.log.info("Test import of descriptors without private keys that the wallet has the privkeys for")
+        self.nodes[0].createwallet(wallet_name="import_noprivs")
+        wallet = self.nodes[0].get_wallet_rpc("import_noprivs")
+        hdkeys = wallet.gethdkeys(private=True)
+        xpub = hdkeys[0]["xpub"]
+        xprv = hdkeys[0]["xprv"]
+        for desc in hdkeys[0]["descriptors"]:
+            if desc["desc"].startswith("pkh(") and "44h/1h/0h" in desc["desc"]:
+                derived_xpub = desc["desc"][4:-14]
+
+        # xpub substition
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"tr({xpub}/1/2/3)")},
+                             success=True,
+                             wallet=wallet,
+                             expected_priv=descsum_create(f"tr({xprv}/1/2/3)"))
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"tr({derived_xpub}/4/5/6)")},
+                             success=True,
+                             wallet=wallet,
+                             expected_priv=descsum_create(f"tr({xprv}/44h/1h/0h/4/5/6)"))
+
+        # individual privkey substition
+        key = get_generate_key()
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"wpkh({key.privkey})")}, success=True, wallet=wallet)
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"tr({key.pubkey})")},
+                             success=True,
+                             wallet=wallet,
+                             expected_priv=descsum_create(f"tr({key.privkey})"))
+
+        # Both, at various descriptor depths
+        other_key = get_generate_key()
+        pub_desc = descsum_create(f"tr({other_key.pubkey},{{multi_a(2,{xpub}/5/4/3/*,{derived_xpub}/1h/2h/*),{{pk({xpub}/3h/4h/*),multi_a(2,{key.pubkey},{derived_xpub}/5/6)}}}})")
+        priv_desc = descsum_create(f"tr({other_key.pubkey},{{multi_a(2,{xprv}/5/4/3/*,{xprv}/44h/1h/0h/1h/2h/*),{{pk({xprv}/3h/4h/*),multi_a(2,{key.privkey},{xprv}/44h/1h/0h/5/6)}}}})")
+        self.test_importdesc({"timestamp": "now", "desc": pub_desc, "range": [0, 100]},
+                             success=True,
+                             warnings=["Not all private keys provided. Some wallet functionality may return unexpected errors"],
+                             wallet=wallet,
+                             expected_priv=priv_desc)
+
+        self.log.info("Test that a descriptor with an individual pubkey whose privkey is in an xprv fails to import (key substitution fails)")
+        xpub_bytes = base58_to_byte(xpub)[0]
+        xpub_pub = xpub_bytes[-33:].hex()
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"tr({xpub_pub})")},
+                             success=False,
+                             error_code=-4,
+                             error_message="Cannot import descriptor without private keys to a wallet with private keys enabled",
+                             wallet=wallet)
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -992,6 +1048,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_import_unused_key_existing()
         self.test_import_unused_noprivs()
         self.test_rescan_fails_import()
+        self.test_import_noprivs()
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
