@@ -562,6 +562,11 @@ class OutPoint : public Handle<btck_TransactionOutPoint, btck_transaction_out_po
 public:
     OutPoint(const OutPointView& view)
         : Handle(view) {}
+
+    OutPoint(const TxidView& txid, uint32_t index)
+        : Handle{btck_transaction_out_point_create(txid.get(), index)}
+    {
+    }
 };
 
 template <typename Derived>

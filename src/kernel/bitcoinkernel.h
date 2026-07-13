@@ -1791,6 +1791,17 @@ BITCOINKERNEL_API void btck_witness_stack_destroy(btck_WitnessStack* witness_sta
 ///@{
 
 /**
+ * @brief Create a transaction out point from a txid and an output index.
+ *
+ * @param[in] txid  Non-null.
+ * @param[in] index The output index.
+ * @return          The allocated transaction out point. Must be freed with
+ *                  btck_transaction_out_point_destroy.
+ */
+BITCOINKERNEL_API btck_TransactionOutPoint* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_out_point_create(
+    const btck_Txid* txid, uint32_t index) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Copy a transaction out point.
  *
  * @param[in] transaction_out_point Non-null.

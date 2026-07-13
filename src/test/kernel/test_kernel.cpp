@@ -520,6 +520,8 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     OutPoint point_0 = input_0.OutPoint();
     OutPoint point_1 = input_1.OutPoint();
     CheckHandle(point_0, point_1);
+    OutPoint point{point_0.Txid(), point_0.index()};
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(point.Txid().ToBytes()), byte_span_to_hex_string_reversed(point_0.Txid().ToBytes()));
 
     WitnessStackView ws_0 = input_0.GetWitnessStack();
     BOOST_CHECK_EQUAL(ws_0.CountItems(), 0);
