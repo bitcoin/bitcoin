@@ -9,6 +9,7 @@
 
 #include <concepts>
 #include <span>
+#include <ranges>
 
 namespace mp {
 template <typename T, typename U>
@@ -33,7 +34,7 @@ requires (std::is_same_v<decltype(output.get()), ::capnp::Data::Builder> && IsBy
 {
     auto data = std::span{value};
     auto result = output.init(data.size());
-    memcpy(result.begin(), data.data(), data.size());
+    std::ranges::copy(data, result.begin());
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
