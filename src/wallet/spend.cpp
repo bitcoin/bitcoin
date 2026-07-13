@@ -175,11 +175,11 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
     std::vector<CTxOut> txouts;
     // Look up the inputs. The inputs are either in the wallet, or in coin_control.
     for (const CTxIn& input : tx.vin) {
-        const auto mi = wallet->mapWallet.find(input.prevout.hash);
+        const CWalletTx* wtx = wallet->GetWalletTx(input.prevout.hash);
         // Can not estimate size without knowing the input details
-        if (mi != wallet->mapWallet.end()) {
-            assert(input.prevout.n < mi->second.GetTx()->vout.size());
-            txouts.emplace_back(mi->second.GetTx()->vout.at(input.prevout.n));
+        if (wtx) {
+            assert(input.prevout.n < wtx->GetTx()->vout.size());
+            txouts.emplace_back(wtx->GetTx()->vout.at(input.prevout.n));
         } else if (coin_control) {
             const auto& txout{coin_control->GetExternalOutput(input.prevout)};
             if (!txout) return TxSize{-1, -1};

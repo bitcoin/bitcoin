@@ -165,7 +165,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 if (!watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
                 }
-                watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid));
+                watchonly_batch.WriteTx(*watchonly_wallet->GetWalletTx(txid));
             }
 
             // Copy address book

@@ -172,12 +172,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
 
     LOCK(wallet.cs_wallet);
     errors.clear();
-    auto it = wallet.mapWallet.find(txid);
-    if (it == wallet.mapWallet.end()) {
+    const CWalletTx* pwtx = wallet.GetWalletTx(txid);
+    if (!pwtx) {
         errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::INVALID_ADDRESS_OR_KEY;
     }
-    const CWalletTx& wtx = it->second;
+    const CWalletTx& wtx = *pwtx;
 
     // Make sure that original_change_index is valid
     if (original_change_index.has_value() && original_change_index.value() >= wtx.GetTx()->vout.size()) {
@@ -355,12 +355,12 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
     if (!errors.empty()) {
         return Result::MISC_ERROR;
     }
-    auto it = txid.IsNull() ? wallet.mapWallet.end() : wallet.mapWallet.find(txid);
-    if (it == wallet.mapWallet.end()) {
+    const CWalletTx* old_wtx = txid.IsNull() ? nullptr : wallet.GetWalletTx(txid);
+    if (!old_wtx) {
         errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::MISC_ERROR;
     }
-    const CWalletTx& oldWtx = it->second;
+    const CWalletTx& oldWtx = *old_wtx;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
     Result result = PreconditionChecks(wallet, oldWtx, /* require_mine=*/ false, errors);
