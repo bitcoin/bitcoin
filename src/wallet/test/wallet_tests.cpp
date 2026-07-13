@@ -293,13 +293,13 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         block->phashBlock = &hash;
         state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
     }
-    return wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
+    return (*wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
         // Assign wtx.m_state to simplify test and avoid the need to simulate
         // reorg events. Without this, AddToWallet asserts false when the same
         // transaction is confirmed in different blocks.
         wtx.m_state = state;
         return true;
-    })->nTimeSmart;
+    }))->nTimeSmart;
 }
 
 // Simple test to verify assignment of CWalletTx::nSmartTime value. Could be
@@ -393,7 +393,7 @@ public:
         wallet.reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    const CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
         CCoinControl dummy;
@@ -413,9 +413,9 @@ public:
         LOCK(wallet->cs_wallet);
         LOCK(Assert(m_node.chainman)->GetMutex());
         wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
-        CWalletTx* wtx = wallet->AddToWallet(tx, TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1});
+        std::optional<WalletTxs::iterator> wtx = wallet->AddToWallet(tx, TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1});
         BOOST_CHECK(wtx);
-        return *wtx;
+        return **wtx;
     }
 
     std::unique_ptr<CWallet> wallet;
@@ -483,7 +483,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
 {
     LOCK(context.wallet->cs_wallet);
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
-    CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
+    const CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);

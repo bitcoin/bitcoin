@@ -91,7 +91,7 @@ static RPCMethod getwalletinfo()
     obj.pushKV("walletname", pwallet->GetName());
     obj.pushKV("walletversion", latest_legacy_wallet_minversion);
     obj.pushKV("format", pwallet->GetDatabase().Format());
-    obj.pushKV("txcount", pwallet->mapWallet.size());
+    obj.pushKV("txcount", pwallet->m_txs.size());
     obj.pushKV("keypoolsize", kpExternalSize);
     obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
 
