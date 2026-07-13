@@ -53,7 +53,7 @@ struct FuzzedWallet {
         {
             LOCK(wallet->cs_wallet);
             wallet->ClearInMemoryTxStateForTest();
-            assert(wallet->mapWallet.empty());
+            assert(wallet->m_txs.empty());
             assert(wallet->GetTXOs().empty());
         }
     }
