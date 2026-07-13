@@ -341,7 +341,7 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
                 CTxDestination address;
                 if(!InputIsMine(wallet, txin)) /* If this input isn't mine, ignore it */
                     continue;
-                if(!ExtractDestination(wallet.mapWallet.at(txin.prevout.hash).GetTx()->vout[txin.prevout.n].scriptPubKey, address))
+                if(!ExtractDestination(wallet.GetWalletTx(txin.prevout.hash)->GetTx()->vout[txin.prevout.n].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 any_mine = true;
