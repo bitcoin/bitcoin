@@ -39,20 +39,18 @@ static void addCoin(CoinsResult& coins,
     tx.vout[0].nValue = nValue;
     tx.vout[0].scriptPubKey = GetScriptForDestination(dest);
 
-    const auto txid{tx.GetHash()};
     LOCK(wallet.cs_wallet);
-    auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
-    assert(ret.second);
-    CWalletTx& wtx = (*ret.first).second;
-    const auto& txout = wtx.GetTx()->vout.at(0);
+    CWalletTx* wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), TxStateInactive{});
+    assert(wtx);
+    const auto& txout = wtx->GetTx()->vout.at(0);
     coins.Add(*Assert(OutputTypeFromDestination(dest)),
-              {COutPoint(wtx.GetHash(), 0),
+              {COutPoint(wtx->GetHash(), 0),
                    txout,
                    depth,
                    CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr),
                    /*solvable=*/ true,
                    /*safe=*/ true,
-                   wtx.GetTxTime(),
+                   wtx->GetTxTime(),
                    is_from_me,
                    fee_rate});
 }
