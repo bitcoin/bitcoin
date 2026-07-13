@@ -433,6 +433,7 @@ https://github.com/bitcoin-core/bitcoin-maintainer-tools#backport).
 
 Copyright
 ---------
+donate: 1Hb7iC63bqxtt7X9oYr1VtDTE2Yk5xLQAU
 
 By contributing to this repository, you agree to license your work under the
 MIT license unless specified otherwise in `contrib/debian/copyright` or at
