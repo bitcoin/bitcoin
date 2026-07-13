@@ -104,7 +104,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (const auto& [_, wtx] : wallet.mapWallet) {
+    for (const auto& wtx : wallet.m_txs_by_txid) {
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < nMinDepth)
@@ -509,13 +509,8 @@ RPCMethod listtransactions()
     {
         LOCK(pwallet->cs_wallet);
 
-        const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
-
-        // iterate backwards until we have nCount items to return:
-        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-        {
-            CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+        for (auto it = pwallet->m_txs_by_pos.rbegin(); it != pwallet->m_txs_by_pos.rend(); ++it) {
+            ListTransactions(*pwallet, *it, 0, true, ret, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -643,7 +638,7 @@ RPCMethod listsinceblock()
 
     UniValue transactions(UniValue::VARR);
 
-    for (const auto& [_, tx] : wallet.mapWallet) {
+    for (const auto& tx : wallet.m_txs_by_txid) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
             ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);

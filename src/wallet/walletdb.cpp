@@ -1080,10 +1080,15 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
 
     // After loading all tx records, abandon any coinbase that is no longer in the active chain.
     // This could happen during an external wallet load, or if the user replaced the chain data.
-    for (auto& [id, wtx] : pwallet->mapWallet) {
+    std::vector<Txid> to_abandon;
+    to_abandon.reserve(pwallet->m_txs.size());
+    for (const auto& wtx : pwallet->m_txs) {
         if (wtx.IsCoinBase() && wtx.isInactive()) {
-            pwallet->AbandonTransaction(wtx);
+            to_abandon.push_back(wtx.GetHash());
         }
+    }
+    for (const Txid& txid : to_abandon) {
+        pwallet->AbandonTransaction(txid);
     }
 
     return result;

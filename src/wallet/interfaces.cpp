@@ -322,8 +322,8 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         std::set<WalletTx> result;
-        for (const auto& entry : m_wallet->mapWallet) {
-            result.emplace(MakeWalletTx(*m_wallet, entry.second));
+        for (const auto& entry : m_wallet->m_txs_by_txid) {
+            result.emplace(MakeWalletTx(*m_wallet, entry));
         }
         return result;
     }

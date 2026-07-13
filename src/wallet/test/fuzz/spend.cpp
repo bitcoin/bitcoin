@@ -70,7 +70,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
         tx.vout[0].nValue = n_value;
         tx.vout[0].scriptPubKey = GetScriptForDestination(fuzzed_wallet.GetDestination(fuzzed_data_provider));
         LOCK(fuzzed_wallet.wallet->cs_wallet);
-        CWalletTx* wtx = fuzzed_wallet.wallet->AddToWallet(MakeTransactionRef(std::move(tx)), TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0});
+        std::optional<WalletTxs::iterator> wtx = fuzzed_wallet.wallet->AddToWallet(MakeTransactionRef(std::move(tx)), TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0});
         assert(wtx);
     }
 
