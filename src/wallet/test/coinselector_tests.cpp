@@ -73,10 +73,10 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
 
     LOCK(wallet.cs_wallet);
 
-    CWalletTx* wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), TxStateInactive{});
+    std::optional<WalletTxs::iterator> wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), TxStateInactive{});
     assert(wtx);
-    const auto& txout = wtx->GetTx()->vout.at(nInput);
-    available_coins.Add(OutputType::BECH32, {COutPoint(wtx->GetHash(), nInput), txout, nAge, custom_size == 0 ? CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr) : custom_size, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), fIsFromMe, feerate});
+    const auto& txout = (*wtx)->GetTx()->vout.at(nInput);
+    available_coins.Add(OutputType::BECH32, {COutPoint((*wtx)->GetHash(), nInput), txout, nAge, custom_size == 0 ? CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr) : custom_size, /*solvable=*/true, /*safe=*/true, (*wtx)->GetTxTime(), fIsFromMe, feerate});
 }
 
 // Helpers

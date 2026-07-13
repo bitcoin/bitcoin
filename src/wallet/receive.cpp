@@ -115,7 +115,7 @@ CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, bool avoi
     if (wallet.IsTxImmatureCoinBase(wtx))
         return 0;
 
-    // GetBalance can assume transactions in mapWallet won't change
+    // GetBalance can assume transactions in m_txs won't change
     return GetCachableAmount(wallet, wtx, CWalletTx::CREDIT, avoid_reuse);
 }
 
@@ -328,9 +328,9 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
     std::set< std::set<CTxDestination> > groupings;
     std::set<CTxDestination> grouping;
 
-    for (const auto& walletEntry : wallet.mapWallet)
+    for (const auto& walletEntry : wallet.m_txs_by_txid)
     {
-        const CWalletTx& wtx = walletEntry.second;
+        const CWalletTx& wtx = walletEntry;
 
         if (wtx.GetTx()->vin.size() > 0)
         {

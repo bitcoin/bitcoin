@@ -56,7 +56,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
     // Tally
     CAmount amount = 0;
-    for (const auto& [_, wtx] : wallet.mapWallet) {
+    for (const auto& wtx : wallet.m_txs_by_txid) {
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth
             // Coinbase with less than 1 confirmation is no longer in the main chain

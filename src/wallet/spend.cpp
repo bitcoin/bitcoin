@@ -288,7 +288,7 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
                 }
             }
         } else {
-            // The input is external. We did not find the tx in mapWallet.
+            // The input is external. We did not find the tx in m_txs.
             const auto out{coin_control.GetExternalOutput(outpoint)};
             if (!out) {
                 return util::Error{strprintf(_("Not found pre-selected input %s"), outpoint.ToString())};
