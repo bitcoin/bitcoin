@@ -22,9 +22,10 @@ struct FooStruct
 {
     std::string name;
     std::set<int> set_int;
-    std::vector<bool> v_bool;
+    std::vector<bool> vector_bool;
     std::optional<int> optional_int;
     std::unordered_set<int> unordered_set_int;
+    std::map<std::string, int> map_string_int;
 };
 
 enum class FooEnum : uint8_t { ONE = 1, TWO = 2, };
@@ -59,6 +60,15 @@ public:
     virtual int call(int arg) = 0;
 };
 
+//! Concrete FooCallback that returns a fixed value, used by listCallbacks tests.
+class SimpleCallback : public FooCallback
+{
+public:
+    explicit SimpleCallback(int value) : m_value(value) {}
+    int call(int) override { return m_value; }
+    int m_value;
+};
+
 class ExtendedCallback : public FooCallback
 {
 public:
@@ -83,12 +93,20 @@ public:
     int callbackExtended(ExtendedCallback& callback, int arg) { return callback.callExtended(arg); }
     FooCustom passCustom(FooCustom foo) { return foo; }
     FooEmpty passEmpty(FooEmpty foo) { return foo; }
+    FooData passData(FooData foo) { return foo; }
     FooMessage passMessage(FooMessage foo) { foo.message += " call"; return foo; }
     void passMutable(FooMutable& foo) { foo.message += " call"; }
     FooEnum passEnum(FooEnum foo) { return foo; }
     double passDouble(double value) { return value; }
     int passFn(std::function<int()> fn) { return fn(); }
     std::vector<FooDataRef> passDataPointers(std::vector<FooDataRef> values) { return values; }
+    std::vector<std::unique_ptr<FooCallback>> listCallbacks(int n)
+    {
+        std::vector<std::unique_ptr<FooCallback>> result;
+        result.reserve(n);
+        for (int i = 0; i < n; ++i) result.push_back(std::make_unique<SimpleCallback>(i));
+        return result;
+    }
     std::shared_ptr<FooCallback> m_callback;
     void callFn() { assert(m_fn); m_fn(); }
     void callFnAsync() { assert(m_fn); m_fn(); }

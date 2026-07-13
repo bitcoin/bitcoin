@@ -39,6 +39,7 @@ public:
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual std::unique_ptr<Rpc> makeRpc() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
+    virtual bool canConnectIpc() { return false; }
     virtual bool canListenIpc() { return false; }
     virtual const char* exeName() { return nullptr; }
     virtual void makeMiningOld2() { throw std::runtime_error("Old mining interface (@2) not supported. Please update your client!"); }
@@ -72,10 +73,12 @@ std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[]);
 //! @param exe_name Current executable name, which is just passed to the IPC
 //!     system and used for logging.
 //!
+//! @param log_suffix File suffix to append for log files..
+//!
 //! @param process_argv0 Optional string containing argv[0] value passed to
 //!     main(). This is passed to the IPC system and used to locate binaries by
 //!     relative path if subprocesses are spawned.
-std::unique_ptr<Init> MakeBasicInit(const char* exe_name, const char* process_argv0="");
+std::unique_ptr<Init> MakeBasicInit(const char* exe_name, const char* log_suffix, const char* process_argv0="");
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_INIT_H
