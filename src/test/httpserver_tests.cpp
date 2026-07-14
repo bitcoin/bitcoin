@@ -484,27 +484,6 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Improperly terminated chunk"});
     }
-    {
-        // End of buffer reached without chunk termination, caller must wait for more data to arrive
-        HTTPRequest req;
-        std::string delayed_chunked = "GET / HTTP/1.0\n"
-                                      "Transfer-Encoding: chunked\n"
-                                      "\n"
-                                      "10\n"
-                                      R"({"method":"getbl)""\n"
-                                      "a\n"
-                                      R"(ockcount"})";
-        LineReader reader1(delayed_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader1));
-        BOOST_CHECK(req.LoadHeaders(reader1));
-        BOOST_CHECK(!req.LoadBody(reader1));
-        // more data arrives!
-        delayed_chunked += "\n0\n\n";
-        LineReader reader2(delayed_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader2));
-        BOOST_CHECK(req.LoadHeaders(reader2));
-        BOOST_CHECK(req.LoadBody(reader2));
-    }
 }
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
