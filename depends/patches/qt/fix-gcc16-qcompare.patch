@@ -105,7 +105,7 @@ index d82cf5ab4a4e..7eee69db66a3 100644
  namespace Qt {
  
  class weak_ordering;
-@@ -157,12 +183,18 @@ public:
+@@ -156,12 +182,18 @@ public:
      constexpr Q_IMPLICIT operator std::partial_ordering() const noexcept
      {
          static_assert(sizeof(*this) == sizeof(std::partial_ordering));
@@ -127,7 +127,7 @@ index d82cf5ab4a4e..7eee69db66a3 100644
          switch (m_order) {
          case qToUnderlying(O::Less):        return R::less;
          case qToUnderlying(O::Greater):     return R::greater;
-@@ -170,7 +202,6 @@ public:
+@@ -169,7 +201,6 @@ public:
          case qToUnderlying(U::Unordered):   return R::unordered;
          }
          Q_UNREACHABLE_RETURN(R::unordered);
@@ -135,7 +135,7 @@ index d82cf5ab4a4e..7eee69db66a3 100644
      }
  
      friend constexpr bool operator==(partial_ordering lhs, std::partial_ordering rhs) noexcept
-@@ -349,18 +380,18 @@ public:
+@@ -347,18 +378,18 @@ public:
      constexpr Q_IMPLICIT operator std::weak_ordering() const noexcept
      {
          static_assert(sizeof(*this) == sizeof(std::weak_ordering));
@@ -158,7 +158,7 @@ index d82cf5ab4a4e..7eee69db66a3 100644
      }
  
      friend constexpr bool operator==(weak_ordering lhs, std::weak_ordering rhs) noexcept
-@@ -547,18 +578,18 @@ public:
+@@ -542,18 +573,18 @@ public:
      constexpr Q_IMPLICIT operator std::strong_ordering() const noexcept
      {
          static_assert(sizeof(*this) == sizeof(std::strong_ordering));
@@ -181,7 +181,7 @@ index d82cf5ab4a4e..7eee69db66a3 100644
      }
  
      friend constexpr bool operator==(strong_ordering lhs, std::strong_ordering rhs) noexcept
-@@ -625,6 +656,8 @@ inline constexpr strong_ordering strong_ordering::greater(QtPrivate::Ordering::G
+@@ -620,6 +651,8 @@ inline constexpr strong_ordering strong_ordering::greater(QtPrivate::Ordering::G
  
  } // namespace Qt
  
