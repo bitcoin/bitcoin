@@ -15,6 +15,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 #include <atomic>
 #include <chrono>
@@ -647,19 +648,36 @@ static bool ConnectToSocket(const Sock& sock,
     return true;
 }
 
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection, std::optional<CNetAddr> bind_addr)
 {
-    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout});
+    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout}, bind_addr);
 }
 
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
                                       bool manual_connection,
-                                      std::chrono::milliseconds timeout)
+                                      std::chrono::milliseconds timeout,
+                                      std::optional<CNetAddr> bind_addr)
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
         LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
         return {};
+    }
+
+    // If a bind address is specified, bind to it before connecting.
+    if (bind_addr) {
+        const CService bind_service{*bind_addr, /*port=*/0};
+        struct sockaddr_storage bind_sa;
+        socklen_t bind_len = sizeof(bind_sa);
+        if (!bind_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&bind_sa), &bind_len)) {
+            LogError("Cannot get sockaddr for bind address %s\n", bind_addr->ToStringAddr());
+            return {};
+        }
+        if (sock->Bind(reinterpret_cast<struct sockaddr*>(&bind_sa), bind_len) == SOCKET_ERROR) {
+            LogError("Failed to bind outgoing connection to %s: %s\n",
+                     bind_addr->ToStringAddr(), NetworkErrorString(WSAGetLastError()));
+            return {};
+        }
     }
 
     // Create a sockaddr from the specified service.
@@ -981,4 +999,26 @@ CService GetBindAddress(const Sock& sock)
         LogWarning("getsockname failed\n");
     }
     return addr_bind;
+}
+
+bool IsAddrBindable(const CNetAddr& addr, bilingual_str& error)
+{
+    const CService service{addr, /*port=*/0};
+    struct sockaddr_storage sa;
+    socklen_t len = sizeof(sa);
+    if (!service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&sa), &len)) {
+        error = strprintf(_("Address family for %s not supported"), addr.ToStringAddr());
+        return false;
+    }
+    std::unique_ptr<Sock> sock = CreateSock(service.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
+    if (!sock) {
+        error = strprintf(_("Could not create socket for %s"), addr.ToStringAddr());
+        return false;
+    }
+    if (sock->Bind(reinterpret_cast<struct sockaddr*>(&sa), len) == SOCKET_ERROR) {
+        error = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"),
+                          addr.ToStringAddr(), NetworkErrorString(WSAGetLastError()));
+        return false;
+    }
+    return true;
 }

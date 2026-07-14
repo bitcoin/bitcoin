@@ -89,6 +89,9 @@ struct ConnmanTestMsg : public CConnman {
         return InitBinds(options);
     }
 
+    std::optional<CNetAddr> GetOutboundBindV4() const { return m_outbound_bind_v4; }
+    std::optional<CNetAddr> GetOutboundBindV6() const { return m_outbound_bind_v6; }
+
     void SocketHandlerPublic()
     {
         SocketHandler();
