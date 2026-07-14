@@ -197,7 +197,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     uint256 chainA_last_header = last_header;
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+        auto result{Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr)};
+        BOOST_REQUIRE(result && *result);
     }
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
@@ -215,7 +216,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     uint256 chainB_last_header = last_header;
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+        auto result{Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr)};
+        BOOST_REQUIRE(result && *result);
     }
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
@@ -246,7 +248,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // Reorg back to chain A.
      for (size_t i = 2; i < 4; i++) {
          const auto& block = chainA[i];
-         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+         auto result{Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr)};
+         BOOST_REQUIRE(result && *result);
      }
 
      // Check that chain A and B blocks can be retrieved.
@@ -393,7 +396,8 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
     BOOST_REQUIRE(BuildChain(prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
 
     for (const auto& block : fork) {
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        auto result{m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)};
+        BOOST_REQUIRE(result && *result);
     }
 
     // Unblock the index thread so it can process the reorg
