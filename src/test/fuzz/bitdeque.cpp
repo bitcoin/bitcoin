@@ -54,8 +54,7 @@ FUZZ_TARGET(bitdeque, .init = InitRandData)
     }
 
     const auto iter_limit{maxlen > 6000 ? 90U : 900U};
-    LIMITED_WHILE(provider.remaining_bytes() > 0, iter_limit)
-    {
+    LIMITED_WHILE (provider.remaining_bytes() > 0, iter_limit) {
         CallOneOf(
             provider,
             [&] {

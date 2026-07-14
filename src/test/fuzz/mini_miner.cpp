@@ -57,8 +57,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
     std::deque<COutPoint> available_coins = g_available_coins;
     LOCK2(::cs_main, pool.cs);
     // Cluster size cannot exceed 500
-    LIMITED_WHILE(!available_coins.empty(), 100)
-    {
+    LIMITED_WHILE (!available_coins.empty(), 100) {
         CMutableTransaction mtx = CMutableTransaction();
         const size_t num_inputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, available_coins.size());
         const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 50);
@@ -95,7 +94,6 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
                 outpoints.push_back(*outpoint);
             }
         }
-
     }
 
     const CFeeRate target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/1000)}};

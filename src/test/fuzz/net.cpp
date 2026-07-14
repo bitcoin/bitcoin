@@ -41,7 +41,7 @@ FUZZ_TARGET(net, .init = initialize_net)
     {
         node.SetAddrLocal(*service_opt);
     }
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -90,7 +90,7 @@ FUZZ_TARGET(local_address, .init = initialize_net)
         LOCK(g_maplocalhost_mutex);
         mapLocalHost.clear();
     }
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

@@ -273,8 +273,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         return coin.out.nValue;
     };
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         {
             // Total supply is the mempool fee + all outpoints
             CAmount supply_now{WITH_LOCK(tx_pool.cs, return tx_pool.GetTotalFee())};
@@ -455,8 +454,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     // If we ever bypass limits, do not do TRUC invariants checks
     bool ever_bypassed_limits{false};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 300) {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
 
         if (fuzzed_data_provider.ConsumeBool()) {

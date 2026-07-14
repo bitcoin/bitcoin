@@ -64,8 +64,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
     Assert(error.empty());
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), NUM_ITERS) {
         const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
         if (!another_mtx) {
             break;

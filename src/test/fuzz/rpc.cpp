@@ -325,8 +325,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
 std::string ConsumeArrayRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
 {
     std::vector<std::string> scalar_arguments;
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
         scalar_arguments.push_back(ConsumeScalarRPCArgument(fuzzed_data_provider, good_data));
     }
     return "[\"" + Join(scalar_arguments, "\",\"") + "\"]";
@@ -382,8 +381,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
         return;
     }
     std::vector<std::string> arguments;
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
         arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data));
     }
     try {

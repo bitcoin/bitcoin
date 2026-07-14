@@ -216,8 +216,7 @@ void TestDbWrapper(FuzzedDataProvider& provider,
     // Oracle: key → value size. Content is reconstructed via MakeValue().
     Oracle oracle;
 
-    LIMITED_WHILE(provider.ConsumeBool(), 1'000)
-    {
+    LIMITED_WHILE (provider.ConsumeBool(), 1'000) {
         CallOneOf(
             provider,
             // --- Mutations ---
@@ -239,8 +238,7 @@ void TestDbWrapper(FuzzedDataProvider& provider,
                 std::map<uint16_t, uint32_t> batch_writes;
                 std::set<uint16_t> batch_erases;
                 const auto fill{[&] {
-                    LIMITED_WHILE(provider.ConsumeBool(), 20)
-                    {
+                    LIMITED_WHILE (provider.ConsumeBool(), 20) {
                         const auto key{ConsumeKey(provider)};
                         if (provider.ConsumeBool()) {
                             const auto size{ConsumeValueSize(provider)};

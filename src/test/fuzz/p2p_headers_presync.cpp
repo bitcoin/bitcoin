@@ -180,8 +180,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 
     std::vector<CBlockHeader> all_headers;
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         auto finalized_block = [&]() {
             CBlock block = ConsumeBlock(fuzzed_data_provider, base.GetHash(), base.nBits);
             FinalizeHeader(block, chainman);

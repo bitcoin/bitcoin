@@ -123,7 +123,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     }
 
     bool good_data{true};
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 20) {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 20) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -234,7 +234,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
     auto& legacy_data{*wallet.GetOrCreateLegacyDataSPKM()};
 
     std::vector<CKey> keys;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 30) {
         const auto key{ConsumePrivateKey(fuzzed_data_provider)};
         if (!key.IsValid()) return;
         auto pub_key{key.GetPubKey()};
@@ -276,7 +276,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
 
     size_t added_script{0};
     bool good_data{true};
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 30) {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 30) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

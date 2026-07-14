@@ -24,8 +24,7 @@ FUZZ_TARGET(autofile)
         fuzzed_file_provider.open(),
         Obfuscation{std::span{key_bytes}.first<Obfuscation::KEY_SIZE>()},
     };
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

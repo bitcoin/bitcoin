@@ -52,7 +52,7 @@ void TestType(std::span<const uint8_t> buffer, uint64_t rng_tweak)
         }
     };
 
-    LIMITED_WHILE(provider.remaining_bytes(), MAX_OPERATIONS) {
+    LIMITED_WHILE (provider.remaining_bytes(), MAX_OPERATIONS) {
         int command = provider.ConsumeIntegral<uint8_t>() % 64;
         unsigned idx = real.empty() ? 0 : provider.ConsumeIntegralInRange<unsigned>(0, real.size() - 1);
         const size_t num_buffers = sim.size();

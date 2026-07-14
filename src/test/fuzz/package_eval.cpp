@@ -237,8 +237,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 300)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.remaining_bytes() > 0, 300) {
         Assert(!mempool_outpoints.empty());
 
         std::vector<CTransactionRef> txs;
@@ -392,8 +391,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 300)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.remaining_bytes() > 0, 300) {
         Assert(!mempool_outpoints.empty());
 
         std::vector<CTransactionRef> txs;

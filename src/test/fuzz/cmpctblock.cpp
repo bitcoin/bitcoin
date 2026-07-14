@@ -323,8 +323,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         return block_info;
     };
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 1000) {
         CSerializedNetMsg net_msg;
         bool sent_net_msg = true;
         bool requested_hb = false;

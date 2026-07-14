@@ -39,8 +39,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
         [&] { current_height = fuzzed_data_provider.ConsumeIntegralInRange<decltype(current_height)>(current_height, 1 << 30); },
     };
     advance_height();
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 10'000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -66,8 +65,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
             },
             [&] {
                 std::list<CTxMemPoolEntry> mempool_entries;
-                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
-                {
+                LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
                     const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                     if (!mtx) {
                         good_data = false;

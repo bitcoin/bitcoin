@@ -97,6 +97,7 @@ ForEachMacros:
   - BOOST_FOREACH
 IfMacros:
   - KJ_IF_MAYBE
+  - LIMITED_WHILE
 IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex:           '^<bitcoin-build-config\.h>'

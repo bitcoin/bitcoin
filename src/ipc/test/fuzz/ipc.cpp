@@ -91,9 +91,7 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
 {
     auto& ipc = *g_ipc;
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const size_t iterations = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 64);
-
-    for (size_t i = 0; i < iterations; ++i) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 64) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -111,8 +109,6 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
             },
             [&] {
                 std::vector<uint8_t> value = ConsumeRandomLengthByteVector<uint8_t>(fuzzed_data_provider, 512);
-                // Empty Data currently trips UBSan in the libmultiprocess byte-span serializer.
-                if (value.empty()) value.push_back(0);
                 std::vector<uint8_t> expected{value.rbegin(), value.rend()};
                 assert(ipc.m_client->passVectorUint8(value) == expected);
             },
