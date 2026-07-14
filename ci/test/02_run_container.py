@@ -21,9 +21,20 @@ def run(cmd, **kwargs):
 
 
 def main():
-    sdk_sources_path = Path(
-        os.environ.get("SDK_SOURCES_PATH", f"{os.environ['DEPENDS_DIR']}/sdk-sources")
-    )
+    depends_dir = Path(os.environ["DEPENDS_DIR"])
+    cache_paths = {
+        "ccache": (Path(os.environ["CCACHE_DIR"]), Path(os.environ["CCACHE_DIR"])),
+        "depends": (depends_dir / "built", depends_dir / "built"),
+        "depends_sources": (depends_dir / "sources", depends_dir / "sources"),
+        "previous_releases": (
+            Path(os.environ["PREVIOUS_RELEASES_DIR"]),
+            Path(os.environ["PREVIOUS_RELEASES_DIR"]),
+        ),
+        "sdk_sources": (
+            Path(os.environ.get("SDK_SOURCES_PATH", str(depends_dir / "sdk-sources"))),
+            depends_dir / "sdk-sources",
+        ),
+    }
 
     print("Export only allowed settings:")
     settings = run(
@@ -54,12 +65,8 @@ def main():
     if os.getenv("DANGER_RUN_CI_ON_HOST"):
         print("Running on host system without docker wrapper")
         print("Create missing folders")
-        for create_dir in [
-                os.environ["CCACHE_DIR"],
-                sdk_sources_path,
-                os.environ["PREVIOUS_RELEASES_DIR"],
-        ]:
-            Path(create_dir).mkdir(parents=True, exist_ok=True)
+        for source, _ in cache_paths.values():
+            source.mkdir(parents=True, exist_ok=True)
 
         # Modify PATH to prepend the retry script, needed for CI_RETRY_EXE
         os.environ["PATH"] = f"{os.environ['BASE_ROOT_DIR']}/ci/retry:{os.environ['PATH']}"
@@ -87,40 +94,33 @@ def main():
             time.sleep(3)
             run(cmd_build)
 
-        for suffix in ["ccache", "depends", "depends_sources", "previous_releases", "sdk_sources"]:
+        for suffix in cache_paths:
             run(["docker", "volume", "create", f"{os.environ['CONTAINER_NAME']}_{suffix}"], check=False)
 
-        CI_CCACHE_MOUNT = f"type=volume,src={os.environ['CONTAINER_NAME']}_ccache,dst={os.environ['CCACHE_DIR']}"
-        CI_DEPENDS_MOUNT = f"type=volume,src={os.environ['CONTAINER_NAME']}_depends,dst={os.environ['DEPENDS_DIR']}/built"
-        CI_DEPENDS_SOURCES_MOUNT = f"type=volume,src={os.environ['CONTAINER_NAME']}_depends_sources,dst={os.environ['DEPENDS_DIR']}/sources"
-        CI_PREVIOUS_RELEASES_MOUNT = f"type=volume,src={os.environ['CONTAINER_NAME']}_previous_releases,dst={os.environ['PREVIOUS_RELEASES_DIR']}"
-        CI_SDK_SOURCES_MOUNT = f"type=volume,src={os.environ['CONTAINER_NAME']}_sdk_sources,dst={os.environ['DEPENDS_DIR']}/sdk-sources"
+        cache_mounts = {
+            suffix: f"type=volume,src={os.environ['CONTAINER_NAME']}_{suffix},dst={destination}"
+            for suffix, (_, destination) in cache_paths.items()
+        }
         CI_BUILD_MOUNT = []
 
         if os.getenv("DANGER_CI_ON_HOST_FOLDERS"):
             # ensure the directories exist
-            for create_dir in [
-                    os.environ["CCACHE_DIR"],
-                    f"{os.environ['DEPENDS_DIR']}/built",
-                    f"{os.environ['DEPENDS_DIR']}/sources",
-                    os.environ["PREVIOUS_RELEASES_DIR"],
-                    sdk_sources_path,
-                    os.environ["BASE_BUILD_DIR"],  # Unset by default, must be defined externally
-            ]:
-                Path(create_dir).mkdir(parents=True, exist_ok=True)
+            for source, _ in cache_paths.values():
+                source.mkdir(parents=True, exist_ok=True)
+            Path(os.environ["BASE_BUILD_DIR"]).mkdir(parents=True, exist_ok=True)
 
-            CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
-            CI_DEPENDS_MOUNT = f"type=bind,src={os.environ['DEPENDS_DIR']}/built,dst={os.environ['DEPENDS_DIR']}/built"
-            CI_DEPENDS_SOURCES_MOUNT = f"type=bind,src={os.environ['DEPENDS_DIR']}/sources,dst={os.environ['DEPENDS_DIR']}/sources"
-            CI_PREVIOUS_RELEASES_MOUNT = f"type=bind,src={os.environ['PREVIOUS_RELEASES_DIR']},dst={os.environ['PREVIOUS_RELEASES_DIR']}"
-            CI_SDK_SOURCES_MOUNT = f"type=bind,src={sdk_sources_path},dst={os.environ['DEPENDS_DIR']}/sdk-sources"
+            cache_mounts = {
+                suffix: f"type=bind,src={source},dst={destination}"
+                for suffix, (source, destination) in cache_paths.items()
+            }
             CI_BUILD_MOUNT = [f"--mount=type=bind,src={os.environ['BASE_BUILD_DIR']},dst={os.environ['BASE_BUILD_DIR']}"]
 
         if os.getenv("DANGER_CI_ON_HOST_CCACHE_FOLDER"):
-            if not os.path.isdir(os.environ["CCACHE_DIR"]):
+            ccache_path, ccache_destination = cache_paths["ccache"]
+            if not ccache_path.is_dir():
                 print(f"Error: Directory '{os.environ['CCACHE_DIR']}' must be created in advance.")
                 sys.exit(1)
-            CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
+            cache_mounts["ccache"] = f"type=bind,src={ccache_path},dst={ccache_destination}"
 
         run(["docker", "network", "create", "--ipv6", "--subnet", "1111:1111::/112", "ci-ip6net"], check=False)
         run(["docker", "network", "create", "--subnet", "1.1.1.0/24", "ci-ip4net"], check=False)
@@ -145,11 +145,7 @@ def main():
             "--cap-add=LINUX_IMMUTABLE",
             *shlex.split(os.getenv("CI_CONTAINER_CAP", "")),
             f"--mount=type=bind,src={os.environ['BASE_READ_ONLY_DIR']},dst={os.environ['BASE_READ_ONLY_DIR']},readonly",
-            f"--mount={CI_CCACHE_MOUNT}",
-            f"--mount={CI_DEPENDS_MOUNT}",
-            f"--mount={CI_DEPENDS_SOURCES_MOUNT}",
-            f"--mount={CI_PREVIOUS_RELEASES_MOUNT}",
-            f"--mount={CI_SDK_SOURCES_MOUNT}",
+            *[f"--mount={mount}" for mount in cache_mounts.values()],
             *CI_BUILD_MOUNT,
             f"--env-file={env_file}",
             f"--name={os.environ['CONTAINER_NAME']}",
