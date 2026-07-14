@@ -569,6 +569,124 @@ static RPCMethod getaddednodeinfo()
     };
 }
 
+namespace net_stats {
+
+UniValue CreateJSON(const RPCMethod&, const JSONRPCRequest& request)
+{
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CConnman& connman = EnsureConnman(node);
+
+    std::unordered_map<
+        std::string, // "sent" or "recv"
+        std::unordered_map<std::string, // "ipv4", "tor", ...
+                           std::unordered_map<std::string, // "outbound-full-relay", "feeler", ...
+                                              std::unordered_map<std::string, // "verack", "ping", ...
+                                                                 NetStats::BytesAndCount>>>>
+        result_map;
+
+    connman.GetNetStats().ForEach([&result_map](NetStats::Direction dir,
+                                                Network net,
+                                                ConnectionType con,
+                                                const std::string& msg,
+                                                const NetStats::BytesAndCount& data) {
+        const std::string dir_str{dir == NetStats::SENT ? "sent" : "recv"};
+        const std::string net_str{GetNetworkName(net)};
+        const std::string con_str{ConnectionTypeAsString(con)};
+
+        result_map[dir_str][net_str][con_str][msg] += data;
+    });
+
+    auto Add = [](UniValue& target, const std::string& key, const UniValue& val) {
+        if (val.empty()) {
+            return;
+        }
+        target.pushKV(key, val);
+    };
+
+    UniValue dir_json{UniValue::VOBJ};
+    for (const auto& [dir_key, dir_val] : result_map) {
+        UniValue net_json{UniValue::VOBJ};
+        for (const auto& [net_key, net_val] : dir_val) {
+            UniValue con_json{UniValue::VOBJ};
+            for (const auto& [con_key, con_val] : net_val) {
+                UniValue msg_json{UniValue::VOBJ};
+                for (const auto& [msg_key, stats] : con_val) {
+                    const auto bytes = stats.bytes.load();
+                    const auto count = stats.count.load();
+                    if (bytes == 0 || count == 0) {
+                        continue;
+                    }
+                    UniValue bytes_and_count_json{UniValue::VOBJ};
+                    bytes_and_count_json.pushKV("bytes", bytes);
+                    bytes_and_count_json.pushKV("count", count);
+
+                    Add(msg_json, msg_key, bytes_and_count_json);
+                }
+                Add(con_json, con_key, msg_json);
+            }
+            Add(net_json, net_key, con_json);
+        }
+        Add(dir_json, dir_key, net_json);
+    }
+
+    return dir_json;
+}
+}; // namespace net_stats
+
+static RPCMethod getnetmsgstats()
+{
+    return RPCMethod{
+        "getnetmsgstats",
+        "Returns the messages count and total number of bytes for network traffic.\n",
+        {},
+        {RPCResult{
+            RPCResult::Type::OBJ_DYN,
+            "",
+            /*optional=*/false,
+            "When a direction, network,\n"
+            "connection type or message type is not listed,\n"
+            "the statistics for that are 0.",
+            {RPCResult{
+                RPCResult::Type::OBJ_DYN,
+                "sent",
+                /*optional=*/true,
+                "The direction in which the traffic occurred.",
+                {RPCResult{
+                    RPCResult::Type::OBJ_DYN,
+                    "ipv4",
+                    /*optional=*/true,
+                    "The network over which the traffic occurred.",
+                    {RPCResult{
+                        RPCResult::Type::OBJ_DYN,
+                        "inbound",
+                        /*optional=*/true,
+                        "The connection type over which the traffic occurred.",
+                        {RPCResult{RPCResult::Type::OBJ,
+                                   "verack",
+                                   /*optional=*/true,
+                                   "Type of the messages transferred.",
+                                   {RPCResult{RPCResult::Type::NUM,
+                                              "bytes",
+                                              /*optional=*/false,
+                                              "Total number of bytes.",
+                                              {},
+                                              {.skip_type_check = true}},
+                                    RPCResult{RPCResult::Type::NUM,
+                                              "count",
+                                              /*optional=*/false,
+                                              "Total number of messages.",
+                                              {},
+                                              {.skip_type_check = true}}},
+                                   {.skip_type_check = true}}},
+                        {.skip_type_check = true}}},
+                    {.skip_type_check = true}}},
+                {.skip_type_check = true}}},
+            {.skip_type_check = true}}},
+        RPCExamples{HelpExampleCli("getnetmsgstats", "") +
+                    HelpExampleRpc("getnetmsgstats", "")},
+        net_stats::CreateJSON};
+}
+
 static RPCMethod getnettotals()
 {
     return RPCMethod{"getnettotals",
@@ -1267,6 +1385,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &addnode},
         {"network", &disconnectnode},
         {"network", &getaddednodeinfo},
+        {"network", &getnetmsgstats},
         {"network", &getnettotals},
         {"network", &getnetworkinfo},
         {"network", &setban},
