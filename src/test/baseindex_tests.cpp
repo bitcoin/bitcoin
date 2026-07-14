@@ -134,9 +134,11 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
                 LOCK(cs_main);
                 BlockValidationState state;
                 BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
-                BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+                auto accept_res{m_node.chainman->AcceptBlock(new_block, &new_block_index, true, nullptr, nullptr, true)};
+                BOOST_CHECK(accept_res && accept_res->IsValid());
                 CCoinsViewCache view(&chainstate.CoinsTip());
-                BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+                auto connect_res{chainstate.ConnectBlock(block, new_block_index, view)};
+                BOOST_CHECK(connect_res && connect_res->IsValid());
             }
             // Send block connected notification, then stop the index without
             // sending a chainstate flushed notification. Prior to #24138, this
@@ -220,7 +222,8 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
     BOOST_REQUIRE(BuildChain(m_node, prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
 
     for (const auto& block : fork) {
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        auto result{m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)};
+        BOOST_REQUIRE(result && *result);
     }
 
     // Unblock the index thread so it can process the reorg
