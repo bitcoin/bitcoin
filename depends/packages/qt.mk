@@ -9,6 +9,7 @@ $(package)_dependencies := native_$(package)
 endif
 $(package)_linux_dependencies := freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_cursor libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_freebsd_dependencies := $($(package)_linux_dependencies)
+$(package)_openbsd_dependencies := $($(package)_linux_dependencies)
 $(package)_patches_path := $(qt_details_patches_path)
 $(package)_patches := cocoa_compat.patch
 $(package)_patches += dont_hardcode_pwd.patch
@@ -26,6 +27,8 @@ $(package)_patches += fix-gcc16-sfinae-qbitarray.patch
 $(package)_patches += fix-gcc16-sfinae-qanystringview.patch
 $(package)_patches += fix-macos26-qyield.patch
 $(package)_patches += fix-qbytearray-include.patch
+$(package)_patches += fix_openbsd_network_kernel.patch
+$(package)_patches += fix_openbsd_plugin_qelfparser.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
 $(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
@@ -158,6 +161,7 @@ $(package)_config_opts_linux += -ltcg
 endif
 $(package)_config_opts_freebsd := $$($(package)_config_opts_linux)
 $(package)_config_opts_freebsd += -no-feature-inotify
+$(package)_config_opts_openbsd := $$($(package)_config_opts_linux)
 
 $(package)_config_opts_mingw32 := -no-dbus
 $(package)_config_opts_mingw32 += -no-feature-freetype
@@ -208,7 +212,7 @@ $(package)_cmake_opts += -DCMAKE_DISABLE_FIND_PACKAGE_WrapSystemDoubleConversion
 $(package)_cmake_opts += -DCMAKE_DISABLE_FIND_PACKAGE_WrapSystemMd4c=TRUE
 $(package)_cmake_opts += -DCMAKE_DISABLE_FIND_PACKAGE_WrapZSTD=TRUE
 endif
-ifeq ($(host_os),linux)
+ifneq (,$(filter linux openbsd,$(host_os)))
 # The `-dbus-runtime` configure option does not work
 # https://qt-project.atlassian.net/browse/QTBUG-144864
 $(package)_cmake_opts += -DINPUT_dbus=runtime
@@ -284,7 +288,9 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qbitarray.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qanystringview.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-macos26-qyield.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch
+  patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_network_kernel.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_plugin_qelfparser.patch
 endef
 ifeq ($(host),$(build))
   $(package)_preprocess_cmds += && patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
