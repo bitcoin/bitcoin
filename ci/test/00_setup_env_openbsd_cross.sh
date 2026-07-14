@@ -14,7 +14,7 @@ export OPENBSD_VERSION=7.9
 export OPENBSD_SDK_BASENAME="openbsd-${HOST}-${OPENBSD_VERSION}"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld-${APT_LLVM_V}"
 export SYSROOT="--sysroot=${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}"
-export DEP_OPTS="build_CC=clang build_CXX=clang++ \
+export DEP_OPTS="NO_QT=1 build_CC=clang build_CXX=clang++ \
  CC='clang --target=${HOST} ${SYSROOT}' \
  CXX='clang++ --target=${HOST} ${SYSROOT} -stdlib=libc++' \
  LDFLAGS='-fuse-ld=lld' \
