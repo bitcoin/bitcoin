@@ -298,9 +298,16 @@ typedef struct btck_BlockHash btck_BlockHash;
 /**
  * Opaque data structure for holding a transaction input.
  *
- * Holds information on the @ref btck_TransactionOutPoint held within.
+ * Holds information on the @ref btck_TransactionOutPoint, @ref btck_WitnessStack and script_sig held within.
  */
 typedef struct btck_TransactionInput btck_TransactionInput;
+
+/**
+ * Opaque data structure for holding a witness stack.
+ *
+ * Holds a sequence of witness stack items.
+ */
+typedef struct btck_WitnessStack btck_WitnessStack;
 
 /**
  * Opaque data structure for holding a transaction out point.
@@ -1692,9 +1699,80 @@ BITCOINKERNEL_API uint32_t btck_transaction_input_get_sequence(
     const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get the witness stack of a transaction input. The returned witness
+ * stack is not owned and depends on the lifetime of the transaction input.
+ *
+ * @param[in] transaction_input Non-null.
+ * @return                      The witness stack.
+ */
+BITCOINKERNEL_API const btck_WitnessStack* btck_transaction_input_get_witness_stack(
+    const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Serialize the script sig of a transaction input through the passed
+ * in callback.
+ *
+ * @param[in] transaction_input Non-null.
+ * @param[in] writer            Non-null, function pointer for writing bytes.
+ * @param[in] user_data         Nullable, passed back through the writer callback.
+ * @return                      The return value of the writer.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_input_get_script_sig(
+    const btck_TransactionInput* transaction_input,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * Destroy the transaction input.
  */
 BITCOINKERNEL_API void btck_transaction_input_destroy(btck_TransactionInput* transaction_input);
+
+///@}
+
+/** @name Witness Stack
+ * Functions for working with witness stacks.
+ */
+///@{
+
+/**
+ * @brief Return the number of items in a witness stack.
+ *
+ * @param[in] witness_stack Non-null.
+ * @return                  The number of witness stack items.
+ */
+BITCOINKERNEL_API size_t btck_witness_stack_count_items(
+    const btck_WitnessStack* witness_stack) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Serialize a witness stack item at a given index through the passed in
+ * callback.
+ *
+ * @param[in] witness_stack Non-null.
+ * @param[in] index         Index of the item in the witness stack.
+ * @param[in] writer        Non-null, function pointer for writing bytes.
+ * @param[in] user_data     Nullable, passed back through the writer callback.
+ * @return                  The return value of the writer.
+ * @pre                    index < btck_witness_stack_count_items(witness_stack)
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_witness_stack_get_item_at(
+    const btck_WitnessStack* witness_stack,
+    size_t index,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 3);
+
+/**
+ * @brief Copy a witness stack.
+ *
+ * @param[in] witness_stack Non-null.
+ * @return                  The copied witness stack.
+ */
+BITCOINKERNEL_API btck_WitnessStack* BITCOINKERNEL_WARN_UNUSED_RESULT btck_witness_stack_copy(
+    const btck_WitnessStack* witness_stack) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the witness stack.
+ */
+BITCOINKERNEL_API void btck_witness_stack_destroy(btck_WitnessStack* witness_stack);
 
 ///@}
 

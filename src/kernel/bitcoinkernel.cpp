@@ -500,6 +500,7 @@ struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUn
 struct btck_Coin : Handle<btck_Coin, Coin> {};
 struct btck_BlockHash : Handle<btck_BlockHash, uint256> {};
 struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
+struct btck_WitnessStack : Handle<btck_WitnessStack, CScriptWitness> {};
 struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
 struct btck_Txid: Handle<btck_Txid, Txid> {};
 struct btck_PrecomputedTransactionData : Handle<btck_PrecomputedTransactionData, PrecomputedTransactionData> {};
@@ -707,9 +708,42 @@ uint32_t btck_transaction_input_get_sequence(const btck_TransactionInput* input)
     return btck_TransactionInput::get(input).nSequence;
 }
 
+const btck_WitnessStack* btck_transaction_input_get_witness_stack(const btck_TransactionInput* input)
+{
+    return btck_WitnessStack::ref(&btck_TransactionInput::get(input).scriptWitness);
+}
+
+int btck_transaction_input_get_script_sig(const btck_TransactionInput* input, btck_WriteBytes writer, void* user_data)
+{
+    const auto& script_sig{btck_TransactionInput::get(input).scriptSig};
+    return writer(script_sig.data(), script_sig.size(), user_data);
+}
+
 void btck_transaction_input_destroy(btck_TransactionInput* input)
 {
     delete input;
+}
+
+size_t btck_witness_stack_count_items(const btck_WitnessStack* witness_stack)
+{
+    return btck_WitnessStack::get(witness_stack).stack.size();
+}
+
+int btck_witness_stack_get_item_at(const btck_WitnessStack* witness_stack, size_t index, btck_WriteBytes writer, void* user_data)
+{
+    const auto& stack{btck_WitnessStack::get(witness_stack).stack};
+    assert(index < stack.size());
+    return writer(stack[index].data(), stack[index].size(), user_data);
+}
+
+btck_WitnessStack* btck_witness_stack_copy(const btck_WitnessStack* witness_stack)
+{
+    return btck_WitnessStack::copy(witness_stack);
+}
+
+void btck_witness_stack_destroy(btck_WitnessStack* witness_stack)
+{
+    delete witness_stack;
 }
 
 btck_TransactionOutPoint* btck_transaction_out_point_copy(const btck_TransactionOutPoint* out_point)

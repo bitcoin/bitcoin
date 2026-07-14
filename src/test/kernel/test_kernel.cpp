@@ -503,6 +503,33 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     OutPoint point_0 = input_0.OutPoint();
     OutPoint point_1 = input_1.OutPoint();
     CheckHandle(point_0, point_1);
+
+    WitnessStackView ws_0 = input_0.GetWitnessStack();
+    BOOST_CHECK_EQUAL(ws_0.CountItems(), 0);
+    BOOST_CHECK(ws_0.Items().empty());
+
+    // P2PKH: DER sig + compressed pubkey push.
+    BOOST_CHECK(input_0.GetScriptSig() == hex_string_to_byte_vec("473044022004893432347f39beaa280e99da595681ddb20fc45010176897e6e055d716dbfa022040a9e46648a5d10c33ef7cee5e6cf4b56bd513eae3ae044f0039824b02d0f44c012102982331a52822fd9b62e9b5d120da1d248558fac3da3a3c51cd7d9c8ad3da760e"));
+    BOOST_CHECK(input_1.GetScriptSig() == hex_string_to_byte_vec("473044022068bcedc7fe39c9f21ad318df2c2da62c2dc9522a89c28c8420ff9d03d2e6bf7b0220132afd752754e5cb1ea2fd0ed6a38ec666781e34b0e93dc9a08f2457842cf5660121033aeb9c079ea3e08ea03556182ab520ce5c22e6b0cb95cee6435ee17144d860cd"));
+
+    // P2WSH input: OP_0, sig, sig, redeem_script (0, 71, 71, 105 bytes); no scriptSig.
+    Transaction segwit_tx{hex_string_to_byte_vec("010000000001011f97548fbbe7a0db7588a66e18d803d0089315aa7d4cc28360b6ec50ef36718a0100000000ffffffff02df1776000000000017a9146c002a686959067f4866b8fb493ad7970290ab728757d29f0000000000220020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d04004730440220565d170eed95ff95027a69b313758450ba84a01224e1f7f130dda46e94d13f8602207bdd20e307f062594022f12ed5017bbf4a055a06aea91c10110a0e3bb23117fc014730440220647d2dc5b15f60bc37dc42618a370b2a1490293f9e5c8464f53ec4fe1dfe067302203598773895b4b16d37485cbe21b337f4e4b650739880098c592553add7dd4355016952210375e00eb72e29da82b89367947f29ef34afb75e8654f6ea368e0acdfd92976b7c2103a1b26313f430c4b15bb1fdce663207659d8cac749a0e53d70eff01874496feff2103c96d495bfdd5ba4145e3e046fee45e84a8a48ad05bd8dbb395c011a32cf9f88053ae00000000")};
+    TransactionInputView segwit_input = segwit_tx.GetInput(0);
+    WitnessStackView ws = segwit_input.GetWitnessStack();
+    BOOST_CHECK_EQUAL(ws.CountItems(), 4);
+    BOOST_CHECK(ws.GetItem(0).empty());
+    BOOST_CHECK(ws.GetItem(1) == hex_string_to_byte_vec("30440220565d170eed95ff95027a69b313758450ba84a01224e1f7f130dda46e94d13f8602207bdd20e307f062594022f12ed5017bbf4a055a06aea91c10110a0e3bb23117fc01"));
+    BOOST_CHECK(ws.GetItem(2) == hex_string_to_byte_vec("30440220647d2dc5b15f60bc37dc42618a370b2a1490293f9e5c8464f53ec4fe1dfe067302203598773895b4b16d37485cbe21b337f4e4b650739880098c592553add7dd435501"));
+    BOOST_CHECK(ws.GetItem(3) == hex_string_to_byte_vec("52210375e00eb72e29da82b89367947f29ef34afb75e8654f6ea368e0acdfd92976b7c2103a1b26313f430c4b15bb1fdce663207659d8cac749a0e53d70eff01874496feff2103c96d495bfdd5ba4145e3e046fee45e84a8a48ad05bd8dbb395c011a32cf9f88053ae"));
+    auto items = ws.Items();
+    BOOST_CHECK_EQUAL(items.size(), 4);
+    for (size_t i = 0; i < items.size(); ++i) {
+        BOOST_CHECK(items[i] == ws.GetItem(i));
+    }
+    WitnessStack owned_ws_0{ws_0};
+    WitnessStack owned_ws{ws};
+    CheckHandle(owned_ws_0, owned_ws);
+    BOOST_CHECK(segwit_input.GetScriptSig().empty());
 }
 
 BOOST_AUTO_TEST_CASE(btck_precomputed_txdata) {
