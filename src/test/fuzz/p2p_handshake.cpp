@@ -72,8 +72,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
             static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()));
     }
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& connection = *PickValue(fuzzed_data_provider, peers);
         if (connection.fDisconnect || connection.fSuccessfullyConnected) {
             // Skip if the connection was disconnected or if the version

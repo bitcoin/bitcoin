@@ -438,7 +438,7 @@ FUZZ_TARGET(txgraph)
         return chunk_feerates;
     };
 
-    LIMITED_WHILE(provider.remaining_bytes() > 0, 200) {
+    LIMITED_WHILE (provider.remaining_bytes() > 0, 200) {
         // Read a one-byte command.
         int command = provider.ConsumeIntegral<uint8_t>();
         int orig_command = command;

@@ -66,8 +66,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
         // might call DumpBanlist (or other methods that are at least linear
         // complexity of the input size).
         bool contains_invalid{false};
-        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
-        {
+        LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 300) {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {

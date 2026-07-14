@@ -102,8 +102,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
     COutPoint random_out_point;
     Coin random_coin;
     CMutableTransaction random_mutable_transaction;
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 10'000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -196,8 +195,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 size_t dirty_count{0};
                 CCoinsMapMemoryResource resource;
                 CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
-                LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
-                {
+                LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 10'000) {
                     CCoinsCacheEntry coins_cache_entry;
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;

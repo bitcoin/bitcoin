@@ -38,8 +38,7 @@ FUZZ_TARGET(system, .init = initialize_system)
         SetupHelpOptions(args_manager);
     }
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 3000)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 3000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

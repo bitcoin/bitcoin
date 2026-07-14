@@ -53,8 +53,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
 
     std::vector<CBlockIndex*> pruned_blocks;
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 1000) {
         if (abort_run) break;
         CallOneOf(
             fuzzed_data_provider,

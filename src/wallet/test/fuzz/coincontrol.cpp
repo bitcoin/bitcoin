@@ -32,8 +32,7 @@ FUZZ_TARGET(coincontrol, .init = initialize_coincontrol)
     CCoinControl coin_control;
     COutPoint out_point;
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

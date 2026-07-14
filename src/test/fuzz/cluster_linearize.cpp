@@ -485,7 +485,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
 
     auto last_compaction_pos{real.PositionRange()};
 
-    LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
+    LIMITED_WHILE (provider.remaining_bytes() > 0, 1000) {
         int command = provider.ConsumeIntegral<uint8_t>() % 4;
         while (true) {
             // Iterate decreasing command until an applicable branch is found.

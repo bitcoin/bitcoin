@@ -233,7 +233,7 @@ FUZZ_TARGET(coinscache_sim)
     // Main simulation loop: read commands from the fuzzer input, and apply them
     // to both the real cache stack and the simulation.
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    LIMITED_WHILE(provider.remaining_bytes(), 10000) {
+    LIMITED_WHILE (provider.remaining_bytes(), 10000) {
         // Every operation (except "Change height") moves current height forward,
         // so it functions as a kind of epoch, making ~all UTXOs unique.
         ++current_height;

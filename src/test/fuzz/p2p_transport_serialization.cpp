@@ -294,7 +294,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
     };
 
     // Main loop, interleaving new messages, sends, and receives.
-    LIMITED_WHILE(provider.remaining_bytes(), 1000) {
+    LIMITED_WHILE (provider.remaining_bytes(), 1000) {
         CallOneOf(provider,
             // (Try to) give the next message to the transport.
             [&] { new_msg_fn(/*side=*/0); },

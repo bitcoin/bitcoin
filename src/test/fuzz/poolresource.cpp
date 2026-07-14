@@ -116,8 +116,7 @@ public:
 
     void Fuzz()
     {
-        LIMITED_WHILE(m_provider.ConsumeBool(), 10000)
-        {
+        LIMITED_WHILE (m_provider.ConsumeBool(), 10000) {
             CallOneOf(
                 m_provider,
                 [&] { Allocate(); },

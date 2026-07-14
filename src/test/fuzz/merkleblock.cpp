@@ -34,7 +34,7 @@ FUZZ_TARGET(merkleblock)
                 if (fuzzed_data_provider.ConsumeBool()) {
                     merkle_block = CMerkleBlock{*opt_block, bloom_filter};
                 } else if (fuzzed_data_provider.ConsumeBool()) {
-                    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+                    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
                         txids.insert(Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)));
                     }
                     merkle_block = CMerkleBlock{*opt_block, txids};

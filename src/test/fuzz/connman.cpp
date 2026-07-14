@@ -113,7 +113,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     std::vector<NodeId> node_ids;
     std::vector<std::string> node_addr_names;
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, steady_clock).release()};
         // Simulate post-handshake state.
         p2p_node.fSuccessfullyConnected = true;
@@ -122,7 +122,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
         node_addr_names.push_back(p2p_node.m_addr_name);
     }
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

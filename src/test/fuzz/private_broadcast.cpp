@@ -60,7 +60,7 @@ FUZZ_TARGET(private_broadcast)
         return fdp.ConsumeIntegralInRange<NodeId>(0, next_nodeid - 1);
     };
 
-    LIMITED_WHILE(fdp.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fdp.ConsumeBool(), 10000) {
         CallOneOf(
             fdp,
             [&] { // Add()

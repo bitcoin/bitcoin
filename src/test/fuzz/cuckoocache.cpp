@@ -38,7 +38,7 @@ FUZZ_TARGET(cuckoocache)
     } else {
         cuckoo_cache.setup(fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, 4096));
     }
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         if (fuzzed_data_provider.ConsumeBool()) {
             cuckoo_cache.insert(fuzzed_data_provider.ConsumeBool());
         } else {

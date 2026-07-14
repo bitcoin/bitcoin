@@ -107,8 +107,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
         connman.AddTestNode(p2p_node);
     }
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 30) {
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::MESSAGE_TYPE_SIZE).c_str()};
 
         clock.set(ConsumeTime(fuzzed_data_provider));
