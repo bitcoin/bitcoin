@@ -20,7 +20,7 @@ NUM_BLOCKS = 6       # number of blocks to mine
 class WalletFastRescanTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [[f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1']]
+        self.extra_args = [[f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1', '-walletpar=1']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -79,12 +79,27 @@ class WalletFastRescanTest(BitcoinTestFramework):
             node.restorewallet('rescan_fast', WALLET_BACKUP_FILENAME)
         txids_fast = self.get_wallet_txids(node, 'rescan_fast')
 
+        self.log.info(" with parallel fast scan")
+        self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1', '-walletpar=4'])
+        with node.assert_debug_log(['fast variant using block filters (4 threads)', *fast_rescan_messages]):
+            node.restorewallet('rescan_fast_par', WALLET_BACKUP_FILENAME)
+        txids_fast_par = self.get_wallet_txids(node, 'rescan_fast_par')
+
         self.log.info("Import non-active descriptors with block filter index")
+        self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1', '-walletpar=1'])
         node.createwallet(wallet_name='rescan_fast_nonactive', disable_private_keys=True, blank=True)
         with node.assert_debug_log(['fast variant using block filters', *fast_rescan_messages]):
             w = node.get_wallet_rpc('rescan_fast_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
         txids_fast_nonactive = self.get_wallet_txids(node, 'rescan_fast_nonactive')
+
+        self.log.info(" with parallel fast scan")
+        self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1', '-walletpar=4'])
+        node.createwallet(wallet_name='rescan_fast_nonactive_par', disable_private_keys=True, blank=True)
+        with node.assert_debug_log(['fast variant using block filters (4 threads)', *fast_rescan_messages]):
+            w = node.get_wallet_rpc('rescan_fast_nonactive_par')
+            w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
+        txids_fast_nonactive_par = self.get_wallet_txids(node, 'rescan_fast_nonactive_par')
 
         self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=0'])
         self.log.info("Import wallet backup w/o block filter index")
@@ -102,8 +117,10 @@ class WalletFastRescanTest(BitcoinTestFramework):
         self.log.info("Verify that all rescans found the same txs in slow and fast variants")
         assert_equal(len(txids_slow), num_txs)
         assert_equal(len(txids_fast), num_txs)
+        assert_equal(len(txids_fast_par), num_txs)
         assert_equal(len(txids_slow_nonactive), num_txs)
         assert_equal(len(txids_fast_nonactive), num_txs)
+        assert_equal(len(txids_fast_nonactive_par), num_txs)
         assert_equal(sorted(txids_slow), sorted(txids_fast))
         assert_equal(sorted(txids_slow_nonactive), sorted(txids_fast_nonactive))
 
