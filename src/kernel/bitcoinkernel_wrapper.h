@@ -63,8 +63,7 @@ enum class Warning : btck_Warning {
 
 enum class ValidationMode : btck_ValidationMode {
     VALID = btck_ValidationMode_VALID,
-    INVALID = btck_ValidationMode_INVALID,
-    INTERNAL_ERROR = btck_ValidationMode_INTERNAL_ERROR
+    INVALID = btck_ValidationMode_INVALID
 };
 
 enum class BlockValidationResult : btck_BlockValidationResult {
