@@ -91,9 +91,7 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
 {
     auto& ipc = *g_ipc;
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const size_t iterations = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 64);
-
-    for (size_t i = 0; i < iterations; ++i) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 64) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
