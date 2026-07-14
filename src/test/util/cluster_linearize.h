@@ -142,7 +142,7 @@ struct DepGraphFormatter
             // Write size, which must be larger than 0.
             s << VARINT_MODE(depgraph.FeeRate(idx).size, VarIntMode::NONNEGATIVE_SIGNED);
             // Write fee, encoded as an unsigned varint (odd=negative, even=non-negative).
-            s << VARINT(SignedToUnsigned(depgraph.FeeRate(idx).fee));
+            s << VARINT(SignedToUnsigned(depgraph.FeeRate(idx).fee.Int()));
             // Write dependency information.
             SetType written_parents;
             uint64_t diff = 0; //!< How many potential parent/child relations we have skipped over.
@@ -213,7 +213,7 @@ struct DepGraphFormatter
                 s >> VARINT(coded_fee);
                 coded_fee &= 0xFFFFFFFFFFFFF; // Enough for fee between -21M...21M BTC.
                 static_assert(0xFFFFFFFFFFFFF > uint64_t{2} * 21000000 * 100000000);
-                new_feerate = {UnsignedToSigned(coded_fee), size};
+                new_feerate = {CAmount{UnsignedToSigned(coded_fee)}, size};
                 // Read dependency information.
                 auto topo_idx = reordering.size();
                 s >> VARINT(diff);

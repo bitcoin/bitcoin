@@ -554,7 +554,7 @@ static RPCMethod prioritisetransaction()
 
     auto txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
     const auto dummy{self.MaybeArg<double>("dummy")};
-    CAmount nAmount = request.params[2].getInt<int64_t>();
+    CAmount nAmount{request.params[2].getInt<int64_t>()};
 
     if (dummy && *dummy != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
@@ -600,10 +600,10 @@ static RPCMethod getprioritisedtransactions()
             UniValue rpc_result{UniValue::VOBJ};
             for (const auto& delta_info : mempool.GetPrioritisedTransactions()) {
                 UniValue result_inner{UniValue::VOBJ};
-                result_inner.pushKV("fee_delta", delta_info.delta);
+                result_inner.pushKV("fee_delta", delta_info.delta.Int());
                 result_inner.pushKV("in_mempool", delta_info.in_mempool);
                 if (delta_info.in_mempool) {
-                    result_inner.pushKV("modified_fee", *delta_info.modified_fee);
+                    result_inner.pushKV("modified_fee", delta_info.modified_fee->Int());
                 }
                 rpc_result.pushKV(delta_info.txid.GetHex(), std::move(result_inner));
             }
@@ -953,7 +953,7 @@ static RPCMethod getblocktemplate()
         entry.pushKV("depends", std::move(deps));
 
         int index_in_template = i - 2;
-        entry.pushKV("fee", tx_fees.at(index_in_template));
+        entry.pushKV("fee", tx_fees.at(index_in_template).Int());
         int64_t nTxSigOps{tx_sigops.at(index_in_template)};
         if (fPreSegWit) {
             CHECK_NONFATAL(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
@@ -1028,7 +1028,7 @@ static RPCMethod getblocktemplate()
     result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
-    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue.Int());
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));

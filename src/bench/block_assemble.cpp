@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <node/mining_types.h>
 #include <primitives/transaction.h>
@@ -39,7 +40,7 @@ static void AssembleBlock(benchmark::Bench& bench)
         CMutableTransaction tx;
         tx.vin.emplace_back(MineBlock(test_setup->m_node, options));
         tx.vin.back().scriptWitness = witness;
-        tx.vout.emplace_back(1337, P2WSH_OP_TRUE);
+        tx.vout.emplace_back(1337_sats, P2WSH_OP_TRUE);
         if (NUM_BLOCKS - b >= COINBASE_MATURITY)
             txs.at(b) = MakeTransactionRef(tx);
     }

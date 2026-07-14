@@ -208,7 +208,7 @@ FUZZ_TARGET_DESERIALIZE(psbt_input_deserialize, {
     DeserializeFromFuzzingInput(buffer, psbt_input);
 })
 FUZZ_TARGET_DESERIALIZE(psbt_output_deserialize, {
-    PSBTOutput psbt_output(0, 0, CScript());
+    PSBTOutput psbt_output(0, 0_sats, CScript());
     DeserializeFromFuzzingInput(buffer, psbt_output);
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {

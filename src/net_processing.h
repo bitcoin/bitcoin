@@ -60,7 +60,7 @@ struct CNodeStateStats {
     bool m_relay_txs;
     int m_inv_to_send = 0;
     uint64_t m_last_inv_seq{0};
-    CAmount m_fee_filter_received;
+    CAmount m_fee_filter_received{0};
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};

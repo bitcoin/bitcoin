@@ -147,18 +147,18 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(PaysForRBF(/*original_fees=*/high_fee,
                            /*replacement_fees=*/high_fee,
                            /*replacement_vsize=*/1,
-                           /*relay_fee=*/CFeeRate(0),
+                           /*relay_fee=*/CFeeRate(0_sats),
                            /*txid=*/unused_txid)
                            == std::nullopt);
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee - 1, 1, CFeeRate(0), unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee + 1, high_fee, 1, CFeeRate(0), unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee - 1_sats, 1, CFeeRate(0_sats), unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee + 1_sats, high_fee, 1, CFeeRate(0_sats), unused_txid).has_value());
     // Additional fees must cover the replacement's vsize at incremental relay fee
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 11, incremental_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 2, 11, higher_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 4, 20, higher_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1_sats, 11, incremental_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1_sats, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 2_sats, 11, higher_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 4_sats, 20, higher_relay_feerate, unused_txid) == std::nullopt);
     BOOST_CHECK(PaysForRBF(low_fee, high_fee, 99999999, incremental_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999_sats, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
 }
 
 BOOST_FIXTURE_TEST_CASE(rbf_conflicts_calculator, TestChain100Setup)
@@ -289,17 +289,17 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset = pool.GetChangeSet();
     changeset->StageRemoval(entry1);
     changeset->StageRemoval(entry2);
-    changeset->StageAddition(tx1_conflict, tx1_fee+1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(tx1_conflict, tx1_fee+1_sats, 0, 1, 0, false, 4, LockPoints());
     changeset->StageAddition(tx3, tx2_fee, 0, 1, 0, false, 4, LockPoints());
     BOOST_CHECK(ImprovesFeerateDiagram(*changeset) == std::nullopt);
 
     changeset.reset();
     // With prioritisation of in-mempool conflicts, it affects the results of the comparison using the same args as just above
-    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/1);
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/1_sats);
     changeset = pool.GetChangeSet();
     changeset->StageRemoval(entry1);
     changeset->StageRemoval(entry2);
-    changeset->StageAddition(tx1_conflict, tx1_fee+1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(tx1_conflict, tx1_fee+1_sats, 0, 1, 0, false, 4, LockPoints());
     changeset->StageAddition(tx3, tx2_fee, 0, 1, 0, false, 4, LockPoints());
     const auto res2 = ImprovesFeerateDiagram(*changeset);
     BOOST_CHECK(res2.has_value());
@@ -307,7 +307,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     BOOST_CHECK(res2.value().second == "insufficient feerate: does not improve feerate diagram");
     changeset.reset();
 
-    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1);
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1_sats);
 
     // With fewer vbytes it does
     CMutableTransaction tx4{entry3.GetTx()};
@@ -331,7 +331,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset->StageRemoval(entry2);
     changeset->StageRemoval(entry5);
     changeset->StageAddition(tx1_conflict, tx1_fee, 0, 1, 0, false, 4, LockPoints());
-    changeset->StageAddition(entry4.GetSharedTx(), tx2_fee + entry5->GetModifiedFee() + 1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(entry4.GetSharedTx(), tx2_fee + entry5->GetModifiedFee() + 1_sats, 0, 1, 0, false, 4, LockPoints());
     const auto res3 = ImprovesFeerateDiagram(*changeset);
     BOOST_CHECK(res3 == std::nullopt);
 }
@@ -360,12 +360,12 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     {
         auto changeset = pool.GetChangeSet();
         changeset->StageRemoval(entry_low);
-        changeset->StageAddition(replacement_tx, 0, 0, 1, 0, false, 4, LockPoints());
+        changeset->StageAddition(replacement_tx, 0_sats, 0, 1, 0, false, 4, LockPoints());
         const auto replace_one{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_one.has_value());
         std::vector<FeeFrac> expected_old_chunks{{low_fee, low_size}};
         BOOST_CHECK(replace_one->first == expected_old_chunks);
-        std::vector<FeeFrac> expected_new_chunks{{0, entry_replacement.GetAdjustedWeight()}};
+        std::vector<FeeFrac> expected_new_chunks{{0_sats, entry_replacement.GetAdjustedWeight()}};
         BOOST_CHECK(replace_one->second == expected_new_chunks);
     }
 
@@ -488,72 +488,72 @@ BOOST_AUTO_TEST_CASE(feerate_chunks_utilities)
     // Sanity check the correctness of the feerate chunks comparison.
 
     // A strictly better case.
-    std::vector<FeeFrac> old_chunks{{{950, 300}, {100, 100}}};
-    std::vector<FeeFrac> new_chunks{{{1000, 300}, {50, 100}}};
+    std::vector<FeeFrac> old_chunks{{{950_sats, 300}, {100_sats, 100}}};
+    std::vector<FeeFrac> new_chunks{{{1000_sats, 300}, {50_sats, 100}}};
 
     BOOST_CHECK(std::is_lt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_gt(CompareChunks(new_chunks, old_chunks)));
 
     // Incomparable diagrams
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{1000, 300}, {0, 100}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{1000_sats, 300}, {0_sats, 100}};
 
     BOOST_CHECK(CompareChunks(old_chunks, new_chunks) == std::partial_ordering::unordered);
     BOOST_CHECK(CompareChunks(new_chunks, old_chunks) == std::partial_ordering::unordered);
 
     // Strictly better but smaller size.
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{1100, 300}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{1100_sats, 300}};
 
     BOOST_CHECK(std::is_lt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_gt(CompareChunks(new_chunks, old_chunks)));
 
     // New diagram is strictly better due to the first chunk, even though
     // second chunk contributes no fees
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{1100, 100}, {0, 100}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{1100_sats, 100}, {0_sats, 100}};
 
     BOOST_CHECK(std::is_lt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_gt(CompareChunks(new_chunks, old_chunks)));
 
     // Feerate of first new chunk is better with, but second chunk is worse
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{750, 100}, {249, 250}, {151, 650}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{750_sats, 100}, {249_sats, 250}, {151_sats, 650}};
 
     BOOST_CHECK(CompareChunks(old_chunks, new_chunks) == std::partial_ordering::unordered);
     BOOST_CHECK(CompareChunks(new_chunks, old_chunks) == std::partial_ordering::unordered);
 
     // If we make the second chunk slightly better, the new diagram now wins.
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{750, 100}, {250, 250}, {150, 150}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{750_sats, 100}, {250_sats, 250}, {150_sats, 150}};
 
     BOOST_CHECK(std::is_lt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_gt(CompareChunks(new_chunks, old_chunks)));
 
     // Identical diagrams, cannot be strictly better
-    old_chunks = {{950, 300}, {100, 100}};
-    new_chunks = {{950, 300}, {100, 100}};
+    old_chunks = {{950_sats, 300}, {100_sats, 100}};
+    new_chunks = {{950_sats, 300}, {100_sats, 100}};
 
     BOOST_CHECK(std::is_eq(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_eq(CompareChunks(new_chunks, old_chunks)));
 
     // Same aggregate fee, but different total size (trigger single tail fee check step)
-    old_chunks = {{950, 300}, {100, 99}};
-    new_chunks = {{950, 300}, {100, 100}};
+    old_chunks = {{950_sats, 300}, {100_sats, 99}};
+    new_chunks = {{950_sats, 300}, {100_sats, 100}};
 
     // No change in evaluation when tail check needed.
     BOOST_CHECK(std::is_gt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_lt(CompareChunks(new_chunks, old_chunks)));
 
     // Trigger multiple tail fee check steps
-    old_chunks = {{950, 300}, {100, 99}};
-    new_chunks = {{950, 300}, {100, 100}, {0, 1}, {0, 1}};
+    old_chunks = {{950_sats, 300}, {100_sats, 99}};
+    new_chunks = {{950_sats, 300}, {100_sats, 100}, {0_sats, 1}, {0_sats, 1}};
 
     BOOST_CHECK(std::is_gt(CompareChunks(old_chunks, new_chunks)));
     BOOST_CHECK(std::is_lt(CompareChunks(new_chunks, old_chunks)));
 
     // Multiple tail fee check steps, unordered result
-    new_chunks = {{950, 300}, {100, 100}, {0, 1}, {0, 1}, {1, 1}};
+    new_chunks = {{950_sats, 300}, {100_sats, 100}, {0_sats, 1}, {0_sats, 1}, {1_sats, 1}};
     BOOST_CHECK(CompareChunks(old_chunks, new_chunks) == std::partial_ordering::unordered);
     BOOST_CHECK(CompareChunks(new_chunks, old_chunks) == std::partial_ordering::unordered);
 }

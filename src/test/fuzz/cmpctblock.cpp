@@ -210,7 +210,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 
         // Choose an outpoint from the mempool, created blocks, or coinbases.
-        CAmount amount_in;
+        CAmount amount_in{0};
         COutPoint outpoint;
         unsigned long mempool_size = mempool.size();
         if (mempool_size != 0 && fuzzed_data_provider.ConsumeBool()) {

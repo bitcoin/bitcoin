@@ -877,7 +877,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     CCoinsViewCache& ibd_coins = WITH_LOCK(::cs_main,
         return validation_chainstate.CoinsTip());
     Coin badcoin;
-    badcoin.out.nValue = m_rng.rand32();
+    badcoin.out.nValue = CAmount{m_rng.rand32()};
     badcoin.nHeight = 1;
     badcoin.out.scriptPubKey.assign(m_rng.randbits(6), 0);
     Txid txid = Txid::FromUint256(m_rng.rand256());

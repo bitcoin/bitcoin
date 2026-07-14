@@ -361,11 +361,11 @@ struct WalletAddress
 //! Collection of wallet balances.
 struct WalletBalances
 {
-    CAmount balance = 0;
-    CAmount unconfirmed_balance = 0;
-    CAmount immature_balance = 0;
-    CAmount used_balance = 0;
-    CAmount nonmempool_balance = 0;
+    CAmount balance = 0_sats;
+    CAmount unconfirmed_balance = 0_sats;
+    CAmount immature_balance = 0_sats;
+    CAmount used_balance = 0_sats;
+    CAmount nonmempool_balance = 0_sats;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
@@ -384,9 +384,9 @@ struct WalletTx
     std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
     std::vector<bool> txout_address_is_mine;
-    CAmount credit;
-    CAmount debit;
-    CAmount change;
+    CAmount credit{0};
+    CAmount debit{0};
+    CAmount change{0};
     int64_t time;
     std::optional<std::string> from; // Deprecated
     std::optional<std::string> message; // Deprecated

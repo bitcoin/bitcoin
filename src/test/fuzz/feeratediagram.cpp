@@ -22,7 +22,7 @@ std::vector<FeeFrac> BuildDiagramFromChunks(const std::span<const FeeFrac> chunk
     std::vector<FeeFrac> diagram;
     diagram.reserve(chunks.size() + 1);
 
-    diagram.emplace_back(0, 0);
+    diagram.emplace_back(0_sats, 0);
     for (auto& chunk : chunks) {
         diagram.emplace_back(diagram.back() + chunk);
     }
@@ -94,7 +94,7 @@ void PopulateChunks(FuzzedDataProvider& fuzzed_data_provider, std::vector<FeeFra
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 50)
     {
-        chunks.emplace_back(fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(INT32_MIN>>1, INT32_MAX>>1), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000));
+        chunks.emplace_back(CAmount{fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(INT32_MIN>>1, INT32_MAX>>1)}, fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000));
     }
     return;
 }
@@ -106,7 +106,7 @@ FUZZ_TARGET(build_and_compare_feerate_diagram)
     // Generate a random set of chunks
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::vector<FeeFrac> chunks1, chunks2;
-    FeeFrac empty{0, 0};
+    FeeFrac empty{0_sats, 0};
 
     PopulateChunks(fuzzed_data_provider, chunks1);
     PopulateChunks(fuzzed_data_provider, chunks2);

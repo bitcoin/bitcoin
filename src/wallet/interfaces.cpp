@@ -397,7 +397,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         LOCK(m_wallet->cs_wallet);
-        CAmount total_amount = 0;
+        CAmount total_amount = 0_sats;
         // Fetch selected coins total amount
         if (coin_control.HasSelected()) {
             FastRandomContext rng{};
@@ -472,8 +472,7 @@ public:
         FeeReason* reason) override
     {
         FeeCalculation fee_calc;
-        CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
+        CAmount result{GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc)};
         if (returned_target) *returned_target = fee_calc.returnedTarget;
         if (reason) *reason = fee_calc.reason;
         return result;

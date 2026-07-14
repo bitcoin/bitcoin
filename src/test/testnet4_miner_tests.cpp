@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     // The template should use the mocked system time
     BOOST_REQUIRE_EQUAL(block_template->getBlockHeader().Time(), template_time);
 
-    const BlockWaitOptions wait_options{.timeout = MillisecondsDouble{0}, .fee_threshold = 1};
+    const BlockWaitOptions wait_options{.timeout = MillisecondsDouble{0}, .fee_threshold = 1_sats};
 
     // waitNext() should return nullptr because there is no better template
     auto should_be_nullptr = block_template->waitNext(wait_options);

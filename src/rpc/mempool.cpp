@@ -92,7 +92,7 @@ static RPCMethod sendrawtransaction()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount = request.params[2].isNull() ? 0_sats : AmountFromValue(request.params[2]);
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
@@ -389,7 +389,7 @@ static RPCMethod testmempoolaccept()
                     // Check that fee does not exceed maximum fee
                     const int64_t virtual_size = tx_result.m_vsize.value();
                     const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
-                    if (max_raw_tx_fee && fee > max_raw_tx_fee) {
+                    if (max_raw_tx_fee != 0_sats && fee > max_raw_tx_fee) {
                         result_inner.pushKV("allowed", false);
                         result_inner.pushKV("reject-reason", "max-fee-exceeded");
                         exit_early = true;
@@ -1394,12 +1394,12 @@ static RPCMethod submitpackage()
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
             std::optional<CFeeRate> client_maxfeerate{max_raw_tx_fee_rate};
             // 0-value is special; it's mapped to no sanity check
-            if (max_raw_tx_fee_rate == CFeeRate(0)) {
+            if (max_raw_tx_fee_rate == CFeeRate(0_sats)) {
                 client_maxfeerate = std::nullopt;
             }
 
             // Burn sanity check is run with no context
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount = request.params[2].isNull() ? 0_sats : AmountFromValue(request.params[2]);
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
@@ -1470,7 +1470,7 @@ static RPCMethod submitpackage()
                 const auto err = BroadcastTransaction(node,
                                                       tx,
                                                       err_string,
-                                                      /*max_tx_fee=*/0,
+                                                      /*max_tx_fee=*/0_sats,
                                                       node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
                                                       /*wait_callback=*/true);
                 if (err != TransactionError::OK) {

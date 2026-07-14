@@ -434,7 +434,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 
 static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strInput)
 {
-    CAmount value = 0;
+    CAmount value = 0_sats;
 
     // separate [VALUE:]DATA in string
     size_t pos = strInput.find(':');
@@ -559,9 +559,10 @@ static CAmount AmountFromValue(const UniValue& value)
     int64_t amount;
     if (!ParseFixedPoint(value.getValStr(), 8, &amount))
         throw std::runtime_error("Invalid amount");
-    if (!MoneyRange(amount))
+    CAmount result{amount};
+    if (!MoneyRange(result))
         throw std::runtime_error("Amount out of range");
-    return amount;
+    return result;
 }
 
 static std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)

@@ -8,6 +8,7 @@
 
 #include <chain.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
@@ -596,7 +597,7 @@ void btck_script_pubkey_destroy(btck_ScriptPubkey* script_pubkey)
 
 btck_TransactionOutput* btck_transaction_output_create(const btck_ScriptPubkey* script_pubkey, int64_t amount)
 {
-    return btck_TransactionOutput::create(amount, btck_ScriptPubkey::get(script_pubkey));
+    return btck_TransactionOutput::create(CAmount{amount}, btck_ScriptPubkey::get(script_pubkey));
 }
 
 btck_TransactionOutput* btck_transaction_output_copy(const btck_TransactionOutput* output)
@@ -611,7 +612,7 @@ const btck_ScriptPubkey* btck_transaction_output_get_script_pubkey(const btck_Tr
 
 int64_t btck_transaction_output_get_amount(const btck_TransactionOutput* output)
 {
-    return btck_TransactionOutput::get(output).nValue;
+    return btck_TransactionOutput::get(output).nValue.Int();
 }
 
 void btck_transaction_output_destroy(btck_TransactionOutput* output)
@@ -687,7 +688,7 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                                btck_ScriptPubkey::get(script_pubkey),
                                &tx.vin[input_index].scriptWitness,
                                script_verify_flags::from_int(flags),
-                               TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
+                               TransactionSignatureChecker(&tx, input_index, CAmount{amount}, txdata, MissingDataBehavior::FAIL),
                                nullptr);
     return result ? 1 : 0;
 }

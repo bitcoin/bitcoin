@@ -24,7 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
+static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY.Int());
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());
 static_assert(ipc::capnp::messages::DEFAULT_BLOCK_RESERVED_WEIGHT == DEFAULT_BLOCK_RESERVED_WEIGHT);
 static_assert(ipc::capnp::messages::DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS == DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS);
@@ -118,6 +118,10 @@ void IpcPipeTest()
     auto script1{CScript() << OP_11};
     auto script2{foo->passScript(script1)};
     BOOST_CHECK_EQUAL(HexStr(script1), HexStr(script2));
+
+    const std::vector<CAmount> amounts1{0_sats, 1_sats, COIN, MAX_MONEY, CAmount{-1}};
+    const std::vector<CAmount> amounts2{foo->passAmounts(amounts1)};
+    BOOST_CHECK_EQUAL_COLLECTIONS(amounts1.begin(), amounts1.end(), amounts2.begin(), amounts2.end());
 
     // Test cleanup: disconnect and join thread
     foo.reset();

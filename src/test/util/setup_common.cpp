@@ -525,7 +525,7 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
         assert(fee_output.value() < mempool_txn.vout.size());
         CAmount target_fee = feerate.value().GetFee(GetVirtualTransactionSize(CTransaction{mempool_txn}));
         CAmount deduction = target_fee - current_fee;
-        if (deduction > 0) {
+        if (deduction > 0_sats) {
             // Only deduct fee if there's anything to deduct. If the caller has put more fees than
             // the target feerate, don't change the fee.
             mempool_txn.vout[fee_output.value()].nValue -= deduction;
@@ -594,7 +594,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             unspent_prevouts.pop_front();
         }
         const size_t num_outputs = det_rand.randrange(25) + 1;
-        const CAmount fee = 100 * det_rand.randrange(30);
+        const CAmount fee = 100_sats * det_rand.randrange(30);
         const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
             CScript spk = CScript() << CScriptNum(num_transactions + n);
@@ -623,7 +623,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         }
         if (success) {
             mempool_transactions.push_back(ptx);
-            if (amount_per_output > 3000) {
+            if (amount_per_output > 3000_sats) {
                 // If the value is high enough to fund another transaction + fees, keep track of it so
                 // it can be used to build a more complex transaction graph. Insert randomly into
                 // unspent_prevouts for extra randomness in the resulting structures.

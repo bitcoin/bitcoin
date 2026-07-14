@@ -142,10 +142,7 @@ public:
     CAmount nValue;
     CScript scriptPubKey;
 
-    CTxOut()
-    {
-        SetNull();
-    }
+    CTxOut() : nValue{-1} {}
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
@@ -153,13 +150,13 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = -1_sats;
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == -1_sats);
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)

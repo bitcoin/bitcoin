@@ -152,7 +152,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 {
     transaction.getWtx() = nullptr; // reset tx output
 
-    CAmount total = 0;
+    CAmount total = 0_sats;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<CRecipient> vecSend;
@@ -175,7 +175,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return InvalidAddress;
             }
-            if(rcp.amount <= 0)
+            if(rcp.amount <= 0_sats)
             {
                 return InvalidAmount;
             }
@@ -466,8 +466,8 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
 {
     CCoinControl coin_control;
     std::vector<bilingual_str> errors;
-    CAmount old_fee;
-    CAmount new_fee;
+    CAmount old_fee{0};
+    CAmount new_fee{0};
     CMutableTransaction mtx;
     if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +

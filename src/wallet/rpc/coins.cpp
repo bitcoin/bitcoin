@@ -55,7 +55,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     const bool include_immature_coinbase{params[2].isNull() ? false : params[2].get_bool()};
 
     // Tally
-    CAmount amount = 0;
+    CAmount amount = 0_sats;
     for (const auto& [_, wtx] : wallet.mapWallet) {
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth
@@ -472,7 +472,7 @@ RPCMethod listunspent()
                               "See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
-                            {"minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0_sats)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
@@ -553,7 +553,7 @@ RPCMethod listunspent()
     }
 
     CoinFilterParams filter_coins;
-    filter_coins.min_amount = 0;
+    filter_coins.min_amount = 0_sats;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -664,12 +664,12 @@ RPCMethod listunspent()
         entry.pushKV("confirmations", out.depth);
         if (!out.depth) {
             size_t ancestor_count, unused_cluster_count, ancestor_size;
-            CAmount ancestor_fees;
+            CAmount ancestor_fees{0};
             pwallet->chain().getTransactionAncestry(out.outpoint.hash, ancestor_count, unused_cluster_count, &ancestor_size, &ancestor_fees);
             if (ancestor_count) {
                 entry.pushKV("ancestorcount", ancestor_count);
                 entry.pushKV("ancestorsize", ancestor_size);
-                entry.pushKV("ancestorfees", ancestor_fees);
+                entry.pushKV("ancestorfees", ancestor_fees.Int());
             }
         }
         entry.pushKV("spendable", true); // Any coins we list are always spendable

@@ -134,7 +134,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         CMutableTransaction parent;
         parent.vin.resize(1);
         parent.vin[0].prevout = g_outpoints.at(iter++);
-        parent.vout.emplace_back(0, CScript());
+        parent.vout.emplace_back(0_sats, CScript());
 
         mempool_txs.emplace_back(parent);
         const auto parent_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
@@ -174,7 +174,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {
-            pool.PrioritiseTransaction(mempool_txs.back().GetHash(), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(-100000, 100000));
+            pool.PrioritiseTransaction(mempool_txs.back().GetHash(), ConsumeMoney(fuzzed_data_provider, -100000_sats, 100000_sats));
         }
     }
 

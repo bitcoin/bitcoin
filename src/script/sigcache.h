@@ -6,7 +6,6 @@
 #ifndef BITCOIN_SCRIPT_SIGCACHE_H
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
-#include <consensus/amount.h>
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
 #include <script/interpreter.h>
@@ -21,6 +20,7 @@
 #include <span>
 #include <vector>
 
+class CAmount;
 class CPubKey;
 class CTransaction;
 class XOnlyPubKey;

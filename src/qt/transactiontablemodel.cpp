@@ -541,7 +541,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, true);
         case Amount:
-            return qint64(rec->credit + rec->debit);
+            return qint64{(rec->credit + rec->debit).Int()};
         } // no default case, so the compiler can warn about missing cases
         assert(false);
     case Qt::ToolTipRole:
@@ -559,7 +559,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
             return COLOR_UNCONFIRMED;
         }
-        if(index.column() == Amount && (rec->credit+rec->debit) < 0)
+        if(index.column() == Amount && (rec->credit+rec->debit) < 0_sats)
         {
             return COLOR_NEGATIVE;
         }
@@ -579,7 +579,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case LabelRole:
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     case AmountRole:
-        return qint64(rec->credit + rec->debit);
+        return qint64{(rec->credit + rec->debit).Int()};
     case TxHashRole:
         return rec->getTxHash();
     case TxHexRole:

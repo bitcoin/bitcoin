@@ -123,7 +123,7 @@ struct TxMempoolInfo
     int32_t vsize;
 
     /** The fee delta. */
-    int64_t nFeeDelta;
+    CAmount nFeeDelta;
 };
 
 /**
@@ -529,20 +529,20 @@ public:
     CTransactionRef get(const Wtxid& hash) const;
 
     template <TxidOrWtxid T>
-    TxMempoolInfo info(const T& id) const
+    std::optional<TxMempoolInfo> info(const T& id) const
     {
         LOCK(cs);
         auto i{GetIter(id)};
-        return i.has_value() ? GetInfo(*i) : TxMempoolInfo{};
+        return i.has_value() ? std::optional{GetInfo(*i)} : std::nullopt;
     }
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
     template <TxidOrWtxid T>
-    TxMempoolInfo info_for_relay(const T& id, uint64_t last_sequence) const
+    std::optional<TxMempoolInfo> info_for_relay(const T& id, uint64_t last_sequence) const
     {
         LOCK(cs);
         auto i{GetIter(id)};
-        return (i.has_value() && i.value()->GetSequence() < last_sequence) ? GetInfo(*i) : TxMempoolInfo{};
+        return (i.has_value() && i.value()->GetSequence() < last_sequence) ? std::optional{GetInfo(*i)} : std::nullopt;
     }
 
     std::vector<CTxMemPoolEntryRef> entryAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
