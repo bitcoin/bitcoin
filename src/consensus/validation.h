@@ -78,7 +78,6 @@ private:
     enum class ModeState {
         M_VALID,   //!< everything ok
         M_INVALID, //!< network rule violation (DoS value may be set)
-        M_ERROR,   //!< run-time error
     } m_mode{ModeState::M_VALID};
     Result m_result{};
     std::string m_reject_reason;
@@ -92,19 +91,11 @@ public:
         m_result = result;
         m_reject_reason = reject_reason;
         m_debug_message = debug_message;
-        if (m_mode != ModeState::M_ERROR) m_mode = ModeState::M_INVALID;
-        return false;
-    }
-    bool Error(const std::string& reject_reason)
-    {
-        if (m_mode == ModeState::M_VALID)
-            m_reject_reason = reject_reason;
-        m_mode = ModeState::M_ERROR;
+        m_mode = ModeState::M_INVALID;
         return false;
     }
     bool IsValid() const { return m_mode == ModeState::M_VALID; }
     bool IsInvalid() const { return m_mode == ModeState::M_INVALID; }
-    bool IsError() const { return m_mode == ModeState::M_ERROR; }
     Result GetResult() const { return m_result; }
     std::string GetRejectReason() const { return m_reject_reason; }
     std::string GetDebugMessage() const { return m_debug_message; }
