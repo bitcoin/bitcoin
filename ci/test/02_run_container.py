@@ -183,6 +183,7 @@ def main():
         f"{os.environ['BASE_ROOT_DIR']}",
     ])
     ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_base_install.sh"])
+    ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_setup_bsd.sh"])
     ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/03_test_script.sh"])
 
     if not os.getenv("DANGER_RUN_CI_ON_HOST"):
