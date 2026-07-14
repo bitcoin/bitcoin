@@ -14,6 +14,7 @@
 #include <span.h>
 #include <streams.h>
 #include <sync.h>
+#include <txdb.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/log.h>
@@ -108,16 +109,15 @@ static void ApplyStats(CCoinsStats& stats, const std::map<uint32_t, Coin>& outpu
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static std::optional<CCoinsStats> ComputeUTXOStats(T hash_obj, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
+static std::optional<CCoinsStats> ComputeUTXOStats(T hash_obj, const CCoinsViewDB& view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CBlockIndex* pindex;
     {
         LOCK(::cs_main);
-        pcursor = view->Cursor();
+        pcursor = view.Cursor();
         pindex = blockman.LookupBlockIndex(pcursor->GetBestBlock());
     }
-    assert(pcursor);
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     Txid prevkey;
@@ -148,11 +148,11 @@ static std::optional<CCoinsStats> ComputeUTXOStats(T hash_obj, CCoinsView* view,
 
     FinalizeHash(hash_obj, stats);
 
-    stats.nDiskSize = view->EstimateSize();
+    stats.nDiskSize = view.EstimateSize();
     return stats;
 }
 
-std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, const CCoinsViewDB& view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
     return [&]() -> std::optional<CCoinsStats> {
         switch (hash_type) {

@@ -992,7 +992,7 @@ CoinStatsHashType ParseHashType(std::string_view hash_type_input)
  *
  * @param[in] index_requested Signals if the coinstatsindex should be used (when available).
  */
-static std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockManager& blockman,
+static std::optional<kernel::CCoinsStats> GetUTXOStats(const CCoinsViewDB& view, node::BlockManager& blockman,
                                                        kernel::CoinStatsHashType hash_type,
                                                        const std::function<void()>& interruption_point = {},
                                                        const CBlockIndex* pindex = nullptr,
@@ -1003,7 +1003,7 @@ static std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::B
         if (pindex) {
             return g_coin_stats_index->LookUpStats(*pindex);
         } else {
-            CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock())));
+            CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view.GetBestBlock())));
             return g_coin_stats_index->LookUpStats(block_index);
         }
     }
@@ -1012,7 +1012,7 @@ static std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::B
     // pindex should either be null or equal to the view's best block. This is
     // because without the coinstats index we can only get coinstats about the
     // best block.
-    CHECK_NONFATAL(!pindex || pindex->GetBlockHash() == view->GetBestBlock());
+    CHECK_NONFATAL(!pindex || pindex->GetBlockHash() == view.GetBestBlock());
 
     return kernel::ComputeUTXOStats(hash_type, view, blockman, interruption_point);
 }
@@ -1083,13 +1083,8 @@ static RPCMethod gettxoutsetinfo()
     Chainstate& active_chainstate = chainman.ActiveChainstate();
     active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
 
-    CCoinsView* coins_view;
-    BlockManager* blockman;
-    {
-        LOCK(::cs_main);
-        coins_view = &active_chainstate.CoinsDB();
-        blockman = &active_chainstate.m_blockman;
-    }
+    const CCoinsViewDB& coins_view{WITH_LOCK(::cs_main, return active_chainstate.CoinsDB())};
+    BlockManager& blockman{active_chainstate.m_blockman};
 
     const CBlockIndex* pindex{nullptr};
     if (!request.params[1].isNull()) {
@@ -1119,7 +1114,7 @@ static RPCMethod gettxoutsetinfo()
         }
     }
 
-    const std::optional<CCoinsStats> maybe_stats = GetUTXOStats(coins_view, *blockman, hash_type, node.rpc_interruption_point, pindex, index_requested);
+    const std::optional<CCoinsStats> maybe_stats = GetUTXOStats(coins_view, blockman, hash_type, node.rpc_interruption_point, pindex, index_requested);
     if (maybe_stats.has_value()) {
         const CCoinsStats& stats = maybe_stats.value();
         ret.pushKV("height", stats.nHeight);
@@ -1140,8 +1135,8 @@ static RPCMethod gettxoutsetinfo()
         } else {
             CCoinsStats prev_stats{};
             if (stats.nHeight > 0) {
-                const CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman->LookupBlockIndex(stats.hashBlock)));
-                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, *blockman, hash_type, node.rpc_interruption_point, block_index.pprev, index_requested);
+                const CBlockIndex& block_index = *CHECK_NONFATAL(WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(stats.hashBlock)));
+                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, blockman, hash_type, node.rpc_interruption_point, block_index.pprev, index_requested);
                 if (!maybe_prev_stats) {
                     throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
                 }
@@ -2446,7 +2441,7 @@ static RPCMethod scantxoutset()
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
             active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
-            pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
+            pcursor = active_chainstate.CoinsDB().Cursor();
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
@@ -3323,7 +3318,7 @@ UniValue CreateRolledBackUTXOSnapshot(
     rollback_cache.Flush();
 
     LogInfo("Rollback complete. Computing UTXO statistics for created txoutset dump.");
-    std::optional<CCoinsStats> maybe_stats = GetUTXOStats(temp_db.get(),
+    std::optional<CCoinsStats> maybe_stats = GetUTXOStats(*temp_db,
                                                           chainstate.m_blockman,
                                                           CoinStatsHashType::HASH_SERIALIZED,
                                                           node.rpc_interruption_point);
@@ -3333,9 +3328,6 @@ UniValue CreateRolledBackUTXOSnapshot(
     }
 
     std::unique_ptr<CCoinsViewCursor> pcursor{temp_db->Cursor()};
-    if (!pcursor) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to create UTXO cursor");
-    }
 
     LogInfo("Writing snapshot to disk.");
     return WriteUTXOSnapshot(chainstate,
@@ -3374,7 +3366,7 @@ PrepareUTXOSnapshot(
 
         chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
 
-        maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
+        maybe_stats = GetUTXOStats(chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
         if (!maybe_stats) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
