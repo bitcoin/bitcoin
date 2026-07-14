@@ -102,8 +102,7 @@ BOOST_FIXTURE_TEST_CASE(findCommonAncestor, TestChain100Setup)
     const CChain& active{*WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return &Assert(m_node.chainman)->ActiveChain())};
     auto* orig_tip = active.Tip();
     for (int i = 0; i < 10; ++i) {
-        BlockValidationState state;
-        m_node.chainman->ActiveChainstate().InvalidateBlock(state, active.Tip());
+        (void)m_node.chainman->ActiveChainstate().InvalidateBlock(active.Tip());
     }
     BOOST_CHECK_EQUAL(active.Height(), orig_tip->nHeight - 10);
     coinbaseKey.MakeNewKey(true);

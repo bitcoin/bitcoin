@@ -15,6 +15,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/fatal_error.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/warning.h>
 #include <logging.h>
@@ -31,6 +32,7 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -1345,7 +1347,7 @@ int btck_chainstate_manager_process_block(
     if (_new_block) {
         *_new_block = new_block ? 1 : 0;
     }
-    return result ? 0 : -1;
+    return (result && *result) ? 0 : -1;
 }
 
 btck_BlockValidationState* btck_chainstate_manager_process_block_header(

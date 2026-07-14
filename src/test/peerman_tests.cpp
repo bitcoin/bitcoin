@@ -38,7 +38,8 @@ static void mineBlock(node::NodeContext& node, FakeNodeClock& clock, std::chrono
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
     clock.set(curr_time); // process block at current time
-    Assert(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    auto result{node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)};
+    Assert(result && *result);
     node.validation_signals->SyncWithValidationInterfaceQueue(); // drain events queue
 }
 

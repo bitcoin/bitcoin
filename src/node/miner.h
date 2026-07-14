@@ -131,7 +131,8 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
 //! Submit a block and capture the validation state via the BlockChecked callback.
-//! Returns whether ProcessNewBlock accepted the block.
+//! Returns whether ProcessNewBlock accepted the block. On a fatal node error,
+//! returns false with the error message in `reason`.
 bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, bool* new_block, std::string& reason, std::string& debug);
 
 /* Interrupt a blocking call. */
