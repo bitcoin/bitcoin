@@ -30,8 +30,6 @@
 
 constexpr uint8_t DB_TXINDEX{'t'};
 
-std::unique_ptr<TxIndex> g_txindex;
-
 
 /** Access to the txindex database (indexes/txindex/) */
 class TxIndex::DB : public BaseIndex::DB

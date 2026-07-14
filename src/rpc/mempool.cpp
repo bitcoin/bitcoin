@@ -12,6 +12,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txospenderindex.h>
+#include <node/context.h>
 #include <kernel/mempool_entry.h>
 #include <net_processing.h>
 #include <netbase.h>
@@ -966,7 +967,8 @@ static RPCMethod gettxspendingprevout()
                                 {"return_spending_tx", UniValueType(UniValue::VBOOL)},
                             }, /*fAllowNull=*/true, /*fStrict=*/true);
 
-            const bool mempool_only{options.exists("mempool_only") ? options["mempool_only"].get_bool() : !g_txospenderindex};
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            const bool mempool_only{options.exists("mempool_only") ? options["mempool_only"].get_bool() : !node.txospenderindex};
             const bool return_spending_tx{options.exists("return_spending_tx") ? options["return_spending_tx"].get_bool() : false};
 
             // Worklist of outpoints to resolve
@@ -1008,7 +1010,7 @@ static RPCMethod gettxspendingprevout()
 
             // Search the mempool first
             {
-                const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+                const CTxMemPool& mempool = EnsureMemPool(node);
                 LOCK(mempool.cs);
 
                 // Make the result if the spending tx appears in the mempool or this is a mempool_only request
@@ -1034,12 +1036,12 @@ static RPCMethod gettxspendingprevout()
 
             // At this point the request was not limited to the mempool and some outpoints remain
             // unresolved. We now rely on the index to determine whether they were spent or not.
-            if (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain()) {
+            if (!node.txospenderindex || !node.txospenderindex->BlockUntilSyncedToCurrentChain()) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Mempool lacks a relevant spend, and txospenderindex is unavailable.");
             }
 
             for (const auto& prevout : prevouts_to_process) {
-                const auto spender{g_txospenderindex->FindSpender(prevout.outpoint)};
+                const auto spender{node.txospenderindex->FindSpender(prevout.outpoint)};
                 if (!spender) {
                     throw JSONRPCError(RPC_MISC_ERROR, spender.error());
                 }

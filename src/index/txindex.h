@@ -54,7 +54,4 @@ public:
     bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
 };
 
-/// The global transaction index, used in GetTransaction. May be null.
-extern std::unique_ptr<TxIndex> g_txindex;
-
 #endif // BITCOIN_INDEX_TXINDEX_H
