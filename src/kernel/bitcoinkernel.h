@@ -382,13 +382,11 @@ typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_
 typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
 
 /**
- * Whether a validated data structure is valid, invalid, or an error was
- * encountered during processing.
+ * Whether a validated data structure is valid or invalid.
  */
 typedef uint8_t btck_ValidationMode;
 #define btck_ValidationMode_VALID ((btck_ValidationMode)(0))
 #define btck_ValidationMode_INVALID ((btck_ValidationMode)(1))
-#define btck_ValidationMode_INTERNAL_ERROR ((btck_ValidationMode)(2))
 
 /**
  * A granular "reason" why a block was invalid.
