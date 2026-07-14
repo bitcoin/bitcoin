@@ -388,6 +388,7 @@ if(BUILD_UTIL)
     core_interface
     bitcoin_common
     bitcoin_util
+    univalue
   )
   install_binary_component(bitcoin-util HAS_MANPAGE)
 endif()
