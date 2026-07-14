@@ -212,10 +212,11 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         pending = [t for t in pbinfo["transactions"] if t["txid"] == tx["txid"] and t["wtxid"] == tx["wtxid"]]
         assert_equal(len(pending), 1)
         assert_equal(pending[0]["hex"].lower(), tx["hex"].lower())
-        peers = pending[0]["peers"]
-        assert len(peers) >= NUM_PRIVATE_BROADCAST_PER_TX
-        assert all("address" in p and "sent" in p for p in peers)
-        assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
+        assert_greater_than_or_equal(pending[0]["num_sent"], NUM_PRIVATE_BROADCAST_PER_TX)
+        assert_greater_than_or_equal(pending[0]["num_acknowledged"], broadcasts_to_expect)
+        # The peers list only contains currently connected peers; the ones
+        # observed above have already disconnected.
+        assert all("address" in p and "sent" in p for p in pending[0]["peers"])
 
     def run_test(self):
         tx_originator = self.nodes[0]

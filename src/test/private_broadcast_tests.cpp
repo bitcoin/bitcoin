@@ -98,9 +98,11 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetTxForNode(recipient2).value(), tx_for_recipient2);
 
     // Confirm none of the transactions' reception have been confirmed.
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient1));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(nonexistent_recipient));
+    {
+        const auto infos_unconfirmed{pb.GetBroadcastInfo()};
+        BOOST_CHECK_EQUAL(find_tx_info(infos_unconfirmed, tx1).num_confirmed, 0);
+        BOOST_CHECK_EQUAL(find_tx_info(infos_unconfirmed, tx2).num_confirmed, 0);
+    }
 
     // 1. Freshly added transactions should NOT be stale yet.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
@@ -115,22 +117,23 @@ BOOST_AUTO_TEST_CASE(basic)
     pb.NodeConfirmedReception(nonexistent_recipient); // Dummy call.
     pb.NodeConfirmedReception(recipient1);
 
-    BOOST_CHECK(pb.DidNodeConfirmReception(recipient1));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
-
     const auto infos{pb.GetBroadcastInfo()};
     BOOST_CHECK_EQUAL(infos.size(), 2);
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient1).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
-        BOOST_CHECK(peers[0].received.has_value());
+        const auto& info{find_tx_info(infos, tx_for_recipient1)};
+        BOOST_CHECK_EQUAL(info.num_sent, 1);
+        BOOST_CHECK_EQUAL(info.num_confirmed, 1);
+        BOOST_CHECK_EQUAL(info.peers.size(), 1);
+        BOOST_CHECK_EQUAL(info.peers[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
+        BOOST_CHECK(info.peers[0].received.has_value());
     }
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient2).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
-        BOOST_CHECK(!peers[0].received.has_value());
+        const auto& info{find_tx_info(infos, tx_for_recipient2)};
+        BOOST_CHECK_EQUAL(info.num_sent, 1);
+        BOOST_CHECK_EQUAL(info.num_confirmed, 0);
+        BOOST_CHECK_EQUAL(info.peers.size(), 1);
+        BOOST_CHECK_EQUAL(info.peers[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
+        BOOST_CHECK(!info.peers[0].received.has_value());
     }
 
     const auto stale_state{pb.GetStale()};
@@ -141,6 +144,22 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
+    // Disconnecting the nodes drops their per-node state but keeps the
+    // transactions' cumulative counters.
+    BOOST_CHECK(pb.NodeDisconnected(recipient1));
+    BOOST_CHECK(!pb.NodeDisconnected(recipient2));
+    BOOST_CHECK(!pb.NodeDisconnected(nonexistent_recipient));
+    BOOST_CHECK(!pb.GetTxForNode(recipient1).has_value());
+    BOOST_CHECK(!pb.GetTxForNode(recipient2).has_value());
+    check_peer_counts(/*tx1_peer_count=*/0, /*tx2_peer_count=*/0);
+    {
+        const auto infos_after_disconnect{pb.GetBroadcastInfo()};
+        BOOST_CHECK_EQUAL(find_tx_info(infos_after_disconnect, tx_for_recipient1).num_sent, 1);
+        BOOST_CHECK_EQUAL(find_tx_info(infos_after_disconnect, tx_for_recipient1).num_confirmed, 1);
+        BOOST_CHECK_EQUAL(find_tx_info(infos_after_disconnect, tx_for_recipient2).num_sent, 1);
+        BOOST_CHECK_EQUAL(find_tx_info(infos_after_disconnect, tx_for_recipient2).num_confirmed, 0);
+    }
+
     BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient1).value(), 1);
     BOOST_CHECK(!pb.Remove(tx_for_recipient1).has_value());
     BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2).value(), 0);
@@ -149,6 +168,51 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 0);
     const CService addr_nonexistent{ipv4Addr, 3333};
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient, /*will_send_to_address=*/addr_nonexistent).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(disconnected_nodes_state_dropped)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    in_addr ipv4Addr;
+    ipv4Addr.s_addr = 0xa0b0c001;
+    const CService addr{ipv4Addr, 1111};
+
+    const auto tx_a{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    const auto tx_b{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    BOOST_REQUIRE(pb.Add(tx_a) == PrivateBroadcast::AddResult::Added);
+
+    // Simulate many failed broadcast attempts (send, no confirmation, disconnect).
+    NodeId nodeid{0};
+    constexpr size_t num_attempts{100};
+    for (size_t i{0}; i < num_attempts; ++i) {
+        BOOST_REQUIRE_EQUAL(pb.PickTxForSend(nodeid, addr).value(), tx_a);
+        BOOST_CHECK(!pb.NodeDisconnected(nodeid));
+        BOOST_CHECK(!pb.GetTxForNode(nodeid).has_value());
+        ++nodeid;
+        clock += 1min;
+    }
+
+    // Only cumulative counters are retained, no per-node state.
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        BOOST_REQUIRE_EQUAL(infos.size(), 1);
+        BOOST_CHECK_EQUAL(infos[0].num_sent, num_attempts);
+        BOOST_CHECK_EQUAL(infos[0].num_confirmed, 0);
+        BOOST_CHECK_EQUAL(infos[0].peers.size(), 0);
+    }
+
+    // The send counter survives disconnects: a newly added transaction with
+    // fewer sends is picked first.
+    BOOST_REQUIRE(pb.Add(tx_b) == PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.PickTxForSend(nodeid, addr).value(), tx_b);
+    pb.NodeConfirmedReception(nodeid);
+    BOOST_CHECK(pb.NodeDisconnected(nodeid));
+
+    // Confirmations survive disconnects too.
+    BOOST_CHECK_EQUAL(pb.Remove(tx_b).value(), 1);
+    BOOST_CHECK_EQUAL(pb.Remove(tx_a).value(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(stale_unpicked_tx)

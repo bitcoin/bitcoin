@@ -16,7 +16,8 @@
 #include <util/overflow.h>
 #include <util/time.h>
 
-#include <unordered_set>
+#include <map>
+#include <unordered_map>
 
 struct CTransactionRefHash {
     size_t operator()(const CTransactionRef& tx) const
@@ -41,15 +42,23 @@ FUZZ_TARGET(private_broadcast)
     const size_t cap{fdp.ConsumeIntegralInRange<size_t>(1, 12)};
     PrivateBroadcast pb{cap};
 
-    // Random transaction that the test generated and passed to Add(). Trimmed when Remove() is called.
-    // The values are the number of times a transaction was picked for sending.
-    std::unordered_map<CTransactionRef, size_t, CTransactionRefHash, CTransactionRefComp> transactions;
+    // Cumulative per-transaction counters, mirroring what PrivateBroadcast retains.
+    struct TxModel {
+        size_t num_picked{0};
+        size_t num_confirmed{0};
+    };
 
-    // Ids of nodes that were passed to PickTxForSend(). Trimmed when Remove() is called.
-    std::unordered_set<NodeId> nodes_sent_to;
+    // Random transactions that the test generated and passed to Add(). Trimmed when Remove() is called.
+    std::unordered_map<CTransactionRef, TxModel, CTransactionRefHash, CTransactionRefComp> transactions;
 
-    // A subset of `nodes_sent_to`, node ids passed to NodeConfirmedReception(). Trimmed when Remove() is called.
-    std::unordered_set<NodeId> nodes_that_confirmed_reception;
+    // In-flight sends to currently-connected nodes, mirroring PrivateBroadcast's per-node
+    // state. Entries are added by PickTxForSend() and trimmed when Remove() or
+    // NodeDisconnected() is called.
+    struct NodeSendModel {
+        CTransactionRef tx;
+        bool confirmed{false};
+    };
+    std::map<NodeId, NodeSendModel> node_sends;
 
     NodeId next_nodeid{0}; // Generate unique node ids.
 
@@ -58,6 +67,16 @@ FUZZ_TARGET(private_broadcast)
             return next_nodeid++;
         }
         return fdp.ConsumeIntegralInRange<NodeId>(0, next_nodeid - 1);
+    };
+
+    const auto NumLiveSendsOf = [&node_sends](const CTransactionRef& tx) {
+        size_t num{0};
+        for (const auto& [_, node_send] : node_sends) {
+            if (node_send.tx->GetWitnessHash() == tx->GetWitnessHash()) {
+                ++num;
+            }
+        }
+        return num;
     };
 
     LIMITED_WHILE(fdp.ConsumeBool(), 10000) {
@@ -79,7 +98,7 @@ FUZZ_TARGET(private_broadcast)
                     Assert(res == PrivateBroadcast::AddResult::QueueFull);
                 } else {
                     Assert(res == PrivateBroadcast::AddResult::Added);
-                    transactions.emplace(tx, 0);
+                    transactions.emplace(tx, TxModel{});
                 }
             },
             [&] { // Remove()
@@ -89,26 +108,15 @@ FUZZ_TARGET(private_broadcast)
                 const auto transactions_it{PickIterator(fdp, transactions)};
                 const CTransactionRef& tx{transactions_it->first};
 
-                size_t num_nodes_that_confirmed_tx{0};
-
-                // Remove relevant entries from nodes_sent_to[] and nodes_that_confirmed_reception[] if any.
-                for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                    const NodeId nodeid{*it};
-                    const auto opt_tx_for_node{pb.GetTxForNode(nodeid)};
-                    if (opt_tx_for_node.has_value() && opt_tx_for_node.value() == tx) {
-                        it = nodes_sent_to.erase(it);
-                        if (nodes_that_confirmed_reception.erase(nodeid) > 0) {
-                            ++num_nodes_that_confirmed_tx;
-                        }
-                    } else {
-                        ++it;
-                    }
-                }
+                // Remove relevant in-flight entries from node_sends[] if any.
+                std::erase_if(node_sends, [&tx](const auto& entry) {
+                    return entry.second.tx->GetWitnessHash() == tx->GetWitnessHash();
+                });
 
                 const auto opt_num_confirmed{pb.Remove(tx)};
 
                 Assert(opt_num_confirmed.has_value());
-                Assert(opt_num_confirmed.value() == num_nodes_that_confirmed_tx);
+                Assert(opt_num_confirmed.value() == transactions_it->second.num_confirmed);
                 Assert(!pb.Remove(tx).has_value());
                 transactions.erase(transactions_it);
             },
@@ -127,13 +135,13 @@ FUZZ_TARGET(private_broadcast)
                     // with the minimum send count of any in the queue. Ties are broken by state we
                     // don't model, so only check this key.
                     const size_t min_picked{std::ranges::min_element(
-                        transactions, {}, [](const auto& el) { return el.second; })->second};
+                        transactions, {}, [](const auto& el) { return el.second.num_picked; })->second.num_picked};
                     const auto picked_it{transactions.find(opt_tx.value())};
                     Assert(picked_it != transactions.end());
-                    Assert(picked_it->second == min_picked); // picked the least-sent transaction
-                    ++picked_it->second; // PickTxForSend() recorded exactly one send
+                    Assert(picked_it->second.num_picked == min_picked); // picked the least-sent transaction
+                    ++picked_it->second.num_picked; // PickTxForSend() recorded exactly one send
 
-                    const auto& [_, inserted]{nodes_sent_to.emplace(will_send_to_nodeid)};
+                    const auto& [_, inserted]{node_sends.emplace(will_send_to_nodeid, NodeSendModel{.tx = opt_tx.value()})};
                     Assert(inserted);
                 } else {
                     Assert(transactions.empty());
@@ -144,8 +152,10 @@ FUZZ_TARGET(private_broadcast)
 
                 const auto opt_tx{pb.GetTxForNode(nodeid)};
 
-                if (nodes_sent_to.contains(nodeid)) {
+                const auto it{node_sends.find(nodeid)};
+                if (it != node_sends.end()) {
                     Assert(opt_tx.has_value());
+                    Assert(opt_tx.value()->GetWitnessHash() == it->second.tx->GetWitnessHash());
                     Assert(transactions.contains(opt_tx.value()));
                 } else {
                     Assert(!opt_tx.has_value());
@@ -156,23 +166,32 @@ FUZZ_TARGET(private_broadcast)
 
                 pb.NodeConfirmedReception(nodeid);
 
-                if (nodes_sent_to.contains(nodeid)) {
-                    // nodeid was previously passed to PickTxForSend(), so NodeConfirmedReception()
-                    // must have changed the internal state. Remember this to later check that
-                    // DidNodeConfirmReception() works correctly.
-                    nodes_that_confirmed_reception.emplace(nodeid);
+                const auto it{node_sends.find(nodeid)};
+                if (it != node_sends.end() && !it->second.confirmed) {
+                    // nodeid has an in-flight send, so NodeConfirmedReception() must have
+                    // bumped the transaction's confirmation counter (exactly once per node).
+                    it->second.confirmed = true;
+                    const auto transactions_it{transactions.find(it->second.tx)};
+                    Assert(transactions_it != transactions.end());
+                    ++transactions_it->second.num_confirmed;
                 }
             },
-            [&] { // DidNodeConfirmReception()
+            [&] { // NodeDisconnected()
                 const NodeId nodeid{ExistentOrNewNodeId()};
 
-                const bool confirmed{pb.DidNodeConfirmReception(nodeid)};
+                const bool confirmed{pb.NodeDisconnected(nodeid)};
 
-                if (nodes_that_confirmed_reception.contains(nodeid)) {
-                    Assert(confirmed);
+                const auto it{node_sends.find(nodeid)};
+                if (it != node_sends.end()) {
+                    Assert(confirmed == it->second.confirmed);
+                    node_sends.erase(it);
                 } else {
                     Assert(!confirmed);
                 }
+
+                // The per-node state is gone now.
+                Assert(!pb.GetTxForNode(nodeid).has_value());
+                Assert(!pb.NodeDisconnected(nodeid));
             },
             [&] { // HavePendingTransactions()
                 if (pb.HavePendingTransactions()) {
@@ -198,7 +217,11 @@ FUZZ_TARGET(private_broadcast)
                 for (const auto& info : all_broadcast_info) {
                     const auto it{transactions.find(info.tx)};
                     Assert(it != transactions.end());
-                    Assert(info.peers.size() == it->second); // exactly the sends we recorded
+                    Assert(info.num_sent == it->second.num_picked);
+                    Assert(info.num_confirmed == it->second.num_confirmed);
+                    // Per-peer entries exist only for in-flight sends to connected nodes,
+                    // regardless of how many sends happened in total.
+                    Assert(info.peers.size() == NumLiveSendsOf(info.tx));
                 }
             },
             [&] {
