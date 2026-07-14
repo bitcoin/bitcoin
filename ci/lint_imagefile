@@ -4,12 +4,12 @@
 
 # See test/lint/README.md for usage.
 
-FROM mirror.gcr.io/ubuntu:24.04
+FROM mirror.gcr.io/ubuntu:26.04
 
 # Pin uv and ruff to minor version to avoid breaking changes
 # https://docs.astral.sh/uv/reference/policies/versioning/
 # https://docs.astral.sh/ruff/versioning/
-COPY --from=ghcr.io/astral-sh/uv:0.10 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /uvx /bin/
 COPY --from=ghcr.io/astral-sh/ruff:0.15 /ruff /bin/
 
 COPY ./ci/retry/retry /ci_retry
