@@ -396,7 +396,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
                 // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
                 // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
                 // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
-                LogWarning("Failed to submit prevout fetch tasks; falling back to single-threaded fetching for this block.");
+                LogWarning("Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
                 m_inputs.clear();
                 StopFetching(); // Assert nothing changed if we failed to start tasks.
             }
