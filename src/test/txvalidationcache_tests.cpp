@@ -173,9 +173,10 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     CScript p2pkh_scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
     CScript p2wpkh_scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(coinbaseKey.GetPubKey()));
 
-    FillableSigningProvider keystore;
-    BOOST_CHECK(keystore.AddKey(coinbaseKey));
-    BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
+    FlatSigningProvider keystore;
+    BOOST_CHECK(keystore.keys.emplace(coinbaseKey.GetPubKey().GetID(), coinbaseKey).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(coinbaseKey.GetPubKey().GetID(), coinbaseKey.GetPubKey()).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(p2pk_scriptPubKey), p2pk_scriptPubKey).second);
 
     // flags to test: SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, SCRIPT_VERIFY_NULLDUMMY, uncompressed pubkey thing
 
