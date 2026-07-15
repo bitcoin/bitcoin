@@ -590,7 +590,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
     if (!registers.contains("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");
-    FillableSigningProvider tempKeystore;
+    FlatSigningProvider tempKeystore;
     UniValue keysObj = registers["privatekeys"];
 
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
@@ -600,7 +600,13 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         if (!key.IsValid()) {
             throw std::runtime_error("privatekey not valid");
         }
-        tempKeystore.AddKey(key);
+        CPubKey pubkey = key.GetPubKey();
+        tempKeystore.keys.emplace(pubkey.GetID(), key);
+        tempKeystore.pubkeys.emplace(pubkey.GetID(), pubkey);
+        if (pubkey.IsCompressed()) {
+            CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID()));
+            tempKeystore.scripts.emplace(CScriptID(p2wpkh), p2wpkh);
+        }
     }
 
     // Add previous txouts given in the RPC call:
@@ -659,12 +665,12 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 UniValue v = prevOut["redeemScript"];
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
-                tempKeystore.AddCScript(redeemScript);
+                tempKeystore.scripts.emplace(CScriptID(redeemScript), redeemScript);
             }
         }
     }
 
-    const FillableSigningProvider& keystore = tempKeystore;
+    const FlatSigningProvider& keystore = tempKeystore;
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
