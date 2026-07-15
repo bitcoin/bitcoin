@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 
 BOOST_AUTO_TEST_CASE(test_Get)
 {
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11*CENT, 50*CENT, 21*CENT, 22*CENT});
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11*CENT, 50*CENT, 21*CENT, 22*CENT});
