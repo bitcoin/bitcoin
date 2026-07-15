@@ -733,6 +733,10 @@ public:
         CCoinsViewCache::Flush(reallocate_cache);
     }
 
+    //! Swapping the backend or writing through to it with Sync() is not supported while fetching.
+    void SetBackend(CCoinsView&) = delete;
+    void Sync() = delete;
+
     //! Verify that all parallel fetched input prevouts have been consumed.
     bool AllInputsConsumed() const noexcept { return m_input_tail == m_inputs.size(); }
 };
