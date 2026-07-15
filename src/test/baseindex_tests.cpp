@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_SUITE(baseindex_tests)
 BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    const int tip_height{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight)};
     auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
         CoinStatsIndex index{interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB};
         BOOST_REQUIRE(index.Init());
@@ -66,21 +67,21 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 
     // Part 1: Sync, then "crash" (stop without flushing). Models a node that
     // started up, had its index catch up, but never flushed before going down.
-    // The end-of-sync Commit() runs at chain tip (height 100) but
-    // m_last_flushed_block is null, so it is skipped.
-    sync_index(false, 100, 0);
+    // The end-of-sync Commit() runs at the chain tip but m_last_flushed_block
+    // is null, so it is skipped.
+    sync_index(false, tip_height, 0);
 
     // Part 2: Restart cleanly. Sync, force a chainstate flush, and drain the
     // validation queue so the index's ChainStateFlushed callback runs.
-    // Now m_last_flushed_block == tip == 100 and the index can commit.
-    sync_index(true, 100, 100);
+    // Now m_last_flushed_block == tip and the index can commit.
+    sync_index(true, tip_height, tip_height);
 
     // Part 3: Connect a new block on the chain without flushing
-    // (m_last_flushed_block stays at 100). For a real node this would happen
-    // in parallel with Sync(). Here we do it before Sync() to make the race
-    // state deterministic.
+    // (m_last_flushed_block stays at tip_height). For a real node this would
+    // happen in parallel with Sync(). Here we do it before Sync() to make the
+    // race state deterministic.
     CreateAndProcessBlock({}, CScript() << OP_TRUE);
-    sync_index(false, 101, 100);
+    sync_index(false, tip_height + 1, tip_height);
 }
 
 // Test shutdown between BlockConnected and ChainStateFlushed notifications,
