@@ -65,12 +65,13 @@ BOOST_AUTO_TEST_CASE(sign)
     // scriptPubKey: HASH160 <hash> EQUAL
 
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        BOOST_CHECK(keystore.AddKey(key[i]));
+        BOOST_CHECK(keystore.keys.emplace(key[i].GetPubKey().GetID(), key[i]).second);
+        BOOST_CHECK(keystore.pubkeys.emplace(key[i].GetPubKey().GetID(), key[i].GetPubKey()).second);
     }
 
     // 8 Scripts: checking all combinations of
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(sign)
     CScript evalScripts[4];
     for (int i = 0; i < 4; i++)
     {
-        BOOST_CHECK(keystore.AddCScript(standardScripts[i]));
+        BOOST_CHECK(keystore.scripts.emplace(CScriptID(standardScripts[i]), standardScripts[i]).second);
         evalScripts[i] = GetScriptForDestination(ScriptHash(standardScripts[i]));
     }
 
@@ -165,14 +166,15 @@ BOOST_AUTO_TEST_CASE(norecurse)
 BOOST_AUTO_TEST_CASE(set)
 {
     // Test the CScript::Set* methods
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CKey key[4];
     std::vector<CPubKey> keys;
     keys.reserve(4);
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        BOOST_CHECK(keystore.AddKey(key[i]));
+        BOOST_CHECK(keystore.keys.emplace(key[i].GetPubKey().GetID(), key[i]).second);
+        BOOST_CHECK(keystore.pubkeys.emplace(key[i].GetPubKey().GetID(), key[i].GetPubKey()).second);
         keys.push_back(key[i].GetPubKey());
     }
 
@@ -186,7 +188,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         outer[i] = GetScriptForDestination(ScriptHash(inner[i]));
-        BOOST_CHECK(keystore.AddCScript(inner[i]));
+        BOOST_CHECK(keystore.scripts.emplace(CScriptID(inner[i]), inner[i]).second);
     }
 
     CMutableTransaction txFrom;  // Funding transaction:
@@ -282,12 +284,13 @@ BOOST_AUTO_TEST_CASE(switchover)
 BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
 {
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CKey key[6];
     for (int i = 0; i < 6; i++)
     {
         key[i].MakeNewKey(true);
-        BOOST_CHECK(keystore.AddKey(key[i]));
+        BOOST_CHECK(keystore.keys.emplace(key[i].GetPubKey().GetID(), key[i]).second);
+        BOOST_CHECK(keystore.pubkeys.emplace(key[i].GetPubKey().GetID(), key[i].GetPubKey()).second);
     }
     std::vector<CPubKey> keys;
     keys.reserve(3);
@@ -296,7 +299,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
 
     // First three are standard:
     CScript pay1 = GetScriptForDestination(PKHash(key[0].GetPubKey()));
-    BOOST_CHECK(keystore.AddCScript(pay1));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(pay1), pay1).second);
     CScript pay1of3 = GetScriptForMultisig(1, keys);
 
     // vout[3] is complicated 1-of-3 AND 2-of-3
@@ -306,20 +309,20 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     oneAndTwo << OP_3 << OP_CHECKMULTISIGVERIFY;
     oneAndTwo << OP_2 << ToByteVector(key[3].GetPubKey()) << ToByteVector(key[4].GetPubKey()) << ToByteVector(key[5].GetPubKey());
     oneAndTwo << OP_3 << OP_CHECKMULTISIG;
-    BOOST_CHECK(keystore.AddCScript(oneAndTwo));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(oneAndTwo), oneAndTwo).second);
 
     // vout[4] is max sigops:
     CScript fifteenSigops; fifteenSigops << OP_1;
     for (unsigned i = 0; i < MAX_P2SH_SIGOPS; i++)
         fifteenSigops << ToByteVector(key[i%3].GetPubKey());
     fifteenSigops << OP_15 << OP_CHECKMULTISIG;
-    BOOST_CHECK(keystore.AddCScript(fifteenSigops));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(fifteenSigops), fifteenSigops).second);
 
     // vout[5/6] are non-standard because they exceed MAX_P2SH_SIGOPS
     CScript sixteenSigops; sixteenSigops << OP_16 << OP_CHECKMULTISIG;
-    BOOST_CHECK(keystore.AddCScript(sixteenSigops));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(sixteenSigops), sixteenSigops).second);
     CScript twentySigops; twentySigops << OP_CHECKMULTISIG;
-    BOOST_CHECK(keystore.AddCScript(twentySigops));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(twentySigops), twentySigops).second);
 
     // vout[7] is non-standard because it lacks sigops
     CScript no_sigops;
