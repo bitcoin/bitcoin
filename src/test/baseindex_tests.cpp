@@ -4,10 +4,14 @@
 
 #include <addresstype.h>
 #include <chain.h>
+#include <chainparams.h>
+#include <coins.h>
 #include <common/args.h>
+#include <consensus/validation.h>
 #include <index/base.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
+#include <kernel/types.h>
 #include <key.h>
 #include <primitives/block.h>
 #include <script/script.h>
@@ -15,6 +19,7 @@
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <test/util/validation.h>
 #include <tinyformat.h>
 #include <util/byte_units.h>
 #include <util/check.h>
@@ -28,6 +33,8 @@
 #include <memory>
 #include <thread>
 #include <vector>
+
+using kernel::ChainstateRole;
 
 // Tests of generic BaseIndex functionality that is independent of which
 // concrete index is being used. CoinStatsIndex is used here merely as a
@@ -74,6 +81,47 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
     // state deterministic.
     CreateAndProcessBlock({}, CScript() << OP_TRUE);
     sync_index(false, 101, 100);
+}
+
+// Test shutdown between BlockConnected and ChainStateFlushed notifications,
+// make sure index is not corrupted and is able to reload.
+BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
+{
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    const CChainParams& params = Params();
+    {
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
+        BOOST_REQUIRE(index.Init());
+        index.Sync();
+        std::shared_ptr<const CBlock> new_block;
+        CBlockIndex* new_block_index = nullptr;
+        {
+            const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+            const CBlock block = this->CreateBlock({}, script_pub_key);
+
+            new_block = std::make_shared<CBlock>(block);
+
+            LOCK(cs_main);
+            BlockValidationState state;
+            BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
+            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+            CCoinsViewCache view(&chainstate.CoinsTip());
+            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+        }
+        // Send block connected notification, then stop the index without
+        // sending a chainstate flushed notification. Prior to #24138, this
+        // would cause the index to be corrupted and fail to reload.
+        ValidationInterfaceTest::BlockConnected(ChainstateRole{}, index, new_block, new_block_index);
+        index.Stop();
+    }
+
+    {
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
+        BOOST_REQUIRE(index.Init());
+        // Make sure the index can be loaded.
+        BOOST_REQUIRE(index.StartBackgroundSync());
+        index.Stop();
+    }
 }
 
 class IndexReorgCrash : public BaseIndex
