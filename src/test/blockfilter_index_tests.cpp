@@ -47,7 +47,6 @@ using node::BlockManager;
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
 struct BuildChainTestingSetup : public TestChain100Setup {
-    CBlock CreateBlock(const CBlockIndex* prev, const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey);
     bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
 };
 
@@ -85,50 +84,41 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     return true;
 }
 
-CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
-    const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey)
-{
-    auto mining{interfaces::MakeMining(m_node)};
-    auto block_template{mining->createNewBlock({
-        .coinbase_output_script = scriptPubKey,
-    }, /*cooldown=*/false)};
-    BOOST_REQUIRE(block_template);
-    CBlock block{block_template->getBlock()};
-    block.hashPrevBlock = prev->GetBlockHash();
-    block.nTime = prev->nTime + 1;
-
-    // Replace mempool-selected txns with just coinbase plus passed-in txns:
-    block.vtx.resize(1);
-    for (const CMutableTransaction& tx : txns) {
-        block.vtx.push_back(MakeTransactionRef(tx));
-    }
-    {
-        CMutableTransaction tx_coinbase{*block.vtx.at(0)};
-        tx_coinbase.nLockTime = static_cast<uint32_t>(prev->nHeight);
-        tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1;
-        block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
-        block.hashMerkleRoot = BlockMerkleRoot(block);
-    }
-
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
-
-    return block;
-}
-
 bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
     const CScript& coinbase_script_pub_key,
     size_t length,
     std::vector<std::shared_ptr<CBlock>>& chain)
 {
-    std::vector<CMutableTransaction> no_txns;
+    auto mining{interfaces::MakeMining(m_node)};
+    const Consensus::Params& consensus{Assert(m_node.chainman)->GetConsensus()};
 
     chain.resize(length);
-    for (auto& block : chain) {
-        block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
+    for (auto& chain_block : chain) {
+        auto block_template{mining->createNewBlock({
+            .use_mempool = false,
+            .coinbase_output_script = coinbase_script_pub_key,
+        }, /*cooldown=*/false)};
+        BOOST_REQUIRE(block_template);
+        CBlock block{block_template->getBlock()};
+
+        // The template is built on the active tip, so repoint it at pindex and
+        // redo the fields that depend on the predecessor.
+        block.hashPrevBlock = pindex->GetBlockHash();
+        block.nTime = pindex->nTime + 1;
+        {
+            CMutableTransaction tx_coinbase{*block.vtx.at(0)};
+            tx_coinbase.nLockTime = static_cast<uint32_t>(pindex->nHeight);
+            tx_coinbase.vin.at(0).scriptSig = CScript{} << pindex->nHeight + 1;
+            block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+        }
+
+        while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) ++block.nNonce;
+
+        chain_block = std::make_shared<CBlock>(std::move(block));
 
         BlockValidationState state;
-        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*block}}, true, state, &pindex)) {
+        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*chain_block}}, true, state, &pindex)) {
             return false;
         }
     }
