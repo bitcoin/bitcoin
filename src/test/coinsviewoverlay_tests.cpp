@@ -203,6 +203,8 @@ BOOST_AUTO_TEST_CASE(access_non_input_coins)
     main_cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, std::move(coin));
 
     CoinsViewOverlay view{&main_cache, MakeStartedThreadPool()};
+    // The block has no non-coinbase transactions, so this fetches nothing and only creates the
+    // reset guard. All lookups below use the fallback path.
     const auto reset_guard{view.StartFetching(block)};
 
     // Non-input fallback hit.
