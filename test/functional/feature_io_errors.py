@@ -25,7 +25,8 @@ class IOErrorTest(BitcoinTestFramework):
 
         tx = wallet.send_self_transfer(from_node=node)
         txid = tx["txid"]
-        self.generate(node, 1)
+        tx2 = wallet.send_self_transfer(from_node=node, utxo_to_spend=tx["new_utxo"])
+        block = self.generate(node, 1)[0]
         if self.is_wallet_compiled():
             psbt = node.createpsbt(inputs=[{"txid": txid, "vout": 0}], outputs=[])
 
@@ -34,8 +35,14 @@ class IOErrorTest(BitcoinTestFramework):
         blk_dat.rename(blk_dat_moved)
 
         msg = "I/O error while opening block file via txindex"
+        assert_raises_rpc_error(-32603, msg, node.gettxoutproof, [txid])
+        assert_raises_rpc_error(-32603, msg, node.getrawtransaction, txid)
         if self.is_wallet_compiled():
             assert_raises_rpc_error(-32603, msg, node.utxoupdatepsbt, psbt)
+        msg = "I/O error reading block data"
+        assert_raises_rpc_error(-32603, msg, node.getrawtransaction, "a" * 64, blockhash=block)
+        msg = "Can't read block from disk"
+        assert_raises_rpc_error(-32603, msg, node.gettxoutproof, [tx2["txid"]])
 
         blk_dat_moved.rename(blk_dat)
 

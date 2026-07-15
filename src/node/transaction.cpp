@@ -139,7 +139,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
     return TransactionError::OK;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
+util::Expected<CTransactionRef, std::string> GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
 {
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);
@@ -147,7 +147,11 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     }
     if (g_txindex) {
         uint256 block_hash;
-        CTransactionRef tx{g_txindex->FindTx(hash, block_hash).value_or(nullptr/*error handling fixed in the next commit*/)};
+        const auto tx_res = g_txindex->FindTx(hash, block_hash);
+        if (!tx_res) {
+            return util::Unexpected{tx_res.error()};
+        }
+        const CTransactionRef& tx{*tx_res};
         if (tx) {
             if (!block_index || block_index->GetBlockHash() == block_hash) {
                 // Don't return the transaction if the provided block hash doesn't match.
@@ -167,8 +171,10 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
                     return tx;
                 }
             }
+        } else {
+            return util::Unexpected{std::string{"I/O error reading block data"}};
         }
     }
-    return nullptr;
+    return CTransactionRef{};
 }
 } // namespace node

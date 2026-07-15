@@ -305,7 +305,11 @@ static RPCMethod getrawtransaction()
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    const auto tx_res = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    if (!tx_res) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, tx_res.error());
+    }
+    const auto& tx{*tx_res};
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
