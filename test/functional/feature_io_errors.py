@@ -33,10 +33,11 @@ class IOErrorTest(BitcoinTestFramework):
         blk_dat_moved = node.blocks_path / "blk00000.dat.moved"
         blk_dat.rename(blk_dat_moved)
 
-        assert_raises_rpc_error(-5, "Transaction not yet in block", node.gettxoutproof, [txid])
-        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, txid)
+        msg = "OpenBlockFile failed"
+        assert_raises_rpc_error(-1, msg, node.gettxoutproof, [txid])
+        assert_raises_rpc_error(-1, msg, node.getrawtransaction, txid)
         if self.is_wallet_compiled():
-            node.utxoupdatepsbt(psbt)  # no exception raised on IO error
+            assert_raises_rpc_error(-1, msg, node.utxoupdatepsbt, psbt)
         msg = "Can't read block from disk"
         assert_raises_rpc_error(-32603, msg, node.gettxoutproof, [tx2["txid"]])
 
