@@ -5,21 +5,17 @@
 #include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
-#include <consensus/merkle.h>
-#include <consensus/validation.h>
 #include <index/base.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
-#include <interfaces/mining.h>
 #include <key.h>
 #include <node/blockstorage.h>
-#include <pow.h>
 #include <primitives/block.h>
-#include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/blockfilter.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <tinyformat.h>
@@ -45,10 +41,6 @@
 using node::BlockManager;
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
-
-struct BuildChainTestingSetup : public TestChain100Setup {
-    bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
-};
 
 static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
                                uint256& last_header, const BlockManager& blockman)
@@ -84,49 +76,7 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     return true;
 }
 
-bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
-    const CScript& coinbase_script_pub_key,
-    size_t length,
-    std::vector<std::shared_ptr<CBlock>>& chain)
-{
-    auto mining{interfaces::MakeMining(m_node)};
-    const Consensus::Params& consensus{Assert(m_node.chainman)->GetConsensus()};
-
-    chain.resize(length);
-    for (auto& chain_block : chain) {
-        auto block_template{mining->createNewBlock({
-            .use_mempool = false,
-            .coinbase_output_script = coinbase_script_pub_key,
-        }, /*cooldown=*/false)};
-        BOOST_REQUIRE(block_template);
-        CBlock block{block_template->getBlock()};
-
-        // The template is built on the active tip, so repoint it at pindex and
-        // redo the fields that depend on the predecessor.
-        block.hashPrevBlock = pindex->GetBlockHash();
-        block.nTime = pindex->nTime + 1;
-        {
-            CMutableTransaction tx_coinbase{*block.vtx.at(0)};
-            tx_coinbase.nLockTime = static_cast<uint32_t>(pindex->nHeight);
-            tx_coinbase.vin.at(0).scriptSig = CScript{} << pindex->nHeight + 1;
-            block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
-            block.hashMerkleRoot = BlockMerkleRoot(block);
-        }
-
-        while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) ++block.nNonce;
-
-        chain_block = std::make_shared<CBlock>(std::move(block));
-
-        BlockValidationState state;
-        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*chain_block}}, true, state, &pindex)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
+BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 {
     BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, true);
     BOOST_REQUIRE(filter_index.Init());
@@ -180,8 +130,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     CScript coinbase_script_pub_key_A = GetScriptForDestination(PKHash(coinbase_key_A.GetPubKey()));
     CScript coinbase_script_pub_key_B = GetScriptForDestination(PKHash(coinbase_key_B.GetPubKey()));
     std::vector<std::shared_ptr<CBlock>> chainA, chainB;
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_A, 10, chainA));
-    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key_B, 10, chainB));
+    BOOST_REQUIRE(BuildChain(m_node, tip, coinbase_script_pub_key_A, 10, chainA));
+    BOOST_REQUIRE(BuildChain(m_node, tip, coinbase_script_pub_key_B, 10, chainB));
 
     // Check that new blocks on chain A get indexed.
     uint256 chainA_last_header = last_header;
@@ -353,7 +303,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
+BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
 {
     std::promise<void> promise;
     std::shared_future<void> blocker(promise.get_future());
@@ -380,7 +330,7 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
     // Create a fork to trigger the reorg
     std::vector<std::shared_ptr<CBlock>> fork;
     const CBlockIndex* prev_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->pprev);
-    BOOST_REQUIRE(BuildChain(prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
+    BOOST_REQUIRE(BuildChain(m_node, prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
 
     for (const auto& block : fork) {
         BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
