@@ -67,6 +67,7 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     // ConsumeIntegral<char>() instead of casting from {u,}int8_t.
     const char ch = fuzzed_data_provider.ConsumeIntegral<char>();
     const bool b = fuzzed_data_provider.ConsumeBool();
+    const uint64_t u64_2{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
     (void)CheckProofOfWorkImpl(u256, u32, consensus_params);
@@ -118,8 +119,16 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
-    (void)PresaltedSipHasher(u64, u64)(u256);
-    (void)PresaltedSipHasher(u64, u64)(u256, u32);
+    {
+        CSipHasher hasher{u64, u64_2};
+        const PresaltedSipHasher presalted_hasher{u64, u64_2};
+        hasher.Write(u256);
+        assert(presalted_hasher(u256) == hasher.Finalize());
+        uint8_t extra[4]{};
+        WriteLE32(extra, u32);
+        hasher.Write(extra);
+        assert(presalted_hasher(u256, u32) == hasher.Finalize());
+    }
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
