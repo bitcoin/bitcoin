@@ -209,6 +209,10 @@ private:
     bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /** Flush a block or undo file sequence to disk, emitting the flush-error
+     *  notification on failure. Returns false if the flush failed. */
+    [[nodiscard]] bool FlushFile(const FlatFileSeq& file_seq, const FlatFilePos& pos, bool finalize, const bilingual_str& flush_error_message);
+
     /** Return false if block file or undo file flushing fails. */
     [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
