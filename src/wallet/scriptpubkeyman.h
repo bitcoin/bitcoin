@@ -169,7 +169,7 @@ using KeyMap = std::map<CKeyID, CKey>;
 using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
 
 // Manages the minimum data needed to load and migrate a legacy wallet.
-class LegacyDataSPKM : public ScriptPubKeyMan, public FillableSigningProvider
+class LegacyDataSPKM : public ScriptPubKeyMan, public SigningProvider
 {
 private:
     using WatchOnlySet = std::set<CScript>;
@@ -178,6 +178,8 @@ private:
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
+    std::map<CKeyID, CKey> m_keys GUARDED_BY(cs_KeyStore);
+    std::map<CScriptID, CScript> m_scripts GUARDED_BY(cs_KeyStore);
 
     /* the HD chain data model (external chain counters) */
     CHDChain m_hd_chain;
@@ -197,8 +199,12 @@ private:
 
     bool IsMine(const CScript& script) const override;
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+
+    void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
+
+    mutable RecursiveMutex cs_KeyStore;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
@@ -212,11 +218,13 @@ public:
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
     uint256 GetID() const override { return uint256::ONE; }
 
-    // FillableSigningProvider overrides
+    // SigningProvider overrides
     bool HaveKey(const CKeyID &address) const override;
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    bool HaveCScript(const CScriptID& hash) const override;
+    bool GetCScript(const CScriptID& hash, CScript& out) const override;
 
     //! Load metadata (used by LoadWallet)
     virtual void LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
