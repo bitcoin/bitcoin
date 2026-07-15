@@ -5,11 +5,48 @@
 #ifndef BITCOIN_CRYPTO_SIPHASH_H
 #define BITCOIN_CRYPTO_SIPHASH_H
 
+#include <attributes.h>
+#include <uint256.h>
+
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <span>
 
-class uint256;
+namespace siphash_detail {
+
+inline constexpr uint64_t SIPHASH_FINALIZER{0xFF};
+
+ALWAYS_INLINE void SipRound(uint64_t& v0, uint64_t& v1, uint64_t& v2, uint64_t& v3)
+{
+    v0 += v1; v1 = std::rotl(v1, 13); v1 ^= v0;
+    v0 = std::rotl(v0, 32);
+    v2 += v3; v3 = std::rotl(v3, 16); v3 ^= v2;
+    v0 += v3; v3 = std::rotl(v3, 21); v3 ^= v0;
+    v2 += v1; v1 = std::rotl(v1, 17); v1 ^= v2;
+    v2 = std::rotl(v2, 32);
+}
+
+ALWAYS_INLINE void ProcessNormal24(uint64_t& v0, uint64_t& v1, uint64_t& v2, uint64_t& v3, uint64_t data)
+{
+    v3 ^= data;
+    SipRound(v0, v1, v2, v3);
+    SipRound(v0, v1, v2, v3);
+    v0 ^= data;
+}
+
+ALWAYS_INLINE uint64_t Finalize24(uint64_t v0, uint64_t v1, uint64_t v2, uint64_t v3, uint64_t data)
+{
+    ProcessNormal24(v0, v1, v2, v3, data);
+    v2 ^= SIPHASH_FINALIZER;
+    SipRound(v0, v1, v2, v3);
+    SipRound(v0, v1, v2, v3);
+    SipRound(v0, v1, v2, v3);
+    SipRound(v0, v1, v2, v3);
+    return v0 ^ v1 ^ v2 ^ v3;
+}
+
+} // namespace siphash_detail
 
 /** Shared SipHash internal state v[0..3], initialized from (k0, k1). */
 class SipHashState
