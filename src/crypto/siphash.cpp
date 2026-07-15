@@ -49,6 +49,23 @@ uint64_t CSipHasher::Finalize() const
                   .Finalize4();
 }
 
+SipHasher13UJ& SipHasher13UJ::Write(uint64_t data) noexcept
+{
+    m_state.Compress1(data);
+    return *this;
+}
+
+SipHasher13UJ& SipHasher13UJ::WriteJumbo(const uint256& hash) noexcept
+{
+    m_state.Compress1Jumbo(hash);
+    return *this;
+}
+
+uint64_t SipHasher13UJ::Finalize() const noexcept
+{
+    return m_state.Copy().Finalize3U();
+}
+
 uint64_t PresaltedSipHasher::operator()(const uint256& val) const noexcept
 {
     return m_state.Copy()
