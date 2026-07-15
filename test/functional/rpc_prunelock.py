@@ -18,12 +18,15 @@ from test_framework.util import (
 # Blocks needed to generate at minimum to allow pruning to work on
 # regtest (with fastprune).
 INITIAL_BLOCKS = 1500
+# Blocks generated while a wallet is unloaded, enough to prune past its scan height.
+BLOCKS_WHILE_UNLOADED = 600
 
 
 class PruneLockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.uses_wallet = None
         self.extra_args = [["-prune=1", "-fastprune"]]
 
     def has_block_file(self, node, filenum):
@@ -33,6 +36,8 @@ class PruneLockTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_prune_lock_rpc()
+        if self.is_wallet_compiled():
+            self.test_prune_lock_wallet()
         self.test_prune_lock_init()
 
     def test_prune_lock_rpc(self):
@@ -138,6 +143,33 @@ class PruneLockTest(BitcoinTestFramework):
                             {"id": "rpc:default_height"},
                             {"height": 0})
         node.setprunelock("default_height", "remove")
+
+
+    def test_prune_lock_wallet(self):
+        # Simulates a wallet that stops following the chain and uses a prune lock
+        # to keep the blocks it still needs to scan.
+        node = self.nodes[0]
+        lock_name = "wallet"
+
+        self.log.info("Test that a prune lock keeps an unloaded wallet loadable")
+        scan_height = node.getblockcount()
+        for wallet_name in ["w1", "w2"]:
+            node.createwallet(wallet_name)
+            node.unloadwallet(wallet_name)
+        node.setprunelock(lock_name, "add", scan_height)
+
+        self.generate(node, BLOCKS_WHILE_UNLOADED)
+        node.pruneblockchain(node.getblockcount())
+        assert_greater_than(scan_height, node.getblockchaininfo()["pruneheight"])
+        node.loadwallet("w1")
+        node.unloadwallet("w1")
+
+        self.log.info("Test that removing the lock leaves the wallet unloadable")
+        node.setprunelock(lock_name, "remove")
+        node.pruneblockchain(node.getblockcount())
+        assert_greater_than(node.getblockchaininfo()["pruneheight"], scan_height)
+        assert_raises_rpc_error(-4, "Prune: last wallet synchronisation goes beyond pruned data",
+                                node.loadwallet, "w2")
 
 
     def test_prune_lock_init(self):
