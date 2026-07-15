@@ -65,13 +65,32 @@ public:
     /// Used to hash the txid to compute the prefix.
     const SipHasher13UJ m_hasher;
 
+    /// Whether the database contains any legacy ('t' + txid) entries.
+    const bool m_has_legacy;
+
     CBlockLocator ReadBestBlock() const override;
     void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
+
+private:
+    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy);
 };
 
+static fs::path TxIndexDBPath() { return gArgs.GetDataDirNet() / "indexes" / "txindex"; }
+
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
-    BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe),
-    m_hasher{ReadOrCreateTxidHasher(*this)}
+    // Bloom filters are built for every key but only consulted by point reads,
+    // which iterators bypass: the per-tx hashed ('x') lookups seek with an
+    // iterator, and the 's'/'h' point reads are at most one per block against a
+    // tiny keyspace. Only the legacy entries' per-tx point lookups benefit, so
+    // enable the filters only for databases still containing them.
+    DB(n_cache_size, f_memory, f_wipe,
+       /*has_legacy=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), txindex::DB_TXINDEX))
+{}
+
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy),
+    m_hasher{ReadOrCreateTxidHasher(*this)},
+    m_has_legacy{has_legacy}
 {}
 
 CBlockLocator TxIndex::DB::ReadBestBlock() const
@@ -115,7 +134,13 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
 
 TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
     : BaseIndex(std::move(chain), "txindex", "txidx"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
-{}
+{
+    if (m_db->m_has_legacy) {
+        LogInfo("txindex contains entries in the legacy format, which uses excessive disk space. "
+                "To reclaim disk space, stop the node, delete %s and restart to rebuild the index.",
+                fs::PathToString(TxIndexDBPath()));
+    }
+}
 
 TxIndex::~TxIndex() = default;
 
@@ -189,7 +214,7 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
     }
     // Fall back to legacy if no hashed entry matched. This makes misses pay an
     // extra lookup, but keeps existing full-txid entries readable after upgrade.
-    return FindLegacyTx(tx_hash);
+    return m_db->m_has_legacy ? FindLegacyTx(tx_hash) : std::nullopt;
 }
 
 std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
