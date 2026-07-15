@@ -60,12 +60,26 @@ public:
     /// Used to hash the txid to compute the prefix.
     const PresaltedSipHasher m_hasher;
 
+    /// Whether the database contains any legacy ('t' + txid) entries.
+    const bool m_has_legacy;
+
     CBlockLocator ReadBestBlock() const override;
     void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
+
+private:
+    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom);
 };
 
+static fs::path TxIndexDBPath() { return gArgs.GetDataDirNet() / "indexes" / "txindex"; }
+
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
-    BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe),
+    // Enable bloom filters only if legacy entries are present (they are point lookups)
+    DB(n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false,
+       /*f_bloom=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), DB_TXINDEX))
+{}
+
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom) :
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, f_obfuscate, f_bloom),
     m_hasher{[](CDBWrapper& db) {
         std::pair<uint64_t, uint64_t> salt;
         if (!db.Read(DB_TXID_HASH_SALT, salt)) {
@@ -74,7 +88,8 @@ TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
             db.Write(DB_TXID_HASH_SALT, salt, /*fSync=*/true);
         }
         return PresaltedSipHasher{salt.first, salt.second};
-    }(*this)}
+    }(*this)},
+    m_has_legacy{f_bloom}
 {}
 
 bool TxIndex::DB::ReadTxPos(const Txid& txid, CDiskTxPos& pos) const
@@ -194,6 +209,7 @@ bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& 
     }
 
     tx.reset();
+    if (!m_db->m_has_legacy) return false;
     // Fall back to legacy if no hashed entry matched. This makes misses pay an
     // extra lookup, but keeps existing full-txid entries readable after upgrade.
     CDiskTxPos postx;
