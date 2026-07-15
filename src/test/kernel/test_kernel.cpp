@@ -1014,6 +1014,39 @@ BOOST_AUTO_TEST_CASE(btck_check_block_context_free)
                           HasReason{"failed to instantiate btck object"});
 }
 
+BOOST_AUTO_TEST_CASE(btck_test_block_validity_tests)
+{
+    auto test_directory{TestDirectory{"test_block_validity_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::MAINNET)};
+    auto chainman{create_chainman(
+        test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
+        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+
+    // Mainnet block 1.
+    auto raw_block = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
+    Block block{raw_block};
+    BlockValidationState state;
+
+    // The block builds on the current tip (genesis), so it validates
+    // contextually without being connected to the chain.
+    BOOST_CHECK(chainman->TestBlockValidity(block, BlockCheckFlags::ALL, state));
+    BOOST_CHECK(state.GetValidationMode() == ValidationMode::VALID);
+
+    // TestBlockValidity must not connect the block, tip remains unchanged.
+    BOOST_CHECK_EQUAL(chainman->GetChain().Height(), 0);
+
+    // Connect the block
+    bool new_block = false;
+    BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
+    BOOST_CHECK(new_block);
+    BOOST_CHECK_EQUAL(chainman->GetChain().Height(), 1);
+
+    // The same block no longer builds on the tip
+    BOOST_CHECK(!chainman->TestBlockValidity(block, BlockCheckFlags::ALL, state));
+    BOOST_CHECK(state.GetValidationMode() == ValidationMode::INVALID);
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_mainnet_tests)
 {
     auto test_directory{TestDirectory{"mainnet_test_bitcoin_kernel"}};
