@@ -194,6 +194,7 @@ class BlockManager
 {
     friend Chainstate;
     friend ChainstateManager;
+    friend struct BlockManagerTest;
 
 private:
     const CChainParams& GetParams() const { return m_opts.chainparams; }
