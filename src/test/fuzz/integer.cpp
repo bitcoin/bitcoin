@@ -56,6 +56,7 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     const uint256 u256(fuzzed_data_provider.ConsumeBytes<unsigned char>(sizeof(uint256)));
     const uint160 u160(fuzzed_data_provider.ConsumeBytes<unsigned char>(sizeof(uint160)));
     const uint64_t u64 = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+    const uint64_t u64_2{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
     const int64_t i64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const uint32_t u32 = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const int32_t i32 = fuzzed_data_provider.ConsumeIntegral<int32_t>();
@@ -118,8 +119,16 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
-    (void)PresaltedSipHasher(u64, u64)(u256);
-    (void)PresaltedSipHasher(u64, u64)(u256, u32);
+    {
+        CSipHasher hasher{u64, u64_2};
+        const PresaltedSipHasher presalted_hasher{u64, u64_2};
+        hasher.Write(u256);
+        assert(presalted_hasher(u256) == hasher.Finalize());
+        uint8_t extra[4]{};
+        WriteLE32(extra, u32);
+        hasher.Write(extra);
+        assert(presalted_hasher(u256, u32) == hasher.Finalize());
+    }
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {

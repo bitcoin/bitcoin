@@ -3,15 +3,47 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
+#include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <hash.h>
-#include <test/util/random.h>
+#include <test/data/siphash.json.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
+
+static uint64_t FromHex64(const UniValue& value) { return ToIntegral<uint64_t>(value.get_str(), /*base=*/16).value(); }
+static uint32_t FromHex32(const UniValue& value) { return uint32_t(FromHex64(value)); }
+static uint256 FromHex256(const UniValue& value) { return uint256{ParseHex(value.get_str())}; }
+
+static uint64_t CalculateSipHash24(const UniValue& test, uint64_t k0, uint64_t k1)
+{
+    CSipHasher hasher{k0, k1};
+    if (auto& hash_value{test["hash"]}; !hash_value.isNull()) {
+        hasher.Write(FromHex256(hash_value));
+        if (auto& extra_value{test["extras"]["siphash24"]}; !extra_value.isNull()) {
+            uint8_t bytes[4]{};
+            WriteLE32(bytes, FromHex32(extra_value));
+            hasher.Write(bytes);
+        }
+    } else {
+        for (auto& block : test["blocks"].getValues()) {
+            auto& value{block["b"]};
+            if (value.get_str().size() == 16) {
+                hasher.Write(FromHex64(value));
+            } else {
+                hasher.Write(FromHex256(value));
+            }
+        }
+    }
+    const uint64_t result{hasher.Finalize()};
+    BOOST_CHECK_EQUAL(hasher.Finalize(), result);
+    return result;
+}
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
@@ -104,8 +136,6 @@ BOOST_AUTO_TEST_CASE(siphash)
     hasher.Write(0x2F2E2D2C2B2A2928ULL);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0xe612a3cb9ecba951ull);
 
-    BOOST_CHECK_EQUAL(PresaltedSipHasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL)(uint256{"1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"}), 0x7127512f72f27cceull);
-
     // Check test vectors from spec, one byte at a time
     CSipHasher hasher2(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
     for (uint8_t x=0; x<std::size(siphash_4_2_testvec); ++x)
@@ -129,24 +159,23 @@ BOOST_AUTO_TEST_CASE(siphash)
     tx.version = 1;
     ss << TX_WITH_WITNESS(tx);
     BOOST_CHECK_EQUAL(PresaltedSipHasher(1, 2)(ss.GetHash()), 0x79751e980c2a0a35ULL);
+}
 
-    // Check consistency between CSipHasher and PresaltedSipHasher.
-    FastRandomContext ctx;
-    for (int i = 0; i < 16; ++i) {
-        uint64_t k0 = ctx.rand64();
-        uint64_t k1 = ctx.rand64();
-        uint256 x = m_rng.rand256();
-
-        CSipHasher sip256(k0, k1);
-        sip256.Write(x);
-        BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(x), sip256.Finalize());
-
-        CSipHasher sip288 = sip256;
-        uint32_t n = ctx.rand32();
-        uint8_t nb[4];
-        WriteLE32(nb, n);
-        sip288.Write(nb);
-        BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(x, n), sip288.Finalize());
+BOOST_AUTO_TEST_CASE(siphash_test_vectors)
+{
+    for (UniValue tests{read_json(json_tests::siphash)}; auto& test : tests.getValues()) {
+        const uint64_t k0{FromHex64(test["key"][0])}, k1{FromHex64(test["key"][1])};
+        const uint64_t expected24{FromHex64(test["expected"]["siphash24"])};
+        BOOST_CHECK_EQUAL(CalculateSipHash24(test, k0, k1), expected24);
+        if (auto& hash_value{test["hash"]}; !hash_value.isNull()) {
+            const uint256 hash{FromHex256(hash_value)};
+            if (auto& extra_value{test["extras"]["siphash24"]}; !extra_value.isNull()) {
+                const uint32_t extra{FromHex32(extra_value)};
+                BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(hash, extra), expected24);
+            } else {
+                BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(hash), expected24);
+            }
+        }
     }
 }
 

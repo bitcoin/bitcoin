@@ -8,6 +8,11 @@ This implements SipHash-2-4. For convenience, an interface taking 256-bit
 integers is provided in addition to the one accepting generic data.
 """
 
+import json
+from pathlib import Path
+import unittest
+
+
 def rotl64(n, b):
     return n >> (64 - b) | (n & ((1 << (64 - b)) - 1)) << b
 
@@ -63,3 +68,23 @@ def siphash(k0, k1, data):
 def siphash256(k0, k1, num):
     assert type(num) is int
     return siphash(k0, k1, num.to_bytes(32, 'little'))
+
+
+class TestFrameworkSipHash(unittest.TestCase):
+    def test_vectors(self):
+        with (Path(__file__).parents[4] / "src/test/data/siphash.json").open() as vectors_file:
+            for test in json.load(vectors_file):
+                k0, k1 = (int(key, 16) for key in test["key"])
+                if "hash" in test:
+                    data = bytes.fromhex(test["hash"])
+                    if extra := test.get("extras", {}).get("siphash24"):
+                        data += int(extra, 16).to_bytes(4, "little")
+                else:
+                    data = b""
+                    for block in test["blocks"]:
+                        value = block["b"]
+                        if len(value) == 16:
+                            data += int(value, 16).to_bytes(8, "little")
+                        else:
+                            data += bytes.fromhex(value)
+                self.assertEqual(siphash(k0, k1, data), int(test["expected"]["siphash24"], 16))
