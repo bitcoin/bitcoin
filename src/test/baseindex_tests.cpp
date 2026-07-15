@@ -2,15 +2,32 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
+#include <chain.h>
+#include <common/args.h>
+#include <index/base.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
+#include <key.h>
+#include <primitives/block.h>
 #include <script/script.h>
+#include <sync.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <tinyformat.h>
 #include <util/byte_units.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <chrono>
+#include <future>
+#include <memory>
+#include <thread>
+#include <vector>
 
 // Tests of generic BaseIndex functionality that is independent of which
 // concrete index is being used. CoinStatsIndex is used here merely as a
@@ -57,6 +74,80 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
     // state deterministic.
     CreateAndProcessBlock({}, CScript() << OP_TRUE);
     sync_index(false, 101, 100);
+}
+
+class IndexReorgCrash : public BaseIndex
+{
+private:
+    FakeNodeClock& m_clock;
+    std::unique_ptr<BaseIndex::DB> m_db;
+    std::shared_future<void> m_blocker;
+    int m_blocking_height;
+
+public:
+    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker, int blocking_height, FakeNodeClock& clock)
+        : BaseIndex(std::move(chain), "test index", "testidx"), m_clock(clock), m_blocker(blocker), m_blocking_height(blocking_height)
+    {
+        const fs::path path = gArgs.GetDataDirNet() / "index";
+        fs::create_directories(path);
+        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
+    }
+
+    bool AllowPrune() const override { return false; }
+    BaseIndex::DB& GetDB() const override { return *m_db; }
+
+    bool CustomAppend(const interfaces::BlockInfo& block) override
+    {
+        // Simulate a delay so new blocks can get connected during the initial sync
+        if (block.height == m_blocking_height) m_blocker.wait();
+
+        // Move mock time forward so the best index gets updated only when we are not at the blocking height
+        if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
+            m_clock += 31s;
+        }
+
+        return true;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
+{
+    std::promise<void> promise;
+    std::shared_future<void> blocker(promise.get_future());
+    int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
+
+    IndexReorgCrash index{interfaces::MakeChain(m_node), blocker, blocking_height, m_clock};
+    BOOST_REQUIRE(index.Init());
+    BOOST_REQUIRE(index.StartBackgroundSync());
+
+    auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (index.GetSummary().best_block_height < height) {
+            if (std::chrono::steady_clock::now() > deadline) {
+                BOOST_FAIL(strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height));
+                return;
+            }
+            std::this_thread::sleep_for(100ms);
+        }
+    };
+
+    // Wait until the index is one block before the fork point
+    func_wait_until(blocking_height - 1, /*timeout=*/5s);
+
+    // Create a fork to trigger the reorg
+    std::vector<std::shared_ptr<CBlock>> fork;
+    const CBlockIndex* prev_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->pprev);
+    BOOST_REQUIRE(BuildChain(m_node, prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
+
+    for (const auto& block : fork) {
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    }
+
+    // Unblock the index thread so it can process the reorg
+    promise.set_value();
+    // Wait for the index to reach the new tip
+    func_wait_until(blocking_height + 2, 5s);
+    index.Stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
