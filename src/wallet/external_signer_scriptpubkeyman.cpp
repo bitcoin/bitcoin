@@ -68,6 +68,9 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
     // TODO: avoid the need to infer a descriptor from inside a descriptor wallet
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     auto provider = GetSolvingProvider(scriptPubKey);
+    if (!provider)
+        return util::Error{Untranslated("No solving provider found for ScriptPubKey")};
+
     auto descriptor = InferDescriptor(scriptPubKey, *provider);
 
     const UniValue& result = signer.DisplayAddress(descriptor->ToString());
