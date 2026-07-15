@@ -144,6 +144,12 @@ public:
     SERIALIZE_METHODS(TestHeaderAndShortIDs, obj) { READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<CBlockHeaderAndShortTxIDs::SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn); }
 };
 
+struct TestPartiallyDownloadedBlock : PartiallyDownloadedBlock {
+    using PartiallyDownloadedBlock::PartiallyDownloadedBlock;
+
+    size_t GetExtraCount() const { return extra_count; }
+};
+
 BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
@@ -319,6 +325,13 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
 
     CBlock block(BuildBlockTestCase(rand_ctx));
+    // Leave one transaction missing so scanning doesn't stop before the collision.
+    mtx = BuildTransactionTestCase();
+    mtx.vin[0].prevout.hash = Txid::FromUint256(rand_ctx.rand256());
+    block.vtx.push_back(MakeTransactionRef(std::move(mtx)));
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+
     std::vector<std::pair<Wtxid, CTransactionRef>> extra_txn;
     extra_txn.resize(10);
 
@@ -352,6 +365,14 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         // This transaction is now available via extra_txn:
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(1));
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(2));
+
+        // Simulate a mempool collision after finding an unrelated extra transaction.
+        extra_txn[2] = {block.vtx[2]->GetWitnessHash(), non_block_tx};
+        TestPartiallyDownloadedBlock partial_block_with_extra_collision{&pool};
+        BOOST_CHECK_EQUAL(partial_block_with_extra_collision.InitData(cmpctblock, extra_txn), READ_STATUS_OK);
+        BOOST_CHECK(partial_block_with_extra_collision.IsTxAvailable(1));
+        BOOST_CHECK(!partial_block_with_extra_collision.IsTxAvailable(2));
+        BOOST_CHECK_EQUAL(partial_block_with_extra_collision.GetExtraCount(), 0U); // TODO: This should be 1
     }
 }
 
