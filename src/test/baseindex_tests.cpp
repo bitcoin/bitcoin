@@ -3,16 +3,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>
 #include <consensus/validation.h>
 #include <index/base.h>
+#include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <index/txindex.h>
+#include <index/txospenderindex.h>
 #include <interfaces/chain.h>
 #include <kernel/types.h>
 #include <key.h>
+#include <node/context.h>
 #include <primitives/block.h>
 #include <script/script.h>
 #include <sync.h>
@@ -29,16 +34,31 @@
 #include <boost/test/unit_test.hpp>
 
 #include <chrono>
+#include <functional>
 #include <future>
 #include <memory>
+#include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using kernel::ChainstateRole;
 
+using IndexFactory = std::function<std::unique_ptr<BaseIndex>(node::NodeContext&)>;
+
+static const std::vector<std::pair<std::string, IndexFactory>> INDEX_FACTORIES{
+    {"coinstatsindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
+        return std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+    {"txindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
+        return std::make_unique<TxIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+    {"txospenderindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
+        return std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+    {"blockfilterindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
+        return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(node), BlockFilterType::BASIC, /*n_cache_size=*/1_MiB); }},
+};
+
 // Tests of generic BaseIndex functionality that is independent of which
-// concrete index is being used. CoinStatsIndex is used here merely as a
-// convenient instantiation of BaseIndex.
+// concrete index is being used.
 BOOST_AUTO_TEST_SUITE(baseindex_tests)
 
 // Test that the index does not commit ahead of the chainstate's last
@@ -48,40 +68,43 @@ BOOST_AUTO_TEST_SUITE(baseindex_tests)
 BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
-    const int tip_height{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight)};
-    auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
-        CoinStatsIndex index{interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB};
-        BOOST_REQUIRE(index.Init());
-        index.Sync();
-        if (do_flush) {
-            chainstate.ForceFlushStateToDisk();
-            m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
-        }
-        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, expected_sync_height);
-        index.Stop();
-        // Reload index to see which block data was actually committed.
-        BOOST_REQUIRE(index.Init());
-        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, expected_commit_height);
-        index.Stop();
-    };
+    for (const auto& [index_name, make_index] : INDEX_FACTORIES) {
+        BOOST_TEST_INFO_SCOPE(index_name);
+        const int tip_height{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight)};
+        auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
+            auto index{make_index(m_node)};
+            BOOST_REQUIRE(index->Init());
+            index->Sync();
+            if (do_flush) {
+                chainstate.ForceFlushStateToDisk();
+                m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+            }
+            BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, expected_sync_height);
+            index->Stop();
+            // Reload index to see which block data was actually committed.
+            BOOST_REQUIRE(index->Init());
+            BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, expected_commit_height);
+            index->Stop();
+        };
 
-    // Part 1: Sync, then "crash" (stop without flushing). Models a node that
-    // started up, had its index catch up, but never flushed before going down.
-    // The end-of-sync Commit() runs at the chain tip but m_last_flushed_block
-    // is null, so it is skipped.
-    sync_index(false, tip_height, 0);
+        // Part 1: Sync, then "crash" (stop without flushing). Models a node that
+        // started up, had its index catch up, but never flushed before going down.
+        // The end-of-sync Commit() runs at the chain tip but m_last_flushed_block
+        // is null, so it is skipped.
+        sync_index(false, tip_height, 0);
 
-    // Part 2: Restart cleanly. Sync, force a chainstate flush, and drain the
-    // validation queue so the index's ChainStateFlushed callback runs.
-    // Now m_last_flushed_block == tip and the index can commit.
-    sync_index(true, tip_height, tip_height);
+        // Part 2: Restart cleanly. Sync, force a chainstate flush, and drain the
+        // validation queue so the index's ChainStateFlushed callback runs.
+        // Now m_last_flushed_block == tip and the index can commit.
+        sync_index(true, tip_height, tip_height);
 
-    // Part 3: Connect a new block on the chain without flushing
-    // (m_last_flushed_block stays at tip_height). For a real node this would
-    // happen in parallel with Sync(). Here we do it before Sync() to make the
-    // race state deterministic.
-    CreateAndProcessBlock({}, CScript() << OP_TRUE);
-    sync_index(false, tip_height + 1, tip_height);
+        // Part 3: Connect a new block on the chain without flushing
+        // (m_last_flushed_block stays at tip_height). For a real node this would
+        // happen in parallel with Sync(). Here we do it before Sync() to make the
+        // race state deterministic.
+        CreateAndProcessBlock({}, CScript() << OP_TRUE);
+        sync_index(false, tip_height + 1, tip_height);
+    }
 }
 
 // Test shutdown between BlockConnected and ChainStateFlushed notifications,
@@ -90,38 +113,41 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
     const CChainParams& params = Params();
-    {
-        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
-        BOOST_REQUIRE(index.Init());
-        index.Sync();
-        std::shared_ptr<const CBlock> new_block;
-        CBlockIndex* new_block_index = nullptr;
+    for (const auto& [index_name, make_index] : INDEX_FACTORIES) {
+        BOOST_TEST_INFO_SCOPE(index_name);
         {
-            const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
-            const CBlock block = this->CreateBlock({}, script_pub_key);
+            auto index{make_index(m_node)};
+            BOOST_REQUIRE(index->Init());
+            index->Sync();
+            std::shared_ptr<const CBlock> new_block;
+            CBlockIndex* new_block_index = nullptr;
+            {
+                const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+                const CBlock block = this->CreateBlock({}, script_pub_key);
 
-            new_block = std::make_shared<CBlock>(block);
+                new_block = std::make_shared<CBlock>(block);
 
-            LOCK(cs_main);
-            BlockValidationState state;
-            BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
-            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
-            CCoinsViewCache view(&chainstate.CoinsTip());
-            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+                LOCK(cs_main);
+                BlockValidationState state;
+                BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
+                BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+                CCoinsViewCache view(&chainstate.CoinsTip());
+                BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+            }
+            // Send block connected notification, then stop the index without
+            // sending a chainstate flushed notification. Prior to #24138, this
+            // would cause the index to be corrupted and fail to reload.
+            ValidationInterfaceTest::BlockConnected(ChainstateRole{}, *index, new_block, new_block_index);
+            index->Stop();
         }
-        // Send block connected notification, then stop the index without
-        // sending a chainstate flushed notification. Prior to #24138, this
-        // would cause the index to be corrupted and fail to reload.
-        ValidationInterfaceTest::BlockConnected(ChainstateRole{}, index, new_block, new_block_index);
-        index.Stop();
-    }
 
-    {
-        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
-        BOOST_REQUIRE(index.Init());
-        // Make sure the index can be loaded.
-        BOOST_REQUIRE(index.StartBackgroundSync());
-        index.Stop();
+        {
+            auto index{make_index(m_node)};
+            BOOST_REQUIRE(index->Init());
+            // Make sure the index can be loaded.
+            BOOST_REQUIRE(index->StartBackgroundSync());
+            index->Stop();
+        }
     }
 }
 
