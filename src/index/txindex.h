@@ -16,6 +16,9 @@
 namespace interfaces {
 class Chain;
 }
+namespace txindex_tests {
+class TxIndexTest;
+}
 
 static constexpr bool DEFAULT_TXINDEX{false};
 
@@ -30,6 +33,7 @@ protected:
     class DB;
 
 private:
+    friend class txindex_tests::TxIndexTest;
     const std::unique_ptr<DB> m_db;
 
     bool AllowPrune() const override { return false; }
