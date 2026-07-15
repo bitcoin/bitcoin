@@ -57,6 +57,11 @@ don't have test cases for.
 - Use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
 - Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
+- Tests are discovered automatically by `test_runner.py` from their filename, so a
+  correctly-named test in this directory is run by default without editing any list.
+  A test that must be run several times with different arguments is declared in the
+  `TEST_PARAMS` map, and extended-only tests are listed in `EXTENDED_SCRIPTS`. If your
+  test becomes the longest-running one, point `LONGEST_BASE_SCRIPT` at it.
 
 #### General test-writing advice
 
