@@ -1369,18 +1369,15 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         }
 
         // Get the scriptPubKey to know which SigningProvider to use
-        CScript script;
-        if (!input.witness_utxo.IsNull()) {
-            script = input.witness_utxo.scriptPubKey;
-        } else if (input.non_witness_utxo) {
-            if (input.prev_out >= input.non_witness_utxo->vout.size()) {
+        CTxOut utxo;
+        if (!input.GetUTXO(utxo)) {
+            if (input.non_witness_utxo) {
                 return PSBTError::MISSING_INPUTS;
             }
-            script = input.non_witness_utxo->vout[input.prev_out].scriptPubKey;
-        } else {
             // There's no UTXO so we can just skip this now
             continue;
         }
+        const CScript& script = utxo.scriptPubKey;
 
         std::unique_ptr<FlatSigningProvider> keys = std::make_unique<FlatSigningProvider>();
         std::unique_ptr<FlatSigningProvider> script_keys = GetSigningProvider(script, /*include_private=*/options.sign);
