@@ -493,9 +493,10 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
     mempool_txn.vout = outputs;
 
     // - Add the signing key to a keystore
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     for (const auto& input_signing_key : input_signing_keys) {
-        keystore.AddKey(input_signing_key);
+        keystore.keys.emplace(input_signing_key.GetPubKey().GetID(), input_signing_key);
+        keystore.pubkeys.emplace(input_signing_key.GetPubKey().GetID(), input_signing_key.GetPubKey());
     }
     // - Populate a CoinsViewCache with the unspent output
     CCoinsViewCache coins_cache{&CoinsViewEmpty::Get()};

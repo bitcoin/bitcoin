@@ -20,8 +20,9 @@ BOOST_FIXTURE_TEST_SUITE(spend_tests, WalletTestingSetup)
 BOOST_AUTO_TEST_CASE(max_signed_input_size_uses_external_outpoint)
 {
     const CKey key{GenerateRandomKey()};
-    FillableSigningProvider provider;
-    BOOST_REQUIRE(provider.AddKey(key));
+    FlatSigningProvider provider;
+    BOOST_CHECK(provider.keys.emplace(key.GetPubKey().GetID(), key).second);
+    BOOST_CHECK(provider.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second);
 
     const CTxOut txout{COIN, GetScriptForDestination(PKHash{key.GetPubKey()})};
     const COutPoint outpoint{Txid{}, 0};

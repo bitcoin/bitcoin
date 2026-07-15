@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK(ValidateInputsStandardness(CTransaction(t1), coins).IsValid());
 }
 
-static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
+static void CreateCreditAndSpend(const FlatSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
 {
     CMutableTransaction outputm;
     outputm.version = 1;
@@ -493,9 +493,10 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     mtx.version = 1;
 
     CKey key = GenerateRandomKey(); // Need to use compressed keys in segwit or the signing will fail
-    FillableSigningProvider keystore;
-    BOOST_CHECK(keystore.AddKeyPubKey(key, key.GetPubKey()));
+    FlatSigningProvider keystore;
     CKeyID hash = key.GetPubKey().GetID();
+    BOOST_CHECK(keystore.keys.emplace(hash, key).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(hash, key.GetPubKey()).second);
     CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
 
     std::vector<int> sigHashes;
@@ -569,7 +570,7 @@ SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutabl
 
 BOOST_AUTO_TEST_CASE(test_witness)
 {
-    FillableSigningProvider keystore, keystore2;
+    FlatSigningProvider keystore, keystore2;
     CKey key1 = GenerateRandomKey();
     CKey key2 = GenerateRandomKey();
     CKey key3 = GenerateRandomKey();
@@ -580,10 +581,14 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CPubKey pubkey3 = key3.GetPubKey();
     CPubKey pubkey1L = key1L.GetPubKey();
     CPubKey pubkey2L = key2L.GetPubKey();
-    BOOST_CHECK(keystore.AddKeyPubKey(key1, pubkey1));
-    BOOST_CHECK(keystore.AddKeyPubKey(key2, pubkey2));
-    BOOST_CHECK(keystore.AddKeyPubKey(key1L, pubkey1L));
-    BOOST_CHECK(keystore.AddKeyPubKey(key2L, pubkey2L));
+    BOOST_CHECK(keystore.keys.emplace(pubkey1.GetID(), key1).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(pubkey1.GetID(), pubkey1).second);
+    BOOST_CHECK(keystore.keys.emplace(pubkey2.GetID(), key2).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(pubkey2.GetID(), pubkey2).second);
+    BOOST_CHECK(keystore.keys.emplace(pubkey1L.GetID(), key1L).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(pubkey1L.GetID(), pubkey1L).second);
+    BOOST_CHECK(keystore.keys.emplace(pubkey2L.GetID(), key2L).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(pubkey2L.GetID(), pubkey2L).second);
     CScript scriptPubkey1, scriptPubkey2, scriptPubkey1L, scriptPubkey2L, scriptMulti;
     scriptPubkey1 << ToByteVector(pubkey1) << OP_CHECKSIG;
     scriptPubkey2 << ToByteVector(pubkey2) << OP_CHECKSIG;
@@ -593,25 +598,26 @@ BOOST_AUTO_TEST_CASE(test_witness)
     oneandthree.push_back(pubkey1);
     oneandthree.push_back(pubkey3);
     scriptMulti = GetScriptForMultisig(2, oneandthree);
-    BOOST_CHECK(keystore.AddCScript(scriptPubkey1));
-    BOOST_CHECK(keystore.AddCScript(scriptPubkey2));
-    BOOST_CHECK(keystore.AddCScript(scriptPubkey1L));
-    BOOST_CHECK(keystore.AddCScript(scriptPubkey2L));
-    BOOST_CHECK(keystore.AddCScript(scriptMulti));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptPubkey1), scriptPubkey1).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptPubkey2), scriptPubkey2).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptPubkey1L), scriptPubkey1L).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptPubkey2L), scriptPubkey2L).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptMulti), scriptMulti).second);
     CScript destination_script_1, destination_script_2, destination_script_1L, destination_script_2L, destination_script_multi;
     destination_script_1 = GetScriptForDestination(WitnessV0KeyHash(pubkey1));
     destination_script_2 = GetScriptForDestination(WitnessV0KeyHash(pubkey2));
     destination_script_1L = GetScriptForDestination(WitnessV0KeyHash(pubkey1L));
     destination_script_2L = GetScriptForDestination(WitnessV0KeyHash(pubkey2L));
     destination_script_multi = GetScriptForDestination(WitnessV0ScriptHash(scriptMulti));
-    BOOST_CHECK(keystore.AddCScript(destination_script_1));
-    BOOST_CHECK(keystore.AddCScript(destination_script_2));
-    BOOST_CHECK(keystore.AddCScript(destination_script_1L));
-    BOOST_CHECK(keystore.AddCScript(destination_script_2L));
-    BOOST_CHECK(keystore.AddCScript(destination_script_multi));
-    BOOST_CHECK(keystore2.AddCScript(scriptMulti));
-    BOOST_CHECK(keystore2.AddCScript(destination_script_multi));
-    BOOST_CHECK(keystore2.AddKeyPubKey(key3, pubkey3));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(destination_script_1), destination_script_1).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(destination_script_2), destination_script_2).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(destination_script_1L), destination_script_1L).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(destination_script_2L), destination_script_2L).second);
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(destination_script_multi), destination_script_multi).second);
+    BOOST_CHECK(keystore2.scripts.emplace(CScriptID(scriptMulti), scriptMulti).second);
+    BOOST_CHECK(keystore2.scripts.emplace(CScriptID(destination_script_multi), destination_script_multi).second);
+    BOOST_CHECK(keystore2.keys.emplace(pubkey3.GetID(), key3).second);
+    BOOST_CHECK(keystore2.pubkeys.emplace(pubkey3.GetID(), pubkey3).second);
 
     CTransactionRef output1, output2;
     CMutableTransaction input1, input2;
