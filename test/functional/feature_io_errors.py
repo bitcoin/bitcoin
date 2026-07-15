@@ -40,17 +40,18 @@ class IOErrorTest(BitcoinTestFramework):
         self.log.info("Check tx RPCs throw on I/O errors")
         msg = "Can't read block from disk"
         assert_raises_rpc_error(-32603, msg, node.gettxoutproof, [tx2["txid"]])
-        assert_raises_rpc_error(-5, "Transaction not yet in block", node.gettxoutproof, [txid])
-        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, txid)
-        node.utxoupdatepsbt(psbt)  # no exception raised on IO error
+        msg = "txindex: Failed to open block file"
+        assert_raises_rpc_error(-1, msg, node.gettxoutproof, [txid])
+        assert_raises_rpc_error(-1, msg, node.getrawtransaction, txid)
+        assert_raises_rpc_error(-1, msg, node.utxoupdatepsbt, psbt)
 
         self.log.info("Check REST /tx/ on I/O errors")
         url = urllib.parse.urlparse(node.url)
         with closing(http.client.HTTPConnection(url.hostname, url.port)) as conn:
             conn.request("GET", f"/rest/tx/{txid}.json")
             response = conn.getresponse()
-            assert_equal(response.status, 404)
-            assert_equal(response.read().decode("utf-8"), f"{txid} not found\r\n")
+            assert_equal(response.status, 500)
+            assert_equal(response.read().decode("utf-8")[:len(msg)], msg)
 
         blk_dat_moved.rename(blk_dat)
 
