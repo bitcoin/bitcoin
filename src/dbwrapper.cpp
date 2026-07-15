@@ -153,6 +153,30 @@ static leveldb::Options GetOptions(size_t nCacheSize, bool bloom_filter)
     return options;
 }
 
+bool CDBWrapper::HasKeyStartingWith(const fs::path& path, uint8_t prefix)
+{
+    if (!fs::exists(path / "CURRENT")) return false;
+
+    CBitcoinLevelDBLogger logger;
+    leveldb::Options options;
+    options.paranoid_checks = true;
+    // Avoid creating or rotating LevelDB's LOG files during this probe.
+    options.info_log = &logger;
+
+    leveldb::DB* raw_db;
+    HandleError(leveldb::DB::Open(options, fs::PathToString(path), &raw_db));
+    const std::unique_ptr<leveldb::DB> db{raw_db};
+
+    leveldb::ReadOptions iteroptions;
+    iteroptions.verify_checksums = true;
+    iteroptions.fill_cache = false;
+    const std::unique_ptr<leveldb::Iterator> it{db->NewIterator(iteroptions)};
+    const leveldb::Slice prefix_slice{reinterpret_cast<const char*>(&prefix), sizeof(prefix)};
+    it->Seek(prefix_slice);
+    HandleError(it->status());
+    return it->Valid() && it->key().starts_with(prefix_slice);
+}
+
 struct CDBBatch::WriteBatchImpl {
     leveldb::WriteBatch batch;
 };
