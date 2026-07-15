@@ -175,16 +175,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // The `non_witness_utxo` is the whole previous transaction
         if (psbt_input.non_witness_utxo) continue;
 
-        CTransactionRef tx;
-
-        // Look in the txindex
-        if (g_txindex) {
-            if (auto result{g_txindex->FindTx(psbt_input.prev_txid)}) tx = result->tx;
-        }
-        // If we still don't have it look in the mempool
-        if (!tx) {
-            tx = node.mempool->get(psbt_input.prev_txid);
-        }
+        uint256 block_hash;
+        CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node.mempool.get(), psbt_input.prev_txid, node.chainman->m_blockman, block_hash)};
         if (tx) {
             psbt_input.non_witness_utxo = tx;
         } else {
