@@ -430,6 +430,13 @@ typedef uint32_t btck_TxValidationResult;
 #define btck_TxValidationResult_RECONSIDERABLE      ((btck_TxValidationResult)(11)) //!< fails some policy, but might be acceptable if submitted in a (different) package
 #define btck_TxValidationResult_UNKNOWN             ((btck_TxValidationResult)(12)) //!< transaction was not validated because package failed
 
+/** Bitflags to control the optional context-free block checks (proof of work and merkle root). */
+typedef uint32_t btck_BlockCheckFlags;
+#define btck_BlockCheckFlags_BASE   ((btck_BlockCheckFlags)0)                                                        //!< run the base context-free block checks only
+#define btck_BlockCheckFlags_POW    ((btck_BlockCheckFlags)(1U << 0))                                                //!< run CheckProofOfWork via CheckBlockHeader
+#define btck_BlockCheckFlags_MERKLE ((btck_BlockCheckFlags)(1U << 1))                                                //!< verify merkle root (and mutation detection)
+#define btck_BlockCheckFlags_ALL    ((btck_BlockCheckFlags)(btck_BlockCheckFlags_POW | btck_BlockCheckFlags_MERKLE)) //!< enable all optional context-free block checks
+
 /**
  * Holds the validation interface callbacks. The user data pointer may be used
  * to point to user-defined structures to make processing the validation
@@ -1315,6 +1322,29 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_p
     int* new_block) BITCOINKERNEL_ARG_NONNULL(1, 2, 3);
 
 /**
+ * @brief Test whether a block would be valid as the next block extending the
+ * current active tip, without connecting it to the chain.
+ * On top of the context-free checks performed by btck_block_check, this also
+ * runs the contextual header checks, the contextual block checks, and a full
+ * script/utxo validation pass against a temporary copy of the utxo set. Neither
+ * the chainstate, the utxo set, nor the block index are modified.
+ *
+ * @param[in]     chainstate_manager Non-null.
+ * @param[in]     block              Non-null, block to validate.
+ * @param[in]     flags              Bitmask of btck_BlockCheckFlags controlling the
+ *                                   optional POW and merkle-root checks. Use
+ *                                   btck_BlockCheckFlags_BASE to skip both.
+ * @param[out]    validation_state   Non-null, previously created with
+ *                                   btck_block_validation_state_create.
+ * @return                           1 if the block passed the checks, 0 otherwise.
+ */
+BITCOINKERNEL_API int btck_chainstate_manager_test_block_validity(
+    btck_ChainstateManager* chainstate_manager,
+    const btck_Block* block,
+    btck_BlockCheckFlags flags,
+    btck_BlockValidationState* validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 4);
+
+/**
  * @brief Returns the best known currently active chain. Its lifetime is
  * dependent on the chainstate manager. It can be thought of as a view on a
  * vector of block tree entries that form the best chain. The returned chain
@@ -1386,13 +1416,6 @@ BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_create
  */
 BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_copy(
     const btck_Block* block) BITCOINKERNEL_ARG_NONNULL(1);
-
-/** Bitflags to control context-free block checks (optional). */
-typedef uint32_t btck_BlockCheckFlags;
-#define btck_BlockCheckFlags_BASE   ((btck_BlockCheckFlags)0)                                                        //!< run the base context-free block checks only
-#define btck_BlockCheckFlags_POW    ((btck_BlockCheckFlags)(1U << 0))                                                //!< run CheckProofOfWork via CheckBlockHeader
-#define btck_BlockCheckFlags_MERKLE ((btck_BlockCheckFlags)(1U << 1))                                                //!< verify merkle root (and mutation detection)
-#define btck_BlockCheckFlags_ALL    ((btck_BlockCheckFlags)(btck_BlockCheckFlags_POW | btck_BlockCheckFlags_MERKLE)) //!< enable all optional context-free block checks
 
 /**
  * @brief Perform context-free validation checks on a btck_Block.

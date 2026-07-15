@@ -1382,6 +1382,24 @@ int btck_chainstate_manager_process_block(
     return result ? 0 : -1;
 }
 
+int btck_chainstate_manager_test_block_validity(
+    btck_ChainstateManager* chainman,
+    const btck_Block* block,
+    btck_BlockCheckFlags flags,
+    btck_BlockValidationState* validation_state)
+{
+    auto& chainman_ref = *btck_ChainstateManager::get(chainman).m_chainman;
+
+    const bool check_pow    = (flags & btck_BlockCheckFlags_POW) != 0;
+    const bool check_merkle = (flags & btck_BlockCheckFlags_MERKLE) != 0;
+
+    LOCK(chainman_ref.GetMutex());
+    auto& state = btck_BlockValidationState::get(validation_state);
+    state = TestBlockValidity(chainman_ref.ActiveChainstate(), *btck_Block::get(block), check_pow, check_merkle);
+
+    return state.IsValid() ? 1 : 0;
+}
+
 btck_BlockValidationState* btck_chainstate_manager_process_block_header(
     btck_ChainstateManager* chainstate_manager,
     const btck_BlockHeader* header)

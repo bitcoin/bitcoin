@@ -1375,6 +1375,11 @@ public:
         return res == 0;
     }
 
+    bool TestBlockValidity(const Block& block, BlockCheckFlags flags, BlockValidationState& state)
+    {
+        return btck_chainstate_manager_test_block_validity(get(), block.get(), static_cast<btck_BlockCheckFlags>(flags), state.get()) == 1;
+    }
+
     BlockValidationState ProcessBlockHeader(const BlockHeader& header)
     {
         auto state = btck_chainstate_manager_process_block_header(get(), header.get());
