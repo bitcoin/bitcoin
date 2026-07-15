@@ -53,9 +53,13 @@ public:
     }
 };
 
+/**
+ * Salted hasher for COutPoint keys in process-local in-memory containers.
+ * Hash values must not be persisted, serialized, or compared across processes.
+ */
 class SaltedOutpointHasher
 {
-    const PresaltedSipHasher m_hasher;
+    const PresaltedSipHasher13UJ m_hasher;
 
 public:
     SaltedOutpointHasher(bool deterministic = false);
@@ -71,7 +75,7 @@ public:
      */
     size_t operator()(const COutPoint& id) const noexcept
     {
-        return m_hasher(id.hash.ToUint256(), id.n);
+        return m_hasher(id.hash.ToUint256(), uint64_t{id.n});
     }
 };
 
