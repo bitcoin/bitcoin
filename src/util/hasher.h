@@ -58,7 +58,7 @@ class SaltedOutpointHasher
     const PresaltedSipHasher m_hasher;
 
 public:
-    SaltedOutpointHasher(bool deterministic = false);
+    SaltedOutpointHasher();
 
     /**
      * Having the hash noexcept allows libstdc++'s unordered_map to recalculate

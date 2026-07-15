@@ -22,9 +22,9 @@ SaltedWtxidHasher::SaltedWtxidHasher() : m_hasher{
     FastRandomContext().rand64()}
 {}
 
-SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : m_hasher{
-    deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
-    deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+SaltedOutpointHasher::SaltedOutpointHasher() : m_hasher{
+    FastRandomContext().rand64(),
+    FastRandomContext().rand64()}
 {}
 
 SaltedSipHasher::SaltedSipHasher() :

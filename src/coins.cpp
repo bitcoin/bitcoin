@@ -8,6 +8,7 @@
 #include <primitives/block.h>
 #include <random.h>
 #include <uint256.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/threadpool.h>
 #include <util/trace.h>
@@ -18,6 +19,13 @@
 TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
 TRACEPOINT_SEMAPHORE(utxocache, uncache);
+
+SaltedCoinsCacheHasher::SaltedCoinsCacheHasher(bool deterministic)
+    : m_hasher{
+          deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
+          deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+{
+}
 
 CoinsViewEmpty& CoinsViewEmpty::Get()
 {
@@ -35,7 +43,7 @@ std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView* in_base, bool deterministic) :
     CCoinsViewBacked(in_base), m_deterministic(deterministic),
-    cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
+    cacheCoins(0, SaltedCoinsCacheHasher{/*deterministic=*/deterministic}, CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
 {
     m_sentinel.second.SelfRef(m_sentinel);
 }
@@ -331,7 +339,7 @@ void CCoinsViewCache::ReallocateCache()
     cacheCoins.~CCoinsMap();
     m_cache_coins_memory_resource.~CCoinsMapMemoryResource();
     ::new (&m_cache_coins_memory_resource) CCoinsMapMemoryResource{};
-    ::new (&cacheCoins) CCoinsMap{0, SaltedOutpointHasher{/*deterministic=*/m_deterministic}, CCoinsMap::key_equal{}, &m_cache_coins_memory_resource};
+    ::new (&cacheCoins) CCoinsMap{0, SaltedCoinsCacheHasher{/*deterministic=*/m_deterministic}, CCoinsMap::key_equal{}, &m_cache_coins_memory_resource};
 }
 
 void CCoinsViewCache::SanityCheck() const
