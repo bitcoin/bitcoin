@@ -503,7 +503,7 @@ static RPCMethod getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    const auto mining_options{node::FlattenMiningOptions(CHECK_NONFATAL(node.block_template_manager)->BlockCreateArgs())};
+    const auto mining_options{node::FlattenMiningOptions(EnsureBlockTemplateManager(node).BlockCreateArgs())};
     obj.pushKV("blockmintxfee", ValueFromAmount(CHECK_NONFATAL(mining_options.block_min_fee_rate)->GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
@@ -740,6 +740,7 @@ static RPCMethod getblocktemplate()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -794,13 +795,13 @@ static RPCMethod getblocktemplate()
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    if (!miner.isTestChain()) {
+    if (!chainman.GetParams().IsTestChain()) {
         const CConnman& connman = EnsureConnman(node);
         if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, CLIENT_NAME " is not connected!");
         }
 
-        if (miner.isInitialBlockDownload()) {
+        if (chainman.IsInitialBlockDownload()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, CLIENT_NAME " is in initial sync and waiting for blocks...");
         }
     }
@@ -809,7 +810,7 @@ static RPCMethod getblocktemplate()
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     WAIT_LOCK(cs_main, cs_main_lock);
-    uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
+    uint256 tip{CHECK_NONFATAL(block_template_manager.GetTip()).value().hash};
 
     // Long Polling (BIP22)
     if (!lpval.isNull()) {
@@ -854,7 +855,7 @@ static RPCMethod getblocktemplate()
             while (IsRPCRunning()) {
                 // If hashWatchedChain is not a real block hash, this will
                 // return immediately.
-                std::optional<BlockRef> maybe_tip{miner.waitTipChanged(hashWatchedChain, checktxtime)};
+                std::optional<BlockRef> maybe_tip{block_template_manager.WaitTipChanged(hashWatchedChain, checktxtime)};
                 // Node is shutting down
                 if (!maybe_tip) break;
                 tip = maybe_tip->hash;
@@ -868,7 +869,7 @@ static RPCMethod getblocktemplate()
                 checktxtime = std::chrono::seconds(10);
             }
         }
-        tip = CHECK_NONFATAL(miner.getTip()).value().hash;
+        tip = CHECK_NONFATAL(block_template_manager.GetTip()).value().hash;
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
