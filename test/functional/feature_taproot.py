@@ -764,7 +764,9 @@ def spenders_taproot_active():
                 add_spender(spenders, "sighash/scriptpath_hashtype_mis_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], annex=annex, standard=no_annex, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), **SINGLE_SIG, failure={"hashtype_actual": hashtype}, **ERR_SCHNORR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
 
         # Test OP_CODESEPARATOR impact on sighashing.
-        hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
+        def hashtype(_):
+            return random.choice(VALID_SIGHASHES_TAPROOT)
+
         common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
         scripts = [
             ("pk_codesep", CScript(random_checksig_style(pubs[1]) + bytes([OP_CODESEPARATOR]))),  # codesep after checksig
@@ -792,7 +794,9 @@ def spenders_taproot_active():
     add_spender(spenders, "sighash/keypath", tap=tap, key=secs[0], **common, failure={"sighash": override(default_sighash, leaf="pk_codesep")}, **ERR_SCHNORR_SIG)
 
     # Test that invalid hashtypes don't work, both in key path and script path spends
-    hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
+    def hashtype(_):
+        return random.choice(VALID_SIGHASHES_TAPROOT)
+
     for invalid_hashtype in [x for x in range(0x100) if x not in VALID_SIGHASHES_TAPROOT]:
         add_spender(spenders, "sighash/keypath_unk_hashtype_%x" % invalid_hashtype, tap=tap, key=secs[0], hashtype=hashtype, failure={"hashtype": invalid_hashtype}, **ERR_SCHNORR_SIG_HASHTYPE)
         add_spender(spenders, "sighash/scriptpath_unk_hashtype_%x" % invalid_hashtype, tap=tap, leaf="pk_codesep", key=secs[1], **SINGLE_SIG, hashtype=hashtype, failure={"hashtype": invalid_hashtype}, **ERR_SCHNORR_SIG_HASHTYPE)
@@ -1170,7 +1174,9 @@ def spenders_taproot_active():
         add_spender(spenders, "unkver/1001inputs", standard=False, tap=tap, leaf="bare_unkver", inputs=[b'']*1001, failure={"leaf": "bare_c0"}, **ERR_STACK_SIZE)
 
     # OP_SUCCESSx tests.
-    hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
+    def hashtype(_):
+        return random.choice(VALID_SIGHASHES_TAPROOT)
+
     for opval in range(76, 0x100):
         opcode = CScriptOp(opval)
         if not is_op_success(opcode):
@@ -1215,7 +1221,9 @@ def spenders_taproot_active():
 
     # == Test case for https://github.com/bitcoin/bitcoin/issues/24765 ==
 
-    zero_fn = lambda h: bytes([0 for _ in range(32)])
+    def zero_fn(h):
+        return bytes([0] * 32)
+
     tap = taproot_construct(pubs[0], [("leaf", CScript([pubs[1], OP_CHECKSIG, pubs[1], OP_CHECKSIGADD, OP_2, OP_EQUAL])), zero_fn])
     add_spender(spenders, "case24765", tap=tap, leaf="leaf", inputs=[getter("sign"), getter("sign")], key=secs[1], no_fail=True)
 
