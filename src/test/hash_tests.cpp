@@ -30,6 +30,29 @@ static uint64_t CalculateSipHash24(const UniValue& input, uint64_t k0, uint64_t 
     return result;
 }
 
+static uint64_t CalculateSipHash13UJ(const UniValue& input, uint64_t k0, uint64_t k1, bool normal_as_jumbo)
+{
+    SipHasher13UJ hasher{k0, k1};
+    for (auto& value : input.getValues()) {
+        const auto block{ParseHex(value.get_str())};
+        if (block.size() == sizeof(uint64_t)) {
+            if (!normal_as_jumbo) {
+                hasher.Write(ReadLE64(block.data()));
+            } else {
+                uint256 data256{};
+                WriteLE64(data256.data(), ReadLE64(block.data()));
+                hasher.WriteJumbo(data256);
+            }
+        } else {
+            BOOST_REQUIRE_EQUAL(block.size(), uint256::size());
+            hasher.WriteJumbo(uint256{block});
+        }
+    }
+    const uint64_t result{hasher.Finalize()};
+    BOOST_CHECK_EQUAL(hasher.Finalize(), result);
+    return result;
+}
+
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
 
@@ -161,6 +184,18 @@ BOOST_AUTO_TEST_CASE(siphash_test_vectors)
         } else if (hash_extra && HasByteLength(input[1], sizeof(uint32_t))) {
             const auto extra{ParseHex(input[1].get_str())};
             BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(FromHex256(input[0]), ReadLE32(extra.data())), expected24);
+        }
+        if (auto& expected_value{test["expected"]["siphash13uj"]}; !expected_value.isNull()) {
+            const uint64_t expected13uj{FromHex64(expected_value)};
+            BOOST_CHECK_EQUAL(CalculateSipHash13UJ(input, k0, k1, /*normal_as_jumbo=*/false), expected13uj);
+            BOOST_CHECK_EQUAL(CalculateSipHash13UJ(input, k0, k1, /*normal_as_jumbo=*/true), expected13uj);
+            const SipHasher13UJ fixed_hasher{k0, k1};
+            if (hash_only) {
+                BOOST_CHECK_EQUAL(fixed_hasher.Hash(FromHex256(input[0])), expected13uj);
+            } else if (hash_extra && HasByteLength(input[1], sizeof(uint64_t))) {
+                const auto extra{ParseHex(input[1].get_str())};
+                BOOST_CHECK_EQUAL(fixed_hasher.Hash(FromHex256(input[0]), ReadLE64(extra.data())), expected13uj);
+            }
         }
     }
 }

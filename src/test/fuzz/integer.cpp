@@ -129,6 +129,38 @@ FUZZ_TARGET(integer, .init = initialize_integer)
         hasher.Write(extra);
         assert(presalted_hasher(u256, u32) == hasher.Finalize());
     }
+    {
+        const uint64_t data0{u160.GetUint64(0)}, data1{u160.GetUint64(1)};
+        SipHasher13UJ hasher{u64, u64_2};
+        const SipHasher13UJ fixed_hasher{u64, u64_2};
+        hasher.WriteJumbo(u256);
+        assert(fixed_hasher.Hash(u256) == hasher.Finalize());
+        hasher.Write(data0);
+        assert(fixed_hasher.Hash(u256, data0) == hasher.Finalize());
+
+        SipHasher13UJ reference{u64, u64_2};
+        SipHasher13UJ mixed{u64, u64_2};
+        reference.WriteJumbo(u256);
+        mixed.WriteJumbo(u256);
+
+        const auto write_normal{[](SipHasher13UJ& hasher, uint64_t data, bool as_jumbo) {
+            if (as_jumbo) {
+                uint256 data256{};
+                WriteLE64(data256.data(), data);
+                hasher.WriteJumbo(data256);
+            } else {
+                hasher.Write(data);
+            }
+        }};
+
+        reference.Write(data0).Write(data1);
+        write_normal(mixed, data0, b);
+        write_normal(mixed, data1, u8 & 1);
+        assert(mixed.Finalize() == reference.Finalize());
+
+        reference.WriteJumbo(u256).Write(data0);
+        assert(mixed.Hash(u256, data0) == reference.Finalize());
+    }
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
