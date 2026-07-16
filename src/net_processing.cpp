@@ -404,7 +404,7 @@ struct Peer {
     std::atomic<bool> m_sent_sendheaders{false};
 
     /** When to potentially disconnect peer for stalling headers download */
-    NodeClock::time_point m_headers_sync_timeout GUARDED_BY(NetEventsInterface::g_msgproc_mutex){NodeClock::epoch};
+    NodeClock::time_point m_headers_sync_timeout GUARDED_BY(NetEventsInterface::g_msgproc_mutex){NodeClock::time_point::max()};
 
     /** Whether this peer wants invs or headers (when possible) for block announcements */
     bool m_prefers_headers GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
@@ -6230,7 +6230,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
         }
         // Check for headers sync timeouts
-        if (state.fSyncStarted && peer.m_headers_sync_timeout < NodeClock::time_point::max()) {
+        if (state.fSyncStarted && peer.m_headers_sync_timeout != NodeClock::time_point::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
                 if (now > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
@@ -6252,7 +6252,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         // this peer (eventually).
                         state.fSyncStarted = false;
                         nSyncStarted--;
-                        peer.m_headers_sync_timeout = NodeClock::epoch;
+                        peer.m_headers_sync_timeout = NodeClock::time_point::max();
                     }
                 }
             } else {
