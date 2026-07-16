@@ -188,7 +188,31 @@ if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
   fi
 fi
 
-if [ "$RUN_UNIT_TESTS" = "true" ]; then
+if [ "${RUN_FUNCTIONAL_TESTS_WITH_CTEST:-false}" = "true" ]; then
+  case "${CTEST_TESTS:-}" in
+    all)
+      CTEST_ARGS=()
+      ;;
+    functional)
+      CTEST_ARGS=(-L '^functional$')
+      ;;
+    nonfunctional)
+      CTEST_ARGS=(-LE '^functional$')
+      ;;
+    *)
+      echo "Unknown CTEST_TESTS value: '${CTEST_TESTS:-}'" >&2
+      false
+      ;;
+  esac
+  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
+  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+  CTEST_OUTPUT_ON_FAILURE=ON \
+  ctest --test-dir "${BASE_BUILD_DIR}" \
+    "${CTEST_ARGS[@]}" \
+    --stop-on-failure \
+    "${MAKEJOBS}" \
+    --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
+elif [ "$RUN_UNIT_TESTS" = "true" ]; then
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   CTEST_OUTPUT_ON_FAILURE=ON \
@@ -198,19 +222,19 @@ if [ "$RUN_UNIT_TESTS" = "true" ]; then
     --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
 fi
 
-if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
-  # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
-  eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
-    "${MAKEJOBS}" \
-    --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
-    --ansi \
-    --combinedlogslen=99999999 \
-    --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" \
-    "${TEST_RUNNER_EXTRA[@]}" \
-    --quiet \
-    --failfast
+if [ "$RUN_FUNCTIONAL_TESTS" = "true" ] && [ "${RUN_FUNCTIONAL_TESTS_WITH_CTEST:-false}" != "true" ]; then
+    # Parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
+    eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
+    LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+    "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
+      "${MAKEJOBS}" \
+      --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
+      --ansi \
+      --combinedlogslen=99999999 \
+      --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" \
+      "${TEST_RUNNER_EXTRA[@]}" \
+      --quiet \
+      --failfast
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
