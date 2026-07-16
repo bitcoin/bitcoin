@@ -429,7 +429,7 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
 // called.
 FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
 {
-    SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedTxidHasher
+    SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     MutationGuardCoinsViewCache backend_cache{&CoinsViewEmpty::Get(), /*deterministic=*/true};
@@ -441,7 +441,7 @@ FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
 
 FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view)
 {
-    SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedTxidHasher
+    SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     auto db_params = DBParams{

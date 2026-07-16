@@ -8,7 +8,6 @@
 #include <primitives/block.h>
 #include <random.h>
 #include <uint256.h>
-#include <util/hasher.h>
 #include <util/log.h>
 #include <util/threadpool.h>
 #include <util/trace.h>
@@ -384,7 +383,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
         // Loop through the block inputs and set their prevouts in the queue.
         // Filter inputs that spend outputs created earlier in the same block. These outputs will be created
         // directly in the cache from the tx that creates them, so they will not be requested from a base view.
-        std::unordered_set<Txid, SaltedTxidHasher> earlier_txids;
+        std::unordered_set<Txid, SaltedCoinsCacheHasher> earlier_txids;
         earlier_txids.reserve(block.vtx.size());
         for (const auto& tx : block.vtx | std::views::drop(1)) {
             for (const auto& input : tx->vin) {
