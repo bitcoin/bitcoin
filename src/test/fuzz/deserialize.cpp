@@ -73,17 +73,6 @@ T Deserialize(DataStream&& ds, const P& params)
     return obj;
 }
 
-template <typename T, typename P>
-void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params)
-{
-    try {
-        SpanReader{buffer} >> params(obj);
-    } catch (const std::ios_base::failure&) {
-        throw invalid_fuzzing_input_exception();
-    }
-    assert(buffer.empty() || !Serialize(obj, params).empty());
-}
-
 template <typename T>
 DataStream Serialize(const T& obj)
 {
