@@ -16,6 +16,7 @@
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <map>
 #include <string>
@@ -28,6 +29,13 @@ using namespace util::hex_literals;
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
+
+static std::string stringify(const Coin& coin)
+{
+    return "Coin{spent=" + util::ToString(coin.IsSpent()) + "coinbase=" +
+           util::ToString(coin.fCoinBase) + ", height=" + util::ToString(coin.nHeight) +
+           ", " + coin.out.ToString() + "}";
+}
 
 //! equality test
 static bool operator==(const Coin &a, const Coin &b) {

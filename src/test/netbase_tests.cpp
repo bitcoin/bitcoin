@@ -19,6 +19,7 @@
 #include <numeric>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 using namespace std::literals;
 using namespace util::hex_literals;

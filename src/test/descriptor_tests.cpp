@@ -6,6 +6,7 @@
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -19,6 +20,11 @@
 
 using namespace util::hex_literals;
 using util::Split;
+
+static std::string stringify(const KeyOriginInfo& info)
+{
+    return "KeyOriginInfo{fingerprint=" + HexStr(info.fingerprint) + ", keypath=" + FormatHDKeypath(info.path) + "]";
+}
 
 namespace {
 

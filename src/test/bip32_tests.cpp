@@ -14,6 +14,20 @@
 #include <string>
 #include <vector>
 
+static std::string stringify(const CExtKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtKey{" + HexStr(code) + "}";
+}
+
+static std::string stringify(const CExtPubKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtPubKey{" + HexStr(code) + "}";
+}
+
 namespace {
 
 struct TestDerivation {

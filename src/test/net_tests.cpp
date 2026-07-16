@@ -27,6 +27,7 @@
 #include <validation.h>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 #include <algorithm>
 #include <cstdint>

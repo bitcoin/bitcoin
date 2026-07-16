@@ -13,8 +13,10 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 #include <univalue.h>
 

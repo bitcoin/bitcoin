@@ -39,6 +39,7 @@
 #include <versionbits.h>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 #include <cstddef>
 #include <cstdint>
