@@ -2,173 +2,173 @@
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "expected": {"siphash24": "8990d3e4299496f4"}
+    "expected": {"siphash24": "8990d3e4299496f4", "siphash13uj": "6a74cba00ddbfeba"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    "expected": {"siphash24": "e1041d47f898e431"}
+    "expected": {"siphash24": "e1041d47f898e431", "siphash13uj": "7f745a471ec7c2f6"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-    "expected": {"siphash24": "7127512f72f27cce"}
+    "expected": {"siphash24": "7127512f72f27cce", "siphash13uj": "c67d87b08ca4b5c6"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "hash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "expected": {"siphash24": "6c37e103dfa2827d"}
+    "expected": {"siphash24": "6c37e103dfa2827d", "siphash13uj": "44ba508bb47f860a"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "1011121314151617000000000000000000000000000000000000000000000000",
-    "expected": {"siphash24": "070fb8d2b4264e7e"}
+    "expected": {"siphash24": "070fb8d2b4264e7e", "siphash13uj": "17bd848a0ddd6294"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f",
-    "expected": {"siphash24": "27bd5ecb84e56c87"}
+    "expected": {"siphash24": "27bd5ecb84e56c87", "siphash13uj": "d2c0b9ab84599147"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "0000000000000000000000000000000000000000000000000000000000000080",
-    "expected": {"siphash24": "52de95ec1fc46cf4"}
+    "expected": {"siphash24": "52de95ec1fc46cf4", "siphash13uj": "c946b5eafdebf91d"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "0100000000000000010000000000000001000000000000000100000000000000",
-    "expected": {"siphash24": "256fc49da00e8ae9"}
+    "expected": {"siphash24": "256fc49da00e8ae9", "siphash13uj": "28193aab7f7f53b5"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "hash": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
-    "expected": {"siphash24": "1ca45bed0c8a9300"}
+    "expected": {"siphash24": "1ca45bed0c8a9300", "siphash13uj": "071384882b8b1ef6"}
   },
   {
     "key": ["ffffffffffffffff", "ffffffffffffffff"],
     "hash": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
-    "expected": {"siphash24": "acb2f25002d4ece5"}
+    "expected": {"siphash24": "acb2f25002d4ece5", "siphash13uj": "6d3cb0c74116cdd5"}
   },
   {
     "key": ["25fd75c04a240044", "4e3816151d29e2ce"],
     "hash": "8940d79240a5bf8acdf428eece829dc27d8cc2ff7b74aaeb134f66062192d308",
-    "expected": {"siphash24": "135eaef5f79941ad"}
+    "expected": {"siphash24": "135eaef5f79941ad", "siphash13uj": "16823b5389538dba"}
   },
   {
     "key": ["aea4345a0fc4e761", "49456a8e8d82e5ee"],
     "hash": "6e0e507f21292ad46a49aa0b20efec23000474f6203f5ceaf4f9325c4e032bbe",
-    "expected": {"siphash24": "56e57b1e7d81c846"}
+    "expected": {"siphash24": "56e57b1e7d81c846", "siphash13uj": "36ae52fdbe166c9a"}
   },
   {
     "key": ["f7ce16edcfe54eeb", "81c22c4aed3e516d"],
     "hash": "caf32c2d8d827c8e55ee92253cffc657359af1cab7f24804afabac89a436fc75",
-    "expected": {"siphash24": "84cad9f91acd36d0"}
+    "expected": {"siphash24": "84cad9f91acd36d0", "siphash13uj": "d8ebd74386d41628"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "22232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041",
-    "extras": {"siphash24": "14131211"},
-    "expected": {"siphash24": "6ff1e744e4b586fc"}
+    "extras": {"siphash24": "14131211", "siphash13uj": "1817161514131211"},
+    "expected": {"siphash24": "6ff1e744e4b586fc", "siphash13uj": "6f62e14ce40a8928"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "extras": {"siphash24": "00000000"},
-    "expected": {"siphash24": "115c6b8926ef399f"}
+    "extras": {"siphash24": "00000000", "siphash13uj": "0000000000000000"},
+    "expected": {"siphash24": "115c6b8926ef399f", "siphash13uj": "71c3a354a6b56058"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    "extras": {"siphash24": "ffffffff"},
-    "expected": {"siphash24": "0b2ebbee73a3d1ed"}
+    "extras": {"siphash24": "ffffffff", "siphash13uj": "ffffffffffffffff"},
+    "expected": {"siphash24": "0b2ebbee73a3d1ed", "siphash13uj": "958c1a52a5e57e8b"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-    "extras": {"siphash24": "43424140"},
-    "expected": {"siphash24": "65f756d1213070be"}
+    "extras": {"siphash24": "43424140", "siphash13uj": "4746454443424140"},
+    "expected": {"siphash24": "65f756d1213070be", "siphash13uj": "6cfc788446f0491d"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "0100000000000000000000000000000000000000000000000000000000000000",
-    "extras": {"siphash24": "00000000"},
-    "expected": {"siphash24": "12691f997c461ea1"}
+    "extras": {"siphash24": "00000000", "siphash13uj": "8000000000000000"},
+    "expected": {"siphash24": "12691f997c461ea1", "siphash13uj": "9e89e2fc7abb2ba2"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
-    "extras": {"siphash24": "23222120"},
-    "expected": {"siphash24": "c1164a11849da500"}
+    "extras": {"siphash24": "23222120", "siphash13uj": "2726252423222120"},
+    "expected": {"siphash24": "c1164a11849da500", "siphash13uj": "cdcd25f7a2ba32c5"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "hash": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
-    "extras": {"siphash24": "24232221"},
-    "expected": {"siphash24": "0efac191c5ac8cff"}
+    "extras": {"siphash24": "24232221", "siphash13uj": "2827262524232221"},
+    "expected": {"siphash24": "0efac191c5ac8cff", "siphash13uj": "738d1f7d2d53622b"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "hash": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
-    "extras": {"siphash24": "23222120"},
-    "expected": {"siphash24": "fb3489181e5cf821"}
+    "extras": {"siphash24": "23222120", "siphash13uj": "2726252423222120"},
+    "expected": {"siphash24": "fb3489181e5cf821", "siphash13uj": "0f078522df1349f3"}
   },
   {
     "key": ["49b001bc5a213d62", "80a330a42e60a89d"],
     "hash": "6f7438d2dd360dcea691dd40e87426f4af6870315898ccbde0d3b19fcbb5ae6d",
-    "extras": {"siphash24": "126cc355"},
-    "expected": {"siphash24": "fe9e704f0f707a09"}
+    "extras": {"siphash24": "126cc355", "siphash13uj": "c9ff5ff2126cc355"},
+    "expected": {"siphash24": "fe9e704f0f707a09", "siphash13uj": "da1c5bf6cf31653d"}
   },
   {
     "key": ["f4d704fa00ce074d", "6f1a65f3fe494b0a"],
     "hash": "175202cb9f976ebd6c4ddc4a80d63b2b53e2976466041ae43b41397c41fe66ac",
-    "extras": {"siphash24": "72013a80"},
-    "expected": {"siphash24": "42861dd0d0b147c5"}
+    "extras": {"siphash24": "72013a80", "siphash13uj": "a9c5d00a72013a80"},
+    "expected": {"siphash24": "42861dd0d0b147c5", "siphash13uj": "5725ddc762049274"}
   },
   {
     "key": ["c3f929b4cb53785c", "1693fa676a8ee165"],
     "hash": "2ac097c589bc75eb6e294605cafb3198891ff93764032225756aab86de06514b",
-    "extras": {"siphash24": "ed2e645c"},
-    "expected": {"siphash24": "f4c119ec8022dc9f"}
+    "extras": {"siphash24": "ed2e645c", "siphash13uj": "85f91dd6ed2e645c"},
+    "expected": {"siphash24": "f4c119ec8022dc9f", "siphash13uj": "49b121224ea53698"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "blocks": [],
-    "expected": {"siphash24": "1e924b9d737700d7"}
+    "expected": {"siphash24": "1e924b9d737700d7", "siphash13uj": "74fdd8982aa99156"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [],
-    "expected": {"siphash24": "726fdb47dd0e0e31"}
+    "expected": {"siphash24": "726fdb47dd0e0e31", "siphash13uj": "feee657d7e331ac3"}
   },
   {
     "key": ["ffffffffffffffff", "ffffffffffffffff"],
     "blocks": [],
-    "expected": {"siphash24": "35dd279ee86ce565"}
+    "expected": {"siphash24": "35dd279ee86ce565", "siphash13uj": "b2203b65f6fc20f2"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "0000000000000000"}],
-    "expected": {"siphash24": "39d3851ca07681a7"}
+    "expected": {"siphash24": "39d3851ca07681a7", "siphash13uj": "6a74cba00ddbfeba"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "ffffffffffffffff"}],
-    "expected": {"siphash24": "2a68ff30a3d9da34"}
+    "expected": {"siphash24": "2a68ff30a3d9da34", "siphash13uj": "a49b16683645df11"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "0706050403020100"}],
-    "expected": {"siphash24": "93f5f5799a932462"}
+    "expected": {"siphash24": "93f5f5799a932462", "siphash13uj": "636d75a66b0b2dee"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "blocks": [{"b": "0000000000000000"}],
-    "expected": {"siphash24": "e849e8bb6ffe2567"}
+    "expected": {"siphash24": "e849e8bb6ffe2567", "siphash13uj": "44ba508bb47f860a"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "1716151413121110"}],
-    "expected": {"siphash24": "76b71a8cb872b528"}
+    "expected": {"siphash24": "76b71a8cb872b528", "siphash13uj": "17bd848a0ddd6294"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -177,7 +177,7 @@
       {"b": "0908070605040302"},
       {"b": "0a09080706050403"}
     ],
-    "expected": {"siphash24": "9b3c1cee5de9caa4"}
+    "expected": {"siphash24": "9b3c1cee5de9caa4", "siphash13uj": "46b8c5978195f0d0"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -186,7 +186,7 @@
       {"b": "0203040506070809000000000000000000000000000000000000000000000000"},
       {"b": "030405060708090a000000000000000000000000000000000000000000000000"}
     ],
-    "expected": {"siphash24": "e9277fda84de2f84"}
+    "expected": {"siphash24": "e9277fda84de2f84", "siphash13uj": "46b8c5978195f0d0"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -196,12 +196,12 @@
       {"b": "5756555453525150"},
       {"b": "5f5e5d5c5b5a5958"}
     ],
-    "expected": {"siphash24": "27bd5ecb84e56c87"}
+    "expected": {"siphash24": "27bd5ecb84e56c87", "siphash13uj": "d630244e335448dd"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "0706050403020100"}, {"b": "0f0e0d0c0b0a0908"}],
-    "expected": {"siphash24": "3f2acc7f57c29bdb"}
+    "expected": {"siphash24": "3f2acc7f57c29bdb", "siphash13uj": "7c25d372353b5aa1"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -211,7 +211,7 @@
       {"b": "1716151413121110"},
       {"b": "1f1e1d1c1b1a1918"}
     ],
-    "expected": {"siphash24": "7127512f72f27cce"}
+    "expected": {"siphash24": "7127512f72f27cce", "siphash13uj": "1aba99b7cf175f4a"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -225,7 +225,7 @@
       {"b": "3736353433323130"},
       {"b": "3f3e3d3c3b3a3938"}
     ],
-    "expected": {"siphash24": "acd2c40b8502cad8"}
+    "expected": {"siphash24": "acd2c40b8502cad8", "siphash13uj": "ba4cdea787bdabb9"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -239,7 +239,7 @@
       {"b": "0000000000000000"}, {"b": "0000000000000000"},
       {"b": "0000000000000000"}, {"b": "0000000000000000"}
     ],
-    "expected": {"siphash24": "d6d266a868d1e17c"}
+    "expected": {"siphash24": "d6d266a868d1e17c", "siphash13uj": "b40ca9149482127a"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -247,7 +247,7 @@
       {"b": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"},
       {"b": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"}
     ],
-    "expected": {"siphash24": "acd2c40b8502cad8"}
+    "expected": {"siphash24": "acd2c40b8502cad8", "siphash13uj": "6bd1d4ec2ccd0192"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -257,7 +257,7 @@
       {"b": "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"},
       {"b": "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f"}
     ],
-    "expected": {"siphash24": "deb79e256c8736ae"}
+    "expected": {"siphash24": "deb79e256c8736ae", "siphash13uj": "497a4c5f66a6c9ac"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -271,7 +271,7 @@
       {"b": "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf"},
       {"b": "e0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"}
     ],
-    "expected": {"siphash24": "999d0526d2a7bfd7"}
+    "expected": {"siphash24": "999d0526d2a7bfd7", "siphash13uj": "33f9f36a0690842d"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -279,17 +279,17 @@
       {"b": "1817161514131211"},
       {"b": "22232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041"}
     ],
-    "expected": {"siphash24": "2a8b45c236d6964c"}
+    "expected": {"siphash24": "2a8b45c236d6964c", "siphash13uj": "2e989a98fc8ab941"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "a7a6a5a4a3a2a1a0"}, {"b": "b7b6b5b4b3b2b1b0"}],
-    "expected": {"siphash24": "103eacf2c5a3c798"}
+    "expected": {"siphash24": "103eacf2c5a3c798", "siphash13uj": "3d50654ce19fef0a"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "b7b6b5b4b3b2b1b0"}, {"b": "a7a6a5a4a3a2a1a0"}],
-    "expected": {"siphash24": "16098ab961ca74be"}
+    "expected": {"siphash24": "16098ab961ca74be", "siphash13uj": "93d52229e1bf3f12"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -298,7 +298,7 @@
       {"b": "02030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021"},
       {"b": "0a09080706050403"}
     ],
-    "expected": {"siphash24": "f33f8a1ac89a38a5"}
+    "expected": {"siphash24": "f33f8a1ac89a38a5", "siphash13uj": "93d4844f68473bde"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -307,7 +307,7 @@
       {"b": "0908070605040302"},
       {"b": "030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122"}
     ],
-    "expected": {"siphash24": "83a7e7cb48fcc3f0"}
+    "expected": {"siphash24": "83a7e7cb48fcc3f0", "siphash13uj": "1eeb5627f80ec45e"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -318,7 +318,7 @@
       {"b": "0404040404040404040404040404040404040404040404040404040404040404"},
       {"b": "0505050505050505"}
     ],
-    "expected": {"siphash24": "2da632417cf98266"}
+    "expected": {"siphash24": "2da632417cf98266", "siphash13uj": "36c183e8c31960ca"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
@@ -330,42 +330,42 @@
       {"b": "5756555453525150"},
       {"b": "58595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f7071727374757677"}
     ],
-    "expected": {"siphash24": "9fee744ff1c22fcc"}
+    "expected": {"siphash24": "9fee744ff1c22fcc", "siphash13uj": "0373fa0d4680e12a"}
   },
   {
     "key": ["0000000000000000", "0000000000000000"],
     "blocks": [{"b": "3736353433323130"}, {"b": "505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"}],
-    "expected": {"siphash24": "f4b057ed3852ca9c"}
+    "expected": {"siphash24": "f4b057ed3852ca9c", "siphash13uj": "0ca784307a2b3941"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "3736353433323130"}, {"b": "505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"}],
-    "expected": {"siphash24": "b0ecaab557894381"}
+    "expected": {"siphash24": "b0ecaab557894381", "siphash13uj": "40a0e330ade3b826"}
   },
   {
     "key": ["ffffffffffffffff", "ffffffffffffffff"],
     "blocks": [{"b": "3736353433323130"}, {"b": "505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"}],
-    "expected": {"siphash24": "c31e72088331c72c"}
+    "expected": {"siphash24": "c31e72088331c72c", "siphash13uj": "39b802d0fb124208"}
   },
   {
     "key": ["0123456789abcdef", "0000000000000000"],
     "blocks": [{"b": "3736353433323130"}, {"b": "505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"}],
-    "expected": {"siphash24": "f74571f90abc512c"}
+    "expected": {"siphash24": "f74571f90abc512c", "siphash13uj": "21bd1ab2c8db2044"}
   },
   {
     "key": ["0000000000000000", "0123456789abcdef"],
     "blocks": [{"b": "3736353433323130"}, {"b": "505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"}],
-    "expected": {"siphash24": "4b58713a5c1de640"}
+    "expected": {"siphash24": "4b58713a5c1de640", "siphash13uj": "bc66d61864912a68"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "0000000000000001"}],
-    "expected": {"siphash24": "2b91b2b085e6d1f6"}
+    "expected": {"siphash24": "2b91b2b085e6d1f6", "siphash13uj": "7426afff81e13e5d"}
   },
   {
     "key": ["0706050403020100", "0f0e0d0c0b0a0908"],
     "blocks": [{"b": "8000000000000000"}],
-    "expected": {"siphash24": "45f93120d11c42c2"}
+    "expected": {"siphash24": "45f93120d11c42c2", "siphash13uj": "dbd8592fe9fd3b1b"}
   },
   {
     "key": ["3becfe231ec833e1", "e5fe84a1124e5b76"],
@@ -375,17 +375,17 @@
       {"b": "efb9b159b0bb3280"},
       {"b": "603cad0d55e42aec"}
     ],
-    "expected": {"siphash24": "2f57b02b4a7cf7d6"}
+    "expected": {"siphash24": "2f57b02b4a7cf7d6", "siphash13uj": "8f201c9a3e7ca92a"}
   },
   {
     "key": ["cff49392d5b0aefe", "b8a0d7022086fc70"],
     "blocks": [],
-    "expected": {"siphash24": "9c7123b7b45d0895"}
+    "expected": {"siphash24": "9c7123b7b45d0895", "siphash13uj": "25f929e44740ac55"}
   },
   {
     "key": ["9bf012bb0d65f966", "f15a2c8514da1d9d"],
     "blocks": [],
-    "expected": {"siphash24": "a5c78c807512368a"}
+    "expected": {"siphash24": "a5c78c807512368a", "siphash13uj": "e317bf983b4cf183"}
   },
   {
     "key": ["4ac23ef0d1555a54", "4a498a3964dd2bc1"],
@@ -394,22 +394,22 @@
       {"b": "8fae72789cea9a53"},
       {"b": "81913a3d80ac146f"}
     ],
-    "expected": {"siphash24": "be7ea59e0e60a59d"}
+    "expected": {"siphash24": "be7ea59e0e60a59d", "siphash13uj": "3adb5b8275ff1694"}
   },
   {
     "key": ["eef84fb309e552b9", "e60195c78faa2ee8"],
     "blocks": [],
-    "expected": {"siphash24": "001e0c1c4140f9ec"}
+    "expected": {"siphash24": "001e0c1c4140f9ec", "siphash13uj": "2bdc46f9f5e83bdc"}
   },
   {
     "key": ["ecfdd5a1ea62a991", "6448b8f842081342"],
     "blocks": [{"b": "51f7f0e2bcf7726d"}, {"b": "7fafa860968477e2"}],
-    "expected": {"siphash24": "3bc824e8141dcdd9"}
+    "expected": {"siphash24": "3bc824e8141dcdd9", "siphash13uj": "89510c79ae874736"}
   },
   {
     "key": ["ab7a12b9c8774c7d", "38056b7041eb2098"],
     "blocks": [{"b": "7e2ca9185faaebfe"}, {"b": "a73a2ee8c9792619"}],
-    "expected": {"siphash24": "783219f01bb9d829"}
+    "expected": {"siphash24": "783219f01bb9d829", "siphash13uj": "a7cb7379701c754e"}
   },
   {
     "key": ["13551d7a6089e83e", "ec3f8c0f4cbc1f7c"],
@@ -421,6 +421,6 @@
       {"b": "73a44f46f5966c31"},
       {"b": "0700f913bbe4dad357c5db1b7e79abd29e6e590e842141a16cb6e97e6933206c"}
     ],
-    "expected": {"siphash24": "30cca0cb21a31ffe"}
+    "expected": {"siphash24": "30cca0cb21a31ffe", "siphash13uj": "638ab9733accc61a"}
   }
 ]

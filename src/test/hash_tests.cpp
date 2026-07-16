@@ -45,6 +45,39 @@ static uint64_t CalculateSipHash24(const UniValue& test, uint64_t k0, uint64_t k
     return result;
 }
 
+static uint64_t CalculateSipHash13UJ(const UniValue& test, uint64_t k0, uint64_t k1, bool normal_as_jumbo)
+{
+    SipHasher13UJ hasher{k0, k1};
+    const auto write_normal{[&](const UniValue& value) {
+        const uint64_t data{FromHex64(value)};
+        if (normal_as_jumbo) {
+            uint256 data256{};
+            WriteLE64(data256.data(), data);
+            hasher.WriteJumbo(data256);
+        } else {
+            hasher.Write(data);
+        }
+    }};
+    if (auto& hash_value{test["hash"]}; !hash_value.isNull()) {
+        hasher.WriteJumbo(FromHex256(hash_value));
+        if (auto& extra_value{test["extras"]["siphash13uj"]}; !extra_value.isNull()) {
+            write_normal(extra_value);
+        }
+    } else {
+        for (auto& block : test["blocks"].getValues()) {
+            auto& value{block["b"]};
+            if (value.get_str().size() == 16) {
+                write_normal(value);
+            } else {
+                hasher.WriteJumbo(FromHex256(value));
+            }
+        }
+    }
+    const uint64_t result{hasher.Finalize()};
+    BOOST_CHECK_EQUAL(hasher.Finalize(), result);
+    return result;
+}
+
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
 
@@ -167,6 +200,9 @@ BOOST_AUTO_TEST_CASE(siphash_test_vectors)
         const uint64_t k0{FromHex64(test["key"][0])}, k1{FromHex64(test["key"][1])};
         const uint64_t expected24{FromHex64(test["expected"]["siphash24"])};
         BOOST_CHECK_EQUAL(CalculateSipHash24(test, k0, k1), expected24);
+        const uint64_t expected13uj{FromHex64(test["expected"]["siphash13uj"])};
+        BOOST_CHECK_EQUAL(CalculateSipHash13UJ(test, k0, k1, /*normal_as_jumbo=*/false), expected13uj);
+        BOOST_CHECK_EQUAL(CalculateSipHash13UJ(test, k0, k1, /*normal_as_jumbo=*/true), expected13uj);
         if (auto& hash_value{test["hash"]}; !hash_value.isNull()) {
             const uint256 hash{FromHex256(hash_value)};
             if (auto& extra_value{test["extras"]["siphash24"]}; !extra_value.isNull()) {
@@ -174,6 +210,12 @@ BOOST_AUTO_TEST_CASE(siphash_test_vectors)
                 BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(hash, extra), expected24);
             } else {
                 BOOST_CHECK_EQUAL(PresaltedSipHasher(k0, k1)(hash), expected24);
+            }
+            const PresaltedSipHasher13UJ presalted_hasher{k0, k1};
+            if (auto& extra_value{test["extras"]["siphash13uj"]}; !extra_value.isNull()) {
+                BOOST_CHECK_EQUAL(presalted_hasher(hash, FromHex64(extra_value)), expected13uj);
+            } else {
+                BOOST_CHECK_EQUAL(presalted_hasher(hash), expected13uj);
             }
         }
     }
