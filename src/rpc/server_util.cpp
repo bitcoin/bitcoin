@@ -6,7 +6,9 @@
 
 #include <chain.h>
 #include <common/args.h>
+#include <interfaces/mining.h>
 #include <net_processing.h>
+#include <node/block_template_manager.h>
 #include <node/context.h>
 #include <node/miner.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -111,6 +113,14 @@ interfaces::Mining& EnsureMining(const NodeContext& node)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node miner not found");
     }
     return *node.mining;
+}
+
+node::BlockTemplateManager& EnsureBlockTemplateManager(const NodeContext& node)
+{
+    if (!node.block_template_manager) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Block template manager not found");
+    }
+    return *node.block_template_manager;
 }
 
 PeerManager& EnsurePeerman(const NodeContext& node)
