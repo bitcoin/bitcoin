@@ -15,6 +15,7 @@
 #include <util/strencodings.h>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 #include <univalue.h>
 

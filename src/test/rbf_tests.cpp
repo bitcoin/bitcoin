@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 #include <optional>
 #include <vector>
 

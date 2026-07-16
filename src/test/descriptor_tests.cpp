@@ -6,6 +6,7 @@
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <test/util/setup_common.h>
+#include <test/util/stringify.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>

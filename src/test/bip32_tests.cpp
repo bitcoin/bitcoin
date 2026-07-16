@@ -9,11 +9,26 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <test/util/stringify.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 
 #include <string>
 #include <vector>
+
+static std::string stringify(const CExtKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtKey{" + HexStr(code) + "}";
+}
+
+static std::string stringify(const CExtPubKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtPubKey{" + HexStr(code) + "}";
+}
 
 namespace {
 
