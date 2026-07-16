@@ -30,7 +30,6 @@ import tempfile
 import re
 import logging
 from test_framework.util import (
-    Binaries,
     export_env_build_path,
     get_binary_paths,
 )
@@ -409,6 +408,67 @@ NON_SCRIPTS = [
     "test_runner.py",
 ]
 
+
+def expand_bench_tests(config, test_list):
+    if config["components"].getboolean("BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
+        # Remove it, and expand it for each bench in the list
+        test_list.remove(TOOL_BENCH_SANITY_CHECK)
+        bench_cmd = [get_binary_paths(config).bitcoin_bench, "-list"]
+        bench_list = subprocess.check_output(bench_cmd, text=True).splitlines()
+        bench_list = [f"{TOOL_BENCH_SANITY_CHECK} --bench={b}" for b in bench_list]
+        # Start with special scripts (variable, unknown runtime)
+        test_list.extendleft(reversed(bench_list))
+    return test_list
+
+
+def ctest_test_name(test):
+    test_argv = test.split()
+    name = os.path.splitext(test_argv[0])[0]
+    for test_arg in test_argv[1:]:
+        if not test_arg.startswith("--"):
+            raise ValueError(f"Functional test argument is not an option: {test_arg}")
+        arg_name = re.sub(r"[^A-Za-z0-9_]+", "_", test_arg[2:])
+        if not arg_name:
+            raise ValueError(f"Functional test argument has no usable name: {test_arg}")
+        name += f".{arg_name}"
+    return f"functional.{name}"
+
+
+def dump_ctest_inventory(config, *, extended):
+    test_list = deque(ALL_SCRIPTS if extended else BASE_SCRIPTS)
+    test_list = expand_bench_tests(config, test_list)
+    check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=True)
+    check_script_prefixes()
+    functional_dir = pathlib.Path(config["environment"]["SRCDIR"]) / "test/functional"
+    missing_scripts = sorted({test.split()[0] for test in test_list
+                              if not (functional_dir / test.split()[0]).is_file()})
+    if missing_scripts:
+        raise RuntimeError("Functional test scripts do not exist: " + ", ".join(missing_scripts))
+
+    test_names = set()
+    for test_index, test in enumerate(test_list):
+        portseed = test_index + 2
+        cost = len(test_list) - test_index
+        test_argv = test.split()
+        test_name = ctest_test_name(test)
+        if test_name in test_names:
+            raise RuntimeError(f"Duplicate functional CTest name: {test_name}")
+        test_names.add(test_name)
+        if len(test_argv) > 2:
+            raise RuntimeError(
+                "Functional CTest discovery supports at most one test argument: "
+                + test
+            )
+        extended_label = "extended" if extended and test_argv[0] in EXTENDED_SCRIPTS else ""
+        test_arg = test_argv[1] if len(test_argv) > 1 else ""
+        fields = [test_name, test_argv[0], str(portseed), extended_label, test_arg, str(cost)]
+        if any("\t" in field or "\n" in field for field in fields):
+            raise RuntimeError(f"Invalid character in functional CTest record: {test}")
+        # Keep this tab-separated protocol aligned with discover_tests():
+        # name, script, portseed, optional extended label, test argument, and cost.
+        print("\t".join(fields))
+
+
 def main():
     # Parse arguments and pass through unrecognised args
     parser = argparse.ArgumentParser(add_help=False,
@@ -420,6 +480,7 @@ def main():
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
+    parser.add_argument('--dump-ctest', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--exclude', '-x', action='append', help='specify a script to exclude. Can be specified multiple times. The .py extension is optional.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
@@ -450,6 +511,10 @@ def main():
     config = configparser.ConfigParser()
     configfile = os.path.abspath(os.path.dirname(__file__)) + "/../config.ini"
     config.read_file(open(configfile))
+
+    if args.dump_ctest:
+        dump_ctest_inventory(config, extended=args.extended)
+        return
 
     passon_args.append("--configfile=%s" % configfile)
 
@@ -540,14 +605,7 @@ def main():
                 # Exclude all variants of a test
                 remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
 
-    if config["components"].getboolean("BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
-        # Remove it, and expand it for each bench in the list
-        test_list.remove(TOOL_BENCH_SANITY_CHECK)
-        bench_cmd = Binaries(get_binary_paths(config), bin_dir=None).bench_argv() + ["-list"]
-        bench_list = subprocess.check_output(bench_cmd, text=True).splitlines()
-        bench_list = [f"{TOOL_BENCH_SANITY_CHECK} --bench={b}" for b in bench_list]
-        # Start with special scripts (variable, unknown runtime)
-        test_list.extendleft(reversed(bench_list))
+    test_list = expand_bench_tests(config, test_list)
 
     if args.filter:
         test_list = deque(filter(re.compile(args.filter).search, test_list))
