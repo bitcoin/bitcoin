@@ -5,6 +5,7 @@
 #include <kernel/bitcoinkernel.h>
 #include <kernel/bitcoinkernel_wrapper.h>
 #include <util/fs.h>
+#include <util/string.h>
 
 #define BITCOIN_TEST_MAIN
 #include <test/util/framework.h>
@@ -74,6 +75,29 @@ std::string byte_span_to_hex_string_reversed(std::span<const std::byte> bytes)
 
     return oss.str();
 }
+
+namespace btck {
+static std::string stringify(const BlockHash& h)
+{
+    return "BlockHash{" + ::byte_span_to_hex_string_reversed(h.ToBytes()) + "}";
+}
+
+static std::string stringify(const Txid& t)
+{
+    return "Txid{" + ::byte_span_to_hex_string_reversed(t.ToBytes()) + "}";
+}
+
+static std::string stringify(const TxidView& t)
+{
+    return "TxidView{" + ::byte_span_to_hex_string_reversed(t.ToBytes()) + "}";
+}
+
+static std::string stringify(const BlockTreeEntry& e)
+{
+    return "BlockTreeEntry{height=" + util::ToString(e.GetHeight()) +
+           ", hash=" + ::byte_span_to_hex_string_reversed(e.GetHash().ToBytes()) + "}";
+}
+} // namespace btck
 
 constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerificationFlags::DERSIG |
                                      ScriptVerificationFlags::NULLDUMMY | ScriptVerificationFlags::CHECKLOCKTIMEVERIFY |

@@ -20,9 +20,15 @@
 #include <vector>
 
 #include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 using namespace util::hex_literals;
 using util::ToString;
+
+static std::string stringify(const CNoDestination& d)
+{
+    return "CNoDestination{" + HexStr(d.GetScript()) + "}";
+}
 
 static const std::string strSecret1 = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj";
 static const std::string strSecret2 = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
