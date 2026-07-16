@@ -58,14 +58,6 @@ struct invalid_fuzzing_input_exception : public std::exception {
 };
 
 template <typename T, typename P>
-DataStream Serialize(const T& obj, const P& params)
-{
-    DataStream ds{};
-    ds << params(obj);
-    return ds;
-}
-
-template <typename T, typename P>
 T Deserialize(DataStream&& ds, const P& params)
 {
     T obj;
@@ -103,7 +95,7 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 template <typename T, typename P>
 void AssertEqualAfterSerializeDeserialize(const T& obj, const P& params)
 {
-    assert(Deserialize<T>(Serialize(obj, params), params) == obj);
+    assert(Deserialize<T>(Serialize(params(obj)), params) == obj);
 }
 template <typename T>
 void AssertEqualAfterSerializeDeserialize(const T& obj)
