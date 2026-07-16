@@ -243,6 +243,12 @@ bool BlockTemplateManager::CooldownIfHeadersAhead(const BlockRef& last_tip, bool
     return true;
 }
 
+std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& current_tip, MillisecondsDouble timeout)
+{
+    bool interrupt_wait{false};
+    return WaitTipChanged(current_tip, timeout, interrupt_wait);
+}
+
 std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt)
 {
     Assume(timeout >= 0ms); // No internal callers should use a negative timeout

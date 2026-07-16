@@ -116,6 +116,14 @@ interfaces::Mining& EnsureMining(const NodeContext& node)
     return *node.mining;
 }
 
+node::BlockTemplateManager& EnsureBlockTemplateManager(const NodeContext& node)
+{
+    if (!node.block_template_manager) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Block template manager not found");
+    }
+    return *node.block_template_manager;
+}
+
 PeerManager& EnsurePeerman(const NodeContext& node)
 {
     if (!node.peerman) {

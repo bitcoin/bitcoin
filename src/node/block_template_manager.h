@@ -63,6 +63,11 @@ public:
      *  interrupt is set (not when the timeout is reached). */
     std::optional<interfaces::BlockRef> WaitTipChanged(const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt);
 
+    /** Convenience overload for in-process callers (e.g. RPC) that have no
+     *  interrupt handle. Takes the timeout by value so the caller's variable is
+     *  left unchanged; the wait still ends on chain shutdown. */
+    std::optional<interfaces::BlockRef> WaitTipChanged(const uint256& current_tip, MillisecondsDouble timeout = MillisecondsDouble::max());
+
     /**
      * Wait while the best known header extends the current chain tip AND at
      * least one block is being added to the tip every 3 seconds. If the tip is
