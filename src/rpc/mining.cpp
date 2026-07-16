@@ -739,7 +739,6 @@ static RPCMethod getblocktemplate()
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    Mining& miner = EnsureMining(node);
     node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
     std::string strMode = "template";
@@ -891,7 +890,7 @@ static RPCMethod getblocktemplate()
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
-    static std::unique_ptr<BlockTemplate> block_template;
+    static std::unique_ptr<node::CBlockTemplate> block_template;
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
@@ -907,7 +906,7 @@ static RPCMethod getblocktemplate()
         // a delay to each getblocktemplate call. This differs from typical
         // long-lived IPC usage, where the overhead is paid only when creating
         // the initial template.
-        block_template = miner.createNewBlock({}, /*cooldown=*/false);
+        block_template = block_template_manager.CreateNewTemplate({});
         CHECK_NONFATAL(block_template);
 
 
@@ -915,7 +914,7 @@ static RPCMethod getblocktemplate()
         pindexPrev = pindexPrevNew;
     }
     CHECK_NONFATAL(pindexPrev);
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block};
 
     // Update nTime
     UpdateTime(&block, consensusParams, pindexPrev);
@@ -928,8 +927,8 @@ static RPCMethod getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<Txid, int64_t> setTxIndex;
-    std::vector<CAmount> tx_fees{block_template->getTxFees()};
-    std::vector<int64_t> tx_sigops{block_template->getTxSigops()};
+    std::vector<CAmount> tx_fees{block_template->vTxFees};
+    std::vector<int64_t> tx_sigops{block_template->vTxSigOpsCost};
 
     int i = 0;
     for (const auto& it : block.vtx) {
@@ -1057,7 +1056,7 @@ static RPCMethod getblocktemplate()
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
     }
 
-    if (auto coinbase{block_template->getCoinbaseTx()}; coinbase.required_outputs.size() > 0) {
+    if (auto coinbase{block_template->m_coinbase_tx}; coinbase.required_outputs.size() > 0) {
         CHECK_NONFATAL(coinbase.required_outputs.size() == 1); // Only one output is currently expected
         result.pushKV("default_witness_commitment", HexStr(coinbase.required_outputs[0].scriptPubKey));
     }
