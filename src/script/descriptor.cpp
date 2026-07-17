@@ -2245,6 +2245,8 @@ struct KeyParser {
     const SigningProvider* m_in;
     //! List of multipath expanded keys contained in the Miniscript.
     mutable std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> m_keys;
+    //! Multipath branch used when comparing and formatting keys.
+    mutable size_t m_multipath_index{0};
     //! Used to detect key parsing errors within a Miniscript.
     mutable std::string m_key_parsing_error;
     //! The script context we're operating within (Tapscript or P2WSH).
@@ -2257,7 +2259,7 @@ struct KeyParser {
         : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
-        return *m_keys.at(a).at(0) < *m_keys.at(b).at(0);
+        return *m_keys.at(a).at(m_multipath_index) < *m_keys.at(b).at(m_multipath_index);
     }
 
     ParseScriptContext ParseContext() const {
@@ -2280,7 +2282,7 @@ struct KeyParser {
 
     std::optional<std::string> ToString(const Key& key, bool&) const
     {
-        return m_keys.at(key).at(0)->ToString();
+        return m_keys.at(key).at(m_multipath_index)->ToString();
     }
 
     template<typename I> std::optional<Key> FromPKBytes(I begin, I end) const
@@ -2727,6 +2729,19 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                     }
                 } else if (vec.size() != num_multipath) {
                     error = strprintf("Miniscript: Multipath derivation paths have mismatched lengths");
+                    return {};
+                }
+            }
+
+            // Duplicate keys were checked above for branch 0. Check every remaining branch now
+            // that all multipath key vectors have been expanded to the same length.
+            for (size_t i = 1; i < num_multipath; ++i) {
+                parser.m_multipath_index = i;
+                node->DuplicateKeyCheck(parser);
+                if (!node->CheckDuplicateKey()) {
+                    const auto* insane_node = &node.value();
+                    if (const auto sub = node->FindInsaneSub()) insane_node = sub;
+                    error = *insane_node->ToString(parser) + " is not sane: contains duplicate public keys";
                     return {};
                 }
             }
