@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <cstdlib>
 #include <cstring>
 #include <future>
 #include <functional>
@@ -26,10 +25,19 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
+#include <thread>
+#include <variant>
+
+#ifdef WIN32
+#include <afunix.h>
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <thread>
-#include <unistd.h>
+#endif
 
 namespace mp {
 namespace test {
@@ -37,63 +45,113 @@ namespace {
 
 constexpr auto FAILURE_TIMEOUT = std::chrono::seconds{30};
 
-//! Owns a temporary Unix-domain listening socket used by ListenSetup. Tests call
+//! Owns a temporary listening socket used by ListenSetup. Tests call
 //! Connect() to create client socket FDs and release() to transfer the listening
 //! FD to ListenConnections().
-class UnixListener
+class SocketListener
 {
 public:
-    UnixListener()
+    SocketListener()
     {
-        std::string dir_template = (std::filesystem::temp_directory_path() / "mptest-listener-XXXXXX").string();
-        char* dir = mkdtemp(dir_template.data());
-        KJ_REQUIRE(dir != nullptr);
-        m_dir = dir;
-        m_path = m_dir + "/socket";
+        // For now, use AF_UNIX sockets by default, and TCP on Windows to work
+        // around limitations with AF_UNIX on in Wine
+        // (https://gitlab.winehq.org/wine/wine/-/merge_requests/7650), in
+        // particular lack of compatibility between AF_UNIX and AcceptEx. It
+        // could make sense later to test TCP connections on Unix, or to avoid
+        // AcceptEx in Wine by calling accept in a thread.
+#ifdef WIN32
+        m_addr.emplace<sockaddr_in>();
+#else
+        m_addr.emplace<sockaddr_un>();
+#endif
+        std::visit([this](auto& addr) { Init(addr); }, m_addr);
+    }
+
+    ~SocketListener()
+    {
+        if (m_fd != SocketError) mp::CloseSocket(m_fd);
+        if (auto* un = std::get_if<sockaddr_un>(&m_addr)) {
+            std::error_code ec;
+            if (un->sun_path[0]) std::filesystem::remove(un->sun_path, ec);
+            if (!m_dir.empty()) std::filesystem::remove(m_dir, ec);
+        }
+    }
+
+    SocketId release()
+    {
+        assert(m_fd != SocketError);
+        SocketId fd = m_fd;
+        m_fd = SocketError;
+        return fd;
+    }
+
+    SocketId MakeConnectedSocket() const
+    {
+        return std::visit([](const auto& addr) { return Connect(addr); }, m_addr);
+    }
+
+private:
+    void Init(sockaddr_in& addr)
+    {
+        m_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        KJ_REQUIRE(m_fd != SocketError);
+
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        addr.sin_port = 0;
+        KJ_REQUIRE(bind(m_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0);
+        KJ_REQUIRE(listen(m_fd, SOMAXCONN) == 0);
+
+        socklen_t len = sizeof(addr);
+        KJ_REQUIRE(getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0);
+    }
+
+    void Init(sockaddr_un& addr)
+    {
+        auto base = std::filesystem::temp_directory_path();
+        auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+        for (unsigned attempt = 0; ; ++attempt) {
+            auto path = base / ("mptest-listener-" + std::to_string(now) + std::to_string(attempt));
+            if (std::filesystem::create_directory(path)) {
+                m_dir = path.string();
+                break;
+            }
+        }
+        std::string path = m_dir + "/socket";
 
         m_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-        KJ_REQUIRE(m_fd >= 0);
+        KJ_REQUIRE(m_fd != SocketError);
 
-        sockaddr_un addr{};
         addr.sun_family = AF_UNIX;
-        KJ_REQUIRE(m_path.size() < sizeof(addr.sun_path));
-        std::strncpy(addr.sun_path, m_path.c_str(), sizeof(addr.sun_path) - 1);
+        KJ_REQUIRE(path.size() < sizeof(addr.sun_path));
+        std::strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
         KJ_REQUIRE(bind(m_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0);
         KJ_REQUIRE(listen(m_fd, SOMAXCONN) == 0);
     }
 
-    ~UnixListener()
+    static SocketId Connect(const sockaddr_in& addr)
     {
-        if (m_fd >= 0) close(m_fd);
-        if (!m_path.empty()) unlink(m_path.c_str());
-        if (!m_dir.empty()) rmdir(m_dir.c_str());
-    }
+        SocketId fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        KJ_REQUIRE(fd != SocketError);
 
-    int release()
-    {
-        assert(m_fd >= 0);
-        int fd = m_fd;
-        m_fd = -1;
+        sockaddr_in a = addr;
+        KJ_REQUIRE(connect(fd, reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0);
         return fd;
     }
 
-    int MakeConnectedSocket() const
+    static SocketId Connect(const sockaddr_un& addr)
     {
-        int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-        KJ_REQUIRE(fd >= 0);
+        SocketId fd = socket(AF_UNIX, SOCK_STREAM, 0);
+        KJ_REQUIRE(fd != SocketError);
 
-        sockaddr_un addr{};
-        addr.sun_family = AF_UNIX;
-        KJ_REQUIRE(m_path.size() < sizeof(addr.sun_path));
-        std::strncpy(addr.sun_path, m_path.c_str(), sizeof(addr.sun_path) - 1);
-        KJ_REQUIRE(connect(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0);
+        sockaddr_un a = addr;
+        KJ_REQUIRE(connect(fd, reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0);
         return fd;
     }
 
-private:
-    int m_fd{-1};
+    SocketId m_fd{SocketError};
     std::string m_dir;
-    std::string m_path;
+    std::variant<sockaddr_in, sockaddr_un> m_addr;
 };
 
 //! Runs a client EventLoop on its own thread and connects one socket FD to the
@@ -102,7 +160,7 @@ private:
 class ClientSetup
 {
 public:
-    explicit ClientSetup(int fd)
+    explicit ClientSetup(SocketId fd)
         : thread([this, fd] {
               EventLoop loop("mptest-client", [](mp::LogMessage log) {
                   KJ_LOG(INFO, log.level, log.message);
@@ -199,7 +257,7 @@ public:
         KJ_REQUIRE(matched);
     }
 
-    UnixListener listener;
+    SocketListener listener;
     std::promise<void> ready_promise;
     std::optional<EventLoopRef> m_loop_ref;
     Mutex counter_mutex;
