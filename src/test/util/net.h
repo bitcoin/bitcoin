@@ -176,6 +176,8 @@ public:
 
     ssize_t Recv(void* buf, size_t len, int flags) const override;
 
+    int ShutdownSend() const override { return 0; }
+
     int Connect(const sockaddr*, socklen_t) const override;
 
     int Bind(const sockaddr*, socklen_t) const override;
