@@ -117,7 +117,7 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
     return result;
 }
 
-std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_info_to_args)
+std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv)
 {
     auto fds{SocketPair()};
 
@@ -127,7 +127,7 @@ std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_
     // locks at fork time. In that case, running code that allocates memory or
     // takes locks in the child between fork() and exec() can deadlock
     // indefinitely. Precomputing arguments in the parent avoids this.
-    const std::vector<std::string> args{connect_info_to_args(std::to_string(fds[0]))};
+    const std::vector<std::string> args{spawn_argv(std::to_string(fds[0]))};
     const std::vector<char*> argv{MakeArgv(args)};
 
     // Clear FD_CLOEXEC on fds[0] before forking so it survives exec in the child.
@@ -174,7 +174,7 @@ std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_
     return {pid, fds[1]};
 }
 
-SocketId StartSpawned(const SpawnConnectInfo& connect_info)
+SocketId StartSpawned(const std::string& connect_info)
 {
     try {
         return std::stoi(connect_info);
