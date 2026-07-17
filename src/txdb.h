@@ -13,6 +13,7 @@
 #include <sync.h>
 #include <util/fs.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <future>
@@ -38,9 +39,12 @@ class CCoinsViewDB final : public CCoinsView
 protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
-    //! Prevents CompactFull() from using m_db while ResizeCache() replaces it.
-    Mutex m_db_mutex;
+    //! Prevents cursor creation while ResizeCache() replaces m_db.
+    mutable Mutex m_db_mutex;
+    //! Live cursors blocking ResizeCache() from replacing m_db.
+    mutable std::atomic_int m_cursor_count{0};
     std::unique_ptr<CDBWrapper> m_db;
+    //! Only accessed under cs_main (destructor excepted); ResizeCache() waits for it before replacing m_db.
     std::shared_future<void> m_compaction;
 public:
     explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
@@ -52,8 +56,9 @@ public:
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
-    //! Get a cursor to iterate over the whole state.
-    std::unique_ptr<CCoinsViewCursor> Cursor() const;
+    //! Get a cursor to iterate over the whole state. ResizeCache() waits for cursors to be destroyed.
+    //! A thread not holding cs_main must destroy its cursors before acquiring cs_main.
+    std::unique_ptr<CCoinsViewCursor> Cursor() const EXCLUSIVE_LOCKS_REQUIRED(!m_db_mutex);
 
     //! Whether an unsupported database format is used.
     bool NeedsUpgrade();
@@ -63,7 +68,7 @@ public:
     void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
 
     //! Perform a full compaction of the underlying LevelDB on a one-shot background thread.
-    std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
+    std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Return an underlying LevelDB property value, if available.
     std::optional<std::string> GetDBProperty(const std::string& property);

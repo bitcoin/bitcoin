@@ -76,6 +76,10 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     // reset.
     if (!m_db_params.memory_only) {
         LOCK(m_db_mutex);
+        if (m_compaction.valid()) m_compaction.wait();
+        // `cs_main` is held while waiting; see Cursor().
+        while (int cursor_count{m_cursor_count.load()})
+            m_cursor_count.wait(cursor_count);
         // Have to do a reset first to get the original `m_db` state to release its
         // filesystem lock.
         m_db.reset();
@@ -202,8 +206,7 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
     m_compaction = std::async(std::launch::async, [this] {
         try {
             util::ThreadRename("utxocompact");
-            LOCK(m_db_mutex);
-
+            // No m_db_mutex: ResizeCache() waits for m_compaction before replacing m_db.
             LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
             m_db->CompactFull();
             LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
@@ -220,9 +223,17 @@ class CCoinsViewDBCursor: public CCoinsViewCursor
 public:
     // Prefer using CCoinsViewDB::Cursor() since we want to perform some
     // cache warmup on instantiation.
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256& in_block_hash):
-        CCoinsViewCursor(in_block_hash), pcursor(pcursorIn) {}
-    ~CCoinsViewDBCursor() = default;
+    // Must be constructed with CCoinsViewDB::m_db_mutex held so the increment cannot interleave with ResizeCache().
+    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256& in_block_hash, std::atomic_int& cursor_count) : CCoinsViewCursor(in_block_hash), m_cursor_count{cursor_count}, pcursor(pcursorIn)
+    {
+        ++m_cursor_count;
+    }
+    ~CCoinsViewDBCursor() override
+    {
+        pcursor.reset(); // Destroy the iterator before allowing ResizeCache().
+        --m_cursor_count; // No m_db_mutex: ResizeCache() holds it while draining.
+        m_cursor_count.notify_all();
+    }
 
     bool GetKey(COutPoint &key) const override;
     bool GetValue(Coin &coin) const override;
@@ -231,6 +242,7 @@ public:
     void Next() override;
 
 private:
+    std::atomic_int& m_cursor_count;
     std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
@@ -239,8 +251,9 @@ private:
 
 std::unique_ptr<CCoinsViewCursor> CCoinsViewDB::Cursor() const
 {
+    LOCK(m_db_mutex);
     auto i = std::make_unique<CCoinsViewDBCursor>(
-        const_cast<CDBWrapper&>(*m_db).NewIterator(), GetBestBlock());
+        const_cast<CDBWrapper&>(*m_db).NewIterator(), GetBestBlock(), m_cursor_count);
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
