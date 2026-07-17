@@ -1070,6 +1070,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     int nRPCBind = std::max(args.GetArgs("-rpcbind").size(), size_t(2));
     // HTTP server connected client sockets
     int rpc_max_connections = std::max(args.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS), 1);
+    if (!args.GetBoolArg("-server", false)) {
+        nRPCBind = 0;
+        rpc_max_connections = 0;
+    }
+
     // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces.
     // Every element is an int >= 0 so summing in int64_t cannot overflow.
     // RaiseFileDescriptorLimit() accepts an int so we check that limit before casting.

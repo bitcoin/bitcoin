@@ -390,6 +390,16 @@ class InitTest(BitcoinTestFramework):
                 match=ErrorMatch.PARTIAL_REGEX,
             )
 
+        # Start without the HTTP server to ensure that -rpcmaxconnections is ignored
+        with node.assert_debug_log(
+            expected_msgs = ["net thread start"],
+            unexpected_msgs = ["Initialized HTTP server"],
+            timeout = 10
+        ):
+            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"])
+        # No HTTP server, no RPC `stop`
+        node.kill_process()
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
