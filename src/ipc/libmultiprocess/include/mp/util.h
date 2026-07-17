@@ -319,6 +319,9 @@ SocketId StartSpawned(const std::string& connect_info);
 //! between parent and child processes.
 std::array<SocketId, 2> SocketPair();
 
+//! Close a socket, throwing a KJ exception on failure.
+void CloseSocket(SocketId fd);
+
 //! Start a process and return its process id. Caller should call WaitProcess
 //! on the returned id.
 ProcessId StartProcess(const std::vector<std::string>& args);

@@ -306,6 +306,15 @@ std::array<SocketId, 2> SocketPair()
     return {pair[0], pair[1]};
 }
 
+void CloseSocket(SocketId fd)
+{
+#ifdef WIN32
+    KJ_WINSOCK(closesocket(fd));
+#else
+    KJ_SYSCALL(close(fd));
+#endif
+}
+
 ProcessId StartProcess(const std::vector<std::string>& args)
 {
 #ifndef WIN32
