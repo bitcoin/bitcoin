@@ -64,7 +64,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
             if (txids.contains(in.prevout.hash)) continue;
             Coin coin{};
             if (!spent) coin.out.nValue = 1;
-            cache.EmplaceCoinInternalDANGER(COutPoint{in.prevout}, std::move(coin));
+            cache.EmplaceCoinInternalDANGER(in.prevout, std::move(coin));
         }
         txids.emplace(tx->GetHash());
     }

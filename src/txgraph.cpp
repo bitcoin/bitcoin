@@ -2710,9 +2710,9 @@ void TxGraphImpl::CommitStaging() noexcept
     m_main_clusterset.m_deps_to_add = std::move(m_staging_clusterset->m_deps_to_add);
     m_main_clusterset.m_to_remove = std::move(m_staging_clusterset->m_to_remove);
     m_main_clusterset.m_group_data = std::move(m_staging_clusterset->m_group_data);
-    m_main_clusterset.m_oversized = std::move(m_staging_clusterset->m_oversized);
-    m_main_clusterset.m_txcount = std::move(m_staging_clusterset->m_txcount);
-    m_main_clusterset.m_txcount_oversized = std::move(m_staging_clusterset->m_txcount_oversized);
+    m_main_clusterset.m_oversized = m_staging_clusterset->m_oversized;
+    m_main_clusterset.m_txcount = m_staging_clusterset->m_txcount;
+    m_main_clusterset.m_txcount_oversized = m_staging_clusterset->m_txcount_oversized;
     // Delete the old staging graph, after all its information was moved to main.
     m_staging_clusterset.reset();
     Compact();
