@@ -1084,6 +1084,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (user_rpc_max_connections < 1) {
         return InitError(Untranslated("-rpcmaxconnections must be greater than zero. Use -server=0 to disable HTTP."));
     }
+    if (!args.GetBoolArg("-server", false)) {
+        num_rpc_bind = 0;
+        user_rpc_max_connections = 0;
+    }
 
     // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces.
     // Every element is an int >= 0 so summing in int64_t cannot overflow.
