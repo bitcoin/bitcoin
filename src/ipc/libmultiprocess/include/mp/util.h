@@ -277,22 +277,20 @@ using ProcessId = int;
 using SocketId = int;
 constexpr SocketId SocketError{-1};
 
-//! Information about parent process passed to child process as a command-line
-//! argument. On unix this is the child socket fd number formatted as a string.
-using SpawnConnectInfo = std::string;
-
-//! Callback type used by SpawnProcess below.
-using SpawnConnectInfoToArgsFn = std::function<std::vector<std::string>(const SpawnConnectInfo&)>;
-
 //! Spawn a new process that communicates with the current process over a socket
-//! pair. Calls connect_info_to_args callback with a connection string that
-//! needs to be passed to the child process, and executes the argv command line
-//! it returns. Returns child process id and socket id.
-std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_info_to_args);
+//! pair. Calls spawn_argv callback with a connection string that needs to be
+//! passed to the child process, and executes the argv command line it returns.
+//! Returns child process id and socket id.
+//!
+//! The connection string is just a file descriptor number on unix, and the
+//! child process can call StartSpawned to parse it.
+std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv);
 
-//! Initialize spawned child process using the SpawnConnectInfo string passed to it,
-//! returning a socket id for communicating with the parent process.
-SocketId StartSpawned(const SpawnConnectInfo& connect_info);
+//! Initialize spawned child process. The connect_info argument is the
+//! connection string SpawnProcess generated in the parent process and passed
+//! to the child on its command line. Returns socket id for communicating with
+//! the parent process.
+SocketId StartSpawned(const std::string& connect_info);
 
 //! Create a socket pair that can be used to communicate within a process or
 //! between parent and child processes.

@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <csignal>
 #include <cstdlib>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <sys/wait.h>
@@ -90,7 +91,7 @@ KJ_TEST("SpawnProcess does not run callback in child")
         control_cv.notify_one();
     });
 
-    const auto [pid, socket]{SpawnProcess([&](SpawnConnectInfo connect_info) -> std::vector<std::string> {
+    const auto [pid, socket]{SpawnProcess([&](std::string connect_info) -> std::vector<std::string> {
         // If this callback runs in the post-fork child, target_mutex appears
         // locked forever (the owning thread does not exist), so this deadlocks.
         std::lock_guard<std::mutex> g(target_mutex);
