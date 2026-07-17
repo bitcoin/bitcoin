@@ -644,6 +644,19 @@ def main():
         results_filepath=results_filepath,
     )
 
+
+def print_combined_logs(tests_dir, testdir, combined_logs_len):
+    # Print the final `combined_logs_len` lines of the combined logs.
+    print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
+    print('\n============')
+    print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+    print('============\n')
+    combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
+    if BOLD[0]:
+        combined_logs_args += ['--color']
+    combined_logs, _ = subprocess.Popen(combined_logs_args, text=True, stdout=subprocess.PIPE).communicate()
+    print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+
 def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
     args = args or []
 
@@ -721,16 +734,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
                 print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
                 print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
                 if combined_logs_len and os.path.isdir(testdir):
-                    # Print the final `combinedlogslen` lines of the combined logs
-                    print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
-                    print('\n============')
-                    print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
-                    print('============\n')
-                    combined_logs_args = [sys.executable, os.path.join(tests_dir, 'combine_logs.py'), testdir]
-                    if BOLD[0]:
-                        combined_logs_args += ['--color']
-                    combined_logs, _ = subprocess.Popen(combined_logs_args, text=True, stdout=subprocess.PIPE).communicate()
-                    print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+                    print_combined_logs(tests_dir, testdir, combined_logs_len)
 
                 if failfast:
                     logging.debug("Early exiting after test failure")
