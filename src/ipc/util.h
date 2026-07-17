@@ -5,8 +5,12 @@
 #ifndef BITCOIN_IPC_UTIL_H
 #define BITCOIN_IPC_UTIL_H
 
+#include <tinyformat.h>
+#include <util/strencodings.h>
+
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <kj/debug.h>
 #include <mp/util.h>
 #include <mp/version.h>
@@ -33,6 +37,20 @@ inline std::array<SocketId, 2> SocketPair()
     int pair[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
     return {pair[0], pair[1]};
+}
+
+inline std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv)
+{
+    ProcessId pid;
+    SocketId socket = SpawnProcess(pid, [&](int fd) { return spawn_argv(strprintf("%d", fd)); });
+    return {pid, socket};
+}
+
+inline SocketId StartSpawned(const std::string& connect_info)
+{
+    auto socket = ToIntegral<SocketId>(connect_info);
+    if (!socket) throw std::invalid_argument(strprintf("Invalid socket descriptor '%s'", connect_info));
+    return *socket;
 }
 #endif
 } // namespace mp
