@@ -480,6 +480,7 @@ def main():
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
+    parser.add_argument('--ctest-direct', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--dump-ctest', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--exclude', '-x', action='append', help='specify a script to exclude. Can be specified multiple times. The .py extension is optional.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
@@ -518,6 +519,19 @@ def main():
 
     passon_args.append("--configfile=%s" % configfile)
 
+    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+
+    if not enable_bitcoind:
+        print("No functional tests to run.")
+        print("Re-compile with the -DBUILD_DAEMON=ON build option")
+        sys.exit(1)
+
+    export_env_build_path(config)
+
+    if args.ctest_direct:
+        run_ctest_test(config=config, tests=tests, args=passon_args,
+                       combined_logs_len=args.combinedlogslen)
+
     # Set up logging
     logging_level = logging.INFO if args.quiet else logging.DEBUG
     logging.basicConfig(format='%(message)s', level=logging_level)
@@ -535,15 +549,6 @@ def main():
         # Stop early if the parent directory doesn't exist
         assert results_filepath.parent.exists(), "Results file parent directory does not exist"
         logging.debug("Test results will be written to " + str(results_filepath))
-
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
-
-    if not enable_bitcoind:
-        print("No functional tests to run.")
-        print("Re-compile with the -DBUILD_DAEMON=ON build option")
-        sys.exit(1)
-
-    export_env_build_path(config)
 
     # Build tests
     test_list = deque()
@@ -643,6 +648,46 @@ def main():
         use_term_control=args.ansi,
         results_filepath=results_filepath,
     )
+
+
+def run_ctest_test(*, config, tests, args, combined_logs_len):
+    if len(tests) != 1:
+        raise RuntimeError("--ctest-direct requires exactly one test script")
+
+    timeout_factor = os.getenv("TEST_RUNNER_TIMEOUT_FACTOR")
+    has_timeout_factor = any(arg.startswith("--timeout-factor=") for arg in args)
+    if timeout_factor and not has_timeout_factor:
+        args.append(f"--timeout-factor={timeout_factor}")
+
+    testdir = next((arg.split("=", 1)[1] for arg in args
+                    if arg.startswith("--tmpdir=")), None)
+    # The runner is invoked from the build tree, but execute the test script
+    # from the configured source tree, matching the native test_runner.py's behavior.
+    test_script = os.path.join(
+        config["environment"]["SRCDIR"], "test", "functional", tests[0]
+    )
+    result = subprocess.run(
+        [sys.executable, test_script] + args,
+        check=False,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, end="")
+
+    returncode = result.returncode
+    if returncode == TEST_EXIT_PASSED and result.stderr:
+        returncode = 1
+
+    if returncode not in (TEST_EXIT_PASSED, TEST_EXIT_SKIPPED):
+        combined_logs_len = combined_logs_len or int(
+            os.getenv("CTEST_FUNCTIONAL_COMBINED_LOGS_LEN", "0")
+        )
+        tests_dir = os.path.dirname(os.path.realpath(__file__))
+        if combined_logs_len and testdir and os.path.isdir(testdir):
+            print_combined_logs(tests_dir, testdir, combined_logs_len)
+
+    sys.exit(returncode)
 
 
 def print_combined_logs(tests_dir, testdir, combined_logs_len):
