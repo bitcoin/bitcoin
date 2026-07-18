@@ -120,7 +120,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     return errors.empty();
 }
 
-bool WriteSettings(const fs::path& path,
+bool WriteJsonUnsafe(const fs::path& path,
     const std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors)
 {

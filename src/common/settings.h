@@ -45,8 +45,13 @@ bool ReadSettings(const fs::path& path,
     std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors);
 
-//! Write settings file.
-bool WriteSettings(const fs::path& path,
+//! Write a JSON object to a file.
+//!
+//! This is a low-level helper that writes directly to `path`. Callers must
+//! write to a temporary file and use RenameOver() to replace the destination
+//! atomically, otherwise a failed or interrupted write can leave a truncated
+//! or empty file.
+bool WriteJsonUnsafe(const fs::path& path,
     const std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors);
 

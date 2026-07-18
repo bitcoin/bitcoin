@@ -493,7 +493,7 @@ bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors, bool backu
 
     LOCK(cs_args);
     std::vector<std::string> write_errors;
-    if (!common::WriteSettings(path_tmp, m_settings.rw_settings, write_errors)) {
+    if (!common::WriteJsonUnsafe(path_tmp, m_settings.rw_settings, write_errors)) {
         SaveErrors(write_errors, errors);
         return false;
     }
