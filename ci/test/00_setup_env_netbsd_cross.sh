@@ -12,6 +12,9 @@ export APT_LLVM_V="22"
 export HOST=x86_64-unknown-netbsd
 export NETBSD_VERSION=11.0_RC6
 export NETBSD_SDK_BASENAME="netbsd-${HOST}-${NETBSD_VERSION}"
+export NETBSD_SDK_SHA512SUMS="\
+0323dbb284913cae27f1e67a41c395dc6c7a4160dc65e79866ca8a69e12bad5fd782cc3f5da81a9d718020a857ccbc764e007f6b2696d88d7b9df83baa86f45b  base.tar.xz\n\
+a33f9cb6886713a2cc9d3e7bfbecbcb77b82d86cd43fa688531e06b389ad1820f1f63e501a37f899aee700270618b0865aacbf569b65a91fdb77ddd48f23d940  comp.tar.xz"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld-${APT_LLVM_V}"
 export SYSROOT="--sysroot=${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}"
 export DEP_OPTS="build_CC=clang build_CXX=clang++ \
