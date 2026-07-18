@@ -62,7 +62,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-22.1.7" /llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 --revision=a255c1ed36a1d06f79bd2633ba9f8d900153007c https://github.com/llvm/llvm-project /llvm-project # llvmorg-22.1.7
 
 # LLVM is configured with LIBCXXABI_USE_LLVM_UNWINDER=OFF,
 # because libunwind doesn't handle exceptions under MSAN.
@@ -88,7 +88,7 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
 fi
 
 if [[ ${BARE_METAL_RISCV} == "true" ]]; then
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2026.06.06 /riscv/gcc
+    ${CI_RETRY_EXE} git clone --depth=1 --revision=81bb1f89664aad156df3d2773195177c92dedc3a https://github.com/riscv-collab/riscv-gnu-toolchain /riscv/gcc # 2026.06.06
     ( cd /riscv/gcc;
       ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32 --disable-gdb;
       make "$MAKEJOBS"; )
@@ -96,7 +96,7 @@ if [[ ${BARE_METAL_RISCV} == "true" ]]; then
 fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${IWYU_LLVM_V}" /include-what-you-use
+  ${CI_RETRY_EXE} git clone --depth=1 --revision="${IWYU_COMMIT}" https://github.com/include-what-you-use/include-what-you-use /include-what-you-use
   pushd /include-what-you-use
   patch -p1 < /ci_container_base/ci/test/01_iwyu.patch
   patch -p1 < /ci_container_base/ci/test/02_iwyu_hash.patch
