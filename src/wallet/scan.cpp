@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <deque>
 #include <future>
+#include <memory>
 
 using interfaces::FoundBlock;
 
@@ -107,24 +108,30 @@ public:
         return false;
     }
 
-    //! Repopulate the filter with new scripts derived by a top-up.
+    //! Repopulate the filter with new scripts derived by a top-up, and
+    //! return the scripts that were added.
     //!
     //! MatchesBlock() reads m_filter_set without synchronization, and filter
     //! checks may run on worker threads. This must therefore never be called
-    //! while any filter check is pending; ParallelFilterChecker::Reset() drains all
-    //! submitted checks to uphold this.
-    void UpdateIfNeeded()
+    //! while any filter check is pending; ParallelFilterChecker::FinishChecks()
+    //! finishes all submitted checks to uphold this.
+    GCSFilter::ElementSet UpdateIfNeeded()
     {
+        GCSFilter::ElementSet delta;
         // repopulate filter with new scripts if top-up has happened since last iteration
         for (const auto& [desc_spkm_id, last_range_end] : m_last_range_ends) {
             auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(m_wallet.GetScriptPubKeyMan(desc_spkm_id))};
             assert(desc_spkm != nullptr);
             int32_t current_range_end{desc_spkm->GetEndRange()};
             if (current_range_end > last_range_end) {
-                AddScriptPubKeys(desc_spkm, last_range_end);
+                for (const auto& script_pub_key : desc_spkm->GetScriptPubKeys(last_range_end)) {
+                    delta.emplace(script_pub_key.begin(), script_pub_key.end());
+                    m_filter_set.emplace(script_pub_key.begin(), script_pub_key.end());
+                }
                 m_last_range_ends.at(desc_spkm->GetID()) = current_range_end;
             }
         }
+        return delta;
     }
 
     std::optional<bool> MatchesBlock(const uint256& block_hash) const
@@ -175,17 +182,18 @@ enum FilterRes {
  * task checks a span of up to FILTER_TASK_SPAN blocks, amortizing per-task
  * scheduling overhead.
  *
- * When a keypool top-up changes the filter set, Reset() discards every
- * verdict that has not been delivered yet - they were computed against the
- * old scripts - and the queued blocks are re-checked.
+ * When a keypool top-up derives new scripts, FinishChecks() completes every
+ * submitted check so the filter set can be updated safely, and ApplyDelta()
+ * patches the verdicts that have not been delivered yet.
  *
  * Workers only ever read the wallet's filter set via
- * FastWalletRescanFilter::MatchesBlock. To keep that race-free, Reset() and
- * the destructor drain every submitted check, so the filter set is never
- * updated while a check is pending.
+ * FastWalletRescanFilter::MatchesBlock. To keep that race-free,
+ * FinishChecks() and the destructor drain every submitted check, so the
+ * filter set is never updated while a check is pending.
  */
 class ParallelFilterChecker {
     const FastWalletRescanFilter& m_filter;
+    interfaces::Chain& m_chain;
     ThreadPool m_pool;
     //! Blocks queued for filter checks, oldest first. Verdicts are produced
     //! in this order; the front block is popped together with its verdict.
@@ -231,8 +239,8 @@ class ParallelFilterChecker {
     }
 
 public:
-    explicit ParallelFilterChecker(const FastWalletRescanFilter& filter, int start_height, const std::string& thread_name, int num_threads)
-        : m_filter(filter), m_pool(thread_name), m_last_submitted_height(start_height - 1) {
+    explicit ParallelFilterChecker(const FastWalletRescanFilter& filter, interfaces::Chain& chain, int start_height, const std::string& thread_name, int num_threads)
+        : m_filter(filter), m_chain(chain), m_pool(thread_name), m_last_submitted_height(start_height - 1) {
         m_pool.Start(num_threads);
     }
 
@@ -261,17 +269,77 @@ public:
         m_carry = res;
     }
 
-    //! Discard all undelivered verdicts, so that the queued blocks are
-    //! re-checked from the front. Called before the filter set is updated:
-    //! outstanding verdicts were computed against the old scripts, and no
-    //! check may be running while the set changes.
-    void Reset() {
-        m_carry.reset();
+    //! Finish every submitted check, collecting the verdicts for delivery,
+    //! so that no worker references the filter set while it is updated.
+    void FinishChecks() {
         Drain();
+        // Collect the finished span verdicts, preserving block order.
+        for (auto& fut : m_futures) {
+            const auto span = fut.get();
+            m_ready.insert(m_ready.end(), span.begin(), span.end());
+        }
         m_futures.clear();
+    }
+
+    //! Patch all undelivered verdicts with the scripts newly derived by a
+    //! keypool top-up. The filter set only grows, so a MATCH stays valid; a
+    //! NO_MATCH is re-checked against just the delta and upgraded on a hit.
+    //! The re-checks for ready verdicts are re-queued as span tasks taking
+    //! the place of the collected spans, so they run on the pool alongside
+    //! fresh checks instead of stalling the scan thread.
+    void ApplyDelta(const GCSFilter::ElementSet& delta) {
+        // FinishChecks() must have been called before the filter set update,
+        // so no checks are still running.
+        Assume(m_futures.empty());
+        // The carried verdict belongs to the front block; it may be needed
+        // by the very next TryPop(), so patch it inline.
+        if (m_carry && *m_carry == FILTER_NO_MATCH &&
+            m_chain.blockFilterMatchesAny(BlockFilterType::BASIC, m_blocks.front().hash, delta).value_or(false)) {
+            m_carry = FILTER_MATCH;
+        }
+        if (m_ready.empty()) return;
+
+        // Pair the ready verdicts with their blocks: they belong to the
+        // front blocks, after the carried one.
+        std::vector<std::pair<uint256, FilterRes>> to_patch;
+        to_patch.reserve(m_ready.size());
+        size_t block_index = m_carry ? 1 : 0;
+        for (const auto res : m_ready) {
+            to_patch.emplace_back(m_blocks[block_index].hash, res);
+            ++block_index;
+        }
         m_ready.clear();
-        m_pending = 0;
-        if (!m_blocks.empty()) m_last_submitted_height = m_blocks.front().height - 1;
+
+        // Chunk the pairs into one task per span, sharing one copy of the
+        // delta. The futures are queued in block order, ahead of any span
+        // Submit() adds later, so delivery is unchanged.
+        const auto shared_delta = std::make_shared<const GCSFilter::ElementSet>(delta);
+        std::vector<std::function<std::vector<FilterRes>()>> tasks;
+        tasks.reserve((to_patch.size() + FILTER_TASK_SPAN - 1) / FILTER_TASK_SPAN);
+        for (size_t begin = 0; begin < to_patch.size(); begin += FILTER_TASK_SPAN) {
+            const size_t end = std::min(begin + FILTER_TASK_SPAN, to_patch.size());
+            std::vector<std::pair<uint256, FilterRes>> span(to_patch.begin() + begin, to_patch.begin() + end);
+            tasks.emplace_back([this, shared_delta, span = std::move(span)] {
+                std::vector<FilterRes> res;
+                res.reserve(span.size());
+                for (const auto& [hash, verdict] : span) {
+                    if (verdict == FILTER_NO_MATCH &&
+                        m_chain.blockFilterMatchesAny(BlockFilterType::BASIC, hash, *shared_delta).value_or(false)) {
+                        res.push_back(FILTER_MATCH);
+                    } else {
+                        res.push_back(verdict);
+                    }
+                }
+                return res;
+            });
+        }
+
+        auto futures = m_pool.Submit(std::move(tasks));
+        // The pool is private to the checker and never stopped while it
+        // exists, so submission cannot fail.
+        Assume(futures.has_value());
+        if (!futures) return;
+        for (auto& fut : *futures) m_futures.emplace_back(std::move(fut));
     }
 
     //! Whether any queued blocks still need their filter check submitted.
@@ -402,10 +470,11 @@ std::vector<ChainScanner::QueuedBlock> ChainScanner::ReadNextBlocks(FastWalletRe
     // Parallel fast scan: pipeline reads and filter checks through the
     // checker.
     if (filter->NeedsUpdate()) {
-        // Verdicts computed before the update may miss the newly derived
-        // scripts: drop them, so the queued blocks are re-checked.
-        ctx.checker->Reset();
-        filter->UpdateIfNeeded();
+        // No check may run while the filter set is updated; finishing them
+        // also collects their verdicts. Those verdicts may miss the newly
+        // derived scripts: patch them with the scripts the update added.
+        ctx.checker->FinishChecks();
+        ctx.checker->ApplyDelta(filter->UpdateIfNeeded());
     }
     ParallelFilterChecker& checker = *ctx.checker;
 
@@ -525,7 +594,7 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) {
         fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
         if (m_wallet.m_wallet_par > 1) {
-            ctx.checker = std::make_unique<ParallelFilterChecker>(*fast_rescan_filter, start_height,
+            ctx.checker = std::make_unique<ParallelFilterChecker>(*fast_rescan_filter, chain, start_height,
                 "walletscan", m_wallet.m_wallet_par);
             log_message = strprintf("fast variant using block filters (%d threads)", m_wallet.m_wallet_par);
         } else {
