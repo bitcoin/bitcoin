@@ -186,7 +186,7 @@ std::string stringify(const T& value)
     } else if constexpr (is_iterator<T>) {
         return std::string{"iterator<"} + typeid(typename std::iterator_traits<T>::value_type).name() + ">";
     } else {
-        return typeid(T).name();
+        static_assert(requires(std::ostream& os) { os << value; }, "Please provide an operator<<(std::ostream&, const T&) for formatting. Otherwise, a test failure will not be able to display the differing objects. Alternatively, use CHECK_NO_DISPLAY to disable display of the objects completely.");
     }
 }
 

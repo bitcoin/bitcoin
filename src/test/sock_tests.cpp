@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(constructor_and_destructor)
 {
     const SOCKET s = CreateSocket();
     Sock* sock = new Sock(s);
-    BOOST_CHECK(*sock == s);
+    CHECK_NO_DISPLAY(*sock == s);
     BOOST_CHECK(!SocketIsClosed(s));
     delete sock;
     BOOST_CHECK(SocketIsClosed(s));
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(move_constructor)
     Sock* sock2 = new Sock(std::move(*sock1));
     delete sock1;
     BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_CHECK(*sock2 == s);
+    CHECK_NO_DISPLAY(*sock2 == s);
     delete sock2;
     BOOST_CHECK(SocketIsClosed(s));
 }
@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(move_assignment)
     *sock2 = std::move(*sock1);
     BOOST_CHECK(!SocketIsClosed(s1));
     BOOST_CHECK(SocketIsClosed(s2));
-    BOOST_CHECK(*sock2 == s1);
+    CHECK_NO_DISPLAY(*sock2 == s1);
 
     delete sock1;
     BOOST_CHECK(!SocketIsClosed(s1));
     BOOST_CHECK(SocketIsClosed(s2));
-    BOOST_CHECK(*sock2 == s1);
+    CHECK_NO_DISPLAY(*sock2 == s1);
 
     delete sock2;
     BOOST_CHECK(SocketIsClosed(s1));

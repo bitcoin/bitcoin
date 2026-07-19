@@ -61,7 +61,7 @@ void TestBIP324PacketVector(
     BOOST_CHECK(!cipher);
     BOOST_CHECK(cipher.GetOurPubKey() == ellswift_ours);
     cipher.Initialize(ellswift_theirs, in_initiating);
-    BOOST_CHECK(cipher);
+    CHECK_NO_DISPLAY(cipher);
 
     // Compare session variables.
     BOOST_CHECK(std::ranges::equal(out_session_id, cipher.GetSessionID()));
@@ -108,7 +108,7 @@ void TestBIP324PacketVector(
         BOOST_CHECK(!dec_cipher);
         BOOST_CHECK(dec_cipher.GetOurPubKey() == ellswift_ours);
         dec_cipher.Initialize(ellswift_theirs, (error == 1) ^ in_initiating, /*self_decrypt=*/true);
-        BOOST_CHECK(dec_cipher);
+        CHECK_NO_DISPLAY(dec_cipher);
 
         // Compare session variables.
         BOOST_CHECK(std::ranges::equal(out_session_id, dec_cipher.GetSessionID()) == (error != 1));
