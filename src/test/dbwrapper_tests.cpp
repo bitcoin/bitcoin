@@ -12,11 +12,21 @@
 
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <ranges>
 
 #include <test/util/framework.h>
 
 using util::ToString;
+
+std::ostream& operator<<(std::ostream& os, const CDBWrapper::ReadFailure& f)
+{
+    switch (f.status) {
+    case CDBWrapper::ReadFailure::Code::DeserializationError: os << "DeserializationError"; break;
+    case CDBWrapper::ReadFailure::Code::DatabaseError: os << "DatabaseError"; break;
+    }
+    return os << ": " << f.err_msg;
+}
 
 BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 

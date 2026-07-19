@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
             builder->Include();
         }
 
-        BOOST_CHECK(chunks == expected_chunks);
+        CHECK_NO_DISPLAY(chunks == expected_chunks);
         auto& last_chunk = chunks.back();
         // The last chunk returned by the BlockBuilder must match GetWorstMainChunk, in reverse.
         std::reverse(last_chunk.begin(), last_chunk.end());

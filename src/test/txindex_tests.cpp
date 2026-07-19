@@ -23,6 +23,7 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <tinyformat.h>
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -30,12 +31,20 @@
 
 #include <cstdint>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include <test/util/framework.h>
+
+namespace txindex {
+std::ostream& operator<<(std::ostream& os, const BlockTxPosition& pos)
+{
+    return os << strprintf("BlockTxPosition(block_seq=%u, tx_offset_in_block=%u)", pos.block_seq, pos.tx_offset_in_block);
+}
+} // namespace txindex
 
 BOOST_AUTO_TEST_SUITE(txindex_tests)
 
