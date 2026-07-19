@@ -200,15 +200,15 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_REQUIRE(master_key_record);
 
     fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
-    BOOST_CHECK( wallet->ChangeWalletPassphrase("old_pass", "new_pass")); // TODO: A failed master-key write must be reported
+    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
     BOOST_CHECK( wallet->IsLocked());
     BOOST_CHECK( fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record);
-    BOOST_CHECK(!wallet->Unlock("old_pass")); // TODO: A failed change must preserve the old passphrase
+    BOOST_CHECK( wallet->Unlock("old_pass"));
     wallet->Lock();
-    BOOST_CHECK( wallet->Unlock("new_pass")); // TODO: A failed change must not activate the new passphrase
-    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass")); // TODO: A failed change must remain retryable with the old passphrase
+    BOOST_CHECK(!wallet->Unlock("new_pass"));
+    BOOST_CHECK( wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
     BOOST_CHECK( wallet->IsLocked());
-    BOOST_CHECK( fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record); // TODO: A successful retry must persist the re-encrypted master key
+    BOOST_CHECK( fail_db->GetRecordValue(DBKeys::MASTER_KEY) != master_key_record);
     BOOST_CHECK( wallet->Unlock("new_pass"));
     wallet->Lock();
     BOOST_CHECK(!wallet->Unlock("old_pass"));
