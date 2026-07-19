@@ -335,50 +335,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .memory_only = options.block_tree_db_in_memory,
             .wipe_data = true,
             .options = chainman.m_options.block_tree_db});
-    } else if (disk_reindexing && !wipe_mint_replay && pnevmtxmintdb) {
-        // SYSCOIN Continuing reindex preserves nevmminttx. A prior crash after mint
-        // write-ahead but before CoinsTip flush can leave markers above the durable
-        // tip; trim only those active-chain descendants (never in durable UTXO) so
-        // reconnect can proceed. Ordinary startup leaves extra markers fail-closed.
-        Chainstate& active = chainman.ActiveChainstate();
-        const CBlockIndex* tip = active.m_chain.Tip();
-        if (tip) {
-            NEVMMintTxSet setMintAboveTip;
-            for (auto& [hash, block_index] : chainman.BlockIndex()) {
-                (void)hash;
-                CBlockIndex* pindex = &block_index;
-                if (pindex->nHeight <= tip->nHeight) {
-                    continue;
-                }
-                if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    continue;
-                }
-                if (pindex->GetAncestor(tip->nHeight) != tip) {
-                    continue;
-                }
-                CBlock block;
-                if (!chainman.m_blockman.ReadBlockFromDisk(block, *pindex)) {
-                    continue;
-                }
-                for (const auto& tx : block.vtx) {
-                    if (!IsSyscoinMintTx(tx->nVersion)) {
-                        continue;
-                    }
-                    const CMintSyscoin mintSyscoin(*tx);
-                    if (!mintSyscoin.IsNull() && pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
-                        setMintAboveTip.insert(mintSyscoin.nTxHash);
-                    }
-                }
-            }
-            if (!setMintAboveTip.empty()) {
-                LogPrintf("Removing %u NEVM mint-replay marker(s) above durable coins tip "
-                          "while continuing reindex\n",
-                          setMintAboveTip.size());
-                if (!pnevmtxmintdb->FlushErase(setMintAboveTip)) {
-                    return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
-                }
-            }
-        }
     }
 
     // Now that chainstates are loaded and we're able to flush to
