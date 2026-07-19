@@ -337,6 +337,52 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .options = chainman.m_options.block_tree_db});
     }
 
+    // FlushStateToDisk writes nevmminttx before CoinsTip. A crash between those
+    // flushes can leave mint markers for blocks above the durable coins tip.
+    // Trim only previously-connected blocks on the tip's chain (nChainTx > 0).
+    if (disk_reindexing && !wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
+        NEVMMintTxSet setMintAboveTip;
+        for (Chainstate* chainstate : chainman.GetAll()) {
+            const CBlockIndex* tip = chainstate->m_chain.Tip();
+            if (!tip) {
+                continue;
+            }
+            for (auto& [hash, block_index] : chainman.BlockIndex()) {
+                (void)hash;
+                CBlockIndex* pindex = &block_index;
+                if (pindex->nHeight <= tip->nHeight || pindex->nChainTx == 0) {
+                    continue;
+                }
+                if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
+                    continue;
+                }
+                if (pindex->GetAncestor(tip->nHeight) != tip) {
+                    continue;
+                }
+                CBlock block;
+                if (!chainman.m_blockman.ReadBlockFromDisk(block, *pindex)) {
+                    continue;
+                }
+                for (const auto& tx : block.vtx) {
+                    if (!IsSyscoinMintTx(tx->nVersion)) {
+                        continue;
+                    }
+                    const CMintSyscoin mintSyscoin(*tx);
+                    if (!mintSyscoin.IsNull()) {
+                        setMintAboveTip.insert(mintSyscoin.nTxHash);
+                    }
+                }
+            }
+        }
+        if (!setMintAboveTip.empty()) {
+            LogPrintf("Removing %u NEVM mint-replay marker(s) above durable coins tip\n",
+                      setMintAboveTip.size());
+            if (!pnevmtxmintdb->FlushErase(setMintAboveTip)) {
+                return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
+            }
+        }
+    }
+
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
     // on the condition of each chainstate.
