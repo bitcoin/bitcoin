@@ -18,7 +18,7 @@
 #include <netlink/netlink_route.h>
 #elif defined(WIN32)
 #include <iphlpapi.h>
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && __has_include(<net/route.h>)
 #include <net/route.h>
 #include <sys/sysctl.h>
 #endif
@@ -217,7 +217,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     return std::nullopt;
 }
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && __has_include(<net/route.h>)
 
 #define ROUNDUP32(a) \
     ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
