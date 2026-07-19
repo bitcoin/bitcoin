@@ -67,6 +67,9 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     bool disk_reindexing{false};
     pblocktree->ReadReindexing(disk_reindexing);
     const bool effective_reindex_geth{options.fReindexGeth || disk_reindexing};
+    // Keep nevmminttx lifetime aligned with UTXO chainstate rebuilds only.
+    // Reconstructible NEVM/Geth auxiliary DBs may still follow effective_reindex_geth.
+    const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
     if (disk_reindexing && !options.fReindexGeth) {
         fReindexGeth = true;
         LogPrintf("Continuing reindex from persisted marker; forcing NEVM/LLMQ database reinitialization.\n");
@@ -121,7 +124,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         .path = chainman.m_options.datadir / "nevmminttx",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = effective_reindex_geth,
+        .wipe_data = wipe_mint_replay,
         .options = chainman.m_options.block_tree_db});
     pblockindexdb.reset();
     pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
