@@ -211,8 +211,10 @@ private:
     //! list of "new" buckets
     nid_type vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
-    //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
-    NodeSeconds m_last_good GUARDED_BY(cs){1s};
+    //! last time Good was called (memory only). While unset, no connection failures
+    //! are counted, because we can not know if this happens due to connectivity
+    //! issues on their side or on our side.
+    NodeSeconds m_last_good GUARDED_BY(cs){};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<nid_type> m_tried_collisions;
