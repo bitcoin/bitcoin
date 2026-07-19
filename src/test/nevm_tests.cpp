@@ -528,29 +528,36 @@ BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
                         "Marker above durable tip must be removable for reconnect");
 }
 
-// Startup reconciliation: side-branch / ahead-of-tip markers erase unless kept
-// by an active-chain mint at or below the durable tip.
-BOOST_AUTO_TEST_CASE(mint_replay_reconcile_keeps_active_tip_markers)
+// Tip-gated pending disconnect erase: apply only when coins best matches.
+BOOST_AUTO_TEST_CASE(mint_replay_pending_disconnect_erase_is_tip_gated)
 {
-    const uint256 active_tip = uint256S(
-        "0101010101010101010101010101010101010101010101010101010101010101");
-    const uint256 ahead = uint256S(
-        "0202020202020202020202020202020202020202020202020202020202020202");
-    const uint256 side_branch = uint256S(
-        "0303030303030303030303030303030303030303030303030303030303030303");
-    const uint256 both = uint256S(
-        "0404040404040404040404040404040404040404040404040404040404040404");
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_pending_disconnect";
+    fs::remove_all(db_dir);
 
-    NEVMMintTxSet keep{active_tip, both};
-    NEVMMintTxSet erase{ahead, side_branch, both};
-    for (const auto& hash : keep) {
-        erase.erase(hash);
-    }
+    const uint256 mint_tx = uint256S(
+        "0505050505050505050505050505050505050505050505050505050505050505");
+    const uint256 new_tip = uint256S(
+        "0606060606060606060606060606060606060606060606060606060606060606");
+    const uint256 old_tip = uint256S(
+        "0707070707070707070707070707070707070707070707070707070707070707");
 
-    BOOST_CHECK(erase.count(ahead));
-    BOOST_CHECK(erase.count(side_branch));
-    BOOST_CHECK(!erase.count(both));
-    BOOST_CHECK(!erase.count(active_tip));
+    CNEVMMintedTxDB mint_db({
+        .path = db_dir,
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = false,
+        .wipe_data = true});
+    mint_db.FlushDataToCache({mint_tx});
+    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
+    BOOST_REQUIRE(mint_db.WritePendingDisconnectErase(new_tip, {mint_tx}));
+
+    // Coins tip still old: drop stale intent, keep marker.
+    BOOST_REQUIRE(mint_db.ApplyPendingDisconnectEraseIfReady(old_tip));
+    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
+
+    BOOST_REQUIRE(mint_db.WritePendingDisconnectErase(new_tip, {mint_tx}));
+    // Coins tip matches post-replay tip: erase marker.
+    BOOST_REQUIRE(mint_db.ApplyPendingDisconnectEraseIfReady(new_tip));
+    BOOST_CHECK(!mint_db.ExistsTx(mint_tx));
 }
 
 // ReplayBlocks erase set: old-branch mints minus mints also on the new branch.

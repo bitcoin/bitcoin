@@ -5757,25 +5757,34 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    // SYSCOIN: 1) persist connect mint markers, 2) commit UTXO, 3) erase
-    // old-branch-only markers. Extra markers are fail-closed; missing markers
-    // are inflationary.
-    if (pnevmtxmintdb && !setMintTxsConnect.empty()) {
-        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
-        if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
-            return error("ReplayBlocks(): Failed to persist NEVM mint-replay markers");
-        }
-    }
-    cache.Flush();
+    // SYSCOIN: 1) persist connect mint markers, 2) record tip-gated pending
+    // disconnect erases, 3) commit UTXO, 4) erase disconnect-only markers.
+    // Extra markers are fail-closed; missing markers are inflationary.
+    NEVMMintTxSet setMintDisconnectOnly;
     if (pnevmtxmintdb) {
-        NEVMMintTxSet setMintDisconnectOnly;
         for (const auto& hash : setMintTxsDisconnect) {
             if (!setMintTxsConnect.count(hash)) {
                 setMintDisconnectOnly.insert(hash);
             }
         }
-        if (!setMintDisconnectOnly.empty() && !pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
+        if (!setMintTxsConnect.empty()) {
+            pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
+            if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+                return error("ReplayBlocks(): Failed to persist NEVM mint-replay markers");
+            }
+        }
+        if (!setMintDisconnectOnly.empty() &&
+            !pnevmtxmintdb->WritePendingDisconnectErase(pindexNew->GetBlockHash(), setMintDisconnectOnly)) {
+            return error("ReplayBlocks(): Failed to record pending NEVM mint-replay erasures");
+        }
+    }
+    cache.Flush();
+    if (pnevmtxmintdb && !setMintDisconnectOnly.empty()) {
+        if (!pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
             return error("ReplayBlocks(): Failed to erase disconnected NEVM mint-replay markers");
+        }
+        if (!pnevmtxmintdb->ClearPendingDisconnectErase()) {
+            return error("ReplayBlocks(): Failed to clear pending NEVM mint-replay erasures");
         }
     }
     if(pnevmdatadb) {
