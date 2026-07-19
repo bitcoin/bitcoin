@@ -14,6 +14,11 @@
 
 namespace wallet {
 
+std::ostream& operator<<(std::ostream& os, const WalletError& e)
+{
+    return os << "WalletError(code=" << static_cast<int>(e.code) << ", message=" << e.message.original << ")";
+}
+
 BOOST_FIXTURE_TEST_SUITE(wallet_interfaces_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(addhdkey)
