@@ -757,7 +757,10 @@ bool CNEVMMintedTxDB::ExistsTx(const uint256& nTxHash) {
 void CNEVMMintedTxDB::SetVerifyOverlay(const NEVMMintTxSet& overlay)
 {
     LOCK(cs_cache);
-    mapVerifyOverlay = overlay;
+    mapVerifyOverlay.clear();
+    for (const auto& hash : overlay) {
+        mapVerifyOverlay.insert(hash);
+    }
 }
 void CNEVMMintedTxDB::ClearVerifyOverlay()
 {
