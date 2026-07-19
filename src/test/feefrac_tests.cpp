@@ -81,13 +81,13 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(ByRatioNegSize{p1} >= ByRatioNegSize{p2});
     BOOST_CHECK(ByRatioNegSize{p1} >= ByRatioNegSize{p4-p3});
     BOOST_CHECK(!(ByRatio{p1} > ByRatio{p3})); // not strictly better
-    BOOST_CHECK(ByRatio{p1} > ByRatio{p2}); // strictly greater feerate
+    CHECK_NO_DISPLAY(ByRatio{p1} > ByRatio{p2}); // strictly greater feerate
 
     BOOST_CHECK(ByRatioNegSize{p2} < ByRatioNegSize{p1});
     BOOST_CHECK(ByRatioNegSize{p2} <= ByRatioNegSize{p1});
     BOOST_CHECK(ByRatioNegSize{p1} <= ByRatioNegSize{p4-p3});
     BOOST_CHECK(!(ByRatio{p3} < ByRatio{p1})); // not strictly worse
-    BOOST_CHECK(ByRatio{p2} < ByRatio{p1}); // strictly lower feerate
+    CHECK_NO_DISPLAY(ByRatio{p2} < ByRatio{p1}); // strictly lower feerate
 
     // "empty" comparisons
     BOOST_CHECK(!(ByRatio{p1} > ByRatio{empty})); // << will always result in false
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
 
     BOOST_CHECK(ByRatioNegSize{oversized_1} < ByRatioNegSize{oversized_2});
     BOOST_CHECK(ByRatioNegSize{oversized_1} <= ByRatioNegSize{oversized_2});
-    BOOST_CHECK(ByRatio{oversized_1} < ByRatio{oversized_2});
+    CHECK_NO_DISPLAY(ByRatio{oversized_1} < ByRatio{oversized_2});
     BOOST_CHECK(ByRatioNegSize{oversized_1} != ByRatioNegSize{oversized_2});
 
     BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(0), 0);
