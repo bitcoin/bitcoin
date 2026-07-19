@@ -414,7 +414,51 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(nevm_mint_replay_lifecycle_tests, BasicTestingSetup)
 
-// nevmminttx markers must survive a non-wipe reopen, matching chainstate lifetime.
+namespace {
+bool WipeMintReplay(bool reindex, bool reindex_chainstate)
+{
+    return reindex || reindex_chainstate;
+}
+
+bool EffectiveReindexGeth(bool f_reindex_geth, bool disk_reindexing)
+{
+    return f_reindex_geth || disk_reindexing;
+}
+
+// Mirrors CompleteChainstateInitialization mint-open / empty-coins recovery.
+bool ShouldClearMintOnOpen(bool reindex, bool reindex_chainstate, bool f_reindex_geth,
+                           bool disk_reindexing, bool coins_view_empty)
+{
+    if (WipeMintReplay(reindex, reindex_chainstate)) {
+        return true;
+    }
+    // Empty coins always clear mint, including when effective_reindex_geth
+    // skipped the full SYS DB recreate path.
+    return coins_view_empty;
+}
+} // namespace
+
+BOOST_AUTO_TEST_CASE(mint_replay_wipe_policy_matrix)
+{
+    // 1) Geth/NEVM aux rebuild with nonempty CoinsTip: marker must survive.
+    BOOST_CHECK(!WipeMintReplay(/*reindex=*/false, /*reindex_chainstate=*/false));
+    BOOST_CHECK(EffectiveReindexGeth(/*f_reindex_geth=*/false, /*disk_reindexing=*/true));
+    BOOST_CHECK(!ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/false));
+
+    // 2) Clean -reindex / -reindex-chainstate: marker cleared.
+    BOOST_CHECK(WipeMintReplay(true, false));
+    BOOST_CHECK(WipeMintReplay(false, true));
+    BOOST_CHECK(ShouldClearMintOnOpen(true, false, true, true, false));
+
+    // 3) Persisted reindex marker with empty CoinsTip: marker DB cleared.
+    BOOST_CHECK(ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/true));
+
+    // 4) Persisted reindex marker with nonempty CoinsTip: do not wipe on open
+    //    (ahead-of-tip markers are trimmed separately against active tip).
+    BOOST_CHECK(!ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/false));
+}
+
+// nevmminttx markers must survive a non-wipe reopen (geth-aux rebuild path).
 BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
 {
     const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_wipe_policy";
@@ -446,6 +490,7 @@ BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
     }
 
     {
+        // Chainstate rebuild path clears markers.
         CNEVMMintedTxDB mint_db({
             .path = db_dir,
             .cache_bytes = static_cast<size_t>(1 << 20),
@@ -453,6 +498,34 @@ BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
             .wipe_data = true});
         BOOST_CHECK(!mint_db.ExistsTx(mint_tx));
     }
+}
+
+// Ahead-of-tip reconciliation: erase only selected markers, keep tip markers.
+BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
+{
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_trim_policy";
+    fs::remove_all(db_dir);
+
+    const uint256 tip_marker = uint256S(
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    const uint256 ahead_marker = uint256S(
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
+
+    CNEVMMintedTxDB mint_db({
+        .path = db_dir,
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = false,
+        .wipe_data = true});
+    mint_db.FlushDataToCache({tip_marker, ahead_marker});
+    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
+    BOOST_CHECK(mint_db.ExistsTx(tip_marker));
+    BOOST_CHECK(mint_db.ExistsTx(ahead_marker));
+
+    BOOST_REQUIRE(mint_db.FlushErase({ahead_marker}));
+    BOOST_CHECK_MESSAGE(mint_db.ExistsTx(tip_marker),
+                        "Marker at or below durable tip must never be removed");
+    BOOST_CHECK_MESSAGE(!mint_db.ExistsTx(ahead_marker),
+                        "Marker above durable tip must be removable for reconnect");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

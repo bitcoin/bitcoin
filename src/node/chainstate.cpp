@@ -337,17 +337,17 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .options = chainman.m_options.block_tree_db});
     }
 
-    // FlushStateToDisk writes nevmminttx before CoinsTip. A crash between those
-    // flushes can leave mint markers for blocks above the durable coins tip.
-    // Only trim blocks that were actually connected (BLOCK_VALID_SCRIPTS): nChainTx
-    // is set earlier at block-data receipt and must not authorize erasing markers.
-    if (disk_reindexing && !wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
-        NEVMMintTxSet setMintAboveTip;
-        for (Chainstate* chainstate : chainman.GetAll()) {
-            const CBlockIndex* tip = chainstate->m_chain.Tip();
-            if (!tip) {
-                continue;
-            }
+    // FlushStateToDisk writes nevmminttx before CoinsTip, including on ordinary
+    // periodic flushes. A crash can leave markers above the durable coins tip
+    // with or without a reindex marker. Reconcile against the active chainstate
+    // tip only (global replay DB cannot track multiple tips). Only trim blocks
+    // that were actually connected (BLOCK_VALID_SCRIPTS): nChainTx is set earlier
+    // at block-data receipt and must not authorize erasing markers.
+    if (!wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
+        Chainstate& active = chainman.ActiveChainstate();
+        const CBlockIndex* tip = active.m_chain.Tip();
+        if (tip) {
+            NEVMMintTxSet setMintAboveTip;
             for (auto& [hash, block_index] : chainman.BlockIndex()) {
                 (void)hash;
                 CBlockIndex* pindex = &block_index;
@@ -374,12 +374,12 @@ static ChainstateLoadResult CompleteChainstateInitialization(
                     }
                 }
             }
-        }
-        if (!setMintAboveTip.empty()) {
-            LogPrintf("Removing %u NEVM mint-replay marker(s) above durable coins tip\n",
-                      setMintAboveTip.size());
-            if (!pnevmtxmintdb->FlushErase(setMintAboveTip)) {
-                return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
+            if (!setMintAboveTip.empty()) {
+                LogPrintf("Removing %u NEVM mint-replay marker(s) above durable coins tip\n",
+                          setMintAboveTip.size());
+                if (!pnevmtxmintdb->FlushErase(setMintAboveTip)) {
+                    return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
+                }
             }
         }
     }
@@ -494,13 +494,24 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
-            // Continued reindex keeps nevmminttx aligned with the existing UTXO tip.
-            // Level-4 VerifyDB reconnects those blocks and would see mint-exists for
-            // already-applied mint markers, so clamp to level <= 3 while fReindex.
-            // Lower-level read/undo/disconnect checks still run.
+            // Continued reindex with preserved mint-replay state: level-4 VerifyDB
+            // reconnects recent tip blocks and sees already-applied markers as
+            // mint-exists. Clamp only in that precise case; fail closed if the
+            // operator explicitly required full verification.
             int check_level = options.check_level;
-            if (fReindex && check_level >= 4) {
-                LogPrintf("Clamping VerifyDB check level from %d to 3 while reindex is in progress\n",
+            bool disk_reindexing{false};
+            if (chainman.m_blockman.m_block_tree_db) {
+                chainman.m_blockman.m_block_tree_db->ReadReindexing(disk_reindexing);
+            }
+            const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
+            if (disk_reindexing && !wipe_mint_replay && check_level >= 4) {
+                if (options.require_full_verification) {
+                    return {ChainstateLoadStatus::FAILURE,
+                            _("Level-4 verification is unavailable while continuing reindex "
+                              "with preserved NEVM mint replay state")};
+                }
+                LogPrintf("Clamping VerifyDB check level from %d to 3 while continuing reindex "
+                          "with preserved NEVM mint replay state\n",
                           check_level);
                 check_level = 3;
             }
