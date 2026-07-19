@@ -143,13 +143,13 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_REQUIRE(master_key_record);
 
     fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
-    BOOST_CHECK( wallet->ChangeWalletPassphrase("old_pass", "new_pass")); // TODO: The failed write is reported as success
+    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
     BOOST_CHECK(fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record);
-    BOOST_CHECK(!wallet->Unlock("old_pass")); // TODO: Memory rejects the passphrase still stored on disk
+    BOOST_CHECK( wallet->Unlock("old_pass"));
     wallet->Lock();
-    BOOST_CHECK( wallet->Unlock("new_pass")); // TODO: The failed write changes the in-memory passphrase
-    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass")); // TODO: The inconsistent state prevents retry
-    BOOST_CHECK(fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record); // TODO: The inconsistent state prevents persisting the new passphrase
+    BOOST_CHECK(!wallet->Unlock("new_pass"));
+    BOOST_CHECK( wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
+    BOOST_CHECK(fail_db->GetRecordValue(DBKeys::MASTER_KEY) != master_key_record);
     BOOST_CHECK( wallet->Unlock("new_pass"));
     wallet->Lock();
     BOOST_CHECK(!wallet->Unlock("old_pass"));
