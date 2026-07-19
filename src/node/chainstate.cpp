@@ -69,6 +69,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const bool effective_reindex_geth{options.fReindexGeth || disk_reindexing};
     // Keep nevmminttx lifetime aligned with UTXO chainstate rebuilds only.
     // Reconstructible NEVM/Geth auxiliary DBs may still follow effective_reindex_geth.
+    // Empty-coins recovery below also clears nevmminttx when needed.
     const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
     if (disk_reindexing && !options.fReindexGeth) {
         fReindexGeth = true;
@@ -322,6 +323,18 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .memory_only = options.block_tree_db_in_memory,
             .wipe_data = false,
             .options = chainman.m_options.coins_db});  
+    } else if (coinsViewEmpty) {
+        // Continued reindex already reinitialized reconstructible NEVM DBs above
+        // via effective_reindex_geth, which skips the block above. nevmminttx still
+        // must clear whenever the UTXO set is empty so replay state matches chainstate.
+        LogPrintf("coinsViewEmpty recreating NEVM mint-replay database\n");
+        pnevmtxmintdb.reset();
+        pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+            .path = chainman.m_options.datadir / "nevmminttx",
+            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = true,
+            .options = chainman.m_options.block_tree_db});
     }
 
     // Now that chainstates are loaded and we're able to flush to
