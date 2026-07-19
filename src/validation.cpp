@@ -3715,18 +3715,13 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN: Persist mint-replay additions before any durable UTXO flush.
-    // An extra marker is fail-closed; a missing marker is inflationary.
+    // SYSCOIN: Stage mint markers in cache before FlushStateToDisk. That path
+    // already sync-writes nevmminttx before any CoinsTip flush, so a per-block
+    // FlushCacheToDisk here is unnecessary.
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
-    if (pnevmtxmintdb) {
+    if(pnevmtxmintdb)
         pnevmtxmintdb->FlushDataToCache(setMintTxs);
-        if (!setMintTxs.empty() &&
-            !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
-            return error("%s: Failed to persist NEVM mint-replay markers for %s",
-                         __func__, pindexNew->GetBlockHash().ToString());
-        }
-    }
     if(pblockindexdb)
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
     if(pnevmtxrootsdb)
