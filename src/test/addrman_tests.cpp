@@ -20,6 +20,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -130,6 +131,106 @@ BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
     BOOST_CHECK_EQUAL(unfiltered.size(), 2U);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_failures_counted_per_network)
+{
+    // Failed attempts are only counted against an address once we have proof that we are
+    // able to reach its network at all.
+    FakeNodeClock clock{};
+
+    auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
+
+    CNetAddr source{ResolveIP("250.1.2.1")};
+
+    CAddress addr_ipv6{CAddress(ResolveService("2a01::1", 8333), NODE_NONE)};
+    addr_ipv6.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_ipv6}, source));
+    BOOST_CHECK(addrman->Good(addr_ipv6));
+
+    // Helpers used to keep recording successful connections on either network
+    CAddress addr_ipv4_helper{CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE)};
+    addr_ipv4_helper.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_ipv4_helper}, source));
+
+    CAddress addr_ipv6_helper{CAddress(ResolveService("2a01::2", 8333), NODE_NONE)};
+    addr_ipv6_helper.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_ipv6_helper}, source));
+
+    // Advance time so that only the number of attempts decides
+    // whether addr_ipv6 is terrible.
+    clock += ADDRMAN_MIN_FAIL + 24h;
+
+    // IPv6 was reachable until now, so the first failure after this is counted.
+    BOOST_CHECK(addrman->Good(addr_ipv6_helper));
+
+    // IPv6 is now unreachable, while IPv4 keeps working.
+    for (int i = 0; i < ADDRMAN_MAX_FAILURES; ++i) {
+        addrman->Good(addr_ipv4_helper);
+        addrman->Attempt(addr_ipv6, /*fCountFailure=*/true);
+        // Let more than a minute pass between attempts, so that the
+        // "tried in the last minute" check doesn't strike.
+        clock += 61s;
+    }
+
+    // The IPv4 successes do not count towards the failures against addr_ipv6:
+    // it is not terrible and is still relayed.
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 3U);
+
+    // Once we can reach IPv6 again, failures on it are counted as before.
+    for (int i = 0; i < ADDRMAN_MAX_FAILURES; ++i) {
+        addrman->Good(addr_ipv6_helper);
+        addrman->Attempt(addr_ipv6, /*fCountFailure=*/true);
+        clock += 61s;
+    }
+
+    std::vector<CAddress> filtered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(filtered.size(), 2U);
+    BOOST_CHECK(std::none_of(filtered.begin(), filtered.end(),
+                             [&](const CAddress& a) { return a == addr_ipv6; }));
+}
+
+BOOST_AUTO_TEST_CASE(addrman_failures_counted_unreachable_network)
+{
+    // If we can't connect to a network for a long time while other networks work,
+    // failures are counted against its addresses based on successes on other networks.
+    FakeNodeClock clock{};
+
+    auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
+
+    CNetAddr source{ResolveIP("250.1.2.1")};
+
+    CAddress addr_ipv6{CAddress(ResolveService("2a01::1", 8333), NODE_NONE)};
+    addr_ipv6.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_ipv6}, source));
+
+    CAddress addr_ipv4_helper{CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE)};
+    addr_ipv4_helper.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_ipv4_helper}, source));
+
+    // IPv6 has never been reachable since startup, while IPv4 works.
+    for (int i = 0; i < ADDRMAN_RETRIES; ++i) {
+        addrman->Good(addr_ipv4_helper);
+        clock += 61s;
+        addrman->Attempt(addr_ipv6, /*fCountFailure=*/true);
+        clock += 61s;
+    }
+
+    // Within ADDRMAN_NET_UNREACHABLE, no failures are counted.
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 2U);
+
+    clock += ADDRMAN_NET_UNREACHABLE;
+
+    // Afterwards, IPv4 successes count towards failures against addr_ipv6.
+    for (int i = 0; i < ADDRMAN_RETRIES; ++i) {
+        addrman->Good(addr_ipv4_helper);
+        clock += 61s;
+        addrman->Attempt(addr_ipv6, /*fCountFailure=*/true);
+        clock += 61s;
+    }
+
+    std::vector<CAddress> filtered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(filtered.size(), 1U);
+    BOOST_CHECK(filtered[0] == addr_ipv4_helper);
+}
 
 BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
 {

@@ -43,6 +43,7 @@ void initialize_addrman()
 FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    FakeNodeClock clock{1610000000s}; // 2021-01-07, arbitrary
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     DataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};

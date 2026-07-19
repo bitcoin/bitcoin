@@ -14,6 +14,7 @@
 #include <util/log.h>
 #include <util/time.h>
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <set>
@@ -211,10 +212,13 @@ private:
     //! list of "new" buckets
     nid_type vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
-    //! last time Good was called (memory only). While unset, no connection failures
+    //! last time Good was called, per network (memory only). While unset, no connection failures
     //! are counted, because we can not know if this happens due to connectivity
-    //! issues on their side or on our side.
-    NodeSeconds m_last_good GUARDED_BY(cs){};
+    //! issues on their side or on our side for that network (see GetLastGoodForNet_ for an exception).
+    std::array<NodeSeconds, NET_MAX> m_last_good GUARDED_BY(cs){};
+
+    //! time this addrman was created (memory only)
+    const NodeSeconds m_start_time{Now<NodeSeconds>()};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<nid_type> m_tried_collisions;
@@ -260,6 +264,9 @@ private:
     bool Add_(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Attempt_(const CService& addr, bool fCountFailure, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    //! Return the last successful connection to be used for counting failures against addresses of a network.
+    NodeSeconds GetLastGoodForNet_(Network net, NodeSeconds now) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::pair<CAddress, NodeSeconds> Select_(bool new_only, const std::unordered_set<Network>& networks) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
