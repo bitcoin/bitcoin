@@ -854,37 +854,21 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     {
         LOCK2(m_relock_mutex, cs_wallet);
-        mapMasterKeys[++nMasterKeyMaxID] = master_key;
-        WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
-        if (!encrypted_batch->TxnBegin()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
+        if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"wallet encryption", [&](WalletBatch& batch) {
+                if (!batch.WriteMasterKey(nMasterKeyMaxID + 1, master_key)) {
+                    return false;
+                }
+                for (const auto& spk_man_pair : m_spk_managers) {
+                    if (!spk_man_pair.second->Encrypt(plain_master_key, &batch)) {
+                        return false;
+                    }
+                }
+                return true;
+            })) {
             return false;
         }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, master_key);
 
-        for (const auto& spk_man_pair : m_spk_managers) {
-            auto spk_man = spk_man_pair.second.get();
-            if (!spk_man->Encrypt(plain_master_key, encrypted_batch)) {
-                encrypted_batch->TxnAbort();
-                delete encrypted_batch;
-                encrypted_batch = nullptr;
-                // We now probably have half of our keys encrypted in memory, and half not...
-                // die and let the user reload the unencrypted wallet.
-                Assert(false);
-            }
-        }
-
-        if (!encrypted_batch->TxnCommit()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
-            // We now have keys encrypted in memory, but not on disk...
-            // die to avoid confusion and let the user reload the unencrypted wallet.
-            Assert(false);
-        }
-
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
+        mapMasterKeys[++nMasterKeyMaxID] = master_key;
 
         Lock();
         if (!Unlock(strWalletPassphrase)) {

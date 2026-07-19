@@ -24,7 +24,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <util/check.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -151,9 +150,9 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailu
     AddKey(*wallet, GenerateRandomKey());
 
     fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
-    for (bool success : {true, false}) { // TODO: The write failure is ignored, making the retry fail
+    for (bool success : {false, true}) {
         BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
-        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
     }
 }
 
@@ -162,11 +161,12 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
     AddKey(*wallet, GenerateRandomKey());
 
     fail_db->FailNextCommit(); // The injected failure affects only the first attempt
-    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
-    BOOST_CHECK_THROW(wallet->EncryptWallet("passphrase"), NonFatalCheckError); // TODO: A local commit failure aborts the process
-    BOOST_CHECK( wallet->HasEncryptionKeys()); // TODO: The failed attempt publishes the master key
-    BOOST_CHECK( wallet->HaveCryptedKeys()); // TODO: The failed attempt publishes encrypted descriptor keys
-    BOOST_CHECK(!wallet->EncryptWallet("passphrase")); // TODO: The published state prevents retry
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase"));
+    BOOST_CHECK(!wallet->HasEncryptionKeys());
+    BOOST_CHECK(!wallet->HaveCryptedKeys());
+    BOOST_CHECK( wallet->EncryptWallet("passphrase"));
+    BOOST_CHECK( wallet->HasEncryptionKeys());
+    BOOST_CHECK( wallet->HaveCryptedKeys());
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
