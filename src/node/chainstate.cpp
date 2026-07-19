@@ -67,7 +67,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     bool disk_reindexing{false};
     pblocktree->ReadReindexing(disk_reindexing);
     const bool effective_reindex_geth{options.fReindexGeth || disk_reindexing};
-    // Keep nevmminttx lifetime aligned with UTXO chainstate rebuilds only.
+    // SYSCOIN Keep nevmminttx lifetime aligned with UTXO chainstate rebuilds only.
     // Reconstructible NEVM/Geth auxiliary DBs may still follow effective_reindex_geth.
     // Empty-coins recovery below also clears nevmminttx when needed.
     const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
@@ -324,7 +324,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .wipe_data = false,
             .options = chainman.m_options.coins_db});  
     } else if (coinsViewEmpty) {
-        // Continued reindex already reinitialized reconstructible NEVM DBs above
+        // SYSCOIN Continued reindex already reinitialized reconstructible NEVM DBs above
         // via effective_reindex_geth, which skips the block above. nevmminttx still
         // must clear whenever the UTXO set is empty so replay state matches chainstate.
         LogPrintf("coinsViewEmpty recreating NEVM mint-replay database\n");
@@ -337,7 +337,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .options = chainman.m_options.block_tree_db});
     }
 
-    // FlushStateToDisk writes nevmminttx before CoinsTip, including on ordinary
+    // SYSCOIN FlushStateToDisk writes nevmminttx before CoinsTip, including on ordinary
     // periodic flushes. A crash can leave markers above the durable coins tip
     // with or without a reindex marker. Reconcile against the active chainstate
     // tip only (global replay DB cannot track multiple tips). Only trim blocks
@@ -494,7 +494,7 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
-            // Continued reindex with preserved mint-replay state: level-4 VerifyDB
+            // SYSCOIN Continued reindex with preserved mint-replay state: level-4 VerifyDB
             // reconnects recent tip blocks and sees already-applied markers as
             // mint-exists. Clamp only in that precise case; fail closed if the
             // operator explicitly required full verification.
