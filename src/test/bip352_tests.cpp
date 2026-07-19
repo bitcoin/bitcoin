@@ -14,12 +14,30 @@
 
 #include <test/util/framework.h>
 #include <test/util/json.h>
+#include <ostream>
 #include <vector>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <streams.h>
+#include <tinyformat.h>
 
 namespace bip352 {
+
+std::ostream& operator<<(std::ostream& os, const SilentPaymentsDestination& dest)
+{
+    return os << strprintf("SilentPaymentsDestination(version=%u, scan_pubkey=%s, spend_pubkey=%s)",
+                           dest.GetVersion(),
+                           HexStr(dest.GetScanPubKey()),
+                           HexStr(dest.GetSpendPubKey()));
+}
+
+std::ostream& operator<<(std::ostream& os, const SilentPaymentsLabel& label)
+{
+    DataStream ss{};
+    ss << label;
+    return os << strprintf("SilentPaymentsLabel(label=%s)", HexStr(ss));
+}
+
 BOOST_FIXTURE_TEST_SUITE(bip352_tests, BasicTestingSetup)
 
 CKey ParseHexToCKey(std::string_view hex) {
