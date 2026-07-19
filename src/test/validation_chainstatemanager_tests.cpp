@@ -117,6 +117,15 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_delete_chainstate_no_mempool, ChainTestingSetup)
+{
+    auto& manager{*Assert(m_node.chainman)};
+    auto& validated{WITH_LOCK(::cs_main, return manager.InitializeChainstate(/*mempool=*/nullptr))};
+    auto& snapshot{WITH_LOCK(::cs_main, return manager.AddChainstate(std::make_unique<Chainstate>(nullptr, manager.m_blockman, manager, uint256::ONE)))};
+    WITH_LOCK(::cs_main, validated.SetTargetBlock(nullptr));
+    BOOST_CHECK(WITH_LOCK(::cs_main, return manager.DeleteChainstate(snapshot))); // Accept Kernel's null mempool
+}
+
 //! Test rebalancing the caches associated with each chainstate.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 {
