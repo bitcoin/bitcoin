@@ -180,8 +180,10 @@ bool CheckSyscoinMintInternal(
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-hash", fJustCheck);
     }
     // A positive replay lookup can reject before the expensive MPT proofs. A
-    // negative lookup never authorizes the mint.
-    if (pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
+    // negative lookup never authorizes the mint. VerifyDB may consume a
+    // one-shot overlay entry for mints it disconnected in the same pass.
+    if (pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash) &&
+        !pnevmtxmintdb->ConsumeVerifyOverlay(mintSyscoin.nTxHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", fJustCheck);
     }
 
@@ -751,6 +753,26 @@ bool CNEVMMintedTxDB::FlushErase(const NEVMMintTxSet &mapNEVMTxRoots) {
 bool CNEVMMintedTxDB::ExistsTx(const uint256& nTxHash) {
     LOCK(cs_cache);
     return (mapCache.find(nTxHash) != mapCache.end()) || Exists(nTxHash);
+}
+void CNEVMMintedTxDB::SetVerifyOverlay(const NEVMMintTxSet& overlay)
+{
+    LOCK(cs_cache);
+    mapVerifyOverlay = overlay;
+}
+void CNEVMMintedTxDB::ClearVerifyOverlay()
+{
+    LOCK(cs_cache);
+    mapVerifyOverlay.clear();
+}
+bool CNEVMMintedTxDB::ConsumeVerifyOverlay(const uint256& nTxHash)
+{
+    LOCK(cs_cache);
+    auto it = mapVerifyOverlay.find(nTxHash);
+    if (it == mapVerifyOverlay.end()) {
+        return false;
+    }
+    mapVerifyOverlay.erase(it);
+    return true;
 }
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {

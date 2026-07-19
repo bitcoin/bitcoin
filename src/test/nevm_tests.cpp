@@ -528,4 +528,56 @@ BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
                         "Marker above durable tip must be removable for reconnect");
 }
 
+// ReplayBlocks erase set: old-branch mints minus mints also on the new branch.
+BOOST_AUTO_TEST_CASE(mint_replay_disconnect_only_excludes_reconnected)
+{
+    const uint256 old_only = uint256S(
+        "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+    const uint256 both = uint256S(
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    const uint256 new_only = uint256S(
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+    NEVMMintTxSet disconnect{old_only, both};
+    NEVMMintTxSet connect{both, new_only};
+    NEVMMintTxSet disconnect_only;
+    for (const auto& hash : disconnect) {
+        if (!connect.count(hash)) {
+            disconnect_only.insert(hash);
+        }
+    }
+
+    BOOST_CHECK_EQUAL(disconnect_only.size(), 1U);
+    BOOST_CHECK(disconnect_only.count(old_only));
+    BOOST_CHECK(!disconnect_only.count(both));
+    BOOST_CHECK(!disconnect_only.count(new_only));
+}
+
+// VerifyDB consume-once overlay: one bypass, then mint-exists again.
+BOOST_AUTO_TEST_CASE(mint_replay_verify_overlay_consume_once)
+{
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_verify_overlay";
+    fs::remove_all(db_dir);
+
+    const uint256 mint_tx = uint256S(
+        "1212121212121212121212121212121212121212121212121212121212121212");
+
+    CNEVMMintedTxDB mint_db({
+        .path = db_dir,
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = false,
+        .wipe_data = true});
+    mint_db.FlushDataToCache({mint_tx});
+    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
+    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
+
+    mint_db.SetVerifyOverlay({mint_tx});
+    BOOST_CHECK(mint_db.ConsumeVerifyOverlay(mint_tx));
+    BOOST_CHECK_MESSAGE(!mint_db.ConsumeVerifyOverlay(mint_tx),
+                        "Overlay bypass must be consume-once");
+    mint_db.ClearVerifyOverlay();
+    BOOST_CHECK(!mint_db.ConsumeVerifyOverlay(mint_tx));
+    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

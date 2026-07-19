@@ -3562,9 +3562,16 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN
-    if(pnevmtxmintdb != nullptr){
-        if(!pnevmtxmintdb->FlushErase(setMintTxs) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)){
+    // SYSCOIN: Missing mint-replay markers are inflationary; extra markers are
+    // fail-closed. Make the disconnected UTXO tip durable before erasing markers.
+    if (pnevmtxmintdb != nullptr) {
+        if (!setMintTxs.empty()) {
+            if (!CoinsTip().Flush()) {
+                return error("DisconnectTip(): Failed to durably flush disconnected mint state %s",
+                             pindexDelete->GetBlockHash().ToString());
+            }
+        }
+        if (!pnevmtxmintdb->FlushErase(setMintTxs) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)) {
             return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
         }
     }
@@ -3708,11 +3715,18 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN
+    // SYSCOIN: Persist mint-replay additions before any durable UTXO flush.
+    // An extra marker is fail-closed; a missing marker is inflationary.
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
-    if(pnevmtxmintdb)
+    if (pnevmtxmintdb) {
         pnevmtxmintdb->FlushDataToCache(setMintTxs);
+        if (!setMintTxs.empty() &&
+            !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+            return error("%s: Failed to persist NEVM mint-replay markers for %s",
+                         __func__, pindexNew->GetBlockHash().ToString());
+        }
+    }
     if(pblockindexdb)
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
     if(pnevmtxrootsdb)
@@ -5575,6 +5589,20 @@ VerifyDBResult CVerifyDB::VerifyDB(
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4 && !skipped_l3_checks) {
+        // SYSCOIN: Disconnect collected mint hashes into a consume-once overlay so
+        // reconnect can accept already-applied markers exactly once without
+        // weakening normal mint-exists checks under fJustCheck.
+        struct VerifyMintOverlayGuard {
+            ~VerifyMintOverlayGuard()
+            {
+                if (pnevmtxmintdb) {
+                    pnevmtxmintdb->ClearVerifyOverlay();
+                }
+            }
+        } verify_mint_overlay_guard;
+        if (pnevmtxmintdb) {
+            pnevmtxmintdb->SetVerifyOverlay(setMintTxs);
+        }
         while (pindex != chainstate.m_chain.Tip()) {
             const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
             if (reportDone < percentageDone / 10) {
@@ -5713,10 +5741,12 @@ bool Chainstate::ReplayBlocks()
         }
         pindexOld = pindexOld->pprev;
     }
-    // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
-    if(pnevmtxmintdb != nullptr){
-        if(!pnevmtxmintdb->FlushErase(setMintTxsDisconnect) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
+    // SYSCOIN: Flush non-mint aux DBs before rollforward. Mint-replay markers are
+    // deferred: erasing them before the recovered UTXO tip is durable can leave
+    // minted UTXOs without replay protection after a crash.
+    if (pnevmtxrootsdb != nullptr) {
+        if (!pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)) {
+            return error("RollbackBlock(): Error flushing to asset dbs on disconnect");
         }
     }
     NEVMTxRootMap mapNEVMTxRoots;
@@ -5732,13 +5762,29 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
+    // SYSCOIN: 1) persist connect mint markers, 2) commit UTXO, 3) erase
+    // old-branch-only markers. Extra markers are fail-closed; missing markers
+    // are inflationary.
+    if (pnevmtxmintdb && !setMintTxsConnect.empty()) {
+        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
+        if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+            return error("ReplayBlocks(): Failed to persist NEVM mint-replay markers");
+        }
+    }
     cache.Flush();
-    // SYSCOIN
+    if (pnevmtxmintdb) {
+        NEVMMintTxSet setMintDisconnectOnly;
+        for (const auto& hash : setMintTxsDisconnect) {
+            if (!setMintTxsConnect.count(hash)) {
+                setMintDisconnectOnly.insert(hash);
+            }
+        }
+        if (!setMintDisconnectOnly.empty() && !pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
+            return error("ReplayBlocks(): Failed to erase disconnected NEVM mint-replay markers");
+        }
+    }
     if(pnevmdatadb) {
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, PoDAFlushSource::Block);
-    }
-    if(pnevmtxmintdb) {
-        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
     }
     if(pblockindexdb) {
         pblockindexdb->FlushDataToCache(vecTXIDPairs);

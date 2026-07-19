@@ -25,6 +25,8 @@ public:
 
 class CNEVMMintedTxDB : public CDBWrapper {
     NEVMMintTxSet mapCache;
+    // VerifyDB disconnect/reconnect: allow each overlay hash to bypass ExistsTx once.
+    NEVMMintTxSet mapVerifyOverlay;
     mutable Mutex cs_cache; // Mutex to protect cache operations (non-recursive for better performance)
 public:
     using CDBWrapper::CDBWrapper;
@@ -32,6 +34,10 @@ public:
     bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     void FlushDataToCache(const NEVMMintTxSet &mapNEVMTxRoots) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool ExistsTx(const uint256& nTxHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    void SetVerifyOverlay(const NEVMMintTxSet& overlay) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    void ClearVerifyOverlay() EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    // Returns true when a verification-local bypass was consumed for nTxHash.
+    bool ConsumeVerifyOverlay(const uint256& nTxHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 };
 
 extern std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
