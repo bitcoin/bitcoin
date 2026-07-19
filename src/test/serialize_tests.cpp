@@ -289,19 +289,19 @@ BOOST_AUTO_TEST_CASE(class_methods)
     CSerializeMethodsTestSingle methodtest3;
     CSerializeMethodsTestMany methodtest4;
     DataStream ss;
-    BOOST_CHECK(methodtest1 == methodtest2);
+    CHECK_NO_DISPLAY(methodtest1 == methodtest2);
     ss << methodtest1;
     ss >> methodtest4;
     ss << methodtest2;
     ss >> methodtest3;
-    BOOST_CHECK(methodtest1 == methodtest2);
-    BOOST_CHECK(methodtest2 == methodtest3);
-    BOOST_CHECK(methodtest3 == methodtest4);
+    CHECK_NO_DISPLAY(methodtest1 == methodtest2);
+    CHECK_NO_DISPLAY(methodtest2 == methodtest3);
+    CHECK_NO_DISPLAY(methodtest3 == methodtest4);
 
     DataStream ss2;
     ss2 << intval << boolval << stringval << charstrval << TX_WITH_WITNESS(txval);
     ss2 >> methodtest3;
-    BOOST_CHECK(methodtest3 == methodtest4);
+    CHECK_NO_DISPLAY(methodtest3 == methodtest4);
     {
         DataStream ds;
         const std::string in{"ab"};
