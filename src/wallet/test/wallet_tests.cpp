@@ -113,11 +113,11 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailu
 
     fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
     for (bool success : {false, true}) {
-        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: A failed master-key write must be reported and leave encryption retryable
-        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: A failed master-key write must leave the wallet unencrypted
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), false); // TODO: A successful retry must persist the master key
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), false); // TODO: A failed master-key write must preserve plaintext keys
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: A failed master-key write must not persist encrypted keys
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
     }
 }
 
@@ -128,18 +128,18 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
     fail_db->FailNextCommit(); // The injected failure affects only the first attempt
     fail_db->MakeBatch(); // Batch construction must not consume the commit failure
     test_only_CheckFailuresAreExceptionsNotAborts mock_checks; // Keep abort regressions observable
-    BOOST_CHECK_THROW(wallet->EncryptWallet("passphrase"), NonFatalCheckError); // TODO: A failed commit must return an error without aborting
-    BOOST_CHECK( wallet->HasEncryptionKeys()); // TODO: A failed commit must not publish the master key
-    BOOST_CHECK( wallet->HaveCryptedKeys()); // TODO: A failed commit must not publish encrypted descriptor keys
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase"));
+    BOOST_CHECK(!wallet->HasEncryptionKeys());
+    BOOST_CHECK(!wallet->HaveCryptedKeys());
     BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY));
     BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
     BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
-    BOOST_CHECK(!wallet->EncryptWallet("passphrase")); // TODO: Encryption must remain retryable after a failed commit
+    BOOST_CHECK( wallet->EncryptWallet("passphrase"));
     BOOST_CHECK( wallet->HasEncryptionKeys());
     BOOST_CHECK( wallet->HaveCryptedKeys());
-    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY)); // TODO: A successful retry must persist the master key
-    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY)); // TODO: A successful retry must erase plaintext keys
-    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY)); // TODO: A successful retry must persist encrypted keys
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::MASTER_KEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
