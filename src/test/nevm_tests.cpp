@@ -414,50 +414,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(nevm_mint_replay_lifecycle_tests, BasicTestingSetup)
 
-namespace {
-bool WipeMintReplay(bool reindex, bool reindex_chainstate)
-{
-    return reindex || reindex_chainstate;
-}
-
-bool EffectiveReindexGeth(bool f_reindex_geth, bool disk_reindexing)
-{
-    return f_reindex_geth || disk_reindexing;
-}
-
-// Mirrors CompleteChainstateInitialization mint-open / empty-coins recovery.
-bool ShouldClearMintOnOpen(bool reindex, bool reindex_chainstate, bool f_reindex_geth,
-                           bool disk_reindexing, bool coins_view_empty)
-{
-    if (WipeMintReplay(reindex, reindex_chainstate)) {
-        return true;
-    }
-    // Empty coins always clear mint, including when effective_reindex_geth
-    // skipped the full SYS DB recreate path.
-    return coins_view_empty;
-}
-} // namespace
-
-BOOST_AUTO_TEST_CASE(mint_replay_wipe_policy_matrix)
-{
-    // 1) Geth/NEVM aux rebuild with nonempty CoinsTip: marker must survive.
-    BOOST_CHECK(!WipeMintReplay(/*reindex=*/false, /*reindex_chainstate=*/false));
-    BOOST_CHECK(EffectiveReindexGeth(/*f_reindex_geth=*/false, /*disk_reindexing=*/true));
-    BOOST_CHECK(!ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/false));
-
-    // 2) Clean -reindex / -reindex-chainstate: marker cleared.
-    BOOST_CHECK(WipeMintReplay(true, false));
-    BOOST_CHECK(WipeMintReplay(false, true));
-    BOOST_CHECK(ShouldClearMintOnOpen(true, false, true, true, false));
-
-    // 3) Persisted reindex marker with empty CoinsTip: marker DB cleared.
-    BOOST_CHECK(ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/true));
-
-    // 4) Persisted reindex marker with nonempty CoinsTip: do not wipe on open
-    //    (ahead-of-tip markers are trimmed separately against active tip).
-    BOOST_CHECK(!ShouldClearMintOnOpen(false, false, false, true, /*coins_view_empty=*/false));
-}
-
 // nevmminttx markers must survive a non-wipe reopen (geth-aux rebuild path).
 BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
 {
@@ -500,15 +456,15 @@ BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
     }
 }
 
-// Ahead-of-tip reconciliation: erase only selected markers, keep tip markers.
-BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
+// Disconnect crash-order: persist pending additions before selective erase.
+BOOST_AUTO_TEST_CASE(mint_replay_flush_additions_before_selective_erase)
 {
-    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_trim_policy";
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_crash_order";
     fs::remove_all(db_dir);
 
-    const uint256 tip_marker = uint256S(
+    const uint256 active_mint = uint256S(
         "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const uint256 ahead_marker = uint256S(
+    const uint256 disconnect_mint = uint256S(
         "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
 
     CNEVMMintedTxDB mint_db({
@@ -516,48 +472,17 @@ BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = false,
         .wipe_data = true});
-    mint_db.FlushDataToCache({tip_marker, ahead_marker});
+
+    mint_db.FlushDataToCache({active_mint, disconnect_mint});
+    BOOST_CHECK(mint_db.ExistsTx(active_mint));
+    BOOST_CHECK(mint_db.ExistsTx(disconnect_mint));
+
     BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
-    BOOST_CHECK(mint_db.ExistsTx(tip_marker));
-    BOOST_CHECK(mint_db.ExistsTx(ahead_marker));
+    BOOST_REQUIRE(mint_db.FlushErase({disconnect_mint}));
 
-    BOOST_REQUIRE(mint_db.FlushErase({ahead_marker}));
-    BOOST_CHECK_MESSAGE(mint_db.ExistsTx(tip_marker),
-                        "Marker at or below durable tip must never be removed");
-    BOOST_CHECK_MESSAGE(!mint_db.ExistsTx(ahead_marker),
-                        "Marker above durable tip must be removable for reconnect");
-}
-
-// Tip-gated pending disconnect erase: apply only when coins best matches.
-BOOST_AUTO_TEST_CASE(mint_replay_pending_disconnect_erase_is_tip_gated)
-{
-    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_pending_disconnect";
-    fs::remove_all(db_dir);
-
-    const uint256 mint_tx = uint256S(
-        "0505050505050505050505050505050505050505050505050505050505050505");
-    const uint256 new_tip = uint256S(
-        "0606060606060606060606060606060606060606060606060606060606060606");
-    const uint256 old_tip = uint256S(
-        "0707070707070707070707070707070707070707070707070707070707070707");
-
-    CNEVMMintedTxDB mint_db({
-        .path = db_dir,
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = false,
-        .wipe_data = true});
-    mint_db.FlushDataToCache({mint_tx});
-    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
-    BOOST_REQUIRE(mint_db.WritePendingDisconnectErase(new_tip, {mint_tx}));
-
-    // Coins tip still old: drop stale intent, keep marker.
-    BOOST_REQUIRE(mint_db.ApplyPendingDisconnectEraseIfReady(old_tip));
-    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
-
-    BOOST_REQUIRE(mint_db.WritePendingDisconnectErase(new_tip, {mint_tx}));
-    // Coins tip matches post-replay tip: erase marker.
-    BOOST_REQUIRE(mint_db.ApplyPendingDisconnectEraseIfReady(new_tip));
-    BOOST_CHECK(!mint_db.ExistsTx(mint_tx));
+    BOOST_CHECK_MESSAGE(mint_db.ExistsTx(active_mint),
+                        "Unrelated active mint marker must remain after disconnect erase");
+    BOOST_CHECK(!mint_db.ExistsTx(disconnect_mint));
 }
 
 // ReplayBlocks erase set: old-branch mints minus mints also on the new branch.
@@ -583,33 +508,6 @@ BOOST_AUTO_TEST_CASE(mint_replay_disconnect_only_excludes_reconnected)
     BOOST_CHECK(disconnect_only.count(old_only));
     BOOST_CHECK(!disconnect_only.count(both));
     BOOST_CHECK(!disconnect_only.count(new_only));
-}
-
-// VerifyDB consume-once overlay: one bypass, then mint-exists again.
-BOOST_AUTO_TEST_CASE(mint_replay_verify_overlay_consume_once)
-{
-    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_verify_overlay";
-    fs::remove_all(db_dir);
-
-    const uint256 mint_tx = uint256S(
-        "1212121212121212121212121212121212121212121212121212121212121212");
-
-    CNEVMMintedTxDB mint_db({
-        .path = db_dir,
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = false,
-        .wipe_data = true});
-    mint_db.FlushDataToCache({mint_tx});
-    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
-    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
-
-    mint_db.SetVerifyOverlay({mint_tx});
-    BOOST_CHECK(mint_db.ConsumeVerifyOverlay(mint_tx));
-    BOOST_CHECK_MESSAGE(!mint_db.ConsumeVerifyOverlay(mint_tx),
-                        "Overlay bypass must be consume-once");
-    mint_db.ClearVerifyOverlay();
-    BOOST_CHECK(!mint_db.ConsumeVerifyOverlay(mint_tx));
-    BOOST_CHECK(mint_db.ExistsTx(mint_tx));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

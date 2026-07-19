@@ -3345,11 +3345,8 @@ bool Chainstate::FlushStateToDisk(
                 !pnevmtxrootsdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/100000, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx roots db");
             }
-            // Mint uniqueness is consensus-critical and has no crash-replay marker, so keep it durable.
-            if (pnevmtxmintdb &&
-                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
-                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
-            }
+            // SYSCOIN: nevmminttx is flushed with the full UTXO flush below (write-ahead
+            // of CoinsTip), not on ordinary periodic metadata writes.
             const bool force_dmn_maintenance =
                 deterministicMNManager &&
                 (mode == FlushStateMode::ALWAYS ||
@@ -3393,6 +3390,12 @@ bool Chainstate::FlushStateToDisk(
             // overwrite one. Still, use a conservative safety factor of 2.
             if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
                 return FatalError(m_chainman.GetNotifications(), state, "Disk space is too low!", _("Disk space is too low!"));
+            }
+            // SYSCOIN: Persist mint-replay additions before making minted UTXO durable.
+            // Extra markers after a crash are fail-closed;
+            if (pnevmtxmintdb &&
+                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit NEVM mint replay database");
             }
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush())
@@ -3562,12 +3565,17 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN: Missing mint-replay markers are inflationary; extra markers are
-    // fail-closed. Make the disconnected UTXO tip durable before erasing markers.
+    // SYSCOIN: durable UTXO mint(T) => durable replay marker(T). Persist any
+    // pending marker additions, commit the disconnected UTXO tip, then erase.
+    // Extra markers after a crash are fail-closed (may require -reindex-chainstate).
     if (pnevmtxmintdb != nullptr) {
         if (!setMintTxs.empty()) {
+            if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+                return error("DisconnectTip(): Failed to persist mint replay additions %s",
+                             pindexDelete->GetBlockHash().ToString());
+            }
             if (!CoinsTip().Flush()) {
-                return error("DisconnectTip(): Failed to durably flush disconnected mint state %s",
+                return error("DisconnectTip(): Failed to flush disconnected UTXO state %s",
                              pindexDelete->GetBlockHash().ToString());
             }
         }
@@ -3715,9 +3723,8 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN: Stage mint markers in cache before FlushStateToDisk. That path
-    // already sync-writes nevmminttx before any CoinsTip flush, so a per-block
-    // FlushCacheToDisk here is unnecessary.
+    // SYSCOIN: Stage mint markers in cache; they become durable on the next full
+    // UTXO flush (write-ahead of CoinsTip) or on mint-containing disconnect/replay.
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
     if(pnevmtxmintdb)
@@ -5584,20 +5591,6 @@ VerifyDBResult CVerifyDB::VerifyDB(
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4 && !skipped_l3_checks) {
-        // SYSCOIN: Disconnect collected mint hashes into a consume-once overlay so
-        // reconnect can accept already-applied markers exactly once without
-        // weakening normal mint-exists checks under fJustCheck.
-        struct VerifyMintOverlayGuard {
-            ~VerifyMintOverlayGuard()
-            {
-                if (pnevmtxmintdb) {
-                    pnevmtxmintdb->ClearVerifyOverlay();
-                }
-            }
-        } verify_mint_overlay_guard;
-        if (pnevmtxmintdb) {
-            pnevmtxmintdb->SetVerifyOverlay(setMintTxs);
-        }
         while (pindex != chainstate.m_chain.Tip()) {
             const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
             if (reportDone < percentageDone / 10) {
@@ -5757,9 +5750,8 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    // SYSCOIN: 1) persist connect mint markers, 2) record tip-gated pending
-    // disconnect erases, 3) commit UTXO, 4) erase disconnect-only markers.
-    // Extra markers are fail-closed; missing markers are inflationary.
+    // SYSCOIN: additions before UTXO commit; erasures after. Extra markers after a
+    // crash are fail-closed (may require -reindex-chainstate).
     NEVMMintTxSet setMintDisconnectOnly;
     if (pnevmtxmintdb) {
         for (const auto& hash : setMintTxsDisconnect) {
@@ -5767,25 +5759,17 @@ bool Chainstate::ReplayBlocks()
                 setMintDisconnectOnly.insert(hash);
             }
         }
-        if (!setMintTxsConnect.empty()) {
-            pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
-            if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
-                return error("ReplayBlocks(): Failed to persist NEVM mint-replay markers");
-            }
-        }
-        if (!setMintDisconnectOnly.empty() &&
-            !pnevmtxmintdb->WritePendingDisconnectErase(pindexNew->GetBlockHash(), setMintDisconnectOnly)) {
-            return error("ReplayBlocks(): Failed to record pending NEVM mint-replay erasures");
+        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
+        if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+            return error("ReplayBlocks(): Failed to persist mint replay additions");
         }
     }
-    cache.Flush();
-    if (pnevmtxmintdb && !setMintDisconnectOnly.empty()) {
-        if (!pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
-            return error("ReplayBlocks(): Failed to erase disconnected NEVM mint-replay markers");
-        }
-        if (!pnevmtxmintdb->ClearPendingDisconnectErase()) {
-            return error("ReplayBlocks(): Failed to clear pending NEVM mint-replay erasures");
-        }
+    if (!cache.Flush()) {
+        return error("ReplayBlocks(): Failed to commit replayed UTXO state");
+    }
+    if (pnevmtxmintdb && !setMintDisconnectOnly.empty() &&
+        !pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
+        return error("ReplayBlocks(): Failed to erase disconnected mint markers");
     }
     if(pnevmdatadb) {
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, PoDAFlushSource::Block);

@@ -180,10 +180,8 @@ bool CheckSyscoinMintInternal(
         return FormatSyscoinErrorMessage(state, "mint-verify-tx-hash", fJustCheck);
     }
     // A positive replay lookup can reject before the expensive MPT proofs. A
-    // negative lookup never authorizes the mint. VerifyDB may consume a
-    // one-shot overlay entry for mints it disconnected in the same pass.
-    if (pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash) &&
-        !pnevmtxmintdb->ConsumeVerifyOverlay(mintSyscoin.nTxHash)) {
+    // negative lookup never authorizes the mint.
+    if (pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
         return FormatSyscoinErrorMessage(state, "mint-exists", fJustCheck);
     }
 
@@ -753,74 +751,6 @@ bool CNEVMMintedTxDB::FlushErase(const NEVMMintTxSet &mapNEVMTxRoots) {
 bool CNEVMMintedTxDB::ExistsTx(const uint256& nTxHash) {
     LOCK(cs_cache);
     return (mapCache.find(nTxHash) != mapCache.end()) || Exists(nTxHash);
-}
-void CNEVMMintedTxDB::SetVerifyOverlay(const NEVMMintTxSet& overlay)
-{
-    LOCK(cs_cache);
-    mapVerifyOverlay.clear();
-    for (const auto& hash : overlay) {
-        mapVerifyOverlay.insert(hash);
-    }
-}
-void CNEVMMintedTxDB::ClearVerifyOverlay()
-{
-    LOCK(cs_cache);
-    mapVerifyOverlay.clear();
-}
-bool CNEVMMintedTxDB::ConsumeVerifyOverlay(const uint256& nTxHash)
-{
-    LOCK(cs_cache);
-    auto it = mapVerifyOverlay.find(nTxHash);
-    if (it == mapVerifyOverlay.end()) {
-        return false;
-    }
-    mapVerifyOverlay.erase(it);
-    return true;
-}
-
-namespace {
-constexpr uint8_t DB_MINT_PENDING_DISCONNECT{'P'};
-} // namespace
-
-bool CNEVMMintedTxDB::WritePendingDisconnectErase(const uint256& expected_best_block, const NEVMMintTxSet& erase)
-{
-    NEVMMintPendingDisconnect pending;
-    pending.expected_best_block = expected_best_block;
-    pending.erase.reserve(erase.size());
-    for (const auto& hash : erase) {
-        pending.erase.push_back(hash);
-    }
-    return Write(DB_MINT_PENDING_DISCONNECT, pending, /*fSync=*/true);
-}
-
-bool CNEVMMintedTxDB::ClearPendingDisconnectErase()
-{
-    return Erase(DB_MINT_PENDING_DISCONNECT, /*fSync=*/true);
-}
-
-bool CNEVMMintedTxDB::ApplyPendingDisconnectEraseIfReady(const uint256& coins_best_block)
-{
-    NEVMMintPendingDisconnect pending;
-    if (!Read(DB_MINT_PENDING_DISCONNECT, pending)) {
-        return true;
-    }
-    if (pending.expected_best_block != coins_best_block) {
-        // UTXO never reached the post-replay tip; drop the intent and let replay redo work.
-        LogPrintf("Clearing stale NEVM mint pending-disconnect record (coins tip mismatch)\n");
-        return ClearPendingDisconnectErase();
-    }
-    NEVMMintTxSet erase;
-    for (const auto& hash : pending.erase) {
-        erase.insert(hash);
-    }
-    if (!erase.empty()) {
-        LogPrintf("Applying %u pending NEVM mint-replay erasures after durable tip %s\n",
-                  erase.size(), coins_best_block.ToString());
-        if (!FlushErase(erase)) {
-            return false;
-        }
-    }
-    return ClearPendingDisconnectErase();
 }
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {

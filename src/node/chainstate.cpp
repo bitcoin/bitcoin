@@ -337,87 +337,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .options = chainman.m_options.block_tree_db});
     }
 
-    // SYSCOIN FlushStateToDisk can sync-write nevmminttx on a periodic write without a
-    // full CoinsTip flush. After an in-memory reorg, that leaves markers on a side branch
-    // while the durable coins tip remains on the old branch. Trim markers from a bounded
-    // window of off-active connected blocks (ahead-of-tip extensions and recent side
-    // branches), but never erase a hash still present on the active tip window. Interrupted
-    // ReplayBlocks disconnect erases are handled separately via the tip-gated pending record.
-    if (!wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
-        Chainstate& active = chainman.ActiveChainstate();
-        const uint256 coins_best = active.CoinsTip().GetBestBlock();
-        if (!pnevmtxmintdb->ApplyPendingDisconnectEraseIfReady(coins_best)) {
-            return {ChainstateLoadStatus::FAILURE, _("Failed to apply pending NEVM mint-replay erasures")};
-        }
-        const CBlockIndex* tip = active.m_chain.Tip();
-        if (tip) {
-            // Bound disk reads: only recent off-active tips / extensions, not the full chain.
-            constexpr int MINT_REPLAY_RECONCILE_DEPTH = 1024;
-            const int min_height = tip->nHeight > MINT_REPLAY_RECONCILE_DEPTH
-                                       ? tip->nHeight - MINT_REPLAY_RECONCILE_DEPTH
-                                       : 0;
-            const int max_height = tip->nHeight + MINT_REPLAY_RECONCILE_DEPTH;
-
-            NEVMMintTxSet setMintErase;
-            for (auto& [hash, block_index] : chainman.BlockIndex()) {
-                (void)hash;
-                CBlockIndex* pindex = &block_index;
-                if (pindex->nHeight < min_height || pindex->nHeight > max_height) {
-                    continue;
-                }
-                if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    continue;
-                }
-                if (active.m_chain.Contains(pindex)) {
-                    continue;
-                }
-                CBlock block;
-                if (!chainman.m_blockman.ReadBlockFromDisk(block, *pindex)) {
-                    continue;
-                }
-                for (const auto& tx : block.vtx) {
-                    if (!IsSyscoinMintTx(tx->nVersion)) {
-                        continue;
-                    }
-                    const CMintSyscoin mintSyscoin(*tx);
-                    if (!mintSyscoin.IsNull() && pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
-                        setMintErase.insert(mintSyscoin.nTxHash);
-                    }
-                }
-            }
-            // Drop candidates still minted on the durable active tip window.
-            if (!setMintErase.empty()) {
-                for (const CBlockIndex* pindex = tip;
-                     pindex && pindex->nHeight >= min_height && !setMintErase.empty();
-                     pindex = pindex->pprev) {
-                    if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
-                        continue;
-                    }
-                    CBlock block;
-                    if (!chainman.m_blockman.ReadBlockFromDisk(block, *pindex)) {
-                        continue;
-                    }
-                    for (const auto& tx : block.vtx) {
-                        if (!IsSyscoinMintTx(tx->nVersion)) {
-                            continue;
-                        }
-                        const CMintSyscoin mintSyscoin(*tx);
-                        if (!mintSyscoin.IsNull()) {
-                            setMintErase.erase(mintSyscoin.nTxHash);
-                        }
-                    }
-                }
-            }
-            if (!setMintErase.empty()) {
-                LogPrintf("Removing %u NEVM mint-replay marker(s) ahead of durable coins tip\n",
-                          setMintErase.size());
-                if (!pnevmtxmintdb->FlushErase(setMintErase)) {
-                    return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
-                }
-            }
-        }
-    }
-
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
     // on the condition of each chainstate.
@@ -528,24 +447,17 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
-            // SYSCOIN Continued reindex with preserved mint-replay state: level-4 VerifyDB
-            // reconnects recent tip blocks and sees already-applied markers as
-            // mint-exists. Clamp only in that precise case; fail closed if the
-            // operator explicitly required full verification.
+            // SYSCOIN: Mint replay markers live outside VerifyDB's temporary coins view.
+            // Level-4 reconnect sees already-applied markers as mint-exists. Cap at 3;
+            // fail closed if the operator required full verification.
             int check_level = options.check_level;
-            bool disk_reindexing{false};
-            if (chainman.m_blockman.m_block_tree_db) {
-                chainman.m_blockman.m_block_tree_db->ReadReindexing(disk_reindexing);
-            }
-            const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
-            if (disk_reindexing && !wipe_mint_replay && check_level >= 4) {
+            if (check_level >= 4) {
                 if (options.require_full_verification) {
                     return {ChainstateLoadStatus::FAILURE,
-                            _("Level-4 verification is unavailable while continuing reindex "
-                              "with preserved NEVM mint replay state")};
+                            _("Check level 4 is unavailable with NEVM mint replay state")};
                 }
-                LogPrintf("Clamping VerifyDB check level from %d to 3 while continuing reindex "
-                          "with preserved NEVM mint replay state\n",
+                LogPrintf("Clamping VerifyDB check level from %d to 3 because NEVM mint "
+                          "replay markers are external to the temporary view\n",
                           check_level);
                 check_level = 3;
             }
