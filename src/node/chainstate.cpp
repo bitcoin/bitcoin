@@ -449,16 +449,18 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
 
             // Continued reindex keeps nevmminttx aligned with the existing UTXO tip.
             // Level-4 VerifyDB reconnects those blocks and would see mint-exists for
-            // already-applied mint markers; skip until reindex finishes. Normal
-            // startups (fReindex false) still run full verification.
-            if (fReindex) {
-                LogPrintf("Skipping VerifyDB while reindex is in progress\n");
-                continue;
+            // already-applied mint markers, so clamp to level <= 3 while fReindex.
+            // Lower-level read/undo/disconnect checks still run.
+            int check_level = options.check_level;
+            if (fReindex && check_level >= 4) {
+                LogPrintf("Clamping VerifyDB check level from %d to 3 while reindex is in progress\n",
+                          check_level);
+                check_level = 3;
             }
 
             VerifyDBResult result = CVerifyDB(chainman.GetNotifications()).VerifyDB(
                 *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
-                options.check_level,
+                check_level,
                 options.check_blocks);
             switch (result) {
             case VerifyDBResult::SUCCESS:
