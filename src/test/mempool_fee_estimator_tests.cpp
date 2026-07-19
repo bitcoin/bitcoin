@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
     BOOST_CHECK_EQUAL(percentiles.p50.size, high_fee_rate.size);
     BOOST_CHECK_EQUAL(percentiles.p75.fee, medium_fee_rate.fee);
     BOOST_CHECK_EQUAL(percentiles.p75.size, medium_fee_rate.size);
-    BOOST_CHECK(ByRatio{percentiles.p50} > ByRatio{percentiles.p75});
+    CHECK_NO_DISPLAY(ByRatio{percentiles.p50} > ByRatio{percentiles.p75});
 }
 
 BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         BOOST_CHECK(result_economical.has_value());
         BOOST_CHECK_EQUAL(result_economical->feerate, FeeFrac(low_fee, tx_vsize));
         BOOST_CHECK_EQUAL(result_conservative->feerate, FeeFrac(med_fee, tx_vsize));
-        BOOST_CHECK(ByRatio{result_conservative->feerate} > ByRatio{result_economical->feerate});
+        CHECK_NO_DISPLAY(ByRatio{result_conservative->feerate} > ByRatio{result_economical->feerate});
         BOOST_CHECK(result_conservative->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
         BOOST_CHECK(result_economical->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
         BOOST_CHECK_EQUAL(result_conservative->returned_target, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
