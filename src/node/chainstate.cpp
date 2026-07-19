@@ -339,7 +339,8 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     // FlushStateToDisk writes nevmminttx before CoinsTip. A crash between those
     // flushes can leave mint markers for blocks above the durable coins tip.
-    // Trim only previously-connected blocks on the tip's chain (nChainTx > 0).
+    // Only trim blocks that were actually connected (BLOCK_VALID_SCRIPTS): nChainTx
+    // is set earlier at block-data receipt and must not authorize erasing markers.
     if (disk_reindexing && !wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
         NEVMMintTxSet setMintAboveTip;
         for (Chainstate* chainstate : chainman.GetAll()) {
@@ -350,10 +351,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             for (auto& [hash, block_index] : chainman.BlockIndex()) {
                 (void)hash;
                 CBlockIndex* pindex = &block_index;
-                if (pindex->nHeight <= tip->nHeight || pindex->nChainTx == 0) {
+                if (pindex->nHeight <= tip->nHeight) {
                     continue;
                 }
-                if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
+                if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                     continue;
                 }
                 if (pindex->GetAncestor(tip->nHeight) != tip) {
@@ -368,7 +369,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
                         continue;
                     }
                     const CMintSyscoin mintSyscoin(*tx);
-                    if (!mintSyscoin.IsNull()) {
+                    if (!mintSyscoin.IsNull() && pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
                         setMintAboveTip.insert(mintSyscoin.nTxHash);
                     }
                 }
