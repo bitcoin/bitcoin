@@ -528,6 +528,31 @@ BOOST_AUTO_TEST_CASE(mint_replay_selective_erase_preserves_tip_markers)
                         "Marker above durable tip must be removable for reconnect");
 }
 
+// Startup reconciliation: side-branch / ahead-of-tip markers erase unless kept
+// by an active-chain mint at or below the durable tip.
+BOOST_AUTO_TEST_CASE(mint_replay_reconcile_keeps_active_tip_markers)
+{
+    const uint256 active_tip = uint256S(
+        "0101010101010101010101010101010101010101010101010101010101010101");
+    const uint256 ahead = uint256S(
+        "0202020202020202020202020202020202020202020202020202020202020202");
+    const uint256 side_branch = uint256S(
+        "0303030303030303030303030303030303030303030303030303030303030303");
+    const uint256 both = uint256S(
+        "0404040404040404040404040404040404040404040404040404040404040404");
+
+    NEVMMintTxSet keep{active_tip, both};
+    NEVMMintTxSet erase{ahead, side_branch, both};
+    for (const auto& hash : keep) {
+        erase.erase(hash);
+    }
+
+    BOOST_CHECK(erase.count(ahead));
+    BOOST_CHECK(erase.count(side_branch));
+    BOOST_CHECK(!erase.count(both));
+    BOOST_CHECK(!erase.count(active_tip));
+}
+
 // ReplayBlocks erase set: old-branch mints minus mints also on the new branch.
 BOOST_AUTO_TEST_CASE(mint_replay_disconnect_only_excludes_reconnected)
 {

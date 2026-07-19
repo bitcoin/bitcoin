@@ -338,46 +338,53 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     }
 
     // SYSCOIN FlushStateToDisk writes nevmminttx before CoinsTip, including on ordinary
-    // periodic flushes. A crash can leave markers above the durable coins tip
-    // with or without a reindex marker. Reconcile against the active chainstate
-    // tip only (global replay DB cannot track multiple tips). Only trim blocks
-    // that were actually connected (BLOCK_VALID_SCRIPTS): nChainTx is set earlier
-    // at block-data receipt and must not authorize erasing markers.
+    // periodic flushes. A crash can leave markers above the durable coins tip, and a
+    // ReplayBlocks crash after UTXO commit but before FlushErase can leave markers on
+    // disconnected side branches. Reconcile against the active chainstate tip only
+    // (global replay DB cannot track multiple tips). Only consider blocks that were
+    // actually connected (BLOCK_VALID_SCRIPTS): nChainTx is set earlier at block-data
+    // receipt and must not authorize erasing markers. Never erase a marker that still
+    // belongs to an active-chain mint at or below the durable tip.
     if (!wipe_mint_replay && !coinsViewEmpty && pnevmtxmintdb) {
         Chainstate& active = chainman.ActiveChainstate();
         const CBlockIndex* tip = active.m_chain.Tip();
         if (tip) {
-            NEVMMintTxSet setMintAboveTip;
+            NEVMMintTxSet setMintKeep;
+            NEVMMintTxSet setMintErase;
             for (auto& [hash, block_index] : chainman.BlockIndex()) {
                 (void)hash;
                 CBlockIndex* pindex = &block_index;
-                if (pindex->nHeight <= tip->nHeight) {
-                    continue;
-                }
                 if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    continue;
-                }
-                if (pindex->GetAncestor(tip->nHeight) != tip) {
                     continue;
                 }
                 CBlock block;
                 if (!chainman.m_blockman.ReadBlockFromDisk(block, *pindex)) {
                     continue;
                 }
+                const bool on_active = active.m_chain.Contains(pindex);
                 for (const auto& tx : block.vtx) {
                     if (!IsSyscoinMintTx(tx->nVersion)) {
                         continue;
                     }
                     const CMintSyscoin mintSyscoin(*tx);
-                    if (!mintSyscoin.IsNull() && pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
-                        setMintAboveTip.insert(mintSyscoin.nTxHash);
+                    if (mintSyscoin.IsNull() || !pnevmtxmintdb->ExistsTx(mintSyscoin.nTxHash)) {
+                        continue;
+                    }
+                    if (on_active && pindex->nHeight <= tip->nHeight) {
+                        setMintKeep.insert(mintSyscoin.nTxHash);
+                    } else {
+                        // Ahead of tip on the active chain, or on a side branch.
+                        setMintErase.insert(mintSyscoin.nTxHash);
                     }
                 }
             }
-            if (!setMintAboveTip.empty()) {
-                LogPrintf("Removing %u NEVM mint-replay marker(s) above durable coins tip\n",
-                          setMintAboveTip.size());
-                if (!pnevmtxmintdb->FlushErase(setMintAboveTip)) {
+            for (const auto& hash : setMintKeep) {
+                setMintErase.erase(hash);
+            }
+            if (!setMintErase.empty()) {
+                LogPrintf("Removing %u NEVM mint-replay marker(s) not covered by durable active tip\n",
+                          setMintErase.size());
+                if (!pnevmtxmintdb->FlushErase(setMintErase)) {
                     return {ChainstateLoadStatus::FAILURE, _("Failed to trim NEVM mint-replay database")};
                 }
             }
