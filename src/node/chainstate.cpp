@@ -447,6 +447,15 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
+            // Continued reindex keeps nevmminttx aligned with the existing UTXO tip.
+            // Level-4 VerifyDB reconnects those blocks and would see mint-exists for
+            // already-applied mint markers; skip until reindex finishes. Normal
+            // startups (fReindex false) still run full verification.
+            if (fReindex) {
+                LogPrintf("Skipping VerifyDB while reindex is in progress\n");
+                continue;
+            }
+
             VerifyDBResult result = CVerifyDB(chainman.GetNotifications()).VerifyDB(
                 *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
                 options.check_level,
