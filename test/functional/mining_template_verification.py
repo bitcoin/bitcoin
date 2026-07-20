@@ -253,10 +253,11 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
     def parallel_test(self, node, block_3):
         # Ensure that getblocktemplate can be called concurrently by many threads.
         self.log.info("Check blocks in parallel")
-        check_50_blocks = lambda n: [
-            assert_template(n, block_3, "bad-txns-inputs-missingorspent", submit=False)
-            for _ in range(50)
-        ]
+        def check_50_blocks(n):
+            return [
+                assert_template(n, block_3, "bad-txns-inputs-missingorspent", submit=False)
+                for _ in range(50)
+            ]
         rpcs = [node.cli for _ in range(6)]
         with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
             list(threads.map(check_50_blocks, rpcs))
