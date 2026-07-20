@@ -6,15 +6,14 @@
 
 FROM mirror.gcr.io/ubuntu:26.04
 
-# Pin uv and ruff to minor version to avoid breaking changes
+# Pin uv and ruff images to reviewed indexes while retaining release tags.
 # https://docs.astral.sh/uv/reference/policies/versioning/
 # https://docs.astral.sh/ruff/versioning/
-COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /uvx /bin/
-COPY --from=ghcr.io/astral-sh/ruff:0.15 /ruff /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11@sha256:93b61e21202b1dab861092748e46bbd6e0e41dd84f59b9174efd2353186e1b47 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/ruff:0.15@sha256:d9e5710276b88ae2c0a33bd394aeb2877f5f852e23235ebcaa1c5bda4998569a /ruff /bin/
 
 COPY ./ci/retry/retry /ci_retry
-COPY ./.python-version /.python-version
-COPY ./ci/lint/requirements.txt /ci/lint/requirements.txt
+COPY ./.python-version ./ci/lint/pyproject.toml ./ci/lint/uv.lock /ci/lint/
 COPY ./ci/lint/01_install.sh /install.sh
 
 RUN /install.sh && \

@@ -22,14 +22,13 @@ ${CI_RETRY_EXE} apt-get update
 # - moreutils (used by scripted-diff)
 ${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg moreutils
 
-# Install Python and create venv using uv (reads version from .python-version)
-uv venv /python_env
+# Install Python dependencies using uv
+export UV_PROJECT_ENVIRONMENT=/python_env
+uv sync --project /ci/lint --locked --only-group lint
 
 export PATH="/python_env/bin:${PATH}"
 command -v python3
 python3 --version
-
-uv pip install --python /python_env --requirements /ci/lint/requirements.txt
 
 SHELLCHECK_VERSION=v0.11.0
 curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.$(uname --machine).tar.xz" | \
