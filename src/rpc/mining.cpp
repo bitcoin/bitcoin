@@ -914,11 +914,11 @@ static RPCMethod getblocktemplate()
         pindexPrev = pindexPrevNew;
     }
     CHECK_NONFATAL(pindexPrev);
-    CBlock block{block_template->block};
+    CBlockHeader block_header{block_template->block};
 
     // Update nTime
-    UpdateTime(&block, consensusParams, pindexPrev);
-    block.nNonce = 0;
+    UpdateTime(&block_header, consensusParams, pindexPrev);
+    block_header.nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
@@ -968,7 +968,7 @@ static RPCMethod getblocktemplate()
 
     UniValue aux(UniValue::VOBJ);
 
-    arith_uint256 hashTarget = arith_uint256().SetCompact(block.nBits);
+    arith_uint256 hashTarget = arith_uint256().SetCompact(block_header.nBits);
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
@@ -1000,16 +1000,16 @@ static RPCMethod getblocktemplate()
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
         if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
-            block.nVersion &= ~info.mask;
+            block_header.nVersion &= ~info.mask;
         }
     }
 
     for (const auto& [name, info] : gbtstatus.locked_in) {
-        block.nVersion |= info.mask;
+        block_header.nVersion |= info.mask;
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
         if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
-            block.nVersion &= ~info.mask;
+            block_header.nVersion &= ~info.mask;
         }
     }
 
@@ -1021,12 +1021,12 @@ static RPCMethod getblocktemplate()
         }
     }
 
-    result.pushKV("version", block.nVersion);
+    result.pushKV("version", block_header.nVersion);
     result.pushKV("rules", std::move(aRules));
     result.pushKV("vbavailable", std::move(vbavailable));
     result.pushKV("vbrequired", 0);
 
-    result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
+    result.pushKV("previousblockhash", block_header.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", block_template->block.vtx[0]->vout[0].nValue);
@@ -1048,8 +1048,8 @@ static RPCMethod getblocktemplate()
     if (!fPreSegWit) {
         result.pushKV("weightlimit", MAX_BLOCK_WEIGHT);
     }
-    result.pushKV("curtime", block.GetBlockTime());
-    result.pushKV("bits", strprintf("%08x", block.nBits));
+    result.pushKV("curtime", block_header.GetBlockTime());
+    result.pushKV("bits", strprintf("%08x", block_header.nBits));
     result.pushKV("height", pindexPrev->nHeight + 1);
 
     if (consensusParams.signet_blocks) {
