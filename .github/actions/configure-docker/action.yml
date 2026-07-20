@@ -10,20 +10,20 @@ runs:
   steps:
     - name: Set up Docker Buildx for Warp cache
       if: ${{ inputs.provider == 'warp' }}
-      uses: docker/setup-buildx-action@v4
+      uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
       with:
         driver-opts: |
           network=host
 
     - name: Set up Docker Buildx
       if: ${{ inputs.provider != 'warp' }}
-      uses: docker/setup-buildx-action@v4
+      uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
 
     # This is required when using the gha cache backend with a manual docker buildx invocation.
     # Docker will check for variables $ACTIONS_CACHE_URL, $ACTIONS_RESULTS_URL and $ACTIONS_RUNTIME_TOKEN
     # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
     - name: Expose actions cache variables
-      uses: actions/github-script@v8
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
       with:
         script: |
           Object.keys(process.env).forEach(function (key) {
