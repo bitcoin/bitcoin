@@ -47,8 +47,11 @@ class InitStressTest(SyscoinTestFramework):
             node.process.wait()
 
         def start_expecting_error(err_fragment):
+            # SYSCOIN: checklevel 4 is unavailable with NEVM mint replay markers
+            # (fail-closed when require_full_verification). Level 3 still runs
+            # CheckBlock/undo verification needed to detect blk/index corruption.
             node.assert_start_raises_init_error(
-                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-checkblocks=200', '-checklevel=4'],
+                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-checkblocks=200', '-checklevel=3'],
                 expected_msg=err_fragment,
                 match=ErrorMatch.PARTIAL_REGEX,
             )
