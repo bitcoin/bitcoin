@@ -2406,10 +2406,6 @@ DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingu
                                        " or address metadata may be missing or incorrect."),
             wallet_file));
         break;
-    case DBErrors::NEED_RESCAN:
-        warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."
-                                       " Rescanning wallet."), wallet_file));
-        break;
     case DBErrors::CORRUPT:
         error = strprintf(_("Error loading %s: Wallet corrupted"), wallet_file);
         break;
@@ -3160,7 +3156,7 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    if (chain && !AttachChain(walletInstance, *chain, /*rescan_required=*/false, error, warnings)) {
+    if (chain && !AttachChain(walletInstance, *chain, error, warnings)) {
         walletInstance->DisconnectChainNotifications();
         return nullptr;
     }
@@ -3182,8 +3178,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
 
     // Load wallet
     auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
-    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
-    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
+    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR) {
         return nullptr;
     }
 
@@ -3201,7 +3196,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
+    if (chain && !AttachChain(walletInstance, *chain, error, warnings)) {
         walletInstance->DisconnectChainNotifications();
         return nullptr;
     }
@@ -3212,7 +3207,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
 }
 
 
-bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings)
+bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     LOCK(walletInstance->cs_wallet);
     // allow setting the chain if it hasn't been set already but prevent changing it
@@ -3241,16 +3236,12 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     // so the wallet will only be completeley synced after the notifications delivery.
     walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
 
-    // If rescan_required = true, rescan_height remains equal to 0
     int rescan_height = 0;
-    if (!rescan_required)
-    {
-        WalletBatch batch(walletInstance->GetDatabase());
-        CBlockLocator locator;
-        if (batch.ReadBestBlock(locator)) {
-            if (const std::optional<int> fork_height = chain.findLocatorFork(locator)) {
-                rescan_height = *fork_height;
-            }
+    WalletBatch batch(walletInstance->GetDatabase());
+    CBlockLocator locator;
+    if (batch.ReadBestBlock(locator)) {
+        if (const std::optional<int> fork_height = chain.findLocatorFork(locator)) {
+            rescan_height = *fork_height;
         }
     }
 
