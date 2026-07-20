@@ -985,6 +985,100 @@ BOOST_AUTO_TEST_CASE(syscoin_bridge_uses_clreceipt_activation)
     BOOST_CHECK_EQUAL(regtest->GetConsensus().nCLReceiptStartBlock, 123);
 }
 
+BOOST_AUTO_TEST_CASE(asset_total_wrap_attack_conditions)
+{
+    constexpr uint64_t SYSX = 123456;
+    constexpr CAmount M = MAX_MONEY;
+    // R = 2^64 - 18*M; each component is individually MoneyRange-valid.
+    constexpr CAmount R = 446744073709551634LL;
+    BOOST_REQUIRE(MoneyRange(R));
+    BOOST_REQUIRE(MoneyRange(M));
+    // Pairwise sums of MoneyRange values cannot overflow int64, so the only
+    // way to observe modular wrap is to skip the aggregate MoneyRange check.
+    BOOST_REQUIRE(M <= std::numeric_limits<CAmount>::max() - M);
+
+    std::vector<CAmount> amounts;
+    amounts.push_back(1);
+    for (int i = 0; i < 18; ++i) {
+        amounts.push_back(M);
+    }
+    amounts.push_back(R);
+    BOOST_REQUIRE_EQUAL(amounts.size(), 20U);
+
+    // 1) Per-output checks alone (canonical allocation shape) accept the vector.
+    std::unordered_set<uint32_t> setOutputs;
+    for (size_t i = 0; i < amounts.size(); ++i) {
+        BOOST_CHECK(MoneyRange(amounts[i]));
+        BOOST_CHECK(setOutputs.insert(static_cast<uint32_t>(i)).second);
+    }
+
+    // 2) Vulnerable accumulator: same as GetAssetValueOut/CheckTxInputs but
+    //    without MoneyRange on the running total (GPT's assumed bug).
+    auto AddUnchecked = [](CAssetsMap& totals, uint64_t asset, CAmount value) {
+        auto [it, inserted] = totals.try_emplace(asset, value);
+        if (!inserted) {
+            // Intentionally unchecked: allow CAmount wrap (two's complement).
+            it->second += value;
+        }
+    };
+    CAssetsMap vulnerable_out;
+    for (CAmount a : amounts) {
+        AddUnchecked(vulnerable_out, SYSX, a);
+    }
+    // Mathematical sum 2^64+1 lands at 1 after wrap — attack "succeeds".
+    BOOST_CHECK_EQUAL(vulnerable_out.at(SYSX), 1);
+
+    // Mint path would then accept receipt amount 1 against wrapped map total 1.
+    const CAmount receipt_amount = 1;
+    BOOST_CHECK_EQUAL(receipt_amount, vulnerable_out.at(SYSX));
+
+    // Allocation-send path: wrap both sides the same way → map equality holds
+    // while outputs create ~2^64 extra satoshis of SYSX.
+    CAssetsMap vulnerable_in;
+    AddUnchecked(vulnerable_in, SYSX, 1); // seed UTXO
+    BOOST_CHECK(vulnerable_in == vulnerable_out);
+
+    // 3) accumulator rejects overflow before wrap.
+    CMutableTransaction mtx;
+    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    mtx.vout.resize(amounts.size());
+    for (size_t i = 0; i < amounts.size(); ++i) {
+        mtx.vout[i].nValue = 0;
+        mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
+        mtx.vout[i].assetInfo = CAssetCoinInfo(SYSX, amounts[i]);
+    }
+    CAssetsMap mapAssetOut;
+    std::string err;
+    BOOST_CHECK(!CTransaction(mtx).GetAssetValueOut(mapAssetOut, err));
+    BOOST_CHECK_EQUAL(err, "bad-txns-asset-out-outofrange");
+
+    // 4) Pre-add MoneyRange (defense-in-depth) rejects before mutating totals.
+    BOOST_CHECK(!MoneyRange(M + M));
+    CMutableTransaction two_max;
+    two_max.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    two_max.vout.resize(2);
+    two_max.vout[0].assetInfo = CAssetCoinInfo(SYSX, M);
+    two_max.vout[1].assetInfo = CAssetCoinInfo(SYSX, M);
+    CAssetsMap two_max_map;
+    std::string two_max_err;
+    BOOST_CHECK(!CTransaction(two_max).GetAssetValueOut(two_max_map, two_max_err));
+    BOOST_CHECK_EQUAL(two_max_err, "bad-txns-asset-out-outofrange");
+    // First output may be inserted; running total must not become 2*M.
+    BOOST_CHECK(two_max_map.find(SYSX) == two_max_map.end() ||
+                two_max_map.at(SYSX) == M);
+
+    // Control: in-range aggregate still succeeds on the real path.
+    CMutableTransaction ok_mtx;
+    ok_mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    ok_mtx.vout.resize(2);
+    ok_mtx.vout[0].assetInfo = CAssetCoinInfo(SYSX, 1);
+    ok_mtx.vout[1].assetInfo = CAssetCoinInfo(SYSX, 2);
+    CAssetsMap ok_map;
+    std::string ok_err;
+    BOOST_CHECK(CTransaction(ok_mtx).GetAssetValueOut(ok_map, ok_err));
+    BOOST_CHECK_EQUAL(ok_map.at(SYSX), 3);
+}
+
 BOOST_AUTO_TEST_CASE(test_Get)
 {
     FillableSigningProvider keystore;
