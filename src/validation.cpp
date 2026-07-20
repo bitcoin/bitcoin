@@ -3345,11 +3345,8 @@ bool Chainstate::FlushStateToDisk(
                 !pnevmtxrootsdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/100000, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx roots db");
             }
-            // Mint uniqueness is consensus-critical and has no crash-replay marker, so keep it durable.
-            if (pnevmtxmintdb &&
-                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
-                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
-            }
+            // SYSCOIN: nevmminttx is flushed with the full UTXO flush below (write-ahead
+            // of CoinsTip), not on ordinary periodic metadata writes.
             const bool force_dmn_maintenance =
                 deterministicMNManager &&
                 (mode == FlushStateMode::ALWAYS ||
@@ -3393,6 +3390,12 @@ bool Chainstate::FlushStateToDisk(
             // overwrite one. Still, use a conservative safety factor of 2.
             if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
                 return FatalError(m_chainman.GetNotifications(), state, "Disk space is too low!", _("Disk space is too low!"));
+            }
+            // SYSCOIN: Persist mint-replay additions before making minted UTXO durable.
+            // Extra markers after a crash are fail-closed;
+            if (pnevmtxmintdb &&
+                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit NEVM mint replay database");
             }
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush())
@@ -3562,9 +3565,21 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN
-    if(pnevmtxmintdb != nullptr){
-        if(!pnevmtxmintdb->FlushErase(setMintTxs) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)){
+    // SYSCOIN: durable UTXO mint(T) => durable replay marker(T). Persist any
+    // pending marker additions, commit the disconnected UTXO tip, then erase.
+    // Extra markers after a crash are fail-closed (may require -reindex-chainstate).
+    if (pnevmtxmintdb != nullptr) {
+        if (!setMintTxs.empty()) {
+            if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+                return error("DisconnectTip(): Failed to persist mint replay additions %s",
+                             pindexDelete->GetBlockHash().ToString());
+            }
+            if (!CoinsTip().Flush()) {
+                return error("DisconnectTip(): Failed to flush disconnected UTXO state %s",
+                             pindexDelete->GetBlockHash().ToString());
+            }
+        }
+        if (!pnevmtxmintdb->FlushErase(setMintTxs) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)) {
             return error("DisconnectTip(): Error flushing to asset dbs on disconnect %s", pindexDelete->GetBlockHash().ToString());
         }
     }
@@ -3708,7 +3723,8 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         bool flushed = view.Flush();
         assert(flushed);
     }
-    // SYSCOIN
+    // SYSCOIN: Stage mint markers in cache; they become durable on the next full
+    // UTXO flush (write-ahead of CoinsTip) or on mint-containing disconnect/replay.
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
     if(pnevmtxmintdb)
@@ -5713,10 +5729,12 @@ bool Chainstate::ReplayBlocks()
         }
         pindexOld = pindexOld->pprev;
     }
-    // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
-    if(pnevmtxmintdb != nullptr){
-        if(!pnevmtxmintdb->FlushErase(setMintTxsDisconnect) || !pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)){
-            return error("RollbackBlock(): Error flushing to asset dbs on disconnect %s", pindexOld->GetBlockHash().ToString());
+    // SYSCOIN: Flush non-mint aux DBs before rollforward. Mint-replay markers are
+    // deferred: erasing them before the recovered UTXO tip is durable can leave
+    // minted UTXOs without replay protection after a crash.
+    if (pnevmtxrootsdb != nullptr) {
+        if (!pnevmtxrootsdb->FlushErase(vecNEVMBlocks) || !pblockindexdb->FlushErase(vecTXIDPairs)) {
+            return error("RollbackBlock(): Error flushing to asset dbs on disconnect");
         }
     }
     NEVMTxRootMap mapNEVMTxRoots;
@@ -5732,13 +5750,29 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    cache.Flush();
-    // SYSCOIN
+    // SYSCOIN: additions before UTXO commit; erasures after. Extra markers after a
+    // crash are fail-closed (may require -reindex-chainstate).
+    NEVMMintTxSet setMintDisconnectOnly;
+    if (pnevmtxmintdb) {
+        for (const auto& hash : setMintTxsDisconnect) {
+            if (!setMintTxsConnect.count(hash)) {
+                setMintDisconnectOnly.insert(hash);
+            }
+        }
+        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
+        if (!pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
+            return error("ReplayBlocks(): Failed to persist mint replay additions");
+        }
+    }
+    if (!cache.Flush()) {
+        return error("ReplayBlocks(): Failed to commit replayed UTXO state");
+    }
+    if (pnevmtxmintdb && !setMintDisconnectOnly.empty() &&
+        !pnevmtxmintdb->FlushErase(setMintDisconnectOnly)) {
+        return error("ReplayBlocks(): Failed to erase disconnected mint markers");
+    }
     if(pnevmdatadb) {
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, PoDAFlushSource::Block);
-    }
-    if(pnevmtxmintdb) {
-        pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);
     }
     if(pblockindexdb) {
         pblockindexdb->FlushDataToCache(vecTXIDPairs);

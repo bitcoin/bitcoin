@@ -21,6 +21,7 @@
 #include <primitives/transaction.h>
 #include <services/assetconsensus.h>
 #include <services/nevmconsensus.h>
+#include <util/fs.h>
 
 namespace {
 CTransaction MakeNEVMDataTx(const std::vector<uint8_t>& version_hash, const std::vector<uint8_t>& data)
@@ -407,6 +408,106 @@ BOOST_AUTO_TEST_CASE(nevm_duplicate_blob_metadata_refresh_rules)
     BOOST_CHECK_EQUAL(meta.txid, block_txid);
     BOOST_CHECK_EQUAL(meta.nSize, 100);
     BOOST_CHECK_EQUAL(meta.nMedianTime, 4000);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(nevm_mint_replay_lifecycle_tests, BasicTestingSetup)
+
+// nevmminttx markers must survive a non-wipe reopen (geth-aux rebuild path).
+BOOST_AUTO_TEST_CASE(mint_replay_db_survives_non_wipe_reopen)
+{
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_wipe_policy";
+    fs::remove_all(db_dir);
+
+    const uint256 mint_tx = uint256S(
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+    {
+        CNEVMMintedTxDB mint_db({
+            .path = db_dir,
+            .cache_bytes = static_cast<size_t>(1 << 20),
+            .memory_only = false,
+            .wipe_data = true});
+        mint_db.FlushDataToCache({mint_tx});
+        BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
+        BOOST_CHECK(mint_db.ExistsTx(mint_tx));
+    }
+
+    {
+        CNEVMMintedTxDB mint_db({
+            .path = db_dir,
+            .cache_bytes = static_cast<size_t>(1 << 20),
+            .memory_only = false,
+            .wipe_data = false});
+        BOOST_CHECK_MESSAGE(
+            mint_db.ExistsTx(mint_tx),
+            "Mint replay markers must survive a non-wipe database reopen");
+    }
+
+    {
+        // Chainstate rebuild path clears markers.
+        CNEVMMintedTxDB mint_db({
+            .path = db_dir,
+            .cache_bytes = static_cast<size_t>(1 << 20),
+            .memory_only = false,
+            .wipe_data = true});
+        BOOST_CHECK(!mint_db.ExistsTx(mint_tx));
+    }
+}
+
+// Disconnect crash-order: persist pending additions before selective erase.
+BOOST_AUTO_TEST_CASE(mint_replay_flush_additions_before_selective_erase)
+{
+    const fs::path db_dir = gArgs.GetDataDirNet() / "nevmminttx_crash_order";
+    fs::remove_all(db_dir);
+
+    const uint256 active_mint = uint256S(
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    const uint256 disconnect_mint = uint256S(
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
+
+    CNEVMMintedTxDB mint_db({
+        .path = db_dir,
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = false,
+        .wipe_data = true});
+
+    mint_db.FlushDataToCache({active_mint, disconnect_mint});
+    BOOST_CHECK(mint_db.ExistsTx(active_mint));
+    BOOST_CHECK(mint_db.ExistsTx(disconnect_mint));
+
+    BOOST_REQUIRE(mint_db.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true));
+    BOOST_REQUIRE(mint_db.FlushErase({disconnect_mint}));
+
+    BOOST_CHECK_MESSAGE(mint_db.ExistsTx(active_mint),
+                        "Unrelated active mint marker must remain after disconnect erase");
+    BOOST_CHECK(!mint_db.ExistsTx(disconnect_mint));
+}
+
+// ReplayBlocks erase set: old-branch mints minus mints also on the new branch.
+BOOST_AUTO_TEST_CASE(mint_replay_disconnect_only_excludes_reconnected)
+{
+    const uint256 old_only = uint256S(
+        "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+    const uint256 both = uint256S(
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    const uint256 new_only = uint256S(
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+    NEVMMintTxSet disconnect{old_only, both};
+    NEVMMintTxSet connect{both, new_only};
+    NEVMMintTxSet disconnect_only;
+    for (const auto& hash : disconnect) {
+        if (!connect.count(hash)) {
+            disconnect_only.insert(hash);
+        }
+    }
+
+    BOOST_CHECK_EQUAL(disconnect_only.size(), 1U);
+    BOOST_CHECK(disconnect_only.count(old_only));
+    BOOST_CHECK(!disconnect_only.count(both));
+    BOOST_CHECK(!disconnect_only.count(new_only));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

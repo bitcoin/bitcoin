@@ -67,6 +67,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     bool disk_reindexing{false};
     pblocktree->ReadReindexing(disk_reindexing);
     const bool effective_reindex_geth{options.fReindexGeth || disk_reindexing};
+    // SYSCOIN Keep nevmminttx lifetime aligned with UTXO chainstate rebuilds only.
+    // Reconstructible NEVM/Geth auxiliary DBs may still follow effective_reindex_geth.
+    // Empty-coins recovery below also clears nevmminttx when needed.
+    const bool wipe_mint_replay{options.reindex || options.reindex_chainstate};
     if (disk_reindexing && !options.fReindexGeth) {
         fReindexGeth = true;
         LogPrintf("Continuing reindex from persisted marker; forcing NEVM/LLMQ database reinitialization.\n");
@@ -121,7 +125,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         .path = chainman.m_options.datadir / "nevmminttx",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = effective_reindex_geth,
+        .wipe_data = wipe_mint_replay,
         .options = chainman.m_options.block_tree_db});
     pblockindexdb.reset();
     pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
@@ -319,6 +323,18 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             .memory_only = options.block_tree_db_in_memory,
             .wipe_data = false,
             .options = chainman.m_options.coins_db});  
+    } else if (coinsViewEmpty) {
+        // SYSCOIN Continued reindex already reinitialized reconstructible NEVM DBs above
+        // via effective_reindex_geth, which skips the block above. nevmminttx still
+        // must clear whenever the UTXO set is empty so replay state matches chainstate.
+        LogPrintf("coinsViewEmpty recreating NEVM mint-replay database\n");
+        pnevmtxmintdb.reset();
+        pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+            .path = chainman.m_options.datadir / "nevmminttx",
+            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = true,
+            .options = chainman.m_options.block_tree_db});
     }
 
     // Now that chainstates are loaded and we're able to flush to
@@ -431,9 +447,24 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                                                          "Only rebuild the block database if you are sure that your computer's date and time are correct")};
             }
 
+            // SYSCOIN: Mint replay markers live outside VerifyDB's temporary coins view.
+            // Level-4 reconnect sees already-applied markers as mint-exists. Cap at 3;
+            // fail closed if the operator required full verification.
+            int check_level = options.check_level;
+            if (check_level >= 4) {
+                if (options.require_full_verification) {
+                    return {ChainstateLoadStatus::FAILURE,
+                            _("Check level 4 is unavailable with NEVM mint replay state")};
+                }
+                LogPrintf("Clamping VerifyDB check level from %d to 3 because NEVM mint "
+                          "replay markers are external to the temporary view\n",
+                          check_level);
+                check_level = 3;
+            }
+
             VerifyDBResult result = CVerifyDB(chainman.GetNotifications()).VerifyDB(
                 *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
-                options.check_level,
+                check_level,
                 options.check_blocks);
             switch (result) {
             case VerifyDBResult::SUCCESS:
