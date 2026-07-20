@@ -4,7 +4,7 @@
 
 # See test/lint/README.md for usage.
 
-FROM mirror.gcr.io/ubuntu:26.04
+FROM mirror.gcr.io/ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb
 
 # Pin uv and ruff images to reviewed indexes while retaining release tags.
 # https://docs.astral.sh/uv/reference/policies/versioning/

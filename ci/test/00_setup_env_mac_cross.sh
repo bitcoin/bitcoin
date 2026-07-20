@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 
 export CONTAINER_NAME=ci_macos_cross
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie" # Check that https://packages.debian.org/trixie/clang (version 19, similar to guix) can cross-compile
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie@sha256:fac46bff2e02f51425b6e33b0e1169f55dfb053d83511ca28aa50c09fd5ed7a4" # Check that https://packages.debian.org/trixie/clang (version 19, similar to guix) can cross-compile
 export HOST=arm64-apple-darwin
 export PACKAGES="clang lld llvm zip"
 export XCODE_VERSION=26.1.1

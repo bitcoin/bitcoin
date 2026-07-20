@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"  # To build codegen, CMake must be 3.31 or newer.
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb"  # To build codegen, CMake must be 3.31 or newer.
 export CONTAINER_NAME=ci_native_iwyu
 export IWYU_LLVM_V="22"
 export IWYU_COMMIT=01a091d16b3dedb808db21f32ed3e761737a3691  # clang_22

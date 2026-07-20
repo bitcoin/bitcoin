@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb"
 export CONTAINER_NAME=ci_native_fuzz
 export APT_LLVM_V="22"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev libboost-dev libsqlite3-dev libcapnp-dev capnproto"
