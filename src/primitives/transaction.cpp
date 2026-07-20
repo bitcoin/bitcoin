@@ -439,14 +439,13 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
         }
         const uint64_t &nAsset = out.assetInfo.nAsset;
         const CAmount& nAmount = out.assetInfo.nValue;
-        auto itRes = mapAssetOut.try_emplace(nAsset, nAmount);
-        if(!itRes.second) {
-            itRes.first->second += nAmount;
-            if (!MoneyRange(nAmount) || !MoneyRange(itRes.first->second)) {
-                err = "bad-txns-asset-out-outofrange";
-                return false;
-            }
+        // Same form as GetValueOut / Bitcoin: range-check before mutating total.
+        auto it = mapAssetOut.try_emplace(nAsset, 0).first;
+        if (!MoneyRange(nAmount) || !MoneyRange(it->second + nAmount)) {
+            err = "bad-txns-asset-out-outofrange";
+            return false;
         }
+        it->second += nAmount;
     }
     return true;
 }
