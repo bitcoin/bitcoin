@@ -927,11 +927,11 @@ static RPCMethod getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<Txid, int64_t> setTxIndex;
-    std::vector<CAmount> tx_fees{block_template->vTxFees};
-    std::vector<int64_t> tx_sigops{block_template->vTxSigOpsCost};
+    const std::vector<CAmount>& tx_fees{block_template->vTxFees};
+    const std::vector<int64_t>& tx_sigops{block_template->vTxSigOpsCost};
 
     int i = 0;
-    for (const auto& it : block.vtx) {
+    for (const auto& it : block_template->block.vtx) {
         const CTransaction& tx = *it;
         Txid txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
@@ -1029,7 +1029,7 @@ static RPCMethod getblocktemplate()
     result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
-    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", block_template->block.vtx[0]->vout[0].nValue);
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
@@ -1056,7 +1056,7 @@ static RPCMethod getblocktemplate()
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
     }
 
-    if (auto coinbase{block_template->m_coinbase_tx}; coinbase.required_outputs.size() > 0) {
+    if (const auto& coinbase{block_template->m_coinbase_tx}; coinbase.required_outputs.size() > 0) {
         CHECK_NONFATAL(coinbase.required_outputs.size() == 1); // Only one output is currently expected
         result.pushKV("default_witness_commitment", HexStr(coinbase.required_outputs[0].scriptPubKey));
     }
