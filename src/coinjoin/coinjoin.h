@@ -11,6 +11,7 @@
 #include <netaddress.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <serialize.h>
 #include <sync.h>
 #include <timedata.h>
 #include <univalue.h>
@@ -45,6 +46,15 @@ static constexpr int COINJOIN_QUEUE_TIMEOUT = 30;
 static constexpr int COINJOIN_SIGNING_TIMEOUT = 15;
 
 static constexpr size_t COINJOIN_ENTRY_MAX_SIZE = 9;
+
+namespace CoinJoin {
+/// Get the minimum/maximum number of participants for the pool
+int GetMinPoolParticipants();
+int GetMaxPoolParticipants();
+
+/// Maximum number of inputs or outputs across a full pool
+inline size_t GetMaxPoolInputOutputCount() { return size_t(GetMaxPoolParticipants()) * COINJOIN_ENTRY_MAX_SIZE; }
+} // namespace CoinJoin
 
 // pool responses
 enum PoolMessage : int32_t {
@@ -164,9 +174,25 @@ public:
     {
     }
 
-    SERIALIZE_METHODS(CCoinJoinEntry, obj)
+    template <typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(obj.vecTxDSIn, obj.txCollateral, obj.vecTxOut);
+        s << vecTxDSIn << txCollateral << vecTxOut;
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        const size_t max_count{CoinJoin::GetMaxPoolInputOutputCount()};
+        if (!UnserializeVectorWithMaxSize(s, vecTxDSIn, max_count)) {
+            throw std::ios_base::failure("CCoinJoinEntry::vecTxDSIn size too large");
+        }
+
+        s >> txCollateral;
+
+        if (!UnserializeVectorWithMaxSize(s, vecTxOut, max_count)) {
+            throw std::ios_base::failure("CCoinJoinEntry::vecTxOut size too large");
+        }
     }
 
     bool AddScriptSig(const CTxIn& txin);
@@ -354,10 +380,6 @@ public:
 namespace CoinJoin
 {
     bilingual_str GetMessageByID(PoolMessage nMessageID);
-
-    /// Get the minimum/maximum number of participants for the pool
-    int GetMinPoolParticipants();
-    int GetMaxPoolParticipants();
 
     constexpr CAmount GetMaxPoolAmount() { return COINJOIN_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
