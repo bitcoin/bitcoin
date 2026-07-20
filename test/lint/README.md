@@ -56,7 +56,23 @@ or `--help`:
 | `py_lint` | [ruff](https://github.com/astral-sh/ruff)
 | markdown link check | [mlc](https://github.com/becheran/mlc)
 
-Dependency versions and installation instructions are available in the [CI setup](../../ci/lint/01_install.sh) and the [lint_imagefile](../../ci/lint_imagefile) (for tools where an OCI imagefile exists).
+Dependency versions and installation instructions are available in the [Python dependency manifest](../../ci/lint/pyproject.toml), [CI setup](../../ci/lint/01_install.sh), and the [lint_imagefile](../../ci/lint_imagefile) (for tools where an OCI imagefile exists).
+Developers using `pip` 25.1 or newer can install the Python dependencies without `uv`:
+
+```sh
+python -m pip install --group './ci/lint/pyproject.toml:lint'
+```
+
+This uses the direct dependency versions from `pyproject.toml`, but does not use the transitive versions in `uv.lock`.
+
+To update a Python dependency and regenerate the lockfile, run from the repository root:
+
+```sh
+uv add --project ci/lint --group lint 'PACKAGE==VERSION'
+./ci/lint.py
+```
+
+Do not edit `ci/lint/uv.lock` directly.
 
 Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
