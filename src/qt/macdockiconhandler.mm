@@ -20,7 +20,8 @@ bool dockClickHandler(id self, SEL _cmd, ...) {
 }
 
 void setupDockClickHandler() {
-    Class delClass = (Class)[[[NSApplication sharedApplication] delegate] class];
+    if (NSApp == nil) return;
+    Class delClass = (Class)[[NSApp delegate] class];
     SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
     class_replaceMethod(delClass, shouldHandle, (IMP)dockClickHandler, "B@:");
 }
@@ -49,5 +50,6 @@ void MacDockIconHandler::cleanup()
  */
 void ForceActivation()
 {
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    if (NSApp == nil) return;
+    [NSApp activateIgnoringOtherApps:YES];
 }
