@@ -359,8 +359,9 @@ public:
     // those with witnesses are preferred, followed by least weight.
     bool Update(CTransactionRef tx, const TxState& arg_state);
 
-    //! make sure balances are recalculated
-    void MarkDirty()
+    //! Make sure balances are recalculated
+    //! This function is not actually const, all of its changes are to mutable members.
+    void MarkDirty() const
     {
         m_amounts[DEBIT].Reset();
         m_amounts[CREDIT].Reset();
