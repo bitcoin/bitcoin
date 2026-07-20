@@ -197,20 +197,20 @@ static void bench_ecmult_1p_g_teardown(void* arg, int iters) {
 
 static void run_ecmult_bench(bench_data* data, int iters) {
     char str[32];
-    sprintf(str, "ecmult_gen");
+    snprintf(str, sizeof(str), "ecmult_gen");
     run_benchmark(str, bench_ecmult_gen, bench_ecmult_setup, bench_ecmult_gen_teardown, data, 10, iters);
-    sprintf(str, "ecmult_const");
+    snprintf(str, sizeof(str), "ecmult_const");
     run_benchmark(str, bench_ecmult_const, bench_ecmult_setup, bench_ecmult_const_teardown, data, 10, iters);
-    sprintf(str, "ecmult_const_xonly");
+    snprintf(str, sizeof(str), "ecmult_const_xonly");
     run_benchmark(str, bench_ecmult_const_xonly, bench_ecmult_setup, bench_ecmult_const_xonly_teardown, data, 10, iters);
     /* ecmult with non generator point */
-    sprintf(str, "ecmult_1p");
+    snprintf(str, sizeof(str), "ecmult_1p");
     run_benchmark(str, bench_ecmult_1p, bench_ecmult_setup, bench_ecmult_1p_teardown, data, 10, iters);
     /* ecmult with generator point */
-    sprintf(str, "ecmult_0p_g");
+    snprintf(str, sizeof(str), "ecmult_0p_g");
     run_benchmark(str, bench_ecmult_0p_g, bench_ecmult_setup, bench_ecmult_0p_g_teardown, data, 10, iters);
     /* ecmult with generator and non-generator point. The reported time is per point. */
-    sprintf(str, "ecmult_1p_g");
+    snprintf(str, sizeof(str), "ecmult_1p_g");
     run_benchmark(str, bench_ecmult_1p_g, bench_ecmult_setup, bench_ecmult_1p_g_teardown, data, 10, 2*iters);
 }
 
@@ -299,9 +299,9 @@ static void run_ecmult_multi_bench(bench_data* data, size_t count, int includes_
 
     /* Run the benchmark. */
     if (includes_g) {
-        sprintf(str, "ecmult_multi_%ip_g", (int)count - 1);
+        snprintf(str, sizeof(str), "ecmult_multi_%ip_g", (int)count - 1);
     } else {
-        sprintf(str, "ecmult_multi_%ip", (int)count);
+        snprintf(str, sizeof(str), "ecmult_multi_%ip", (int)count);
     }
     run_benchmark(str, bench_ecmult_multi, bench_ecmult_multi_setup, bench_ecmult_multi_teardown, data, 10, count * iters);
 }
@@ -350,13 +350,13 @@ int main(int argc, char **argv) {
     }
 
     /* Allocate stuff */
-    data.scalars = malloc(sizeof(secp256k1_scalar) * POINTS);
-    data.seckeys = malloc(sizeof(secp256k1_scalar) * POINTS);
-    data.pubkeys = malloc(sizeof(secp256k1_ge) * POINTS);
-    data.pubkeys_gej = malloc(sizeof(secp256k1_gej) * POINTS);
-    data.expected_output = malloc(sizeof(secp256k1_gej) * (iters + 1));
-    data.output = malloc(sizeof(secp256k1_gej) * (iters + 1));
-    data.output_xonly = malloc(sizeof(secp256k1_fe) * (iters + 1));
+    data.scalars = calloc(POINTS, sizeof(secp256k1_scalar));
+    data.seckeys = calloc(POINTS, sizeof(secp256k1_scalar));
+    data.pubkeys = calloc(POINTS, sizeof(secp256k1_ge));
+    data.pubkeys_gej = calloc(POINTS, sizeof(secp256k1_gej));
+    data.expected_output = calloc(iters + 1, sizeof(secp256k1_gej));
+    data.output = calloc(iters + 1, sizeof(secp256k1_gej));
+    data.output_xonly = calloc(iters + 1, sizeof(secp256k1_fe));
 
     /* Generate a set of scalars, and private/public keypairs. */
     secp256k1_gej_set_ge(&data.pubkeys_gej[0], &secp256k1_ge_const_g);
