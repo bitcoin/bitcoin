@@ -184,19 +184,19 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
         if (hasAssets && !coin.out.assetInfo.IsNull()) {
-            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, coin.out.assetInfo.nValue);
-            if (!inRes.second) {
-                inRes.first->second += coin.out.assetInfo.nValue;
-                if(!MoneyRange(inRes.first->second) || !MoneyRange(coin.out.assetInfo.nValue)) {
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
-                }
+            const CAmount& nAssetValue = coin.out.assetInfo.nValue;
+            // Same form as GetValueOut / Bitcoin: range-check before mutating total.
+            auto it = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, 0).first;
+            if (!MoneyRange(nAssetValue) || !MoneyRange(it->second + nAssetValue)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
             }
+            it->second += nAssetValue;
         }
         // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
+        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn + coin.out.nValue)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
         }
+        nValueIn += coin.out.nValue;
         
     }
     const CAmount &value_out = tx.GetValueOut();

@@ -985,6 +985,81 @@ BOOST_AUTO_TEST_CASE(syscoin_bridge_uses_clreceipt_activation)
     BOOST_CHECK_EQUAL(regtest->GetConsensus().nCLReceiptStartBlock, 123);
 }
 
+BOOST_AUTO_TEST_CASE(asset_amount_aggregate_range_checks)
+{
+    constexpr uint64_t SYSX = 123456;
+    constexpr CAmount M = MAX_MONEY;
+    // R = 2^64 - 18*M; each component is individually MoneyRange-valid.
+    constexpr CAmount R = 446744073709551634LL;
+    BOOST_REQUIRE(MoneyRange(R));
+    BOOST_REQUIRE(MoneyRange(M));
+    // Pairwise sums of MoneyRange values fit in int64.
+    BOOST_REQUIRE(M <= std::numeric_limits<CAmount>::max() - M);
+
+    std::vector<CAmount> amounts;
+    amounts.push_back(1);
+    for (int i = 0; i < 18; ++i) {
+        amounts.push_back(M);
+    }
+    amounts.push_back(R);
+    BOOST_REQUIRE_EQUAL(amounts.size(), 20U);
+
+    // Per-output amounts are each in range and use unique indices.
+    std::unordered_set<uint32_t> setOutputs;
+    for (size_t i = 0; i < amounts.size(); ++i) {
+        BOOST_CHECK(MoneyRange(amounts[i]));
+        BOOST_CHECK(setOutputs.insert(static_cast<uint32_t>(i)).second);
+    }
+
+    // Without an aggregate range check, uint64 modular sum of this vector is 1
+    // (mathematical total is 2^64+1). Use unsigned addition for defined wrap.
+    uint64_t unchecked_sum = 0;
+    for (CAmount a : amounts) {
+        unchecked_sum += static_cast<uint64_t>(a);
+    }
+    BOOST_CHECK_EQUAL(unchecked_sum, uint64_t{1});
+
+    // Consensus GetAssetValueOut must reject the same vector.
+    CMutableTransaction mtx;
+    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    mtx.vout.resize(amounts.size());
+    for (size_t i = 0; i < amounts.size(); ++i) {
+        mtx.vout[i].nValue = 0;
+        mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
+        mtx.vout[i].assetInfo = CAssetCoinInfo(SYSX, amounts[i]);
+    }
+    CAssetsMap mapAssetOut;
+    std::string err;
+    BOOST_CHECK(!CTransaction(mtx).GetAssetValueOut(mapAssetOut, err));
+    BOOST_CHECK_EQUAL(err, "bad-txns-asset-out-outofrange");
+
+    // Two MAX_MONEY outputs for one asset are also rejected before the total
+    // is updated past MAX_MONEY.
+    BOOST_CHECK(!MoneyRange(M + M));
+    CMutableTransaction two_max;
+    two_max.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    two_max.vout.resize(2);
+    two_max.vout[0].assetInfo = CAssetCoinInfo(SYSX, M);
+    two_max.vout[1].assetInfo = CAssetCoinInfo(SYSX, M);
+    CAssetsMap two_max_map;
+    std::string two_max_err;
+    BOOST_CHECK(!CTransaction(two_max).GetAssetValueOut(two_max_map, two_max_err));
+    BOOST_CHECK_EQUAL(two_max_err, "bad-txns-asset-out-outofrange");
+    BOOST_CHECK(two_max_map.find(SYSX) == two_max_map.end() ||
+                two_max_map.at(SYSX) == M);
+
+    // In-range aggregate still succeeds.
+    CMutableTransaction ok_mtx;
+    ok_mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    ok_mtx.vout.resize(2);
+    ok_mtx.vout[0].assetInfo = CAssetCoinInfo(SYSX, 1);
+    ok_mtx.vout[1].assetInfo = CAssetCoinInfo(SYSX, 2);
+    CAssetsMap ok_map;
+    std::string ok_err;
+    BOOST_CHECK(CTransaction(ok_mtx).GetAssetValueOut(ok_map, ok_err));
+    BOOST_CHECK_EQUAL(ok_map.at(SYSX), 3);
+}
+
 BOOST_AUTO_TEST_CASE(test_Get)
 {
     FillableSigningProvider keystore;
