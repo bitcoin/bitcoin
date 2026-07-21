@@ -174,9 +174,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 try:
                     ctx, mining = await make_mining_ctx(self)
                     break
-                except (ConnectionRefusedError, FileNotFoundError):
+                except (ConnectionRefusedError, FileNotFoundError, OSError):
                     # Poll quickly to connect as soon as socket becomes
-                    # available but without using a lot of CPU
+                    # available but without using a lot of CPU. OSError catches
+                    # unmapped WSA error codes returned by _win32_create_unix_connection
+                    # on Windows (e.g. unexpected error codes before the socket file exists).
+                    # TODO: identify which specific WSA codes occur and map them explicitly
+                    # in _win32_create_unix_connection instead of catching OSError here.
                     await asyncio.sleep(0.005)
 
             opts = self.capnp_modules['mining'].BlockCreateOptions()

@@ -60,6 +60,8 @@ BITCOIN_PID_FILENAME_DEFAULT = "bitcoind.pid"
 
 if sys.platform.startswith("linux"):
     UNIX_PATH_MAX = 108          # includes the trailing NUL
+elif sys.platform == 'win32':
+    UNIX_PATH_MAX = 108          # afunix.h UNIX_PATH_MAX is 108
 elif sys.platform.startswith(("darwin", "freebsd", "netbsd", "openbsd")):
     UNIX_PATH_MAX = 104
 else:                            # safest portable value
@@ -275,6 +277,12 @@ class TestNode():
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir_path, self.chain)
+
+        # On Windows, AF_UNIX socket files are not auto-deleted when a process
+        # exits (unlike Linux where the kernel reclaims them). A stale socket file
+        # causes EADDRINUSE on rebind. Remove it here so that node restarts work.
+        if sys.platform == 'win32' and 'ipc_socket_path' in self.__dict__ and self.ipc_socket_path.exists():
+            self.ipc_socket_path.unlink()
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
