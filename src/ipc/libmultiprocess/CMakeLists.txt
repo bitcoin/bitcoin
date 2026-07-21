@@ -209,6 +209,30 @@ target_link_libraries(mpgen PRIVATE CapnProto::capnp-rpc)
 target_link_libraries(mpgen PRIVATE CapnProto::capnpc)
 target_link_libraries(mpgen PRIVATE CapnProto::kj)
 target_link_libraries(mpgen PRIVATE Threads::Threads)
+# Pass capnp tool paths as compile-time defines when cmake-provided paths are
+# valid. gen.cpp uses CAPNP_EXECUTABLE/CAPNPC_CXX_EXECUTABLE when defined,
+# and falls back to capnp_PREFIX construction otherwise. The EXISTS check
+# skips targets with bad IMPORTED_LOCATION (e.g. Ubuntu Noble libcapnp-dev
+# 1.0.1 sets /usr/lib/bin/capnp instead of /usr/bin/capnp due to a packaging
+# bug), so the fallback still works on those systems.
+foreach(_mp_tool IN ITEMS "capnp_tool;CAPNP_EXECUTABLE" "capnpc_cpp;CAPNPC_CXX_EXECUTABLE")
+  list(GET _mp_tool 0 _mp_target)
+  list(GET _mp_tool 1 _mp_define)
+  if(TARGET "CapnProto::${_mp_target}")
+    foreach(_mp_prop IN ITEMS IMPORTED_LOCATION IMPORTED_LOCATION_RELEASE)
+      get_target_property(_mp_exe "CapnProto::${_mp_target}" "${_mp_prop}")
+      if(_mp_exe AND EXISTS "${_mp_exe}")
+        target_compile_definitions(mpgen PRIVATE "${_mp_define}=\"${_mp_exe}\"")
+        break()
+      endif()
+    endforeach()
+  endif()
+endforeach()
+unset(_mp_tool)
+unset(_mp_target)
+unset(_mp_define)
+unset(_mp_prop)
+unset(_mp_exe)
 set_target_properties(mpgen PROPERTIES
     INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_target_properties(mpgen PROPERTIES
