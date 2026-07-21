@@ -272,7 +272,7 @@ static void Generate(kj::StringPtr src_prefix,
     if (p != std::string::npos) include_base.erase(p);
 
     std::vector<std::string> args;
-    args.emplace_back(capnp_PREFIX "/bin/capnp");
+    args.emplace_back(CAPNP_EXECUTABLE);
     args.emplace_back("compile");
     args.emplace_back("--src-prefix=");
     args.back().append(src_prefix.cStr(), src_prefix.size());
@@ -280,11 +280,11 @@ static void Generate(kj::StringPtr src_prefix,
         args.emplace_back("--import-path=");
         args.back().append(import_path.cStr(), import_path.size());
     }
-    args.emplace_back("--output=" capnp_PREFIX "/bin/capnpc-c++");
+    args.emplace_back("--output=" CAPNPC_CXX_EXECUTABLE);
     args.emplace_back(src_file);
     const int status = mp::WaitProcess(mp::StartProcess(args));
     if (status) {
-        throw std::runtime_error("Invoking " capnp_PREFIX "/bin/capnp failed");
+        throw std::runtime_error("Invoking " CAPNP_EXECUTABLE " failed");
     }
 
     const capnp::SchemaParser parser;
