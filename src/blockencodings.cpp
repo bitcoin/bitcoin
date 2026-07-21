@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
+#include <logging/categories.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -17,18 +18,25 @@
 
 #include <unordered_map>
 
-CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce)
+CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce, const std::set<uint32_t>& prefill_candidates)
     : nonce(nonce),
-      shorttxids(block.vtx.size() - 1),
-      prefilledtxn(1),
       header(block)
 {
+    prefilledtxn.reserve(prefill_candidates.size());
+    shorttxids.reserve(block.vtx.size() - prefill_candidates.size());
     FillShortTxIDSelector();
-    // TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
-    prefilledtxn[0] = {0, block.vtx[0]};
-    for (size_t i = 1; i < block.vtx.size(); i++) {
-        const CTransaction& tx = *block.vtx[i];
-        shorttxids[i - 1] = GetShortID(tx.GetWitnessHash());
+
+    uint16_t prefill_index = 0;
+    for (size_t i = 0; i < block.vtx.size(); i++) {
+        // Always prefill the coinbase transaction.
+        if(prefill_candidates.contains(i) || i == 0) {
+            prefilledtxn.push_back({prefill_index, block.vtx[i]});
+            prefill_index = 0;
+        } else {
+            const CTransaction& tx = *block.vtx[i];
+            shorttxids.push_back(GetShortID(tx.GetWitnessHash()));
+            prefill_index++;
+        }
     }
 }
 
@@ -69,23 +77,56 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     header = cmpctblock.header;
     txn_available.resize(cmpctblock.BlockTxCount());
 
-    int32_t lastprefilledindex = -1;
-    for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
-        if (cmpctblock.prefilledtxn[i].tx->IsNull())
-            return READ_STATUS_INVALID;
+    std::vector<Wtxid> extra_wtxids{};
 
-        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
-        if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
-            return READ_STATUS_INVALID;
-        if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
-            // If we are inserting a tx at an index greater than our full list of shorttxids
-            // plus the number of prefilled txn we've inserted, then we have txn for which we
-            // have neither a prefilled txn or a shorttxid!
-            return READ_STATUS_INVALID;
+    bool debug_log = util::log::ShouldDebugLog(BCLog::CMPCTBLOCK);
+
+    if (debug_log) {
+        prefilled_count = cmpctblock.prefilledtxn.size();
+
+        // A sorted vec of extra_txn's for cheaply checking if prefills
+        // were redundant with the extrapool.
+        for (const auto& [id, tx] : extra_txn) {
+            extra_wtxids.push_back(id);
         }
-        txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
+        std::sort(extra_wtxids.begin(), extra_wtxids.end());
     }
-    prefilled_count = cmpctblock.prefilledtxn.size();
+
+
+    {
+        int32_t lastprefilledindex = -1;
+        LOCK(pool->cs);
+        for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
+            if (cmpctblock.prefilledtxn[i].tx->IsNull())
+                return READ_STATUS_INVALID;
+
+            lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
+            if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
+                return READ_STATUS_INVALID;
+            if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
+                // If we are inserting a tx at an index greater than our full list of shorttxids
+                // plus the number of prefilled txn we've inserted, then we have txn for which we
+                // have neither a prefilled txn or a shorttxid!
+                return READ_STATUS_INVALID;
+            }
+            txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
+
+            size_t tx_size = debug_log ? cmpctblock.prefilledtxn[i].tx->ComputeTotalSize() : 0;
+            // Only consider prefilled transactions that were NOT in our mempool as candidates
+            // that WE want to prefill.
+            auto tx_wtxid =  cmpctblock.prefilledtxn[i].tx->GetWitnessHash();
+            if (!pool->exists(tx_wtxid)) {
+                prefill_candidates.insert(lastprefilledindex);
+                if (std::binary_search(extra_wtxids.begin(), extra_wtxids.end(), tx_wtxid)) {
+                    redundant_prefilled_ep_count++;
+                    redundant_prefilled_ep_size += tx_size;
+                } else {
+                    redundant_prefilled_mp_count++;
+                    redundant_prefilled_mp_size += tx_size;
+                }
+            }
+        }
+    }
 
     // Calculate map of txids -> positions and check mempool to see what we have (or don't)
     // Because well-formed cmpctblock messages will have a (relatively) uniform distribution
@@ -124,14 +165,18 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 txn_available[idit->second] = txit->GetSharedTx();
                 have_txn[idit->second]  = true;
                 mempool_count++;
-            } else {
+                if (debug_log) {
+                    mempool_size += txn_available[idit->second]->ComputeTotalSize();
+                }
+            } else if (txn_available[idit->second]) {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
-                if (txn_available[idit->second]) {
-                    txn_available[idit->second].reset();
-                    mempool_count--;
+                if (debug_log) {
+                    mempool_size -= txn_available[idit->second]->ComputeTotalSize();
                 }
+                txn_available[idit->second].reset();
+                mempool_count--;
             }
         }
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
@@ -148,9 +193,12 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
+                prefill_candidates.insert(idit->second);
                 have_txn[idit->second]  = true;
-                mempool_count++;
                 extra_count++;
+                if (debug_log) {
+                    extra_size += txn_available[idit->second]->ComputeTotalSize();
+                }
             } else {
                 // If we find two mempool/extra txn that match the short id, just
                 // request it.
@@ -160,8 +208,10 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // trigger this case, so we compare witness hashes first
                 if (txn_available[idit->second] &&
                         txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                    if (debug_log) {
+                        extra_size -= txn_available[idit->second]->ComputeTotalSize();
+                    }
                     txn_available[idit->second].reset();
-                    mempool_count--;
                     extra_count--;
                 }
             }
@@ -169,7 +219,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
         // the performance win of an early exit here is too good to pass up and worth
         // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (mempool_count + extra_count == shorttxids.size())
             break;
     }
 
@@ -186,6 +236,11 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const
     return txn_available[index] != nullptr;
 }
 
+std::set<uint32_t> PartiallyDownloadedBlock::PrefillCandidates() const
+{
+    return prefill_candidates;
+}
+
 ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active)
 {
     if (header.IsNull()) return READ_STATUS_INVALID;
@@ -199,6 +254,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
             if (tx_missing_offset >= vtx_missing.size()) {
                 return READ_STATUS_INVALID;
             }
+            prefill_candidates.insert(i);
             block.vtx[i] = vtx_missing[tx_missing_offset++];
         } else {
             block.vtx[i] = std::move(txn_available[i]);
@@ -222,11 +278,30 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
         const uint256 hash{block.GetHash()};
         uint32_t tx_missing_size{0};
-        for (const auto& tx : vtx_missing) tx_missing_size += tx->ComputeTotalSize();
-        LogDebug(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %u txn prefilled, %u txn from mempool (incl at least %u from extra pool) and %u txn (%u bytes) requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size(), tx_missing_size);
-        if (vtx_missing.size() < 5) {
+        for (const auto& tx : vtx_missing) { tx_missing_size += tx->ComputeTotalSize(); }
+        LogDebug(BCLog::CMPCTBLOCK,
+            "Successfully reconstructed block %s with %u txn prefilled (%u bytes), "
+            "%u txn from mempool (%u bytes), "
+            "%u txn from extrapool (%u bytes), "
+            "and %u txn requested (%u bytes)",
+            hash.ToString(),
+            prefilled_count, prefilled_size,
+            mempool_count, mempool_size,
+            extra_count, extra_size,
+            vtx_missing.size(), tx_missing_size);
+        LogDebug(BCLog::CMPCTBLOCK,
+            "%u txn (%u bytes) of the prefill were redundant, "
+            "%u txn (%u bytes) were present in the mempool, "
+            "%u txn (%u bytes) were present in the extrapool. ",
+            redundant_prefilled_mp_count + redundant_prefilled_ep_count,
+            redundant_prefilled_mp_size + redundant_prefilled_ep_size,
+            redundant_prefilled_mp_count, redundant_prefilled_mp_size,
+            redundant_prefilled_ep_count, redundant_prefilled_ep_size);
+
+
+        if (util::log::ShouldTraceLog(BCLog::CMPCTBLOCK)) {
             for (const auto& tx : vtx_missing) {
-                LogDebug(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
+                LogTrace(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
             }
         }
     }

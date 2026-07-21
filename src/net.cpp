@@ -915,6 +915,26 @@ size_t V1Transport::GetSendMemoryUsage() const noexcept
     return m_message_to_send.GetMemoryUsage();
 }
 
+size_t V1Transport::GetMessageHeaderSize() const noexcept
+{
+    return CMessageHeader::HEADER_SIZE;
+}
+
+size_t V1Transport::GetMessageSize(const CSerializedNetMsg& msg) const noexcept
+{
+    return msg.data.size() + GetMessageHeaderSize();
+}
+
+size_t V1Transport::GetSendMessageSize() const noexcept
+{
+    LOCK(m_send_mutex);
+    if (m_sending_header) {
+        return m_header_to_send.size() - m_bytes_sent + m_message_to_send.data.size();
+    } else {
+        return m_message_to_send.data.size() - m_bytes_sent;
+    }
+}
+
 namespace {
 
 /** List of short messages as defined in BIP324, in order.
@@ -1583,6 +1603,41 @@ size_t V2Transport::GetSendMemoryUsage() const noexcept
     return sizeof(m_send_buffer) + memusage::DynamicUsage(m_send_buffer);
 }
 
+size_t V2Transport::GetMessageHeaderSize(const std::string& m_type) const noexcept
+{
+    // Headers are either one byte with short encoding, or 13.
+    // https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki#v2-bitcoin-p2p-message-structure
+    auto msg_type_len = 1 + (V2_MESSAGE_MAP(m_type) ? 0 : CMessageHeader::MESSAGE_TYPE_SIZE);
+    return msg_type_len + BIP324Cipher::EXPANSION;
+}
+
+size_t V2Transport::GetMessageSize(const CSerializedNetMsg& msg) const noexcept
+{
+    SendState send_state;
+    {
+        LOCK(m_send_mutex);
+        send_state = m_send_state;
+
+        if (send_state != SendState::V1) return GetMessageHeaderSize(msg.m_type) + msg.data.size();
+    }
+    Assume(send_state == SendState::V1);
+    return m_v1_fallback.GetMessageSize(msg);
+}
+
+size_t V2Transport::GetSendMessageSize() const noexcept
+{
+    SendState send_state;
+    {
+        LOCK(m_send_mutex);
+        send_state = m_send_state;
+
+        if (send_state != SendState::V1) return m_send_buffer.size() - m_send_pos;
+    }
+
+    Assume(send_state == SendState::V1);
+    return m_v1_fallback.GetSendMessageSize();
+}
+
 Transport::Info V2Transport::GetInfo() const noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
@@ -1617,9 +1672,11 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // there is an existing message still being sent, or (for v2 transports) when the
             // handshake has not yet completed.
             size_t memusage = it->GetMemoryUsage();
+            size_t sersize = node.m_transport->GetMessageSize(*it);
             if (node.m_transport->SetMessageToSend(*it)) {
                 // Update memory usage of send buffer (as *it will be deleted).
                 node.m_send_memusage -= memusage;
+                node.m_send_size -= sersize;
                 ++it;
             }
         }
@@ -1678,6 +1735,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
 
     if (it == node.vSendMsg.end()) {
         assert(node.m_send_memusage == 0);
+        Assume(node.m_send_size == 0);
     }
     node.vSendMsg.erase(node.vSendMsg.begin(), it);
     return {nSentSize, data_left};
@@ -4121,6 +4179,41 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
     return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
+std::pair<uint32_t, uint32_t> CNode::WindowBytesTotalAndAvailable()
+{
+    uint32_t window_size{0}, bytes_available{0}, bytes_inflight, bytes_inqueue;
+    {
+        LOCK(m_sock_mutex);
+        if (m_sock) {
+            auto tcp_info = TCPInfo{*m_sock};
+            window_size = tcp_info.GetTCPWindowSize();
+            if (window_size == 0) {
+                return {0, 0};
+            }
+            // Bytes sitting in the OS's send queue + un'ACKed bytes on the wire.
+            bytes_inflight = m_sock->GetOSBytesQueued(tcp_info);
+        } else {
+            return {0, 0};
+        }
+    }
+
+    // Bytes sitting in our application layer queue for this CNode.
+    bytes_inqueue = GetSendQueueSize();
+
+    Assume(window_size > 0);
+    // Bytes between the previous and next window boundary that are used.
+    auto bytes_used = (bytes_inflight + bytes_inqueue) % window_size;
+
+    // How many bytes we can use before reaching the next window boundary.
+    bytes_available = window_size - bytes_used;
+
+    LogDebug(BCLog::NET,
+       "WindowBytes: Total: %d bytes, In flight: %d bytes, In send queue: %d, Available: %d",
+       window_size, bytes_inflight, bytes_inqueue, bytes_available);
+
+    return {window_size, bytes_available};
+}
+
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
@@ -4179,6 +4272,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
         // Update memory usage of send buffer.
         pnode->m_send_memusage += msg.GetMemoryUsage();
+        pnode->m_send_size += pnode->m_transport->GetMessageSize(msg);
         if (pnode->m_send_memusage + pnode->m_transport->GetSendMemoryUsage() > nSendBufferMaxSize) pnode->fPauseSend = true;
         // Move message to vSendMsg queue.
         pnode->vSendMsg.push_back(std::move(msg));

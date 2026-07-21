@@ -23,7 +23,6 @@
 #include <net/if.h>      // IWYU pragma: export
 #include <netdb.h>       // IWYU pragma: export
 #include <netinet/in.h>  // IWYU pragma: export
-#include <netinet/tcp.h> // IWYU pragma: export
 #include <sys/mman.h>    // IWYU pragma: export
 #include <sys/select.h>  // IWYU pragma: export
 #include <sys/socket.h>  // IWYU pragma: export
@@ -113,6 +112,33 @@ typedef SSIZE_T ssize_t;
 // MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
 #if !defined(MSG_DONTWAIT)
 #define MSG_DONTWAIT 0
+#endif
+
+// Windows 10 1703 is required for SIO_TCP_INFO, which we need at build time to
+// support TCP_INFO_v0 fetching.
+// https://learn.microsoft.com/en-us/windows/win32/api/mstcpip/ns-mstcpip-tcp_info_v0#requirements
+#if defined(WIN32)
+#include <mstcpip.h>    // IWYU pragma: export
+#if defined(SIO_TCP_INFO)
+#define WIN32_TCPINFO_SUPPORTED
+#endif
+#endif
+
+// linux/tcp.h contains the definition of the extended tcp_info struct, which
+// has the tcpi_snd_wnd field.
+#if defined(__linux__)
+#include <linux/tcp.h>  // IWYU pragma: export
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+#define TCP_INFO_HAS_SEND_WND
+#endif
+#elif !defined(WIN32)
+#include <netinet/tcp.h>    // IWYU pragma: export
+#endif
+
+// Querying bytes in the send buffer on these platforms requires ioctl
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#include <sys/ioctl.h>  // IWYU pragma: export
 #endif
 
 #endif // BITCOIN_COMPAT_COMPAT_H

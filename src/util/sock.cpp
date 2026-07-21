@@ -8,12 +8,12 @@
 #include <span.h>
 #include <tinyformat.h>
 #include <util/check.h>
-#include <util/log.h>
 #include <util/syserror.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <compare>
 #include <exception>
 #include <memory>
@@ -108,6 +108,51 @@ int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt
 int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
 {
     return getsockname(m_socket, name, name_len);
+}
+
+int Sock::GetOSBytesQueued(const TCPInfo &info)
+{
+    if (m_socket == INVALID_SOCKET) {
+        return 0;
+    }
+
+    int bytes_queued{0};
+#if (defined(__linux__) || defined(__FreeBSD__))
+    if (ioctl(m_socket, TIOCOUTQ, &bytes_queued)) {
+        LogError("sock: Error getting queued bytes: ioctl(TIOCOUTQ): %s\n", NetworkErrorString(errno));
+        return 0;
+    }
+#elif defined(__NetBSD__) // https://man.netbsd.org/ioctl.2
+    if (ioctl(m_socket, FIONWRITE, &bytes_queued)) {
+        LogError("sock: Error getting queued bytes: ioctl(FIONWRITE): %s\n", NetworkErrorString(errno));
+        return 0;
+    }
+#elif defined(__APPLE__) && defined(SO_NWRITE)
+    // Apple's online manpage reference is out-of-date or inaccurate and omits this,
+    // but this is documented in the `man 2 getsockopt` on MacOS devices.
+    // https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/bsd/man/man2/getsockopt.2#L170
+    socklen_t result_len{sizeof(bytes_queued)};
+    if (GetSockOpt(SOL_SOCKET, SO_NWRITE, &bytes_queued, &result_len)) {
+        LogError("sock: Error getting queued bytes: getsockopt(SO_NWRITE): %s\n", NetworkErrorString(errno));
+        return 0;
+    }
+#elif defined(__OpenBSD__)
+    if (!info.m_valid) {
+        LogError("sock: Error getting queued bytes: Acquiring TCP info: %s\n", NetworkErrorString(errno));
+        return 0;
+    }
+
+    // Index of Next byte to send - index of oldest unacked byte.
+    bytes_queued = info.m_tcp_info.tcpi_snd_nxt - info.m_tcp_info.tcpi_snd_una;
+#elif defined(WIN32_TCPINFO_SUPPORTED)
+    if (!info.m_valid) {
+        LogError("sock: Error getting queued bytes: Acquiring TCP info: %s\n", NetworkErrorString(errno));
+        return 0;
+    }
+    bytes_queued = info.m_tcp_info.BytesInFlight;
+#endif
+
+    return std::max(0, bytes_queued);
 }
 
 bool Sock::SetNonBlocking() const
