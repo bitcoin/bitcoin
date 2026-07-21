@@ -4091,7 +4091,7 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
  *  v0.12 and v0.15 (when no additional protection was in place) whereby an attacker could unboundedly
  *  grow our in-memory block index. See https://bitcoincore.org/en/2024/07/03/disclose-header-spam.
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, NodeClock::time_point now)
 {
     AssertLockHeld(::cs_main);
     assert(pindexPrev != nullptr);
@@ -4118,7 +4118,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState&
     }
 
     // Check timestamp
-    if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
+    if (block.Time() > now + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 
@@ -4234,7 +4234,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             LogDebug(BCLog::VALIDATION, "header %s has prev block invalid: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
-        if (!ContextualCheckBlockHeader(block, state, GetConsensus(), pindexPrev)) {
+        if (!ContextualCheckBlockHeader(block, state, GetConsensus(), pindexPrev, NodeClock::now())) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4522,7 +4522,7 @@ BlockValidationState TestBlockValidity(
      * - do run ContextualCheckBlock()
      */
 
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_chainman.GetConsensus(), tip)) {
+    if (!ContextualCheckBlockHeader(block, state, chainstate.m_chainman.GetConsensus(), tip, NodeClock::now())) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
