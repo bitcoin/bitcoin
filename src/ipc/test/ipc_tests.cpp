@@ -33,7 +33,11 @@
 #endif
 
 static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
+#if !defined(_MSC_VER) || defined(__clang__)
+// Capnp floating-point constants aren't constexpr on MSVC (CAPNP_NON_INT_CONSTEXPR_DECL_INIT
+// is empty there), so skip this static_assert on MSVC to avoid C2131.
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());
+#endif
 static_assert(ipc::capnp::messages::DEFAULT_BLOCK_RESERVED_WEIGHT == DEFAULT_BLOCK_RESERVED_WEIGHT);
 static_assert(ipc::capnp::messages::DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS == DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS);
 
