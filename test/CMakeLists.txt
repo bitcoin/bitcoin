@@ -94,6 +94,8 @@ function(create_test_directory_links)
     endif()
     file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${CMAKE_CURRENT_BINARY_DIR}/${f} COPY_ON_ERROR ${symlink})
   endforeach()
+
+  configure_file(${PROJECT_SOURCE_DIR}/src/test/data/siphash.json ${PROJECT_BINARY_DIR}/src/test/data/siphash.json COPYONLY)
 endfunction()
 
 create_test_directory_links()
