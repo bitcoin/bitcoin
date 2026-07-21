@@ -5923,14 +5923,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
                     LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
 
+                    const auto headers_behind{(NodeClock::now() - m_chainman.m_best_header->Time()) / consensusParams.PowTargetSpacing()};
                     state.fSyncStarted = true;
                     peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
-                        (
-                         // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
-                         // to maintain precision
-                         std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
-                         Ticks<std::chrono::seconds>(NodeClock::now() - m_chainman.m_best_header->Time()) / consensusParams.nPowTargetSpacing
-                        );
+                        HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * headers_behind;
                     nSyncStarted++;
                 }
             }
