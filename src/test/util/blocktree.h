@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-/** Options for the test blocks built by BlockTree::Add(). */
+/** Options for the test blocks built by MakeHeader() and BlockTree::Add(). */
 struct BlockTreeAddOptions {
     //! Mark the block as stored and validated up to BLOCK_VALID_TRANSACTIONS.
     bool have_data{false};
@@ -27,6 +27,19 @@ struct BlockTreeAddOptions {
     //! Merkle root of the header, or a value unique to the block if unset.
     std::optional<uint256> merkle_root{};
 };
+
+/** Build a header on `prev` whose hash is unique for each `nonce`. */
+inline CBlockHeader MakeHeader(const CBlockIndex* prev, uint32_t nonce, const BlockTreeAddOptions& opts)
+{
+    CBlockHeader header;
+    header.nVersion = 4;
+    header.hashPrevBlock = prev ? prev->GetBlockHash() : uint256::ZERO;
+    header.hashMerkleRoot = opts.merkle_root.value_or(uint256{static_cast<uint8_t>(nonce)});
+    header.nTime = 1'700'000'000 + nonce;
+    header.nBits = opts.bits;
+    header.nNonce = nonce;
+    return header;
+}
 
 /** Block index entries linked into a tree without a BlockManager, for unit
  *  tests of code that walks the block index. */
@@ -42,13 +55,7 @@ struct BlockTree
      *  If `active`, make it the active tip. */
     CBlockIndex* Add(CBlockIndex* prev, bool active, BlockTreeAddOptions opts = {}) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
-        CBlockHeader header;
-        header.nVersion = 4;
-        header.hashPrevBlock = prev ? prev->GetBlockHash() : uint256::ZERO;
-        header.hashMerkleRoot = opts.merkle_root.value_or(uint256{static_cast<uint8_t>(next_nonce)});
-        header.nTime = 1'700'000'000 + next_nonce;
-        header.nBits = opts.bits;
-        header.nNonce = next_nonce++;
+        const CBlockHeader header{MakeHeader(prev, next_nonce++, opts)};
 
         hashes.push_back(header.GetHash());
         auto block{std::make_unique<CBlockIndex>(header)};

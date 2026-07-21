@@ -6,6 +6,7 @@
 
 #include <arith_uint256.h>
 #include <chain.h>
+#include <node/blockstorage.h>
 #include <uint256.h>
 #include <util/check.h>
 
@@ -121,6 +122,27 @@ bool StaleTipTracker::Add(const CBlockIndex& stale_tip)
 
     m_tips.push_back(&stale_tip);
     return true;
+}
+
+void StaleTipTracker::SeedFromBlockIndex(const node::BlockManager& blockman, const CChain& active_chain)
+{
+    AssertLockHeld(::cs_main);
+
+    std::vector<const CBlockIndex*> candidates;
+    for (const auto& [_, block_index] : blockman.m_block_index) {
+        if (GetEligibleForkPoint(active_chain, block_index) != nullptr) candidates.push_back(&block_index);
+    }
+
+    // Sort by decreasing work, so that descendants come before their
+    // ancestors and Add() keeps only each branch's tip, and so that the
+    // tips with the most work are kept if there are too many. Break ties
+    // by hash so that the result is the same on every start.
+    std::ranges::sort(candidates, [](const CBlockIndex* a, const CBlockIndex* b) {
+        if (a->nChainWork != b->nChainWork) return a->nChainWork > b->nChainWork;
+        return a->GetBlockHash() < b->GetBlockHash();
+    });
+
+    for (const CBlockIndex* candidate : candidates) AddStaleTip(active_chain, *candidate);
 }
 
 bool StaleTipTracker::AddStaleTip(const CChain& active_chain, const CBlockIndex& stale_tip)

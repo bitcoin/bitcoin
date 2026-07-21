@@ -10,10 +10,12 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 using node::MAX_ADVERTISED_STALETIPS;
@@ -403,6 +405,117 @@ BOOST_AUTO_TEST_CASE(staletip_tracker_signet_variant_becomes_active)
     // It stays tracked, and is eligible again once the variant is reorged out.
     tree.active_chain.SetTip(*active);
     BOOST_CHECK_EQUAL(tips.GetStaleTips(tree.active_chain).size(), 1U);
+}
+
+/** A BlockManager whose block index holds an active chain of five blocks,
+ *  for tests of StaleTipTracker::SeedFromBlockIndex(). */
+struct SeedFromBlockIndexSetup : public ChainTestingSetup {
+    node::BlockManager& blockman{m_node.chainman->m_blockman};
+    CBlockIndex* best_header{nullptr};
+    CChain active_chain;
+    CBlockIndex* active{nullptr};
+    uint32_t next_nonce{1};
+
+    SeedFromBlockIndexSetup()
+    {
+        LOCK(::cs_main);
+        for (int i{0}; i < 5; ++i) {
+            active = Add(active);
+            active_chain.SetTip(*active);
+        }
+    }
+
+    CBlockIndex* Add(const CBlockIndex* prev, BlockTreeAddOptions opts = {}) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        CBlockIndex* block{blockman.AddToBlockIndex(MakeHeader(prev, next_nonce++, opts), best_header)};
+        if (opts.have_data) {
+            block->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+            block->nStatus |= BLOCK_HAVE_DATA;
+        }
+        return block;
+    }
+
+    /** Seed `tracker` and return the tracked tips. */
+    std::vector<const CBlockIndex*> Seed(StaleTipTracker& tracker) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        tracker.SeedFromBlockIndex(blockman, active_chain);
+        std::vector<const CBlockIndex*> tips;
+        for (const StaleFork& fork : tracker.GetStaleTips(active_chain)) tips.push_back(fork.tip);
+        return tips;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(staletip_seed_orders_tips_deterministically, SeedFromBlockIndexSetup)
+{
+    LOCK(::cs_main);
+
+    const CBlockIndex* lower_tip{Add(active->GetAncestor(active->nHeight - 2))};
+    const CBlockIndex* same_work_a{Add(active->pprev)};
+    const CBlockIndex* same_work_b{Add(active->pprev)};
+    if (same_work_b->GetBlockHash() < same_work_a->GetBlockHash()) std::swap(same_work_a, same_work_b);
+
+    // More work first, then lower hash first among tips with equal work.
+    StaleTipTracker tracker;
+    const std::vector<const CBlockIndex*> expected{same_work_a, same_work_b, lower_tip};
+    BOOST_CHECK(Seed(tracker) == expected);
+}
+
+BOOST_FIXTURE_TEST_CASE(staletip_seed_tracks_branch_tips_only, SeedFromBlockIndexSetup)
+{
+    LOCK(::cs_main);
+
+    CBlockIndex* branch{Add(active->GetAncestor(active->nHeight - 3))};
+    branch = Add(branch);
+    branch = Add(branch);
+
+    StaleTipTracker tracker;
+    BOOST_CHECK(Seed(tracker) == std::vector<const CBlockIndex*>{branch});
+}
+
+BOOST_FIXTURE_TEST_CASE(staletip_seed_signet_tracks_last_validated_block, SeedFromBlockIndexSetup)
+{
+    LOCK(::cs_main);
+
+    // On signet, a branch whose last block has not been downloaded yet is
+    // tracked up to its last validated block.
+    const CBlockIndex* validated{Add(active->GetAncestor(active->nHeight - 2), {.have_data = true})};
+    const CBlockIndex* headers_only{Add(validated)};
+
+    StaleTipTracker signet_tracker{ChainType::SIGNET};
+    BOOST_CHECK(Seed(signet_tracker) == std::vector<const CBlockIndex*>{validated});
+
+    StaleTipTracker main_tracker;
+    BOOST_CHECK(Seed(main_tracker) == std::vector<const CBlockIndex*>{headers_only});
+}
+
+BOOST_FIXTURE_TEST_CASE(staletip_seed_signet_skips_active_tip_variant, SeedFromBlockIndexSetup)
+{
+    LOCK(::cs_main);
+
+    const CBlockIndex* active_variant{Add(active->pprev, {.have_data = true, .merkle_root = active->hashMerkleRoot})};
+
+    StaleTipTracker signet_tracker{ChainType::SIGNET};
+    BOOST_CHECK(Seed(signet_tracker).empty());
+
+    // Header variants are only deduplicated on signet.
+    StaleTipTracker main_tracker;
+    BOOST_CHECK(Seed(main_tracker) == std::vector<const CBlockIndex*>{active_variant});
+}
+
+BOOST_FIXTURE_TEST_CASE(staletip_seed_keeps_most_work_tips, SeedFromBlockIndexSetup)
+{
+    LOCK(::cs_main);
+
+    // Added to the block index first, but has less work than the tips that
+    // fill the tracker.
+    const CBlockIndex* least_work{Add(active->GetAncestor(1))};
+    std::vector<const CBlockIndex*> most_work;
+    for (size_t i{0}; i < MAX_ADVERTISED_STALETIPS; ++i) most_work.push_back(Add(active->pprev));
+
+    StaleTipTracker tracker;
+    const std::vector<const CBlockIndex*> tips{Seed(tracker)};
+    BOOST_CHECK(std::ranges::is_permutation(tips, most_work));
+    BOOST_CHECK(std::ranges::find(tips, least_work) == tips.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
