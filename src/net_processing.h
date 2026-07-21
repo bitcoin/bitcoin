@@ -16,6 +16,7 @@
 #include <util/expected.h>
 #include <validationinterface.h>
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -39,6 +40,17 @@ class Warnings;
 
 /** Whether transaction reconciliation protocol should be enabled by default. */
 inline constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
+/** Mode of operation for stale-tip relay (-staletips). */
+enum class StaleTipRelayMode {
+    //! Stale-tip relay disabled.
+    NONE,
+    //! Track recent stale tips.
+    HEADERS,
+};
+/** All stale-tip relay modes, in the order -help lists them. */
+inline constexpr std::array ALL_STALETIP_RELAY_MODES{StaleTipRelayMode::NONE, StaleTipRelayMode::HEADERS};
+/** Default stale-tip relay mode. Stale-tip relay is opt-in. */
+inline constexpr StaleTipRelayMode DEFAULT_STALETIP_RELAY_MODE{StaleTipRelayMode::NONE};
 /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
     orphan, replaced, and rejected transactions. */
 inline constexpr uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
@@ -95,6 +107,8 @@ public:
         bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
         //! Whether transaction reconciliation protocol is enabled
         bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
+        //! Stale-tip relay mode (-staletips).
+        StaleTipRelayMode stale_tip_relay_mode{DEFAULT_STALETIP_RELAY_MODE};
         //! Number of non-mempool transactions to keep around for block reconstruction. Includes
         //! orphan, replaced, and rejected transactions.
         uint32_t max_extra_txs{DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN};
