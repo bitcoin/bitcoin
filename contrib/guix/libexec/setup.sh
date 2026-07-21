@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit.
 export LC_ALL=C
-set -e -o pipefail
+set -o errexit -o pipefail
 
 # Environment variables for determinism
 export TAR_OPTIONS="--no-same-owner --owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
@@ -59,6 +59,31 @@ store_path() {
         | sed --expression='s|\x29*$||' \
               --expression='s|^[[:space:]]*"||' \
               --expression='s|"[[:space:]]*$||'
+}
+
+# Sanity check CROSS_*_PATH directories
+check_cross_paths() {
+    local p paths
+    IFS=':' read -ra paths <<< "$1"
+    for p in "${paths[@]}"; do
+        if [ -n "$p" ] && [ ! -d "$p" ]; then
+            echo "'$p' doesn't exist or isn't a directory... Aborting..." >&2
+            return 1
+        fi
+    done
+}
+
+# Given a hostname, determine the correct value for -Wl,--dynamic-linker.
+glibc_dynamic_linker() {
+    case "$1" in
+        x86_64-linux-gnu)      echo /lib64/ld-linux-x86-64.so.2 ;;
+        arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
+        aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
+        riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
+        powerpc64-linux-gnu)   echo /lib64/ld64.so.1 ;;
+        powerpc64le-linux-gnu) echo /lib64/ld64.so.2 ;;
+        *)                     exit 1 ;;
+    esac
 }
 
 # Disable Guix ld auto-rpath behavior

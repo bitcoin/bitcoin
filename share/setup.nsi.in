@@ -72,19 +72,19 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_builddir@/release/@BITCOIN_GUI_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@BITCOIN_WRAPPER_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_GUI_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_WRAPPER_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     File @abs_top_srcdir@/share/examples/bitcoin.conf
     SetOutPath $INSTDIR\share\rpcauth
     File @abs_top_srcdir@/share/rpcauth/*.*
     SetOutPath $INSTDIR\daemon
-    File @abs_top_builddir@/release/@BITCOIN_DAEMON_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@BITCOIN_CLI_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@BITCOIN_TX_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@BITCOIN_WALLET_TOOL_NAME@@EXEEXT@
-    File @abs_top_builddir@/release/@BITCOIN_TEST_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_DAEMON_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_CLI_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_TX_NAME@@EXEEXT@
+    File @BIN_DIR@/@BITCOIN_WALLET_TOOL_NAME@@EXEEXT@
+    File @LIBEXEC_DIR@/@BITCOIN_TEST_NAME@@EXEEXT@
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
