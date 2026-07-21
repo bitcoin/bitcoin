@@ -4,7 +4,10 @@
 
 #include <node/staletiptracker.h>
 
+#include <arith_uint256.h>
 #include <chain.h>
+#include <uint256.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -14,13 +17,40 @@ namespace node {
 
 namespace {
 
+/** Maximum target of a stale tip tracked on testnet3 and testnet4: a
+ *  difficulty of about 1,000,000 (2^20), the example threshold in BIP 332. */
+constexpr uint256 TESTNET_MAX_TARGET{"0000000000000fffffffffffffffffffffffffffffffffffffffffffffffffff"};
+
 /** Whether `ancestor` is an ancestor of `block`, or `block` itself. */
 bool HasAncestor(const CBlockIndex& block, const CBlockIndex& ancestor)
 {
     return block.nHeight >= ancestor.nHeight && block.GetAncestor(ancestor.nHeight) == &ancestor;
 }
 
+/** Whether `block` is a header variant of the block at its height on the
+ *  branch ending at `branch_tip`: both have the same previous block and merkle
+ *  root. A block is a variant of itself. On signet, varying nBits can turn a
+ *  valid block into another valid variant, so only one is tracked (see the
+ *  "Signet" section of BIP 332). */
+bool IsVariantOnBranch(const CBlockIndex& block, const CBlockIndex& branch_tip)
+{
+    if (block.nHeight > branch_tip.nHeight) return false;
+    const CBlockIndex& other{*Assert(branch_tip.GetAncestor(block.nHeight))};
+    return block.pprev == other.pprev && block.hashMerkleRoot == other.hashMerkleRoot;
+}
+
 } // namespace
+
+StaleTipTracker::StaleTipTracker(ChainType chain_type, int recent_window, size_t max_headers)
+    : m_require_validated_block{chain_type == ChainType::SIGNET},
+      m_dedup_header_variants{chain_type == ChainType::SIGNET},
+      m_recent_window{recent_window},
+      m_max_headers{max_headers}
+{
+    if (chain_type == ChainType::TESTNET || chain_type == ChainType::TESTNET4) {
+        m_max_target = UintToArith256(TESTNET_MAX_TARGET);
+    }
+}
 
 const CBlockIndex* StaleTipTracker::GetEligibleForkPoint(const CChain& active_chain, const CBlockIndex& stale_tip) const
 {
@@ -29,6 +59,16 @@ const CBlockIndex* StaleTipTracker::GetEligibleForkPoint(const CChain& active_ch
     if (active_chain.Contains(stale_tip)) return nullptr;
     if (IsExpired(active_chain, stale_tip)) return nullptr;
     if (stale_tip.nChainWork > active_tip->nChainWork) return nullptr;
+
+    // Only one variant of a block is tracked, and the active chain's block
+    // counts as seen first, even if it became active later.
+    if (m_dedup_header_variants && IsVariantOnBranch(stale_tip, *active_tip)) return nullptr;
+
+    if (m_max_target) {
+        arith_uint256 target;
+        target.SetCompact(stale_tip.nBits);
+        if (target > *m_max_target) return nullptr;
+    }
 
     // Walk back at most m_max_headers blocks, rather than to the fork point
     // however far back it is.
@@ -59,13 +99,17 @@ bool StaleTipTracker::Add(const CBlockIndex& stale_tip)
 {
     AssertLockHeld(::cs_main);
 
-    // Nothing to do if the tip, or one of its descendants, is tracked.
+    // Skip the tip if a tracked tip already covers it.
     for (const CBlockIndex* tip : m_tips) {
         if (HasAncestor(*tip, stale_tip)) return false;
+        if (m_dedup_header_variants && IsVariantOnBranch(stale_tip, *tip)) return false;
     }
 
-    // The tip replaces any tracked ancestors.
-    std::erase_if(m_tips, [&](const CBlockIndex* tip) { return HasAncestor(stale_tip, *tip); });
+    // Drop tracked tips that the new tip covers.
+    std::erase_if(m_tips, [&](const CBlockIndex* tip) {
+        return HasAncestor(stale_tip, *tip) ||
+               (m_dedup_header_variants && IsVariantOnBranch(*tip, stale_tip));
+    });
 
     if (m_tips.size() == MAX_ADVERTISED_STALETIPS) {
         // Evict the tip with the least work, if it has less than the new
@@ -82,6 +126,8 @@ bool StaleTipTracker::Add(const CBlockIndex& stale_tip)
 bool StaleTipTracker::AddStaleTip(const CChain& active_chain, const CBlockIndex& stale_tip)
 {
     AssertLockHeld(::cs_main);
+    // Validation is never undone, so this is only checked when a tip is added.
+    if (m_require_validated_block && !stale_tip.IsValid(BLOCK_VALID_TRANSACTIONS)) return false;
     if (GetEligibleForkPoint(active_chain, stale_tip) == nullptr) return false;
 
     PruneExpired(active_chain);

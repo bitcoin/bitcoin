@@ -15,8 +15,18 @@
 #include <cstdint>
 #include <deque>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
+
+/** Options for the test blocks built by BlockTree::Add(). */
+struct BlockTreeAddOptions {
+    //! Mark the block as stored and validated up to BLOCK_VALID_TRANSACTIONS.
+    bool have_data{false};
+    uint32_t bits{0x1d00ffff};
+    //! Merkle root of the header, or a value unique to the block if unset.
+    std::optional<uint256> merkle_root{};
+};
 
 /** Block index entries linked into a tree without a BlockManager, for unit
  *  tests of code that walks the block index. */
@@ -30,14 +40,14 @@ struct BlockTree
 
     /** Add a block on top of `prev`, or a genesis block if `prev` is null.
      *  If `active`, make it the active tip. */
-    CBlockIndex* Add(CBlockIndex* prev, bool active) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    CBlockIndex* Add(CBlockIndex* prev, bool active, BlockTreeAddOptions opts = {}) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CBlockHeader header;
         header.nVersion = 4;
         header.hashPrevBlock = prev ? prev->GetBlockHash() : uint256::ZERO;
-        header.hashMerkleRoot = uint256{static_cast<uint8_t>(next_nonce)};
+        header.hashMerkleRoot = opts.merkle_root.value_or(uint256{static_cast<uint8_t>(next_nonce)});
         header.nTime = 1'700'000'000 + next_nonce;
-        header.nBits = 0x1d00ffff;
+        header.nBits = opts.bits;
         header.nNonce = next_nonce++;
 
         hashes.push_back(header.GetHash());
@@ -47,6 +57,10 @@ struct BlockTree
         block->nHeight = prev ? prev->nHeight + 1 : 0;
         block->nChainWork = (prev ? prev->nChainWork : arith_uint256{}) + arith_uint256{1};
         block->nStatus = BLOCK_VALID_TREE;
+        if (opts.have_data) {
+            block->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
+            block->nStatus |= BLOCK_HAVE_DATA;
+        }
         block->BuildSkip();
         CBlockIndex* ret{block.get()};
         blocks.push_back(std::move(block));
@@ -56,10 +70,10 @@ struct BlockTree
 
     /** Add a genesis block and `height` more blocks on top of it, all on the
      *  active chain, and return the tip. */
-    CBlockIndex* AddChain(int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    CBlockIndex* AddChain(int height, BlockTreeAddOptions opts = {}) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
-        CBlockIndex* tip{Add(nullptr, /*active=*/true)};
-        for (int i{0}; i < height; ++i) tip = Add(tip, /*active=*/true);
+        CBlockIndex* tip{Add(nullptr, /*active=*/true, opts)};
+        for (int i{0}; i < height; ++i) tip = Add(tip, /*active=*/true, opts);
         return tip;
     }
 };
