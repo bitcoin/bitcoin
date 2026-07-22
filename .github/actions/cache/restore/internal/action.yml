@@ -14,6 +14,14 @@ inputs:
   provider:
     description: 'The cache provider to use'
     required: true
+  enable-cross-os-archive:
+    description: 'Allow the cache to be restored from another operating system'
+    required: false
+    default: 'false'
+  enable-cross-arch-archive:
+    description: 'Allow the WarpBuild cache to be restored from another architecture'
+    required: false
+    default: 'false'
 outputs:
   cache-hit:
     description: 'A boolean value to indicate an exact match was found for the primary key'
@@ -32,6 +40,8 @@ runs:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
+        enableCrossOsArchive: ${{ inputs.enable-cross-os-archive }}
+        enableCrossArchArchive: ${{ inputs.enable-cross-arch-archive }}
 
     - name: Restore cache with GitHub Actions
       id: gha
@@ -41,3 +51,4 @@ runs:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
+        enableCrossOsArchive: ${{ inputs.enable-cross-os-archive }}
