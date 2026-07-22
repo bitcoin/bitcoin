@@ -2274,6 +2274,47 @@ script_verify_flags ChainstateManager::GetAllConsensusScriptFlags(const Consensu
     return flags;
 }
 
+namespace {
+// Helper class to ensure at compile-time that all flags returned by
+// GetBlockScriptFlags() have been included in
+// STANDARD_SCRIPT_VERIFY_FLAGS.
+
+class StandardScriptVerifyFlags
+{
+public:
+    using value_type = script_verify_flags::value_type;
+
+    consteval StandardScriptVerifyFlags(script_verify_flags flags)
+    {
+        if ((flags & STANDARD_SCRIPT_VERIFY_FLAGS) != flags) throw;
+        m_value = flags.as_int();
+    }
+
+    consteval StandardScriptVerifyFlags(script_verify_flag_name flag) : StandardScriptVerifyFlags{script_verify_flags{flag}} { }
+
+    StandardScriptVerifyFlags& operator&=(const script_verify_flags& flags)
+    {
+        Assume((m_value & flags.as_int()) == flags.as_int());
+        m_value &= flags.as_int();
+        return *this;
+    }
+
+    StandardScriptVerifyFlags& operator|=(const StandardScriptVerifyFlags& flags)
+    {
+        m_value |= flags.m_value;
+        return *this;
+    }
+
+    operator script_verify_flags() const
+    {
+        return script_verify_flags::from_int(m_value);
+    }
+
+private:
+    value_type m_value{0};
+};
+} // namespace
+
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
@@ -2286,10 +2327,10 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     // mainnet.
     // For simplicity, always leave P2SH+WITNESS+TAPROOT on except for the two
     // violating blocks.
-    script_verify_flags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+    StandardScriptVerifyFlags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
     const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
     if (it != consensusparams.script_flag_exceptions.end()) {
-        flags = it->second;
+        flags &= it->second;
     }
 
     // Enforce the DERSIG (BIP66) rule
