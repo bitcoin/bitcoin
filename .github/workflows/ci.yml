@@ -451,12 +451,6 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
 
-          - name: 'macOS-cross to arm64'
-            warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_mac_cross.sh'
-
           - name: 'macOS-cross to x86_64'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
             fallback-runner: 'ubuntu-latest'
@@ -582,6 +576,71 @@ jobs:
         uses: ./.github/actions/cache/save
         with:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+
+  macos-cross-arm64:
+    name: 'macOS-cross to arm64'
+    needs: record-frozen-commit
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_CI_ON_HOST_FOLDERS: 1
+      FILE_ENV: './ci/test/00_setup_env_mac_cross.sh'
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Clear unnecessary files
+        if: ${{ github.repository != 'bitcoin/bitcoin' }} # Only needed on GHA runners
+        uses: ./.github/actions/clear-files
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Prepare macOS arm64 tests
+        run: |
+          mkdir unit_test_data
+          ./ci/retry/retry curl --location --fail \
+            https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json \
+            -o unit_test_data/script_assets_test.json
+          tar -cf macos-arm64-binaries.tar \
+            -C "${BASE_BUILD_DIR}" \
+            bin/test_bitcoin \
+            bin/test_bitcoin-qt \
+            dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt \
+            -C "${GITHUB_WORKSPACE}" \
+            unit_test_data/script_assets_test.json
+
+      - name: Save macOS arm64 binaries
+        uses: ./.github/actions/cache/save/internal
+        with:
+          path: macos-arm64-binaries.tar
+          key: macos-arm64-binaries-${{ github.run_id }}
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          enable-cross-os-archive: true
+          enable-cross-arch-archive: true
+
+      - name: Save caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
   lint:
     name: 'lint'
