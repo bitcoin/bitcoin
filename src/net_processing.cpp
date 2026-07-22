@@ -866,6 +866,10 @@ private:
 
     void ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
+    /** Track `tip`, and if `peer_has_block` and it has more work than the
+     *  active tip, update the peer's header state and request its blocks. */
+    void HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     /** Copied into short-lived tx INV deduplication sets to avoid generating salts per message. */
@@ -6006,7 +6010,7 @@ void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRec
         LOCK(cs_main);
 
         if (const CBlockIndex* known_tip{m_chainman.m_blockman.LookupBlockIndex(tip_hash)}) {
-            m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), *known_tip);
+            HandleStaleTip(pfrom, peer, *known_tip, /*peer_has_block=*/msg.have_block, /*received_new_header=*/false);
             return;
         }
 
@@ -6036,7 +6040,28 @@ void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRec
     }
 
     LOCK(cs_main);
-    if (last_header != nullptr) m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), *last_header);
+    if (!Assume(last_header)) return;
+    HandleStaleTip(pfrom, peer, *last_header, /*peer_has_block=*/msg.have_block, /*received_new_header=*/true);
+}
+
+void PeerManagerImpl::HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+
+    // A known-invalid tip must not advance the peer's header state.
+    if (!tip.IsValid(BLOCK_VALID_TREE)) return;
+
+    const CBlockIndex* active_tip{m_chainman.ActiveTip()};
+    if (peer_has_block && active_tip != nullptr && tip.nChainWork > active_tip->nChainWork) {
+        // Update the peer's state as for a headers message: this can protect
+        // an outbound peer from eviction, or during IBD disconnect one whose
+        // chain is below the minimum chain work.
+        UpdatePeerStateForReceivedHeaders(pfrom, tip, received_new_header, /*may_have_more_headers=*/false);
+        HeadersDirectFetchBlocks(pfrom, peer, tip);
+    }
+
+    m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), tip);
 }
 
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
