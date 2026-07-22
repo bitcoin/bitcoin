@@ -5,11 +5,13 @@
 #ifndef BITCOIN_NODE_STALETIPRELAYMAN_H
 #define BITCOIN_NODE_STALETIPRELAYMAN_H
 
+#include <arith_uint256.h>
 #include <kernel/cs_main.h>
 #include <node/staletiptracker.h>
 #include <staletipmessage.h>
 #include <sync.h>
 #include <util/chaintype.h>
+#include <util/expected.h>
 
 #include <vector>
 
@@ -18,6 +20,23 @@ class CChain;
 
 namespace node {
 class BlockManager;
+
+/** Why ValidateStaleTipAnnouncement() rejected an announcement. */
+enum class StaleTipAnnouncementError {
+    //! The announced tip is more than the recency window below the active
+    //! tip.
+    OUTSIDE_RECENT_WINDOW,
+    //! The announced branch has less work than the anti-DoS threshold.
+    LOW_WORK,
+};
+
+/** Check an announced stale branch of `num_headers` headers, forking off at
+ *  `fork_point` and claiming `claimed_work`, against the active tip, the
+ *  recency window and the anti-DoS `work_threshold`. A null `active_tip`
+ *  skips the recency check. */
+util::Expected<void, StaleTipAnnouncementError> ValidateStaleTipAnnouncement(const CBlockIndex& fork_point, size_t num_headers, const arith_uint256& claimed_work,
+                                                                             const CBlockIndex* active_tip, const arith_uint256& work_threshold,
+                                                                             int recent_window = STALETIP_RECENT_WINDOW);
 
 struct StaleTipRelayOptions {
     ChainType chain_type{ChainType::MAIN};

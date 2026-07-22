@@ -8,8 +8,10 @@
 from test_framework.blocktools import create_block
 from test_framework.messages import (
     CBlockHeader,
+    StaleTipCompressedHeader,
     msg_feature,
     msg_headers,
+    msg_staletip,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -20,6 +22,21 @@ from test_framework.util import (
 
 STALETIP_FEATURE = "BIP332"
 FEATURE_VERSION = 70017
+STALETIP_RECENT_WINDOW = 1000  # Mirrors STALETIP_RECENT_WINDOW in src/node/staletiptracker.h
+
+
+class msg_raw_staletip:
+    """A staletip message with an arbitrary payload, for malformed inputs."""
+    msgtype = b"staletip"
+
+    def __init__(self, payload):
+        self.payload = payload
+
+    def serialize(self):
+        return self.payload
+
+    def __repr__(self):
+        return f"msg_raw_staletip({self.payload.hex()})"
 
 
 class StaleTipPeer(P2PInterface):
@@ -52,6 +69,7 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.test_feature_negotiation()
         self.test_reorged_out_active_tip_tracked()
         self.test_tracked_tip_listed_with_known_descendants()
+        self.test_inbound_staletip_handling()
         self.test_startup_seeding_only_when_enabled()
 
     def tracked_staletips(self):
@@ -62,6 +80,48 @@ class P2PStaleTipTest(BitcoinTestFramework):
 
     def assert_staletip_hash_tracked(self, block_hash):
         self.wait_until(lambda: block_hash in self.tracked_staletips())
+
+    def stale_block(self, *, fork_depth=1):
+        blocks, fork_point_hash = self.stale_branch(length=1, fork_depth=fork_depth)
+        return blocks[0], fork_point_hash
+
+    def stale_branch(self, *, length, fork_depth):
+        node = self.nodes[0]
+        active_tip = node.getblock(node.getbestblockhash())
+        fork_point = active_tip
+        for _ in range(fork_depth):
+            fork_point = node.getblock(fork_point["previousblockhash"])
+        fork_point_hash = int(fork_point["hash"], 16)
+        prev_hash = fork_point_hash
+        height = fork_point["height"]
+        blocks = []
+        for _ in range(length):
+            block = create_block(
+                hashprev=prev_hash,
+                height=height + 1,
+                ntime=active_tip["time"] + self.block_time_offset,
+            )
+            self.block_time_offset += 1
+            block.solve()
+            blocks.append(block)
+            prev_hash = block.hash_int
+            height += 1
+        return blocks, fork_point_hash
+
+    def staletip_msg(self, blocks, fork_point_hash, *, have_block=False):
+        if not isinstance(blocks, list):
+            blocks = [blocks]
+        return msg_staletip(
+            hash_fork_point=fork_point_hash,
+            headers=[StaleTipCompressedHeader(CBlockHeader(block)) for block in blocks],
+            have_block=have_block,
+        )
+
+    def assert_staletip_tracked(self, block):
+        self.assert_staletip_hash_tracked(block.hash_hex)
+
+    def assert_staletip_not_tracked(self, block):
+        assert block.hash_hex not in self.tracked_staletips()
 
     def test_staletip_option_validation(self):
         self.log.info("Test staletip option validation")
@@ -148,6 +208,7 @@ class P2PStaleTipTest(BitcoinTestFramework):
     def test_feature_negotiation(self):
         self.log.info("Test staletip feature advertisement modes")
         node = self.nodes[0]
+        block, fork_point_hash = self.stale_block()
         for mode, expected_data in [("headers", b"\x00"), ("none", None)]:
             self.restart_node(0, extra_args=[f"-staletips={mode}"])
             peer = self.connect_peer()
@@ -155,6 +216,9 @@ class P2PStaleTipTest(BitcoinTestFramework):
             if expected_data is None:
                 assert_equal(stale_features, [])
                 assert_equal(node.getnetworkinfo()["localfeatures"], {})
+                # The peer advertised the feature, but relay is off here.
+                with node.assert_debug_log(["ignoring unnegotiated staletip"], timeout=2):
+                    peer.send_and_ping(self.staletip_msg(block, fork_point_hash))
             else:
                 assert_equal(len(stale_features), 1)
                 assert_equal(stale_features[0].feature_data, expected_data)
@@ -176,8 +240,118 @@ class P2PStaleTipTest(BitcoinTestFramework):
                 peer = self.connect_peer(send_feature=send_feature, feature_data=feature_data)
             peer.sync_with_ping()
             assert_equal(node.getpeerinfo()[0]["features"], expected_features)
-            assert peer.is_connected
+            if not expected_features:
+                with node.assert_debug_log(["ignoring unnegotiated staletip"], timeout=2):
+                    peer.send_and_ping(self.staletip_msg(block, fork_point_hash))
+                assert peer.is_connected
+                self.assert_staletip_not_tracked(block)
             node.disconnect_p2ps()
+
+    def check_inbound_staletip(self, message, block, *, outcome, expected_log=None):
+        """Send `message` from a negotiated peer and check the outcome: "track",
+        "ignore", or "disconnect"."""
+        node = self.nodes[0]
+        peer = self.connect_peer()
+        with node.assert_debug_log([expected_log] if expected_log else [], timeout=2):
+            if outcome == "disconnect":
+                peer.send_without_ping(message)
+                peer.wait_for_disconnect()
+            else:
+                peer.send_and_ping(message)
+        if outcome == "track":
+            self.assert_staletip_tracked(block)
+        else:
+            self.assert_staletip_not_tracked(block)
+        if outcome != "disconnect":
+            assert peer.is_connected
+        node.disconnect_p2ps()
+
+    def test_inbound_staletip_handling(self):
+        self.log.info("Test inbound staletip validation")
+        node = self.nodes[0]
+
+        def oversized():
+            block, fork_point_hash = self.stale_block()
+            message = self.staletip_msg(block, fork_point_hash)
+            message.headers *= 21
+            return message, block
+
+        def raw(mutate):
+            def build():
+                block, fork_point_hash = self.stale_block()
+                return msg_raw_staletip(mutate(self.staletip_msg(block, fork_point_hash).serialize())), block
+            return build
+
+        def invalid_pow():
+            block, fork_point_hash = self.stale_block()
+            message = self.staletip_msg(block, fork_point_hash)
+            message.headers[0].nBits = 0x1d00ffff
+            return message, block
+
+        def unknown_fork_point():
+            active_tip = node.getblock(node.getbestblockhash())
+            block = create_block(hashprev=0xdead, height=active_tip["height"], ntime=active_tip["time"] + self.block_time_offset)
+            self.block_time_offset += 1
+            block.solve()
+            return self.staletip_msg(block, 0xdead), block
+
+        def time_too_old():
+            fork_point = node.getblock(node.getblock(node.getbestblockhash())["previousblockhash"])
+            block = create_block(hashprev=int(fork_point["hash"], 16), height=fork_point["height"] + 1, ntime=fork_point["mediantime"])
+            block.solve()
+            return self.staletip_msg(block, int(fork_point["hash"], 16)), block
+
+        def within_recent_window():
+            # Deeper than the default anti-DoS window of 144 blocks.
+            block, fork_point_hash = self.stale_block(fork_depth=200)
+            return self.staletip_msg(block, fork_point_hash), block
+
+        self.generate(node, 250)
+        for name, build, outcome, expected_log in [
+            ("oversized", oversized, "ignore", "headers limit exceeded"),
+            ("trailing byte", raw(lambda payload: payload + b"\x00"), "disconnect", "malformed staletip"),
+            ("invalid have_block", raw(lambda payload: payload[:-1] + b"\x02"), "disconnect", "malformed staletip"),
+            ("truncated", raw(lambda payload: payload[:-1]), "disconnect", "malformed staletip"),
+            ("invalid proof of work", invalid_pow, "ignore", "with invalid headers"),
+            ("unknown fork point", unknown_fork_point, "ignore", "with unknown fork point"),
+            ("time too old", time_too_old, "ignore", "time-too-old"),
+            ("within recency window", within_recent_window, "track", None),
+        ]:
+            self.log.info(f"- {name}")
+            message, block = build()
+            self.check_inbound_staletip(message, block, outcome=outcome, expected_log=expected_log)
+
+        self.log.info("- already known tip")
+        # A header with more work than the active tip is not tracked. Once a
+        # competing block leaves it with equal work, only the staletip
+        # message can track it.
+        block, fork_point_hash = self.stale_block(fork_depth=0)
+        assert_equal(node.submitheader(CBlockHeader(block).serialize().hex()), None)
+        self.generate(node, 1)
+        self.assert_staletip_not_tracked(block)
+        peer = self.connect_peer()
+        with node.assert_debug_log([], unexpected_msgs=["ignoring staletip"]):
+            peer.send_and_ping(self.staletip_msg(block, fork_point_hash))
+        self.assert_staletip_tracked(block)
+        assert peer.is_connected
+        node.disconnect_p2ps()
+
+        self.log.info("- outside recency window")
+        self.generate(node, max(0, STALETIP_RECENT_WINDOW + 2 - node.getblockcount()))
+        fork_height = node.getblockcount() - STALETIP_RECENT_WINDOW - 2
+        fork_point_hash = node.getblockhash(fork_height)
+        block = create_block(hashprev=int(fork_point_hash, 16), height=fork_height + 1, ntime=node.getblock(fork_point_hash)["time"] + 1)
+        block.solve()
+        self.check_inbound_staletip(self.staletip_msg(block, int(fork_point_hash, 16)), block, outcome="ignore", expected_log="outside recency window")
+
+        self.log.info("- low work")
+        # With uniform regtest difficulty, a tip inside the recency window
+        # always has enough work, so raise the threshold instead.
+        chainwork = node.getblockheader(node.getbestblockhash())["chainwork"]
+        self.restart_node(0, extra_args=["-staletips=headers", f"-minimumchainwork={chainwork}"])
+        block, fork_point_hash = self.stale_block(fork_depth=2)
+        self.check_inbound_staletip(self.staletip_msg(block, fork_point_hash), block, outcome="ignore", expected_log="ignoring low-work staletip")
+        self.restart_node(0, extra_args=["-staletips=headers"])
 
     def test_startup_seeding_only_when_enabled(self):
         self.log.info("Test stale-tip tracker is seeded at startup only when enabled")
