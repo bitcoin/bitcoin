@@ -216,14 +216,18 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
-    // Cached value for whether the transaction spends any inputs known to the wallet
-    mutable std::optional<bool> m_cached_from_me{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
-    // memory only
+    // Memory only
+    //
+    // Represents the incoming and outgoing amounts of this specific tx.
+    // Not the final wallet balance. Only importing a descriptor could make values change.
     enum AmountType { DEBIT, CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
+    // Cached value for whether the transaction spends any inputs known to the wallet
+    mutable std::optional<bool> m_cached_from_me{std::nullopt};
+
     /**
      * This flag is true if all m_amounts caches are empty. This is particularly
      * useful in places where MarkDirty is conditionally called and the
