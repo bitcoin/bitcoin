@@ -8,13 +8,21 @@ set -o errexit -o pipefail
 # shellcheck source=setup.sh
 source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 
-# Set environment variables to point the NATIVE toolchain to the right
-# includes/libs
-NATIVE_GCC="$(store_path gcc-toolchain)"
-
-# Set native toolchain
-build_CC="${NATIVE_GCC}/bin/gcc -isystem ${NATIVE_GCC}/include"
-build_CXX="${NATIVE_GCC}/bin/g++ -isystem ${NATIVE_GCC}/include/c++ -isystem ${NATIVE_GCC}/include"
+# Set toolchain
+CLANG_TOOLCHAIN="$(store_path clang-toolchain)"
+LIBCXX="$(store_path libcxx)"
+build_CC="${CLANG_TOOLCHAIN}/bin/clang \
+    -isystem ${CLANG_TOOLCHAIN}/include"
+build_CXX="${CLANG_TOOLCHAIN}/bin/clang++ \
+    -stdlib=libc++ \
+    -isystem ${LIBCXX}/include/c++/v1 \
+    -isystem ${CLANG_TOOLCHAIN}/include"
+build_LDFLAGS="-fuse-ld=lld -rtlib=compiler-rt -unwindlib=libunwind -L${LIBCXX}/lib -Wl,-rpath,${LIBCXX}/lib"
+build_AR="${CLANG_TOOLCHAIN}/bin/llvm-ar"
+build_RANLIB="${CLANG_TOOLCHAIN}/bin/llvm-ranlib"
+build_OBJDUMP="${CLANG_TOOLCHAIN}/bin/llvm-objdump"
+build_NM="${CLANG_TOOLCHAIN}/bin/llvm-nm"
+build_STRIP="${CLANG_TOOLCHAIN}/bin/llvm-strip"
 
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
@@ -24,6 +32,12 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
                                    ${build_CC+build_CC="$build_CC"} \
                                    ${build_CXX+build_CXX="$build_CXX"} \
+                                   ${build_LDFLAGS+build_LDFLAGS="$build_LDFLAGS"} \
+                                   ${build_AR+build_AR="$build_AR"} \
+                                   ${build_RANLIB+build_RANLIB="$build_RANLIB"} \
+                                   ${build_OBJDUMP+build_OBJDUMP="$build_OBJDUMP"} \
+                                   ${build_NM+build_NM="$build_NM"} \
+                                   ${build_STRIP+build_STRIP="$build_STRIP"} \
                                    NO_QT=1
 
 mkdir -p "$DISTSRC"

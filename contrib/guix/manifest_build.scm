@@ -264,7 +264,6 @@ chain for " target " development."))
         tar
         gzip
         ;; Build tools
-        gcc-toolchain-14
         cmake-minimal
         gnu-make
         ;; Scripting
@@ -273,12 +272,14 @@ chain for " target " development."))
         git-minimal)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list (make-mingw-pthreads-cross-toolchain target)))
+           (list gcc-toolchain-14
+                 (make-mingw-pthreads-cross-toolchain target)))
           ((string-contains target "-linux-")
-           (list (list gcc-toolchain-14 "static")
+           (list gcc-toolchain-14
+                 (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19
-                 lld-19
-                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)))
+                 libcxx ;; 19.1.7
+                 lld-19))
           (else '())))))
