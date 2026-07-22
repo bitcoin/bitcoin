@@ -12,6 +12,8 @@
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <kernel/types.h>
+#include <node/block_template_manager.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
 #include <node/mining_types.h>
@@ -36,6 +38,7 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
 #include <versionbits.h>
 
 #include <boost/test/unit_test.hpp>
@@ -55,12 +58,13 @@ using interfaces::BlockTemplate;
 using interfaces::Mining;
 using node::BlockAssembler;
 using node::BlockCreateOptions;
+using node::TemplateSnapshot;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
-    void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst);
+    void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight);
+    void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst);
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
@@ -70,6 +74,7 @@ struct MinerTestingSetup : public TestingSetup {
     }
     CTxMemPool& MakeMempool()
     {
+        ResetBlockTemplateManager();
         // Delete the previous mempool to ensure with valgrind that the old
         // pointer is not accessed, when the new one should be accessed
         // instead.
@@ -82,6 +87,7 @@ struct MinerTestingSetup : public TestingSetup {
         opts.limits.cluster_size_vbytes = 1'200'000;
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
+        CreateBlockTemplateManager();
         return *m_node.mempool;
     }
     std::unique_ptr<Mining> MakeMining()
@@ -137,8 +143,10 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
         .coinbase_output_script = scriptPubKey,
     };
 
-    LOCK(tx_mempool.cs);
-    BOOST_CHECK(tx_mempool.size() == 0);
+    {
+        LOCK(tx_mempool.cs);
+        BOOST_CHECK(tx_mempool.size() == 0);
+    }
 
     // Block template should only have a coinbase when there's nothing in the mempool
     std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options, /*cooldown=*/false);
@@ -206,6 +214,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(raw_txs[0]);
     BOOST_CHECK(raw_txs[0]->GetHash() == hashParentTx);
     BOOST_CHECK(!raw_txs[1]);
+    // Drain pending MempoolUpdated signals before creating a new template
+    // so stale signals don't pollute the new entry's fee tracking.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
@@ -214,25 +225,32 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
 
-    // Test the inclusion of package feerates in the block template and ensure they are sequential.
-    // Can't use the Mining interface because it needs access to m_package_feerates.
-    const auto block_package_feerates = BlockAssembler{
+    // Test template chunks are recorded with correct feerates, weights, sigops, and wtxids.
+    // Can't use the Mining interface because it needs access to m_template_chunks.
+    const auto template_chunks = BlockAssembler{
         m_node.chainman->ActiveChainstate(),
         &tx_mempool,
-        MergeMiningOptions(options, m_node.mining_args),
-    }.CreateNewBlock()->m_package_feerates;
-    BOOST_CHECK(block_package_feerates.size() == 2);
+        MergeMiningOptions(options,
+                           Assert(m_node.block_template_manager)->GetInitBlockCreateOptions())}
+                                     .CreateNewBlock()
+                                     ->m_template_chunks;
+    BOOST_CHECK_EQUAL(template_chunks.size(), 2U);
 
-    // parent_tx and high_fee_tx are added to the block as a package.
-    const auto combined_txs_fee = parent_tx.GetFee() + high_fee_tx.GetFee();
-    const auto combined_txs_size = parent_tx.GetTxSize() + high_fee_tx.GetTxSize();
-    FeeFrac package_feefrac{combined_txs_fee, combined_txs_size};
-    // The package should be added first.
-    BOOST_CHECK(block_package_feerates[0] == package_feefrac);
+    // parent_tx and high_fee_tx are added to the block as a chunk.
+    BOOST_CHECK_EQUAL(template_chunks[0].feerate.fee, parent_tx.GetFee() + high_fee_tx.GetFee());
+    BOOST_CHECK_EQUAL(template_chunks[0].feerate.size, int32_t(parent_tx.GetTxWeight() + high_fee_tx.GetTxWeight()));
+    BOOST_CHECK_EQUAL(template_chunks[0].weight, parent_tx.GetTxWeight() + high_fee_tx.GetTxWeight());
+    BOOST_CHECK_EQUAL(template_chunks[0].sigops_cost, parent_tx.GetSigOpCost() + high_fee_tx.GetSigOpCost());
+    std::vector<Wtxid> expected_wtxids_0{parent_tx.GetSharedTx()->GetWitnessHash(), high_fee_tx.GetSharedTx()->GetWitnessHash()};
+    BOOST_CHECK(template_chunks[0].chunk_wtxids == expected_wtxids_0);
 
     // The medium_fee_tx should be added next.
-    FeeFrac medium_tx_feefrac{medium_fee_tx.GetFee(), medium_fee_tx.GetTxSize()};
-    BOOST_CHECK(block_package_feerates[1] == medium_tx_feefrac);
+    BOOST_CHECK_EQUAL(template_chunks[1].feerate.fee, medium_fee_tx.GetFee());
+    BOOST_CHECK_EQUAL(template_chunks[1].feerate.size, int32_t(medium_fee_tx.GetTxWeight()));
+    BOOST_CHECK_EQUAL(template_chunks[1].weight, medium_fee_tx.GetTxWeight());
+    BOOST_CHECK_EQUAL(template_chunks[1].sigops_cost, medium_fee_tx.GetSigOpCost());
+    std::vector<Wtxid> expected_wtxids_1{medium_fee_tx.GetSharedTx()->GetWitnessHash()};
+    BOOST_CHECK(template_chunks[1].chunk_wtxids == expected_wtxids_1);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
@@ -250,7 +268,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     Txid hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
 
-    // waitNext() should return nullptr because there is no better template
+    // A package below the block min tx fee should not make the template stale.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
@@ -264,12 +283,13 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // Test that packages above the min relay fee do get included, even if one
     // of the transactions is below the min relay fee
     // Remove the low fee transaction and replace with a higher fee transaction
-    tx_mempool.removeRecursive(CTransaction(tx), MemPoolRemovalReason::REPLACED);
+    WITH_LOCK(tx_mempool.cs, tx_mempool.removeRecursive(CTransaction(tx), MemPoolRemovalReason::REPLACED));
     tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
 
     // waitNext() should return if fees for the new template are at least 1 sat up
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     block_template = block_template->waitNext({.fee_threshold = 1});
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
@@ -530,7 +550,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
 
     {
         CTxMemPool& tx_mempool{MakeMempool()};
-        LOCK(tx_mempool.cs);
+        LOCK2(cs_main, tx_mempool.cs);
 
         // subsidy changing
         int nHeight = m_node.chainman->ActiveChain().Height();
@@ -586,7 +606,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     }
 
     CTxMemPool& tx_mempool{MakeMempool()};
-    LOCK(tx_mempool.cs);
+    LOCK2(cs_main, tx_mempool.cs);
 
     // non-final txs in mempool
     clock.set(std::chrono::seconds{m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1});
@@ -915,17 +935,248 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
     }
 
-    LOCK(cs_main);
-
     TestBasicMining(scriptPubKey, txFirst, baseheight);
-
-    m_node.chainman->ActiveChain().Tip()->nHeight--;
+    {
+        LOCK(cs_main);
+        m_node.chainman->ActiveChain().Tip()->nHeight--;
+        SetMockTime(0);
+    }
 
     TestPackageSelection(scriptPubKey, txFirst);
 
-    m_node.chainman->ActiveChain().Tip()->nHeight--;
-
+    {
+        LOCK(cs_main);
+        m_node.chainman->ActiveChain().Tip()->nHeight--;
+        SetMockTime(0);
+    }
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager)
+{
+    auto& block_template_manager = *Assert(m_node.block_template_manager);
+    BlockCreateOptions options;
+    options.use_mempool = false;
+    auto block_template = block_template_manager.CreateNewTemplate(options);
+    BOOST_REQUIRE(block_template);
+    const CBlock& block{block_template->block};
+    // Without the mempool the template holds only the coinbase, and the per-tx
+    // fee/sigops vectors exclude it.
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+    BOOST_CHECK(block.vtx[0]->IsCoinBase());
+    BOOST_CHECK(block_template->vTxFees.empty());
+    BOOST_CHECK(block_template->vTxSigOpsCost.empty());
+    uint64_t template_id_1{0};
+    uint64_t template_id_2{0};
+    auto tracked_template_1 = block_template_manager.CreateNewTemplate(options, &template_id_1);
+    auto tracked_template_2 = block_template_manager.CreateNewTemplate(options, &template_id_2);
+    BOOST_CHECK(tracked_template_1 != nullptr);
+    BOOST_CHECK(tracked_template_2 != nullptr);
+    BOOST_CHECK(template_id_1 != 0);
+    BOOST_CHECK(template_id_2 != 0);
+    BOOST_CHECK(template_id_1 != template_id_2);
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(template_id_1));
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(template_id_2));
+    block_template_manager.StopTrackingFeeInflow(template_id_1);
+    BOOST_CHECK(!block_template_manager.IsTrackingFeeInflow(template_id_1));
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(template_id_2));
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager_staleness)
+{
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    auto& block_template_manager = *Assert(m_node.block_template_manager);
+    BlockCreateOptions default_options;
+    default_options.test_block_validity = false;
+    // BlockConnected prunes a tracked entry built on the old tip
+    auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+    uint64_t id_1{0};
+    auto block_template = block_template_manager.CreateNewTemplate(default_options, &id_1);
+    auto block = std::make_shared<const CBlock>(block_template->block);
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(id_1));
+    m_node.validation_signals->BlockConnected(kernel::ChainstateRole{}, block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(!block_template_manager.IsTrackingFeeInflow(id_1));
+    // BlockConnected with historical role does not prune tracked entries
+    uint64_t id_2{0};
+    auto historical_template = block_template_manager.CreateNewTemplate(default_options, &id_2);
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(id_2));
+    m_node.validation_signals->BlockConnected(kernel::ChainstateRole{.historical = true}, block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(id_2));
+    // BlockDisconnected preserves tracked entries built on a different tip
+    m_node.validation_signals->BlockDisconnected(block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(id_2));
+    block_template_manager.SanityCheck();
+    // Fee inflow detection via IsStale / CreateNewTemplate
+    const CAmount threshold = 1000;
+    uint64_t cached_id{0};
+    auto cached_template = block_template_manager.CreateNewTemplate(default_options, &cached_id);
+    // Not stale initially
+    BOOST_CHECK(!block_template_manager.IsStale(default_options, cached_id, threshold));
+    // Not stale when no tracked entry exists (0 is never assigned to a template)
+    const uint64_t bogus_id{0};
+    BOOST_CHECK(!block_template_manager.IsStale(default_options, bogus_id, threshold));
+    // Template has no mempool txs, so any new chunk is fee inflow
+    BOOST_CHECK(cached_template->m_template_chunks.empty());
+    MemPoolChunksUpdate update;
+    update.new_chunks.push_back({FeePerWeight{threshold + 1, 100}, {}, 0, std::nullopt});
+    update.reason = MemPoolRemovalReason::REPLACED;
+    m_node.validation_signals->MempoolUpdated(std::move(update));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    // Stale: fee inflow above threshold
+    BOOST_CHECK(block_template_manager.IsStale(default_options, cached_id, threshold));
+    // Creating a tracked template adds a new entry
+    uint64_t new_id{0};
+    auto new_template = block_template_manager.CreateNewTemplate(default_options, &new_id);
+    BOOST_REQUIRE(new_template);
+    BOOST_CHECK(!block_template_manager.IsStale(default_options, new_id, threshold));
+    MemPoolChunksUpdate addition_update;
+    addition_update.new_chunks.push_back({FeePerWeight{threshold + 1, 100}, {}, 0, std::nullopt});
+    addition_update.reason = MemPoolRemovalReason::REPLACED;
+    m_node.validation_signals->MempoolUpdated(std::move(addition_update));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(block_template_manager.IsStale(default_options, new_id, threshold));
+    // Removing the tracked chunk reverses the fee inflow.
+    MemPoolChunksUpdate removal_update;
+    removal_update.old_chunks.push_back({FeePerWeight{threshold + 1, 100}, {}, 0, std::nullopt});
+    removal_update.reason = MemPoolRemovalReason::EXPIRY;
+    m_node.validation_signals->MempoolUpdated(std::move(removal_update));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(!block_template_manager.IsStale(default_options, new_id, threshold));
+    block_template_manager.StopTrackingFeeInflow(new_id);
+    BOOST_CHECK(!block_template_manager.IsTrackingFeeInflow(new_id));
+    // BlockConnected prunes the matching tracked entry, so IsStale returns false
+    m_node.validation_signals->BlockConnected(kernel::ChainstateRole{}, block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(!block_template_manager.IsStale(default_options, new_id, threshold));
+    block_template_manager.SanityCheck();
+    // All created templates remain independently tracked.
+    for (size_t i = 0; i < 11; ++i) {
+        uint64_t tracked_id{0};
+        auto tracked_template = block_template_manager.CreateNewTemplate(default_options, &tracked_id);
+        BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(tracked_id));
+    }
+    uint64_t same_time_id_1{0};
+    uint64_t same_time_id_2{0};
+    auto same_time_template_1 = block_template_manager.CreateNewTemplate(default_options, &same_time_id_1);
+    auto same_time_template_2 = block_template_manager.CreateNewTemplate(default_options, &same_time_id_2);
+    BOOST_CHECK(same_time_id_1 != 0);
+    BOOST_CHECK(same_time_id_2 != 0);
+    BOOST_CHECK(same_time_id_1 != same_time_id_2);
+    block_template_manager.StopTrackingFeeInflow(same_time_id_1);
+    BOOST_CHECK(!block_template_manager.IsTrackingFeeInflow(same_time_id_1));
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(same_time_id_2));
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager_template_snapshot)
+{
+    TemplateSnapshot snapshot;
+    const uint256 hash{1};
+    snapshot.AddChunk(hash, {FeePerWeight{1000, 100}, 400, 1});
+    snapshot.AddChunk(hash, {FeePerWeight{2500, 100}, 600, 2});
+    BOOST_CHECK_EQUAL(snapshot.template_chunks.size(), 1U);
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 1U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 2500);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 600);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
+    snapshot.RemoveChunk(hash);
+    BOOST_CHECK(snapshot.template_chunks.empty());
+    BOOST_CHECK(snapshot.chunks_by_feerate.empty());
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 0);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 0);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 0);
+    snapshot.SanityCheck();
+    snapshot.max_weight = 1'000;
+    const uint256 low_fee_hash{1};
+    const uint256 high_fee_hash{2};
+    const uint256 equal_fee_hash{3};
+    snapshot.AddChunk(low_fee_hash, {FeePerWeight{1'000, 100}, 600, 1});
+    snapshot.AddChunk(high_fee_hash, {FeePerWeight{3'000, 100}, 150, 1});
+    snapshot.AddChunk(equal_fee_hash, {FeePerWeight{3'000, 100}, 150, 1});
+    BOOST_CHECK(snapshot.TrimToFit(/*needed_weight=*/500, /*needed_sigops=*/0, FeePerWeight{2'000, 100}));
+    BOOST_CHECK(!snapshot.template_chunks.contains(low_fee_hash));
+    BOOST_CHECK(snapshot.template_chunks.contains(high_fee_hash));
+    BOOST_CHECK(snapshot.template_chunks.contains(equal_fee_hash));
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 6'000);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 300);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
+    BOOST_CHECK(!snapshot.TrimToFit(/*needed_weight=*/700, /*needed_sigops=*/0, FeePerWeight{3'000, 100}));
+    BOOST_CHECK_EQUAL(snapshot.template_chunks.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.chunks_by_feerate.size(), 2U);
+    BOOST_CHECK_EQUAL(snapshot.total_fees, 6'000);
+    BOOST_CHECK_EQUAL(snapshot.total_weight, 300);
+    BOOST_CHECK_EQUAL(snapshot.total_sigops, 2);
+    snapshot.SanityCheck();
+    TemplateSnapshot sigops_limited_snapshot;
+    sigops_limited_snapshot.max_weight = 1'000;
+    sigops_limited_snapshot.reserved_sigops = MAX_BLOCK_SIGOPS_COST;
+    sigops_limited_snapshot.total_sigops = sigops_limited_snapshot.reserved_sigops;
+    BOOST_CHECK(!sigops_limited_snapshot.TrimToFit(/*needed_weight=*/0, /*needed_sigops=*/1, FeePerWeight{4'000, 100}));
+    sigops_limited_snapshot.SanityCheck();
+}
+
+// A duplicate mempool add callback for a chunk already tracked in the
+// snapshot must be idempotent. In a near-full snapshot, re-counting the
+// chunk's weight would otherwise evict a lower-feerate tracked chunk.
+BOOST_AUTO_TEST_CASE(block_template_manager_duplicate_add)
+{
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    auto& block_template_manager = *Assert(m_node.block_template_manager);
+    // Two equal-weight chunks that differ only in the spent output index, so
+    // their wtxid-derived chunk hashes differ.
+    auto make_chunk_tx = [](uint32_t n) {
+        CMutableTransaction mtx;
+        mtx.vin.resize(1);
+        mtx.vin[0].prevout.n = n;
+        mtx.vout.resize(50);
+        for (auto& out : mtx.vout) {
+            out.nValue = 1000;
+            out.scriptPubKey = CScript() << OP_1;
+        }
+        return MakeTransactionRef(mtx);
+    };
+    const auto tx_high = make_chunk_tx(0);
+    const auto tx_low = make_chunk_tx(1);
+    const int32_t chunk_weight = GetTransactionWeight(*tx_high);
+    // Size the block so both chunks fit but a third copy would not: a
+    // double-counted add would have to evict the lower-feerate chunk.
+    BlockCreateOptions options;
+    options.test_block_validity = false;
+    options.block_reserved_weight = DEFAULT_BLOCK_RESERVED_WEIGHT;
+    options.block_max_weight = static_cast<uint64_t>(*options.block_reserved_weight + 2 * chunk_weight + chunk_weight / 2);
+    uint64_t template_id{0};
+    auto block_template = block_template_manager.CreateNewTemplate(options, &template_id);
+    BOOST_REQUIRE(block_template->m_template_chunks.empty());
+    // Track a high-feerate and a lower-feerate chunk via the add path.
+    const CAmount high_fee = 5000;
+    const CAmount low_fee = 2000;
+    MemPoolChunksUpdate add;
+    add.new_chunks.push_back({FeePerWeight{high_fee, chunk_weight}, {tx_high}, 0, std::nullopt});
+    add.new_chunks.push_back({FeePerWeight{low_fee, chunk_weight}, {tx_low}, 0, std::nullopt});
+    add.reason = MemPoolRemovalReason::REPLACED;
+    m_node.validation_signals->MempoolUpdated(std::move(add));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    block_template_manager.SanityCheck();
+    // Combined inflow exceeds the threshold; either chunk alone does not.
+    const CAmount threshold = high_fee + 1;
+    BOOST_CHECK(block_template_manager.IsStale(options, template_id, threshold));
+    // Re-deliver the high-feerate chunk (a stale queued add). With the guard this
+    // is a no-op; without it, the double-counted weight would evict the
+    // lower-feerate chunk and drop the inflow below the threshold.
+    MemPoolChunksUpdate duplicate;
+    duplicate.new_chunks.push_back({FeePerWeight{high_fee, chunk_weight}, {tx_high}, 0, std::nullopt});
+    duplicate.reason = MemPoolRemovalReason::REPLACED;
+    m_node.validation_signals->MempoolUpdated(std::move(duplicate));
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    block_template_manager.SanityCheck();
+    // Still stale: the lower-feerate chunk was not evicted.
+    BOOST_CHECK(block_template_manager.IsStale(options, template_id, threshold));
+    BOOST_CHECK(block_template_manager.IsTrackingFeeInflow(template_id));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

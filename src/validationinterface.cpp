@@ -13,6 +13,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <util/check.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/task_runner.h>
 
@@ -237,6 +238,29 @@ void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<Rem
                           txs_removed_for_block.size());
     auto event = [txs_removed_for_block, nBlockHeight, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
+    };
+    ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
+}
+
+void ValidationSignals::MempoolUpdated(MemPoolChunksUpdate mempool_chunks)
+{
+    auto compute_hash = [](MemPoolChunk& chunk) {
+        std::vector<Wtxid> wtxids;
+        wtxids.reserve(chunk.m_transactions.size());
+        for (const auto& tx : chunk.m_transactions)
+            wtxids.emplace_back(tx->GetWitnessHash());
+        chunk.m_chunk_hash = GetHashFromWitnesses(wtxids);
+    };
+    for (auto& chunk : mempool_chunks.old_chunks)
+        compute_hash(chunk);
+    for (auto& chunk : mempool_chunks.new_chunks)
+        compute_hash(chunk);
+    auto log_msg = LOG_MSG("%s: old chunks=%s new chunks=%s reason for removal=%s", __func__,
+                           mempool_chunks.old_chunks.size(),
+                           mempool_chunks.new_chunks.size(),
+                           RemovalReasonToString(mempool_chunks.reason));
+    auto event = [mempool_chunks, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolUpdated(mempool_chunks); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }

@@ -13,12 +13,10 @@
 #include <threadsafety.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
-#include <util/time.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 
 class CBlockIndex;
@@ -29,15 +27,14 @@ class ChainstateManager;
 namespace Consensus {
 struct Params;
 } // namespace Consensus
-class uint256;
-namespace interfaces {
-struct BlockRef;
-} // namespace interfaces
-
-using interfaces::BlockRef;
-
 namespace node {
-class KernelNotifications;
+
+struct TemplateChunk {
+    FeePerWeight feerate;
+    std::vector<Wtxid> chunk_wtxids;
+    int64_t weight; //!< Actual serialized weight (may differ from feerate.size which is sigops-adjusted).
+    int64_t sigops_cost;
+};
 
 struct CBlockTemplate
 {
@@ -46,14 +43,19 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     // Sigops per transaction, not including coinbase transaction (unlike CBlock::vtx).
     std::vector<int64_t> vTxSigOpsCost;
-    /* A vector of package fee rates, ordered by the sequence in which
-     * packages are selected for inclusion in the block template.*/
-    std::vector<FeePerVSize> m_package_feerates;
+    /* Chunks included in the block template, ordered by selection sequence.
+     * Each entry records the chunk feerate, unadjusted weight, sigops cost,
+     * and the wtxids of the transactions in the chunk. */
+    std::vector<TemplateChunk> m_template_chunks;
     /*
      * Template containing all coinbase transaction fields that are set by our
      * miner code.
      */
     CoinbaseTx m_coinbase_tx;
+    //! Height of the block template.
+    int m_height{0};
+    //! Median-time-past cutoff used for transaction finality checks.
+    int64_t m_lock_time_cutoff{0};
 };
 
 /** Generate a new block, without valid proof-of-work */
@@ -129,54 +131,6 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
 /* Compute the block's merkle root, insert or replace the coinbase transaction and the merkle root into the block */
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
-
-//! Submit a block and capture the validation state via the BlockChecked callback.
-//! Returns whether ProcessNewBlock accepted the block.
-bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, bool* new_block, std::string& reason, std::string& debug);
-
-/* Interrupt a blocking call. */
-void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait);
-/**
- * Return a new block template when fees rise to a certain threshold or after a
- * new tip; return nullopt if timeout is reached.
- */
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
-                                                      KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& wait_options,
-                                                      const BlockCreateOptions& create_options,
-                                                      bool& interrupt_wait);
-
-/* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
-std::optional<BlockRef> GetTip(ChainstateManager& chainman);
-
-/* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
- * Returns the current tip, or nullopt if the node is shutting down or interrupt()
- * is called.
- */
-std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt);
-
-/**
- * Wait while the best known header extends the current chain tip AND at least
- * one block is being added to the tip every 3 seconds. If the tip is
- * sufficiently far behind, allow up to 20 seconds for the next tip update.
- *
- * It’s not safe to keep waiting, because a malicious miner could announce a
- * header and delay revealing the block, causing all other miners using this
- * software to stall. At the same time, we need to balance between the default
- * waiting time being brief, but not ending the cooldown prematurely when a
- * random block is slow to download (or process).
- *
- * The cooldown only applies to createNewBlock(), which is typically called
- * once per connected client. Subsequent templates are provided by waitNext().
- *
- * @param last_tip tip at the start of the cooldown window.
- * @param interrupt_mining set to true to interrupt the cooldown.
- *
- * @returns false if interrupted.
- */
-bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt_mining);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

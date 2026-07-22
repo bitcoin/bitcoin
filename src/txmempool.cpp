@@ -54,6 +54,24 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
     return true;
 }
 
+static std::vector<MemPoolChunk> MakeMemPoolChunks(const std::vector<TxGraph::Chunk>& chunks)
+{
+    std::vector<MemPoolChunk> result;
+    result.reserve(chunks.size());
+    for (const auto& chunk : chunks) {
+        std::vector<CTransactionRef> txs;
+        int64_t sigops{0};
+        txs.reserve(chunk.refs.size());
+        for (const auto& ref : chunk.refs) {
+            const auto& entry = static_cast<const CTxMemPoolEntry&>(*ref);
+            txs.emplace_back(entry.GetSharedTx());
+            sigops += entry.GetSigOpCost();
+        }
+        result.push_back({chunk.feerate, std::move(txs), sigops, std::nullopt});
+    }
+    return result;
+}
+
 std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const CTxMemPoolEntry& entry) const
 {
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
@@ -88,34 +106,62 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CT
     return ret;
 }
 
+
+void CTxMemPool::addDependenciesFromBlock(const std::vector<Txid>& vHashesToUpdate)
+{
+    AssertLockHeld(cs);
+    // Iterate in reverse so that when processing a transaction, all its
+    // in-mempool descendants have already been processed.
+    for (const Txid& hash : vHashesToUpdate | std::views::reverse) {
+        txiter it = mapTx.find(hash);
+        if (it == mapTx.end()) continue;
+        auto iter = mapNextTx.lower_bound(COutPoint(hash, 0));
+        for (; iter != mapNextTx.end() && iter->first->hash == hash; ++iter) {
+            assert(iter->second != mapTx.end());
+            m_txgraph->AddDependency(/*parent=*/*it, /*child=*/*iter->second);
+        }
+    }
+}
+
 void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate)
 {
     AssertLockHeld(cs);
-
-    // Iterate in reverse, so that whenever we are looking at a transaction
-    // we are sure that all in-mempool descendants have already been processed.
-    for (const Txid& hash : vHashesToUpdate | std::views::reverse) {
-        // calculate children from mapNextTx
-        txiter it = mapTx.find(hash);
-        if (it == mapTx.end()) {
-            continue;
+    Assume(!m_have_changeset);
+    // Add parent->child dependencies discovered between re-added transactions
+    // and existing mempool transactions on a staging graph, then check whether
+    // any clusters now exceed the size limit.
+    auto changeSet = GetChangeSet();
+    addDependenciesFromBlock(vHashesToUpdate);
+    auto txs_to_remove = m_txgraph->Trim();
+    setEntries iters;
+    if (!txs_to_remove.empty()) {
+        // Clusters exceed the size limit after adding new dependencies.
+        // Abort the current staging graph (which contains the oversized clusters)
+        // and start fresh; an oversized graph cannot produce a valid fee rate diagram.
+        // Then evict the transactions discovered by Trim() and re-add dependencies.
+        // With the oversized txs gone, GetMainStagingDiagrams produces a correct
+        // before/after diff: old = pre-dependency clusters (main),
+        // new = post-dependency clusters without evicted txs (staging).
+        changeSet.reset();
+        changeSet = GetChangeSet();
+        for (auto txptr : txs_to_remove) {
+            m_txgraph->RemoveTransaction(*txptr);
+            iters.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*txptr)));
         }
-        auto iter = mapNextTx.lower_bound(COutPoint(hash, 0));
-        {
-            for (; iter != mapNextTx.end() && iter->first->hash == hash; ++iter) {
-                txiter childIter = iter->second;
-                assert(childIter != mapTx.end());
-                // Add dependencies that are discovered between transactions in the
-                // block and transactions that were in the mempool to txgraph.
-                m_txgraph->AddDependency(/*parent=*/*it, /*child=*/*childIter);
-            }
-        }
+        // It is safe to add dependencies here without first evicting iters from
+        // mapTx/mapNextTx: AddDependency is a no-op when either parent or child
+        // is absent from the graph, so evicted txs are simply skipped.
+        addDependenciesFromBlock(vHashesToUpdate);
     }
-
-    auto txs_to_remove = m_txgraph->Trim(); // Enforce cluster size limits.
-    for (auto txptr : txs_to_remove) {
-        const CTxMemPoolEntry& entry = *(static_cast<const CTxMemPoolEntry*>(txptr));
-        removeUnchecked(mapTx.iterator_to(entry), MemPoolRemovalReason::SIZELIMIT);
+    changeSet->SnapshotDiagrams();
+    auto& chunks = changeSet->GetFeeRateDiagramChunks();
+    auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+    m_txgraph->CommitStaging();
+    if (m_opts.signals) m_opts.signals->MempoolUpdated(
+        MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::SIZELIMIT});
+    RemoveStaged(iters, MemPoolRemovalReason::SIZELIMIT);
+    if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
+        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after reorg.");
     }
 }
 
@@ -206,8 +252,13 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 void CTxMemPool::Apply(ChangeSet* changeset)
 {
     AssertLockHeld(cs);
+    if (changeset->m_fee_rate_diagrams.first.empty() && changeset->m_fee_rate_diagrams.second.empty()) {
+        changeset->SnapshotDiagrams();
+    }
+    auto& chunks = changeset->GetFeeRateDiagramChunks();
+    auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
     m_txgraph->CommitStaging();
-
+    if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::REPLACED});
     RemoveStaged(changeset->m_to_remove, MemPoolRemovalReason::REPLACED);
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
@@ -325,9 +376,15 @@ void CTxMemPool::removeRecursive(CTxMemPool::txiter to_remove, MemPoolRemovalRea
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
     auto descendants = m_txgraph->GetDescendants(*to_remove, TxGraph::Level::MAIN);
+    auto changeSet = GetChangeSet();
     for (auto tx: descendants) {
-        removeUnchecked(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*tx)), reason);
+        changeSet->StageRemoval(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*tx)));
     }
+    changeSet->SnapshotDiagrams();
+    auto& chunks = changeSet->GetFeeRateDiagramChunks();
+    auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+    if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, reason});
+    RemoveStaged(changeSet->GetRemovals(), reason);
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
@@ -350,10 +407,15 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             ++iter;
         }
         auto all_removes = m_txgraph->GetDescendantsUnion(to_remove, TxGraph::Level::MAIN);
+        auto changeSet = GetChangeSet();
         for (auto ref : all_removes) {
-            auto tx = mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref));
-            removeUnchecked(tx, reason);
+            changeSet->StageRemoval(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
         }
+        changeSet->SnapshotDiagrams();
+        auto& chunks = changeSet->GetFeeRateDiagramChunks();
+        auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+        if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, reason});
+        RemoveStaged(changeSet->GetRemovals(), reason);
     }
 }
 
@@ -373,10 +435,16 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
 
     auto all_to_remove = m_txgraph->GetDescendantsUnion(to_remove, TxGraph::Level::MAIN);
 
+    auto changeSet = GetChangeSet();
     for (auto ref : all_to_remove) {
-        auto it = mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref));
-        removeUnchecked(it, MemPoolRemovalReason::REORG);
+        changeSet->StageRemoval(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
     }
+    changeSet->SnapshotDiagrams();
+    auto& chunks = changeSet->GetFeeRateDiagramChunks();
+    auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+    if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::REORG});
+    RemoveStaged(changeSet->GetRemovals(), MemPoolRemovalReason::REORG);
+
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
@@ -410,12 +478,22 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     if (mapTx.size() || mapNextTx.size() || mapDeltas.size()) {
         txs_removed_for_block.reserve(vtx.size());
-        for (const auto& tx : vtx) {
-            txiter it = mapTx.find(tx->GetHash());
-            if (it != mapTx.end()) {
-                txs_removed_for_block.emplace_back(*it);
-                removeUnchecked(it, MemPoolRemovalReason::BLOCK);
+        {
+            auto changeSet = GetChangeSet();
+            for (const auto& tx : vtx) {
+                txiter it = mapTx.find(tx->GetHash());
+                if (it != mapTx.end()) {
+                    txs_removed_for_block.emplace_back(*it);
+                    changeSet->StageRemoval(it);
+                }
             }
+            changeSet->SnapshotDiagrams();
+            auto& chunks = changeSet->GetFeeRateDiagramChunks();
+            auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+            if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::BLOCK, nBlockHeight});
+            RemoveStaged(changeSet->GetRemovals(), MemPoolRemovalReason::BLOCK);
+        }
+        for (const auto& tx : vtx) {
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());
         }
@@ -799,7 +877,8 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(const setEntries& stage, MemPoolRemovalReason reason)
+{
     AssertLockHeld(cs);
     for (txiter it : stage) {
         removeUnchecked(it, reason);
@@ -831,7 +910,15 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     for (txiter removeit : toremove) {
         CalculateDescendants(removeit, stage);
     }
-    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
+    auto changeSet = GetChangeSet();
+    for (auto it : stage) {
+        changeSet->StageRemoval(it);
+    }
+    changeSet->SnapshotDiagrams();
+    auto& chunks = changeSet->GetFeeRateDiagramChunks();
+    auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+    if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::EXPIRY});
+    RemoveStaged(changeSet->GetRemovals(), MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
 
@@ -897,13 +984,15 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
             }
         }
 
-        setEntries stage;
+        auto changeSet = GetChangeSet();
         for (auto ref : worst_chunk) {
-            stage.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
+            changeSet->StageRemoval(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
         }
-        for (auto e : stage) {
-            removeUnchecked(e, MemPoolRemovalReason::SIZELIMIT);
-        }
+        changeSet->SnapshotDiagrams();
+        auto& chunks = changeSet->GetFeeRateDiagramChunks();
+        auto diagrams = std::make_pair(MakeMemPoolChunks(chunks.first), MakeMemPoolChunks(chunks.second));
+        if (m_opts.signals) m_opts.signals->MempoolUpdated(MemPoolChunksUpdate{diagrams.first, diagrams.second, MemPoolRemovalReason::SIZELIMIT});
+        RemoveStaged(changeSet->GetRemovals(), MemPoolRemovalReason::SIZELIMIT);
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
@@ -1003,12 +1092,31 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<Txi
 util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::ChangeSet::CalculateChunksForRBF()
 {
     LOCK(m_pool->cs);
-
     if (!CheckMemPoolPolicyLimits()) {
         return util::Error{Untranslated("cluster size limit exceeded")};
     }
+    return SnapshotDiagrams();
+}
 
-    return m_pool->m_txgraph->GetMainStagingDiagrams();
+std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> CTxMemPool::ChangeSet::SnapshotDiagrams()
+{
+    LOCK(m_pool->cs);
+    std::vector<FeeFrac> old_diagram, new_diagram;
+    m_fee_rate_diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
+    old_diagram.reserve(m_fee_rate_diagrams.first.size());
+    new_diagram.reserve(m_fee_rate_diagrams.second.size());
+    for (auto& chunk : m_fee_rate_diagrams.first) {
+        old_diagram.emplace_back(chunk.feerate);
+    }
+    for (auto& chunk : m_fee_rate_diagrams.second) {
+        new_diagram.emplace_back(chunk.feerate);
+    }
+    return std::make_pair(old_diagram, new_diagram);
+}
+
+const std::pair<std::vector<TxGraph::Chunk>, std::vector<TxGraph::Chunk>>& CTxMemPool::ChangeSet::GetFeeRateDiagramChunks() const
+{
+    return m_fee_rate_diagrams;
 }
 
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
