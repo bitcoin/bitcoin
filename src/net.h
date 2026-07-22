@@ -1108,7 +1108,7 @@ public:
         bool bind_on_any;
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
-        std::vector<std::string> m_added_nodes;
+        std::vector<AddedNodeParams> m_added_nodes;
         bool m_i2p_accept_incoming;
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
@@ -1141,12 +1141,8 @@ public:
         vWhitelistedRangeOutgoing = connOptions.vWhitelistedRangeOutgoing;
         {
             LOCK(m_added_nodes_mutex);
-            // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
-            // peer doesn't support it or immediately disconnects us for another reason.
-            const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
-            for (const std::string& added_node : connOptions.m_added_nodes) {
-                m_added_node_params.push_back({added_node, use_v2transport});
-            }
+            m_added_node_params.insert(
+                m_added_node_params.end(), connOptions.m_added_nodes.begin(), connOptions.m_added_nodes.end());
         }
         m_onion_binds = connOptions.onion_binds;
         whitelist_forcerelay = connOptions.whitelist_forcerelay;

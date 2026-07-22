@@ -2144,6 +2144,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.m_msgproc = node.peerman.get();
     connOptions.nSendBufferMaxSize = 1000 * args.GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000 * args.GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
+    // peer doesn't support it or immediately disconnects us for another reason.
+    const bool use_v2transport{static_cast<bool>(g_local_services & NODE_P2P_V2)};
     for (const std::string& added_node : args.GetArgs("-addnode")) {
         // Such a value is not a valid connection target, but would otherwise be
         // treated as one and retried indefinitely.
@@ -2151,7 +2154,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogWarning("Ignoring empty -addnode value");
             continue;
         }
-        connOptions.m_added_nodes.push_back(added_node);
+        connOptions.m_added_nodes.push_back({added_node, use_v2transport});
     }
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
