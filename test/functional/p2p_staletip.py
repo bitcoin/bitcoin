@@ -8,11 +8,14 @@
 from test_framework.blocktools import create_block
 from test_framework.messages import (
     CBlockHeader,
+    CInv,
     MSG_BLOCK,
     MSG_TYPE_MASK,
     StaleTipCompressedHeader,
     msg_feature,
     msg_headers,
+    msg_inv,
+    msg_sendheaders,
     msg_staletip,
 )
 from test_framework.p2p import P2PInterface
@@ -48,6 +51,7 @@ class StaleTipPeer(P2PInterface):
         self.feature_data = feature_data
         self.features = []
         self.getdata = []
+        self.invs = []
 
     def on_version(self, message):
         if self.send_feature and message.nVersion >= FEATURE_VERSION:
@@ -60,11 +64,21 @@ class StaleTipPeer(P2PInterface):
     def on_getdata(self, message):
         self.getdata.extend(message.inv)
 
+    def on_inv(self, message):
+        self.invs.extend(message.inv)
+        super().on_inv(message)
+
     def wait_for_getdata_hash(self, block_hash):
         self.wait_until(lambda: any(
             inv.hash == block_hash and inv.type & MSG_TYPE_MASK == MSG_BLOCK
             for inv in self.getdata
         ))
+
+    def block_inv_count(self, block_hash):
+        return sum(inv.type == MSG_BLOCK and inv.hash == block_hash for inv in self.invs)
+
+    def wait_for_block_inv(self, block_hash):
+        self.wait_until(lambda: any(inv.type == MSG_BLOCK and inv.hash == block_hash for inv in self.invs))
 
 
 class P2PStaleTipTest(BitcoinTestFramework):
@@ -83,6 +97,7 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.test_tracked_tip_listed_with_known_descendants()
         self.test_inbound_staletip_handling()
         self.test_higher_work_staletip_requests_block()
+        self.test_active_tip_announced_to_source_peer()
         self.test_startup_seeding_only_when_enabled()
 
     def tracked_staletips(self):
@@ -402,6 +417,37 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.assert_staletip_tracked(equal_work_block)
         equal_work_peer.sync_with_ping()
         assert_equal(self.block_getdata_hashes(equal_work_peer), [])
+        self.nodes[0].disconnect_p2ps()
+
+    def test_active_tip_announced_to_source_peer(self):
+        self.log.info("Test active tip is announced to staletip peers that announced it first, but not to other peers")
+        node = self.nodes[0]
+        peer = self.connect_peer()
+        plain_peer = self.connect_peer(send_feature=False)
+        # Negotiated peers that did not announce the block: one that takes
+        # block announcements as inv, and one that takes them as headers.
+        inv_peer = self.connect_peer()
+        headers_peer = self.connect_peer()
+        headers_peer.send_and_ping(msg_inv([CInv(MSG_BLOCK, int(node.getbestblockhash(), 16))]))
+        headers_peer.send_and_ping(msg_sendheaders())
+
+        block, _ = self.active_block()
+        peer.send_and_ping(msg_inv([CInv(MSG_BLOCK, block.hash_int)]))
+        plain_peer.send_and_ping(msg_inv([CInv(MSG_BLOCK, block.hash_int)]))
+        assert_equal(node.submitblock(block.serialize().hex()), None)
+        peer.wait_for_block_inv(block.hash_int)
+        inv_peer.wait_for_block_inv(block.hash_int)
+        headers_peer.wait_for_header(block.hash_hex)
+        # The node has processed the new tip, so a second ping round trip
+        # flushes any announcement queued for plain_peer.
+        plain_peer.sync_with_ping()
+        plain_peer.sync_with_ping()
+        assert_equal(plain_peer.block_inv_count(block.hash_int), 0)
+        for announced_peer in [peer, inv_peer, headers_peer]:
+            announced_peer.sync_with_ping()
+        assert_equal(peer.block_inv_count(block.hash_int), 1)
+        assert_equal(inv_peer.block_inv_count(block.hash_int), 1)
+        assert_equal(headers_peer.block_inv_count(block.hash_int), 0)
         self.nodes[0].disconnect_p2ps()
 
     def test_startup_seeding_only_when_enabled(self):

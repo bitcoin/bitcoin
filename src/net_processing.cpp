@@ -6485,6 +6485,21 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     }
                 }
             }
+            // BIP 332 peers infer which fork points we know from the blocks
+            // we announce, so announce our active tip by inv even if they
+            // already have its header, for example because they announced it
+            // to us.
+            if (NegotiatedStaleTip(peer) && !peer.m_blocks_for_headers_relay.empty()) {
+                const CBlockIndex* tip{m_chainman.ActiveChain().Tip()};
+                const uint256& tip_hash{tip->GetBlockHash()};
+                if (peer.m_blocks_for_headers_relay.back() == tip_hash &&
+                    state.pindexBestHeaderSent != tip &&
+                    std::ranges::find(peer.m_blocks_for_inv_relay, tip_hash) == peer.m_blocks_for_inv_relay.end()) {
+                    peer.m_blocks_for_inv_relay.push_back(tip_hash);
+                    LogDebug(BCLog::NET, "%s: queueing active tip inv peer=%d hash=%s", __func__,
+                        node.GetId(), tip_hash.ToString());
+                }
+            }
             peer.m_blocks_for_headers_relay.clear();
         }
 
