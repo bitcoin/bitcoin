@@ -180,10 +180,16 @@ public:
     bool LoadBody(LineReader& reader);
     /// @}
 
-    void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
-    void WriteReply(HTTPStatusCode status, std::string_view reply_body_view)
+    /**
+     * Queue an HTTP response for this request's client.
+     * @param[in] force_close If true, send Connection: close and mark the client
+     *                        non-keep-alive so the connection is closed after the
+     *                        response is flushed (or after a lingering close drain).
+     */
+    void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {}, bool force_close = false);
+    void WriteReply(HTTPStatusCode status, std::string_view reply_body_view, bool force_close = false)
     {
-        WriteReply(status, std::as_bytes(std::span{reply_body_view}));
+        WriteReply(status, std::as_bytes(std::span{reply_body_view}), force_close);
     }
 
     // These methods reimplement the API from http_libevent::HTTPRequest
@@ -460,6 +466,9 @@ public:
      * In lieu of an intermediate transport class like p2p uses,
      * we copy data from the socket buffer to the client object
      * and attempt to read HTTP requests from here.
+     *
+     * Only the HTTP I/O thread may access this buffer. Workers receive
+     * already-parsed HTTPRequest objects.
      */
     std::vector<std::byte> m_recv_buffer{};
 
@@ -478,6 +487,7 @@ public:
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
     /// @{
+    //! Lock order: always acquire m_send_mutex before m_sock_mutex (never the reverse).
     Mutex m_send_mutex;
     std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
     /// @}
@@ -496,6 +506,7 @@ public:
      * Mutex that serializes the Send() and Recv() calls on `m_sock`. Reading
      * from the client occurs in the I/O thread but writing back to a client
      * may occur in a worker thread.
+     * Must be acquired after m_send_mutex when both are needed.
      */
     Mutex m_sock_mutex;
 
@@ -509,7 +520,8 @@ public:
     std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
     //! Initialized to true while server waits for first request from client.
-    //! Set to false after data is written to m_send_buffer and then that buffer is flushed to client.
+    //! Set to false after m_send_buffer is flushed, unless a lingering close is in progress
+    //! (then kept true so DisconnectAllClients() waits for the drain).
     //! Reset to true when we receive new request data from client.
     //! Checked during DisconnectClients() and set by read/write operations
     //! called in either the HTTPServer I/O loop or by a worker thread during an "optimistic send".
@@ -527,6 +539,25 @@ public:
     //! Might be set in a worker thread or in the I/O thread. When set to `true` we disconnect,
     //! possibly overriding all other disconnect flags.
     std::atomic_bool m_disconnect{false};
+
+    /**
+     * Linger after a parse error so unread request bytes can be drained.
+     *
+     * Set by the I/O thread and read by the send path, which may run on a worker.
+     */
+    std::atomic_bool m_lingering_close{false};
+
+    /**
+     * True after the error reply is flushed and the send side is half-closed.
+     * Set by the send path and read by the I/O thread.
+     */
+    std::atomic_bool m_lingering_half_closed{false};
+
+    /**
+     * Fallback deadline while waiting for peer EOF after the half-close.
+     * Set by the send path once the send side is half-closed.
+     */
+    std::atomic<SteadyMilliseconds> m_lingering_close_deadline{SteadyMilliseconds::max()};
 
     //! Timestamp of last send or receive activity, used for -rpcservertimeout.
     //! Due to optimistic sends it may be updated in either a worker thread or in the
