@@ -66,6 +66,12 @@ int main(int argc, char* argv[])
     setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
 #endif
 
+#ifdef Q_OS_MACOS
+    // QMacStyle assumes a Cocoa platform window, which the minimal platform
+    // does not provide. In particular, painting a QGroupBox can make Qt call
+    // addSubview: on an invalid native object (QTBUG-49686).
+    setenv("QT_STYLE_OVERRIDE", "fusion", 0 /* overwrite */);
+#endif
 
     QCoreApplication::setOrganizationName(QAPP_ORG_NAME);
     QCoreApplication::setApplicationName(QAPP_APP_NAME_DEFAULT "-test");
