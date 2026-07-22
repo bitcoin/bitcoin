@@ -111,10 +111,15 @@ class IPCMiningTest(BitcoinTestFramework):
         coinbase_tx.nLockTime = coinbase_res.lockTime
         return coinbase_tx
 
-    async def build_candidate_block(self, template, ctx):
-        """Build a complete block from a remote BlockTemplate."""
+    async def build_candidate_block(self, template, ctx, extra_nonce=b""):
+        """Build a complete block from a remote BlockTemplate.
+
+        The returned block replaces the dummy coinbase from CreateNewBlock()
+        with one constructed from getCoinbaseTx().
+        """
         block = await mining_get_block(template, ctx)
-        coinbase = await self.build_coinbase_test(template, ctx, self.miniwallet)
+        coinbase = await self.build_coinbase_test(
+            template, ctx, self.miniwallet, extra_nonce=extra_nonce)
         # Reduce payout for balance comparison simplicity.
         coinbase.vout[0].nValue = COIN
         block.vtx[0] = coinbase
@@ -532,8 +537,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(check.reason, "bad-version(0x00000000)")
                 assert_equal(check.debug, "rejected nVersion=0x00000000 block")
                 self.log.debug("submitSolution should reject a bad-version block")
-                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
-                assert_equal(submitted, False)
+                result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+                assert_equal(result.result, False)
+                assert_equal(result.reason, "bad-version(0x00000000)")
+                assert_equal(result.debug, "rejected nVersion=0x00000000 block")
                 self.log.debug("submitBlock should reject a bad-version block")
                 await self.assert_submit_block(
                     mining2,
@@ -566,8 +573,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 missing_witness_block.hashMerkleRoot = missing_witness_block.calc_merkle_root()
                 missing_witness_block.solve()
                 self.log.debug("submitSolution should reject a coinbase missing witness")
-                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())).result
-                assert_equal(submitted, False)
+                result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
+                assert_equal(result.result, False)
+                assert_equal(result.reason, "bad-witness-nonce-size")
+                assert_equal(result.debug, "CheckWitnessMalleation : invalid witness reserved value size")
 
                 self.log.debug("Even a rejected submitSolution() mutates the template's block")
                 # Can be used by clients to download and inspect the (rejected)
@@ -586,8 +595,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 )
 
                 self.log.debug("Submit again, with the witness")
-                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
-                assert_equal(submitted, True)
+                result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+                assert_equal(result.result, True)
+                assert_equal(result.reason, "")
+                assert_equal(result.debug, "")
 
                 self.log.debug("Submit a valid complete block through the disconnected node")
                 await self.assert_submit_block(mining2, ctx2, block, result=True)
@@ -616,7 +627,7 @@ class IPCMiningTest(BitcoinTestFramework):
             self.log.debug("submitBlock on the same node should fail with duplicate after submitSolution succeeds")
             await self.assert_submit_block(mining, ctx, block, result=False, reason="duplicate")
 
-            self.log.debug("submitSolution should still return True for a duplicate after submitBlock succeeds")
+            self.log.debug("submitSolution should return duplicate after submitBlock succeeds")
             async with destroying((await mining2.createNewBlock(ctx2, self.default_block_create_options)).result, ctx2) as template2:
                 duplicate_block = await self.build_candidate_block(template2, ctx2)
                 duplicate_coinbase = duplicate_block.vtx[0]
@@ -624,9 +635,55 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("Submit a valid complete block before duplicate submitSolution")
                 await self.assert_submit_block(mining2, ctx2, duplicate_block, result=True)
                 self.nodes[2].waitforblockheight(current_block_height + 2)
-                self.log.debug("submitSolution should accept the duplicate block")
-                submitted = (await template2.submitSolution(ctx2, duplicate_block.nVersion, duplicate_block.nTime, duplicate_block.nNonce, duplicate_coinbase.serialize())).result
-                assert_equal(submitted, True)
+                self.log.debug("submitSolution should reject the duplicate block")
+                result = await template2.submitSolution(ctx2, duplicate_block.nVersion, duplicate_block.nTime, duplicate_block.nNonce, duplicate_coinbase.serialize())
+                assert_equal(result.result, False)
+                assert_equal(result.reason, "duplicate")
+                assert_equal(result.debug, "")
+            self.sync_all()
+
+            self.log.debug(
+                "submitSolution and submitBlock should report inconclusive for valid stale blocks")
+            async with AsyncExitStack() as stack:
+                active_template = await mining_create_block_template(
+                    mining2, stack, ctx2, self.default_block_create_options)
+                solution_template = await mining_create_block_template(
+                    mining2, stack, ctx2, self.default_block_create_options)
+                submit_block_template = await mining_create_block_template(
+                    mining2, stack, ctx2, self.default_block_create_options)
+                assert active_template is not None
+                assert solution_template is not None
+                assert submit_block_template is not None
+
+                active_block = await self.build_candidate_block(
+                    active_template, ctx2, extra_nonce=b"\x01")
+                solution_block = await self.build_candidate_block(
+                    solution_template, ctx2, extra_nonce=b"\x02")
+                submit_block = await self.build_candidate_block(
+                    submit_block_template, ctx2, extra_nonce=b"\x03")
+                active_block.solve()
+                solution_block.solve()
+                submit_block.solve()
+
+                # All three templates share a parent. The first block becomes
+                # active, so the remaining valid blocks are accepted as stale.
+                await self.assert_submit_block(
+                    mining2, ctx2, active_block, result=True)
+
+                solution_coinbase = solution_block.vtx[0]
+                result = await solution_template.submitSolution(
+                    ctx2,
+                    solution_block.nVersion,
+                    solution_block.nTime,
+                    solution_block.nNonce,
+                    solution_coinbase.serialize(),
+                )
+                assert_equal(result.result, False)
+                assert_equal(result.reason, "inconclusive")
+                assert_equal(result.debug, "")
+
+                await self.assert_submit_block(
+                    mining2, ctx2, submit_block, result=False, reason="inconclusive")
             self.sync_all()
 
             self.log.debug("Submit the same invalid block twice")
@@ -740,8 +797,10 @@ class IPCMiningTest(BitcoinTestFramework):
                     block.vtx[0] = coinbase
                     block.hashMerkleRoot = block.calc_merkle_root()
                     block.solve()
-                    submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
-                    assert_equal(submitted, True)
+                    result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+                    assert_equal(result.result, True)
+                    assert_equal(result.reason, "")
+                    assert_equal(result.debug, "")
                     assert_equal(node.getblockcount(), height)
 
         asyncio.run(capnp.run(async_routine()))
