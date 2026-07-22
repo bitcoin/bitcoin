@@ -438,6 +438,19 @@ class CCoinsViewCache : public CCoinsViewBacked
 private:
     const bool m_deterministic;
 
+    //! Force a reallocation of the cache map. This is required when downsizing
+    //! the cache because the map's allocator may be hanging onto a lot of
+    //! memory despite having called .clear().
+    //!
+    //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
+    void ReallocateCache();
+
+    /**
+     * @note this is marked const, but may actually append to `cacheCoins`, increasing
+     * memory usage.
+     */
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
@@ -555,13 +568,6 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
-    //! Force a reallocation of the cache map. This is required when downsizing
-    //! the cache because the map's allocator may be hanging onto a lot of
-    //! memory despite having called .clear().
-    //!
-    //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
-    void ReallocateCache();
-
     //! Run an internal sanity check on the cache data structure. */
     void SanityCheck() const;
 
@@ -583,13 +589,6 @@ public:
 
     //! Create a scoped guard that will call `Reset()` on this cache when it goes out of scope.
     [[nodiscard]] ResetGuard CreateResetGuard() noexcept { return ResetGuard{*this}; }
-
-private:
-    /**
-     * @note this is marked const, but may actually append to `cacheCoins`, increasing
-     * memory usage.
-     */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 };
 
 /**
