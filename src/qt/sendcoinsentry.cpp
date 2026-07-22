@@ -238,3 +238,5 @@ bool SendCoinsEntry::updateLabel(const QString &address)
 
     return false;
 }
+
+#include <moc_sendcoinsentry.cpp>
