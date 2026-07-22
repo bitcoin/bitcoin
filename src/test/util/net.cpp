@@ -176,6 +176,8 @@ ssize_t ZeroSock::Recv(void* buf, size_t len, int flags) const
     return len;
 }
 
+int ZeroSock::ShutdownSend() const { return 0; }
+
 int ZeroSock::Connect(const sockaddr*, socklen_t) const { return 0; }
 
 int ZeroSock::Bind(const sockaddr*, socklen_t) const { return 0; }
