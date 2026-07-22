@@ -209,7 +209,7 @@ chain for " target " development."))
 (define-public glibc-2.31
   (let ((commit "28eb5caf895ced5d895cb02757e109004a2d33e5"))
   (package
-    (inherit glibc) ;; 2.39
+    (inherit glibc) ;; 2.41
     (version "2.31")
     (source (origin
               (method git-fetch)
