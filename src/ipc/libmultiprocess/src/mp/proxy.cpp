@@ -40,7 +40,37 @@
 
 namespace mp {
 
-thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial-threadlocal)
+ThreadContext& GThreadContext()
+{
+#ifdef __MINGW32__
+    // On MinGW only, deliberately leak a heap object instead of using a plain
+    // thread_local variable, because MinGW-w64's emutls implementation can
+    // free the storage backing thread_local variables before C++ destructors
+    // registered by __cxa_thread_atexit run at thread exit (pthread key
+    // destructor order is unspecified), so a nontrivial thread_local
+    // destructor can run on freed memory and corrupt the heap. Observed as
+    // intermittent STATUS_HEAP_CORRUPTION (0xC0000374) crashes in msvcrt
+    // builds. See the full explanation, gdb evidence, and mingw-w64 bug
+    // tracker links (bugs 527, 727, 445, 859, msys2 issue 2519) in the
+    // GThreadContext() declaration comment in proxy-io.h. The leaked object
+    // is held by a trivially-destructible thread_local pointer so no
+    // destructor is registered at thread exit at all.
+    //
+    // The leak is confined to MinGW because the number of IPC threads a
+    // process can create is unbounded, so leaking per-thread state on
+    // platforms with working thread_local destruction would be a real
+    // resource leak. TODO: a better long-term fix could explicitly destroy
+    // the context at the end of mp-managed thread routines (the
+    // EventLoop::loop thread, the EventLoop async thread, and
+    // ProxyServer<ThreadMap>::makeThread threads), so that even on MinGW the
+    // leak would only apply to externally-created client threads.
+    thread_local ThreadContext* context{new ThreadContext};
+    return *context;
+#else
+    thread_local ThreadContext context; // NOLINT(bitcoin-nontrivial-threadlocal)
+    return context;
+#endif
+}
 
 Stream MakeStream(EventLoop&loop, SocketId socket)
 {
@@ -321,9 +351,9 @@ EventLoop::~EventLoop()
 
 void EventLoop::loop()
 {
-    assert(!g_thread_context.loop_thread);
-    g_thread_context.loop_thread = true;
-    KJ_DEFER(g_thread_context.loop_thread = false);
+    assert(!GThreadContext().loop_thread);
+    GThreadContext().loop_thread = true;
+    KJ_DEFER(GThreadContext().loop_thread = false);
 
     {
         const Lock lock(m_mutex);
@@ -517,11 +547,11 @@ kj::Promise<void> ProxyServer<ThreadMap>::makePool(MakePoolContext context)
         const std::string thread_name = "pool/" + std::to_string(i);
         std::promise<ThreadContext*> thread_context;
         std::thread thread([&loop, &thread_context, thread_name]() {
-            g_thread_context.thread_name = ThreadName(loop.m_exe_name) + " (" + thread_name + ")";
-            g_thread_context.waiter = std::make_unique<Waiter>();
-            Lock lock(g_thread_context.waiter->m_mutex);
-            thread_context.set_value(&g_thread_context);
-            g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
+            GThreadContext().thread_name = ThreadName(loop.m_exe_name) + " (" + thread_name + ")";
+            GThreadContext().waiter = std::make_unique<Waiter>();
+            Lock lock(GThreadContext().waiter->m_mutex);
+            thread_context.set_value(&GThreadContext());
+            GThreadContext().waiter->wait(lock, [] { return !GThreadContext().waiter; });
         });
         auto thread_server = kj::heap<ProxyServer<Thread>>(m_connection, *thread_context.get_future().get(), std::move(thread));
         m_connection.m_thread_pool.push_back({m_connection.m_threads.add(kj::mv(thread_server))});
@@ -536,14 +566,14 @@ kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
     const std::string from = context.getParams().getName();
     std::promise<ThreadContext*> thread_context;
     std::thread thread([&loop, &thread_context, from]() {
-        g_thread_context.thread_name = ThreadName(loop.m_exe_name) + " (from " + from + ")";
-        g_thread_context.waiter = std::make_unique<Waiter>();
-        Lock lock(g_thread_context.waiter->m_mutex);
-        thread_context.set_value(&g_thread_context);
+        GThreadContext().thread_name = ThreadName(loop.m_exe_name) + " (from " + from + ")";
+        GThreadContext().waiter = std::make_unique<Waiter>();
+        Lock lock(GThreadContext().waiter->m_mutex);
+        thread_context.set_value(&GThreadContext());
         if (loop.testing_hook_makethread_created) loop.testing_hook_makethread_created();
         // Wait for shutdown signal from ProxyServer<Thread> destructor (signal
         // is just waiter getting set to null.)
-        g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
+        GThreadContext().waiter->wait(lock, [] { return !GThreadContext().waiter; });
     });
     auto thread_server = kj::heap<ProxyServer<Thread>>(m_connection, *thread_context.get_future().get(), std::move(thread));
     auto thread_client = m_connection.m_threads.add(kj::mv(thread_server));
@@ -555,7 +585,7 @@ std::atomic<int> server_reqs{0};
 
 std::string LongThreadName(const char* exe_name)
 {
-    return g_thread_context.thread_name.empty() ? ThreadName(exe_name) : g_thread_context.thread_name;
+    return GThreadContext().thread_name.empty() ? ThreadName(exe_name) : GThreadContext().thread_name;
 }
 
 kj::StringPtr KJ_STRINGIFY(Log v)

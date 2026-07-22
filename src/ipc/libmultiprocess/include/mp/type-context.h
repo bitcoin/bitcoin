@@ -93,7 +93,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
         // call. In this case, the callbackThread value should point
         // to the same thread already in the map, so there is no
         // need to update the map.
-        auto& thread_context = g_thread_context;
+        auto& thread_context = GThreadContext();
         auto& request_threads = thread_context.request_threads;
         ConnThread request_thread;
         bool inserted{false};

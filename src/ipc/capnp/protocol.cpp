@@ -94,7 +94,7 @@ public:
     void serve(interfaces::Init& init, const std::function<mp::Stream()>& make_stream) override
     {
         assert(!m_loop);
-        mp::g_thread_context.thread_name = mp::ThreadName(m_exe_name);
+        mp::GThreadContext().thread_name = mp::ThreadName(m_exe_name);
         mp::LogOptions opts = {
             .log_fn = IpcLogFn,
             .log_level = GetRequestedIPCLogLevel()
