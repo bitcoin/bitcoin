@@ -96,7 +96,6 @@ Section -post SEC0001
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet).lnk" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 1
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (test signet).lnk" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "-signet" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 2
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet4).lnk" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "-testnet4" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 3
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
@@ -123,9 +122,6 @@ Section -post SEC0001
     DeleteRegValue HKCU "${REGKEY} (64-bit)" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY} (64-bit)\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY} (64-bit)"
-
-    # Lingering since 77b2923f87131a407f7d4193c54db22375130403
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Bitcoin Core (testnet, 64-bit).lnk"
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -157,7 +153,6 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet4).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (test signet).lnk"
     Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"

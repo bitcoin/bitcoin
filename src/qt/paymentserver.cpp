@@ -37,7 +37,7 @@ const QString BITCOIN_IPC_PREFIX("bitcoin:");
 
 //
 // Create a name that is unique for:
-//  testnet / non-testnet
+//  testnet4 / non-testnet4
 //  data directory
 //
 static QString ipcServerName()
@@ -46,7 +46,7 @@ static QString ipcServerName()
 
     // Append a simple hash of the datadir
     // Note that gArgs.GetDataDirNet() returns a different path
-    // for -testnet versus main net
+    // for -testnet4 versus main net
     QString ddir(GUIUtil::PathToQString(gArgs.GetDataDirNet()));
     name.append(QString::number(qHash(ddir)));
 

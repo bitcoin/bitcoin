@@ -177,7 +177,7 @@ SettingsValue GetSetting(const Settings& settings,
             !get_chain_type;
 
         // Weird behavior preserved for backwards compatibility: Negated
-        // -regtest and -testnet arguments which you would expect to override
+        // -regtest and -testnet4 arguments which you would expect to override
         // values set in the configuration file are currently accepted but
         // silently ignored. It would be better to apply these just like other
         // negated values, or at least warn they are ignored.

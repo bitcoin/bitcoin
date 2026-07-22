@@ -173,8 +173,6 @@ public:
     static std::unique_ptr<const CChainParams> SigNet() { const SigNetOptions opts{}; return SigNet(opts); }
     static std::unique_ptr<const CChainParams> Main(const MainNetOptions& options);
     static std::unique_ptr<const CChainParams> Main() { const MainNetOptions opts{}; return Main(opts); }
-    static std::unique_ptr<const CChainParams> TestNet(const TestNetOptions& options);
-    static std::unique_ptr<const CChainParams> TestNet() { const TestNetOptions opts{}; return TestNet(opts); }
     static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 

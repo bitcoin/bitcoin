@@ -138,11 +138,6 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         ReadMainNetArgs(args, opts);
         return CChainParams::Main(opts);
     }
-    case ChainType::TESTNET: {
-        auto opts = CChainParams::TestNetOptions{};
-        ReadTestNetArgs(args, opts);
-        return CChainParams::TestNet(opts);
-    }
     case ChainType::TESTNET4: {
         auto opts = CChainParams::TestNetOptions{};
         ReadTestNetArgs(args, opts);
