@@ -4,10 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
+import socket
+
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal, assert_raises_rpc_error, rpc_port
+
+DISCONNECT_TIMEOUT = 10
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -73,6 +77,50 @@ class RPCBindTest(BitcoinTestFramework):
         # connect to node through non-loopback interface
         node = self.nodes[0].create_new_rpc_connection()
         node.getnetworkinfo()
+        self.stop_nodes()
+
+    def run_allowip_disconnect_test(self, allow_ips, rpchost, rpcport):
+        '''
+        Start a node which does not allow rpchost, then check that a rejected
+        client is disconnected by the server rather than waiting for the client
+        to disconnect.
+        '''
+        self.log.info("Allow IP disconnect test for %s:%d" % (rpchost, rpcport))
+        node_args = \
+            ['-disablewallet', '-nolisten'] + \
+            ['-rpcallowip='+x for x in allow_ips] + \
+            ['-rpcbind='+addr for addr in ['127.0.0.1', "%s:%d" % (rpchost, rpcport)]] # Bind to localhost as well so start_nodes doesn't hang
+        self.nodes[0].rpchost = None
+        self.start_nodes([node_args])
+
+        # Ask for the connection to be kept alive (also the HTTP/1.1 default),
+        # which the server must override because we are not allowed to connect
+        # in the first place.
+        request = (
+            "POST / HTTP/1.1\r\n"
+            f"Host: {rpchost}:{rpcport}\r\n"
+            "Connection: keep-alive\r\n"
+            "Content-Length: 0\r\n"
+            "\r\n"
+        ).encode("ascii")
+
+        response = b""
+        with socket.create_connection((rpchost, rpcport), timeout=DISCONNECT_TIMEOUT) as sock:
+            sock.sendall(request)
+            # Read until the server sends EOF. A server that ignored its own
+            # rejection would keep the connection open and time out here.
+            try:
+                while True:
+                    data = sock.recv(1024)
+                    if not data:
+                        break
+                    response += data
+            except TimeoutError:
+                raise AssertionError(
+                    f"Server did not disconnect rejected client within {DISCONNECT_TIMEOUT}s, got: {response}")
+
+        assert response.startswith(b"HTTP/1.1 403 Forbidden"), response
+        assert b"Connection: close\r\n" in response, response
         self.stop_nodes()
 
     def run_invalid_allowip_test(self):
@@ -164,6 +212,10 @@ class RPCBindTest(BitcoinTestFramework):
 
         # Check that with invalid rpcallowip, we are denied
         self.run_allowip_test([self.non_loopback_ip], self.non_loopback_ip, self.defaultport)
+
+        # A rejected client is dropped, not just told "no".
+        self.run_allowip_disconnect_test(['1.1.1.1'], self.non_loopback_ip, self.defaultport)
+
         if self.options.usecli:
             self.log.info("Skip negative IP test with CLI, because the CLI can not throw the tested exception type")
             return
