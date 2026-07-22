@@ -430,10 +430,61 @@ jobs:
       - name: CI script
         run: ./ci/test_run_all.sh
 
+      - name: Prepare macOS arm64 tests
+        run: |
+          mkdir unit_test_data
+          ./ci/retry/retry curl --location --fail \
+            https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json \
+            -o unit_test_data/script_assets_test.json
+          tar -cf macos-arm64-binaries.tar \
+            -C "${BASE_BUILD_DIR}" \
+            bin/test_bitcoin \
+            bin/test_bitcoin-qt \
+            dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt \
+            -C "${GITHUB_WORKSPACE}" \
+            unit_test_data/script_assets_test.json
+
+      - name: Upload macOS arm64 binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64-binaries-${{ github.run_id }}
+          path: macos-arm64-binaries.tar
+          if-no-files-found: error
+
       - name: Save caches
         uses: ./.github/actions/cache/save
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+  macos-cross-arm64-native:
+    name: 'macOS arm64, run cross-built'
+    needs: [macos-cross-arm64, record-frozen-commit]
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-macos-26-arm64-6x' || 'macos-26' }}
+    timeout-minutes: 120
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Download macOS arm64 binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: macos-arm64-binaries-${{ github.run_id }}
+
+      - name: Unpack cross-built binaries
+        run: |
+          mkdir macos-arm64-binaries
+          tar -xf macos-arm64-binaries.tar -C macos-arm64-binaries
+          macos-arm64-binaries/dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt -version
+
+      - name: Run cross-built test_bitcoin
+        env:
+          DIR_UNIT_TEST_DATA: ${{ github.workspace }}/macos-arm64-binaries/unit_test_data
+        run: macos-arm64-binaries/bin/test_bitcoin -l test_suite
+
+      - name: Run cross-built test_bitcoin-qt
+        run: macos-arm64-binaries/bin/test_bitcoin-qt
 
   ci-matrix:
     name: ${{ matrix.name }}
