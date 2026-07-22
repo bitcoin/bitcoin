@@ -642,6 +642,46 @@ jobs:
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
+  macos-cross-arm64-native:
+    name: 'macOS arm64, run cross-built'
+    needs: [macos-cross-arm64, record-frozen-commit]
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-macos-26-arm64-6x' || 'macos-26' }}
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Restore macOS arm64 binaries
+        id: restore-binaries
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          path: macos-arm64-binaries.tar
+          key: macos-arm64-binaries-${{ github.run_id }}
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          enable-cross-os-archive: true
+          enable-cross-arch-archive: true
+
+      - name: Check cache hit
+        if: ${{ steps.restore-binaries.outputs.cache-hit != 'true' }}
+        run: |
+          echo '::error::Cross-built macOS arm64 binaries were not found in the cache'
+          false
+
+      - name: Unpack cross-built binaries
+        run: |
+          mkdir macos-arm64-binaries
+          tar -xf macos-arm64-binaries.tar -C macos-arm64-binaries
+          macos-arm64-binaries/dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt -version
+
+      - name: Run cross-built test_bitcoin
+        env:
+          DIR_UNIT_TEST_DATA: ${{ github.workspace }}/macos-arm64-binaries/unit_test_data
+        run: macos-arm64-binaries/bin/test_bitcoin -l test_suite
+
+      - name: Run cross-built test_bitcoin-qt
+        run: macos-arm64-binaries/bin/test_bitcoin-qt
+
   lint:
     name: 'lint'
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
