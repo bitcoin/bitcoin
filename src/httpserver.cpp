@@ -131,6 +131,10 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     if (!ClientAllowed(hreq->GetPeer())) {
         LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Client network is not allowed RPC access\n",
                  hreq->GetPeer().ToStringAddrPort());
+        // Drop a rejected peer instead of leaving it to decide whether to keep
+        // the connection open. The client is disconnected once the reply has
+        // been flushed
+        hreq->WriteHeader("Connection", "close");
         hreq->WriteReply(HTTP_FORBIDDEN);
         return;
     }
@@ -569,8 +573,14 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         res.m_headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
     }
 
-    auto connection_header{m_headers.FindFirst("Connection")};
-    if (connection_header && ToLower(connection_header.value()) == "close") {
+    // The connection is closed after this response if either side asked for it:
+    // the client via its request header, or serverside via WriteHeader()
+    // Relying on the client's choice alone would let a rejected client
+    // keep the connection open by asking for keep-alive.
+    const auto wants_close{[](const std::optional<std::string>& header) {
+        return header && ToLower(header.value()) == "close";
+    }};
+    if (wants_close(m_headers.FindFirst("Connection")) || wants_close(res.m_headers.FindFirst("Connection"))) {
         // Might not exist already but we need to replace it, not append to it
         res.m_headers.RemoveAll("Connection");
 
