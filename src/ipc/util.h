@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <functional>
 #include <kj/debug.h>
+#include <mp/proxy-io.h>
 #include <mp/util.h>
 #include <mp/version.h>
 #include <sys/socket.h>
@@ -51,6 +52,11 @@ inline SocketId StartSpawned(const std::string& connect_info)
     auto socket = ToIntegral<SocketId>(connect_info);
     if (!socket) throw std::invalid_argument(strprintf("Invalid socket descriptor '%s'", connect_info));
     return *socket;
+}
+
+inline ThreadContext& CurrentThread()
+{
+    return g_thread_context;
 }
 #endif
 } // namespace mp
