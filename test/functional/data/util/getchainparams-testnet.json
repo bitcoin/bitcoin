@@ -1,0 +1,26 @@
+{
+  "chain": "test",
+  "test_chain": true,
+  "genesis": "43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000",
+  "subsidy_halving_interval": 210000,
+  "pow": {
+    "limit": "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "target_spacing": 600,
+    "difficulty_retarget_interval": 2016,
+    "mindiff_blocks": "yes"
+  },
+  "net": {
+    "default_port": 18333,
+    "magic": "0b110907",
+    "dns_seeds": [
+      "testnet-seed.bitcoin.jonasschnelli.ch.",
+      "seed.tbtc.petertodd.net.",
+      "seed.testnet.bitcoin.sprovoost.nl.",
+      "testnet-seed.bluematt.me.",
+      "seed.testnet.achownodes.xyz."
+    ]
+  },
+  "addresses": {
+    "bech32_hrp": "tb"
+  }
+}

@@ -1,6 +1,6 @@
 Tools and Utilities
 -------------------
 
-- A new `bitcoin-util netmagic` command returns the network magic of the
-  selected chain.
+- A new `bitcoin-util getchainparams` command returns hardcoded details
+  about the selected chain.
 

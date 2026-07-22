@@ -31,52 +31,52 @@
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["netmagic"],
+    "args": ["getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-mainnet.hex",
-    "description": "netmagic returns mainnet magic bytes"
+    "output_cmp": "getchainparams-mainnet.json",
+    "description": "getchainparams returns mainnet info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["-regtest", "netmagic"],
+    "args": ["-regtest", "getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-regtest.hex",
-    "description": "netmagic returns regtest magic bytes"
+    "output_cmp": "getchainparams-regtest.json",
+    "description": "getchainparams returns regtest info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["-testnet", "netmagic"],
+    "args": ["-testnet", "getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-testnet.hex",
-    "description": "netmagic returns testnet magic bytes"
+    "output_cmp": "getchainparams-testnet.json",
+    "description": "getchainparams returns testnet info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["-testnet4", "netmagic"],
+    "args": ["-testnet4", "getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-testnet4.hex",
-    "description": "netmagic returns testnet4 magic bytes"
+    "output_cmp": "getchainparams-testnet4.json",
+    "description": "getchainparams returns testnet4 info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["-signet", "netmagic"],
+    "args": ["-signet", "getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-signet.hex",
-    "description": "netmagic returns signet magic bytes"
+    "output_cmp": "getchainparams-signet.json",
+    "description": "getchainparams returns signet info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["-signet", "-signetchallenge=512102f7561d208dd9ae99bf497273e16f389bdbd6c4742ddb8e6b216e64fa2928ad8f51ae", "netmagic"],
+    "args": ["-signet", "-signetchallenge=512102f7561d208dd9ae99bf497273e16f389bdbd6c4742ddb8e6b216e64fa2928ad8f51ae", "getchainparams"],
     "return_code": 0,
-    "output_cmp": "netmagic-signet-custom.hex",
-    "description": "netmagic returns custom signet magic bytes"
+    "output_cmp": "getchainparams-signet-custom.json",
+    "description": "getchainparams returns custom signet info"
   },
   {
     "exec": "./bitcoin-util",
-    "args": ["netmagic", "extra_arg"],
+    "args": ["getchainparams", "extra_arg"],
     "return_code": 1,
-    "error_txt": "netmagic does not take arguments",
-    "description": "netmagic rejects extra arguments"
+    "error_txt": "getchainparams does not take arguments",
+    "description": "getchainparams rejects extra arguments"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "nversion=1"],
