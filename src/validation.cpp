@@ -2252,8 +2252,61 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
 }
 
 namespace {
+
+static constexpr script_verify_flags CONSENSUS_SCRIPT_VERIFY_FLAGS{
+    SCRIPT_VERIFY_NONE
+    | SCRIPT_VERIFY_P2SH
+    | SCRIPT_VERIFY_WITNESS
+    | SCRIPT_VERIFY_TAPROOT
+    | SCRIPT_VERIFY_DERSIG
+    | SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY
+    | SCRIPT_VERIFY_CHECKSEQUENCEVERIFY
+    | SCRIPT_VERIFY_NULLDUMMY
+};
+static_assert((CONSENSUS_SCRIPT_VERIFY_FLAGS & STANDARD_SCRIPT_VERIFY_FLAGS) == CONSENSUS_SCRIPT_VERIFY_FLAGS, "standard flags must be a superset of consensus flags");
+static_assert(CONSENSUS_SCRIPT_VERIFY_FLAGS == MANDATORY_SCRIPT_VERIFY_FLAGS);
+
+/** Helper class to ensure at compile-time that all flags calculated by
+ *  GetBlockScriptFlags() and GetAllConsensusScriptFlags() only use
+ *  subsets of CONSENSUS_SCRIPT_VERIFY_FLAGS.
+ */
+class ConsensusScriptVerifyFlags
+{
+public:
+    using value_type = script_verify_flags::value_type;
+
+    consteval ConsensusScriptVerifyFlags(script_verify_flags flags)
+    {
+        if ((flags & CONSENSUS_SCRIPT_VERIFY_FLAGS) != flags) throw;
+        m_value = flags.as_int();
+    }
+
+    consteval ConsensusScriptVerifyFlags(script_verify_flag_name flag) : ConsensusScriptVerifyFlags{script_verify_flags{flag}} { }
+
+    ConsensusScriptVerifyFlags& operator&=(const script_verify_flags& flags)
+    {
+        Assume((m_value & flags.as_int()) == flags.as_int());
+        m_value &= flags.as_int();
+        return *this;
+    }
+
+    ConsensusScriptVerifyFlags& operator|=(const ConsensusScriptVerifyFlags& flags)
+    {
+        m_value |= flags.m_value;
+        return *this;
+    }
+
+    operator script_verify_flags() const
+    {
+        return script_verify_flags::from_int(m_value);
+    }
+
+private:
+    value_type m_value{0};
+};
+
 template<script_verify_flag_name VFN>
-script_verify_flags add_pending_flag(const Consensus::Params& params, auto dep)
+ConsensusScriptVerifyFlags add_pending_flag(const Consensus::Params& params, auto dep)
 {
     if (DeploymentEnabled(params, dep)) return VFN;
     return SCRIPT_VERIFY_NONE;
@@ -2262,13 +2315,12 @@ script_verify_flags add_pending_flag(const Consensus::Params& params, auto dep)
 
 script_verify_flags ChainstateManager::GetAllConsensusScriptFlags(const Consensus::Params& params)
 {
-    script_verify_flags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+    ConsensusScriptVerifyFlags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
     flags |= add_pending_flag<SCRIPT_VERIFY_DERSIG>(params, Consensus::DEPLOYMENT_DERSIG);
     flags |= add_pending_flag<SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY>(params, Consensus::DEPLOYMENT_CLTV);
     flags |= add_pending_flag<SCRIPT_VERIFY_CHECKSEQUENCEVERIFY>(params, Consensus::DEPLOYMENT_CSV);
     flags |= add_pending_flag<SCRIPT_VERIFY_NULLDUMMY>(params, Consensus::DEPLOYMENT_SEGWIT);
 
-    assert((flags & STANDARD_SCRIPT_VERIFY_FLAGS) == flags); // consensus flags should be a subset of STANDARD
     return flags;
 }
 
@@ -2284,10 +2336,10 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     // mainnet.
     // For simplicity, always leave P2SH+WITNESS+TAPROOT on except for the two
     // violating blocks.
-    script_verify_flags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+    ConsensusScriptVerifyFlags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
     const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
     if (it != consensusparams.script_flag_exceptions.end()) {
-        flags = it->second;
+        flags &= it->second;
     }
 
     // Enforce the DERSIG (BIP66) rule
