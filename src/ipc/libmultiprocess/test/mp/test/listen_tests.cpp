@@ -39,6 +39,19 @@
 #include <sys/un.h>
 #endif
 
+#ifdef WIN32
+// Call WSAStartup before any test runs. Winsock requires WSAStartup before any
+// socket call; the mp library calls it inside ConnectSocketToProcess(), but
+// listen_tests.cpp creates sockets directly and never reaches that code path.
+// WSACleanup is intentionally omitted: the OS reclaims Winsock state on exit.
+// TODO: check the return value of WSAStartup and fail fast if it returns an error.
+namespace {
+struct WsaInit {
+    WsaInit() { WSADATA data; WSAStartup(MAKEWORD(2, 2), &data); }
+} g_wsa_init;
+} // namespace
+#endif
+
 namespace mp {
 namespace test {
 namespace {
