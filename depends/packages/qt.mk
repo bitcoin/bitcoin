@@ -14,7 +14,6 @@ $(package)_patches_path := $(qt_details_patches_path)
 $(package)_patches := cocoa_compat.patch
 $(package)_patches += dont_hardcode_pwd.patch
 $(package)_patches += qtbase_avoid_qmain.patch
-$(package)_patches += qtbase_platformsupport.patch
 $(package)_patches += qtbase_plugins_cocoa.patch
 $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
@@ -181,7 +180,11 @@ $(package)_cmake_opts += --log-level=STATUS
 endif
 
 $(package)_cmake_opts += -DQT_USE_DEFAULT_CMAKE_OPTIMIZATION_FLAGS=ON
-$(package)_cmake_opts += -DCMAKE_C_FLAGS="$$($(package)_cppflags) $$($$($(package)_type)_CFLAGS) -ffile-prefix-map=$$($(package)_extract_dir)=/usr"
+# The bundled libpng 1.6.49 in Qt 6.8.4 introduced support for
+# the RISC-V Vector Extension (RVV). However, the resulting library
+# fails to link when cross-compiling for riscv64-linux-gnu.
+# Disable this feature for now.
+$(package)_cmake_opts += -DCMAKE_C_FLAGS="$$($(package)_cppflags) -DPNG_RISCV_RVV_OPT=0 $$($$($(package)_type)_CFLAGS) -ffile-prefix-map=$$($(package)_extract_dir)=/usr"
 $(package)_cmake_opts += -DCMAKE_C_FLAGS_RELEASE="$$($$($(package)_type)_release_CFLAGS)"
 $(package)_cmake_opts += -DCMAKE_C_FLAGS_DEBUG="$$($$($(package)_type)_debug_CFLAGS)"
 $(package)_cmake_opts += -DCMAKE_CXX_FLAGS="$$($(package)_cppflags) $$($$($(package)_type)_CXXFLAGS) -ffile-prefix-map=$$($(package)_extract_dir)=/usr"
@@ -277,7 +280,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/cocoa_compat.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_avoid_qmain.patch && \
-  patch -p1 -i $($(package)_patch_dir)/qtbase_platformsupport.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_cocoa.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \

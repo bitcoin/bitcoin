@@ -19,7 +19,7 @@ diff --git a/qtbase/src/corelib/text/qanystringview.cpp b/qtbase/src/corelib/tex
 index 7bf8a3fa1fd..3c993ff1da0 100644
 --- a/qtbase/src/corelib/text/qanystringview.cpp
 +++ b/qtbase/src/corelib/text/qanystringview.cpp
-@@ -243,6 +243,10 @@ QT_BEGIN_NAMESPACE
+@@ -355,6 +355,10 @@ QT_BEGIN_NAMESPACE
      \sa isNull(), isEmpty()
  */
  

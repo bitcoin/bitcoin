@@ -9,7 +9,7 @@ Skip building/installing unneeded tools:
 
 --- a/qtbase/cmake/QtBaseGlobalTargets.cmake
 +++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
-@@ -118,9 +118,6 @@ qt_generate_global_module_pri_file()
+@@ -128,9 +128,6 @@ qt_generate_global_module_pri_file()
  qt_generate_global_device_pri_file()
  qt_generate_qmake_and_qtpaths_wrapper_for_target()
  
@@ -19,7 +19,7 @@ Skip building/installing unneeded tools:
  
  qt_internal_add_platform_internal_target(GlobalConfigPrivate)
  target_link_libraries(GlobalConfigPrivate INTERFACE GlobalConfig)
-@@ -390,12 +387,3 @@ elseif(WASM)
+@@ -400,12 +397,3 @@ elseif(WASM)
      qt_install(PROGRAMS "${QT_BUILD_DIR}/${INSTALL_LIBEXECDIR}/qt-wasmtestrunner.py"
          DESTINATION "${INSTALL_LIBEXECDIR}")
  endif()
