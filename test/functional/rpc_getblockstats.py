@@ -7,13 +7,19 @@
 # Test getblockstats rpc call
 #
 
+from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.messages import COIN
+from test_framework.script import (
+    CScript,
+    OP_RETURN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    wallet_importprivkey,
 )
+from test_framework.wallet import MiniWallet
 import json
 import os
 
@@ -41,26 +47,29 @@ class GetblockstatsTest(BitcoinTestFramework):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
 
     def generate_test_data(self, filename):
+        node = self.nodes[0]
         mocktime = 1525107225
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].createwallet(wallet_name='test')
-        privkey = self.nodes[0].get_deterministic_priv_key().key
-        wallet_importprivkey(self.nodes[0], privkey, 0)
+        node.setmocktime(mocktime)
 
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        wallet = MiniWallet(node)
 
-        address = self.nodes[0].get_deterministic_priv_key().address
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.generate(self.nodes[0], 1)
+        self.generate(wallet, COINBASE_MATURITY + 1)
 
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
-        self.fee_rate=300
-        self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True, fee_rate=self.fee_rate)
-        # Send to OP_RETURN output to test its exclusion from statistics
-        self.nodes[0].send(outputs={"data": "21"}, fee_rate=self.fee_rate)
-        self.sync_all()
-        self.generate(self.nodes[0], 1)
+        external_script = address_to_scriptpubkey(node.get_deterministic_priv_key().address)
+        wallet.send_to(from_node=node, scriptPubKey=external_script, amount=10 * COIN)
+        self.generate(wallet, 1)
+
+        for amount in (10, 10, 1):
+            wallet.send_to(from_node=node, scriptPubKey=external_script, amount=amount * COIN)
+        # Send to OP_RETURN output to test its exclusion from statistics,
+        # using a higher fee for maxfee coverage.
+        wallet.send_to(
+            from_node=node,
+            scriptPubKey=CScript([OP_RETURN, b"\x21"]),
+            amount=0,
+            fee=31200,
+        )
+        self.generate(wallet, 1)
 
         self.expected_stats = self.get_stats()
 
@@ -178,9 +187,9 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.log.info('Test tip including OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
         assert_equal(tip_stats["utxo_increase"], 6)
-        assert_equal(tip_stats["utxo_size_inc"], 435)
+        assert_equal(tip_stats["utxo_size_inc"], 444)
         assert_equal(tip_stats["utxo_increase_actual"], 4)
-        assert_equal(tip_stats["utxo_size_inc_actual"], 296)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 305)
 
         self.log.info("Test when only header is known")
         block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
