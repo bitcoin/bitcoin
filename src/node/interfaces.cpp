@@ -90,6 +90,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
@@ -1047,6 +1048,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        return {.usage = block_template_manager().GetTemplateMemoryUsage()};
     }
 
     const NodeContext* context() override { return &m_node; }
