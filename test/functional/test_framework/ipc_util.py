@@ -45,7 +45,7 @@ async def destroying(obj, ctx):
         await obj.destroy(ctx)
 
 
-async def wait_and_do(wait_fn, do_fn):
+async def wait_and_do(wait_fn, do_fn, sleep_time=0.1):
     """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
     both tasks to complete."""
     wait_started = asyncio.Event()
@@ -58,7 +58,7 @@ async def wait_and_do(wait_fn, do_fn):
 
     async def do():
         await wait_started.wait()
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(sleep_time)
         # Let do_fn be either a callable or an awaitable object
         if inspect.isawaitable(do_fn):
             await do_fn
