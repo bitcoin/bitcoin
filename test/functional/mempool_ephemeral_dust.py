@@ -21,7 +21,7 @@ from test_framework.wallet import (
     MiniWallet,
 )
 from test_framework.blocktools import (
-    create_empty_fork
+    ForkGenerator
 )
 
 class EphemeralDustTest(BitcoinTestFramework):
@@ -66,12 +66,6 @@ class EphemeralDustTest(BitcoinTestFramework):
         )
 
         return dusty_tx, sweep_tx
-
-    def trigger_reorg(self, fork_blocks):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            self.nodes[0].submitblock(block.serialize().hex())
-        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def run_test(self):
 
@@ -332,13 +326,14 @@ class EphemeralDustTest(BitcoinTestFramework):
         # due to bypass_limits allowing 0-fee individually, and creation of single dust
 
         # Prep for fork with empty blocks
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen = ForkGenerator(self.nodes[0])
+        fork_gen.prepare_fork()
 
         dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
 
         self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"]], sync_fun=self.no_op)
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
         # Create a sweep that has dust of its own and leaves dusty_tx's dust unspent
@@ -347,18 +342,20 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx["hex"])
 
         # Prep for fork with empty blocks
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen.reset()
+        fork_gen.prepare_fork()
 
         # Mine the sweep then re-org, the sweep will make it back in due to lack of eph dust spend checks on reorg
         self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx["hex"]], sync_fun=self.no_op)
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]], sync=False)
 
         # Test that dusty tx being reorged back into mempool doesn't invalidate descendants
         # whether they spend dust or not
 
         # Mine the parent transaction only while preparing a fork
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen.reset()
+        fork_gen.prepare_fork()
         self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"]], sync_fun=self.no_op)
         utxo = self.wallet.get_utxo()
         # No in-mempool deps, use version=2 and chain off of it
@@ -371,7 +368,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         # Add ultimate parent back into mempool
         expected_pool = [dusty_tx["tx"]] + expected_pool
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         assert_mempool_contents(self, self.nodes[0], expected=expected_pool, sync=False)
 
         hex_to_mine = [tx.serialize().hex() for tx in expected_pool]
@@ -382,20 +379,22 @@ class EphemeralDustTest(BitcoinTestFramework):
         multi_dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3, num_dust_outputs=2)
 
         # Prep for fork with empty blocks
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen.reset()
+        fork_gen.prepare_fork()
 
         self.generateblock(self.nodes[0], self.wallet.get_address(), [multi_dusty_tx["hex"]], sync_fun=self.no_op)
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # With fee and one dust
         dusty_fee_tx, _ = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=1)
 
         # Prep for fork with empty blocks
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen.reset()
+        fork_gen.prepare_fork()
 
         self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_fee_tx["hex"]], sync_fun=self.no_op)
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Re-connect and make sure we have same state still

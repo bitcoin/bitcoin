@@ -7,17 +7,11 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
-from test_framework.blocktools import create_empty_fork
+from test_framework.blocktools import ForkGenerator
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-
-    def trigger_reorg(self, fork_blocks):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            self.nodes[0].submitblock(block.serialize().hex())
-        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def run_test(self):
         node = self.nodes[0]
@@ -28,13 +22,14 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Create three more transactions, spending the spends
         # Mine another block
         # ... make sure all the transactions are confirmed
-        # Invalidate both blocks
+        # Reorg both blocks
         # ... make sure all the transactions are put back in the mempool
         # Mine a new block
         # ... make sure all the transactions are confirmed again
 
         # Prep for fork
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen = ForkGenerator(self.nodes[0])
+        fork_gen.prepare_fork()
         blocks = []
         spends1_ids = [wallet.send_self_transfer(from_node=node)['txid'] for _ in range(3)]
         blocks.extend(self.generate(node, 1))
@@ -50,7 +45,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert spends_ids < confirmed_txns
 
         # Trigger reorg
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
 
         # All txns should be back in mempool with 0 confirmations
         assert_equal(set(node.getrawmempool()), spends_ids)

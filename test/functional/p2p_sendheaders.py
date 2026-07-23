@@ -79,7 +79,7 @@ a. Repeat 100 times:
 b. Then send 99 more headers that don't connect.
    Expect: getheaders message each time.
 """
-from test_framework.blocktools import create_block
+from test_framework.blocktools import create_block, ForkGenerator
 from test_framework.messages import CInv
 from test_framework.p2p import (
     CBlockHeader,
@@ -214,17 +214,18 @@ class SendHeadersTest(BitcoinTestFramework):
         to-be-reorged-out blocks are mined, so that we don't break later tests.
         return the list of block hashes newly mined."""
 
+        # Prep for fork with empty blocks
+        fork_gen = ForkGenerator(self.nodes[1])
+        fork_gen.prepare_fork(fork_length=length + 1)
+
         # make sure all invalidated blocks are node0's
         self.generatetoaddress(self.nodes[0], length, self.nodes[0].get_deterministic_priv_key().address)
         for x in self.nodes[0].p2ps:
             x.wait_for_block_announcement(int(self.nodes[0].getbestblockhash(), 16))
             x.clear_block_announcements()
 
-        tip_height = self.nodes[1].getblockcount()
-        hash_to_invalidate = self.nodes[1].getblockhash(tip_height - (length - 1))
-        self.nodes[1].invalidateblock(hash_to_invalidate)
-        all_hashes = self.generatetoaddress(self.nodes[1], length + 1, self.nodes[1].get_deterministic_priv_key().address)  # Must be longer than the orig chain
-        return [int(x, 16) for x in all_hashes]
+        fork_gen.trigger_reorg()
+        return [block.hash_int for block in fork_gen.get_fork_blocks()]
 
     def run_test(self):
         # Setup the p2p connections

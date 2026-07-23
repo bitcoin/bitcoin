@@ -5,7 +5,10 @@
 
 import time
 
-from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
+from test_framework.blocktools import (
+    ForkGenerator,
+    MAX_STANDARD_TX_WEIGHT,
+)
 from test_framework.mempool_util import (
     create_large_orphan,
     tx_in_orphanage,
@@ -263,11 +266,13 @@ class OrphanHandlingTest(BitcoinTestFramework):
         txid_conf_old = utxo_conf_old["txid"]
         self.generate(self.wallet, 10)
 
-        # Create a fake reorg to trigger BlockDisconnected, which resets the rolling bloom filter.
+        # Trigger a reorg to fire BlockDisconnected, which resets the rolling bloom filter.
         # The alternative is to mine thousands of transactions to push it out of the filter.
-        last_block = node.getbestblockhash()
-        node.invalidateblock(last_block)
-        node.preciousblock(last_block)
+        # Prepare an empty fork at the current tip, mine a block on top, then reorg it out.
+        fork_gen = ForkGenerator(node)
+        fork_gen.prepare_fork()
+        self.generate(self.wallet, 1)
+        fork_gen.trigger_reorg()
         node.syncwithvalidationinterfacequeue()
 
         # This UTXO confirmed recently.
