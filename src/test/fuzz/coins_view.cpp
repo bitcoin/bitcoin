@@ -35,6 +35,7 @@
 #include <vector>
 
 namespace {
+BasicTestingSetup* g_setup;
 const Coin EMPTY_COIN{};
 
 bool operator==(const Coin& a, const Coin& b)
@@ -135,7 +136,8 @@ CBlock BuildRandomBlock(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& vi
 
 void initialize_coins_view()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>();
+    g_setup = testing_setup.get();
 }
 
 void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView* backend_coins_view)
@@ -418,16 +420,22 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB backend_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewDB backend_coins_view{g_setup->m_logger, std::move(db_params), CoinsViewOptions{}};
     CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_coins_view);
+}
+
+static void cleanup_coins_view()
+{
+    // Stop worker threads before logger is destroyed because they log when exiting.
+    g_thread_pool->Stop();
 }
 
 // Creates a CoinsViewOverlay and a MutationGuardCoinsViewCache as the base.
 // This allows us to exercise all methods on a CoinsViewOverlay, while also
 // ensuring that nothing can mutate the underlying cache until Flush or Sync is
 // called.
-FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
+FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view, .cleanup = cleanup_coins_view)
 {
     SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();
@@ -439,7 +447,7 @@ FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_cache);
 }
 
-FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view)
+FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view, .cleanup = cleanup_coins_view)
 {
     SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();
@@ -449,7 +457,7 @@ FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB backend_base_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewDB backend_base_coins_view{g_setup->m_logger, std::move(db_params), CoinsViewOptions{}};
     CCoinsViewCache backend_cache{&backend_base_coins_view, /*deterministic=*/true};
     TestCoinsView(fuzzed_data_provider, backend_cache, &backend_base_coins_view);
     CoinsViewOverlay coins_view_cache{&backend_cache, g_thread_pool, /*deterministic=*/true};

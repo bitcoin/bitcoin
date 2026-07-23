@@ -98,6 +98,10 @@ public:
     }
 };
 
+struct KernelTestFixture {
+    Logger<TestLog> m_logger{std::make_unique<TestLog>()};
+};
+
 struct TestDirectory {
     fs::path m_directory;
     TestDirectory(std::string directory_name)
@@ -389,6 +393,8 @@ void CheckRange(const RangeType& range, size_t expected_size)
     BOOST_CHECK(it2 == it + 1);
 }
 
+BOOST_FIXTURE_TEST_SUITE(test_kernel, KernelTestFixture)
+
 BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 {
     auto tx_data{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")};
@@ -652,20 +658,18 @@ BOOST_AUTO_TEST_CASE(logging_tests)
         .always_print_category_levels = true,
     };
 
-    logging_set_options(logging_options);
-    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    logging_disable_category(LogCategory::BENCH);
-    logging_enable_category(LogCategory::VALIDATION);
-    logging_disable_category(LogCategory::VALIDATION);
+    logging_set_options(m_logger, logging_options);
+    logging_set_level_category(m_logger, LogCategory::BENCH, LogLevel::TRACE_LEVEL);
+    logging_disable_category(m_logger, LogCategory::BENCH);
+    logging_enable_category(m_logger, LogCategory::VALIDATION);
+    logging_disable_category(m_logger, LogCategory::VALIDATION);
 
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
+    // Check that setting options on a different logger works.
     {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
         Logger logger_2{std::make_unique<TestLog>()};
+        logging_set_level_category(logger_2, LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
+        logging_enable_category(logger_2, LogCategory::KERNEL);
     }
-    Logger logger{std::make_unique<TestLog>()};
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
@@ -765,7 +769,6 @@ Context create_context(std::shared_ptr<TestKernelNotifications> notifications, C
 
 BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 {
-    Logger logger{std::make_unique<TestLog>()};
     auto test_directory{TestDirectory{"chainman_test_bitcoin_kernel"}};
 
     { // test with default context
@@ -1410,3 +1413,5 @@ BOOST_AUTO_TEST_CASE(btck_transaction_check_tests)
         "ffffffff00ffffffff000100000000000000000000000000000000000000000000000000000000"
         "00000000000000ffffffff010000000000000000015100000000");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
