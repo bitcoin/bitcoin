@@ -342,23 +342,6 @@ private:
     void AddToSpends(const COutPoint& outpoint, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void AddToSpends(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /**
-     * Add a transaction to the wallet, or update it.  confirm.block_* should
-     * be set when the transaction was known to be included in a block.  When
-     * block_hash.IsNull(), then wallet state is not updated in AddToWallet, but
-     * notifications happen and cached balances are marked dirty.
-     *
-     * TODO: One exception to this is that the abandoned state is cleared under the
-     * assumption that any further notification of a transaction that was considered
-     * abandoned is an indication that it is not safe to be considered abandoned.
-     * Abandoned state should probably be more carefully tracked via different
-     * chain notifications or by checking mempool presence when necessary.
-     *
-     * Should be called with rescanning_old_block set to true, if the transaction is
-     * not discovered in real time, but during a rescan of old blocks.
-     */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx);
 
@@ -630,6 +613,23 @@ public:
      * @return the recently added wtx pointer or nullptr if there was a db write error.
      */
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false);
+
+    /**
+     * Add a transaction to the wallet, or update it.  confirm.block_* should
+     * be set when the transaction was known to be included in a block.  When
+     * block_hash.IsNull(), then wallet state is not updated in AddToWallet, but
+     * notifications happen and cached balances are marked dirty.
+     *
+     * TODO: One exception to this is that the abandoned state is cleared under the
+     * assumption that any further notification of a transaction that was considered
+     * abandoned is an indication that it is not safe to be considered abandoned.
+     * Abandoned state should probably be more carefully tracked via different
+     * chain notifications or by checking mempool presence when necessary.
+     *
+     * Should be called with rescanning_old_block set to true, if the transaction is
+     * not discovered in real time, but during a rescan of old blocks.
+     */
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
