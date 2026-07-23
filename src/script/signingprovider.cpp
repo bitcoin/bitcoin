@@ -9,7 +9,6 @@
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
 #include <util/check.h>
-#include <util/log.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -157,114 +156,6 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     // We shouldn't be merging 2 different sessions, just overwrite with b's sessions.
     if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
     return *this;
-}
-
-void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
-{
-    AssertLockHeld(cs_KeyStore);
-    CKeyID key_id = pubkey.GetID();
-    // This adds the redeemscripts necessary to detect P2WPKH and P2SH-P2WPKH
-    // outputs. Technically P2WPKH outputs don't have a redeemscript to be
-    // spent. However, our current IsMine logic requires the corresponding
-    // P2SH-P2WPKH redeemscript to be present in the wallet in order to accept
-    // payment even to P2WPKH outputs.
-    // Also note that having superfluous scripts in the keystore never hurts.
-    // They're only used to guide recursion in signing and IsMine logic - if
-    // a script is present but we can't do anything with it, it has no effect.
-    // "Implicitly" refers to fact that scripts are derived automatically from
-    // existing keys, and are present in memory, even without being explicitly
-    // loaded (e.g. from a file).
-    if (pubkey.IsCompressed()) {
-        CScript script = GetScriptForDestination(WitnessV0KeyHash(key_id));
-        // This does not use AddCScript, as it may be overridden.
-        CScriptID id(script);
-        mapScripts[id] = std::move(script);
-    }
-}
-
-bool FillableSigningProvider::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
-{
-    CKey key;
-    if (!GetKey(address, key)) {
-        return false;
-    }
-    vchPubKeyOut = key.GetPubKey();
-    return true;
-}
-
-bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
-{
-    LOCK(cs_KeyStore);
-    mapKeys[pubkey.GetID()] = key;
-    ImplicitlyLearnRelatedKeyScripts(pubkey);
-    return true;
-}
-
-bool FillableSigningProvider::HaveKey(const CKeyID &address) const
-{
-    LOCK(cs_KeyStore);
-    return mapKeys.contains(address);
-}
-
-std::set<CKeyID> FillableSigningProvider::GetKeys() const
-{
-    LOCK(cs_KeyStore);
-    std::set<CKeyID> set_address;
-    for (const auto& mi : mapKeys) {
-        set_address.insert(mi.first);
-    }
-    return set_address;
-}
-
-bool FillableSigningProvider::GetKey(const CKeyID &address, CKey &keyOut) const
-{
-    LOCK(cs_KeyStore);
-    KeyMap::const_iterator mi = mapKeys.find(address);
-    if (mi != mapKeys.end()) {
-        keyOut = mi->second;
-        return true;
-    }
-    return false;
-}
-
-bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
-{
-    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-        LogError("FillableSigningProvider::AddCScript(): redeemScripts > %i bytes are invalid\n", MAX_SCRIPT_ELEMENT_SIZE);
-        return false;
-    }
-
-    LOCK(cs_KeyStore);
-    mapScripts[CScriptID(redeemScript)] = redeemScript;
-    return true;
-}
-
-bool FillableSigningProvider::HaveCScript(const CScriptID& hash) const
-{
-    LOCK(cs_KeyStore);
-    return mapScripts.contains(hash);
-}
-
-std::set<CScriptID> FillableSigningProvider::GetCScripts() const
-{
-    LOCK(cs_KeyStore);
-    std::set<CScriptID> set_script;
-    for (const auto& mi : mapScripts) {
-        set_script.insert(mi.first);
-    }
-    return set_script;
-}
-
-bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
-{
-    LOCK(cs_KeyStore);
-    ScriptMap::const_iterator mi = mapScripts.find(hash);
-    if (mi != mapScripts.end())
-    {
-        redeemScriptOut = (*mi).second;
-        return true;
-    }
-    return false;
 }
 
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest)

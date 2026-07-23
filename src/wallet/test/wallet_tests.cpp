@@ -50,8 +50,9 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     CMutableTransaction mtx;
     mtx.vout.emplace_back(from.vout[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey);
     mtx.vin.push_back({CTxIn{from.GetHash(), index}});
-    FillableSigningProvider keystore;
-    keystore.AddKey(key);
+    FlatSigningProvider keystore;
+    BOOST_CHECK(keystore.keys.emplace(key.GetPubKey().GetID(), key).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second);
     std::map<COutPoint, Coin> coins;
     coins[mtx.vin[0].prevout].out = from.vout[index];
     std::map<int, bilingual_str> input_errors;
@@ -547,9 +548,10 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     CScript script_pubkey = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
 
     // Add inner-script to key store and key to watchonly
-    FillableSigningProvider keystore;
-    keystore.AddCScript(inner_script);
-    keystore.AddKeyPubKey(key, pubkey);
+    FlatSigningProvider keystore;
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(inner_script), inner_script).second);
+    BOOST_CHECK(keystore.keys.emplace(key.GetPubKey().GetID(), key).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second);
 
     // Fill in dummy signatures for fee calculation.
     SignatureData sig_data;

@@ -79,10 +79,10 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
         signature_data_1.MergeSignatureData(signature_data_2);
     }
 
-    FillableSigningProvider provider;
+    FlatSigningProvider provider;
     CKey k = ConsumePrivateKey(fuzzed_data_provider);
     if (k.IsValid()) {
-        provider.AddKey(k);
+        provider.keys.emplace(k.GetPubKey().GetID(), k);
     }
 
     {

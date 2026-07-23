@@ -1271,7 +1271,7 @@ SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
 {
     // Test the ProduceSignature's ability to combine signatures function
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     std::vector<CKey> keys;
     std::vector<CPubKey> pubkeys;
     for (int i = 0; i < 3; i++)
@@ -1279,7 +1279,8 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         CKey key = GenerateRandomKey(/*compressed=*/i%2 == 1);
         keys.push_back(key);
         pubkeys.push_back(key.GetPubKey());
-        BOOST_CHECK(keystore.AddKey(key));
+        BOOST_CHECK(keystore.keys.emplace(key.GetPubKey().GetID(), key).second);
+        BOOST_CHECK(keystore.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second);
     }
 
     CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(PKHash(keys[0].GetPubKey())));
@@ -1309,7 +1310,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
-    BOOST_CHECK(keystore.AddCScript(pkSingle));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(pkSingle), pkSingle).second);
     scriptPubKey = GetScriptForDestination(ScriptHash(pkSingle));
     SignatureData dummy_c;
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_c));
@@ -1327,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
-    BOOST_CHECK(keystore.AddCScript(scriptPubKey));
+    BOOST_CHECK(keystore.scripts.emplace(CScriptID(scriptPubKey), scriptPubKey).second);
     SignatureData dummy_e;
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, dummy_e));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
@@ -1391,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
  */
 BOOST_AUTO_TEST_CASE(sign_invalid_miniscript)
 {
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     SignatureData sig_data;
     CMutableTransaction prev, curr;
 
@@ -1412,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(sign_invalid_miniscript)
 /* P2A input should be considered signed. */
 BOOST_AUTO_TEST_CASE(sign_paytoanchor)
 {
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     SignatureData sig_data;
     CMutableTransaction prev, curr;
     prev.vout.emplace_back(0, GetScriptForDestination(PayToAnchor{}));
