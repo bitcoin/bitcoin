@@ -30,12 +30,12 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
 
 static void LogWithDebug(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=net", "-trace=0"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
 }
 
 static void LogWithoutDebug(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=0", "-trace=0"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
 }
 
 static void LogWithThreadNames(benchmark::Bench& bench)
