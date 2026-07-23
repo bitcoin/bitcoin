@@ -256,6 +256,7 @@ BASE_SCRIPTS = [
     'mempool_truc.py',
     'wallet_multisig_descriptor_psbt.py',
     'wallet_miniscript_decaying_multisig_descriptor_psbt.py',
+    'wallet_taproot_decaying_multisig_descriptor_psbt.py',
     'wallet_txn_doublespend.py',
     'wallet_backwards_compatibility.py',
     'wallet_txn_clone.py --mineblock',
