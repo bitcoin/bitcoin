@@ -35,6 +35,7 @@
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/task_runner.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -43,6 +44,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <limits>
 #include <list>
 #include <memory>
 #include <optional>
@@ -1532,4 +1534,14 @@ int btck_transaction_check(const btck_Transaction* tx, btck_TxValidationState* v
     state = TxValidationState{};
     const bool ok = CheckTransaction(*btck_Transaction::get(tx), state);
     return ok ? 1 : 0;
+}
+
+int btck_set_mock_time(int64_t timestamp)
+{
+    constexpr int64_t max_time{std::numeric_limits<uint32_t>::max()};
+    if (timestamp < 0 || timestamp > max_time) {
+        return -1;
+    }
+    SetMockTime(std::chrono::seconds{timestamp});
+    return 0;
 }
