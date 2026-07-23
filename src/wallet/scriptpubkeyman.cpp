@@ -20,6 +20,7 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <wallet/logging.h>
 
 #include <optional>
 
@@ -293,7 +294,7 @@ bool LegacyDataSPKM::LoadCScript(const CScript& redeemScript)
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
     {
         std::string strAddr = EncodeDestination(ScriptHash(redeemScript));
-        WalletLogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n", __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
+        LogWarning(m_log, "%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n", __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
         return true;
     }
 
@@ -1120,7 +1121,7 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
     if (IsMine(script)) {
         int32_t index = m_map_script_pub_keys[script];
         if (index >= m_wallet_descriptor.next_index) {
-            WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
+            LogInfo(m_log, "%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
             auto out_keys = std::make_unique<FlatSigningProvider>();
             std::vector<CScript> scripts_temp;
             while (index >= m_wallet_descriptor.next_index) {
@@ -1134,7 +1135,7 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
             }
         }
         if (!TopUp()) {
-            WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+            LogInfo(m_log, "%s: Topping up keypool failed (locked wallet)\n", __func__);
         }
     }
 
