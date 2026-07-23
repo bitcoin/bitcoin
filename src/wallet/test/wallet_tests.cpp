@@ -191,6 +191,36 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
     BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
 }
 
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::WALLETDESCRIPTORCKEY, /*match_skip_count=*/1); // Only one write fails
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: A failed encrypted-key write must be reported and leave encryption retryable
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: A failed encrypted-key write must leave the wallet unencrypted
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: A failed encrypted-key write must not publish descriptor encryption state
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), true); // TODO: A failed encrypted-key write must not persist the master key
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), true); // TODO: A successful retry must erase plaintext keys
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: A failed encrypted-key write must roll back earlier encrypted-key writes
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_erase_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY); // Only one erase fails
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: A failed plaintext-key erase must be reported and leave encryption retryable
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: A failed plaintext-key erase must leave the wallet unencrypted
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: A failed plaintext-key erase must not publish descriptor encryption state
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), true); // TODO: A failed plaintext-key erase must not persist the master key
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), true); // TODO: A successful retry must erase plaintext keys
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: A failed plaintext-key erase must roll back the encrypted-key write
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFailureSetup)
 {
     AddKey(*wallet, GenerateRandomKey());
