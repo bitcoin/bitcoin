@@ -1188,9 +1188,9 @@ int btck_block_check(const btck_Block* block, const btck_ConsensusParams* consen
     const bool check_pow    = (flags & btck_BlockCheckFlags_POW) != 0;
     const bool check_merkle = (flags & btck_BlockCheckFlags_MERKLE) != 0;
 
-    const bool result = CheckBlock(*btck_Block::get(block), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
+    state = CheckBlock(*btck_Block::get(block), btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
 
-    return result ? 1 : 0;
+    return state.IsValid() ? 1 : 0;
 }
 
 size_t btck_block_count_transactions(const btck_Block* block)
@@ -1388,11 +1388,9 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
 {
     try {
         auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
+        auto state = chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true);
 
-        auto state = btck_BlockValidationState::create();
-        bool result{chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true, btck_BlockValidationState::get(state))};
-        assert(result == btck_BlockValidationState::get(state).IsValid());
-        return state;
+        return btck_BlockValidationState::create(std::move(state));
     } catch (const std::exception& e) {
         LogError("Failed to process block header: %s", e.what());
         return nullptr;
