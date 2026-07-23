@@ -794,8 +794,7 @@ class TestHandler:
         assert self.jobs  # Must not be empty here
 
         # Print remaining running jobs when all jobs have been started.
-        if not self.test_list:
-            print("Remaining jobs: [{}]".format(", ".join(sorted(self.jobs.values()))))
+        print("Remaining jobs: [{}]".format(", ".join(sorted(self.jobs.values()))), flush=True)
 
         dot_count = 0
         while True:

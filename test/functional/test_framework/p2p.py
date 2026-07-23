@@ -748,6 +748,7 @@ class NetworkThread(threading.Thread):
 
         NetworkThread.listeners = {}
         NetworkThread.protos = {}
+        NetworkThread.protos_accept_done = []
 
     def run(self):
         """Start the network thread."""
@@ -756,10 +757,25 @@ class NetworkThread(threading.Thread):
 
     def close(self, *, timeout):
         """Close the connections and network event loop."""
+        for p in NetworkThread.protos_accept_done:
+            p.peer_disconnect()
+        NetworkThread.protos_accept_done.clear()
+
+        listeners = list(NetworkThread.listeners.values())
+        NetworkThread.listeners.clear()
+
+        async def close_listeners():
+            for listener in listeners:
+                listener.close()
+            for listener in listeners:
+                await listener.wait_closed()
+        future = asyncio.run_coroutine_threadsafe(close_listeners(), self.network_event_loop)
+        future.result(timeout=timeout)
+
         self.network_event_loop.call_soon_threadsafe(self.network_event_loop.stop)
         wait_until_helper_internal(lambda: not self.network_event_loop.is_running(), timeout=timeout)
-        self.network_event_loop.close()
         self.join(timeout)
+        self.network_event_loop.close()
         # Safe to remove event loop.
         NetworkThread.network_event_loop = None
 
@@ -795,6 +811,7 @@ class NetworkThread(threading.Thread):
             response = cls.protos.get((addr, port))
             # remove protocol function from dict only when reconnection doesn't need to happen/already happened
             if not proto.reconnect:
+                cls.protos_accept_done.append(response)
                 cls.protos[(addr, port)] = None
             return response
 
