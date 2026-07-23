@@ -106,6 +106,14 @@ option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
 option(BUILD_TESTS "Build test_bitcoin and other unit test executables." ON)
+option(BUILD_FUNCTIONAL_TESTS "Register the Python functional tests with CTest." OFF)
+cmake_dependent_option(
+  BUILD_EXTENDED_FUNCTIONAL_TESTS
+  "Register extended Python functional tests with CTest."
+  OFF
+  "BUILD_FUNCTIONAL_TESTS"
+  OFF
+)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
 option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 cmake_dependent_option(BUILD_GUI_TESTS "Build test_bitcoin-qt executable." ON "BUILD_GUI;BUILD_TESTS" OFF)
@@ -619,6 +627,15 @@ if(NOT TARGET Python3::Interpreter)
   )
 endif()
 
+if(BUILD_FUNCTIONAL_TESTS)
+  if(NOT BUILD_DAEMON)
+    message(FATAL_ERROR "BUILD_FUNCTIONAL_TESTS requires BUILD_DAEMON=ON.")
+  endif()
+  if(NOT TARGET Python3::Interpreter)
+    message(FATAL_ERROR "BUILD_FUNCTIONAL_TESTS requires Python3::Interpreter.")
+  endif()
+endif()
+
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
 target_compile_definitions(core_interface_relwithdebinfo INTERFACE ${DEPENDS_COMPILE_DEFINITIONS_RELWITHDEBINFO})
 target_compile_definitions(core_interface_debug INTERFACE ${DEPENDS_COMPILE_DEFINITIONS_DEBUG})
@@ -632,7 +649,7 @@ if(DEFINED ENV{LDFLAGS})
   deduplicate_flags(CMAKE_EXE_LINKER_FLAGS)
 endif()
 
-if(BUILD_TESTS)
+if(BUILD_TESTS OR BUILD_FUNCTIONAL_TESTS)
   enable_testing()
 endif()
 
