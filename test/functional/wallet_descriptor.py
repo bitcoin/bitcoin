@@ -287,7 +287,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
             k, v = key_rows[0]
             conn.execute('INSERT INTO main VALUES(?, ?)', (k.replace(key_prefix, ckey_prefix), v))
         conn.close()
-        with self.nodes[0].assert_debug_log(["Wallet contains both unencrypted and encrypted keys"]):
+        with self.nodes[0].assert_debug_log(["Wallet contains both unencrypted and encrypted keys"], wallet=True):
             assert_raises_rpc_error(-4, "Wallet corrupted", self.nodes[0].loadwallet, wallet_name)
 
         self.test_parent_descriptors()
