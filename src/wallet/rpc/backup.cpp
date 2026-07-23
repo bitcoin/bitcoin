@@ -96,6 +96,7 @@ RPCMethod removeprunedfunds()
 {
     return RPCMethod{
         "removeprunedfunds",
+        "(DEPRECATED) This feature will be removed in the next major release. Start bitcoind with the `-deprecatedrpc=removeprunedfunds` option in order to use this.\n"
         "Deletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded id of the transaction you are deleting"},
@@ -110,6 +111,10 @@ RPCMethod removeprunedfunds()
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
+
+    if (!pwallet->chain().rpcEnableDeprecated("removeprunedfunds")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "DEPRECATION WARNING: This feature will be removed in the next major release. Start bitcoind with the `-deprecatedrpc=removeprunedfunds` option in order to use this.");
+    }
 
     LOCK(pwallet->cs_wallet);
 
