@@ -18,6 +18,7 @@
 #include <vector>
 
 class CPubKey;
+class CTxIn;
 
 enum class TxoutType {
     NONSTANDARD,
@@ -63,5 +64,11 @@ std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> Match
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+
+/**
+ * Returns the script being executed for a given transaction input, along with
+ * a witness version (-1 for P2SH, >= 0 for segwit, -2 if not found/invalid).
+ */
+std::pair<CScript, int> GetScriptForTransactionInput(CScript prevScript, const CTxIn& txin);
 
 #endif // BITCOIN_SCRIPT_SOLVER_H
