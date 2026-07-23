@@ -37,6 +37,15 @@ sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const 
     return result;
 }
 
+static bool is_standard(const CScript& spk) {
+    TxoutType type;
+    bool res{::IsStandard(spk, type)};
+    if (res) {
+        BOOST_CHECK_EQUAL(type, TxoutType::MULTISIG);
+    }
+    return res;
+}
+
 BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     script_verify_flags flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
@@ -143,15 +152,6 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
-    const auto is_standard{[](const CScript& spk) {
-        TxoutType type;
-        bool res{::IsStandard(spk, type)};
-        if (res) {
-            BOOST_CHECK_EQUAL(type, TxoutType::MULTISIG);
-        }
-        return res;
-    }};
-
     CScript a_and_b;
     a_and_b << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
     BOOST_CHECK(is_standard(a_and_b));
@@ -178,6 +178,35 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 
     for (int i = 0; i < 6; i++) {
         BOOST_CHECK(!is_standard(malformed[i]));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(multisig_pushdata_IsStandard)
+{
+    // Non-minimal push encodings for the pubkey (OP_PUSHDATA1/2/4) are all
+    // rejected by IsStandard.
+
+    CKey key;
+    key.MakeNewKey(true);
+    auto pubkey_bytes{ToByteVector(key.GetPubKey())};
+
+    auto make_nonminimal = [&](std::vector<unsigned char> pushdata) {
+      std::vector<unsigned char> raw;
+      raw.push_back(OP_1);
+      raw.insert(raw.end(), pushdata.begin(), pushdata.end());
+      raw.insert(raw.end(), pubkey_bytes.begin(), pubkey_bytes.end());
+      raw.push_back(OP_1);
+      raw.push_back(OP_CHECKMULTISIG);
+      return CScript(raw.begin(), raw.end());
+    };
+
+    CScript nonminimal[3];
+    nonminimal[0] = make_nonminimal({OP_PUSHDATA1, 0x21});
+    nonminimal[1] = make_nonminimal({OP_PUSHDATA2, 0x21, 0x00});
+    nonminimal[2] = make_nonminimal({OP_PUSHDATA4, 0x21, 0x00, 0x00, 0x00});
+
+    for (int i = 0; i < 3; i++) {
+        BOOST_CHECK(!is_standard(nonminimal[i]));
     }
 }
 

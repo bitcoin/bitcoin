@@ -31,6 +31,8 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_0,
+    OP_1,
+    OP_CHECKMULTISIG,
     OP_HASH160,
     OP_RETURN,
     OP_TRUE,
@@ -58,10 +60,11 @@ from test_framework.wallet_util import generate_keypair
 
 class MempoolAcceptanceTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
-        self.extra_args = [[
-            '-txindex','-permitbaremultisig=0',
-        ]] * self.num_nodes
+        self.num_nodes = 2
+        self.extra_args = [
+            ['-txindex', '-permitbaremultisig=0'],
+            ['-permitbaremultisig=1'],
+        ]
         self.supports_cli = False
 
     def check_mempool_result(self, result_expected, *args, **kwargs):
@@ -490,6 +493,16 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
         # but is consensus-legal
         self.generateblock(node, self.wallet.get_address(), [nested_anchor_spend.serialize().hex()])
+
+        self.log.info('Non-minimal pubkey push encodings are rejected in bare multisig')
+        for pushdata in [
+            bytes([0x4c, 0x21]),                    # OP_PUSHDATA1 33
+            bytes([0x4d, 0x21, 0x00]),              # OP_PUSHDATA2 33
+            bytes([0x4e, 0x21, 0x00, 0x00, 0x00]),  # OP_PUSHDATA4 33
+        ]:
+            tx = tx_from_hex(raw_tx_reference)
+            tx.vout[0].scriptPubKey = CScript(bytes([OP_1]) + pushdata + pubkey + bytes([OP_1, OP_CHECKMULTISIG]))
+            assert_equal(self.nodes[1].testmempoolaccept([tx.serialize().hex()], maxfeerate=0)[0]['allowed'], False)
 
         self.log.info('Spending a confirmed bare multisig is okay')
         address = self.wallet.get_address()
