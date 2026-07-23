@@ -42,6 +42,8 @@ static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
     orphan, replaced, and rejected transactions. */
 static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
+/** Default maximum per-second rate for sending transaction inventory to peers. */
+static constexpr unsigned int DEFAULT_TX_SEND_RATE{14};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
@@ -70,9 +72,18 @@ struct CNodeStateStats {
 };
 
 struct PeerManagerInfo {
+    struct InvBucketInfo {
+        size_t backlog_count{0};
+        double count_bucket{0};
+        double size_bucket{0};
+    };
+
     std::chrono::seconds median_outbound_time_offset{0s};
     bool ignores_incoming_txs{false};
     bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+    unsigned int tx_send_rate{0};
+    InvBucketInfo inbound_bucket;
+    InvBucketInfo outbound_bucket;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -96,6 +107,8 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Maximum per-second rate for sending transaction inventory to peers.
+        unsigned int tx_send_rate{DEFAULT_TX_SEND_RATE};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -139,11 +152,11 @@ public:
 
     /**
      * Initiate a transaction broadcast to eligible peers.
-     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
-     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
+     * Queue the witness transaction id to the inbound and outbound inv backlogs.
+     * Later, depending on `-txsendrate`, `Peer::TxRelay::m_next_inv_send_time` and if
      * the transaction is in the mempool, an `INV` about it may be sent to the peer.
      */
-    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
+    virtual void InitiateTxBroadcastToAll(const Wtxid& wtxid) = 0;
 
     /**
      * Initiate a private transaction broadcast. This is done
