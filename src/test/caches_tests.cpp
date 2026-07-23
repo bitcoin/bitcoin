@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_SUITE(caches_tests)
 
 BOOST_AUTO_TEST_CASE(oversized_dbcache_warning)
 {
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(MIN_DB_CACHE, 1_GiB));
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(MIN_DBCACHE_BYTES, 1_GiB));
 
     // Below DBCACHE_WARNING_RESERVED_RAM the existing fixed default dominates.
-    CheckDbCacheWarnThreshold(DEFAULT_DB_CACHE, 1_GiB);
-    CheckDbCacheWarnThreshold(DEFAULT_DB_CACHE, DBCACHE_WARNING_RESERVED_RAM);
+    CheckDbCacheWarnThreshold(DEFAULT_KERNEL_CACHE, 1_GiB);
+    CheckDbCacheWarnThreshold(DEFAULT_KERNEL_CACHE, DBCACHE_WARNING_RESERVED_RAM);
 
     // Above DBCACHE_WARNING_RESERVED_RAM the warning fires at 75% of the headroom.
     CheckDbCacheWarnThreshold(((3_GiB - DBCACHE_WARNING_RESERVED_RAM) / 4) * 3, 3_GiB);

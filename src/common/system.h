@@ -10,8 +10,6 @@
 #include <util/time.h>
 
 #include <chrono>
-#include <cstdint>
-#include <optional>
 #include <string>
 
 /// Monotonic uptime (not affected by system time changes).
@@ -31,10 +29,5 @@ void runCommand(const std::string& strCommand);
  * @note This does count virtual cores, such as those provided by HyperThreading.
  */
 int GetNumCores();
-
-/**
- * Return the total RAM available on the current system, if detectable.
- */
-std::optional<size_t> GetTotalRAM();
 
 #endif // BITCOIN_COMMON_SYSTEM_H
