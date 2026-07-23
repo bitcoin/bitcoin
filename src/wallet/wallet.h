@@ -25,6 +25,7 @@
 #include <util/btcsignals.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/expected.h>
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
@@ -666,7 +667,7 @@ public:
     bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** Sign the tx given the input coins and sighash. */
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const;
-    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
+    util::Expected<void, SigningResult> SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
 
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
