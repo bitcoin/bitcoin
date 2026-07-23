@@ -11,6 +11,8 @@
 #include <wallet/sqlite.h>
 
 #include <memory>
+#include <string>
+#include <utility>
 
 class ArgsManager;
 class CChain;
@@ -24,6 +26,23 @@ namespace wallet {
 class CWallet;
 class WalletDatabase;
 struct WalletContext;
+
+constexpr int TEST_SQLITE_ERROR{-999}; // Arbitrary nonzero sentinel because transaction code only accepts SQLITE_OK
+
+class DbExecBlocker : public SQliteExecHandler
+{
+public:
+    explicit DbExecBlocker(std::string blocked_statement) : m_blocked_statement{std::move(blocked_statement)} {}
+
+    int Exec(SQLiteDatabase& database, const std::string& statement) override
+    {
+        if (m_blocked_statement == statement) return TEST_SQLITE_ERROR;
+        return SQliteExecHandler::Exec(database, statement);
+    }
+
+private:
+    std::string m_blocked_statement;
+};
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
        DatabaseFormat::SQLITE,
