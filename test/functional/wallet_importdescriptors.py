@@ -36,6 +36,8 @@ from test_framework.wallet_util import (
     test_address,
 )
 
+MISSING_KEYS_WARNING = "Not all private keys provided. Some wallet functionality may return unexpected errors"
+
 class ImportDescriptorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -201,6 +203,41 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             except JSONRPCException as e:
                 assert_equal(e.error["code"], -1)
                 assert_equal(e.error["message"], "Rescan aborted by user.")
+
+    def test_musig_private_key_warnings(self, xprv1, acc_xprv2, acc_xpub2, derivation_path):
+        self.log.info("Testing importdescriptors MuSig private key warnings")
+
+        self.nodes[1].createwallet(wallet_name="musig_import_warnings", blank=True)
+        wallet = self.nodes[1].get_wallet_rpc("musig_import_warnings")
+        res = wallet.importdescriptors([
+            {
+                "desc": descsum_create(f"rawtr(musig({xprv1}/{derivation_path}/0,{acc_xprv2}/1))"),
+                "timestamp": "now",
+            },
+            {
+                "desc": descsum_create(f"rawtr(musig({xprv1}/{derivation_path}/2,{acc_xpub2}/3))"),
+                "timestamp": "now",
+            },
+            {
+                "desc": descsum_create(f"rawtr(musig({xprv1}/{derivation_path},{acc_xprv2})/0/*)"),
+                "timestamp": "now",
+                "range": [0, 1],
+            },
+            {
+                "desc": descsum_create(f"rawtr(musig({xprv1}/{derivation_path},{acc_xpub2})/1/*)"),
+                "timestamp": "now",
+                "range": [0, 1],
+            },
+        ])
+
+        assert_equal(res[0]["success"], True)
+        assert "warnings" not in res[0]
+        assert_equal(res[1]["success"], True)
+        assert_equal(res[1]["warnings"], [MISSING_KEYS_WARNING])
+        assert_equal(res[2]["success"], True)
+        assert "warnings" not in res[2]
+        assert_equal(res[3]["success"], True)
+        assert_equal(res[3]["warnings"], [MISSING_KEYS_WARNING])
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -613,6 +650,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         chg_xpub3_key = extended_key_3.derive_path(change_derivation_path).pubkey()
         chg_xpub3 = chg_xpub3_key.to_string()
 
+        self.test_musig_private_key_warnings(xprv1, acc_xprv2, acc_xpub2, derivation_path)
+
         self.test_importdesc({"desc": descsum_create(f"wsh(multi(2,{xprv1}/{derivation_path}/*,{xprv2}/{derivation_path}/*,{xprv3}/{derivation_path}/*))"),
                             "active": True,
                             "range": 1000,
@@ -713,9 +752,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "timestamp": "now"
         }])
         assert_equal(res[0]['success'], True)
-        assert_equal(res[0]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
+        assert_equal(res[0]['warnings'][0], MISSING_KEYS_WARNING)
         assert_equal(res[1]['success'], True)
-        assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
+        assert_equal(res[1]['warnings'][0], MISSING_KEYS_WARNING)
 
         self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True)
         wmulti_priv2 = self.nodes[1].get_wallet_rpc('wmulti_priv2')
@@ -736,9 +775,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "timestamp": "now"
         }])
         assert_equal(res[0]['success'], True)
-        assert_equal(res[0]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
+        assert_equal(res[0]['warnings'][0], MISSING_KEYS_WARNING)
         assert_equal(res[1]['success'], True)
-        assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
+        assert_equal(res[1]['warnings'][0], MISSING_KEYS_WARNING)
 
         rawtx = self.nodes[1].createrawtransaction([utxo], {w0.getnewaddress(): 9.999})
         tx_signed_1 = wmulti_priv1.signrawtransactionwithwallet(rawtx)
