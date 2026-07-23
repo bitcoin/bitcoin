@@ -162,6 +162,9 @@ private:
      */
     bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
+    bool ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, bool found_after_non_option = false)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
 protected:
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
     [[nodiscard]] bool ReadConfigString(const std::string& str_config) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
@@ -479,6 +482,43 @@ private:
         const std::string& prefix,
         const std::string& section,
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleUnknownOption(
+        const std::string& original_input,
+        std::string& error,
+        bool found_after_non_option) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleKnownOption(
+        const KeyInfo& keyinfo,
+        const std::optional<std::string>& val,
+        unsigned int flags,
+        std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool TryHandleNamedRPC(
+        const std::string& key,
+        const std::string& original_input,
+        std::string& error,
+        bool double_dash,
+        bool found_after_non_option) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    void NormalizeKey(std::string& key, bool& double_dash);
+
+    bool ShouldSkipApplePlatformArg(const std::string& key);
+
+    void SplitKeyValue(std::string& key, std::optional<std::string>& val);
+
+    bool HandleGlobalOption(std::string& key,
+                            std::optional<std::string>& val,
+                            std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleCommandOption(const char* arg, std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleCommand(const char* const argv[],
+                       int& i,
+                       int argc,
+                       std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleIncludeConfError(std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 };
 
 extern ArgsManager gArgs;

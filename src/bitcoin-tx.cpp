@@ -797,35 +797,41 @@ static int CommandLineRawTx(int argc, char* argv[])
     std::string strPrint;
     int nRet = 0;
     try {
-        // Skip switches; Permit common stdin convention "-"
-        while (argc > 1 && IsSwitchChar(argv[1][0]) &&
-               (argv[1][1] != 0)) {
-            argc--;
-            argv++;
+        std::vector<std::string> args;
+        if (const auto command{gArgs.GetCommand()}) {
+            args = command->args;
+        } else {
+            // Skip switches; Permit common stdin convention "-"
+            while (argc > 1 && IsSwitchChar(argv[1][0]) &&
+                   (argv[1][1] != 0)) {
+                argc--;
+                argv++;
+            }
+            args.assign(argv + 1, argv + argc);
         }
 
         CMutableTransaction tx;
-        int startArg;
+        size_t startArg;
 
         if (!fCreateBlank) {
             // require at least one param
-            if (argc < 2)
+            if (args.empty())
                 throw std::runtime_error("too few parameters");
 
             // param: hex-encoded bitcoin transaction
-            std::string strHexTx(argv[1]);
+            std::string strHexTx(args[0]);
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();
 
             if (!DecodeHexTx(tx, strHexTx, true))
                 throw std::runtime_error("invalid transaction encoding");
 
-            startArg = 2;
-        } else
             startArg = 1;
+        } else
+            startArg = 0;
 
-        for (int i = startArg; i < argc; i++) {
-            std::string arg = argv[i];
+        for (size_t i{startArg}; i < args.size(); ++i) {
+            const std::string& arg{args[i]};
             std::string key, value;
             size_t eqpos = arg.find('=');
             if (eqpos == std::string::npos)

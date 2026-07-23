@@ -36,6 +36,17 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
+    {
+        ArgsManager parsed_args;
+        parsed_args.AddArg("-datadir=<dir>", "", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+        const auto datadir_arg{"--datadir=" + fs::PathToString(dd_norm) + "/"};
+        const char* argv_datadir[]{"ignored", datadir_arg.c_str()};
+        std::string error;
+        BOOST_CHECK(parsed_args.ParseParameters(2, argv_datadir, error));
+        BOOST_CHECK_EQUAL(error, "");
+        BOOST_CHECK_EQUAL(dd_norm, parsed_args.GetDataDirBase());
+    }
+
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
@@ -214,14 +225,14 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
-    // -a, -b and -ccc end up in map, -d ignored because it is after
-    // a non-option argument (non-GNU option parsing)
+    // -a, -b and -ccc end up in map, also -d since the parser detects
+    // [options] after a non-option argument (GNU-style option parsing)
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
-                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+                && !testArgs.IsArgSet("f") && testArgs.IsArgSet("-d"));
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.size() == 3 && s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.size() == 4 && s.ro_config.empty());
         BOOST_CHECK(s.command_line_options.contains("a") && s.command_line_options.contains("b") && s.command_line_options.contains("ccc")
-                    && !s.command_line_options.contains("f") && !s.command_line_options.contains("d"));
+                    && !s.command_line_options.contains("f") && s.command_line_options.contains("d"));
 
         BOOST_CHECK(s.command_line_options.at("a").size() == 1);
         BOOST_CHECK(s.command_line_options.at("a").front().get_str() == "");
@@ -230,6 +241,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
         BOOST_CHECK(s.command_line_options.at("ccc").back().get_str() == "multiple");
     });
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
+
+#ifdef WIN32
+    const char* argv_windows_test[] = {"-ignored", "f", "/D=windows"};
+    BOOST_CHECK(testArgs.ParseParameters(3, argv_windows_test, error));
+    BOOST_CHECK(testArgs.IsArgSet("-d"));
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-d", ""), "windows");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseInvalidParameters)
@@ -669,7 +687,13 @@ BOOST_AUTO_TEST_CASE(util_AddCommand)
     };
 
     BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "cmd1"}));
-    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd1", "-opt1=foo"})); // things after the command are "args" and left unparsed, not options
+
+    // options/ command-options can be passsed before or after commands (GNU-Style)
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd1", "-opt3=foo"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd2", "-opt1"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd2", "-opt1", "-opt3"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "cmd2", "-opt2"}));
 
     BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd2"}));
     BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd3"}));

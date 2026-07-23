@@ -220,6 +220,7 @@ static int AppInitRPC(int argc, char* argv[])
                 "\nIt can be used to query network information, manage wallets, create or broadcast transactions, and control the " CLIENT_NAME " server.\n"
                 "\nUse the \"help\" command to list all commands. Use \"help <command>\" to show help for that command.\n"
                 "The -named option allows you to specify parameters using the key=value format, eliminating the need to pass unused positional parameters.\n"
+                "[options] can be specified before or after the commands.\n"
                 "\n"
                 "Usage: bitcoin-cli [options] <command> [params]\n"
                 "or:    bitcoin-cli [options] -named <command> [name=value]...\n"
@@ -1342,7 +1343,7 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
             strPrint += ("error message:\n" + err_msg.get_str());
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
-            strPrint += " Or for the CLI, specify the \"-rpcwallet=<walletname>\" option before the command";
+            strPrint += " Or for the CLI, specify the \"-rpcwallet=<walletname>\" option before or after the command";
             strPrint += " (run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see which wallets are currently loaded).";
         }
     } else {
@@ -1548,16 +1549,21 @@ static void SetGenerateToAddressArgs(const std::string& address, std::vector<std
     args.emplace(args.begin() + 1, address);
 }
 
-static int CommandLineRPC(int argc, char *argv[])
+std::vector<std::string> GetCommandArgs() {
+    std::optional<const ArgsManager::Command> command = gArgs.GetCommand();
+
+    // Return command args if command is present, otherwise return an empty vector
+    if (command.has_value()) {
+        return command->args;
+    }
+    return {};
+}
+
+static int CommandLineRPC()
 {
     std::string strPrint;
     int nRet = 0;
     try {
-        // Skip switches
-        while (argc > 1 && IsSwitchChar(argv[1][0])) {
-            argc--;
-            argv++;
-        }
         std::string rpcPass;
         if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
             NO_STDIN_ECHO();
@@ -1573,7 +1579,7 @@ static int CommandLineRPC(int argc, char *argv[])
             }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
-        std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
+        std::vector<std::string> args = GetCommandArgs();
         if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
             NO_STDIN_ECHO();
             std::string walletPass;
@@ -1690,7 +1696,7 @@ MAIN_FUNCTION
 
     int ret = EXIT_FAILURE;
     try {
-        ret = CommandLineRPC(argc, argv);
+        ret = CommandLineRPC();
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRPC()");
