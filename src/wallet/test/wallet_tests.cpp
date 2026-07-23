@@ -87,7 +87,20 @@ struct FaultInjectingDatabase : InMemoryWalletDatabase {
     {
         m_fail_write = {std::move(record_type), matches_to_skip};
     }
+    void FailNextErase(std::string record_type) { m_fail_erase = {std::move(record_type)}; }
     void FailNextCommit() { m_fail_commit = true; }
+
+    bool HasRecordType(const std::string& record_type)
+    {
+        DataStream prefix;
+        prefix << record_type;
+        auto batch{MakeBatch()};
+        if (auto cursor{batch->GetNewPrefixCursor(prefix)}) {
+            DataStream key, value;
+            return cursor->Next(key, value) == DatabaseCursor::Status::MORE;
+        }
+        return false;
+    }
 
     static bool ShouldFail(std::optional<Failure>& failure, const DataStream& key)
     {
@@ -117,12 +130,19 @@ struct FaultInjectingDatabase : InMemoryWalletDatabase {
             return SQLiteBatch::WriteKey(std::move(key), std::move(value), overwrite);
         }
 
+        bool EraseKey(DataStream&& key) override
+        {
+            if (ShouldFail(m_owner.m_fail_erase, key)) return false;
+            return SQLiteBatch::EraseKey(std::move(key));
+        }
+
         FaultInjectingDatabase& m_owner;
     };
 
     std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<Batch>(*this); }
 
     std::optional<Failure> m_fail_write{};
+    std::optional<Failure> m_fail_erase{};
     bool m_fail_commit{false};
 };
 
@@ -195,6 +215,20 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_CHECK( wallet->Unlock("new_pass"));
     wallet->Lock();
     BOOST_CHECK(!wallet->Unlock("old_pass"));
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_erase_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY); // Only one erase fails
+    for (bool success : {true, false}) { // TODO: The erase failure is ignored, making the retry fail
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: The failed attempt publishes descriptor keys
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), true); // TODO: The failed erase leaves the plaintext record committed
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
