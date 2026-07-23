@@ -626,6 +626,16 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
+
+                if (!m_last_decrypted_features || *m_last_decrypted_features != WALLET_CLIENT_FEATURES) {
+                    // Write the current wallet client features to LAST_DECRYPTED_FEATURES.
+                    // This must be done after all automatic upgrades so that those upgrades can be
+                    // performed in an upgrade-downgrade-upgrade scenario.
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteLastDecryptedFeatures();
+                    SetLastDecryptedFeatures(WALLET_CLIENT_FEATURES);
+                }
+
                 return true;
             }
         }
@@ -3128,9 +3138,16 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     }
 
     // Initialize version key.
-    if(!WalletBatch(walletInstance->GetDatabase()).WriteVersion(CLIENT_VERSION)) {
-        error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
-        return nullptr;
+    {
+        WalletBatch batch(walletInstance->GetDatabase());
+        if(!batch.WriteLastOpenedVersion()) {
+            error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
+            return nullptr;
+        }
+        if(!batch.WriteLastOpenedFeatures()) {
+            error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
+            return nullptr;
+        }
     }
     {
         LOCK(walletInstance->cs_wallet);
@@ -4006,6 +4023,13 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // Set the client features
+    local_wallet_batch.WriteLastOpenedVersion();
+    local_wallet_batch.WriteLastOpenedFeatures();
+    if (HasEncryptionKeys()) {
+        local_wallet_batch.WriteLastDecryptedFeatures();
+    }
+
     // Get best block locator so that we can copy it to the watchonly and solvables
     // Note: The best block locator was introduced in #152 so ancient wallets do not have it
     CBlockLocator best_block_locator;
@@ -4647,4 +4671,9 @@ void CWallet::DisconnectChainNotifications()
     }
 }
 
+void CWallet::SetLastDecryptedFeatures(uint64_t features)
+{
+    AssertLockHeld(cs_wallet);
+    m_last_decrypted_features = features;
+}
 } // namespace wallet
