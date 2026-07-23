@@ -43,7 +43,6 @@
 #include <validationinterface.h>
 
 #include <cstdint>
-#include <numeric>
 
 #include <univalue.h>
 
@@ -1925,30 +1924,16 @@ static RPCMethod joinpsbts()
                 merged_psbt.m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
             }
         }
+        merged_psbt.m_proprietary.insert(psbt.m_proprietary.begin(), psbt.m_proprietary.end());
         merged_psbt.unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
     }
 
-    // Generate list of shuffled indices for shuffling inputs and outputs of the merged PSBT
-    std::vector<int> input_indices(merged_psbt.inputs.size());
-    std::iota(input_indices.begin(), input_indices.end(), 0);
-    std::vector<int> output_indices(merged_psbt.outputs.size());
-    std::iota(output_indices.begin(), output_indices.end(), 0);
-
-    // Shuffle input and output indices lists
-    std::shuffle(input_indices.begin(), input_indices.end(), FastRandomContext());
-    std::shuffle(output_indices.begin(), output_indices.end(), FastRandomContext());
-
-    PartiallySignedTransaction shuffled_psbt(tx, merged_psbt.GetVersion());
-    for (int i : input_indices) {
-        shuffled_psbt.AddInput(merged_psbt.inputs[i]);
-    }
-    for (int i : output_indices) {
-        shuffled_psbt.AddOutput(merged_psbt.outputs[i]);
-    }
-    shuffled_psbt.unknown.insert(merged_psbt.unknown.begin(), merged_psbt.unknown.end());
+    // Shuffle the inputs and outputs for privacy
+    std::shuffle(merged_psbt.inputs.begin(), merged_psbt.inputs.end(), FastRandomContext());
+    std::shuffle(merged_psbt.outputs.begin(), merged_psbt.outputs.end(), FastRandomContext());
 
     DataStream ssTx{};
-    ssTx << shuffled_psbt;
+    ssTx << merged_psbt;
     return EncodeBase64(ssTx);
 },
     };
