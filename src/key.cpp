@@ -359,8 +359,7 @@ CKey GenerateRandomKey(bool compressed) noexcept
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     if (nDepth == std::numeric_limits<unsigned char>::max()) return false;
     out.nDepth = nDepth + 1;
-    CKeyID id = key.GetPubKey().GetID();
-    memcpy(out.vchFingerprint, &id, 4);
+    out.fingerprint = id_key_fingerprint();
     out.nChild = _nChild;
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
@@ -375,13 +374,13 @@ void CExtKey::SetSeed(std::span<const std::byte> seed)
     memcpy(chaincode.begin(), vout.data() + 32, 32);
     nDepth = 0;
     nChild = 0;
-    memset(vchFingerprint, 0, sizeof(vchFingerprint));
+    fingerprint.fill(0);
 }
 
 CExtPubKey CExtKey::Neuter() const {
     CExtPubKey ret;
     ret.nDepth = nDepth;
-    memcpy(ret.vchFingerprint, vchFingerprint, 4);
+    ret.fingerprint = fingerprint;
     ret.nChild = nChild;
     ret.pubkey = key.GetPubKey();
     ret.chaincode = chaincode;
@@ -390,7 +389,7 @@ CExtPubKey CExtKey::Neuter() const {
 
 void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
-    memcpy(code+1, vchFingerprint, 4);
+    std::ranges::copy(fingerprint, code+1);
     WriteBE32(code+5, nChild);
     memcpy(code+9, chaincode.begin(), 32);
     code[41] = 0;
@@ -400,11 +399,11 @@ void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
 
 void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
-    memcpy(vchFingerprint, code+1, 4);
+    std::copy_n(code + 1, fingerprint.size(), fingerprint.begin());
     nChild = ReadBE32(code+5);
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
-    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(fingerprint.data()) != 0)) || code[41] != 0) key = CKey();
 }
 
 KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
