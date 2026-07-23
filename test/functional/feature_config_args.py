@@ -265,6 +265,21 @@ class ConfArgsTest(BitcoinTestFramework):
             ])
         self.stop_node(0)
 
+    def test_empty_addnode(self):
+        self.log.info("Test empty addnode configuration values are ignored")
+        node = self.nodes[0]
+        util.append_config(node.datadir_path, ["addnode="])
+
+        with node.assert_debug_log(expected_msgs=["Ignoring empty -addnode value"]):
+            # Values consisting of whitespace only are trimmed away by the
+            # config file parser, so they can only be passed on the command
+            # line. Non-empty values are unaffected.
+            self.start_node(0, extra_args=["-addnode= ", "-addnode=some.node"])
+        util.assert_equal([added["addednode"] for added in node.getaddednodeinfo()], ["some.node"])
+        self.stop_node(0)
+
+        node.replace_in_config([("addnode=\n", "")])
+
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
@@ -325,13 +340,15 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # No peers.dat exists and -dnsseed=0
         # We expect the node will fallback immediately to fixed seeds
+        # An empty -addnode value is ignored, so it must not delay the fallback
+        # either.
         assert not peer_dat.exists()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
                 "Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n",
         ], timeout=2):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
+            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode='])
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(['-dnsseed=1', '-onlynet=i2p', '-i2psam=127.0.0.1:7656'], "Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")
 
@@ -516,6 +533,7 @@ class ConfArgsTest(BitcoinTestFramework):
     def run_test(self):
         self.test_log_buffer()
         self.test_args_log()
+        self.test_empty_addnode()
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()
