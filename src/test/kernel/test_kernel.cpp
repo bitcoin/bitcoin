@@ -389,6 +389,56 @@ void CheckRange(const RangeType& range, size_t expected_size)
     BOOST_CHECK(it2 == it + 1);
 }
 
+
+struct ScriptTracer {
+    std::vector<ScriptTraceFrame>& m_state;
+
+    void ScriptTrace(ScriptTraceFrame state)
+    {
+        m_state.emplace_back(state);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(btck_script_trace_tests)
+{
+    std::vector<ScriptTraceFrame> states;
+#ifndef ENABLE_SCRIPT_TRACE
+    BOOST_CHECK_EXCEPTION(
+            ScriptTraceSetCallback(std::make_unique<ScriptTracer>(states)),
+            std::runtime_error,
+            HasReason("Script Tracing is not available. Compile bitcoin kernel with ENABLE_SCRIPT_TRACE"));
+    // Should be no-op
+    ScriptTraceUnsetCallback();
+#else
+    ScriptTraceSetCallback(std::make_unique<ScriptTracer>(states));
+
+    auto legacy_spent_script_pubkey{ScriptPubkey{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")}};
+    auto legacy_spending_tx{Transaction{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")}};
+    auto status{ScriptVerifyStatus::OK};
+    BOOST_CHECK(legacy_spent_script_pubkey.Verify(
+        /*amount=*/0,
+        /*tx_to=*/legacy_spending_tx,
+        /*precomputed_txdata=*/nullptr,
+        /*input_index=*/0,
+        VERIFY_ALL_PRE_TAPROOT,
+        status));
+    BOOST_CHECK(status == ScriptVerifyStatus::OK);
+
+    ScriptTraceUnsetCallback();
+
+    BOOST_CHECK_EQUAL(states.size(), 11);
+    BOOST_CHECK(states[0].m_kind == ScriptTraceFrameKind::BEGIN);
+    BOOST_CHECK(states[3].m_kind == ScriptTraceFrameKind::END);
+    BOOST_CHECK(states[4].m_kind == ScriptTraceFrameKind::BEGIN);
+    BOOST_CHECK(states[10].m_kind == ScriptTraceFrameKind::END);
+    for (int i : {1, 2, 5, 6, 7, 8, 9}) {
+        BOOST_CHECK(states[i].m_kind == ScriptTraceFrameKind::STEP);
+    }
+    BOOST_CHECK_EQUAL(states[3].m_script_error, 0);
+    BOOST_CHECK_EQUAL(states[10].m_script_error, 0);
+#endif
+}
+
 BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 {
     auto tx_data{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")};
