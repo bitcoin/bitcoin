@@ -148,17 +148,12 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // The `non_witness_utxo` is the whole previous transaction
         if (psbt_input.non_witness_utxo) continue;
 
-        CTransactionRef tx;
-
-        // Look in the txindex
-        if (g_txindex) {
-            uint256 block_hash;
-            g_txindex->FindTx(psbt_input.prev_txid, block_hash, tx);
+        uint256 block_hash;
+        const auto tx_res = GetTransaction(/*block_index=*/nullptr, node.mempool.get(), psbt_input.prev_txid, node.chainman->m_blockman, block_hash);
+        if (!tx_res) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, tx_res.error());
         }
-        // If we still don't have it look in the mempool
-        if (!tx) {
-            tx = node.mempool->get(psbt_input.prev_txid);
-        }
+        const CTransactionRef& tx{*tx_res};
         if (tx) {
             psbt_input.non_witness_utxo = tx;
         } else {
@@ -300,7 +295,11 @@ static RPCMethod getrawtransaction()
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    const auto tx_res = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    if (!tx_res) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, tx_res.error());
+    }
+    const auto& tx{*tx_res};
     if (!tx) {
         std::string errmsg;
         if (blockindex) {

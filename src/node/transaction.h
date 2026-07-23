@@ -9,6 +9,9 @@
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
+#include <util/expected.h>
+
+#include <string>
 
 class CBlockIndex;
 class CTxMemPool;
@@ -68,9 +71,9 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  hash            The txid
  * @param[in]  blockman        Used to access and read blocks from disk
  * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
- * @returns                    The tx if found, otherwise nullptr
+ * @returns                    The tx if found, nullptr if not found, or an error string for I/O issues
  */
-CTransactionRef GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
+util::Expected<CTransactionRef, std::string> GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H

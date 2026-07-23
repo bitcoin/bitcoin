@@ -90,31 +90,32 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const
+util::Expected<CTransactionRef, std::string> TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash) const
 {
     CDiskTxPos postx;
     if (!m_db->ReadTxPos(tx_hash, postx)) {
-        return false;
+        return CTransactionRef{};
     }
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
     if (file.IsNull()) {
         LogError("OpenBlockFile failed");
-        return false;
+        return util::Unexpected{std::string{"I/O error while opening block file via txindex"}};
     }
     CBlockHeader header;
+    CTransactionRef tx;
     try {
         file >> header;
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
         LogError("Deserialize or I/O error - %s", e.what());
-        return false;
+        return util::Unexpected{std::string{"I/O error while deserializing transaction via txindex: "} + e.what()};
     }
     if (tx->GetHash() != tx_hash) {
         LogError("txid mismatch");
-        return false;
+        return util::Unexpected{std::string{"txid mismatch while reading transaction via txindex"}};
     }
     block_hash = header.GetHash();
-    return true;
+    return tx;
 }
