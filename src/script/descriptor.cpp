@@ -1659,7 +1659,9 @@ public:
             if (!m_pubkeys[key]->ToNormalizedString(*m_arg, ret, m_cache)) return {};
             break;
         case DescriptorImpl::StringType::COMPAT:
-            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::COMPAT);
+            // For backwards compatibility, we do not pass StringType::COMPAT as
+            // desdescriptors with miniscript did not handle all string types until 31.0
+            ret = m_pubkeys[key]->ToString();
             break;
         }
         return ret;
@@ -2982,7 +2984,7 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
     return InferScript(script, ParseScriptContext::TOP, provider);
 }
 
-uint256 DescriptorID(const Descriptor& desc)
+uint256 CompatDescriptorHash(const Descriptor& desc)
 {
     std::string desc_str = desc.ToString(/*compat_format=*/true);
     uint256 id;

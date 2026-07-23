@@ -3609,9 +3609,9 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
 {
     std::unique_ptr<DescriptorScriptPubKeyMan> spk_manager;
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        spk_manager = ExternalSignerScriptPubKeyMan::LoadFromStorage(*this, desc, m_keypool_size, keys, ckeys);
+        spk_manager = ExternalSignerScriptPubKeyMan::LoadFromStorage(*this, id, desc, m_keypool_size, keys, ckeys);
     } else {
-        spk_manager = DescriptorScriptPubKeyMan::LoadFromStorage(*this, desc, m_keypool_size, keys, ckeys);
+        spk_manager = DescriptorScriptPubKeyMan::LoadFromStorage(*this, id, desc, m_keypool_size, keys, ckeys);
     }
     AddScriptPubKeyMan(id, std::move(spk_manager));
 }
@@ -3771,14 +3771,13 @@ void CWallet::DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool intern
 
 DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const
 {
-    auto spk_man_pair = m_spk_managers.find(desc.id);
+    auto spk_man_pair = std::find_if(m_spk_managers.begin(), m_spk_managers.end(), [&desc](const auto& item) {
+        DescriptorScriptPubKeyMan* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(item.second.get());
+        return spk_manager != nullptr && spk_manager->HasWalletDescriptor(desc);
+    });
 
     if (spk_man_pair != m_spk_managers.end()) {
-        // Try to downcast to DescriptorScriptPubKeyMan then check if the descriptors match
-        DescriptorScriptPubKeyMan* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair->second.get());
-        if (spk_manager != nullptr && spk_manager->HasWalletDescriptor(desc)) {
-            return spk_manager;
-        }
+        return dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair->second.get());
     }
 
     return nullptr;

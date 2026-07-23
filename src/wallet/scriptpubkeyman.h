@@ -304,12 +304,7 @@ private:
      */
     mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
 
-    //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
-        : ScriptPubKeyMan(storage),
-        m_keypool_size(keypool_size),
-        m_wallet_descriptor(descriptor)
-    {}
+    const uint256 m_id;
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
@@ -327,16 +322,16 @@ private:
     void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    //! Setup descriptors based on the given CExtKey
-    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
-
 protected:
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
+    DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
 
-    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
+    //! Create a new DescriptorScriptPubKeyMan from a descriptor (e.g. from an import, newly generated outside of constructor)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
         : ScriptPubKeyMan(storage),
-        m_keypool_size(keypool_size)
+        m_keypool_size(keypool_size),
+        m_id(CompatDescriptorHash(*descriptor.descriptor)),
+        m_wallet_descriptor(descriptor)
     {}
 
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
@@ -345,7 +340,7 @@ protected:
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
-    static std::unique_ptr<DescriptorScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
+    static std::unique_ptr<DescriptorScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
     static std::unique_ptr<DescriptorScriptPubKeyMan> CreateFromImport(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     static std::unique_ptr<DescriptorScriptPubKeyMan> CreateFromMigration(WalletStorage& storage, WalletBatch& batch, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     static std::unique_ptr<DescriptorScriptPubKeyMan> GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal);
