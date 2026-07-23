@@ -34,6 +34,8 @@ class WalletHDTest(BitcoinTestFramework):
         wallet = self.nodes[0].get_wallet_rpc("hdkey")
 
         assert_equal(len(wallet.gethdkeys()), 1)
+        existing_wallet_xprv = wallet.gethdkeys(private=True)[0]["xprv"]
+        assert_raises_rpc_error(-4, "HD key already exists", wallet.addhdkey, existing_wallet_xprv)
 
         wallet.addhdkey()
         xpub_info = wallet.gethdkeys()

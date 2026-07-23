@@ -3605,6 +3605,20 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
     }
 }
 
+std::set<DescriptorScriptPubKeyMan*> CWallet::GetScriptlessSPKMs() const
+{
+    std::set<DescriptorScriptPubKeyMan*> spk_mans;
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        if (!desc_spkm) continue;
+        LOCK(desc_spkm->cs_desc_man);
+        if (!desc_spkm->GetWalletDescriptor().descriptor->HasScripts()) {
+            spk_mans.insert(desc_spkm);
+        }
+    }
+    return spk_mans;
+}
+
 void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, const KeyMap& keys, const CryptedKeyMap& ckeys)
 {
     std::unique_ptr<DescriptorScriptPubKeyMan> spk_manager;
