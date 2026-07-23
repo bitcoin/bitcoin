@@ -244,6 +244,18 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_CHECK(!wallet->Unlock("old_pass"));
 }
 
+BOOST_FIXTURE_TEST_CASE(add_encrypted_descriptor_key_without_plaintext_record, EncryptionFailureSetup)
+{
+    RecreateWallet(WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_BLANK_WALLET);
+    BOOST_REQUIRE(wallet->EncryptWallet("passphrase"));
+    BOOST_REQUIRE(wallet->Unlock("passphrase"));
+
+    AddKey(*wallet, GenerateRandomKey());
+    BOOST_CHECK( wallet->HaveCryptedKeys());
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+}
+
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
 {
     CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
