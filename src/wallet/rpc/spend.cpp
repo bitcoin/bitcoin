@@ -195,7 +195,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
+        entry.pushKV("fee_reason", StringForFeeReason(res->fee_reason));
         return entry;
     }
     return tx->GetHash().GetHex();
@@ -272,7 +272,7 @@ RPCMethod sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required). It no longer exposes the block policy estimator's detailed threshold internals."}
                         },
                     },
                 },
@@ -382,7 +382,7 @@ RPCMethod sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required). It no longer exposes the block policy estimator's detailed threshold internals."}
                         },
                     },
                 },
@@ -1444,8 +1444,7 @@ RPCMethod sendall()
 
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
-            FeeCalculation fee_calc_out;
-            CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out)};
+            auto [fee_rate, fee_reason, returned_target] = GetMinimumFeeRate(*pwallet, coin_control);
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
@@ -1453,14 +1452,14 @@ RPCMethod sendall()
                 auto msg{strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s).",
                     coin_control.m_feerate->ToString(feerate_format),
                     fee_rate.ToString(feerate_format))};
-                if (fee_calc_out.reason == FeeReason::REQUIRED) {
+                if (fee_reason == FeeReason::REQUIRED) {
                     msg += strprintf("\nConsider modifying -mintxfee (%s) or -minrelaytxfee (%s).",
                         pwallet->m_min_fee.ToString(feerate_format),
                         pwallet->chain().relayMinFee().ToString(feerate_format));
                 }
                 throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
             }
-            if (fee_calc_out.reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
+            if (fee_reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee
                 throw JSONRPCError(RPC_WALLET_ERROR, "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
             }

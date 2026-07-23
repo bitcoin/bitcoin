@@ -6,7 +6,6 @@
 #include <common/messages.h>
 #include <common/types.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
@@ -27,12 +26,9 @@ namespace common {
 std::string StringForFeeReason(FeeReason reason)
 {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
+        {FeeReason::FEE_RATE_ESTIMATOR, "Fee Rate Estimator"},
         {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
+        {FeeReason::USER_SPECIFIED, "User Specified Fee"},
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
     };

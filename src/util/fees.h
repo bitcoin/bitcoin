@@ -12,4 +12,13 @@ enum class FeeEstimateMode {
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
 };
 
+/* Used to determine the reason a wallet selected a transaction fee rate */
+enum class FeeReason {
+    FEE_RATE_ESTIMATOR,
+    MEMPOOL_MIN,
+    USER_SPECIFIED,
+    FALLBACK,
+    REQUIRED,
+};
+
 #endif // BITCOIN_UTIL_FEES_H
