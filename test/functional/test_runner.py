@@ -237,6 +237,7 @@ BASE_SCRIPTS = [
     'rpc_net.py --v2transport',
     'wallet_keypool.py',
     'wallet_descriptor.py',
+    'rpc_addnode_limits.py',
     'p2p_nobloomfilter_messages.py',
     TEST_FRAMEWORK_UNIT_TESTS,
     'p2p_filter.py',
