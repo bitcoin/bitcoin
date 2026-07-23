@@ -229,11 +229,12 @@ bool WalletBatch::WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubk
 
 bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret)
 {
-    if (!WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, std::make_pair(desc_id, pubkey)), secret, false)) {
-        return false;
-    }
-    EraseIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)));
-    return true;
+    const auto descriptor_key{std::make_pair(desc_id, pubkey)};
+    const auto plaintext_key{std::make_pair(DBKeys::WALLETDESCRIPTORKEY, descriptor_key)};
+    const auto encrypted_key{std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, descriptor_key)};
+
+    if (!WriteIC(encrypted_key, secret, /*fOverwrite=*/false)) return false;
+    return !m_batch->Exists(plaintext_key) || EraseIC(plaintext_key);
 }
 
 bool WalletBatch::WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor)
