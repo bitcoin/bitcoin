@@ -17,6 +17,7 @@
 #include <util/check.h>
 #include <util/result.h>
 #include <wallet/db.h>
+#include <wallet/migration.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
 #include <wallet/transaction.h>
