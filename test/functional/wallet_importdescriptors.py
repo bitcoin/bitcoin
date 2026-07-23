@@ -187,7 +187,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
             importing = thread.submit(w_import.importdescriptors, descriptor)
 
-            # Keep trying because an abort before ScanForWalletTransactions starts
+            # Keep trying because an abort before wallet transaction scan starts
             # is reset when the scan loop begins.
             abort_succeeded = False
             abort_deadline = time.time() + 30 * self.options.timeout_factor

@@ -1,0 +1,320 @@
+// Copyright (c) 2026-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <chain.h>
+#include <interfaces/chain.h>
+#include <logging.h>
+#include <primitives/block.h>
+#include <sync.h>
+#include <util/check.h>
+#include <wallet/scan.h>
+#include <wallet/wallet.h>
+
+using interfaces::FoundBlock;
+
+namespace wallet {
+
+int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
+{
+    // Find starting block. May be null if nCreateTime is greater than the
+    // highest blockchain timestamp, in which case there is nothing that needs
+    // to be scanned.
+    int start_height = 0;
+    uint256 start_block;
+    bool start = m_wallet.chain().findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, FoundBlock().hash(start_block).height(start_height));
+    m_wallet.WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight()) - start_height + 1 : 0);
+
+    if (start) {
+        // TODO: this should take into account failure by ScanResult::USER_ABORT
+        ScanResult result = Scan(start_block, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        if (result.status == ScanResult::FAILURE) {
+            int64_t time_max;
+            CHECK_NONFATAL(m_wallet.chain().findBlock(result.last_failed_block, FoundBlock().maxTime(time_max)));
+            return time_max + TIMESTAMP_WINDOW + 1;
+        }
+    }
+    return startTime;
+}
+
+bool WalletRescanReserver::reserve(bool with_passphrase) {
+    assert(!m_could_reserve);
+    if (!m_wallet.Scanner().TryReserve(with_passphrase)) {
+        return false;
+    }
+    m_could_reserve = true;
+    return true;
+}
+
+bool WalletRescanReserver::isReserved() const {
+    return m_could_reserve && m_wallet.Scanner().IsScanning();
+}
+
+WalletRescanReserver::~WalletRescanReserver() {
+    if (m_could_reserve) {
+        m_wallet.Scanner().Release();
+    }
+}
+
+bool ChainScanner::TryReserve(bool with_passphrase) {
+    if (m_scanning.exchange(true)) return false;
+    // Discard any abort request left over from previous reservation, so
+    // that an abort requested while the reservation is held always applies
+    // to abort this rescan, even if it arrives before the scan loop starts.
+    m_abort = false;
+    m_scanning_with_passphrase = with_passphrase;
+    m_scanning_start = SteadyClock::now();
+    m_scanning_progress = 0;
+    return true;
+}
+
+void ChainScanner::Release() {
+    m_scanning = false;
+    m_scanning_with_passphrase = false;
+}
+
+namespace {
+class FastWalletRescanFilter
+{
+public:
+    FastWalletRescanFilter(const CWallet& wallet) : m_wallet(wallet)
+    {
+        // create initial filter with scripts from all ScriptPubKeyMans
+        for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
+            auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
+            assert(desc_spkm != nullptr);
+            AddScriptPubKeys(desc_spkm);
+            // save each range descriptor's end for possible future filter updates
+            if (desc_spkm->IsHDEnabled()) {
+                m_last_range_ends.emplace(desc_spkm->GetID(), desc_spkm->GetEndRange());
+            }
+        }
+    }
+
+    void UpdateIfNeeded()
+    {
+        // repopulate filter with new scripts if top-up has happened since last iteration
+        for (const auto& [desc_spkm_id, last_range_end] : m_last_range_ends) {
+            auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(m_wallet.GetScriptPubKeyMan(desc_spkm_id))};
+            assert(desc_spkm != nullptr);
+            int32_t current_range_end{desc_spkm->GetEndRange()};
+            if (current_range_end > last_range_end) {
+                AddScriptPubKeys(desc_spkm, last_range_end);
+                m_last_range_ends.at(desc_spkm->GetID()) = current_range_end;
+            }
+        }
+    }
+
+    std::optional<bool> MatchesBlock(const uint256& block_hash) const
+    {
+        return m_wallet.chain().blockFilterMatchesAny(BlockFilterType::BASIC, block_hash, m_filter_set);
+    }
+
+private:
+    const CWallet& m_wallet;
+    /** Map for keeping track of each range descriptor's last seen end range.
+      * This information is used to detect whether new addresses were derived
+      * (that is, if the current end range is larger than the saved end range)
+      * after processing a block and hence a filter set update is needed to
+      * take possible keypool top-ups into account.
+      */
+    std::map<uint256, int32_t> m_last_range_ends;
+    GCSFilter::ElementSet m_filter_set;
+
+    void AddScriptPubKeys(const DescriptorScriptPubKeyMan* desc_spkm, int32_t last_range_end = 0)
+    {
+        for (const auto& script_pub_key : desc_spkm->GetScriptPubKeys(last_range_end)) {
+            m_filter_set.emplace(script_pub_key.begin(), script_pub_key.end());
+        }
+    }
+};
+
+static bool ShouldFetchBlock(const FastWalletRescanFilter& filter, const uint256& block_hash, int block_height) {
+    auto matches_block{filter.MatchesBlock(block_hash)};
+    if (matches_block.has_value()) {
+        if (*matches_block) {
+            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
+        return true;
+    }
+}
+} // namespace
+
+bool ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height) {
+    bool block_still_active = false;
+    bool has_next_block = false;
+    uint256 next_block_hash;
+    m_wallet.chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(has_next_block).hash(next_block_hash)));
+
+    // Queue the next block if it exists and is within range. Whether the scan
+    // has caught up with the wallet's tip is checked after the current block
+    // is processed, so blocks connected while it was being processed are not
+    // missed.
+    if (has_next_block && (!max_height || block_height < *max_height)) {
+        next_block = {{next_block_hash, block_height + 1}};
+    }
+
+    return block_still_active;
+}
+
+void ChainScanner::UpdateProgress(const LoopState& state, double progress_current, int block_height) {
+    if (state.progress_end - state.progress_begin > 0.0) {
+        m_scanning_progress = (progress_current - state.progress_begin) / (state.progress_end - state.progress_begin);
+    } else {
+        // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
+        m_scanning_progress = 0;
+    }
+    if (block_height % 100 == 0 && state.progress_end - state.progress_begin > 0.0) {
+        m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")),
+                              std::max(1, std::min(99, (int)(m_scanning_progress.load() * 100))));
+    }
+}
+
+void ChainScanner::UpdateTipIfChanged(LoopState& state) {
+    const uint256 new_tip = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
+    if (new_tip != state.tip_hash) {
+        state.tip_hash = new_tip;
+        state.progress_end = m_wallet.chain().guessVerificationProgress(state.tip_hash);
+    }
+}
+
+bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
+    // Read block data and locator if needed (the locator is usually null unless we need to save progress)
+    CBlock block;
+    CBlockLocator loc;
+    // Find block
+    FoundBlock found_block{FoundBlock().data(block)};
+    if (save_progress) found_block.locator(loc);
+    m_wallet.chain().findBlock(block_hash, found_block);
+
+    if (block.IsNull()) return false;
+
+    {
+        LOCK(m_wallet.cs_wallet);
+        for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+            m_wallet.SyncTransaction(
+                block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height,
+                static_cast<int>(posInBlock)},
+                /*rescanning_old_block=*/true);
+        }
+
+        if (!loc.IsNull()) {
+            m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
+            WalletBatch batch(m_wallet.GetDatabase());
+            batch.WriteBestBlock(loc);
+        }
+    }
+    return true;
+}
+
+ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std::optional<int> max_height,
+                              const WalletRescanReserver& reserver, bool save_progress) {
+    constexpr auto INTERVAL_TIME{60s};
+    auto current_time{reserver.now()};
+    auto start_time{reserver.now()};
+
+    assert(reserver.isReserved());
+    auto& chain = m_wallet.chain();
+
+    std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
+    if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
+
+    m_wallet.WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
+                fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
+
+    // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
+    m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), 0);
+
+    ScanResult result;
+    LoopState state;
+    state.tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
+    uint256 end_hash = state.tip_hash;
+    if (max_height) chain.findAncestorByHeight(state.tip_hash, *max_height, FoundBlock().hash(end_hash));
+    state.progress_begin = chain.guessVerificationProgress(start_block);
+    state.progress_end = chain.guessVerificationProgress(end_hash);
+    double progress_current = state.progress_begin;
+    std::optional<std::pair<uint256, int>> next_block = {{start_block, start_height}};
+    int block_height = start_height;
+    while (!m_abort && !chain.shutdownRequested()) {
+        if (!next_block) break;
+
+        const uint256 block_hash = next_block->first;
+        block_height = next_block->second;
+        next_block.reset();
+        // Look up the current block's position separately from reading its
+        // data below, because reading is slow and there might be a reorg
+        // while it is read.
+        const bool block_still_active = QueueNextBlock(block_hash, block_height, next_block, max_height);
+
+        progress_current = chain.guessVerificationProgress(block_hash);
+        UpdateProgress(state, progress_current, block_height);
+
+        bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
+        if (next_interval) {
+            current_time = reserver.now();
+            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
+        }
+
+        bool fetch_block{true};
+        if (fast_rescan_filter) {
+            fast_rescan_filter->UpdateIfNeeded();
+            fetch_block = ShouldFetchBlock(*fast_rescan_filter, block_hash, block_height);
+        }
+
+        if (fetch_block && !block_still_active) {
+            // Abort scan if a block that needs to be inspected is no longer
+            // active, to prevent marking transactions as coming from the
+            // wrong block. A block skipped by the filter can stay skipped:
+            // it has no successor in the active chain, so the scan ends
+            // successfully at the reorg point and the replacement blocks are
+            // handled by blockConnected notifications.
+            result.last_failed_block = block_hash;
+            result.status = ScanResult::FAILURE;
+            break;
+        }
+        if (!fetch_block || ScanBlock(block_hash, block_height, save_progress && next_interval)) {
+            // scanned the block, or skipped it via the filter: record it as
+            // the most recent successfully scanned block
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = block_height;
+        } else {
+            // could not scan block, keep scanning but record this block as the most recent failure
+            result.last_failed_block = block_hash;
+            result.status = ScanResult::FAILURE;
+        }
+
+        // Stop scanning once the wallet's tip is reached, re-reading the height
+        // after the block was processed so a tip extension that happened
+        // meanwhile is picked up. If scanning with cs_wallet locked (AttachChain),
+        // blocks connected during rescan are handled after scanning is complete
+        // via blockConnected notifications. Without the lock, newly added blocks
+        // are re-processed here if the notifications were handled and the last
+        // block height was updated.
+        if (block_height >= WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
+            break;
+        }
+
+        if (!max_height) UpdateTipIfChanged(state);
+    }
+    if (!max_height) {
+        m_wallet.WalletLogPrintf("Scanning current mempool transactions.\n");
+        WITH_LOCK(m_wallet.cs_wallet, chain.requestMempoolTransactions(m_wallet));
+    }
+    m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), 100);
+    if (m_abort) {
+        m_wallet.WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, progress_current);
+        result.status = ScanResult::USER_ABORT;
+    } else if (chain.shutdownRequested()) {
+        m_wallet.WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, progress_current);
+        result.status = ScanResult::USER_ABORT;
+    } else {
+        m_wallet.WalletLogPrintf("Rescan completed in %15dms\n", Ticks<std::chrono::milliseconds>(reserver.now() - start_time));
+    }
+    return result;
+}
+}

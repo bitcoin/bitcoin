@@ -12,6 +12,7 @@
 #include <util/vector.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 using interfaces::FoundBlock;
@@ -910,14 +911,14 @@ RPCMethod rescanblockchain()
         CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
     }
 
-    CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, /*save_progress=*/false);
+    ScanResult result =
+        pwallet->Scanner().Scan(start_block, start_height, stop_height, reserver, /*save_progress=*/false);
     switch (result.status) {
-    case CWallet::ScanResult::SUCCESS:
+    case ScanResult::SUCCESS:
         break;
-    case CWallet::ScanResult::FAILURE:
+    case ScanResult::FAILURE:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
-    case CWallet::ScanResult::USER_ABORT:
+    case ScanResult::USER_ABORT:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
     } // no default case, so the compiler can warn about missing cases
     UniValue response(UniValue::VOBJ);
@@ -948,8 +949,8 @@ RPCMethod abortrescan()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
-    pwallet->AbortRescan();
+    if (!pwallet->Scanner().IsScanning() || pwallet->Scanner().IsAborting()) return false;
+    pwallet->Scanner().Abort();
     return true;
 },
     };
