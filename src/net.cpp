@@ -356,6 +356,25 @@ bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
     return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
 }
 
+std::string CConnman::ManualConnectionKey(const std::string& dest) const
+{
+    const CService resolved{MaybeFlipIPv6toCJDNS(LookupNumeric(dest, GetDefaultPort(dest)))};
+    return resolved.IsValid() ? resolved.ToStringAddrPort() : dest;
+}
+
+bool CConnman::MarkManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+{
+    LOCK(m_nodes_mutex);
+    return m_manual_connection_in_progress.insert(key).second;
+}
+
+void CConnman::ClearManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+{
+    LOCK(m_nodes_mutex);
+    const auto erased{m_manual_connection_in_progress.erase(key)};
+    Assume(erased == 1);
+}
+
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(m_nodes_mutex);
@@ -3032,16 +3051,26 @@ void CConnman::ThreadOpenAddedConnections()
     AssertLockNotHeld(m_reconnections_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
 
+    std::unordered_set<std::string> logged_connected;
     while (true)
     {
         CountingSemaphoreGrant<> grant(*semAddnode);
-        std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo(/*include_connected=*/false);
+        std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo(/*include_connected=*/true);
+        std::unordered_set<std::string> current_added_nodes;
         bool tried = false;
         for (const AddedNodeInfo& info : vInfo) {
+            current_added_nodes.insert(info.m_params.m_added_node);
+            if (info.fConnected) {
+                if (logged_connected.insert(info.m_params.m_added_node).second) {
+                    LogDebug(BCLog::NET, "Skipping manual connection to %s, already connected\n", info.m_params.m_added_node);
+                }
+                continue;
+            }
+            logged_connected.erase(info.m_params.m_added_node);
             if (!grant) {
-                // If we've used up our semaphore and need a new one, let's not wait here since while we are waiting
-                // the addednodeinfo state might change.
-                break;
+                // If we've used up our semaphore, do not wait here since while
+                // we are waiting the addednodeinfo state might change.
+                continue;
             }
             tried = true;
             OpenNetworkConnection(/*addrConnect=*/CAddress{CService{}, NODE_NONE},
@@ -3054,6 +3083,7 @@ void CConnman::ThreadOpenAddedConnections()
             if (!m_interrupt_net->sleep_for(500ms)) return;
             grant = CountingSemaphoreGrant<>(*semAddnode, /*fTry=*/true);
         }
+        std::erase_if(logged_connected, [&](const auto& node) { return !current_added_nodes.contains(node); });
         // See if any reconnections are desired.
         PerformReconnections();
         // Retry every 60 seconds if a connection was attempted, otherwise two seconds
@@ -3094,10 +3124,26 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
         return false;
     }
 
+    std::optional<std::string> manual_connection;
+    if (conn_type == ConnectionType::MANUAL) {
+        if (pszDest) {
+            manual_connection = ManualConnectionKey(pszDest);
+        } else if (addrConnect.IsValid()) {
+            manual_connection = addrConnect.ToStringAddrPort();
+        }
+        if (manual_connection && !MarkManualConnectionInProgress(*manual_connection)) {
+            LogInfo("Not opening manual connection to %s, connection already in progress\n",
+                    pszDest ? pszDest : addrConnect.ToStringAddrPort());
+            return false;
+        }
+    }
+
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type, use_v2transport, proxy_override);
 
-    if (!pnode)
+    if (!pnode) {
+        if (manual_connection) ClearManualConnectionInProgress(*manual_connection);
         return false;
+    }
     pnode->grantOutbound = std::move(grant_outbound);
 
     m_msgproc->InitializeNode(*pnode, m_local_services);
@@ -3108,6 +3154,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
         // update connection count by network
         if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
     }
+    if (manual_connection) ClearManualConnectionInProgress(*manual_connection);
 
     TRACEPOINT(net, outbound_connection,
         pnode->GetId(),

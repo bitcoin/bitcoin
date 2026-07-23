@@ -43,6 +43,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <unordered_set>
@@ -1541,6 +1542,10 @@ private:
      */
     bool AlreadyConnectedToAddress(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
+    std::string ManualConnectionKey(const std::string& dest) const;
+    bool MarkManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    void ClearManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
     bool AttemptToEvictConnection() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     /**
@@ -1642,6 +1647,7 @@ private:
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable Mutex m_nodes_mutex;
+    std::unordered_set<std::string> m_manual_connection_in_progress GUARDED_BY(m_nodes_mutex);
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
