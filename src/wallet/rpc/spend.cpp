@@ -9,6 +9,7 @@
 #include <node/types.h>
 #include <policy/policy.h>
 #include <policy/truc_policy.h>
+#include <psbt.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
@@ -1611,7 +1612,13 @@ RPCMethod walletprocesspsbt()
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true},
+                        "How to handle standard key-origin fields in the returned PSBT: "
+                        "true or \"add\" allows known fields to be added; "
+                        "false or \"preserve\" does not add or explicitly remove fields; "
+                        "\"strip\" removes fields after normal processing. "
+                        "Finalization may remove input key-origin fields.",
+                        RPCArgOptions{.skip_type_check = true, .type_str = {"", "boolean or string"}}},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
                 },
                 RPCResult{
@@ -1647,7 +1654,8 @@ RPCMethod walletprocesspsbt()
 
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    const PSBTKeyOriginMode key_origin_mode{ParseBip32DerivsMode(self.Arg<UniValue>("bip32derivs"))};
+    const bool bip32derivs{key_origin_mode == PSBTKeyOriginMode::Add};
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
 
@@ -1656,6 +1664,9 @@ RPCMethod walletprocesspsbt()
     const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
+    }
+    if (key_origin_mode == PSBTKeyOriginMode::Strip) {
+        StripPSBTKeyOriginFields(psbtx);
     }
 
     UniValue result(UniValue::VOBJ);

@@ -1651,6 +1651,9 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned
 /**  Reduces the size of the PSBT by dropping unnecessary `non_witness_utxos` (i.e. complete previous transactions) from a psbt when all inputs are segwit v1. */
 void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx);
 
+/** Remove global xpubs and legacy and Taproot BIP32 derivation fields from a PSBT. */
+void StripPSBTKeyOriginFields(PartiallySignedTransaction& psbt);
+
 /** Counts the unsigned inputs of a PSBT. */
 size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
 

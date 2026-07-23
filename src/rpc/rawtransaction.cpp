@@ -2087,7 +2087,13 @@ RPCMethod descriptorprocesspsbt()
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true},
+                        "How to handle standard key-origin fields in the returned PSBT: "
+                        "true or \"add\" allows known fields to be added; "
+                        "false or \"preserve\" does not add or explicitly remove fields; "
+                        "\"strip\" removes fields after normal processing. "
+                        "Finalization may remove input key-origin fields.",
+                        RPCArgOptions{.skip_type_check = true, .type_str = {"", "boolean or string"}}},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
                 },
                 RPCResult{
@@ -2113,10 +2119,11 @@ RPCMethod descriptorprocesspsbt()
     }
 
     std::optional<int> sighash_type = ParseSighashString(request.params[2]);
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    const PSBTKeyOriginMode key_origin_mode{ParseBip32DerivsMode(self.Arg<UniValue>("bip32derivs"))};
+    const bool bip32derivs{key_origin_mode == PSBTKeyOriginMode::Add};
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
 
-    const PartiallySignedTransaction& psbtx = ProcessPSBT(
+    PartiallySignedTransaction psbtx = ProcessPSBT(
         request.params[0].get_str(),
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
@@ -2129,6 +2136,9 @@ RPCMethod descriptorprocesspsbt()
     const PrecomputedTransactionData txdata{*CHECK_NONFATAL(txdata_opt)};
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         complete = complete && PSBTInputSignedAndVerified(psbtx, i, &txdata);
+    }
+    if (key_origin_mode == PSBTKeyOriginMode::Strip) {
+        StripPSBTKeyOriginFields(psbtx);
     }
 
     DataStream ssTx{};
