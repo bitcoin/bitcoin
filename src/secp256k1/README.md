@@ -22,6 +22,7 @@ Features:
 * Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
 * Optional module for ElligatorSwift key exchange according to [BIP-324](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki).
 * Optional module for MuSig2 Schnorr multi-signatures according to [BIP-327](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki).
+* Optional module for Silent Payments sending and receiving according to [BIP-352](https://github.com/bitcoin/bips/blob/master/bip-0352.mediawiki).
 
 Implementation details
 ----------------------
@@ -81,20 +82,21 @@ This can be done with the following steps:
     ```
 4. Check out the latest release tag, e.g. 
     ```
-    git checkout v0.6.0
+    git checkout v0.7.1
     ```
 5. Use git to verify the GPG signature: 
    ```
-   % git tag -v v0.6.0 | grep -C 3 'Good signature'
+   % git tag -v v0.7.1 | grep -C 3 'Good signature'
 
-   gpg: Signature made Mon 04 Nov 2024 12:14:44 PM EST
-   gpg:                using RSA key 4BBB845A6F5A65A69DFAEC234861DBF262123605
-   gpg: Good signature from "Jonas Nick <jonas@n-ck.net>" [unknown]
-   gpg:                 aka "Jonas Nick <jonasd.nick@gmail.com>" [unknown]
+   gpg: Signature made Mon 26 Jan 2026 07:42:46 PM UTC
+   gpg:                using RSA key 2840EAABF4BC9F0FFD716AFAFBAFCC46DE2D3FE2
+   gpg: Good signature from "Pieter Wuille <pieter@wuille.net>" [unknown]
+   gpg:                 aka "Pieter Wuille <pieter.wuille@gmail.com>" [full]
+   gpg:                 aka "[jpeg image of size 5996]" [undefined]
    gpg: WARNING: This key is not certified with a trusted signature!
    gpg:          There is no indication that the signature belongs to the owner.
-   Primary key fingerprint: 36C7 1A37 C9D9 88BD E825  08D9 B1A7 0E4F 8DCD 0366
-        Subkey fingerprint: 4BBB 845A 6F5A 65A6 9DFA  EC23 4861 DBF2 6212 3605
+   Primary key fingerprint: 133E AC17 9436 F14A 5CF1  B794 860F EB80 4E66 9320
+        Subkey fingerprint: 2840 EAAB F4BC 9F0F FD71  6AFA FBAF CC46 DE2D 3FE2
    ```
 
 Building with Autotools
@@ -150,6 +152,7 @@ Usage examples can be found in the [examples](examples) directory. To compile th
   * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
   * [ElligatorSwift key exchange example](examples/ellswift.c)
   * [MuSig2 Schnorr multi-signatures example](examples/musig.c)
+  * [Silent Payments send and receive example](examples/silentpayments.c)
 
 To compile the examples, make sure the corresponding modules are enabled.
 

@@ -269,38 +269,10 @@ static int secp256k1_fe_impl_set_b32_limit(secp256k1_fe *r, const unsigned char 
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 static void secp256k1_fe_impl_get_b32(unsigned char *r, const secp256k1_fe *a) {
-    r[0] = (a->n[4] >> 40) & 0xFF;
-    r[1] = (a->n[4] >> 32) & 0xFF;
-    r[2] = (a->n[4] >> 24) & 0xFF;
-    r[3] = (a->n[4] >> 16) & 0xFF;
-    r[4] = (a->n[4] >> 8) & 0xFF;
-    r[5] = a->n[4] & 0xFF;
-    r[6] = (a->n[3] >> 44) & 0xFF;
-    r[7] = (a->n[3] >> 36) & 0xFF;
-    r[8] = (a->n[3] >> 28) & 0xFF;
-    r[9] = (a->n[3] >> 20) & 0xFF;
-    r[10] = (a->n[3] >> 12) & 0xFF;
-    r[11] = (a->n[3] >> 4) & 0xFF;
-    r[12] = ((a->n[2] >> 48) & 0xF) | ((a->n[3] & 0xF) << 4);
-    r[13] = (a->n[2] >> 40) & 0xFF;
-    r[14] = (a->n[2] >> 32) & 0xFF;
-    r[15] = (a->n[2] >> 24) & 0xFF;
-    r[16] = (a->n[2] >> 16) & 0xFF;
-    r[17] = (a->n[2] >> 8) & 0xFF;
-    r[18] = a->n[2] & 0xFF;
-    r[19] = (a->n[1] >> 44) & 0xFF;
-    r[20] = (a->n[1] >> 36) & 0xFF;
-    r[21] = (a->n[1] >> 28) & 0xFF;
-    r[22] = (a->n[1] >> 20) & 0xFF;
-    r[23] = (a->n[1] >> 12) & 0xFF;
-    r[24] = (a->n[1] >> 4) & 0xFF;
-    r[25] = ((a->n[0] >> 48) & 0xF) | ((a->n[1] & 0xF) << 4);
-    r[26] = (a->n[0] >> 40) & 0xFF;
-    r[27] = (a->n[0] >> 32) & 0xFF;
-    r[28] = (a->n[0] >> 24) & 0xFF;
-    r[29] = (a->n[0] >> 16) & 0xFF;
-    r[30] = (a->n[0] >> 8) & 0xFF;
-    r[31] = a->n[0] & 0xFF;
+    secp256k1_write_be64(&r[0], (a->n[4] << 16) | (a->n[3] >> 36));
+    secp256k1_write_be64(&r[8], (a->n[3] << 28) | (a->n[2] >> 24));
+    secp256k1_write_be64(&r[16], (a->n[2] << 40) | (a->n[1] >> 12));
+    secp256k1_write_be64(&r[24], (a->n[1] << 52) | a->n[0]);
 }
 
 SECP256K1_INLINE static void secp256k1_fe_impl_negate_unchecked(secp256k1_fe *r, const secp256k1_fe *a, int m) {
