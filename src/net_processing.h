@@ -18,10 +18,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 class AddrMan;
@@ -96,6 +98,9 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Precomputed headers-sync parameters, as {commitment period, redownload buffer size};
+        //! when unset, they are computed at construction time (this is a test-only option).
+        std::optional<std::pair<size_t, size_t>> headers_sync_params{std::nullopt};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
