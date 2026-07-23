@@ -1897,6 +1897,9 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
         break;
+    case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
+        max_connections = m_max_outbound_full_recon;
+        break;
     case ConnectionType::BLOCK_RELAY:
         max_connections = m_max_outbound_block_relay;
         break;
@@ -2697,6 +2700,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
 
         // Only connect out to one peer per ipv4/ipv6 network group (/16 for IPv4).
         int nOutboundFullRelay = 0;
+        int nOutboundFullRecon = 0;
         int nOutboundBlockRelay = 0;
         int outbound_privacy_network_peers = 0;
         std::set<std::vector<unsigned char>> outbound_ipv46_peer_netgroups;
@@ -2705,6 +2709,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
+                if (pnode->IsOutboundReconciliationConn()) nOutboundFullRecon++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
                 // Make sure our persistent outbound slots to ipv4/ipv6 peers belong to different netgroups.
@@ -2721,6 +2726,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                         break;
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
+                    case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
                     case ConnectionType::BLOCK_RELAY:
                         const CAddress address{pnode->addr};
                         if (address.IsTor() || address.IsI2P() || address.IsCJDNS()) {
@@ -2768,6 +2774,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
             // OUTBOUND_FULL_RELAY
+        } else if (nOutboundFullRecon < m_max_outbound_full_recon) {
+            conn_type = ConnectionType::OUTBOUND_FULL_RECONCILIATION;
         } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
             conn_type = ConnectionType::BLOCK_RELAY;
         } else if (GetTryNewOutboundPeer()) {

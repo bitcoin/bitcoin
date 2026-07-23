@@ -127,11 +127,17 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         # Now, *sending* to *outbound*.
-        self.log.info('SENDTXRCNCL sent to an outbound')
+        self.log.info('SENDTXRCNCL sent to an outbound reconciliation peer')
         peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-recon")
         assert peer.sendtxrcncl_msg_received
         assert_equal(peer.sendtxrcncl_msg_received.version, 1)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('SENDTXRCNCL should not be sent if outbound-full-relay')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
+        assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL should not be sent if block-relay-only')
