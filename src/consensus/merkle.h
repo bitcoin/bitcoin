@@ -10,6 +10,12 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+/*
+ * Compute a Merkle root from the provided leaf hashes.
+ * *mutated is set to true if two identical hashes are paired at any tree level
+ * before the odd-count hash duplication step. The returned root is always
+ * computed from the full input, regardless of whether a mutation is detected.
+ */
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
 
 /*

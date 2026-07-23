@@ -47,6 +47,8 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
     bool mutation = false;
     while (hashes.size() > 1) {
         if (mutated) {
+            // Mutation detection only affects the output flag.
+            // The root computation below must still reduce every tree level.
             for (size_t pos = 0; pos + 1 < hashes.size(); pos += 2) {
                 if (hashes[pos] == hashes[pos + 1]) mutation = true;
             }
