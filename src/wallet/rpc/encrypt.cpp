@@ -27,6 +27,8 @@ RPCMethod walletpassphrase()
                 RPCExamples{
             "\nUnlock the wallet for 60 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
+            "\nUnlock the wallet for 60 seconds, reading the passphrase from stdin to avoid exposing it in shell history or process list\n"
+            + HelpExampleCli("-stdinwalletpassphrase walletpassphrase", "60") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
@@ -126,8 +128,10 @@ RPCMethod walletpassphrasechange()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
-            + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
+                    HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"") +
+            "\nUsing -stdinwalletpassphrase to avoid exposing passphrases in shell history or process list\n"
+            + HelpExampleCli("-stdinwalletpassphrase -stdin walletpassphrasechange", "") +
+            HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
