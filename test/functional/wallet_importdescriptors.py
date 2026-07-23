@@ -19,7 +19,7 @@ import concurrent.futures
 import threading
 import time
 
-from test_framework.address import key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
+from test_framework.address import key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
@@ -461,28 +461,24 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         # Make sure ranged imports import keys in order
         w1 = self.nodes[1].get_wallet_rpc('w1')
         self.log.info('Key ranges should be imported in order')
-        xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
-        addresses = [
-            'bcrt1qtmp74ayg7p24uslctssvjm06q5phz4yrxucgnv', # m/0'/0'/0
-            'bcrt1q8vprchan07gzagd5e6v9wd7azyucksq2xc76k8', # m/0'/0'/1
-            'bcrt1qtuqdtha7zmqgcrr26n2rqxztv5y8rafjp9lulu', # m/0'/0'/2
-            'bcrt1qau64272ymawq26t90md6an0ps99qkrse58m640', # m/0'/0'/3
-            'bcrt1qsg97266hrh6cpmutqen8s4s962aryy77jp0fg0', # m/0'/0'/4
-        ]
-
-        self.test_importdesc({'desc': descsum_create('wpkh([80002067/0h/0h]' + xpub + '/*)'),
+        root_xprv = ExtendedPrivateKey.generate()
+        root_fingerprint = root_xprv._fingerprint().hex()
+        xprv = root_xprv.derive_path("m/0'/0'")
+        xpub = xprv.pubkey().to_string()
+        addresses = [key_to_p2wpkh(xprv.derive_path(f"m/{i}").pubkey().pubkey.get_bytes()) for i in range(0, 5)]
+        self.test_importdesc({'desc': descsum_create(f'wpkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
                               'active': True,
                               'range' : [0, 2],
                               'timestamp': 'now'
                              },
                              success=True)
-        self.test_importdesc({'desc': descsum_create('sh(wpkh([abcdef12/0h/0h]' + xpub + '/*))'),
+        self.test_importdesc({'desc': descsum_create(f'sh(wpkh([{root_fingerprint}/0h/0h]{xpub}/*))'),
                               'active': True,
                               'range' : [0, 2],
                               'timestamp': 'now'
                              },
                              success=True)
-        self.test_importdesc({'desc': descsum_create('pkh([12345678/0h/0h]' + xpub + '/*)'),
+        self.test_importdesc({'desc': descsum_create(f'pkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
                               'active': True,
                               'range' : [0, 2],
                               'timestamp': 'now'
@@ -495,15 +491,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
             assert_equal(received_addr, expected_addr)
             bech32_addr_info = w1.getaddressinfo(received_addr)
-            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0h/0h/{}]'.format(i))
+            assert_equal(bech32_addr_info['desc'][:23], f'wpkh([{root_fingerprint}/0h/0h/{i}]')
 
             shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
             shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0h/0h/{}]'.format(i))
+            assert_equal(shwpkh_addr_info['desc'][:26], f'sh(wpkh([{root_fingerprint}/0h/0h/{i}]')
 
             pkh_addr = w1.getnewaddress('', 'legacy')
             pkh_addr_info = w1.getaddressinfo(pkh_addr)
-            assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0h/0h/{}]'.format(i))
+            assert_equal(pkh_addr_info['desc'][:22], f'pkh([{root_fingerprint}/0h/0h/{i}]')
 
             assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
         w1.keypoolrefill()
@@ -540,7 +536,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               },
                              success=True)
         address = w1.getrawchangeaddress('legacy')
-        assert_equal(address, "mpA2Wh9dvZT7yfELq1UnrUmAoc5qCkMetg")
+        assert_equal(address, key_to_p2pkh(xprv.derive_path("m/0").pubkey().pubkey.get_bytes()))
 
         self.log.info('Check can deactivate active descriptor')
         self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
