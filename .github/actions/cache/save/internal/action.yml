@@ -10,6 +10,14 @@ inputs:
   provider:
     description: 'The cache provider to use'
     required: true
+  enable-cross-os-archive:
+    description: 'Allow the cache to be restored on another operating system'
+    required: false
+    default: 'false'
+  enable-cross-arch-archive:
+    description: 'Allow the WarpBuild cache to be restored on another architecture'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -19,6 +27,8 @@ runs:
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
+        enableCrossOsArchive: ${{ inputs.enable-cross-os-archive }}
+        enableCrossArchArchive: ${{ inputs.enable-cross-arch-archive }}
 
     - name: Save cache with GitHub Actions
       if: ${{ inputs.provider == 'gha' }}
@@ -26,3 +36,4 @@ runs:
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
+        enableCrossOsArchive: ${{ inputs.enable-cross-os-archive }}
