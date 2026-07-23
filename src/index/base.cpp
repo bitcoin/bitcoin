@@ -500,6 +500,24 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
+bool BaseIndex::WaitForRacingWrite(const CBlockIndex* target, int max_ahead) const
+{
+    if (!target || !m_synced) return false;
+    const CBlockIndex* best = m_best_block_index.load();
+    if (!best) return false;
+    // Wait when `target` is within the race window of our last processed block.
+    // `ahead == 0` covers same-height sibling reorgs: the initial lookup only
+    // fails when the requested block differs from `best`, so a same-height miss
+    // means a queued BlockConnected for the sibling is in flight. `ahead < 0`
+    // is a real miss for an older block — draining the queue won't help.
+    const int ahead = target->nHeight - best->nHeight;
+    if (ahead < 0 || ahead > max_ahead) return false;
+    auto* signals = Assert(m_chain->context())->validation_signals.get();
+    if (!signals) return false;
+    signals->SyncWithValidationInterfaceQueue();
+    return true;
+}
+
 void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
 {
     assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());

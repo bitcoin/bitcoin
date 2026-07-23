@@ -137,6 +137,15 @@ protected:
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
+    /// Drain the validation-interface queue once if `target` is at most
+    /// `max_ahead` blocks ahead of the last block this index has processed.
+    /// Returns true if the wait happened (caller should retry the lookup),
+    /// false otherwise. Bounds the wait/DoS surface: callers reachable from
+    /// the network can only force a queue drain for blocks that are
+    /// plausibly racing with our own BlockConnected callback, not for
+    /// arbitrary historic missing entries.
+    bool WaitForRacingWrite(const CBlockIndex* target, int max_ahead) const LOCKS_EXCLUDED(::cs_main);
+
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
