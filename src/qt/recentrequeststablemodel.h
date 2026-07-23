@@ -20,7 +20,7 @@ class RecentRequestEntry
 public:
     RecentRequestEntry() = default;
 
-    static const int CURRENT_VERSION = 1;
+    static constexpr int CURRENT_VERSION{1};
     int nVersion{RecentRequestEntry::CURRENT_VERSION};
     int64_t id{0};
     QDateTime date;

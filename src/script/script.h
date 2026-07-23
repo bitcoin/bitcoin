@@ -241,7 +241,7 @@ public:
         m_value = n;
     }
 
-    static const size_t nDefaultMaxNumSize = 4;
+    static constexpr size_t nDefaultMaxNumSize{4};
 
     explicit CScriptNum(const std::vector<unsigned char>& vch, bool fRequireMinimal,
                         const size_t nMaxNumSize = nDefaultMaxNumSize)

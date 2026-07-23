@@ -21,7 +21,7 @@ public:
     explicit TransactionFilterProxy(QObject *parent = nullptr);
 
     /** Type filter bit field (all types) */
-    static const quint32 ALL_TYPES = 0xFFFFFFFF;
+    static constexpr quint32 ALL_TYPES{0xFFFFFFFF};
 
     static quint32 TYPE(int type) { return 1<<type; }
 

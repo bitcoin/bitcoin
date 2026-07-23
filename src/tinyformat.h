@@ -232,7 +232,7 @@ struct is_convertible
         // the overload set only if the version taking a T2 doesn't match.
         // Then we compare the sizes of the return types to check which
         // function matched.  Very neat, in a disgusting kind of way :)
-        static const bool value =
+        static constexpr bool value =
             sizeof(tryConvert(makeT1())) == sizeof(succeed);
 #       ifdef _MSC_VER
 #       pragma warning(pop)

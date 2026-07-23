@@ -13,7 +13,7 @@ class CHKDF_HMAC_SHA256_L32
 {
 private:
     unsigned char m_prk[32];
-    static const size_t OUTPUT_SIZE = 32;
+    static constexpr size_t OUTPUT_SIZE{32};
 
 public:
     CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt);

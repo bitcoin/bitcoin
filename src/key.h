@@ -39,8 +39,8 @@ public:
     /**
      * secp256k1:
      */
-    static const unsigned int SIZE            = 279;
-    static const unsigned int COMPRESSED_SIZE = 214;
+    static constexpr unsigned int SIZE{279};
+    static constexpr unsigned int COMPRESSED_SIZE{214};
     /**
      * see www.keylength.com
      * script supports up to 75 for single byte push
