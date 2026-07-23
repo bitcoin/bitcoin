@@ -23,6 +23,7 @@
 #include <util/translation.h>
 #include <wallet/export.h>
 #include <wallet/rpc/util.h>
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 #include <cstdint>
@@ -428,10 +429,10 @@ RPCMethod importdescriptors()
 
     // Rescan the blockchain using the lowest timestamp
     if (rescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver);
+        int64_t scanned_time = pwallet->Scanner().ScanFromTime(lowest_timestamp, reserver);
         pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
 
-        if (pwallet->IsAbortingRescan()) {
+        if (pwallet->Scanner().IsAborting()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
         }
 
