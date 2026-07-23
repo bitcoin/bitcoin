@@ -39,7 +39,7 @@ outgoing connections, but more is possible.
         as well. You need to use -noonion or -onion=0 to explicitly disable
         outbound access to onion services.
 
-    -proxy=ip[:port]=tor
+    -proxy=ip[:port]=onion
     or
     -onion=ip[:port]
         Set the proxy server for reaching .onion addresses. You do not need to
@@ -51,7 +51,7 @@ outgoing connections, but more is possible.
         -proxy=addr:port=ipv4 or
         -proxy=addr:port=ipv6
         (last one if multiple options are given). It is not taken from
-        -proxy=addr:port=tor or
+        -proxy=addr:port=onion or
         -onion=addr:port.
         If no proxy for DNS requests is configured, then they will be done using
         the functions provided by the operating system, most likely resulting in

@@ -616,7 +616,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    "Connect through SOCKS5 proxy, set -noproxy to disable. " +
                    proxy_doc_for_unix_socket +
                    "Could end in =network to set the proxy only for that network. " +
-                   "The network can be any of ipv4, ipv6, tor or cjdns. " +
+                   "The network can be any of ipv4, ipv6, onion or cjdns. " +
                    "(default: disabled)",
                    ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_ELISION,
                    OptionsCategory::CONNECTION);
