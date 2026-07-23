@@ -15,6 +15,7 @@
 #include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cassert>
@@ -2164,7 +2165,7 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
         std::vector<unsigned char> data;
         while (pc < scriptSig.end()) {
             opcodetype opcode;
-            scriptSig.GetOp(pc, opcode, data);
+            Assert(scriptSig.GetOp(pc, opcode, data));
         }
         CScript subscript(data.begin(), data.end());
         if (subscript.IsWitnessProgram(witnessversion, witnessprogram)) {
