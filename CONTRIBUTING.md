@@ -106,7 +106,8 @@ fixes or code moves with actual code changes.
 
 Make sure each individual commit is hygienic: that it builds successfully on its
 own without warnings, errors, regressions, or test failures.
-This means tests must be updated in the same commit that changes the behavior.
+See the [developer notes](doc/developer-notes.md#commit-structure-for-tests)
+for guidance on where test coverage belongs in a commit stack.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
