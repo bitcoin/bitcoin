@@ -593,12 +593,18 @@ private:
 };
 
 /**
- * CCoinsViewCache subclass that asynchronously fetches most block input prevouts in parallel during ConnectBlock without
- * mutating the base cache.
+ * CCoinsViewCache subclass that asynchronously fetches most block input prevouts in parallel during ConnectBlock
+ * without mutating the base cache. This is achieved by fetching coins from the base view using PeekCoin() instead of
+ * GetCoin(), so intermediate CCoinsViewCache layers are not filled.
  *
- * Only used in ConnectBlock to pass as an ephemeral view that can be reset if the block is invalid.
+ * Used during ConnectBlock() as an ephemeral, resettable top-level view that is flushed only on success, so invalid
+ * blocks don't pollute the underlying cache.
  * It provides the same interface as CCoinsViewCache.
  * It adds an additional StartFetching method to provide the block.
+ *
+ * While this class uses threads internally to fetch coins, externally it is only safe to call its methods from a
+ * single "main" thread. It assumes StartFetching, StopFetching, FetchCoinFromBase, Flush and Reset will all only be
+ * called from the main thread.
  *
  * When a block is passed to StartFetching, the inputs of the block are flattened into a vector of InputToFetch
  * objects. StartFetching then submits worker tasks to a ThreadPool and keeps the returned futures alive until fetching
@@ -608,17 +614,16 @@ private:
  * m_inputs vector at a time. Workers race to claim inputs, so they may fetch elements in any order. If the fetched
  * index is greater than or equal to the size of m_inputs, no more inputs can be fetched and false is returned.
  *
- * The worker claims the InputToFetch at this index, fetches the coin from the base cache and moves it into the
+ * The worker claims the InputToFetch at this index, fetches the coin with base->PeekCoin() and moves it into the
  * InputToFetch object. The ready flag is then set with a release memory order. This allows the ready flag to be
  * used as a memory fence, guaranteeing the coin being written to the object will have happened before another
  * thread tests the flag with an acquire memory order.
- * This assumes all base->PeekCoin() paths are safe for concurrent readers and do not mutate lower cache layers.
+ * This assumes all base->PeekCoin() paths are safe for concurrent readers.
  *
- * When a coin is requested from the cache on the main thread and is not already in cacheCoins map, FetchCoinFromBase
- * checks whether the next unconsumed entry in m_inputs has the requested outpoint. On a match, m_input_tail is advanced
- * and the entry's ready flag is waited on with an acquire memory order until a worker has finished fetching it. The
- * coin is then moved out and returned. Since the main thread is the only consumer of validation results, it blocks
- * on the specific input it needs rather than racing workers for other inputs.
+ * The main thread is the only consumer of the fetched coins. FetchCoinFromBase is called when a coin is requested on
+ * the main thread and is not already in the cache. It checks whether the next unconsumed entry in m_inputs has the
+ * requested outpoint. On a match, m_input_tail is advanced and the entry's ready flag is waited on with an acquire
+ * memory order until a worker has finished fetching it. The coin is then moved out and returned.
  *
  * StopFetching() is called in Flush() and in Reset() (the per-block teardown) so workers stop before the block they
  * reference goes away. It stops fetching by moving m_input_head to the end of m_inputs (so workers quickly exit),
@@ -742,6 +747,8 @@ private:
     std::vector<std::future<void>> m_futures{};
 
 protected:
+    //! StopFetching must be called here since InputToFetch objects hold references to the block's
+    //! outpoints, so they must not outlive the block being connected.
     void Reset() noexcept override
     {
         StopFetching();
@@ -769,6 +776,10 @@ public:
         StopFetching();
         CCoinsViewCache::Flush(reallocate_cache);
     }
+
+    //! Swapping the backend or writing through to it with Sync() is not supported while fetching.
+    void SetBackend(CCoinsView&) = delete;
+    void Sync() = delete;
 
     //! Verify that all parallel fetched input prevouts have been consumed.
     bool AllInputsConsumed() const noexcept { return m_input_tail == m_inputs.size(); }
