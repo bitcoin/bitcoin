@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <string>
 #include <string_view>
 
@@ -41,11 +42,12 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if satvB is true (only present if no errors were encountered)"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -83,7 +85,7 @@ static RPCMethod estimatesmartfee()
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
-                result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+                result.pushKV("feerate", ValueFromFeeRate(feeRate, self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
             } else {
                 errors.push_back("Insufficient data or no feerate found");
                 result.pushKV("errors", std::move(errors));
@@ -110,7 +112,7 @@ static std::vector<RPCResult> FeeRateBucketDoc(bool elide = false)
 static std::vector<RPCResult> FeeEstimateHorizonDoc(bool elide = false)
 {
     auto fields = std::vector<RPCResult>{
-        {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB"},
+        {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate"},
         {RPCResult::Type::NUM, "decay", "exponential decay (per block) for historical moving average of confirmation data"},
         {RPCResult::Type::NUM, "scale", "The resolution of confirmation targets at this time horizon"},
         {RPCResult::Type::OBJ, "pass", /*optional=*/true, "information about the lowest range of feerates to succeed in meeting the threshold", FeeRateBucketDoc()},
@@ -139,6 +141,7 @@ static RPCMethod estimaterawfee()
             {"threshold", RPCArg::Type::NUM, RPCArg::Default{0.95}, "The proportion of transactions in a given feerate range that must have been\n"
             "confirmed within conf_target in order to consider those feerates as high enough and proceed to check\n"
             "lower buckets."},
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "Results are returned for any horizon which tracks blocks up to the confirmation target",
@@ -170,7 +173,18 @@ static RPCMethod estimaterawfee()
             }
 
             UniValue result(UniValue::VOBJ);
+            const bool sat_vb{self.Arg<bool>("satvB")};
 
+            auto ValueFromEstimateBucketFeeRate = [&sat_vb](const double fee_rate_per_kvb) -> UniValue {
+                const double rounded_fee_rate_per_kvb{round(fee_rate_per_kvb)};
+
+                if (!sat_vb || rounded_fee_rate_per_kvb == -1) return rounded_fee_rate_per_kvb;
+
+                if (rounded_fee_rate_per_kvb > static_cast<double>(std::numeric_limits<CAmount>::max())) {
+                    return rounded_fee_rate_per_kvb / 1000.0;
+                }
+                return ValueFromFeeRate(CFeeRate{static_cast<CAmount>(rounded_fee_rate_per_kvb)}, FeeRateUnit::SAT_VB);
+            };
             for (const FeeEstimateHorizon horizon : ALL_FEE_ESTIMATE_HORIZONS) {
                 CFeeRate feeRate;
                 EstimationResult buckets;
@@ -182,15 +196,15 @@ static RPCMethod estimaterawfee()
                 UniValue horizon_result(UniValue::VOBJ);
                 UniValue errors(UniValue::VARR);
                 UniValue passbucket(UniValue::VOBJ);
-                passbucket.pushKV("startrange", round(buckets.pass.start));
-                passbucket.pushKV("endrange", round(buckets.pass.end));
+                passbucket.pushKV("startrange", ValueFromEstimateBucketFeeRate(buckets.pass.start));
+                passbucket.pushKV("endrange", ValueFromEstimateBucketFeeRate(buckets.pass.end));
                 passbucket.pushKV("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0);
                 passbucket.pushKV("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0);
                 passbucket.pushKV("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0);
                 passbucket.pushKV("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0);
                 UniValue failbucket(UniValue::VOBJ);
-                failbucket.pushKV("startrange", round(buckets.fail.start));
-                failbucket.pushKV("endrange", round(buckets.fail.end));
+                failbucket.pushKV("startrange", ValueFromEstimateBucketFeeRate(buckets.fail.start));
+                failbucket.pushKV("endrange", ValueFromEstimateBucketFeeRate(buckets.fail.end));
                 failbucket.pushKV("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0);
                 failbucket.pushKV("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0);
                 failbucket.pushKV("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0);
@@ -198,7 +212,7 @@ static RPCMethod estimaterawfee()
 
                 // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
                 if (feeRate != CFeeRate(0)) {
-                    horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+                    horizon_result.pushKV("feerate", ValueFromFeeRate(feeRate, sat_vb ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", buckets.scale);
                     horizon_result.pushKV("pass", std::move(passbucket));

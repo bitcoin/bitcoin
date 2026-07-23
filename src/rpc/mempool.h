@@ -5,11 +5,13 @@
 #ifndef BITCOIN_RPC_MEMPOOL_H
 #define BITCOIN_RPC_MEMPOOL_H
 
+#include <core_io.h>
+
 class CTxMemPool;
 class UniValue;
 
 /** Mempool information to JSON */
-UniValue MempoolInfoToJSON(const CTxMemPool& pool);
+UniValue MempoolInfoToJSON(const CTxMemPool& pool, FeeRateUnit feerate_units = FeeRateUnit::BTC_KVB);
 
 /** Mempool to JSON */
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false, bool include_mempool_sequence = false);
