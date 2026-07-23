@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 
     logging_set_options(logging_options);
 
-    Logger logger{std::make_unique<KernelLog>()};
+    logging_set_callback(std::make_unique<KernelLog>());
 
     ContextOptions options{};
     ChainParams params{has_regtest_flag ? ChainType::REGTEST : ChainType::MAINNET};
