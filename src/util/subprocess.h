@@ -48,7 +48,6 @@ Documentation for C++ subprocessing library.
 #include <future>
 #include <initializer_list>
 #include <iostream>
-#include <locale>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -56,7 +55,7 @@ Documentation for C++ subprocessing library.
 #include <vector>
 
 #ifdef WIN32
-  #include <codecvt>
+#include <util/fs.h>
 #endif
 
 extern "C" {
@@ -168,9 +167,15 @@ public:
 namespace util
 {
 #ifdef WIN32
-  inline void quote_argument(const std::wstring &argument, std::wstring &command_line,
+  template <typename StringType>
+  inline void quote_argument(const StringType &argument, StringType &command_line,
                       bool force)
   {
+    using CharT = typename StringType::value_type;
+    constexpr CharT space_chars[] = {CharT(' '), CharT('\t'), CharT('\n'), CharT('\v'), CharT('\0')};
+    constexpr CharT quote = CharT('"');
+    constexpr CharT backslash = CharT('\\');
+
     //
     // Unless we're told otherwise, don't quote unless we actually
     // need to do so --- hopefully avoid problems if programs won't
@@ -178,16 +183,16 @@ namespace util
     //
 
     if (force == false && argument.empty() == false &&
-        argument.find_first_of(L" \t\n\v") == argument.npos) {
+        argument.find_first_of(space_chars) == argument.npos) {
       command_line.append(argument);
     }
     else {
-      command_line.push_back(L'"');
+      command_line.push_back(quote);
 
       for (auto it = argument.begin();; ++it) {
         unsigned number_backslashes = 0;
 
-        while (it != argument.end() && *it == L'\\') {
+        while (it != argument.end() && *it == backslash) {
           ++it;
           ++number_backslashes;
         }
@@ -200,17 +205,17 @@ namespace util
           // as a metacharacter.
           //
 
-          command_line.append(number_backslashes * 2, L'\\');
+          command_line.append(number_backslashes * 2, backslash);
           break;
         }
-        else if (*it == L'"') {
+        else if (*it == quote) {
 
           //
           // Escape all backslashes and the following
           // double quotation mark.
           //
 
-          command_line.append(number_backslashes * 2 + 1, L'\\');
+          command_line.append(number_backslashes * 2 + 1, backslash);
           command_line.push_back(*it);
         }
         else {
@@ -219,12 +224,12 @@ namespace util
           // Backslashes aren't special here.
           //
 
-          command_line.append(number_backslashes, L'\\');
+          command_line.append(number_backslashes, backslash);
           command_line.push_back(*it);
         }
       }
 
-      command_line.push_back(L'"');
+      command_line.push_back(quote);
     }
   }
 
@@ -1085,7 +1090,6 @@ inline void Popen::execute_process() noexcept(false)
   }
   this->exe_name_ = vargs_[0];
 
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   std::wstring argument;
   std::wstring command_line;
   bool first_arg = true;
@@ -1096,8 +1100,8 @@ inline void Popen::execute_process() noexcept(false)
     } else {
       first_arg = false;
     }
-    argument = converter.from_bytes(arg);
-    util::quote_argument(argument, command_line, false);
+    argument = fs::u8path(arg).wstring();
+    util::quote_argument(argument, command_line, /*force=*/false);
   }
 
   // CreateProcessW can modify szCmdLine so we allocate needed memory
