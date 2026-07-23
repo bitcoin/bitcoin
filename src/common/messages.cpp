@@ -127,8 +127,6 @@ bilingual_str PSBTErrorString(PSBTError err)
 bilingual_str TransactionErrorString(const TransactionError err)
 {
     switch (err) {
-        case TransactionError::OK:
-            return Untranslated("No error");
         case TransactionError::MISSING_INPUTS:
             return Untranslated("Inputs missing or spent");
         case TransactionError::ALREADY_IN_UTXO_SET:

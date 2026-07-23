@@ -127,14 +127,14 @@ static RPCMethod sendrawtransaction()
             }
             const auto method = private_broadcast_enabled ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
                                                           : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
-            const TransactionError err = BroadcastTransaction(node,
-                                                              tx,
-                                                              err_string,
-                                                              max_raw_tx_fee,
-                                                              method,
-                                                              /*wait_callback=*/true);
-            if (TransactionError::OK != err) {
-                throw JSONRPCTransactionError(err, err_string);
+            const auto result = BroadcastTransaction(node,
+                                                     tx,
+                                                     err_string,
+                                                     max_raw_tx_fee,
+                                                     method,
+                                                     /*wait_callback=*/true);
+            if (!result) {
+                throw JSONRPCTransactionError(result.error(), err_string);
             }
 
             return tx->GetHash().GetHex();
@@ -1467,14 +1467,14 @@ static RPCMethod submitpackage()
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
                 std::string err_string;
-                const auto err = BroadcastTransaction(node,
-                                                      tx,
-                                                      err_string,
-                                                      /*max_tx_fee=*/0,
-                                                      node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
-                                                      /*wait_callback=*/true);
-                if (err != TransactionError::OK) {
-                    throw JSONRPCTransactionError(err,
+                const auto result = BroadcastTransaction(node,
+                                                         tx,
+                                                         err_string,
+                                                         /*max_tx_fee=*/0,
+                                                         node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
+                                                         /*wait_callback=*/true);
+                if (!result) {
+                    throw JSONRPCTransactionError(result.error(),
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
                             err_string, num_broadcast));
                 }
