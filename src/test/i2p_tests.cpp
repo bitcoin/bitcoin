@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(listen_ok_accept_fail)
                 // reply to STREAM ACCEPT
                 "STREAM STATUS RESULT=OK\n"
                 // continued reply to STREAM ACCEPT, violating the protocol described at
-                // https://geti2p.net/en/docs/api/samv3#Accept%20Response
+                // https://i2p.net/en/docs/api/samv3/#accept-response
                 // should be base64, something like
                 // "IchV608baDoXbqzQKSqFDmTXPVgoDbPAhZJvNRXXxi4hyFXrTxtoOhdurNApKoUOZNc9WCgNs8CFkm81FdfGLiHIVetPG2g6F26s0CkqhQ5k1z1YKA2zwIWSbzUV18YuIchV608baDoXbqzQKSqFDmTXPVgoDbPAhZJvNRXXxi4hyFXrTxtoOhdurNApKoUOZNc9WCgNs8CFkm81FdfGLiHIVetPG2g6F26s0CkqhQ5k1z1YKA2zwIWSbzUV18YuIchV608baDoXbqzQKSqFDmTXPVgoDbPAhZJvNRXXxi4hyFXrTxtoOhdurNApKoUOZNc9WCgNs8CFkm81FdfGLiHIVetPG2g6F26s0CkqhQ5k1z1YKA2zwIWSbzUV18YuIchV608baDoXbqzQKSqFDmTXPVgoDbPAhZJvNRXXxi4hyFXrTxtoOhdurNApKoUOZNc9WCgNs8CFkm81FdfGLlSreVaCuCS5sdb-8ToWULWP7kt~lRPDeUNxQMq3cRSBBQAEAAcAAA==\n"
                 "STREAM STATUS RESULT=I2P_ERROR MESSAGE=\"Session was closed\"\n"
