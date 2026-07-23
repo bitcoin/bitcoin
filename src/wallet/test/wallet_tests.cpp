@@ -753,5 +753,105 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+struct TxValues
+{
+    CAmount credit, debit, change;
+    bool from_me;
+};
+
+static TxValues CachedValuesOf(const CWallet& wallet, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    const CWalletTx& wtx = wallet.mapWallet.at(txid);
+    return {CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false),
+            CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false),
+            CachedTxGetChange(wallet, wtx),
+            CachedTxIsFromMe(wallet, wtx)};
+}
+
+static void CheckValues(const CWallet& wallet, const Txid& txid, const TxValues& before) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    // Computed from the transaction, without the cache.
+    const CWalletTx& wtx = wallet.mapWallet.at(txid);
+    BOOST_CHECK_EQUAL(TxGetCredit(wallet, *wtx.tx), before.credit);
+    BOOST_CHECK_EQUAL(wallet.GetDebit(*wtx.tx), before.debit);
+    BOOST_CHECK_EQUAL(TxGetChange(wallet, *wtx.tx), before.change);
+    BOOST_CHECK_EQUAL(wallet.IsFromMe(*wtx.tx), before.from_me);
+
+    // And through the cache, which is what callers actually read.
+    const TxValues cached = CachedValuesOf(wallet, txid);
+    BOOST_CHECK_EQUAL(cached.credit, before.credit);
+    BOOST_CHECK_EQUAL(cached.debit, before.debit);
+    BOOST_CHECK_EQUAL(cached.change, before.change);
+    BOOST_CHECK_EQUAL(cached.from_me, before.from_me);
+}
+
+static std::vector<COutPoint> AvailableCoinsOf(const CWallet& wallet, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    std::vector<COutPoint> coins;
+    for (const COutput& coin : AvailableCoins(wallet).All()) {
+        if (coin.outpoint.hash == txid) coins.push_back(coin.outpoint);
+    }
+    return coins;
+}
+
+// A transaction spending only the specified outpoint, paying an address outside the wallet.
+static CTransactionRef CreateSpendOf(CWallet& wallet, const COutPoint& outpoint)
+{
+    CCoinControl coin_control;
+    coin_control.m_allow_other_inputs = false;
+    coin_control.Select(outpoint);
+    const CRecipient recipient{PubKeyDestination{GenerateRandomKey().GetPubKey()}, 5 * COIN, /*subtract_fee=*/false};
+    const auto res = Assert(CreateTransaction(wallet, {recipient}, /*change_pos=*/std::nullopt, coin_control));
+    return res->tx;
+}
+
+// Check that a transaction's cached values do not change when one of its outputs is spent,
+// or when that spend is abandoned. They represent the incoming and outgoing amounts of that
+// transaction alone, not the wallet's available balance (see wallet/transaction.h).
+// Abandoning takes the same path as marking a spend conflicted.
+BOOST_FIXTURE_TEST_CASE(cached_values_unchanged_by_spend, ListCoinsTestingSetup)
+{
+    // Pay to ourselves, so the wallet owns two of the transaction's outputs: the payment
+    // and the change.
+    const CTxDestination dest = getNewDestination(*wallet, OutputType::BECH32);
+    const Txid parent_tx = AddTx({dest, 20 * COIN, /*subtract_fee=*/false}).GetHash();
+
+    LOCK(wallet->cs_wallet);
+    const TxValues before = CachedValuesOf(*wallet, parent_tx);
+    const std::vector<COutPoint> coins = AvailableCoinsOf(*wallet, parent_tx);
+    BOOST_REQUIRE_EQUAL(coins.size(), 2U);
+
+    const CTransactionRef spend = CreateSpendOf(*wallet, coins[0]);
+    wallet->CommitTransaction(spend);
+    BOOST_CHECK(wallet->IsSpent(coins[0]));
+    BOOST_CHECK(!wallet->IsSpent(coins[1]));
+    BOOST_CHECK_EQUAL(AvailableCoinsOf(*wallet, parent_tx).size(), 1U);
+    CheckValues(*wallet, parent_tx, before);
+
+    // Now check that abandoning the spending tx does not change the parent cached values neither.
+    BOOST_REQUIRE(wallet->AbandonTransaction(spend->GetHash()));
+    BOOST_CHECK(!wallet->IsSpent(coins[0]));
+    BOOST_CHECK_EQUAL(AvailableCoinsOf(*wallet, parent_tx).size(), 2U);
+    CheckValues(*wallet, parent_tx, before);
+}
+
+// Check that a tx's cached values do not change when a spend of one of its
+// outputs reaches the wallet via a mempool event (same path as a block event).
+BOOST_FIXTURE_TEST_CASE(cached_values_unchanged_by_mempool_spend, ListCoinsTestingSetup)
+{
+    const CTxDestination dest = getNewDestination(*wallet, OutputType::BECH32);
+    const Txid parent_tx = AddTx({dest, 20 * COIN, /*subtract_fee=*/false}).GetHash();
+
+    LOCK(wallet->cs_wallet);
+    const TxValues before = CachedValuesOf(*wallet, parent_tx);
+    const std::vector<COutPoint> coins = AvailableCoinsOf(*wallet, parent_tx);
+    BOOST_REQUIRE_EQUAL(coins.size(), 2U);
+
+    wallet->transactionAddedToMempool(CreateSpendOf(*wallet, coins[0]));
+    BOOST_CHECK(wallet->IsSpent(coins[0]));
+    BOOST_CHECK_EQUAL(AvailableCoinsOf(*wallet, parent_tx).size(), 1U);
+    CheckValues(*wallet, parent_tx, before);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
