@@ -4749,8 +4749,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 // able to without any round trips.
                 PartiallyDownloadedBlock tempBlock(&m_mempool);
                 ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact);
+                // Malformed compact blocks are peer misbehavior; reconstruction failures are not.
                 if (status != READ_STATUS_OK) {
-                    // TODO: don't ignore failures
+                    if (status == READ_STATUS_INVALID) Misbehaving(peer, "invalid compact block");
                     return;
                 }
                 std::vector<CTransactionRef> dummy;
