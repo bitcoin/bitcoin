@@ -65,6 +65,12 @@ esac
 # LDFLAGS
 HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$(glibc_dynamic_linker "$HOST") -Wl,-O2"
 
+# Use LINK_WARNING_AS_ERROR when using CMake 4.x
+case "$HOST" in
+    riscv64-linux-gnu) ;; # https://github.com/boostorg/test/issues/345
+    *) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--fatal-warnings" ;;
+esac
+
 mkdir -p "$DISTSRC"
 (
     cd "$DISTSRC"

@@ -54,7 +54,7 @@ HOST_CFLAGS+=" -fno-ident"
 HOST_CXXFLAGS="$HOST_CFLAGS"
 
 # LDFLAGS
-HOST_LDFLAGS="-Wl,--no-insert-timestamp"
+HOST_LDFLAGS="-Wl,--no-insert-timestamp -Wl,--fatal-warnings"
 
 mkdir -p "$DISTSRC"
 (
