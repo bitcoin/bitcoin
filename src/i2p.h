@@ -193,7 +193,7 @@ private:
 
     /**
      * Derive own destination from `m_private_key`.
-     * @see https://geti2p.net/spec/common-structures#destination
+     * @see https://i2p.net/en/docs/specs/common-structures/#destination
      * @return an I2P destination
      */
     Binary MyDestination() const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
@@ -240,7 +240,7 @@ private:
 
     /**
      * The private key of this peer.
-     * @see The reply to the "DEST GENERATE" command in https://geti2p.net/en/docs/api/samv3
+     * @see The reply to the "DEST GENERATE" command in https://i2p.net/en/docs/api/samv3
      */
     Binary m_private_key GUARDED_BY(m_mutex);
 
@@ -251,7 +251,7 @@ private:
      * other connections to the SAM service to accept incoming I2P
      * connections and make outgoing ones.
      * If not connected then this unique_ptr will be empty.
-     * See https://geti2p.net/en/docs/api/samv3
+     * See https://i2p.net/en/docs/api/samv3
      */
     std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);
 
