@@ -38,7 +38,7 @@ def main():
     exit_code = 0
     shell_files = get_shell_files_list()
     for file_path in shell_files:
-        if re.search('src/(secp256k1|minisketch)/', file_path):
+        if re.search('src/(ipc/libmultiprocess|secp256k1|minisketch)/', file_path):
             continue
 
         with open(file_path, 'r') as file_obj:
