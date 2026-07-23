@@ -10,7 +10,7 @@
 #include <vector>
 #include <utility>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #define SKIPLIST_LENGTH 300000
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
         vBlocksMain[i].phashBlock = &vHashMain[i];
         vBlocksMain[i].BuildSkip();
         BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksMain[i].GetBlockHash()).GetLow64(), vBlocksMain[i].nHeight);
-        BOOST_CHECK(vBlocksMain[i].pprev == nullptr || vBlocksMain[i].nHeight == vBlocksMain[i].pprev->nHeight + 1);
+        BOOST_CHECK((vBlocksMain[i].pprev == nullptr || vBlocksMain[i].nHeight == vBlocksMain[i].pprev->nHeight + 1));
     }
 
     // Build a branch that splits off at block 49999, 50000 blocks long.
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
         vBlocksSide[i].phashBlock = &vHashSide[i];
         vBlocksSide[i].BuildSkip();
         BOOST_CHECK_EQUAL((int)UintToArith256(vBlocksSide[i].GetBlockHash()).GetLow64(), vBlocksSide[i].nHeight);
-        BOOST_CHECK(vBlocksSide[i].pprev == nullptr || vBlocksSide[i].nHeight == vBlocksSide[i].pprev->nHeight + 1);
+        BOOST_CHECK((vBlocksSide[i].pprev == nullptr || vBlocksSide[i].nHeight == vBlocksSide[i].pprev->nHeight + 1));
     }
 
     // Build a CChain for the main branch.
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_test)
         int64_t test_time = vBlocksMain[r].nTime;
         CBlockIndex* ret = chain.FindEarliestAtLeast(test_time, 0);
         BOOST_CHECK(ret->nTimeMax >= test_time);
-        BOOST_CHECK((ret->pprev==nullptr) || ret->pprev->nTimeMax < test_time);
+        BOOST_CHECK(((ret->pprev==nullptr) || ret->pprev->nTimeMax < test_time));
         BOOST_CHECK(vBlocksMain[r].GetAncestor(ret->nHeight) == ret);
     }
 }
@@ -184,10 +184,12 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     BOOST_CHECK(!chain.FindEarliestAtLeast(0, 9));
 
     CBlockIndex* ret1 = chain.FindEarliestAtLeast(100, 2);
-    BOOST_CHECK(ret1->nTimeMax >= 100 && ret1->nHeight == 2);
+    BOOST_CHECK(ret1->nTimeMax >= 100);
+    BOOST_CHECK(ret1->nHeight == 2);
     BOOST_CHECK(!chain.FindEarliestAtLeast(300, 9));
     CBlockIndex* ret2 = chain.FindEarliestAtLeast(200, 4);
-    BOOST_CHECK(ret2->nTimeMax >= 200 && ret2->nHeight == 4);
+    BOOST_CHECK(ret2->nTimeMax >= 200);
+    BOOST_CHECK(ret2->nHeight == 4);
 }
 
 BOOST_AUTO_TEST_CASE(build_skip_height_test)
@@ -270,7 +272,7 @@ BOOST_AUTO_TEST_CASE(build_skip_height_test)
         block_index[i].pprev = i == 0 ? nullptr : &block_index[i - 1];
         block_index[i].nHeight = i;
         block_index[i].BuildSkip();
-        BOOST_CHECK(block_index[i].pskip || i == 0);
+        BOOST_CHECK((block_index[i].pskip || i == 0));
     }
 
     for (auto& [input, expected] : TEST_DATA) {

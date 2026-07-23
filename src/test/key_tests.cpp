@@ -19,10 +19,16 @@
 #include <string>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 using namespace util::hex_literals;
 using util::ToString;
+
+static std::string stringify(const CNoDestination& d)
+{
+    return "CNoDestination{" + HexStr(d.GetScript()) + "}";
+}
 
 static const std::string strSecret1 = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj";
 static const std::string strSecret2 = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
@@ -41,13 +47,17 @@ BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(key_test1)
 {
     CKey key1  = DecodeSecret(strSecret1);
-    BOOST_CHECK(key1.IsValid() && !key1.IsCompressed());
+    BOOST_CHECK(key1.IsValid());
+    BOOST_CHECK(!key1.IsCompressed());
     CKey key2  = DecodeSecret(strSecret2);
-    BOOST_CHECK(key2.IsValid() && !key2.IsCompressed());
+    BOOST_CHECK(key2.IsValid());
+    BOOST_CHECK(!key2.IsCompressed());
     CKey key1C = DecodeSecret(strSecret1C);
-    BOOST_CHECK(key1C.IsValid() && key1C.IsCompressed());
+    BOOST_CHECK(key1C.IsValid());
+    BOOST_CHECK(key1C.IsCompressed());
     CKey key2C = DecodeSecret(strSecret2C);
-    BOOST_CHECK(key2C.IsValid() && key2C.IsCompressed());
+    BOOST_CHECK(key2C.IsValid());
+    BOOST_CHECK(key2C.IsCompressed());
     CKey bad_key = DecodeSecret(strAddressBad);
     BOOST_CHECK(!bad_key.IsValid());
 

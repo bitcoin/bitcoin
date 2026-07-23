@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 using namespace util::hex_literals;
 
@@ -35,7 +35,9 @@ struct CryptoTest : BasicTestingSetup {
 template<typename Hasher, typename In, typename Out>
 void TestVector(const Hasher &h, const In &in, const Out &out) {
     Out hash;
-    BOOST_CHECK(out.size() == h.OUTPUT_SIZE);
+    // Copy to a local to avoid ODR-using the in-class `static const` member.
+    const size_t output_size{h.OUTPUT_SIZE};
+    BOOST_CHECK(out.size() == output_size);
     hash.resize(out.size());
     {
         // Test that writing the whole input string at once works.

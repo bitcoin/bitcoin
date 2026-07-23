@@ -13,7 +13,7 @@
 
 #include <test/util/setup_common.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, ChainTestingSetup)
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     for (int i = 1; i < 10;i++) {
-        BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK((feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee));
     }
 
     // Mine all those transactions
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
-        BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK((feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee));
     }
 
     // Mine 400 more blocks where everything is mined every block

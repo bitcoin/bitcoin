@@ -2,35 +2,30 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-/**
- * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
- */
-#define BOOST_TEST_MODULE Bitcoin Core Test Suite
+#define BITCOIN_TEST_MAIN
 
-#include <boost/test/included/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <test/util/setup_common.h>
 
 #include <functional>
-#include <iostream>
+#include <string>
+#include <vector>
 
 /**
- * Retrieve the command line arguments from boost.
- * Allows usage like:
+ * Retrieve the user-supplied command line arguments — everything after the
+ * `--` separator on the command line. Allows usage like:
  * `test_bitcoin --run_test="net_tests/cnode_listen_port" -- -checkaddrman=1 -printtoconsole=1`
  * which would return `["-checkaddrman=1", "-printtoconsole=1"]`.
  */
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
-    std::vector<const char*> args;
-    for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i) {
-        args.push_back(boost::unit_test::framework::master_test_suite().argv[i]);
-    }
-    return args;
+    const auto ua = framework::user_args();
+    return ua;
 };
 
 /**
- * Retrieve the boost unit test name.
+ * Retrieve the full name (`suite/case`) of the currently-running test.
  */
 const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
-    return boost::unit_test::framework::current_test_case().full_name();
+    return framework::current_test_full_name();
 };

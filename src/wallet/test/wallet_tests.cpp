@@ -31,7 +31,7 @@
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <univalue.h>
 
 using node::MAX_BLOCKFILE_SIZE;
@@ -137,7 +137,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         {
             CBlockLocator locator;
             BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
+            BOOST_CHECK(!locator.IsNull());
+            BOOST_CHECK(locator.vHave.front() == newTip->GetBlockHash());
         }
 
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/true);
@@ -150,7 +151,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         {
             CBlockLocator locator;
             BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
+            BOOST_CHECK(!locator.IsNull());
+            BOOST_CHECK(locator.vHave.front() == newTip->GetBlockHash());
         }
     }
 

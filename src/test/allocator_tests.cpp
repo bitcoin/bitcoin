@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_AUTO_TEST_SUITE(allocator_tests)
 
@@ -166,6 +166,8 @@ private:
 
 BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
 {
+    // Copy to a local to avoid ODR-using the in-class `static const` member.
+    const size_t arena_size{LockedPool::ARENA_SIZE};
     // Test over three virtual arenas, of which one will succeed being locked
     std::unique_ptr<LockedPageAllocator> x = std::make_unique<TestLockedPageAllocator>(3, 1);
     LockedPool pool(std::move(x));
@@ -184,7 +186,7 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
 
     void *a0 = pool.alloc(LockedPool::ARENA_SIZE / 2);
     BOOST_CHECK(a0);
-    BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
+    BOOST_CHECK(pool.stats().locked == arena_size);
     void *a1 = pool.alloc(LockedPool::ARENA_SIZE / 2);
     BOOST_CHECK(a1);
     void *a2 = pool.alloc(LockedPool::ARENA_SIZE / 2);
@@ -206,7 +208,7 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     pool.free(a3);
     pool.free(a5);
     BOOST_CHECK(pool.stats().total == 3*LockedPool::ARENA_SIZE);
-    BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
+    BOOST_CHECK(pool.stats().locked == arena_size);
     BOOST_CHECK(pool.stats().used == 0);
 }
 

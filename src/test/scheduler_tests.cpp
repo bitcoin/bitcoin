@@ -6,7 +6,7 @@
 #include <scheduler.h>
 #include <util/time.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <functional>
 #include <mutex>
@@ -209,7 +209,8 @@ BOOST_AUTO_TEST_CASE(mockforward)
     auto now = std::chrono::steady_clock::now();
     int delta = std::chrono::duration_cast<std::chrono::seconds>(first - now).count();
     // should be between 2 & 3 minutes from now
-    BOOST_CHECK(delta > 2*60 && delta < 3*60);
+    BOOST_CHECK(delta > 2*60);
+    BOOST_CHECK(delta < 3*60);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

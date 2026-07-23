@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <univalue.h>
 
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(sighash_caching)
             HashWriter dummy{};
             cache.Store(hash_type, diff_scriptcode, dummy);
             (void)SignatureHash(scriptcode, tx, in_index, hash_type, amount, sigversion, nullptr, &cache);
-            BOOST_CHECK(cache.Load(hash_type, scriptcode, dummy) || expect_one);
+            BOOST_CHECK((cache.Load(hash_type, scriptcode, dummy) || expect_one));
         }
     }
 }
