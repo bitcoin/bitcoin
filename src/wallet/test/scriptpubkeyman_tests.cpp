@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <external_signer.h>
 #include <key.h>
 #include <key_io.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
+#include <wallet/external_signer_scriptpubkeyman.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>
@@ -48,6 +50,15 @@ BOOST_AUTO_TEST_CASE(desc_spkm_topup_fail)
     BOOST_CHECK_EXCEPTION(
         CreateDescriptor(keystore, "wpkh(" + EncodeExtPubKey(extkey.Neuter()) + "/*h)", /*success=*/true),
         std::runtime_error, HasReason("Could not top up scriptPubKeys"));
+}
+
+BOOST_AUTO_TEST_CASE(external_signer_command_required)
+{
+    // With no command configured (empty -signer), GetExternalSigner reports that one is
+    // needed and returns before attempting to launch any external process.
+    const auto res = ExternalSignerScriptPubKeyMan::GetExternalSigner(/*command=*/"", /*chain=*/"regtest");
+    BOOST_CHECK(!res);
+    BOOST_CHECK_EQUAL(util::ErrorString(res).original, "restart bitcoind with -signer=<cmd>");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -749,6 +749,11 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
+    /** Command used to invoke an external signer (the -signer arg), or empty if none configured. */
+    std::string m_external_signer_command;
+    /** Chain argument passed to an external signer. */
+    std::string m_external_signer_chain;
+
     /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
     int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
 
