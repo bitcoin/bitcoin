@@ -1027,6 +1027,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
 
+    def skip_if_no_lsof_on_nonlinux(self):
+        """Skip the running test if the lsof utility is not available on non-Linux platforms."""
+        if sys.platform != "linux" and shutil.which("lsof") is None:
+            raise SkipTest("lsof not available")
+
     def skip_if_platform_not_posix(self):
         """Skip the running test if we are not on a POSIX platform"""
         if os.name != 'posix':

@@ -93,7 +93,14 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkgin install python313 py313-zmq
+pkgin install python313 py313-zmq lsof
+```
+
+When the `lsof` binary package was built for a different point release, it might be necessary to force its installation as follows:
+
+```bash
+echo "CHECK_OSABI=no" >> /etc/pkg_install.conf
+pkgin install lsof
 ```
 
 ## Building Bitcoin Core
