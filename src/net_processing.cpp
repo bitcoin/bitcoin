@@ -4375,7 +4375,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             const bool ret{m_chainman.m_blockman.ReadBlock(block, block_pos, req.blockhash)};
             // If height is above MAX_BLOCKTXN_DEPTH then this block cannot get
             // pruned after we release cs_main above, so this read should never fail.
-            assert(ret);
+            // Unless an I/O error occurs, in which case we want to shut down gracefully.
+            if (!ret) {
+                m_chainman.GetNotifications().fatalError(_("Failed to read block during GETBLOCKTXN"));
+                return;
+            }
 
             SendBlockTransactions(pfrom, peer, block, req);
             return;
