@@ -1164,6 +1164,23 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
                   /*coinbase=*/true,
                   /*spend_height=*/COINBASE_MATURITY,
                   TxValidationResult::TX_PREMATURE_SPEND, /*expected_reason=*/"bad-txns-premature-spend-of-coinbase");
+
+    // Spending an outpoint that is absent from the view (AccessCoin returns a
+    // spent coinEmpty) is reported as missing/spent inputs.
+    {
+        CCoinsViewCache inputs{&CoinsViewEmpty::Get()};
+
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+        mtx.vout.emplace_back(0, CScript() << OP_TRUE);
+
+        TxValidationState state;
+        CAmount txfee{0};
+        BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, inputs, /*nSpendHeight=*/2, txfee));
+        BOOST_CHECK(state.IsInvalid());
+        BOOST_CHECK_EQUAL(state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txns-inputs-missingorspent");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)

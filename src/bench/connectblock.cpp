@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <consensus/amount.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <key.h>
 #include <node/blockstorage.h>
@@ -141,3 +142,48 @@ static void ConnectBlockAllEcdsa(benchmark::Bench& bench)
 BENCHMARK(ConnectBlockAllSchnorr);
 BENCHMARK(ConnectBlockMixedEcdsaSchnorr);
 BENCHMARK(ConnectBlockAllEcdsa);
+
+/*
+ * Benchmarks Consensus::CheckTxInputs in isolation (without script
+ * verification) over a realistic block, so the cost is dominated by UTXO set
+ * lookups. The coins are added to CoinsTip (not to the view being measured),
+ * and a fresh CCoinsViewCache wrapping CoinsTip is constructed on every
+ * batch, so each measured pass actually pulls the coins across the
+ * view/base boundary (like a fresh per-block view would in production)
+ * instead of always hitting an already-warmed local cache.
+ */
+static void CheckTxInputs(benchmark::Bench& bench)
+{
+    const auto test_setup{MakeNoLogFileContext<TestChain100Setup>()};
+    // Same input mix as ConnectBlockMixedEcdsaSchnorr (5 inputs/tx, 1000 txs).
+    auto [keys, outputs]{CreateKeysAndOutputs(test_setup->coinbaseKey, /*num_schnorr=*/1, /*num_ecdsa=*/4)};
+    const auto test_block{CreateTestBlock(*test_setup, keys, outputs)};
+
+    LOCK(cs_main);
+    Chainstate& chainstate{test_setup->m_node.chainman->ActiveChainstate()};
+    const int spend_height{chainstate.m_chain.Height() + 1};
+
+    // Make all prevouts referenced by the block available directly in
+    // CoinsTip. The first transaction spends outputs already in CoinsTip
+    // (created by CreateTestBlock in a previously processed block); the rest
+    // spend outputs of earlier transactions in this block, which we add here.
+    for (const auto& tx : test_block.vtx) {
+        AddCoins(chainstate.CoinsTip(), *tx, spend_height);
+    }
+
+    const size_t num_checked{test_block.vtx.size() - 1}; // all but the coinbase
+    bench.unit("tx").batch(num_checked).run([&] {
+        // Fresh view per batch: every AccessCoin() below must cross into
+        // CoinsTip at least once, instead of reusing a view that already has
+        // every coin resolved from a prior batch.
+        CCoinsViewCache view{&chainstate.CoinsTip()};
+        for (size_t i{1}; i < test_block.vtx.size(); ++i) { // skip coinbase
+            TxValidationState state;
+            CAmount txfee{0};
+            const bool ok{Consensus::CheckTxInputs(*test_block.vtx[i], state, view, spend_height, txfee)};
+            assert(ok);
+        }
+    });
+}
+
+BENCHMARK(CheckTxInputs);
