@@ -798,22 +798,17 @@ void btck_logging_set_options(const btck_LoggingOptions options)
 
 void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
 {
-    LOCK(cs_main);
-    if (category == btck_LogCategory_ALL) {
-        LogInstance().SetLogLevel(get_bclog_level(level));
-    }
-
-    LogInstance().AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
 }
 
 void btck_logging_enable_category(btck_LogCategory category)
 {
-    LogInstance().EnableCategory(get_bclog_flag(category));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), BCLog::Level::Debug);
 }
 
 void btck_logging_disable_category(btck_LogCategory category)
 {
-    LogInstance().DisableCategory(get_bclog_flag(category));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), BCLog::Level::Info);
 }
 
 void btck_logging_disable()
