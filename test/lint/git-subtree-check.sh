@@ -48,11 +48,12 @@ fi
 find_latest_squash()
 {
     dir="$1"
+    from="$2"
     sq=
     main=
     sub=
     git log --grep="^git-subtree-dir: $dir/*\$" \
-        --pretty=format:'START %H%n%s%n%n%b%nEND%n' "$COMMIT" |
+        --pretty=format:'START %H%n%s%n%n%b%nEND%n' "$from" |
     while read a b _; do
         case "$a" in
             START) sq="$b" ;;
@@ -77,7 +78,7 @@ find_latest_squash()
 }
 
 # find latest subtree update
-latest_squash="$(find_latest_squash "$DIR")"
+latest_squash="$(find_latest_squash "$DIR" "$COMMIT")"
 if [ -z "$latest_squash" ]; then
     echo "ERROR: $DIR is not a subtree" >&2
     exit 2
@@ -112,6 +113,17 @@ if [ "$tree_actual_tree" != "$tree_commit" ]; then
     git diff "$tree_commit" "$tree_actual_tree" >&2
     echo "FAIL: subtree directory was touched without subtree merge" >&2
     exit 1
+fi
+
+# If COMMIT is the subtree merge itself, warn when its first parent is not the
+# previous subtree merge. Stacking updates this way keeps them easy to
+# backport; see doc/developer-notes.md#subtrees.
+if [ "$(git rev-parse -q --verify "$COMMIT^2")" = "$old" ]; then
+    prev_squash="$(find_latest_squash "$DIR" "$COMMIT^1")"
+    prev_squash="${prev_squash%% *}"
+    if [ -n "$prev_squash" ] && [ "$(git rev-parse -q --verify "$COMMIT^1^2")" != "$prev_squash" ]; then
+        echo "WARNING: first parent $(git rev-parse "$COMMIT^1") of subtree merge is not the previous subtree merge (of squash $prev_squash)" >&2
+    fi
 fi
 
 if [ "$check_remote" != "0" ]; then

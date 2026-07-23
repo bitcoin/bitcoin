@@ -83,6 +83,11 @@ git-subtree-check.sh
 Run this script from the root of the repository to verify that a subtree matches the contents of
 the commit it claims to have been updated to.
 
+It also warns if a subtree merge commit does not follow the structure recommended in the
+[developer notes](/doc/developer-notes.md#subtrees), but only when the checked commit
+(`COMMIT`, or `HEAD`) is the subtree merge itself. Since CI performs a merge with master, it
+skips this check.
+
 ```
 Usage: test/lint/git-subtree-check.sh [-r] DIR [COMMIT]
        test/lint/git-subtree-check.sh -?
