@@ -169,6 +169,18 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
     BOOST_CHECK( wallet->HaveCryptedKeys());
 }
 
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::WALLETDESCRIPTORCKEY, /*matches_to_skip=*/1); // Only one write fails
+    for (bool success : {true, false}) { // TODO: The write failure is ignored, making the retry fail
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: The failed attempt publishes descriptor keys
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFailureSetup)
 {
     AddKey(*wallet, GenerateRandomKey());
