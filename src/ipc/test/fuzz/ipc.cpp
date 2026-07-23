@@ -78,9 +78,10 @@ static void initialize_ipc()
     static const auto testing_setup = MakeNoLogFileContext<>();
     (void)testing_setup;
 
-    // Ensure g_thread_context is destroyed after the IPC setup, since C++
-    // destroys thread_local objects in reverse construction order.
-    mp::ThreadContext& thread_context{mp::g_thread_context};
+    // Ensure the thread's ThreadContext is created before the IPC setup, so
+    // it is destroyed after it, since C++ destroys thread_local objects in
+    // reverse construction order.
+    mp::ThreadContext& thread_context{mp::GThreadContext()};
     (void)thread_context;
 
     thread_local static IpcFuzzSetup ipc; // NOLINT(bitcoin-nontrivial-threadlocal)

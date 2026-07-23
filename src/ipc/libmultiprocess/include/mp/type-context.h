@@ -12,11 +12,11 @@
 
 namespace mp {
 template <typename Output>
+    requires FieldTypeIs<Output, Context::Builder>
 void CustomBuildField(TypeList<>,
     Priority<1>,
     ClientInvokeContext& invoke_context,
-    Output&& output,
-    typename std::enable_if<std::is_same<decltype(output.get()), Context::Builder>::value>::type* enable = nullptr)
+    Output&& output)
 {
     auto& connection = invoke_context.connection;
     auto& thread_context = invoke_context.thread_context;
@@ -93,7 +93,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
         // call. In this case, the callbackThread value should point
         // to the same thread already in the map, so there is no
         // need to update the map.
-        auto& thread_context = g_thread_context;
+        auto& thread_context = GThreadContext();
         auto& request_threads = thread_context.request_threads;
         ConnThread request_thread;
         bool inserted{false};

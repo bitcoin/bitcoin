@@ -5,12 +5,15 @@
 #ifndef MP_UTIL_H
 #define MP_UTIL_H
 
+#include <array>
 #include <capnp/schema.h>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <kj/async-io.h>
+#include <kj/memory.h>
 #include <kj/string-tree.h>
 #include <mutex>
 #include <string>
@@ -24,6 +27,17 @@
 #if __has_include(<cxxabi.h>)
 #include <cxxabi.h>
 #include <memory>
+#endif
+
+#ifdef WIN32
+// WIN32_LEAN_AND_MEAN excludes commdlg.h which defines `#define INTERFACE
+// IPrintDialogServices` — this conflicts with capnp::Kind::INTERFACE used
+// in CAPNP_DECLARE_INTERFACE_HEADER. Must be defined before winsock2.h.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <winsock2.h>
 #endif
 
 namespace mp {
@@ -91,6 +105,16 @@ using RemoveCvRef = std::remove_cv_t<std::remove_reference_t<T>>;
 template <typename T>
 using Decay = std::decay_t<T>;
 
+//! Concept satisfied when T's .get() method returns exactly type U.
+//! Used to constrain overloads that handle a specific capnp field type.
+template <typename T, typename U>
+concept FieldTypeIs = std::is_same_v<decltype(std::declval<T>().get()), U>;
+
+//! Concept satisfied when T's .get() method returns a capnp interface type
+//! (i.e., a type that exposes a nested ::Calls type in generated code).
+template <typename T>
+concept InterfaceField = requires { typename Decay<decltype(std::declval<T>().get())>::Calls; };
+
 //! SFINAE helper, see using Require below.
 template <typename SfinaeExpr, typename Result_>
 struct _Require
@@ -142,7 +166,10 @@ struct PtrOrValue {
     std::variant<T*, T> data;
 
     template <typename... Args>
-    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+    PtrOrValue(T* ptr, Args&&... args) : data(std::in_place_type<T*>, ptr)
+    {
+        if (!ptr) data.template emplace<T>(std::forward<Args>(args)...);
+    }
 
     T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
     T* operator->() { return &**this; }
@@ -255,25 +282,52 @@ std::string ThreadName(const char* exe_name);
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
-//! Callback type used by SpawnProcess below.
-using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
+using Stream = kj::Own<kj::AsyncIoStream>;
+
+#ifdef WIN32
+// On Windows, ProcessId is defined to be the local process HANDLE rather than
+// global process ID, because handles are more useful for controlling and
+// waiting for processes. It it possible to obtain the actual process ID from
+// handles by calling the GetProcessId API.
+using ProcessId = HANDLE;
+using SocketId = SOCKET;
+constexpr SocketId SocketError{INVALID_SOCKET};
+#else
+using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
+#endif
 
 //! Spawn a new process that communicates with the current process over a socket
-//! pair. Returns pid through an output argument, and file descriptor for the
-//! local side of the socket.
-//! The fd_to_args callback is invoked in the parent process before fork().
-//! It must not rely on child pid/state, and must return the command line
-//! arguments that should be used to execute the process. Embed the remote file
-//! descriptor number in whatever format the child process expects.
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
+//! pair. Calls spawn_argv callback with a connection string that needs to be
+//! passed to the child process, and executes the argv command line it returns.
+//! Returns child process id and socket id.
+//!
+//! The connection string is just a file descriptor number on unix. On windows,
+//! it is a path to a named pipe the parent process will write
+//! WSADuplicateSocket info to. In both cases, the child process can call
+//! StartSpawned to get a socket handle from the connection string.
+std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv);
 
-//! Call execvp with vector args.
-//! Not safe to call in a post-fork child of a multi-threaded process.
-//! Currently only used by mpgen at build time.
-void ExecProcess(const std::vector<std::string>& args);
+//! Initialize spawned child process. The connect_info argument is the
+//! connection string SpawnProcess generated in the parent process and passed
+//! to the child on its command line. Returns socket id for communicating with
+//! the parent process.
+SocketId StartSpawned(const std::string& connect_info);
+
+//! Create a socket pair that can be used to communicate within a process or
+//! between parent and child processes.
+std::array<SocketId, 2> SocketPair();
+
+//! Close a socket, throwing a KJ exception on failure.
+void CloseSocket(SocketId fd);
+
+//! Start a process and return its process id. Caller should call WaitProcess
+//! on the returned id.
+ProcessId StartProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
-int WaitProcess(int pid);
+int WaitProcess(ProcessId pid);
 
 inline char* CharCast(char* c) { return c; }
 inline char* CharCast(unsigned char* c) { return (char*)c; }

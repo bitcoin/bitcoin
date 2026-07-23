@@ -21,9 +21,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <unistd.h>
 #include <utility>
 #include <vector>
+
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace ipc {
 namespace {
@@ -54,15 +59,14 @@ class IpcImpl : public interfaces::Ipc
 public:
     IpcImpl(const char* exe_name, const char* process_argv0, interfaces::Init& init)
         : m_exe_name(exe_name), m_process_argv0(process_argv0), m_init(init),
-          m_protocol(ipc::capnp::MakeCapnpProtocol()), m_process(ipc::MakeProcess())
+          m_protocol(ipc::capnp::MakeCapnpProtocol(exe_name)), m_process(ipc::MakeProcess())
     {
     }
     std::unique_ptr<interfaces::Init> spawnProcess(const char* new_exe_name) override
     {
-        int pid;
-        int fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
+        const auto [pid, socket] = m_process->spawn(new_exe_name, m_process_argv0);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
-        auto init = m_protocol->connect(fd, m_exe_name);
+        auto init = m_protocol->connect(m_protocol->makeStream(socket));
         Ipc::addCleanup(*init, [this, new_exe_name, pid] {
             int status = m_process->waitSpawned(pid);
             LogDebug(::BCLog::IPC, "Process %s pid %i exited with status %i\n", new_exe_name, pid, status);
@@ -72,19 +76,19 @@ public:
     bool startSpawnedProcess(int argc, char* argv[], int& exit_status) override
     {
         exit_status = EXIT_FAILURE;
-        int32_t fd = -1;
-        if (!m_process->checkSpawned(argc, argv, fd)) {
+        mp::SocketId socket{mp::SocketError};
+        if (!m_process->checkSpawned(argc, argv, socket)) {
             return false;
         }
         IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
-        m_protocol->serve(fd, m_exe_name, m_init);
+        m_protocol->serve(m_init, [&] { return m_protocol->makeStream(socket); } );
         exit_status = EXIT_SUCCESS;
         return true;
     }
     std::unique_ptr<interfaces::Init> connectAddress(std::string& address) override
     {
         if (address.empty() || address == "0") return nullptr;
-        int fd;
+        mp::SocketId fd;
         if (address == "auto") {
             // Treat "auto" the same as "unix" except don't treat it an as error
             // if the connection is not accepted. Just return null so the caller
@@ -98,6 +102,24 @@ public:
                 if (e.code() == std::errc::connection_refused || e.code() == std::errc::no_such_file_or_directory || e.code() == std::errc::not_a_directory) {
                     return nullptr;
                 }
+#ifdef WIN32
+                // Workaround: ProcessImpl::connect throws
+                // std::system_error(WSAECONNREFUSED, std::system_category()),
+                // but MinGW libstdc++'s system_category() does not map Winsock
+                // codes to std::errc values, so the connection_refused check
+                // above misses it. The proper fix is for ProcessImpl::connect
+                // to throw with std::errc::connection_refused (generic_category)
+                // instead of relying on system_category() to map Winsock codes.
+                // TODO: once ProcessImpl::connect is fixed to throw the right errc,
+                // remove this block; the Windows-specific error string handling in
+                // "test: Fix interface_ipc_cli.py error assertions on Windows" may
+                // then also be simplifiable.
+                // (MSVC's STL does map WSAECONNREFUSED to errc::connection_refused,
+                // so this check is redundant but harmless there.)
+                if (e.code().category() == std::system_category() && e.code().value() == WSAECONNREFUSED) {
+                    return nullptr;
+                }
+#endif
                 throw;
             } catch (const std::invalid_argument&) {
                // Catch 'Unix address path "..." exceeded maximum socket path length' error
@@ -106,12 +128,12 @@ public:
         } else {
             fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
         }
-        return m_protocol->connect(fd, m_exe_name);
+        return m_protocol->connect(m_protocol->makeStream(fd));
     }
     void listenAddress(std::string& address) override
     {
-        int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
-        m_protocol->listen(fd, m_exe_name, m_init);
+        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
+        m_protocol->listen(fd, m_init);
     }
     void disconnectIncoming() override
     {

@@ -8,6 +8,7 @@
 #include <cstring> // IWYU pragma: keep
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <kj/async.h>
@@ -19,20 +20,20 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
 
 static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const std::string& new_exe_name)
 {
-    int pid;
-    const int fd = mp::SpawnProcess(pid, [&](int fd) -> std::vector<std::string> {
+    const auto [pid, socket] = mp::SpawnProcess([&](std::string connect_info) -> std::vector<std::string> {
         fs::path path = process_argv0;
         path.remove_filename();
         path.append(new_exe_name);
-        return {path.string(), std::to_string(fd)};
+        return {path.string(), std::move(connect_info)};
     });
-    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, fd), pid);
+    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, mp::MakeStream(loop, socket)), pid);
 }
 
 static void LogPrint(mp::LogMessage log_data)
