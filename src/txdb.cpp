@@ -246,12 +246,11 @@ std::unique_ptr<CCoinsViewCursor> CCoinsViewDB::Cursor() const
        that restriction.  */
     i->pcursor->Seek(DB_COIN);
     // Cache key of first record
-    if (i->pcursor->Valid()) {
-        CoinEntry entry(&i->keyTmp.second);
-        i->pcursor->GetKey(entry);
-        i->keyTmp.first = entry.key;
-    } else {
+    CoinEntry entry(&i->keyTmp.second);
+    if (!i->pcursor->Valid() || !i->pcursor->GetKey(entry)) {
         i->keyTmp.first = 0; // Make sure Valid() and GetKey() return false
+    } else {
+        i->keyTmp.first = entry.key;
     }
     return i;
 }
