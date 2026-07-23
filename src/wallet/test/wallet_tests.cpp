@@ -222,12 +222,12 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_erase_failure, EncryptionF
     AddKey(*wallet, GenerateRandomKey());
 
     fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY); // Only one erase fails
-    for (bool success : {true, false}) { // TODO: The erase failure is ignored, making the retry fail
+    for (bool success : {false, true}) {
         BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
-        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
-        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: The failed attempt publishes descriptor keys
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), true); // TODO: The failed erase leaves the plaintext record committed
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
     }
 }
 
