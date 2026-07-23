@@ -298,12 +298,13 @@ void HTTPHeaders::RemoveAll(std::string_view key)
     m_headers.erase(moved.begin(), moved.end());
 }
 
-bool HTTPHeaders::Read(util::LineReader& reader)
+bool HTTPHeaders::Read(util::LineReader& reader, bool write)
 {
     // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
     // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+    size_t start{reader.Consumed()};
     while (auto maybe_line = reader.ReadLine()) {
-        if (reader.Consumed() > MAX_HEADERS_SIZE) throw std::runtime_error("HTTP headers exceed size limit");
+        if (reader.Consumed() - start > MAX_HEADERS_SIZE) throw std::runtime_error("HTTP headers exceed size limit");
 
         const std::string_view& line = *maybe_line;
 
@@ -336,7 +337,9 @@ bool HTTPHeaders::Read(util::LineReader& reader)
         // that can not be empty.
         if (key.empty()) throw std::runtime_error("Empty HTTP header name");
 
-        Write(std::string(key), std::move(value));
+        if (write) {
+            Write(std::string(key), std::move(value));
+        }
     }
 
     return false;
@@ -447,22 +450,11 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 
             // Last chunk has size 0
             if (*chunk_size == 0) {
-                // Allow (but ignore) Chunked Trailer section, by
-                // reading CRLF-terminated lines until we read an empty line,
-                // which indicates the end of this request.
+                // Validate Chunked Trailer section, which is used for
+                // additional headers sent at the end of the message.
+                // At this time we ignore and drop these data after validating.
                 // See https://httpwg.org/specs/rfc9112.html#rfc.section.7.1.2
-                const size_t trailer_start{reader.Consumed()};
-                while (true) {
-                    auto maybe_trailer = reader.ReadLine();
-                    if (reader.Consumed() - trailer_start > MAX_HEADERS_SIZE) {
-                        throw std::runtime_error("HTTP chunked trailer exceeds size limit");
-                    }
-                    if (!maybe_trailer) return false;
-                    if (maybe_trailer->empty()) break;
-                }
-                // Complete request has been parsed, reader is now pointing
-                // to beginning of next request or end of the buffer.
-                return true;
+                return m_headers.Read(reader, /*write=*/false);
             }
 
             // We are still expecting more data for this chunk

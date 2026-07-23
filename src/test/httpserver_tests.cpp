@@ -446,8 +446,9 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
-        // Chunk Trailer was cleared
+        // Chunk Trailer was parsed, but ignored
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
+        BOOST_CHECK(!req.GetHeader("Expires").first);
     }
     {
         // Invalid "chunked" transfer, using roman numerals instead of hex for chunk length
