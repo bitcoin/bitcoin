@@ -446,8 +446,9 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
-        // Chunk Trailer was cleared
-        BOOST_CHECK_EQUAL(reader.Remaining(), 0);
+        // Chunk Trailer was parsed
+        BOOST_CHECK(req.GetHeader("Expires").first);
+        BOOST_CHECK_EQUAL(req.GetHeader("Expires").second, "Wed, 21 Oct 2026 07:28:00 GMT");
     }
     {
         // Invalid "chunked" transfer, using roman numerals instead of hex for chunk length
