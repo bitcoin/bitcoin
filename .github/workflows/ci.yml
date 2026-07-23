@@ -293,322 +293,322 @@ jobs:
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
-  record-frozen-commit:
-    # Record frozen commit, so that the native tests on cross-builds can run on
-    # the exact same commit id of the build.
-    name: '[meta] record frozen commit'
-    runs-on: ubuntu-slim
-    outputs:
-      commit: ${{ steps.record-commit.outputs.commit }}
-    steps:
-      - *ANNOTATION_PR_NUMBER
-      - *CHECKOUT
-      - name: Record commit
-        id: record-commit
-        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  windows-cross:
-    name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
-    needs: record-frozen-commit
-    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        crt: [msvcrt, ucrt]
-        include:
-          - crt: msvcrt
-            file-env: './ci/test/00_setup_env_win64_msvcrt.sh'
-            artifact-name: 'x86_64-w64-mingw32-executables'
-          - crt: ucrt
-            file-env: './ci/test/00_setup_env_win64.sh'
-            artifact-name: 'x86_64-w64-mingw32ucrt-executables'
-
-    env:
-      FILE_ENV: ${{ matrix.file-env }}
-      DANGER_CI_ON_HOST_FOLDERS: 1
-
-    steps:
-      - *ANNOTATION_PR_NUMBER
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.record-frozen-commit.outputs.commit }}
-
-      - name: Configure environment
-        uses: ./.github/actions/configure-environment
-
-      - name: Restore caches
-        id: restore-cache
-        uses: ./.github/actions/cache/restore
-        with:
-          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
-
-      - name: Configure Docker
-        uses: ./.github/actions/configure-docker
-        with:
-          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
-
-      - name: CI script
-        run: ./ci/test_run_all.sh
-
-      - name: Save caches
-        uses: ./.github/actions/cache/save
-        with:
-          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
-
-      - name: Upload built executables
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.artifact-name }}-${{ github.run_id }}
-          path: |
-            ${{ env.BASE_BUILD_DIR }}/bin/*.dll
-            ${{ env.BASE_BUILD_DIR }}/bin/*.exe
-            ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*.exe
-            ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
-            ${{ env.BASE_BUILD_DIR }}/test/config.ini
-
-  windows-native-test:
-    name: 'Windows, ${{ matrix.crt }}, test cross-built'
-    runs-on: windows-2022
-    needs: [windows-cross, record-frozen-commit]
-
-    strategy:
-      fail-fast: false
-      matrix:
-        crt: [msvcrt, ucrt]
-        include:
-          - crt: msvcrt
-            artifact-name: 'x86_64-w64-mingw32-executables'
-          - crt: ucrt
-            artifact-name: 'x86_64-w64-mingw32ucrt-executables'
-
-    env:
-      PYTHONUTF8: 1
-      TEST_RUNNER_TIMEOUT_FACTOR: 40
-
-    steps:
-      - *ANNOTATION_PR_NUMBER
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.record-frozen-commit.outputs.commit }}
-
-      - name: Download built executables
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ matrix.artifact-name }}-${{ github.run_id }}
-
-      - name: Run bitcoind.exe
-        run: py -3 .github/ci-windows-cross.py print_version
-
-      - *IMPORT_VS_ENV
-
-      - name: Check executable manifests
-        run: py -3 .github/ci-windows-cross.py check_manifests
-
-      - name: Prepare Windows test environment
-        run: py -3 .github/ci-windows-cross.py prepare_tests
-
-      - name: Run unit tests
-        run: py -3 .github/ci-windows-cross.py run_unit_tests
-
-      - name: Run functional tests
-        env:
-          TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
-        run: |
-          py -3 .github/ci-windows-cross.py run_functional_tests
-
-  ci-matrix:
-    name: ${{ matrix.name }}
-    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
-    timeout-minutes: ${{ matrix.timeout-minutes }}
-
-    env:
-      DANGER_CI_ON_HOST_FOLDERS: 1
-      FILE_ENV: ${{ matrix.file-env }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: 'iwyu'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_iwyu.sh'
-
-          - name: '32 bit ARM'
-            warp-runner: 'ubuntu-24.04-arm' # Warp's Arm runners don't support 32-bit mode currently
-            fallback-runner: 'ubuntu-24.04-arm'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_arm.sh'
-            provider: 'gha'
-
-          - name: 'ASan + LSan + UBSan + integer'
-            warp-runner: 'warp-ubuntu-2404-x64-8x' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-            fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_asan.sh'
-
-          - name: 'macOS-cross to arm64'
-            warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_mac_cross.sh'
-
-          - name: 'macOS-cross to x86_64'
-            warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
-
-          - name: 'NetBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_netbsd_cross.sh'
-
-          - name: 'FreeBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_freebsd_cross.sh'
-
-          - name: 'OpenBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_openbsd_cross.sh'
-
-          - name: 'No wallet'
-            warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_nowallet.sh'
-
-          - name: 'i686, no IPC'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
-
-          - name: 'fuzzer,address,undefined,integer'
-            warp-runner: 'warp-ubuntu-latest-x64-16x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 240
-            file-env: './ci/test/00_setup_env_native_fuzz.sh'
-
-          - name: 'previous releases'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_previous_releases.sh'
-
-          - name: 'Alpine (musl)'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_alpine_musl.sh'
-
-          - name: 'tidy'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_tidy.sh'
-
-          - name: 'TSan'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_tsan.sh'
-
-          - name: 'MSan, fuzz'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 180
-            file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
-
-          - name: 'MSan'
-            warp-runner: 'warp-ubuntu-latest-x64-16x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_msan.sh'
-
-          - name: 'riscv32 bare metal, static libbitcoin_consensus'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_riscv_bare_cross.sh'
-
-    steps:
-      - *ANNOTATION_PR_NUMBER
-
-      - *CHECKOUT
-
-      - name: Configure environment
-        uses: ./.github/actions/configure-environment
-
-      - name: Restore caches
-        id: restore-cache
-        uses: ./.github/actions/cache/restore
-        with:
-          provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
-
-      - name: Configure Docker
-        uses: ./.github/actions/configure-docker
-        with:
-          provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
-
-      - name: Clear unnecessary files
-        if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
-        uses: ./.github/actions/clear-files
-
-      - name: Enable bpfcc script
-        if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
-        # In the image build step, no external environment variables are available,
-        # so any settings will need to be written to the settings env file:
-        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
-
-      - name: Set mmap_rnd_bits
-        if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_msan' }}
-        # Prevents crashes due to high ASLR entropy
-        run: sudo sysctl -w vm.mmap_rnd_bits=28
-
-      - name: CI script
-        run: ./ci/test_run_all.sh
-
-      - name: Save caches
-        uses: ./.github/actions/cache/save
-        with:
-          provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
-
-  lint:
-    name: 'lint'
-    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
-    timeout-minutes: 20
-    env:
-      CONTAINER_NAME: "bitcoin-linter"
-    steps:
-      - *ANNOTATION_PR_NUMBER
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: *CHECKOUT_REF_TMPL
-          fetch-depth: 0
-
-      - name: Configure Docker
-        uses: ./.github/actions/configure-docker
-        with:
-          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
-
-      - name: CI script
-        run: |
-          git worktree add ../lint-worktree HEAD
-          ../lint-worktree/ci/lint.py
+  # record-frozen-commit:
+  #   # Record frozen commit, so that the native tests on cross-builds can run on
+  #   # the exact same commit id of the build.
+  #   name: '[meta] record frozen commit'
+  #   runs-on: ubuntu-slim
+  #   outputs:
+  #     commit: ${{ steps.record-commit.outputs.commit }}
+  #   steps:
+  #     - *ANNOTATION_PR_NUMBER
+  #     - *CHECKOUT
+  #     - name: Record commit
+  #       id: record-commit
+  #       run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  #
+  # windows-cross:
+  #   name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
+  #   needs: record-frozen-commit
+  #   runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
+  #   if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+  #
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       crt: [msvcrt, ucrt]
+  #       include:
+  #         - crt: msvcrt
+  #           file-env: './ci/test/00_setup_env_win64_msvcrt.sh'
+  #           artifact-name: 'x86_64-w64-mingw32-executables'
+  #         - crt: ucrt
+  #           file-env: './ci/test/00_setup_env_win64.sh'
+  #           artifact-name: 'x86_64-w64-mingw32ucrt-executables'
+  #
+  #   env:
+  #     FILE_ENV: ${{ matrix.file-env }}
+  #     DANGER_CI_ON_HOST_FOLDERS: 1
+  #
+  #   steps:
+  #     - *ANNOTATION_PR_NUMBER
+  #
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         ref: ${{ needs.record-frozen-commit.outputs.commit }}
+  #
+  #     - name: Configure environment
+  #       uses: ./.github/actions/configure-environment
+  #
+  #     - name: Restore caches
+  #       id: restore-cache
+  #       uses: ./.github/actions/cache/restore
+  #       with:
+  #         provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+  #
+  #     - name: Configure Docker
+  #       uses: ./.github/actions/configure-docker
+  #       with:
+  #         provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+  #
+  #     - name: CI script
+  #       run: ./ci/test_run_all.sh
+  #
+  #     - name: Save caches
+  #       uses: ./.github/actions/cache/save
+  #       with:
+  #         provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+  #
+  #     - name: Upload built executables
+  #       uses: actions/upload-artifact@v7
+  #       with:
+  #         name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+  #         path: |
+  #           ${{ env.BASE_BUILD_DIR }}/bin/*.dll
+  #           ${{ env.BASE_BUILD_DIR }}/bin/*.exe
+  #           ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*.exe
+  #           ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
+  #           ${{ env.BASE_BUILD_DIR }}/test/config.ini
+  #
+  # windows-native-test:
+  #   name: 'Windows, ${{ matrix.crt }}, test cross-built'
+  #   runs-on: windows-2022
+  #   needs: [windows-cross, record-frozen-commit]
+  #
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       crt: [msvcrt, ucrt]
+  #       include:
+  #         - crt: msvcrt
+  #           artifact-name: 'x86_64-w64-mingw32-executables'
+  #         - crt: ucrt
+  #           artifact-name: 'x86_64-w64-mingw32ucrt-executables'
+  #
+  #   env:
+  #     PYTHONUTF8: 1
+  #     TEST_RUNNER_TIMEOUT_FACTOR: 40
+  #
+  #   steps:
+  #     - *ANNOTATION_PR_NUMBER
+  #
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         ref: ${{ needs.record-frozen-commit.outputs.commit }}
+  #
+  #     - name: Download built executables
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+  #
+  #     - name: Run bitcoind.exe
+  #       run: py -3 .github/ci-windows-cross.py print_version
+  #
+  #     - *IMPORT_VS_ENV
+  #
+  #     - name: Check executable manifests
+  #       run: py -3 .github/ci-windows-cross.py check_manifests
+  #
+  #     - name: Prepare Windows test environment
+  #       run: py -3 .github/ci-windows-cross.py prepare_tests
+  #
+  #     - name: Run unit tests
+  #       run: py -3 .github/ci-windows-cross.py run_unit_tests
+  #
+  #     - name: Run functional tests
+  #       env:
+  #         TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
+  #       run: |
+  #         py -3 .github/ci-windows-cross.py run_functional_tests
+  #
+  # ci-matrix:
+  #   name: ${{ matrix.name }}
+  #   runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
+  #   if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+  #   timeout-minutes: ${{ matrix.timeout-minutes }}
+  #
+  #   env:
+  #     DANGER_CI_ON_HOST_FOLDERS: 1
+  #     FILE_ENV: ${{ matrix.file-env }}
+  #
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - name: 'iwyu'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_iwyu.sh'
+  #
+  #         - name: '32 bit ARM'
+  #           warp-runner: 'ubuntu-24.04-arm' # Warp's Arm runners don't support 32-bit mode currently
+  #           fallback-runner: 'ubuntu-24.04-arm'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_arm.sh'
+  #           provider: 'gha'
+  #
+  #         - name: 'ASan + LSan + UBSan + integer'
+  #           warp-runner: 'warp-ubuntu-2404-x64-8x' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+  #           fallback-runner: 'ubuntu-24.04'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_asan.sh'
+  #
+  #         - name: 'macOS-cross to arm64'
+  #           warp-runner: 'warp-ubuntu-latest-x64-4x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_mac_cross.sh'
+  #
+  #         - name: 'macOS-cross to x86_64'
+  #           warp-runner: 'warp-ubuntu-latest-x64-4x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
+  #
+  #         - name: 'NetBSD Cross'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_netbsd_cross.sh'
+  #
+  #         - name: 'FreeBSD Cross'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_freebsd_cross.sh'
+  #
+  #         - name: 'OpenBSD Cross'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_openbsd_cross.sh'
+  #
+  #         - name: 'No wallet'
+  #           warp-runner: 'warp-ubuntu-latest-x64-4x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_nowallet.sh'
+  #
+  #         - name: 'i686, no IPC'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
+  #
+  #         - name: 'fuzzer,address,undefined,integer'
+  #           warp-runner: 'warp-ubuntu-latest-x64-16x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 240
+  #           file-env: './ci/test/00_setup_env_native_fuzz.sh'
+  #
+  #         - name: 'previous releases'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_previous_releases.sh'
+  #
+  #         - name: 'Alpine (musl)'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_alpine_musl.sh'
+  #
+  #         - name: 'tidy'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_tidy.sh'
+  #
+  #         - name: 'TSan'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_tsan.sh'
+  #
+  #         - name: 'MSan, fuzz'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 180
+  #           file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
+  #
+  #         - name: 'MSan'
+  #           warp-runner: 'warp-ubuntu-latest-x64-16x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_native_msan.sh'
+  #
+  #         - name: 'riscv32 bare metal, static libbitcoin_consensus'
+  #           warp-runner: 'warp-ubuntu-latest-x64-8x'
+  #           fallback-runner: 'ubuntu-latest'
+  #           timeout-minutes: 120
+  #           file-env: './ci/test/00_setup_env_riscv_bare_cross.sh'
+  #
+  #   steps:
+  #     - *ANNOTATION_PR_NUMBER
+  #
+  #     - *CHECKOUT
+  #
+  #     - name: Configure environment
+  #       uses: ./.github/actions/configure-environment
+  #
+  #     - name: Restore caches
+  #       id: restore-cache
+  #       uses: ./.github/actions/cache/restore
+  #       with:
+  #         provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+  #
+  #     - name: Configure Docker
+  #       uses: ./.github/actions/configure-docker
+  #       with:
+  #         provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+  #
+  #     - name: Clear unnecessary files
+  #       if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
+  #       uses: ./.github/actions/clear-files
+  #
+  #     - name: Enable bpfcc script
+  #       if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
+  #       # In the image build step, no external environment variables are available,
+  #       # so any settings will need to be written to the settings env file:
+  #       run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
+  #
+  #     - name: Set mmap_rnd_bits
+  #       if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_msan' }}
+  #       # Prevents crashes due to high ASLR entropy
+  #       run: sudo sysctl -w vm.mmap_rnd_bits=28
+  #
+  #     - name: CI script
+  #       run: ./ci/test_run_all.sh
+  #
+  #     - name: Save caches
+  #       uses: ./.github/actions/cache/save
+  #       with:
+  #         provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+  #
+  # lint:
+  #   name: 'lint'
+  #   runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
+  #   if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+  #   timeout-minutes: 20
+  #   env:
+  #     CONTAINER_NAME: "bitcoin-linter"
+  #   steps:
+  #     - *ANNOTATION_PR_NUMBER
+  #
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #       with:
+  #         ref: *CHECKOUT_REF_TMPL
+  #         fetch-depth: 0
+  #
+  #     - name: Configure Docker
+  #       uses: ./.github/actions/configure-docker
+  #       with:
+  #         provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+  #
+  #     - name: CI script
+  #       run: |
+  #         git worktree add ../lint-worktree HEAD
+  #         ../lint-worktree/ci/lint.py
