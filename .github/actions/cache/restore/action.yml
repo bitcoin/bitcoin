@@ -27,6 +27,15 @@ runs:
           depends-sources-${{ env.CONTAINER_NAME }}-
         provider: ${{ inputs.provider }}
 
+    - name: Restore SDK sources cache
+      id: sdk-sources
+      if: ${{ env.SDK_SOURCES_CACHE_ENABLED == 'true' }}
+      uses: ./.github/actions/cache/restore/internal
+      with:
+        path: ${{ env.SDK_SOURCES_PATH }}
+        key: depends-sdk-sources-${{ env.CONTAINER_NAME }}-${{ env.SDK_SOURCES_HASH }}
+        provider: ${{ inputs.provider }}
+
     - name: Restore built depends cache
       id: depends-built
       uses: ./.github/actions/cache/restore/internal
@@ -51,5 +60,6 @@ runs:
       shell: bash
       run: |
         echo "depends-sources-cache-hit=${{ steps.depends-sources.outputs.cache-hit }}" >> $GITHUB_ENV
+        echo "sdk-sources-cache-hit=${{ steps.sdk-sources.outputs.cache-hit }}" >> $GITHUB_ENV
         echo "depends-built-cache-hit=${{ steps.depends-built.outputs.cache-hit }}" >> $GITHUB_ENV
         echo "previous-releases-cache-hit=${{ steps.previous-releases.outputs.cache-hit }}" >> $GITHUB_ENV
