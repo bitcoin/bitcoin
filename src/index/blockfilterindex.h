@@ -89,11 +89,11 @@ public:
     bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) EXCLUSIVE_LOCKS_REQUIRED(!m_cs_headers_cache);
 
     /** Get a range of filters between two heights on a chain. */
-    bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+    bool LookupFilterRange(int start_height, const CBlockIndex& stop_index,
                            std::vector<BlockFilter>& filters_out) const;
 
     /** Get a range of filter hashes between two heights on a chain. */
-    bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+    bool LookupFilterHashRange(int start_height, const CBlockIndex& stop_index,
                                std::vector<uint256>& hashes_out) const;
 };
 

@@ -920,19 +920,24 @@ private:
 
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
      *  at most count entries.
+     * vBlocks must not contain nullptr.
      */
     void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /** Request blocks for the background chainstate, if one is in use. */
-    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex* from_tip, const CBlockIndex* target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /**
+     * Request blocks for the background chainstate, if one is in use.
+     * vBlocks must not contain nullptr.
+     */
+    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex& from_tip, const CBlockIndex& target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
     * \brief Find next blocks to download from a peer after a starting block.
     *
     * \param vBlocks      Vector of blocks to download which will be appended to.
+    *                     Must not contain nullptr.
     * \param peer         Peer which blocks will be downloaded from.
     * \param state        Pointer to the state of the peer.
-    * \param pindexWalk   Pointer to the starting block to add to vBlocks.
+    * \param index_walk   The starting block to add to vBlocks.
     * \param count        Maximum number of blocks to allow in vBlocks. No more
     *                     blocks will be added if it reaches this size.
     * \param nWindowEnd   Maximum height of blocks to allow in vBlocks. No
@@ -953,7 +958,7 @@ private:
     *                     block in the window is in flight and no other peer is
     *                     trying to download the next block).
     */
-    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /* Multimap used to preserve insertion order */
     typedef std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> BlockDownloadMap;
@@ -1043,6 +1048,7 @@ private:
      * @param[in]   stop_hash       The stop_hash for the request
      * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
      * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
+     *                              Set to non-nullptr on success.
      * @param[out]  filter_index    The filter index, if the request can be serviced.
      * @return                      True if the request can be serviced.
      */
@@ -1435,29 +1441,26 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     // pindexLastCommonBlock is required to be an ancestor of pindexBestKnownBlock, and will be used as a starting point.
     // It is being set to the fork point between the peer's best known block and the current tip, unless it is already set to
     // an ancestor with more work than the fork point.
-    auto fork_point = LastCommonAncestor(state->pindexBestKnownBlock, m_chainman.ActiveTip());
+    auto& fork_point = LastCommonAncestor(*state->pindexBestKnownBlock, *m_chainman.ActiveTip());
     if (state->pindexLastCommonBlock == nullptr ||
-        fork_point->nChainWork > state->pindexLastCommonBlock->nChainWork ||
+        fork_point.nChainWork > state->pindexLastCommonBlock->nChainWork ||
         state->pindexBestKnownBlock->GetAncestor(state->pindexLastCommonBlock->nHeight) != state->pindexLastCommonBlock) {
-        state->pindexLastCommonBlock = fork_point;
+        state->pindexLastCommonBlock = &fork_point;
     }
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
 
-    const CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
+    const CBlockIndex& index_walk = *state->pindexLastCommonBlock;
     // Never fetch further than the best block we know the peer has, or more than BLOCK_DOWNLOAD_WINDOW + 1 beyond the last
     // linked block we have in common with this peer. The +1 is so we can detect stalling, namely if we would be able to
     // download that next block if the window were 1 larger.
     int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
 
-    FindNextBlocks(vBlocks, peer, state, pindexWalk, count, nWindowEnd, &m_chainman.ActiveChain(), &nodeStaller);
+    FindNextBlocks(vBlocks, peer, state, index_walk, count, nWindowEnd, &m_chainman.ActiveChain(), &nodeStaller);
 }
 
-void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex *from_tip, const CBlockIndex* target_block)
+void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex& from_tip, const CBlockIndex& target_block)
 {
-    Assert(from_tip);
-    Assert(target_block);
-
     if (vBlocks.size() >= count) {
         return;
     }
@@ -1465,7 +1468,7 @@ void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned 
     vBlocks.reserve(count);
     CNodeState *state = Assert(State(peer.m_id));
 
-    if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->GetAncestor(target_block->nHeight) != target_block) {
+    if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->GetAncestor(target_block.nHeight) != &target_block) {
         // This peer can't provide us the complete series of blocks leading up to the
         // assumeutxo snapshot base.
         //
@@ -1479,15 +1482,16 @@ void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned 
         return;
     }
 
-    FindNextBlocks(vBlocks, peer, state, from_tip, count, std::min<int>(from_tip->nHeight + BLOCK_DOWNLOAD_WINDOW, target_block->nHeight));
+    FindNextBlocks(vBlocks, peer, state, from_tip, count, std::min<int>(from_tip.nHeight + BLOCK_DOWNLOAD_WINDOW, target_block.nHeight));
 }
 
-void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain, NodeId* nodeStaller)
+void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int nWindowEnd, const CChain* activeChain, NodeId* nodeStaller)
 {
     std::vector<const CBlockIndex*> vToFetch;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
     bool is_limited_peer = IsLimitedPeer(peer);
     NodeId waitingfor = -1;
+    const CBlockIndex* pindexWalk = &index_walk;
     while (pindexWalk->nHeight < nMaxHeight) {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
         // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
@@ -3371,7 +3375,7 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
     }
 
     std::vector<BlockFilter> filters;
-    if (!filter_index->LookupFilterRange(start_height, stop_index, filters)) {
+    if (!filter_index->LookupFilterRange(start_height, *stop_index, filters)) {
         LogDebug(BCLog::NET, "Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
                      BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
@@ -3411,7 +3415,7 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& node, Peer& peer, DataStream& v
     }
 
     std::vector<uint256> filter_hashes;
-    if (!filter_index->LookupFilterHashRange(start_height, stop_index, filter_hashes)) {
+    if (!filter_index->LookupFilterHashRange(start_height, *stop_index, filter_hashes)) {
         LogDebug(BCLog::NET, "Failed to find block filter hashes in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
                      BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
@@ -6296,11 +6300,11 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             if (historical_blocks && !IsLimitedPeer(peer)) {
                 // If the first needed historical block is not an ancestor of the last,
                 // we need to start requesting blocks from their last common ancestor.
-                const CBlockIndex* from_tip = LastCommonAncestor(historical_blocks->first, historical_blocks->second);
+                const CBlockIndex& from_tip = LastCommonAncestor(*historical_blocks->first, *historical_blocks->second);
                 TryDownloadingHistoricalBlocks(
                     peer,
                     get_inflight_budget(),
-                    vToDownload, from_tip, historical_blocks->second);
+                    vToDownload, from_tip, *historical_blocks->second);
             }
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(peer);

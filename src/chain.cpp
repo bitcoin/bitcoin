@@ -15,10 +15,12 @@ std::string CBlockIndex::ToString() const
 
 void CChain::SetTip(CBlockIndex& block)
 {
-    CBlockIndex* pindex = &block;
-    vChain.resize(pindex->nHeight + 1);
-    while (pindex && vChain[pindex->nHeight] != pindex) {
-        vChain[pindex->nHeight] = pindex;
+    CBlockIndex placeholder;
+    vChain.resize(block.nHeight + 1, std::ref(placeholder));
+    vChain[block.nHeight] = std::ref(block);
+    CBlockIndex* pindex = block.pprev;
+    while (pindex && &(vChain[pindex->nHeight].get()) != pindex) {
+        vChain[pindex->nHeight] = std::ref(*pindex);
         pindex = pindex->pprev;
     }
 }
@@ -60,9 +62,9 @@ const CBlockIndex* CChain::FindFork(const CBlockIndex& index) const
 CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const
 {
     std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
-    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
-        [](CBlockIndex* pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock->GetBlockTimeMax() < blockparams.first || pBlock->nHeight < blockparams.second; });
-    return (lower == vChain.end() ? nullptr : *lower);
+    std::vector<std::reference_wrapper<CBlockIndex>>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
+        [](std::reference_wrapper<CBlockIndex> pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock.get().GetBlockTimeMax() < blockparams.first || pBlock.get().nHeight < blockparams.second; });
+    return (lower == vChain.end() ? nullptr : &(lower->get()));
 }
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
@@ -149,9 +151,10 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
     return sign * int64_t(r.GetLow64());
 }
 
-/** Find the last common ancestor two blocks have.
- *  Both pa and pb must be non-nullptr. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb) {
+/** Find the last common ancestor two blocks have. */
+const CBlockIndex& LastCommonAncestor(const CBlockIndex& a, const CBlockIndex& b) {
+    const CBlockIndex* pa{&a};
+    const CBlockIndex* pb{&b};
     // First rewind to the last common height (the forking point cannot be past one of the two).
     if (pa->nHeight > pb->nHeight) {
         pa = pa->GetAncestor(pb->nHeight);
@@ -173,5 +176,5 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
         pa = pa->pprev;
         pb = pb->pprev;
     }
-    return pa;
+    return *Assert(pa);
 }

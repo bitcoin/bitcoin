@@ -2679,8 +2679,9 @@ static RPCMethod scanblocks()
             end_range = (start_block + amount_per_chunk < stop_block->nHeight) ?
                     WITH_LOCK(::cs_main, return chainman.ActiveChain()[start_block + amount_per_chunk]) :
                     stop_block;
+            CHECK_NONFATAL(end_range);
 
-            if (index->LookupFilterRange(start_block, end_range, filters)) {
+            if (index->LookupFilterRange(start_block, *end_range, filters)) {
                 for (const BlockFilter& filter : filters) {
                     // compare the elements-set with each filter
                     if (filter.GetFilter().MatchAny(needle_set)) {

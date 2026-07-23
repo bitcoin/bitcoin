@@ -102,7 +102,7 @@ private:
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
-    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+    bool ProcessBlock(const CBlockIndex& index, const CBlock* block_data = nullptr);
 
     virtual bool AllowPrune() const = 0;
 

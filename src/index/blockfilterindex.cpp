@@ -306,25 +306,25 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
 }
 
 static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
-                        const CBlockIndex* stop_index, std::vector<DBVal>& results)
+                        const CBlockIndex& stop_index, std::vector<DBVal>& results)
 {
     if (start_height < 0) {
         LogError("start height (%d) is negative", start_height);
         return false;
     }
-    if (start_height > stop_index->nHeight) {
+    if (start_height > stop_index.nHeight) {
         LogError("start height (%d) is greater than stop height (%d)",
-                 start_height, stop_index->nHeight);
+                 start_height, stop_index.nHeight);
         return false;
     }
 
-    size_t results_size = static_cast<size_t>(stop_index->nHeight - start_height + 1);
+    size_t results_size = static_cast<size_t>(stop_index.nHeight - start_height + 1);
     std::vector<std::pair<uint256, DBVal>> values(results_size);
 
     index_util::DBHeightKey key(start_height);
     std::unique_ptr<CDBIterator> db_it(db.NewIterator());
     db_it->Seek(index_util::DBHeightKey(start_height));
-    for (int height = start_height; height <= stop_index->nHeight; ++height) {
+    for (int height = start_height; height <= stop_index.nHeight; ++height) {
         if (!db_it->Valid() || !db_it->GetKey(key) || key.height != height) {
             return false;
         }
@@ -343,7 +343,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 
     // Iterate backwards through block indexes collecting results in order to access the block hash
     // of each entry in case we need to look it up in the hash index.
-    for (const CBlockIndex* block_index = stop_index;
+    for (const CBlockIndex* block_index = &stop_index;
          block_index && block_index->nHeight >= start_height;
          block_index = block_index->pprev) {
         uint256 block_hash = block_index->GetBlockHash();
@@ -404,7 +404,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     return true;
 }
 
-bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex& stop_index,
                                          std::vector<BlockFilter>& filters_out) const
 {
     std::vector<DBVal> entries;
@@ -424,7 +424,7 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
     return true;
 }
 
-bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex& stop_index,
                                              std::vector<uint256>& hashes_out) const
 
 {
