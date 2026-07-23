@@ -8,6 +8,7 @@
 #include <common/system.h>
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
+#include <init_settings.h>
 #include <kernel/caches.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
@@ -49,7 +50,7 @@ uint64_t GetDefaultDBCache()
 
 uint64_t CalculateDbCacheBytes(const ArgsManager& args)
 {
-    if (auto db_cache{args.GetIntArg("-dbcache")}) {
+    if (auto db_cache{DbCacheSetting::Get(args)}) {
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
         constexpr uint64_t max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<uint64_t>::max()};
@@ -74,8 +75,8 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     // - coinstatsindex: intentionally not included here, since usage pattern
     //   does not seem to suggest it would be necessary to cache.
     IndexCacheSizes index_sizes;
-    index_sizes.tx_index = std::min(total_cache * 10 / 100, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? MAX_TX_INDEX_CACHE : 0);
-    index_sizes.txospender_index = std::min(total_cache * 5 / 100, args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX) ? MAX_TXOSPENDER_INDEX_CACHE : 0);
+    index_sizes.tx_index = std::min(total_cache * 10 / 100, TxIndexSetting::Get(args) ? MAX_TX_INDEX_CACHE : 0);
+    index_sizes.txospender_index = std::min(total_cache * 5 / 100, TxospenderindexSetting::Get(args) ? MAX_TXOSPENDER_INDEX_CACHE : 0);
     if (n_indexes > 0) {
         uint64_t max_cache = std::min(total_cache * 5 / 100, MAX_FILTER_INDEX_CACHE);
         index_sizes.filter_index = max_cache / n_indexes;
