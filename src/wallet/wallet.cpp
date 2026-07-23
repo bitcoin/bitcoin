@@ -2346,12 +2346,6 @@ void CWallet::CommitTransaction(
         throw std::runtime_error(std::string(__func__) + ": Wallet db error, transaction commit failed");
     }
 
-    // Notify that old coins are spent
-    for (const CTxIn& txin : tx->vin) {
-        CWalletTx &coin = mapWallet.at(txin.prevout.hash);
-        NotifyTransactionChanged(coin.GetHash(), CT_UPDATED);
-    }
-
     if (!fBroadcastTransactions) {
         // Don't submit tx to the mempool
         return;
