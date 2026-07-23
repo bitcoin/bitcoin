@@ -2,15 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/settings.h>
-
 #include <bitcoin-build-config.h> // IWYU pragma: keep
+
+#include <common/settings.h>
 
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/fs.h>
 
-#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <map>
