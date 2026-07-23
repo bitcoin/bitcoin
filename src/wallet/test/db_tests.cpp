@@ -206,22 +206,6 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
     }
 }
 
-// Test-only statement execution error
-constexpr int TEST_SQLITE_ERROR = -999;
-
-class DbExecBlocker : public SQliteExecHandler
-{
-private:
-    SQliteExecHandler m_base_exec;
-    std::set<std::string> m_blocked_statements;
-public:
-    DbExecBlocker(std::set<std::string> blocked_statements) : m_blocked_statements(blocked_statements) {}
-    int Exec(SQLiteDatabase& database, const std::string& statement) override {
-        if (m_blocked_statements.contains(statement)) return TEST_SQLITE_ERROR;
-        return m_base_exec.Exec(database, statement);
-    }
-};
-
 BOOST_AUTO_TEST_CASE(txn_close_failure_dangling_txn)
 {
     // Verifies that there is no active dangling, to-be-reversed db txn
@@ -239,7 +223,7 @@ BOOST_AUTO_TEST_CASE(txn_close_failure_dangling_txn)
     BOOST_CHECK(batch->Write(key, value));
     // Set a handler to prevent txn abortion during destruction.
     // Mimicking a db statement execution failure.
-    batch->SetExecHandler(std::make_unique<DbExecBlocker>(std::set<std::string>{"ROLLBACK TRANSACTION"}));
+    batch->SetExecHandler(std::make_unique<DbExecBlocker>("ROLLBACK TRANSACTION"));
     // Destroy batch
     batch.reset();
 
