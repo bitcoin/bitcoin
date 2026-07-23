@@ -52,6 +52,7 @@ const std::string POOL{"pool"};
 const std::string PURPOSE{"purpose"};
 const std::string SETTINGS{"settings"};
 const std::string TX{"tx"};
+const std::string WTX_VARIANT{"wtxvariant"};
 const std::string VERSION{"version"};
 const std::string WALLETDESCRIPTOR{"walletdescriptor"};
 const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
@@ -97,12 +98,24 @@ bool WalletBatch::ErasePurpose(const std::string& strAddress)
 
 bool WalletBatch::WriteTx(const CWalletTx& wtx)
 {
-    return WriteIC(std::make_pair(DBKeys::TX, wtx.GetHash()), wtx);
+    const Txid txid = wtx.GetHash();
+    // Persist all witness variants. Including the canonical one
+    for (const auto& [wtxid, tx] : wtx.GetTxs()) {
+        if (!WriteWtxVariant(txid, tx)) return false;
+    }
+    return WriteIC(std::make_pair(DBKeys::TX, txid), wtx);
 }
 
 bool WalletBatch::EraseTx(Txid hash)
 {
-    return EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()));
+    if (!EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()))) return false;
+    // Drop all witness variant records too, so none are left dangling
+    return m_batch->ErasePrefix(DataStream() << DBKeys::WTX_VARIANT << hash);
+}
+
+bool WalletBatch::WriteWtxVariant(const Txid& txid, const CTransactionRef& tx)
+{
+    return WriteIC(std::make_pair(DBKeys::WTX_VARIANT, std::make_pair(txid, tx->GetWitnessHash())), TX_WITH_WITNESS(tx));
 }
 
 bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
@@ -980,6 +993,37 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
     return result;
 }
 
+static std::map<Wtxid, CTransactionRef> ReadWtxVariants(DatabaseBatch& batch, const Txid& txid)
+{
+    std::map<Wtxid, CTransactionRef> variants;
+
+    DataStream prefix;
+    prefix << DBKeys::WTX_VARIANT << txid;
+    std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
+    if (!cursor) {
+        throw std::runtime_error(strprintf("Error getting database cursor for '%s' records", DBKeys::WTX_VARIANT));
+    }
+
+    DataStream key;
+    DataStream value;
+    while (true) {
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        if (status == DatabaseCursor::Status::DONE) break;
+        if (status == DatabaseCursor::Status::FAIL) {
+            throw std::runtime_error(strprintf("Error reading '%s' record", DBKeys::WTX_VARIANT));
+        }
+        CTransactionRef tx;
+        value >> TX_WITH_WITNESS(tx);
+        if (tx->GetHash() != txid) {
+            throw std::runtime_error(strprintf("Corrupted witness variant, tx hash differs"));
+        }
+        if (!variants.emplace(tx->GetWitnessHash(), std::move(tx)).second) {
+            throw std::runtime_error(strprintf("Duplicate witness variant"));
+        }
+    }
+    return variants;
+}
+
 static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_unordered) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
@@ -988,31 +1032,27 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
     // Load tx record
     any_unordered = false;
     LoadResult tx_res = LoadRecords(pwallet, batch, DBKeys::TX,
-        [&any_unordered] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        [&any_unordered, &batch] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
         DBErrors result = DBErrors::LOAD_OK;
         Txid hash;
         key >> hash;
-        // LoadToWallet call below creates a new CWalletTx that fill_wtx
-        // callback fills with transaction metadata.
-        auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
-            if(!new_tx) {
-                // There's some corruption here since the tx we just tried to load was already in the wallet.
-                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
-                result = DBErrors::CORRUPT;
-                return false;
+        try {
+            CWalletTx wtx{deserialize, value, ReadWtxVariants(batch, hash)};
+            if (wtx.GetHash() != hash) {
+                result = std::max(result, DBErrors::NEED_RESCAN);
             }
-            value >> wtx;
-            if (wtx.GetHash() != hash)
-                return false;
 
-            if (wtx.nOrderPos == -1)
+            if (wtx.nOrderPos == -1) {
                 any_unordered = true;
+            }
 
-            return true;
-        };
-        if (!pwallet->LoadToWallet(hash, fill_wtx)) {
-            // Use std::max as fill_wtx may have already set result to CORRUPT
-            result = std::max(result, DBErrors::NEED_RESCAN);
+            if (!pwallet->LoadToWallet(std::move(wtx))) {
+                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
+                return DBErrors::CORRUPT;
+            }
+        } catch (const std::exception& e) {
+            err = strprintf("Error: Corrupt tx record found: %s" ,e.what());
+            return DBErrors::CORRUPT;
         }
         return result;
     });
