@@ -1495,7 +1495,11 @@ RPCMethod sendall()
             } else {
                 CoinFilterParams coins_params;
                 coins_params.min_amount = 0;
-                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
+                auto available_coins_res = AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params);
+                if (!available_coins_res) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(available_coins_res).original);
+                }
+                for (const COutput& output : available_coins_res->All()) {
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
