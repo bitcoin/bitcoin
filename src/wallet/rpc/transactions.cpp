@@ -296,8 +296,36 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
     }
 }
 
+static bool IsMixedInput(const WalletTxHistoryAccounting& accounting)
+{
+    return accounting.input_ownership == WalletTxInputOwnership::PARTIAL;
+}
+
+static bool NeedsUnattributedAggregateSend(const WalletTxHistoryAccounting& accounting)
+{
+    return IsMixedInput(accounting) && !accounting.fee.has_value();
+}
+
+static void PushMixedInputFields(UniValue& entry, const WalletTxHistoryAccounting& accounting)
+{
+    entry.pushKV("involves_mixed_inputs", true);
+    entry.pushKV("wallet_debit", ValueFromAmount(accounting.debit));
+    entry.pushKV("wallet_credit", ValueFromAmount(accounting.credit));
+}
+
+// When a mixed-input transaction has unattributable outputs or fee share, the
+// wallet still knows it spent all of its own inputs into the transaction. Report
+// that gross outflow as a single aggregate send entry, while omitting address,
+// vout, and fee because none can be attributed from the transaction alone.
+static void PushUnattributedAggregateSend(UniValue& entry, const WalletTxHistoryAccounting& accounting)
+{
+    entry.pushKV("category", "send");
+    entry.pushKV("amount", ValueFromAmount(-accounting.debit));
+    PushMixedInputFields(entry, accounting);
+}
+
 /**
- * List transactions based on the given criteria.
+ * Append RPC entries for a wallet transaction based on the given criteria.
  *
  * @param  wallet         The wallet.
  * @param  wtx            The wallet transaction.
@@ -307,16 +335,29 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
 template <class Vec>
-static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
-                             Vec& ret, const std::optional<std::string>& filter_label,
-                             bool include_change = false)
+static void AppendWalletTxEntries(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
+                                  Vec& ret, const std::optional<std::string>& filter_label,
+                                  bool include_change = false)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
+    const WalletTxHistoryAccounting accounting{CachedTxGetHistoryAccounting(wallet, wtx)};
+    const bool is_mixed_input{IsMixedInput(accounting)};
+    const bool needs_unattributed_aggregate_send{NeedsUnattributedAggregateSend(accounting)};
     CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, include_change);
+
+    if (needs_unattributed_aggregate_send && !filter_label.has_value()) {
+        UniValue entry(UniValue::VOBJ);
+        PushUnattributedAggregateSend(entry, accounting);
+        if (fLong) {
+            WalletTxToJSON(wallet, wtx, entry);
+        }
+        entry.pushKV("abandoned", wtx.isAbandoned());
+        ret.push_back(std::move(entry));
+    }
 
     // Sent
     if (!filter_label.has_value())
@@ -333,6 +374,9 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
+            if (is_mixed_input) {
+                PushMixedInputFields(entry, accounting);
+            }
             if (fLong)
                 WalletTxToJSON(wallet, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
@@ -369,6 +413,9 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("category", "receive");
             }
             entry.pushKV("amount", ValueFromAmount(r.amount));
+            if (is_mixed_input) {
+                PushMixedInputFields(entry, accounting);
+            }
             if (address_book_entry) {
                 entry.pushKV("label", label);
             }
@@ -414,6 +461,9 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the output script of this coin.", {
                {RPCResult::Type::STR, "desc", "The descriptor string."},
            }},
+           {RPCResult::Type::BOOL, "involves_mixed_inputs", /*optional=*/true, "Only present if the transaction spends both wallet-owned and non-wallet inputs."},
+           {RPCResult::Type::STR_AMOUNT, "wallet_debit", /*optional=*/true, "Only present if involves_mixed_inputs is true. Total value of wallet-owned inputs spent by this transaction."},
+           {RPCResult::Type::STR_AMOUNT, "wallet_credit", /*optional=*/true, "Only present if involves_mixed_inputs is true. Total value of wallet-owned outputs created by this transaction."},
            };
 }
 
@@ -426,7 +476,12 @@ RPCMethod listtransactions()
                 "transactions specified in the 'skip' argument. A transaction can have multiple entries in this RPC response. \n"
                 "For instance, a wallet transaction that pays three addresses — one wallet-owned and two external — will produce \n"
                 "four entries. The payment to the wallet-owned address appears both as a send entry and as a receive entry. \n"
-                "As a result, the RPC response will contain one entry in the receive category and three entries in the send category.\n",
+                "As a result, the RPC response will contain one entry in the receive category and three entries in the send category.\n"
+                "A transaction with both wallet-owned and non-wallet inputs is reported with normal per-output send/receive entries if \n"
+                "all non-wallet inputs have known zero value. Otherwise the wallet cannot attribute the foreign outputs or its \n"
+                "fee share, so it reports a single unattributed aggregate send entry (marked with involves_mixed_inputs and \n"
+                "without address, vout, or fee) carrying the negative total of wallet-owned inputs spent. Wallet-owned outputs \n"
+                "are reported as separate receive entries, so the transaction's entries sum to the wallet's net change.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
@@ -441,17 +496,17 @@ RPCMethod listtransactions()
                         {
                             {RPCResult::Type::STR, "address",  /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
                             {RPCResult::Type::STR, "category", "The transaction category.\n"
-                                "\"send\"                  Transactions sent.\n"
+                                "\"send\"                  Transactions sent. For mixed-input transactions whose outputs or fee share cannot be attributed, a single unattributed aggregate send entry carries the negative total of wallet-owned inputs spent.\n"
                                 "\"receive\"               Non-coinbase transactions received.\n"
                                 "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
                                 "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
                                 "\"orphan\"                Orphaned coinbase transactions received."},
-                            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                                "for all other categories"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category and positive for\n"
+                                "receive categories. For an unattributed aggregate mixed-input send, this is the negative total of wallet-owned inputs spent."},
                             {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
-                            {RPCResult::Type::NUM, "vout", "the vout value"},
-                            {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                 "'send' category of transactions."},
+                            {RPCResult::Type::NUM, "vout", /*optional=*/true, "the vout value"},
+                            {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for\n"
+                                 "'send' category transactions whose fee is known to the wallet (omitted for unattributed aggregate mixed-input sends)."},
                         },
                         TransactionDescriptionString()),
                         {
@@ -505,7 +560,7 @@ RPCMethod listtransactions()
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+            AppendWalletTxEntries(*pwallet, *pwtx, 0, true, ret, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -531,16 +586,16 @@ static std::vector<RPCResult> ListSinceBlockTxFields()
         {
             {RPCResult::Type::STR, "address", /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
             {RPCResult::Type::STR, "category", "The transaction category.\n"
-                "\"send\"                  Transactions sent.\n"
+                "\"send\"                  Transactions sent. For mixed-input transactions whose outputs or fee share cannot be attributed, a single unattributed aggregate send entry carries the negative total of wallet-owned inputs spent.\n"
                 "\"receive\"               Non-coinbase transactions received.\n"
                 "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
                 "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
                 "\"orphan\"                Orphaned coinbase transactions received."},
-            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                "for all other categories"},
-            {RPCResult::Type::NUM, "vout", "the vout value"},
+            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category and positive for\n"
+                "receive categories. For an unattributed aggregate mixed-input send, this is the negative total of wallet-owned inputs spent."},
+            {RPCResult::Type::NUM, "vout", /*optional=*/true, "the vout value"},
             {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                 "'send' category of transactions."},
+                 "'send' category transactions whose fee is known to the wallet (omitted for unattributed aggregate mixed-input sends)."},
         },
         Cat(
             TransactionDescriptionString(),
@@ -558,7 +613,12 @@ RPCMethod listsinceblock()
         "listsinceblock",
         "Get all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
                 "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
-                "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n",
+                "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n"
+                "A transaction with both wallet-owned and non-wallet inputs is reported with normal per-output send/receive entries if \n"
+                "all non-wallet inputs have known zero value. Otherwise the wallet cannot attribute the foreign outputs or its \n"
+                "fee share, so it reports a single unattributed aggregate send entry (marked with involves_mixed_inputs and \n"
+                "without address, vout, or fee) carrying the negative total of wallet-owned inputs spent. Wallet-owned outputs \n"
+                "are reported as separate receive entries, so the transaction's entries sum to the wallet's net change.\n",
                 {
                     {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, the block hash to list transactions since, otherwise list all transactions."},
                     {"target_confirmations", RPCArg::Type::NUM, RPCArg::Default{1}, "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
@@ -636,7 +696,7 @@ RPCMethod listsinceblock()
     for (const auto& [_, tx] : wallet.mapWallet) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);
+            AppendWalletTxEntries(wallet, tx, 0, true, transactions, filter_label, include_change);
         }
     }
 
@@ -653,7 +713,7 @@ RPCMethod listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter_label, include_change);
+                AppendWalletTxEntries(wallet, it->second, -100000000, true, removed, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -689,8 +749,7 @@ RPCMethod gettransaction()
                     RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                     {
                         {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                     "'send' category of transactions."},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the wallet-attributable fee in " + CURRENCY_UNIT + ". This is negative and only available when known."},
                     },
                     TransactionDescriptionString()),
                     {
@@ -700,20 +759,23 @@ RPCMethod gettransaction()
                             {
                                 {RPCResult::Type::STR, "address", /*optional=*/true, "The bitcoin address involved in the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
-                                    "\"send\"                  Transactions sent.\n"
+                                    "\"send\"                  Transactions sent. For mixed-input transactions whose outputs or fee share cannot be attributed, a single unattributed aggregate send entry carries the negative total of wallet-owned inputs spent.\n"
                                     "\"receive\"               Non-coinbase transactions received.\n"
                                     "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
                                     "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
                                     "\"orphan\"                Orphaned coinbase transactions received."},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
                                 {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
-                                {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
-                                    "'send' category of transactions."},
+                                {RPCResult::Type::NUM, "vout", /*optional=*/true, "the vout value"},
+                                {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for\n"
+                                    "'send' category transactions whose fee is known to the wallet (omitted for unattributed aggregate mixed-input sends)."},
                                 {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
                                 {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the output script of this coin.", {
                                     {RPCResult::Type::STR, "desc", "The descriptor string."},
                                 }},
+                                {RPCResult::Type::BOOL, "involves_mixed_inputs", /*optional=*/true, "Only present if the transaction spends both wallet-owned and non-wallet inputs."},
+                                {RPCResult::Type::STR_AMOUNT, "wallet_debit", /*optional=*/true, "Only present if involves_mixed_inputs is true. Total value of wallet-owned inputs spent by this transaction."},
+                                {RPCResult::Type::STR_AMOUNT, "wallet_credit", /*optional=*/true, "Only present if involves_mixed_inputs is true. Total value of wallet-owned outputs created by this transaction."},
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
@@ -752,19 +814,20 @@ RPCMethod gettransaction()
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
-    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
-    CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
+    const WalletTxHistoryAccounting accounting{CachedTxGetHistoryAccounting(*pwallet, wtx)};
 
-    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (CachedTxIsFromMe(*pwallet, wtx))
-        entry.pushKV("fee", ValueFromAmount(nFee));
+    entry.pushKV("amount", ValueFromAmount(accounting.credit - accounting.debit + accounting.fee.value_or(0)));
+    if (accounting.fee.has_value()) {
+        entry.pushKV("fee", ValueFromAmount(-*accounting.fee));
+    }
+    if (IsMixedInput(accounting)) {
+        PushMixedInputFields(entry, accounting);
+    }
 
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
+    AppendWalletTxEntries(*pwallet, wtx, /*nMinDepth=*/0, /*fLong=*/false, details, /*filter_label=*/std::nullopt);
     entry.pushKV("details", std::move(details));
 
     entry.pushKV("hex", EncodeHexTx(*wtx.tx));
