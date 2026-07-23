@@ -245,13 +245,12 @@ std::unique_ptr<CCoinsViewCursor> CCoinsViewDB::Cursor() const
        only need read operations on it, use a const-cast to get around
        that restriction.  */
     i->pcursor->Seek(DB_COIN);
-    // Cache key of first record
+    // Cache key of first record, matching Next() for undecodable keys.
+    i->keyTmp.first = 0;
     if (i->pcursor->Valid()) {
-        CoinEntry entry(&i->keyTmp.second);
-        i->pcursor->GetKey(entry);
-        i->keyTmp.first = entry.key;
-    } else {
-        i->keyTmp.first = 0; // Make sure Valid() and GetKey() return false
+        if (CoinEntry entry{&i->keyTmp.second}; i->pcursor->GetKey(entry)) {
+            i->keyTmp.first = entry.key;
+        }
     }
     return i;
 }
