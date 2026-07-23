@@ -7,6 +7,7 @@ target_sources(fuzz
     coincontrol.cpp
     coinselection.cpp
     crypter.cpp
+    feebumper.cpp
     fees.cpp
     scriptpubkeyman.cpp
     spend.cpp
