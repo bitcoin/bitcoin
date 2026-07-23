@@ -1293,12 +1293,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // The sequence number is set to non-maxint so that DiscourageFeeSniping
     // works.
-    //
-    // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
-    // we use the highest possible value in that range (maxint-2)
-    // to avoid conflicting with other possible uses of nSequence,
-    // and in the spirit of "smallest possible change from prior
-    // behavior."
     bool use_anti_fee_sniping = true;
     const uint32_t default_sequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
     txNew.vin.reserve(selected_coins.size());
