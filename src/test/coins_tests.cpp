@@ -17,6 +17,9 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 
+#include <chrono>
+#include <future>
+#include <latch>
 #include <map>
 #include <string>
 #include <variant>
@@ -24,6 +27,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace std::chrono_literals;
 using namespace util::hex_literals;
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
@@ -1059,6 +1063,23 @@ BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/false);
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/true);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(coins_db_cursor_resize_waits_for_cursor, BasicTestingSetup)
+{
+    CCoinsViewDB db{{.path = m_args.GetDataDirBase() / "coins_db_cursor_resize_waits", .cache_bytes = 1_MiB, .wipe_data = true}, {}};
+    auto cursor{db.Cursor()};
+    BOOST_CHECK(db.Cursor()); // Cursors can coexist
+
+    std::latch resize_started{1};
+    auto resize{std::async(std::launch::async, [&] { WITH_LOCK(::cs_main, resize_started.count_down(); db.ResizeCache(2_MiB)); })};
+    resize_started.wait();
+
+    BOOST_CHECK_EQUAL(resize.wait_for(100ms), std::future_status::timeout); // Resize waits for the live cursor before replacing the DB
+    cursor.reset();
+    BOOST_REQUIRE_EQUAL(resize.wait_for(5s), std::future_status::ready);
+    resize.get();
+    BOOST_CHECK(db.Cursor());
 }
 
 BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
