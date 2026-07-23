@@ -1034,7 +1034,8 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
 
     switch (m_type) {
     case Type::ANY: {
-        NONFATAL_UNREACHABLE(); // Only for testing
+        sections.PushSection({indent + maybe_key + "xxx" + maybe_separator, Description("any")});
+        return;
     }
     case Type::NONE: {
         sections.PushSection({indent + "null" + maybe_separator, Description("json null")});

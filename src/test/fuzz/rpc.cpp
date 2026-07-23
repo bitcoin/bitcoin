@@ -147,6 +147,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getnetworkhashps",
     "getnetworkinfo",
     "getnodeaddresses",
+    "getopenrpcinfo",
     "getorphantxs",
     "getpeerinfo",
     "getprioritisedtransactions",
@@ -169,6 +170,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "prioritisetransaction",
     "pruneblockchain",
     "reconsiderblock",
+    "rpc.discover",
     "scanblocks",
     "scantxoutset",
     "sendmsgtopeer", // when no peers are connected, no p2p message is sent
