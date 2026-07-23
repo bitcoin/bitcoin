@@ -8,6 +8,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <array>
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -1379,6 +1380,13 @@ public:
     {
         auto state = btck_chainstate_manager_process_block_header(get(), header.get());
         return BlockValidationState{state};
+    }
+
+    void SetClockTime(std::optional<std::chrono::seconds> now)
+    {
+        if (btck_chainstate_manager_set_clock_time(get(), now ? now->count() : 0) != 0) {
+            throw std::runtime_error("timestamp out of range");
+        }
     }
 
     ChainView GetChain() const

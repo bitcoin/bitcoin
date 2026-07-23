@@ -95,6 +95,13 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (opts.use_current_time) {
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
             }
+            // Reject nTime values that cannot be represented as MempoolTime.
+            constexpr int64_t MAX_MEMPOOL_TIME{
+                std::chrono::time_point_cast<std::chrono::seconds>(MempoolTime::max())
+                    .time_since_epoch().count()};
+            if (nTime < 0 || nTime > MAX_MEMPOOL_TIME) {
+                throw std::runtime_error(strprintf("Mempool entry nTime value %d is out of range", nTime));
+            }
 
             CAmount amountdelta = nFeeDelta;
             if (amountdelta && opts.apply_fee_delta_priority) {
@@ -102,7 +109,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, NodeSeconds{std::chrono::seconds{nTime}}, /*bypass_limits=*/false, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
@@ -195,7 +202,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         LogInfo("Writing %u mempool transactions to file...\n", mempool_transactions_to_write);
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
-            file << int64_t{count_seconds(i.m_time)};
+            file << int64_t{TicksSinceEpoch<std::chrono::seconds>(i.m_time)};
             file << int64_t{i.nFeeDelta};
             mapDeltas.erase(i.tx->GetHash());
         }

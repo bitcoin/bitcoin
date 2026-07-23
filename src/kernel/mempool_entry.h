@@ -50,6 +50,8 @@ struct CompareIteratorByHash {
     }
 };
 
+using MempoolTime = NodeClock::time_point;
+
 /** \class CTxMemPoolEntry
  *
  * CTxMemPoolEntry stores data about the corresponding transaction, as well
@@ -74,7 +76,7 @@ private:
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
     const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
-    const int64_t nTime;            //!< Local time when entering the mempool
+    const MempoolTime nTime; //!< Local time when entering the mempool
     const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
@@ -85,7 +87,7 @@ private:
 public:
     virtual ~CTxMemPoolEntry() = default;
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
-                    int64_t time, unsigned int entry_height, uint64_t entry_sequence,
+                    MempoolTime time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
@@ -113,7 +115,7 @@ public:
     }
     int32_t GetAdjustedWeight() const { return GetSigOpsAdjustedWeight(nTxWeight, sigOpCost, ::nBytesPerSigOp); }
     int32_t GetTxWeight() const { return nTxWeight; }
-    std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
+    MempoolTime GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
