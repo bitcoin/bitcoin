@@ -27,12 +27,23 @@ namespace init {
 void AddLoggingArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file (default: %s). Relative paths will be prefixed by a net-specific datadir location. Pass -nodebuglogfile to disable writing the log to a file.", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-loglevel=<level>|<category>:<level>[,<category>:<level>...]",
+        strprintf("Set the global or per-category severity level for logging. "
+            "Possible values for <level> are %s (default: info). <category> can be: %s. "
+            "A global level (e.g. -loglevel=debug) enables all categories at that level; "
+            "a per-category entry (e.g. -loglevel=net:trace) enables one category. "
+            "Multiple entries can be comma-separated or given as separate -loglevel arguments "
+            "and later settings override earlier settings.",
+            LogInstance().LogLevelsString(), LogInstance().LogCategoriesString()),
+        ArgsManager::DISALLOW_ELISION, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-debug=<category>", "Output debug and trace logging (default: -nodebug, supplying <category> is optional). "
-        "If <category> is not supplied or if <category> is 1 or \"all\", output all debug logging. If <category> is 0 or \"none\", any other categories are ignored. Other valid values for <category> are: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories.",
+        "If <category> is not supplied or if <category> is 1 or \"all\", output all debug logging. If <category> is 0 or \"none\", any other categories are ignored. Other valid values for <category> are: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories. "
+        "Specifying -debug=1 is equivalent to specifying -loglevel=debug, and -debug=<category> is equivalent to -loglevel=<category>:debug. -loglevel takes precedence over -debug if both are used together.",
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-debugexclude=<category>", "Exclude debug and trace logging for a category. Can be used in conjunction with -debug=1 to output debug and trace logging for all categories except the specified category. This option can be specified multiple times to exclude multiple categories. This takes priority over \"-debug\"", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-debugexclude=<category>", "Exclude debug and trace logging for a category. Can be used in conjunction with -debug=1 to output debug and trace logging for all categories except the specified category. This option can be specified multiple times to exclude multiple categories. This takes priority over \"-debug\" and \"-loglevel\". "
+        "Specifying -debugexclude=<category> is equivalent to specifying -loglevel=category:info",
+        ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logips", strprintf("Include IP addresses in log output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option or the logging RPC. Possible values are %s (default=%s). The following levels are always logged: error, warning, info. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logsourcelocations", strprintf("Prepend debug output with name of the originating source location (source file, line number and function name) (default: %u)", DEFAULT_LOGSOURCELOCATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -59,20 +70,37 @@ void SetLoggingOptions(const ArgsManager& args)
 
 util::Result<void> SetLoggingLevel(const ArgsManager& args)
 {
-        for (const std::string& level_str : args.GetArgs("-loglevel")) {
-            if (level_str.find_first_of(':', 3) == std::string::npos) {
-                // user passed a global log level, i.e. -loglevel=<level>
-                if (!LogInstance().SetLogLevel(level_str)) {
-                    return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", level_str, LogInstance().LogLevelsString())};
+    for (const std::string& level_arg : args.GetArgs("-loglevel")) {
+        bool seen_per_category = false;
+        for (const std::string& token : SplitString(level_arg, ',')) {
+            if (token.find(':') == std::string::npos) {
+                // Global level token — must come first in a comma-separated value
+                if (seen_per_category) {
+                    return util::Error{strprintf(_("In %s=%s, global level must be specified before any category-specific levels."), "-loglevel", level_arg)};
+                }
+                if (!LogInstance().SetLogLevel(token)) {
+                    return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", token, LogInstance().LogLevelsString())};
+                }
+                // Global level: reset per-category overrides and flags
+                LogInstance().SetCategoryLogLevel({});
+                if (LogInstance().LogLevel() >= util::log::Level::Info) {
+                    LogInstance().DisableCategory(BCLog::ALL);
+                } else {
+                    LogInstance().EnableCategory(BCLog::ALL);
                 }
             } else {
-                // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
-                const auto& toks = SplitString(level_str, ':');
+                // Category-specific level: -loglevel=net:trace (or comma token "net:trace")
+                const auto& toks = SplitString(token, ':');
                 if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
-                    return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
+                    return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", token, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
+                if (const auto flag = BCLog::Logger::GetLogCategory(toks[0])) {
+                    LogInstance().EnableCategory(*flag);
+                }
+                seen_per_category = true;
             }
         }
+    }
     return {};
 }
 
@@ -92,7 +120,11 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
         }
     }
 
-    // Now remove the logging categories which were explicitly excluded
+    return {};
+}
+
+util::Result<void> SetLoggingExcludes(const ArgsManager& args)
+{
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
