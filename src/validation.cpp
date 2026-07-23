@@ -4535,14 +4535,15 @@ BlockValidationState TestBlockValidity(
         return state;
     }
 
-    // We don't want ConnectBlock to update the actual chainstate, so create
-    // a cache on top of it, along with a dummy block index.
+    // We don't want ConnectBlock to update the actual chainstate, so use the
+    // reusable overlay view on top of it, along with a dummy block index.
     CBlockIndex index_dummy{block};
     uint256 block_hash(block.GetHash());
     index_dummy.pprev = tip;
     index_dummy.nHeight = tip->nHeight + 1;
     index_dummy.phashBlock = &block_hash;
-    CCoinsViewCache view_dummy(&chainstate.CoinsTip());
+    CoinsViewOverlay& view_dummy{chainstate.ConnectBlockView()};
+    const auto reset_guard{view_dummy.StartFetching(block)};
 
     // Set fJustCheck to true in order to update, and not clear, validation caches.
     if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
