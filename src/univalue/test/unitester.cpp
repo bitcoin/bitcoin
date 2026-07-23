@@ -4,7 +4,6 @@
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <univalue.h>
-
 #include <univalue/test/fail1.json.h>
 #include <univalue/test/fail10.json.h>
 #include <univalue/test/fail11.json.h>
@@ -63,6 +62,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -186,6 +186,55 @@ void no_nul_test()
     assert(val.read({buf + 3, 7}));
 }
 
+void expect_json_token(std::string_view raw, size_t size, enum jtokentype expected,
+                       unsigned int expected_consumed = 0,
+                       std::string_view expected_token_value = {})
+{
+    assert(size <= raw.size());
+
+    std::string token_value;
+    unsigned int consumed{0};
+    const enum jtokentype token{
+        getJsonToken(token_value, consumed, raw.data(), raw.data() + size)};
+
+    assert(token == expected);
+    assert(consumed == expected_consumed);
+    assert(std::string_view{token_value} == expected_token_value);
+}
+
+void get_json_token_end_test()
+{
+    expect_json_token("null", 3, JTOK_ERR);
+    expect_json_token("true", 3, JTOK_ERR);
+    expect_json_token("false", 4, JTOK_ERR);
+
+    expect_json_token("null", /*size=*/4, JTOK_KW_NULL, /*expected_consumed=*/4);
+    expect_json_token("true", /*size=*/4, JTOK_KW_TRUE, /*expected_consumed=*/4);
+    expect_json_token("false", /*size=*/5, JTOK_KW_FALSE, /*expected_consumed=*/5);
+
+    expect_json_token("-0", 1, JTOK_ERR);
+    expect_json_token("-x", 1, JTOK_ERR);
+    expect_json_token("01", /*size=*/1, JTOK_NUMBER, /*expected_consumed=*/1, "0");
+    expect_json_token("-01", /*size=*/2, JTOK_NUMBER, /*expected_consumed=*/2, "-0");
+
+    expect_json_token("01", 2, JTOK_ERR);
+    expect_json_token("-01", 3, JTOK_ERR);
+
+    // fractions
+    expect_json_token("1.5", /*size=*/3, JTOK_NUMBER, /*expected_consumed=*/3, "1.5");
+    expect_json_token("-0.5", /*size=*/4, JTOK_NUMBER, /*expected_consumed=*/4, "-0.5");
+    expect_json_token("1.5", /*size=*/2, JTOK_ERR);
+
+    // exponents
+    expect_json_token("1e5", /*size=*/3, JTOK_NUMBER, /*expected_consumed=*/3, "1e5");
+    expect_json_token("-1e-5", /*size=*/5, JTOK_NUMBER, /*expected_consumed=*/5, "-1e-5");
+    expect_json_token("1e", /*size=*/2, JTOK_ERR);
+
+    // fractions + exponents combined
+    expect_json_token("1.5e3", /*size=*/5, JTOK_NUMBER, /*expected_consumed=*/5, "1.5e3");
+    expect_json_token("-1.5e-3", /*size=*/7, JTOK_NUMBER, /*expected_consumed=*/7, "-1.5e-3");
+}
+
 int main(int argc, char* argv[])
 {
     for (const auto& [file, json] : tests) {
@@ -194,6 +243,7 @@ int main(int argc, char* argv[])
 
     unescape_unicode_test();
     no_nul_test();
+    get_json_token_end_test();
 
     return 0;
 }
