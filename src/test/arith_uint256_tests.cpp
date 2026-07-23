@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -16,7 +18,7 @@
 #include <string>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(arith_uint256_tests)
+BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 
 /// Convert vector to arith_uint256, via uint256 blob
 static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
@@ -277,6 +279,21 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
 
     BOOST_CHECK_LT(ZeroL,
                    OneL);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_sorting)
+{
+    const std::array expected{
+        arith_uint256{1},
+        arith_uint256{2},
+        arith_uint256{arith_uint256{1} << 32},
+        arith_uint256{arith_uint256{1} << 33},
+    };
+
+    auto values{expected};
+    std::ranges::shuffle(values, m_rng);
+    std::ranges::sort(values);
+    BOOST_CHECK(values == expected);
 }
 
 BOOST_AUTO_TEST_CASE( plusMinus )
