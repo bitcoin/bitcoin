@@ -70,13 +70,8 @@ pkg install libzmq4 pkgconf
 ```
 
 #### Test Suite Dependencies
-There is an included test suite that is useful for testing code changes when developing.
-To run the test suite (recommended), you will need to have Python 3 installed:
 
-```bash
-pkg install python3 databases/py-sqlite3 net/py-pyzmq
-```
----
+See [`test/README.md`](/test/README.md#dependencies-and-prerequisites).
 
 ## Building Bitcoin Core
 
