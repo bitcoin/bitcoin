@@ -8,11 +8,14 @@
 #define BITCOIN_KEY_H
 
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
 #include <uint256.h>
 
+#include <optional>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 struct secp256k1_context_struct;
@@ -254,6 +257,12 @@ struct CExtKey {
     CExtPubKey Neuter() const;
     void SetSeed(std::span<const std::byte> seed);
 };
+
+//! Get extended key and origin info for a given path
+//! @param[in] ext_key The extended private key to derive from
+//! @param[in] path The BIP 32 path
+//! @return the resulting extended private key and origin info
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path);
 
 /** KeyPair
  *

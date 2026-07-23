@@ -9,8 +9,10 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -184,6 +186,47 @@ BOOST_AUTO_TEST_CASE(bip32_test5) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
+{
+    const CExtKey master{DecodeExtKey(test1.vDerive[0].prv)};
+    const std::vector<uint32_t> path{test1.vDerive[0].nChild, test1.vDerive[1].nChild};
+    const auto derived{DeriveExtKey(master, path)};
+    BOOST_REQUIRE(derived);
+    BOOST_CHECK(EncodeExtKey(derived->first) == test1.vDerive[2].prv);
+
+    KeyOriginInfo expected_origin;
+    const CKeyID id{master.key.GetPubKey().GetID()};
+    std::copy(id.begin(), id.begin() + sizeof(expected_origin.fingerprint), expected_origin.fingerprint);
+    expected_origin.path = path;
+    BOOST_CHECK(derived->second == expected_origin);
+
+    const auto root{DeriveExtKey(master, {})};
+    BOOST_REQUIRE(root);
+    BOOST_CHECK(root->first == master);
+    expected_origin.path.clear();
+    BOOST_CHECK(root->second == expected_origin);
+
+    CExtKey max_depth{master};
+    for (auto i{0}; i++ < 255;) {
+        CExtKey next_key;
+        BOOST_REQUIRE(max_depth.Derive(next_key, 0));
+        max_depth = next_key;
+    }
+    BOOST_CHECK(!DeriveExtKey(max_depth, {0}));
+}
+
+BOOST_AUTO_TEST_CASE(bip32_has_hardened_derivation)
+{
+    const std::vector<uint32_t> empty;
+    const std::vector<uint32_t> unhardened{0, 1, 2};
+    const std::vector<uint32_t> hardened{0x80000000U};
+    const std::vector<uint32_t> mixed{0, 1 | 0x80000000U, 2};
+    BOOST_CHECK(!HasHardenedDerivation(empty));
+    BOOST_CHECK(!HasHardenedDerivation(unhardened));
+    BOOST_CHECK(HasHardenedDerivation(hardened));
+    BOOST_CHECK(HasHardenedDerivation(mixed));
+}
+
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     CExtKey key_parent{DecodeExtKey(test1.vDerive[0].prv)}, key_child;
     CExtPubKey pubkey_parent{DecodeExtPubKey(test1.vDerive[0].pub)}, pubkey_child;
@@ -200,6 +243,87 @@ BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     BOOST_CHECK(key_parent.nDepth == 255 && pubkey_parent.nDepth == 255);
     BOOST_CHECK(!key_parent.Derive(key_child, 0));
     BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
+}
+
+BOOST_AUTO_TEST_CASE(parse_hd_keypath)
+{
+    std::vector<uint32_t> keypath;
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("//////////////////////////'/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1/'//////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" ", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("O", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0000'/0000'/0000'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0000,/0000,/0000,", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("01234", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0x1234", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" 1", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("42", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m42", keypath));
+
+    // A path element's numeric part is capped at 2^31-1; the top bit is
+    // reserved for the hardened marker (h or ').
+    BOOST_CHECK(ParseHDKeypath("2147483647", keypath));  // 0x7fffffff, largest normal index
+    BOOST_CHECK(!ParseHDKeypath("2147483648", keypath)); // 0x80000000, would set the hardened bit
+    BOOST_CHECK(!ParseHDKeypath("4294967295", keypath)); // 0xffffffff
+    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // uint32_t max + 1
+
+    BOOST_CHECK(ParseHDKeypath("m", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
+
+    keypath.clear();
+    BOOST_REQUIRE(ParseHDKeypath("m/0h/1h/2h", keypath));
+    BOOST_REQUIRE_EQUAL(keypath.size(), 3);
+    BOOST_CHECK_EQUAL(keypath[0], 0x80000000U);
+    BOOST_CHECK_EQUAL(keypath[1], 0x80000001U);
+    BOOST_CHECK_EQUAL(keypath[2], 0x80000002U);
+    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/00", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/0/f00", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/00/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0'/00/'0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
