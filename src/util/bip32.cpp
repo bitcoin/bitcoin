@@ -8,9 +8,36 @@
 #include <util/strencodings.h>
 
 #include <cstdint>
-#include <cstdio>
 #include <optional>
 #include <sstream>
+#include <string_view>
+
+std::optional<uint32_t> ParseKeyPathElement(std::span<const char> elem, bool& is_hardened, std::string& error)
+{
+    is_hardened = false;
+    const std::string_view raw{elem.begin(), elem.end()};
+    if (elem.empty()) {
+        error = strprintf("Key path value '%s' is not valid", raw);
+        return std::nullopt;
+    }
+
+    const char last = elem.back();
+    if (last == '\'' || last == 'h') {
+        elem = elem.first(elem.size() - 1);
+        is_hardened = true;
+    }
+
+    const auto number{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
+    if (!number) {
+        error = strprintf("Key path value '%s' is not a valid uint32", raw);
+        return std::nullopt;
+    }
+    if (*number >= BIP32_HARDENED_FLAG) {
+        error = strprintf("Key path value %u is out of range", *number);
+        return std::nullopt;
+    }
+    return *number | (is_hardened ? BIP32_HARDENED_FLAG : BIP32_UNHARDENED_FLAG);
+}
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
@@ -25,26 +52,11 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
             }
             return false;
         }
-        // Finds whether it is hardened
-        uint32_t path = 0;
-        size_t pos = item.find('\'');
-        if (pos != std::string::npos) {
-            // The hardened tick can only be in the last index of the string
-            if (pos != item.size() - 1) {
-                return false;
-            }
-            path |= 0x80000000;
-            item = item.substr(0, item.size() - 1); // Drop the last character which is the hardened tick
-        }
-
-        // Ensure this is only numbers
-        const auto number{ToIntegral<uint32_t>(item)};
-        if (!number) {
-            return false;
-        }
-        path |= *number;
-
-        keypath.push_back(path);
+        bool hardened = false;
+        std::string error;
+        const auto index{ParseKeyPathElement(std::span<const char>{item.data(), item.size()}, hardened, error)};
+        if (!index.has_value()) return false;
+        keypath.push_back(*index);
         first = false;
     }
     return true;
