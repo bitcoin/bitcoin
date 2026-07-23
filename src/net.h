@@ -172,6 +172,11 @@ bool IsLocal(const CService& addr);
 CService GetLocalAddress(const CNode& peer);
 
 extern bool fDiscover;
+/** Whether -discover was disabled implicitly by -externalip rather than explicitly
+ *  by the user. In that case CJDNS local address discovery stays enabled, since
+ *  CJDNS addresses live on a separate overlay network and do not conflict with a
+ *  manually specified external IP. */
+extern bool fDiscoverSoftDisabled;
 extern bool fListen;
 
 /** Subversion as sent to the P2P network in `version` messages */
