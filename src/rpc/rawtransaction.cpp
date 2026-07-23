@@ -1918,13 +1918,7 @@ static RPCMethod joinpsbts()
         for (const PSBTOutput& output : psbt.outputs) {
             merged_psbt.AddOutput(output);
         }
-        for (auto& xpub_pair : psbt.m_xpubs) {
-            if (!merged_psbt.m_xpubs.contains(xpub_pair.first)) {
-                merged_psbt.m_xpubs[xpub_pair.first] = xpub_pair.second;
-            } else {
-                merged_psbt.m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
-            }
-        }
+        merged_psbt.MergeGlobalXPubs(psbt);
         merged_psbt.unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
     }
 

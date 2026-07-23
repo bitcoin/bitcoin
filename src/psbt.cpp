@@ -13,6 +13,8 @@
 #include <util/result.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
+
 using common::PSBTError;
 
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version) : m_version(version)
@@ -58,13 +60,7 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
             return false;
         }
     }
-    for (auto& xpub_pair : psbt.m_xpubs) {
-        if (!m_xpubs.contains(xpub_pair.first)) {
-            m_xpubs[xpub_pair.first] = xpub_pair.second;
-        } else {
-            m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
-        }
-    }
+    MergeGlobalXPubs(psbt);
     if (fallback_locktime == std::nullopt && psbt.fallback_locktime != std::nullopt) fallback_locktime = psbt.fallback_locktime;
 
     // Set m_tx_modifiable only if either PSBT had it set
@@ -83,6 +79,16 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
 
     return true;
+}
+
+void PartiallySignedTransaction::MergeGlobalXPubs(const PartiallySignedTransaction& psbt)
+{
+    for (const auto& [origin, xpubs] : psbt.m_xpubs) {
+        for (const CExtPubKey& xpub : xpubs) {
+            const bool known{std::ranges::any_of(m_xpubs, [&](const auto& entry) { return entry.second.contains(xpub); })};
+            if (!known) m_xpubs[origin].insert(xpub);
+        }
+    }
 }
 
 std::optional<uint32_t> PartiallySignedTransaction::ComputeTimeLock() const

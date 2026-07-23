@@ -1260,6 +1260,9 @@ public:
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
+    /** Merge the global xpubs of psbt into this, keeping the existing origin for an xpub
+      * seen again with a different one, as the serialized records are keyed by xpub. */
+    void MergeGlobalXPubs(const PartiallySignedTransaction& psbt);
     bool AddInput(const PSBTInput& psbtin);
     bool AddOutput(const PSBTOutput& psbtout);
     std::optional<uint32_t> ComputeTimeLock() const;
@@ -1356,9 +1359,6 @@ public:
 
         // Used for duplicate key detection
         std::set<std::vector<unsigned char>> key_lookup;
-
-        // Track the global xpubs we have already seen. Just for sanity checking
-        std::set<CExtPubKey> global_xpubs;
 
         // Read global data
         bool found_sep = false;
@@ -1462,7 +1462,6 @@ public:
                     if (!xpub.pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
-                    global_xpubs.insert(xpub);
                     // Read in the keypath from stream
                     KeyOriginInfo keypath;
                     DeserializeHDKeypath(s, keypath);
