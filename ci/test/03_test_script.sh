@@ -123,7 +123,7 @@ cmake -S "$BASE_ROOT_DIR" -B "$BASE_BUILD_DIR" "${CMAKE_ARGS[@]}" || (
   false
 )
 
-if [[ "${GOAL}" != all && "${GOAL}" != codegen ]]; then
+if [[ "${GOAL}" != all && "${GOAL}" != *codegen* ]]; then
   GOAL="all ${GOAL}"
 fi
 
