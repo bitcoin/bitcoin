@@ -559,9 +559,13 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
 {
     TaprootSpendData spenddata;
     TaprootBuilder builder;
+    const bool taproot_keypath_only{creator.Options().taproot_keypath_only};
 
     // Gather information about this output.
     if (provider.GetTaprootSpendData(output, spenddata)) {
+        // Avoid merging newly provided script path data. Existing taproot
+        // script path fields in sigdata (e.g. from a PSBT) are left intact.
+        if (taproot_keypath_only) spenddata.scripts.clear();
         sigdata.tr_spenddata.Merge(spenddata);
     }
     if (provider.GetTaprootBuilder(output, builder)) {
@@ -612,6 +616,10 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             return true;
         }
     }
+
+    // Key path signing failed. In keypath-only mode, stop here instead of
+    // attempting a script path signature.
+    if (taproot_keypath_only) return false;
 
     // Try script path spending.
     std::vector<std::vector<unsigned char>> smallest_result_stack;
