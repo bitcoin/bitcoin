@@ -47,7 +47,11 @@ endef
 define fetch_local_dir_sha256
     if ! [ -f $($(1)_source) ] || [ -n "$$(find $($(1)_local_dir) -newer $($(1)_source) | head -n1)" ]; then \
         mkdir -p $(dir $($(1)_source)) && \
-        $(build_TAR) -c -f $($(1)_source) -C $($(1)_local_dir) . && \
+        ( \
+          cd $($(1)_local_dir) && \
+          find . -print0 | TZ=UTC xargs -0r $(build_TOUCH) && \
+          find . | LC_ALL=C sort | $(build_TAR) --no-recursion -c -f $($(1)_source) -T - \
+        ) && \
         rm -f $($(1)_fetched); \
     fi && \
     if ! [ -f $($(1)_fetched) ] || [ -n "$$(find $($(1)_source) -newer $($(1)_fetched))" ]; then \
