@@ -642,6 +642,10 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
 
 SocketTestingSetup::SocketTestingSetup()
 {
+    // HTTPServer is not integrated into NodeContext yet and still pulls global args.
+    // This is the IP address DynSock claims to be from when connecting.
+    gArgs.ForceSetArg("-rpcallowip", "5.5.5.5");
+
     // "back up" the current CreateSock() so we can restore it after the test
     m_create_sock_orig = CreateSock;
 
