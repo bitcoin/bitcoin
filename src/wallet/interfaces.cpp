@@ -11,6 +11,7 @@
 #include <node/types.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <support/allocators/secure.h>
@@ -30,6 +31,7 @@
 #include <wallet/wallet.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -166,6 +168,11 @@ public:
         }
         return false;
     }
+    util::Expected<CExtPubKey, wallet::WalletError> addHDKey(const std::optional<CExtKey>& key) override
+    {
+        return m_wallet->AddHDKey(key);
+    }
+
     SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) override
     {
         return m_wallet->SignMessage(message, pkhash, str_sig);
