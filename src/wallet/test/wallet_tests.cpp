@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <future>
 #include <memory>
+#include <optional>
+#include <utility>
 #include <vector>
 
 #include <addresstype.h>
@@ -21,6 +23,8 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -28,6 +32,7 @@
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
+#include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
@@ -69,6 +74,99 @@ static void AddKey(CWallet& wallet, const CKey& key)
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+}
+
+namespace {
+// Inject failures before SQLite executes the selected operation.
+struct FaultInjectingDatabase : InMemoryWalletDatabase {
+    struct Failure {
+        std::string record_type;
+        size_t matches_to_skip{0};
+    };
+
+    void FailNextWrite(std::string record_type, size_t matches_to_skip = 0)
+    {
+        m_fail_write = {std::move(record_type), matches_to_skip};
+    }
+    void FailNextCommit() { m_fail_commit = true; }
+
+    static bool ShouldFail(std::optional<Failure>& failure, const DataStream& key)
+    {
+        if (!failure) return false;
+        std::string record_type;
+        SpanReader{MakeByteSpan(key)} >> record_type;
+        if (failure->record_type != record_type) return false;
+        if (failure->matches_to_skip > 0) {
+            --failure->matches_to_skip;
+            return false;
+        }
+        failure.reset();
+        return true;
+    }
+
+    struct Batch : SQLiteBatch {
+        explicit Batch(FaultInjectingDatabase& database) : SQLiteBatch(database), m_owner{database}
+        {
+            if (std::exchange(database.m_fail_commit, false)) {
+                SetExecHandler(std::make_unique<DbExecBlocker>("COMMIT TRANSACTION"));
+            }
+        }
+
+        bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override
+        {
+            if (ShouldFail(m_owner.m_fail_write, key)) return false;
+            return SQLiteBatch::WriteKey(std::move(key), std::move(value), overwrite);
+        }
+
+        FaultInjectingDatabase& m_owner;
+    };
+
+    std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<Batch>(*this); }
+
+    std::optional<Failure> m_fail_write{};
+    bool m_fail_commit{false};
+};
+
+struct EncryptionFailureSetup : WalletTestingSetup {
+    WalletContext context;
+    FaultInjectingDatabase* fail_db{nullptr};
+    std::shared_ptr<CWallet> wallet;
+    FakeNodeClock clock; // Frozen time makes EncryptMasterKey skip its KDF benchmark rounds
+
+    EncryptionFailureSetup()
+    {
+        context.args = &m_args;
+        context.chain = m_node.chain.get();
+        auto database{std::make_unique<FaultInjectingDatabase>()};
+        fail_db = database.get();
+        wallet = TestCreateWallet(std::move(database), context, WALLET_FLAG_DESCRIPTORS);
+    }
+
+    ~EncryptionFailureSetup() { TestUnloadWallet(std::move(wallet)); }
+};
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
+    for (bool success : {true, false}) { // TODO: The write failure is ignored, making the retry fail
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextCommit(); // The injected failure affects only the first attempt
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+    BOOST_CHECK_THROW(wallet->EncryptWallet("passphrase"), NonFatalCheckError); // TODO: A local commit failure aborts the process
+    BOOST_CHECK( wallet->HasEncryptionKeys()); // TODO: The failed attempt publishes the master key
+    BOOST_CHECK( wallet->HaveCryptedKeys()); // TODO: The failed attempt publishes encrypted descriptor keys
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase")); // TODO: The published state prevents retry
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
