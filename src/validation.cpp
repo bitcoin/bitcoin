@@ -3091,7 +3091,10 @@ bool Chainstate::ConnectTip(
              Ticks<MillisecondsDouble>(m_chainman.time_chainstate) / m_chainman.num_blocks_total);
     // Remove conflicting transactions from the mempool.;
     if (m_mempool) {
-        m_mempool->removeForBlock(block_to_connect->vtx, pindexNew->nHeight);
+        auto txs_removed_for_block{m_mempool->removeForBlock(block_to_connect->vtx)};
+        if (m_chainman.m_options.signals) {
+            m_chainman.m_options.signals->MempoolTransactionsRemovedForBlock(block_to_connect->vtx, txs_removed_for_block, pindexNew->nHeight, pindexNew->GetBlockHash());
+        }
         disconnectpool.removeForBlock(block_to_connect->vtx);
     }
     // Update m_chain & related variables.

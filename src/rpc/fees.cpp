@@ -8,6 +8,8 @@
 #include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
+#include <policy/fees/mempool_estimator.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -15,6 +17,7 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/expected.h>
 #include <util/fees.h>
 #include <validationinterface.h>
 
@@ -41,11 +44,25 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                {
+                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
+                     "The fee rate estimator to use. Recognized values are "
+                     "\"none\" and \"block_policy\". Unknown values are treated "
+                     "as \"none\". \"none\" uses the fee rate estimator manager "
+                     "to select an estimate."},
+                    {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1},
+                     "1 returns feerate and errors. 2 also returns mempool health statistics "
+                     "for recently mined blocks when fee_rate_estimator is \"none\"."},
+                },
+            },
+
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -55,6 +72,15 @@ static RPCMethod estimatesmartfee()
                 "fee estimation is able to return based on how long it has been running.\n"
                 "An error is returned if not enough transactions and blocks\n"
                 "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::ARR, "mempool_health_statistics", /*optional=*/true, "Health statistics for the most recently mined blocks (only present when verbosity >= 2 and fee_rate_estimator is \"none\")",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::NUM, "block_height", "Block height"},
+                                {RPCResult::Type::NUM, "block_weight", "Total weight of non-coinbase transactions in the block"},
+                                {RPCResult::Type::NUM, "mempool_txs_weight", "Total weight of transactions removed from the mempool for this block"},
+                            }},
+                    }},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -62,33 +88,56 @@ static RPCMethod estimatesmartfee()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            FeeRateEstimatorManager& fee_estimator_man = EnsureAnyFeeEstimatorMan(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
 
             CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = fee_estimator_man.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             FeeEstimateMode fee_mode;
             if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
-
+            const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+            RPCTypeCheckObj(options,
+                            {
+                                {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
+                                {"verbosity", UniValueType(UniValue::VNUM)},
+                            }, /*fAllowNull=*/true, /*fStrict=*/true);
+            const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
+                options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
+            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
+            int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
-            FeeCalculation feeCalc;
-            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-            CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
-            if (feeRate != CFeeRate(0)) {
-                CFeeRate min_mempool_feerate{mempool.GetMinFee()};
-                CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
-                feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
-                result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
-            } else {
-                errors.push_back("Insufficient data or no feerate found");
+            const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};
+            if (estimate) {
+                const CFeeRate min_mempool_feerate{mempool.GetMinFee()};
+                const CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
+                const auto fee_rate{std::max({CFeeRate(estimate->feerate), min_mempool_feerate, min_relay_feerate})};
+                result.pushKV("feerate", ValueFromAmount(fee_rate.GetFeePerK()));
+            } else if (!estimate.error().reason.empty()) {
+                errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
             }
-            result.pushKV("blocks", feeCalc.returnedTarget);
+            if (estimate && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+                result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate->feerate_estimator));
+            }
+            const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
+            result.pushKV("blocks", estimation.returned_target);
+            if (verbosity >= 2 && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+                UniValue mempool_health_stats(UniValue::VARR);
+                const auto blocks_data = fee_estimator_man.MempoolPolicyEstimatorBlocksStats();
+                for (auto it = blocks_data.rbegin(); it != blocks_data.rend(); ++it) {
+                    UniValue entry(UniValue::VOBJ);
+                    entry.pushKV("block_height", it->m_height);
+                    entry.pushKV("block_weight", it->m_block_weight);
+                    entry.pushKV("mempool_txs_weight", it->m_removed_block_txs_weight);
+                    mempool_health_stats.push_back(std::move(entry));
+                }
+                result.pushKV("mempool_health_statistics", std::move(mempool_health_stats));
+            }
             return result;
         },
     };
@@ -155,11 +204,11 @@ static RPCMethod estimaterawfee()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            FeeRateEstimatorManager& fee_estimator_man = EnsureAnyFeeEstimatorMan(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);
 
             CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = fee_estimator_man.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             double threshold = 0.95;
             if (!request.params[1].isNull()) {
@@ -176,9 +225,9 @@ static RPCMethod estimaterawfee()
                 EstimationResult buckets;
 
                 // Only output results for horizons which track the target
-                if (conf_target > fee_estimator.HighestTargetTracked(horizon)) continue;
+                if (conf_target > fee_estimator_man.BlockPolicyHighestTargetTracked(horizon)) continue;
 
-                feeRate = fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
+                feeRate = fee_estimator_man.BlockPolicyEstimateRawFee(conf_target, threshold, horizon, &buckets);
                 UniValue horizon_result(UniValue::VOBJ);
                 UniValue errors(UniValue::VARR);
                 UniValue passbucket(UniValue::VOBJ);

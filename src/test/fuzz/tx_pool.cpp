@@ -130,7 +130,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
 
         // Try updating the mempool for this block, as though it were mined.
         LOCK2(::cs_main, tx_pool.cs);
-        tx_pool.removeForBlock(block_template->block.vtx, chainstate.m_chain.Height() + 1);
+        tx_pool.removeForBlock(block_template->block.vtx);
 
         // Now try to add those transactions back, as though a reorg happened.
         std::vector<Txid> hashes_to_update;

@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <exception>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 
 // The current format written, and the version required to read. Must be
@@ -44,6 +45,23 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     case FeeEstimateHorizon::SHORT_HALFLIFE: return "short";
     case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
     case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason)
+{
+    switch (reason) {
+    case BlockPolicyEstimateReason::NONE:
+        return "None";
+    case BlockPolicyEstimateReason::HALF_ESTIMATE:
+        return "Half Target 60% Threshold";
+    case BlockPolicyEstimateReason::FULL_ESTIMATE:
+        return "Target 85% Threshold";
+    case BlockPolicyEstimateReason::DOUBLE_ESTIMATE:
+        return "Double Target 95% Threshold";
+    case BlockPolicyEstimateReason::CONSERVATIVE:
+        return "Conservative Double Target longer horizon";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -578,21 +596,6 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator() = default;
 
-void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/)
-{
-    processTransaction(tx);
-}
-
-void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/)
-{
-    removeTx(tx->GetHash());
-}
-
-void CBlockPolicyEstimator::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
-{
-    processBlock(txs_removed_for_block, nBlockHeight);
-}
-
 void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& tx)
 {
     LOCK(m_cs_fee_estimator);
@@ -872,11 +875,12 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 {
     LOCK(m_cs_fee_estimator);
 
-    if (feeCalc) {
-        feeCalc->desiredTarget = confTarget;
-        feeCalc->returnedTarget = confTarget;
-        feeCalc->best_height = nBestSeenHeight;
-    }
+    FeeCalculation temp_fee_calc;
+    if (!feeCalc) feeCalc = &temp_fee_calc;
+
+    feeCalc->desiredTarget = confTarget;
+    feeCalc->returnedTarget = confTarget;
+    feeCalc->best_height = nBestSeenHeight;
 
     double median = -1;
     EstimationResult tempResult;
@@ -893,7 +897,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     if ((unsigned int)confTarget > maxUsableEstimate) {
         confTarget = maxUsableEstimate;
     }
-    if (feeCalc) feeCalc->returnedTarget = confTarget;
+    feeCalc->returnedTarget = confTarget;
 
     if (confTarget <= 1) return CFeeRate(0); // error condition
 
@@ -917,42 +921,58 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
      * See: https://github.com/bitcoin/bitcoin/issues/11800#issuecomment-349697807
      */
     double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true, &tempResult);
-    if (feeCalc) {
-        feeCalc->est = tempResult;
-        feeCalc->reason = FeeReason::HALF_ESTIMATE;
-    }
+    feeCalc->est = tempResult;
+    feeCalc->reason = BlockPolicyEstimateReason::HALF_ESTIMATE;
     median = halfEst;
     double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true, &tempResult);
     if (actualEst > median) {
         median = actualEst;
-        if (feeCalc) {
-            feeCalc->est = tempResult;
-            feeCalc->reason = FeeReason::FULL_ESTIMATE;
-        }
+        feeCalc->est = tempResult;
+        feeCalc->reason = BlockPolicyEstimateReason::FULL_ESTIMATE;
     }
     double doubleEst = estimateCombinedFee(2 * confTarget, DOUBLE_SUCCESS_PCT, !conservative, &tempResult);
     if (doubleEst > median) {
         median = doubleEst;
-        if (feeCalc) {
-            feeCalc->est = tempResult;
-            feeCalc->reason = FeeReason::DOUBLE_ESTIMATE;
-        }
+        feeCalc->est = tempResult;
+        feeCalc->reason = BlockPolicyEstimateReason::DOUBLE_ESTIMATE;
     }
 
     if (conservative || median == -1) {
         double consEst =  estimateConservativeFee(2 * confTarget, &tempResult);
         if (consEst > median) {
             median = consEst;
-            if (feeCalc) {
-                feeCalc->est = tempResult;
-                feeCalc->reason = FeeReason::CONSERVATIVE;
-            }
+            feeCalc->est = tempResult;
+            feeCalc->reason = BlockPolicyEstimateReason::CONSERVATIVE;
         }
     }
 
     if (median < 0) return CFeeRate(0); // error condition
 
+    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)",
+             median, feeCalc->returnedTarget, feeCalc->desiredTarget, StringForBlockPolicyEstimateReason(feeCalc->reason), feeCalc->est.decay,
+             feeCalc->est.pass.start, feeCalc->est.pass.end,
+             (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) > 0.0 ? 100 * feeCalc->est.pass.withinTarget / (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) : 0.0,
+             feeCalc->est.pass.withinTarget, feeCalc->est.pass.totalConfirmed, feeCalc->est.pass.inMempool, feeCalc->est.pass.leftMempool,
+             feeCalc->est.fail.start, feeCalc->est.fail.end,
+             (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) > 0.0 ? 100 * feeCalc->est.fail.withinTarget / (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) : 0.0,
+             feeCalc->est.fail.withinTarget, feeCalc->est.fail.totalConfirmed, feeCalc->est.fail.inMempool, feeCalc->est.fail.leftMempool);
+
     return CFeeRate(llround(median));
+}
+
+util::Expected<FeeRateEstimation, FeeRateEstimationError> CBlockPolicyEstimator::EstimateFeeRate(int target, bool conservative) const
+{
+    FeeCalculation fee_calc;
+    CFeeRate feerate{estimateSmartFee(target, &fee_calc, conservative)};
+    if (feerate == CFeeRate(0)) {
+        return EstimationError(FeeRateEstimatorType::BLOCK_POLICY, fee_calc.returnedTarget, "Insufficient data or no feerate found");
+    }
+    return FeeRateEstimation{FeeRateEstimatorType::BLOCK_POLICY, feerate.GetFeePerVSize(), fee_calc.returnedTarget};
+}
+
+unsigned int CBlockPolicyEstimator::MaximumTarget() const
+{
+    return HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
 }
 
 void CBlockPolicyEstimator::Flush() {
@@ -962,6 +982,15 @@ void CBlockPolicyEstimator::Flush() {
 
 void CBlockPolicyEstimator::FlushFeeEstimates()
 {
+    if (!m_estimation_filepath.parent_path().empty()) {
+        std::error_code error;
+        fs::create_directories(m_estimation_filepath.parent_path(), error);
+        if (error) {
+            LogWarning("Failed to create fee estimates directory %s: %s. Continue anyway.", fs::PathToString(m_estimation_filepath.parent_path()), error.message());
+            return;
+        }
+    }
+
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogWarning("Failed to write fee estimates to %s. Continue anyway.", fs::PathToString(m_estimation_filepath));
