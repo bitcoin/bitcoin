@@ -165,14 +165,18 @@ chain for " target " development."))
     (arguments
       (substitute-keyword-arguments (package-arguments base-gcc)
         ((#:configure-flags flags)
-          `(append ,flags
+          #~(append #$flags
             ;; https://gcc.gnu.org/install/configure.html
-            (list "--enable-threads=posix",
-                  "--enable-default-ssp=yes",
-                  "--enable-host-bind-now=yes",
-                  "--disable-gcov",
-                  "--disable-libgomp",
-                  building-on)))))))
+            (list "--enable-default-ssp=yes"
+                  "--enable-gprofng=no"
+                  "--enable-host-bind-now=yes"
+                  "--enable-threads=posix"
+                  "--disable-gcov"
+                  "--disable-libgomp"
+                  "--disable-libsanitizer"
+                  "--disable-lto"
+                  "--disable-nls"
+                  #$building-on)))))))
 
 (define-public linux-base-gcc
   (package
@@ -180,22 +184,25 @@ chain for " target " development."))
     (arguments
       (substitute-keyword-arguments (package-arguments base-gcc)
         ((#:configure-flags flags)
-          `(append ,flags
+           #~(append #$flags
             ;; https://gcc.gnu.org/install/configure.html
-            (list "--enable-initfini-array=yes",
-                  "--enable-default-ssp=yes",
-                  "--enable-default-pie=yes",
-                  "--enable-host-bind-now=yes",
-                  "--enable-standard-branch-protection=yes",
-                  "--enable-cet=yes",
-                  "--enable-gprofng=no",
-                  "--disable-gcov",
-                  "--disable-libgomp",
-                  "--disable-libquadmath",
-                  "--disable-libsanitizer",
-                  building-on)))
+            (list "--enable-cet=yes"
+                  "--enable-default-ssp=yes"
+                  "--enable-default-pie=yes"
+                  "--enable-gprofng=no"
+                  "--enable-host-bind-now=yes"
+                  "--enable-initfini-array=yes"
+                  "--enable-standard-branch-protection=yes"
+                  "--disable-gcov"
+                  "--disable-libgomp"
+                  "--disable-libquadmath"
+                  "--disable-libsanitizer"
+                  "--disable-lto"
+                  "--disable-nls"
+                  "--disable-tm-clone-registry"
+                  #$building-on)))
         ((#:phases phases)
-          `(modify-phases ,phases
+          #~(modify-phases #$phases
             ;; Given a XGCC package, return a modified package that replace each instance of
             ;; -rpath in the default system spec that's inserted by Guix with -rpath-link
             (add-after 'pre-configure 'replace-rpath-with-rpath-link
