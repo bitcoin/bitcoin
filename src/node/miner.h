@@ -131,8 +131,9 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
 //! Submit a block and capture the validation state via the BlockChecked callback.
-//! Returns whether the block was accepted as a new valid block.
-bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug);
+//! Returns whether the block was accepted as a new valid block or, if precious
+//! is true, whether it was connected to the active chain.
+bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, bool precious, std::string& reason, std::string& debug);
 
 /* Interrupt a blocking call. */
 void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait);

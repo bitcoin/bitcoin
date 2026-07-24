@@ -376,16 +376,16 @@ protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
     {
         if (block->GetHash() != m_hash) return;
-        // ProcessNewBlock emits BlockChecked synchronously while holding cs_main,
-        // so SubmitBlock can read these fields after ProcessNewBlock returns
-        // without extra synchronization.
+        // ProcessNewBlock and PreciousBlock emit BlockChecked synchronously
+        // while holding cs_main, so SubmitBlock can read these fields after
+        // they return without extra synchronization.
         m_found = true;
         m_state = state;
     }
 };
 } // namespace
 
-bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
+bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, bool precious, std::string& reason, std::string& debug)
 {
     reason.clear();
     debug.clear();
@@ -394,33 +394,57 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     // is intentionally kept separate from the RPC implementation. The RPC entry
     // point decodes hex, formats BIP22/JSONRPC results, and calls
     // UpdateUncommittedBlockStructures() for legacy witness handling. IPC
-    // callers submit already-formed blocks and need bool + reason/debug
-    // results.
+    // callers submit already-formed blocks, need bool + reason/debug results,
+    // and may optionally request preciousblock-like handling.
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
     bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+
+    bool precious_connected{false};
+    if (accepted && precious && !sc->m_found) {
+        BlockValidationState state;
+        // ProcessNewBlock() returned true, so AcceptBlock() either found an
+        // existing block index entry or created one. LookupBlockIndex() must
+        // succeed and requires cs_main. PreciousBlock() serializes activation
+        // and captures whether the block was connected before releasing its
+        // chainstate lock.
+        CBlockIndex* pindex{CHECK_NONFATAL(WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block->GetHash())))};
+        if (!chainman.ActiveChainstate().PreciousBlock(state, pindex, precious_connected) || !state.IsValid()) {
+            accepted = false;
+            reason = state.GetRejectReason();
+            debug = state.GetDebugMessage();
+            if (reason.empty()) reason = "inconclusive";
+        }
+    }
+
     // No queue drain is needed. The BlockChecked notification used above is
-    // emitted synchronously by ProcessNewBlock, unlike most validation signals.
+    // emitted synchronously by ProcessNewBlock and PreciousBlock, unlike most
+    // validation signals.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
-    if (!new_block && accepted) {
-        reason = "duplicate";
-    } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
-        // ProcessNewBlock can fail without a validation result, for example
-        // from an activation or system error. It can also fail after a valid
-        // BlockChecked result. In these cases the validation result is
-        // inconclusive.
-        reason = "inconclusive";
-    } else if (!sc->m_found) {
-        // The block was accepted but not connected, for example if it does not
-        // have more work than the current tip.
-        reason = "inconclusive";
-    } else if (!sc->m_state.IsValid()) {
-        reason = sc->m_state.GetRejectReason();
-        debug = sc->m_state.GetDebugMessage();
+    if (reason.empty()) {
+        if (sc->m_found && !sc->m_state.IsValid()) {
+            // Prefer a conclusive validation error over fallback results. In
+            // particular, PreciousBlock may fail to connect a known block
+            // after ProcessNewBlock initially classified it as a duplicate.
+            reason = sc->m_state.GetRejectReason();
+            debug = sc->m_state.GetDebugMessage();
+        } else if (!new_block && accepted && !precious_connected) {
+            reason = "duplicate";
+        } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
+            // ProcessNewBlock can fail without a validation result, for example
+            // from an activation or system error. It can also fail after a valid
+            // BlockChecked result. In these cases the validation result is
+            // inconclusive.
+            reason = "inconclusive";
+        } else if (!sc->m_found && !precious_connected) {
+            // The block was accepted but not connected, for example if it does
+            // not have more work than the current tip.
+            reason = "inconclusive";
+        }
     }
-    const bool result{accepted && new_block && reason.empty()};
+    const bool result{accepted && (new_block || precious_connected) && reason.empty()};
     CHECK_NONFATAL(result == reason.empty());
     return result;
 }

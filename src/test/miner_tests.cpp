@@ -25,6 +25,7 @@
 #include <serialize.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/time.h>
@@ -57,6 +58,11 @@ using node::BlockAssembler;
 using node::BlockCreateOptions;
 
 namespace miner_tests {
+static std::unique_ptr<Mining> MakeMining(const node::NodeContext& node)
+{
+    return interfaces::MakeMining(node, /*wait_loaded=*/false);
+}
+
 struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -83,10 +89,6 @@ struct MinerTestingSetup : public TestingSetup {
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
         return *m_node.mempool;
-    }
-    std::unique_ptr<Mining> MakeMining()
-    {
-        return interfaces::MakeMining(m_node, /*wait_loaded=*/false);
     }
 };
 } // namespace miner_tests
@@ -126,13 +128,34 @@ static std::unique_ptr<CBlockIndex> CreateBlockIndex(int nHeight, CBlockIndex* a
     return index;
 }
 
+static uint256 ActiveTipHash(const node::NodeContext& node)
+{
+    return WITH_LOCK(::cs_main, return Assert(node.chainman)->ActiveChain().Tip()->GetBlockHash());
+}
+
+static void MutateCoinbase(CBlock& block, int extra_nonce)
+{
+    CMutableTransaction coinbase{*block.vtx.at(0)};
+    coinbase.vin.at(0).scriptSig << extra_nonce;
+    block.vtx.at(0) = MakeTransactionRef(std::move(coinbase));
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    block.nNonce = 0;
+}
+
+static BlockCreateOptions BlockOptions()
+{
+    BlockCreateOptions options;
+    options.coinbase_output_script = CScript() << OP_TRUE;
+    return options;
+}
+
 // Test suite for ancestor feerate transaction selection.
 // Implemented as an additional function, rather than a separate test case,
 // to allow reusing the blockchain created in CreateNewBlock_validity.
 void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
     CTxMemPool& tx_mempool{MakeMempool()};
-    auto mining{MakeMining()};
+    auto mining{MakeMining(m_node)};
     BlockCreateOptions options{
         .coinbase_output_script = scriptPubKey,
     };
@@ -377,7 +400,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     const CAmount HIGHFEE = COIN;
     const CAmount HIGHERFEE = 4 * COIN;
 
-    auto mining{MakeMining()};
+    auto mining{MakeMining(m_node)};
     BOOST_REQUIRE(mining);
 
     BlockCreateOptions options{
@@ -704,7 +727,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
 
 void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
-    auto mining{MakeMining()};
+    auto mining{MakeMining(m_node)};
     BOOST_REQUIRE(mining);
 
     BlockCreateOptions options{
@@ -792,7 +815,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
-    auto mining{MakeMining()};
+    auto mining{MakeMining(m_node)};
     BOOST_REQUIRE(mining);
 
     // Note that by default, these tests run with size accounting enabled.
@@ -887,19 +910,19 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         std::string reason{"stale reason"};
         std::string debug{"stale debug"};
         if (current_height % 2 == 0) {
-            BOOST_REQUIRE(mining->submitBlock(block, reason, debug));
+            BOOST_REQUIRE(mining->submitBlock(block, /*precious=*/false, reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
 
             reason = "stale reason";
             debug = "stale debug";
-            BOOST_REQUIRE(!mining->submitBlock(block, reason, debug));
+            BOOST_REQUIRE(!mining->submitBlock(block, /*precious=*/false, reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "duplicate");
             BOOST_REQUIRE_EQUAL(debug, "");
         } else {
             reason = "stale reason";
             debug = "stale debug";
-            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), reason, debug));
+            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), /*precious=*/false, reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
             BOOST_CHECK_THROW(block_template->submitSolutionOld7(block.nVersion, block.nTime, block.nNonce,
@@ -933,6 +956,224 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace miner_tests_precious {
+using miner_tests::ActiveTipHash;
+using miner_tests::BlockOptions;
+using miner_tests::MakeMining;
+using miner_tests::MutateCoinbase;
+} // namespace miner_tests_precious
+
+BOOST_FIXTURE_TEST_SUITE(miner_tests_precious, RegTestingSetup)
+
+BOOST_AUTO_TEST_CASE(SubmitBlock_precious)
+{
+    auto mining{MakeMining(m_node)};
+    BOOST_REQUIRE(mining);
+
+    auto block_template{mining->createNewBlock(BlockOptions(), /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+
+    const auto& consensus{Assert(m_node.chainman)->GetParams().GetConsensus()};
+    CBlock active_block{block_template->getBlock()};
+    MutateCoinbase(active_block, /*extra_nonce=*/1);
+    GrindBlock(active_block, consensus);
+
+    CBlock side_block{block_template->getBlock()};
+    MutateCoinbase(side_block, /*extra_nonce=*/2);
+    GrindBlock(side_block, consensus);
+
+    BOOST_REQUIRE(active_block.GetHash() != side_block.GetHash());
+    BOOST_REQUIRE_EQUAL(active_block.hashPrevBlock, side_block.hashPrevBlock);
+
+    std::string reason{"stale reason"};
+    std::string debug{"stale debug"};
+    BOOST_REQUIRE(mining->submitBlock(active_block, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), active_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(active_block, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "duplicate");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), active_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(side_block, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "inconclusive");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), active_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(side_block, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), side_block.GetHash());
+
+    // Re-submitting the active tip with precious=true is a no-op reorg, but
+    // the block is validated/connected so submitBlock should report success.
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(side_block, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), side_block.GetHash());
+
+    // Submitting a brand-new same-work block with precious=true on the first
+    // try (no prior precious=false store) should still reorg to it. This
+    // exercises the path where AcceptBlock stores a fresh block and
+    // PreciousBlock immediately promotes it.
+    auto next_template{mining->createNewBlock(BlockOptions(), /*cooldown=*/false)};
+    BOOST_REQUIRE(next_template);
+
+    CBlock next_active{next_template->getBlock()};
+    MutateCoinbase(next_active, /*extra_nonce=*/1);
+    GrindBlock(next_active, consensus);
+
+    CBlock next_side{next_template->getBlock()};
+    MutateCoinbase(next_side, /*extra_nonce=*/2);
+    GrindBlock(next_side, consensus);
+
+    BOOST_REQUIRE(next_active.GetHash() != next_side.GetHash());
+    BOOST_REQUIRE_EQUAL(next_active.hashPrevBlock, side_block.GetHash());
+    BOOST_REQUIRE_EQUAL(next_side.hashPrevBlock, side_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(next_active, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), next_active.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(next_side, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), next_side.GetHash());
+
+    // Lower-work blocks cannot trigger a reorg, but PreciousBlock still reports
+    // whether they are already connected to the active chain.
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(side_block, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), next_side.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(active_block, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "duplicate");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), next_side.GetHash());
+
+    // A same-work block can pass initial block checks and be stored without
+    // being connected. If making that known block precious later exposes a
+    // ConnectBlock failure, return its validation error instead of "duplicate".
+    auto connect_template{mining->createNewBlock(BlockOptions(), /*cooldown=*/false)};
+    BOOST_REQUIRE(connect_template);
+
+    CBlock connect_active{connect_template->getBlock()};
+    MutateCoinbase(connect_active, /*extra_nonce=*/1);
+    GrindBlock(connect_active, consensus);
+
+    CBlock connect_invalid{connect_template->getBlock()};
+    MutateCoinbase(connect_invalid, /*extra_nonce=*/2);
+    CMutableTransaction invalid_coinbase{*connect_invalid.vtx.at(0)};
+    ++invalid_coinbase.vout.at(0).nValue;
+    connect_invalid.vtx.at(0) = MakeTransactionRef(std::move(invalid_coinbase));
+    connect_invalid.hashMerkleRoot = BlockMerkleRoot(connect_invalid);
+    connect_invalid.nNonce = 0;
+    GrindBlock(connect_invalid, consensus);
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(mining->submitBlock(connect_active, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), connect_active.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(connect_invalid, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "inconclusive");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), connect_active.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(connect_invalid, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "bad-cb-amount");
+    BOOST_REQUIRE(!debug.empty());
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), connect_active.GetHash());
+
+    // An invalid block submitted with precious=true must be rejected by
+    // ProcessNewBlock; PreciousBlock must not run when accepted=false. The
+    // validation reason should surface and the active tip should not move.
+    auto invalid_template{mining->createNewBlock(BlockOptions(), /*cooldown=*/false)};
+    BOOST_REQUIRE(invalid_template);
+    CBlock invalid_block{invalid_template->getBlock()};
+    invalid_block.hashMerkleRoot = uint256::ONE;
+    invalid_block.nNonce = 0;
+    GrindBlock(invalid_block, consensus);
+
+    const uint256 tip_before_invalid{ActiveTipHash(m_node)};
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!mining->submitBlock(invalid_block, /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "bad-txnmrklroot");
+    BOOST_REQUIRE_EQUAL(debug, "hashMerkleRoot mismatch");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), tip_before_invalid);
+}
+
+BOOST_AUTO_TEST_CASE(SubmitSolution_precious)
+{
+    auto mining{MakeMining(m_node)};
+    BOOST_REQUIRE(mining);
+
+    auto side_template{mining->createNewBlock(BlockOptions(), /*cooldown=*/false)};
+    BOOST_REQUIRE(side_template);
+
+    const auto& consensus{Assert(m_node.chainman)->GetParams().GetConsensus()};
+    CBlock active_block{side_template->getBlock()};
+    MutateCoinbase(active_block, /*extra_nonce=*/1);
+    GrindBlock(active_block, consensus);
+
+    CBlock side_block{side_template->getBlock()};
+    MutateCoinbase(side_block, /*extra_nonce=*/2);
+    GrindBlock(side_block, consensus);
+
+    BOOST_REQUIRE(active_block.GetHash() != side_block.GetHash());
+    BOOST_REQUIRE_EQUAL(active_block.hashPrevBlock, side_block.hashPrevBlock);
+
+    std::string reason{"stale reason"};
+    std::string debug{"stale debug"};
+    BOOST_REQUIRE(mining->submitBlock(active_block, /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), active_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(!side_template->submitSolution(side_block.nVersion, side_block.nTime, side_block.nNonce, side_block.vtx.at(0), /*precious=*/false, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "inconclusive");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), active_block.GetHash());
+
+    reason = "stale reason";
+    debug = "stale debug";
+    BOOST_REQUIRE(side_template->submitSolution(side_block.nVersion, side_block.nTime, side_block.nNonce, side_block.vtx.at(0), /*precious=*/true, reason, debug));
+    BOOST_REQUIRE_EQUAL(reason, "");
+    BOOST_REQUIRE_EQUAL(debug, "");
+    BOOST_REQUIRE_EQUAL(ActiveTipHash(m_node), side_block.GetHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
