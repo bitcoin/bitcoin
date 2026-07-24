@@ -123,12 +123,20 @@ arrives. This means a transaction could be published multiple times: first when 
 mempool and then again in each block that includes it. The body part of the message is the
 serialized transaction.
 
+During a reorg, transactions from disconnected blocks are re-published via this topic.
+When assumeutxo is in use, transactions in historical blocks connected to the background
+validation chainstate are not published.
+
 #### hashtx
 
 Notifies about all transactions, both when they are added to mempool or when a new block
 arrives. This means a transaction could be published multiple times: first when it enters
 mempool and then again in each block that includes it. The body part of the message is the
 32-byte transaction hash in reversed byte order.
+
+During a reorg, transactions from disconnected blocks are re-published via this topic.
+When assumeutxo is in use, transactions in historical blocks connected to the background
+validation chainstate are not published.
 
 #### rawblock
 
@@ -150,6 +158,17 @@ The 8-byte LE uints correspond to _mempool sequence number_ and the types of bod
    - `D` : block with this hash disconnected
    - `R` : transaction with this hash removed from mempool for non-block inclusion reason
    - `A` : transaction with this hash added to mempool
+
+A transaction removal notification (`R`) is sent for all removals **except** block
+inclusion. This covers: expiry (`EXPIRY`), size limit eviction (`SIZELIMIT`),
+reorg eviction (`REORG`), conflict with an in-block transaction (`CONFLICT`), and
+replacement via RBF (`REPLACED`). Transactions removed because they were included
+in a block are not reported here; subscribers can learn about those via the
+`rawblock` or `hashblock` topics.
+
+During a reorg, the sequence of events is: the disconnected block is announced (`D`),
+then any mempool transactions evicted due to the reorg receive an `R` notification,
+then the reconnected block is announced (`C`).
 
 ### Implementing ZMQ client
 
