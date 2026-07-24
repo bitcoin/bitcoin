@@ -1,0 +1,23 @@
+{
+  "script": {
+    "asm": "",
+    "hex": "",
+    "type": "nonstandard"
+  },
+  "sigversion": "witness_v0",
+  "script_flags": [
+    "CHECKLOCKTIMEVERIFY",
+    "CHECKSEQUENCEVERIFY",
+    "DERSIG",
+    "NULLDUMMY",
+    "P2SH",
+    "TAPROOT",
+    "WITNESS"
+  ],
+  "dummy_sig_checker": true,
+  "stack_after": [
+  ],
+  "sigop_cost": 0,
+  "success": false,
+  "error": "Stack size must be exactly one after execution"
+}
