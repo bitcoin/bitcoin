@@ -4,7 +4,8 @@
              ((gnu packages installers) #:select (nsis-x86_64))
              (gnu packages ninja)
              (gnu packages pkg-config)
-             ((gnu packages python-xyz) #:select (python-lief)))
+             ((gnu packages python-xyz) #:select (python-lief))
+             (toolchains))
 
 (packages->manifest
  (append
@@ -21,6 +22,7 @@
           ((string-contains target "-linux-")
            (list bison
                  gawk
+                 (make-bitcoin-cross-toolchain target) ;; glibc 2.31 based
                  pkg-config))
           ((string-contains target "darwin")
            (list zip))
