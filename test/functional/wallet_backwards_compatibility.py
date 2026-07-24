@@ -19,6 +19,7 @@ import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.messages import ser_string
@@ -26,6 +27,7 @@ from test_framework.messages import ser_string
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 
@@ -190,6 +192,76 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_master.getblockcount()
         # Reset settings for any subsequent test
         os.remove(settings_path)
+
+    def test_downgrade_preserves_witness_variants(self, node_master, node_miner, node_old):
+        # Ensure the wallet keeps every witness variant of a tx during a downgrade. An old
+        # release updating the tx record must not drop them.
+        self.log.info("Test that witness variants survive a downgrade that rewrites the tx record")
+
+        # Earlier tests may have restarted node_master or dropped its peers
+        self.connect_nodes(node_miner.index, node_master.index)
+        self.connect_nodes(node_master.index, node_old.index)
+        self.sync_blocks([node_miner, node_master, node_old])
+
+        wallet_name = "altwit_downgrade"
+        node_master.createwallet(wallet_name)
+        wallet = node_master.get_wallet_rpc(wallet_name)
+
+        xprvs = [ExtendedPrivateKey.generate() for _ in range(0, 2)]
+        xpubs = [xprv.pubkey() for xprv in xprvs]
+
+        # Taproot descriptor with a public-only internal key: the wallet can only
+        # spend via the script path, so the key path is signed separately below.
+        script_path_desc = descsum_create(f"tr({xpubs[0].to_string()}/*,pk({xprvs[1].to_string()}/*))")
+        assert_equal(wallet.importdescriptors([{"desc": script_path_desc, "active": True, "timestamp": "now"}])[0]["success"], True)
+
+        # Fund tr output owned by the wallet
+        node_miner.sendtoaddress(wallet.getnewaddress(address_type="bech32m"), 1)
+        self.sync_mempools([node_miner, node_master])
+        self.generate(node_miner, 1, sync_fun=self.no_op)
+        self.sync_blocks([node_miner, node_master, node_old])
+        wallet.syncwithvalidationinterfacequeue()
+
+        # Two witness variants of the same spend: same txid, different wtxid
+        psbt = wallet.walletcreatefundedpsbt(outputs=[{node_miner.getnewaddress(): 0.5}])["psbt"]
+        script_path_tx = wallet.finalizepsbt(wallet.walletprocesspsbt(psbt=psbt, finalize=False)["psbt"])["hex"]
+        script_path_wtxid = node_master.decoderawtransaction(script_path_tx)["hash"]
+
+        key_path_desc = descsum_create(f"tr({xprvs[0].to_string()}/*,pk({xpubs[1].to_string()}/*))")
+        key_path_psbt = node_master.descriptorprocesspsbt(psbt=psbt, descriptors=[{"desc": key_path_desc}], finalize=False)["psbt"]
+        key_path_tx = wallet.finalizepsbt(key_path_psbt)["hex"]
+        key_path_wtxid = node_master.decoderawtransaction(key_path_tx)["hash"]
+        assert_not_equal(script_path_wtxid, key_path_wtxid)
+
+        # Store variant A through the mempool; store variant B by mining it. The
+        # confirmed (key path) variant becomes canonical, the script path an alternate.
+        txid = node_master.sendrawtransaction(script_path_tx)
+        wallet.syncwithvalidationinterfacequeue()
+        block_hash = self.generateblock(node_master, node_miner.getnewaddress(), [key_path_tx], sync_fun=self.no_op)["hash"]
+        self.sync_blocks([node_miner, node_master, node_old])
+        wallet.syncwithvalidationinterfacequeue()
+        assert_equal(wallet.gettransaction(txid)["alternate_wtxids"], [script_path_wtxid])
+        wallet.unloadwallet()
+
+        # Downgrade: load on the old release, then force it to rewrite the tx
+        # record by disconnecting the block that confirmed the canonical tx.
+        old_dir = node_old.wallets_path / wallet_name
+        shutil.copytree(node_master.wallets_path / wallet_name, old_dir)
+        node_old.loadwallet(wallet_name)
+        old_wallet = node_old.get_wallet_rpc(wallet_name)
+        assert_equal(old_wallet.gettransaction(txid)["hex"], key_path_tx)
+        old_wallet.invalidateblock(block_hash)
+        old_wallet.syncwithvalidationinterfacequeue()
+        old_wallet.unloadwallet()
+
+        # Re-open on master: the alternate must still be there
+        self.cleanup_folder(node_master.wallets_path / wallet_name)
+        shutil.copytree(old_dir, node_master.wallets_path / wallet_name)
+        node_master.loadwallet(wallet_name)
+        wallet = node_master.get_wallet_rpc(wallet_name)
+        assert_equal(wallet.gettransaction(txid)["alternate_wtxids"], [script_path_wtxid])
+        wallet.unloadwallet()
+
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -434,6 +506,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         self.test_v22_inactivehdchain_path()
         self.test_ignore_legacy_during_startup(legacy_nodes, node_master)
+        node_v25 = self.nodes[2] # note: could be any node prior to v32
+        self.test_downgrade_preserves_witness_variants(node_master, node_miner, node_v25)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest(__file__).main()

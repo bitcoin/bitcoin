@@ -219,7 +219,6 @@ public:
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
-    std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
     enum AmountType { DEBIT, CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
@@ -234,9 +233,21 @@ public:
     mutable bool fChangeCached;
     mutable CAmount nChangeCached;
 
-    CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(tx)), m_state(state)
+    CWalletTx(CTransactionRef tx, const TxState& state) : m_state(state)
     {
+        Assert(tx);
+        m_canonical_wtxid = tx->GetWitnessHash();
+        m_txs.emplace(tx->GetWitnessHash(), std::move(tx));
         Init();
+    }
+
+    template <typename Stream>
+    CWalletTx(deserialize_type, Stream& s, const std::map<Wtxid, CTransactionRef>& variants) : m_state(TxStateInactive{})
+    {
+        Unserialize(s);
+        // Merge witness variants
+        m_txs.insert(variants.begin(), variants.end());
+        Assert(m_txs.contains(GetWitnessHash()));
     }
 
     void Init()
@@ -248,7 +259,6 @@ public:
         nOrderPos = -1;
     }
 
-    CTransactionRef tx;
     TxState m_state;
 
     // Set of mempool transactions that conflict
@@ -292,7 +302,7 @@ public:
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(GetTx()) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
     }
 
     template<typename Stream>
@@ -308,7 +318,10 @@ public:
         int serializedIndex;
         std::map<std::string, std::string> string_values;
         std::vector<std::pair<std::string, std::string>> msgs_reqs;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        CTransactionRef canonical_tx;
+        s >> TX_WITH_WITNESS(canonical_tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        m_canonical_wtxid = canonical_tx->GetWitnessHash();
+        m_txs.emplace(m_canonical_wtxid, std::move(canonical_tx));
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -337,13 +350,17 @@ public:
         }
     }
 
-    void SetTx(CTransactionRef arg)
-    {
-        tx = std::move(arg);
-    }
+    CTransactionRef GetTx() const { return m_txs.at(m_canonical_wtxid); }
 
-    //! make sure balances are recalculated
-    void MarkDirty()
+    // Update the state of this wallet transaction along with a transaction that may have a different wtxid.
+    // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
+    // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
+    // those with witnesses are preferred, followed by least weight.
+    bool Update(CTransactionRef tx, const TxState& arg_state);
+
+    //! Make sure balances are recalculated
+    //! This function is not actually const, all of its changes are to mutable members.
+    void MarkDirty() const
     {
         m_amounts[DEBIT].Reset();
         m_amounts[CREDIT].Reset();
@@ -372,26 +389,28 @@ public:
     bool isInactive() const { return state<TxStateInactive>(); }
     bool isUnconfirmed() const { return !isAbandoned() && !isBlockConflicted() && !isMempoolConflicted() && !isConfirmed(); }
     bool isConfirmed() const { return state<TxStateConfirmed>(); }
-    const Txid& GetHash() const LIFETIMEBOUND { return tx->GetHash(); }
-    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return tx->GetWitnessHash(); }
-    bool IsCoinBase() const { return tx->IsCoinBase(); }
+    const Txid& GetHash() const LIFETIMEBOUND { return GetTx()->GetHash(); }
+    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return GetTx()->GetWitnessHash(); }
+    bool IsCoinBase() const { return GetTx()->IsCoinBase(); }
+
+    const std::map<Wtxid, CTransactionRef>& GetTxs() const { return m_txs; }
+
+    // Disable copying of CWalletTx objects to prevent bugs where instances get
+    // copied in and out of the m_txs map, and fields are updated in the
+    // wrong copy.
+    CWalletTx(const CWalletTx&) = delete;
+    CWalletTx& operator=(const CWalletTx&) = delete;
+
+    // Enable the default move constructor
+    CWalletTx(CWalletTx&&) = default;
 
 private:
-    // Disable copying of CWalletTx objects to prevent bugs where instances get
-    // copied in and out of the mapWallet map, and fields are updated in the
-    // wrong copy.
-    CWalletTx(const CWalletTx&) = default;
-    CWalletTx& operator=(const CWalletTx&) = default;
-public:
-    // Instead have an explicit copy function
-    void CopyFrom(const CWalletTx&);
-};
+    Wtxid m_canonical_wtxid;
+    std::map<Wtxid, CTransactionRef> m_txs;
 
-struct WalletTxOrderComparator {
-    bool operator()(const CWalletTx* a, const CWalletTx* b) const
-    {
-        return a->nOrderPos < b->nOrderPos;
-    }
+    //! Set m_canonical_wtxid to the best variant under the unconfirmed rule
+    //! (witnessed preferred, then least weight). Ignores state.
+    void RecomputeCanonical();
 };
 
 class WalletTXO
@@ -405,7 +424,7 @@ public:
     : m_wtx(wtx),
     m_output(output)
     {
-        Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
+        Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }

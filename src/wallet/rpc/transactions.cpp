@@ -38,6 +38,12 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     }
     entry.pushKV("txid", wtx.GetHash().GetHex());
     entry.pushKV("wtxid", wtx.GetWitnessHash().GetHex());
+    UniValue alternate_wtxids(UniValue::VARR);
+    for (const auto& [wtxid, _] : wtx.GetTxs()) {
+        if (wtxid == wtx.GetWitnessHash()) continue;
+        alternate_wtxids.push_back(wtxid.GetHex());
+    }
+    entry.pushKV("alternate_wtxids", alternate_wtxids);
     UniValue conflicts(UniValue::VARR);
     for (const Txid& conflict : wallet.GetTxConflicts(wtx))
         conflicts.push_back(conflict.GetHex());
@@ -53,7 +59,7 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     if (chain.rpcEnableDeprecated("bip125")) {
         std::string rbfStatus = "no";
         if (confirms <= 0) {
-            RBFTransactionState rbfState = chain.isRBFOptIn(*wtx.tx);
+            RBFTransactionState rbfState = chain.isRBFOptIn(*wtx.GetTx());
             if (rbfState == RBFTransactionState::UNKNOWN)
                 rbfStatus = "unknown";
             else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
@@ -98,7 +104,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (const auto& [_, wtx] : wallet.mapWallet) {
+    for (const auto& wtx : wallet.m_txs_by_txid) {
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < nMinDepth)
@@ -110,7 +116,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout) {
+        for (const CTxOut& txout : wtx.GetTx()->vout) {
             CTxDestination address;
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
@@ -354,7 +360,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             UniValue entry(UniValue::VOBJ);
             MaybePushAddress(entry, r.destination);
-            PushParentDescriptors(wallet, wtx.tx->vout.at(r.vout).scriptPubKey, entry);
+            PushParentDescriptors(wallet, wtx.GetTx()->vout.at(r.vout).scriptPubKey, entry);
             if (wtx.IsCoinBase())
             {
                 if (wallet.GetTxDepthInMainChain(wtx) < 1)
@@ -395,6 +401,10 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            {RPCResult::Type::STR_HEX, "wtxid", "The hash of serialized transaction, including witness data."},
+           {RPCResult::Type::ARR, "alternate_wtxids", "The wtxids of transactions with different witness data but the same txid.",
+           {
+               {RPCResult::Type::STR_HEX, "wtxid", "The witness transaction id."},
+           }},
            {RPCResult::Type::ARR, "walletconflicts", "Confirmed transactions that have been detected by the wallet to conflict with this transaction.",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
@@ -499,13 +509,8 @@ RPCMethod listtransactions()
     {
         LOCK(pwallet->cs_wallet);
 
-        const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
-
-        // iterate backwards until we have nCount items to return:
-        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-        {
-            CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+        for (auto it = pwallet->m_txs_by_pos.rbegin(); it != pwallet->m_txs_by_pos.rend(); ++it) {
+            ListTransactions(*pwallet, *it, 0, true, ret, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -633,7 +638,7 @@ RPCMethod listsinceblock()
 
     UniValue transactions(UniValue::VARR);
 
-    for (const auto& [_, tx] : wallet.mapWallet) {
+    for (const auto& tx : wallet.m_txs_by_txid) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
             ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);
@@ -649,11 +654,10 @@ RPCMethod listsinceblock()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
         }
         for (const CTransactionRef& tx : block.vtx) {
-            auto it = wallet.mapWallet.find(tx->GetHash());
-            if (it != wallet.mapWallet.end()) {
+            if (const CWalletTx* wtx = wallet.GetWalletTx(tx->GetHash())) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter_label, include_change);
+                ListTransactions(wallet, *wtx, -100000000, true, removed, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -746,16 +750,16 @@ RPCMethod gettransaction()
     bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 
     UniValue entry(UniValue::VOBJ);
-    auto it = pwallet->mapWallet.find(hash);
-    if (it == pwallet->mapWallet.end()) {
+    const CWalletTx* pwtx = pwallet->GetWalletTx(hash);
+    if (!pwtx) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
-    const CWalletTx& wtx = it->second;
+    const CWalletTx& wtx = *pwtx;
 
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.GetTx()->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
     if (CachedTxIsFromMe(*pwallet, wtx))
@@ -767,11 +771,11 @@ RPCMethod gettransaction()
     ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
     entry.pushKV("details", std::move(details));
 
-    entry.pushKV("hex", EncodeHexTx(*wtx.tx));
+    entry.pushKV("hex", EncodeHexTx(*wtx.GetTx()));
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx,
+        TxToUniv(*wtx.GetTx(),
                 /*block_hash=*/uint256(),
                 /*entry=*/decoded,
                 /*include_hex=*/false,
@@ -820,7 +824,7 @@ RPCMethod abandontransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    if (!pwallet->mapWallet.contains(hash)) {
+    if (!pwallet->GetWalletTx(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
     if (!pwallet->AbandonTransaction(hash)) {

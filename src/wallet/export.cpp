@@ -158,16 +158,14 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             }
 
             // Copy the transactions
-            for (const auto& [txid, wtx] : wallet.mapWallet) {
-                if (!watchonly_wallet->LoadToWallet(txid, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(watchonly_wallet->cs_wallet) {
-                    if (!new_tx) return false;
-                    ins_wtx.SetTx(wtx.tx);
-                    ins_wtx.CopyFrom(wtx);
-                    return true;
-                })) {
-                    return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
+            for (const auto& wtx : wallet.m_txs_by_txid) {
+                DataStream wtx_ser;
+                wtx_ser << wtx;
+                CWalletTx copy_wtx(deserialize, wtx_ser, wtx.GetTxs());
+                if (!watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
+                    return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), wtx.GetHash().GetHex())};
                 }
-                watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid));
+                watchonly_batch.WriteTx(*watchonly_wallet->GetWalletTx(wtx.GetHash()));
             }
 
             // Copy address book

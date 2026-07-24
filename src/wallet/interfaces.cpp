@@ -57,15 +57,15 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 {
     LOCK(wallet.cs_wallet);
     WalletTx result;
-    result.tx = wtx.tx;
-    result.txin_is_mine.reserve(wtx.tx->vin.size());
-    for (const auto& txin : wtx.tx->vin) {
+    result.tx = wtx.GetTx();
+    result.txin_is_mine.reserve(wtx.GetTx()->vin.size());
+    for (const auto& txin : wtx.GetTx()->vin) {
         result.txin_is_mine.emplace_back(InputIsMine(wallet, txin));
     }
-    result.txout_is_mine.reserve(wtx.tx->vout.size());
-    result.txout_address.reserve(wtx.tx->vout.size());
-    result.txout_address_is_mine.reserve(wtx.tx->vout.size());
-    for (const auto& txout : wtx.tx->vout) {
+    result.txout_is_mine.reserve(wtx.GetTx()->vout.size());
+    result.txout_address.reserve(wtx.GetTx()->vout.size());
+    result.txout_address_is_mine.reserve(wtx.GetTx()->vout.size());
+    for (const auto& txout : wtx.GetTx()->vout) {
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
         result.txout_is_change.push_back(OutputIsChange(wallet, txout));
         result.txout_address.emplace_back();
@@ -99,7 +99,7 @@ WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
     result.blocks_to_maturity = wallet.GetTxBlocksToMaturity(wtx);
     result.depth_in_main_chain = wallet.GetTxDepthInMainChain(wtx);
     result.time_received = wtx.nTimeReceived;
-    result.lock_time = wtx.tx->nLockTime;
+    result.lock_time = wtx.GetTx()->nLockTime;
     result.is_trusted = CachedTxIsTrusted(wallet, wtx);
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
@@ -114,7 +114,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     int depth) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     WalletTxOut result;
-    result.txout = wtx.tx->vout[n];
+    result.txout = wtx.GetTx()->vout[n];
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
     result.is_spent = wallet.IsSpent(COutPoint(wtx.GetHash(), n));
@@ -303,18 +303,18 @@ public:
     CTransactionRef getTx(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto mi = m_wallet->mapWallet.find(txid);
-        if (mi != m_wallet->mapWallet.end()) {
-            return mi->second.tx;
+        const CWalletTx* wtx = m_wallet->GetWalletTx(txid);
+        if (wtx) {
+            return wtx->GetTx();
         }
         return {};
     }
     WalletTx getWalletTx(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto mi = m_wallet->mapWallet.find(txid);
-        if (mi != m_wallet->mapWallet.end()) {
-            return MakeWalletTx(*m_wallet, mi->second);
+        const CWalletTx* wtx = m_wallet->GetWalletTx(txid);
+        if (wtx) {
+            return MakeWalletTx(*m_wallet, *wtx);
         }
         return {};
     }
@@ -322,8 +322,8 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         std::set<WalletTx> result;
-        for (const auto& entry : m_wallet->mapWallet) {
-            result.emplace(MakeWalletTx(*m_wallet, entry.second));
+        for (const auto& entry : m_wallet->m_txs_by_txid) {
+            result.emplace(MakeWalletTx(*m_wallet, entry));
         }
         return result;
     }
@@ -336,14 +336,14 @@ public:
         if (!locked_wallet) {
             return false;
         }
-        auto mi = m_wallet->mapWallet.find(txid);
-        if (mi == m_wallet->mapWallet.end()) {
+        const CWalletTx* wtx = m_wallet->GetWalletTx(txid);
+        if (!wtx) {
             return false;
         }
         num_blocks = m_wallet->GetLastBlockHeight();
         block_time = -1;
         CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(block_time)));
-        tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
+        tx_status = MakeWalletTxStatus(*m_wallet, *wtx);
         return true;
     }
     WalletTx getWalletTxDetails(const Txid& txid,
@@ -354,14 +354,14 @@ public:
         int& num_blocks) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto mi = m_wallet->mapWallet.find(txid);
-        if (mi != m_wallet->mapWallet.end()) {
+        const CWalletTx* wtx = m_wallet->GetWalletTx(txid);
+        if (wtx) {
             num_blocks = m_wallet->GetLastBlockHeight();
-            in_mempool = mi->second.InMempool();
-            messages = mi->second.m_messages;
-            payment_requests = mi->second.m_payment_requests;
-            tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
-            return MakeWalletTx(*m_wallet, mi->second);
+            in_mempool = wtx->InMempool();
+            messages = wtx->m_messages;
+            payment_requests = wtx->m_payment_requests;
+            tx_status = MakeWalletTxStatus(*m_wallet, *wtx);
+            return MakeWalletTx(*m_wallet, *wtx);
         }
         return {};
     }
@@ -455,11 +455,11 @@ public:
         result.reserve(outputs.size());
         for (const auto& output : outputs) {
             result.emplace_back();
-            auto it = m_wallet->mapWallet.find(output.hash);
-            if (it != m_wallet->mapWallet.end()) {
-                int depth = m_wallet->GetTxDepthInMainChain(it->second);
+            const CWalletTx* wtx = m_wallet->GetWalletTx(output.hash);
+            if (wtx) {
+                int depth = m_wallet->GetTxDepthInMainChain(*wtx);
                 if (depth >= 0) {
-                    result.back() = MakeWalletTxOut(*m_wallet, it->second, output.n, depth);
+                    result.back() = MakeWalletTxOut(*m_wallet, *wtx, output.n, depth);
                 }
             }
         }
