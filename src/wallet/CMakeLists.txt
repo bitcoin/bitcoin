@@ -39,6 +39,8 @@ target_link_libraries(bitcoin_wallet
   PRIVATE
     core_interface
     bitcoin_common
+    bitcoin_kernel
+    bitcoin_util_kernel
     SQLite3::SQLite3
     univalue
     Boost::headers
