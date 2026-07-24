@@ -916,11 +916,13 @@ void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_so
         }
         const auto it = events_per_sock.find(sock);
         if (it != events_per_sock.end() && it->second.occurred & Sock::RecvEvent) {
-            CService addr_accepted;
-
-            auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
-
-            if (sock_accepted) {
+            // Drain all pending connections from this socket up to the limit.
+            // Stop early if the kernel queue is empty (AcceptConnection returns null)
+            // or if accepting the last connection brought us to the limit.
+            while (GetConnectionsCount() < static_cast<size_t>(m_rpcmaxconnections)) {
+                CService addr_accepted;
+                auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
+                if (!sock_accepted) break;
                 NewSockAccepted(std::move(sock_accepted), addr_accepted);
             }
         }
@@ -931,8 +933,14 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
 {
     IOReadiness io_readiness;
 
-    for (const auto& sock : m_listen) {
-        io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RecvEvent});
+    // If the server is already handling its max connected clients count,
+    // don't bother checking the listening sockets for new inbound connections.
+    // Leave them in the kernel's queue until space in the application opens
+    // up (or the client times out on its own).
+    if (GetConnectionsCount() < static_cast<size_t>(m_rpcmaxconnections)) {
+        for (const auto& sock : m_listen) {
+            io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RecvEvent});
+        }
     }
 
     for (const auto& http_client : m_connected) {
@@ -1220,6 +1228,7 @@ bool InitHTTPServer()
     g_http_server = std::make_unique<HTTPServer>(MaybeDispatchRequestToWorker);
 
     g_http_server->SetServerTimeout(std::chrono::seconds(gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT)));
+    g_http_server->SetMaxConnections(std::max(gArgs.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS), 1));
 
     // Bind HTTP server to specified addresses
     std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};

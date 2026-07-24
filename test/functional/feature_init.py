@@ -362,6 +362,44 @@ class InitTest(BitcoinTestFramework):
         self.log.info("Testing node startup with fd limit above INT_MAX")
         self.restart_node_with_fd_limit(1 << 31)
 
+    def init_fd_overflow_test(self):
+        node = self.nodes[1]
+        if node.running:
+            self.stop_node(1)
+
+        # A value larger than any possible int saturates to INT_MAX during arg parsing.
+        # Adding in other file descriptor requirements is guaranteed to overflow,
+        # so expect an InitError before RaiseFileDescriptorLimit() is called.
+        self.log.info("Checking -rpcmaxconnections setting that would overflow int is rejected")
+        node.assert_start_raises_init_error(
+            extra_args=[f"-rpcmaxconnections={2**64}"],
+            expected_msg="Error: Too many file descriptors requested.",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
+        # If possible, get the current file descriptor limit and ensure that
+        # a value greater than the limit (but less than INT_MAX) gets
+        # rejected after RaiseFileDescriptorLimit() is called.
+        if self.RLIM_INFINITY is not None:
+            self.log.info("Checking -rpcmaxconnections setting that would exceed file descriptor limit is rejected")
+            import resource
+            soft, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+            node.assert_start_raises_init_error(
+                extra_args=[f"-rpcmaxconnections={soft}"],
+                expected_msg="Not enough file descriptors available.",
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
+
+        # Start without the HTTP server to ensure that -rpcmaxconnections is ignored
+        with node.assert_debug_log(
+            expected_msgs = ["net thread start"],
+            unexpected_msgs = ["Initialized HTTP server"],
+            timeout = 10
+        ):
+            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"])
+        # No HTTP server, no RPC `stop`
+        node.kill_process()
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
@@ -370,6 +408,7 @@ class InitTest(BitcoinTestFramework):
         self.init_empty_test()
         self.init_rlimit_test()
         self.init_rlimit_large_test()
+        self.init_fd_overflow_test()
 
 
 if __name__ == '__main__':
