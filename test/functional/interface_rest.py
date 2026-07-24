@@ -23,6 +23,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    sync_txindex,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -52,7 +53,7 @@ def filter_output_indices_by_value(vouts, value):
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1", "-txindex"], []]
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
 
@@ -60,14 +61,14 @@ class RESTTest (BitcoinTestFramework):
             self,
             uri: str,
             http_method: str = 'GET',
-            req_type: ReqType = ReqType.JSON,
+            req_type: typing.Optional[ReqType] = ReqType.JSON,
             body: str = '',
             status: int = 200,
             ret_type: RetType = RetType.JSON,
             query_params: typing.Union[dict[str, typing.Any], str, None] = None,
             ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
         rest_uri = '/rest' + uri
-        if req_type in ReqType:
+        if isinstance(req_type, ReqType):
             rest_uri += f'.{req_type.name.lower()}'
         if query_params:
             if isinstance(query_params, str):
@@ -304,7 +305,7 @@ class RESTTest (BitcoinTestFramework):
         expected_filter = {
             'basic block filter index': {'synced': True, 'best_block_height': 208},
         }
-        self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
+        self.wait_until(lambda: self.nodes[0].getindexinfo("basic block filter index") == expected_filter)
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
@@ -522,6 +523,99 @@ class RESTTest (BitcoinTestFramework):
 
         resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+
+        self.log.info("Test Cache-Control headers on REST responses")
+
+        blockhash = self.nodes[0].getbestblockhash()
+        height = self.nodes[0].getblockcount()
+        immutable = "public, immutable, max-age=86400"
+        mutable = "no-cache, must-revalidate"
+        no_store = "no-store"
+
+        def assert_cache_control(
+            uri: str,
+            expected: str,
+            *,
+            req_type: typing.Optional[ReqType] = ReqType.JSON,
+            status: int = 200,
+            query_params: typing.Union[dict[str, typing.Any], str, None] = None,
+        ) -> bytes:
+            """Assert `uri` has expected Cache-Control and return the response body."""
+            response = self.test_rest_request(
+                uri,
+                req_type=req_type,
+                status=status,
+                ret_type=RetType.OBJ,
+                query_params=query_params,
+            )
+            assert isinstance(response, http.client.HTTPResponse)
+            assert_equal(response.getheader("Cache-Control"), expected)
+            return response.read()
+
+        # Immutable endpoints
+        assert_cache_control(f"/block/{blockhash}", immutable, req_type=ReqType.BIN)
+        assert_cache_control(f"/spenttxouts/{blockhash}", immutable)
+        assert_cache_control(f"/blockfilter/basic/{blockhash}", immutable, req_type=ReqType.JSON)
+        assert_cache_control(f"/blockfilter/basic/{blockhash}", immutable, req_type=ReqType.BIN)
+        assert_cache_control(f"/blockfilter/basic/{blockhash}", immutable, req_type=ReqType.HEX)
+
+        # Mutable endpoints
+        assert_cache_control(f"/block/{blockhash}", mutable)
+        assert_cache_control(f"/block/notxdetails/{blockhash}", mutable)
+        assert_cache_control(f"/headers/{blockhash}", mutable, req_type=ReqType.JSON, query_params={"count": 1})
+        assert_cache_control(f"/headers/{blockhash}", mutable, req_type=ReqType.BIN, query_params={"count": 1})
+        assert_cache_control(f"/headers/{blockhash}", mutable, req_type=ReqType.HEX, query_params={"count": 1})
+        assert_cache_control(f"/blockfilterheaders/basic/{blockhash}", mutable, req_type=ReqType.JSON, query_params={"count": 1})
+        assert_cache_control(f"/blockfilterheaders/basic/{blockhash}", mutable, req_type=ReqType.BIN, query_params={"count": 1})
+        assert_cache_control(f"/blockfilterheaders/basic/{blockhash}", mutable, req_type=ReqType.HEX, query_params={"count": 1})
+        assert_cache_control(f"/blockhashbyheight/{height}", mutable)
+
+        # Dynamic endpoints
+        assert_cache_control("/chaininfo", no_store)
+        assert_cache_control("/mempool/info", no_store)
+        assert_cache_control("/deploymentinfo", no_store)
+        assert_cache_control(f"/deploymentinfo/{blockhash}", immutable)
+
+        cache_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
+        mempool_txid = cache_tx["txid"]
+        cache_utxo = cache_tx["new_utxo"]
+        cache_utxo_path = f"/getutxos/{mempool_txid}-{cache_utxo['vout']}"
+
+        mempool_tx = json.loads(
+            assert_cache_control(f"/tx/{mempool_txid}", no_store, req_type=ReqType.JSON),
+            parse_float=Decimal,
+        )
+        assert "blockhash" not in mempool_tx
+        assert_cache_control(f"/tx/{mempool_txid}", no_store, req_type=ReqType.BIN)
+        assert_cache_control(f"/tx/{mempool_txid}", no_store, req_type=ReqType.HEX)
+
+        self.generate(self.nodes[0], 1)
+        sync_txindex(self, self.nodes[0])
+
+        confirmed_tx = json.loads(
+            assert_cache_control(f"/tx/{mempool_txid}", mutable, req_type=ReqType.JSON),
+            parse_float=Decimal,
+        )
+        assert_equal(confirmed_tx["txid"], mempool_txid)
+        assert "blockhash" in confirmed_tx
+        assert_cache_control(f"/tx/{mempool_txid}", mutable, req_type=ReqType.BIN)
+        assert_cache_control(f"/tx/{mempool_txid}", mutable, req_type=ReqType.HEX)
+        assert_cache_control(cache_utxo_path, no_store, req_type=ReqType.JSON)
+        assert_cache_control(cache_utxo_path, no_store, req_type=ReqType.BIN)
+        assert_cache_control(cache_utxo_path, no_store, req_type=ReqType.HEX)
+
+        self.log.info("Test Cache-Control headers on REST error responses")
+        assert_cache_control(f"/block/{blockhash}.invalid", no_store, status=400, req_type=None)
+        assert_cache_control(f"/tx/{INVALID_PARAM}", no_store, status=400)
+        assert_cache_control(f"/deploymentinfo/{INVALID_PARAM}", no_store, status=400)
+        assert_cache_control("/blockhashbyheight/999999999", no_store, status=404)
+        assert_cache_control(f"/block/{UNKNOWN_PARAM}", no_store, status=404)
+        assert_cache_control(f"/tx/{'f' * 64}", no_store, status=404)
+        assert_cache_control("", no_store, status=404, query_params={"x": 1}, req_type=None)
+        assert_cache_control("/tx", no_store, status=404, req_type=None)
+        assert_cache_control("/does-not-exist", no_store, status=404, req_type=None)
+        assert_cache_control("/mempool/not-a-valid-path", no_store, status=400)
+        assert_cache_control(f"/deploymentinfo/{non_existing_blockhash}", no_store, status=400)
 
 if __name__ == '__main__':
     RESTTest(__file__).main()

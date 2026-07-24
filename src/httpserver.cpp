@@ -195,6 +195,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
             return;
         }
     } else {
+        hreq->WriteHeader("Cache-Control", "no-store");
         hreq->WriteReply(HTTP_NOT_FOUND);
     }
 }
