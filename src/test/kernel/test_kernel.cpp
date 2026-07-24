@@ -397,6 +397,9 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     auto tx2{Transaction{tx_data_2}};
     CheckHandle(tx, tx2);
 
+    BOOST_CHECK(!tx.IsCoinbase());
+    BOOST_CHECK(!tx2.IsCoinbase());
+
     auto invalid_data = hex_string_to_byte_vec("012300");
     BOOST_CHECK_THROW(Transaction{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
@@ -493,6 +496,20 @@ BOOST_AUTO_TEST_CASE(btck_transaction_output)
     CheckHandle(output, output2);
 }
 
+BOOST_AUTO_TEST_CASE(btck_coin)
+{
+    ScriptPubkey script{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")};
+    TransactionOutput output{script, 1};
+    Coin coin{output, 0, false};
+    Coin coin2{output, 1, true};
+    CheckHandle(coin, coin2);
+
+    BOOST_CHECK(!coin.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin.GetConfirmationHeight(), 0);
+    BOOST_CHECK(coin2.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin2.GetConfirmationHeight(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(btck_transaction_input)
 {
     Transaction tx{hex_string_to_byte_vec("020000000248c03e66fd371c7033196ce24298628e59ebefa00363026044e0f35e0325a65d000000006a473044022004893432347f39beaa280e99da595681ddb20fc45010176897e6e055d716dbfa022040a9e46648a5d10c33ef7cee5e6cf4b56bd513eae3ae044f0039824b02d0f44c012102982331a52822fd9b62e9b5d120da1d248558fac3da3a3c51cd7d9c8ad3da760efeffffffb856678c6e4c3c84e39e2ca818807049d6fba274b42af3c6d3f9d4b6513212d2000000006a473044022068bcedc7fe39c9f21ad318df2c2da62c2dc9522a89c28c8420ff9d03d2e6bf7b0220132afd752754e5cb1ea2fd0ed6a38ec666781e34b0e93dc9a08f2457842cf5660121033aeb9c079ea3e08ea03556182ab520ce5c22e6b0cb95cee6435ee17144d860cdfeffffff0260d50b00000000001976a914363cc8d55ea8d0500de728ef6d63804ddddbdc9888ac67040f00000000001976a914c303bdc5064bf9c9a8b507b5496bd0987285707988ac6acb0700")};
@@ -503,6 +520,8 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     OutPoint point_0 = input_0.OutPoint();
     OutPoint point_1 = input_1.OutPoint();
     CheckHandle(point_0, point_1);
+    OutPoint point{point_0.Txid(), point_0.index()};
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(point.Txid().ToBytes()), byte_span_to_hex_string_reversed(point_0.Txid().ToBytes()));
 
     WitnessStackView ws_0 = input_0.GetWitnessStack();
     BOOST_CHECK_EQUAL(ws_0.CountItems(), 0);
@@ -1108,6 +1127,26 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     BOOST_CHECK(context.interrupt());
 }
 
+static std::vector<std::pair<OutPointView, CoinView>> SpentOutputsFromUndo(
+    const Block& block,
+    const BlockSpentOutputs& spent_outputs)
+{
+    std::vector<std::pair<OutPointView, CoinView>> coin_pairs;
+    size_t undo_index{0};
+    for (const auto transaction : block.Transactions()) {
+        if (transaction.IsCoinbase()) continue;
+        TransactionSpentOutputsView tx_undo{spent_outputs.GetTxSpentOutputs(undo_index)};
+        ++undo_index;
+
+        size_t input_index{0};
+        for (const auto input : transaction.Inputs()) {
+            coin_pairs.emplace_back(input.OutPoint(), tx_undo.GetCoin(input_index));
+            ++input_index;
+        }
+    }
+    return coin_pairs;
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 {
     auto test_directory{TestDirectory{"regtest_test_bitcoin_kernel"}};
@@ -1171,6 +1210,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     check_equal(read_block_2.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 2]));
 
     Txid txid = read_block.Transactions()[0].Txid();
+    BOOST_CHECK(read_block.Transactions()[0].IsCoinbase());
     Txid txid_2 = read_block_2.Transactions()[0].Txid();
     BOOST_CHECK(txid != txid_2);
     BOOST_CHECK(txid == txid);
@@ -1189,8 +1229,12 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
         return std::nullopt;
     };
 
+    std::vector<std::pair<Block, BlockSpentOutputs>> blocks;
+
     for (const auto block_tree_entry : chain.Entries()) {
+        if (block_tree_entry.GetHeight() == 0) continue;
         auto block{chainman->ReadBlock(block_tree_entry)};
+
         for (const auto transaction : block->Transactions()) {
             std::vector<TransactionInput> inputs;
             std::vector<TransactionOutput> spent_outputs;
@@ -1212,6 +1256,62 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
             for (size_t i{0}; i < inputs.size(); ++i) {
                 BOOST_CHECK(spent_outputs[i].GetScriptPubkey().Verify(spent_outputs[i].Amount(), transaction, &precomputed_txdata, i, ScriptVerificationFlags::ALL, status));
             }
+        }
+
+        BlockSpentOutputs undo{chainman->ReadBlockSpentOutputs(block_tree_entry)};
+        auto coin_pairs{SpentOutputsFromUndo(*block, undo)};
+
+        BlockValidationState state{};
+        BOOST_CHECK(chainman->ValidateBlock(*block, block_tree_entry, coin_pairs, state));
+        BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+        BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::UNSET);
+
+        blocks.emplace_back(std::move(*block), std::move(undo));
+    }
+
+    BOOST_REQUIRE_EQUAL(blocks.size(), REGTEST_BLOCK_DATA.size());
+
+    // Validate every block with a fresh chainman by first processing its
+    // header, then validating without the UTXO set.
+    {
+        auto test_directory2{TestDirectory{"regtest_test_bitcoin_kernel_fresh"}};
+        auto notifications2{std::make_shared<TestKernelNotifications>()};
+        auto context2{create_context(notifications2, ChainType::REGTEST)};
+        auto chainman2{create_chainman(
+            test_directory2, /*reindex=*/false, /*wipe_chainstate=*/false,
+            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context2)};
+
+        for (const auto& [blk, undo] : blocks) {
+            BlockValidationState header_state{chainman2->ProcessBlockHeader(blk.GetHeader())};
+            BOOST_CHECK_EQUAL(header_state.GetValidationMode(), ValidationMode::VALID);
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blk.GetHash())};
+
+            auto coin_pairs{SpentOutputsFromUndo(blk, undo)};
+            BlockValidationState state;
+            BOOST_CHECK(chainman2->ValidateBlock(blk, entry, coin_pairs, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+            // Validate again to ensure there is no lingering state
+            BOOST_CHECK(chainman2->ValidateBlock(blk, entry, coin_pairs, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+        }
+
+        {
+            // Validate with no coins
+            BlockValidationState state;
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blocks[205].first.GetHash())};
+            BOOST_CHECK(!chainman2->ValidateBlock(blocks[205].first, entry, {}, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::INVALID);
+            BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::CONSENSUS);
+        }
+
+        {
+            // Validate with an incorrect set of coins
+            auto wrong_coins{SpentOutputsFromUndo(blocks[205].first, blocks[205].second)};
+            BlockValidationState state;
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blocks[204].first.GetHash())};
+            BOOST_CHECK(!chainman2->ValidateBlock(blocks[204].first, entry, wrong_coins, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::INVALID);
+            BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::CONSENSUS);
         }
     }
 

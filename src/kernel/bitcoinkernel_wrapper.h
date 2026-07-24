@@ -562,6 +562,11 @@ class OutPoint : public Handle<btck_TransactionOutPoint, btck_transaction_out_po
 public:
     OutPoint(const OutPointView& view)
         : Handle(view) {}
+
+    OutPoint(const TxidView& txid, uint32_t index)
+        : Handle{btck_transaction_out_point_create(txid.get(), index)}
+    {
+    }
 };
 
 template <typename Derived>
@@ -667,6 +672,11 @@ public:
     size_t CountOutputs() const
     {
         return btck_transaction_count_outputs(impl());
+    }
+
+    bool IsCoinbase() const
+    {
+        return btck_transaction_is_coinbase(impl()) != 0;
     }
 
     size_t CountInputs() const
@@ -1278,6 +1288,8 @@ public:
 class Coin : public Handle<btck_Coin, btck_coin_copy, btck_coin_destroy>, public CoinApi<Coin>
 {
 public:
+    Coin(const TransactionOutput& output, uint32_t height, bool is_coinbase) : Handle{btck_coin_create(output.get(), height, is_coinbase)} {}
+
     Coin(btck_Coin* coin) : Handle{coin} {}
 
     Coin(const CoinView& view) : Handle{view} {}
@@ -1379,6 +1391,23 @@ public:
     {
         auto state = btck_chainstate_manager_process_block_header(get(), header.get());
         return BlockValidationState{state};
+    }
+
+    bool ValidateBlock(const Block& block,
+                       const BlockTreeEntry& entry,
+                       std::span<const std::pair<OutPointView, CoinView>> spent_outputs,
+                       BlockValidationState& state)
+    {
+        std::vector<const btck_TransactionOutPoint*> out_points;
+        std::vector<const btck_Coin*> coins;
+        out_points.reserve(spent_outputs.size());
+        coins.reserve(spent_outputs.size());
+        for (const auto& [out_point, coin] : spent_outputs) {
+            out_points.push_back(out_point.get());
+            coins.push_back(coin.get());
+        }
+
+        return btck_chainstate_manager_validate_block(get(), block.get(), entry.get(), out_points.data(), coins.data(), out_points.size(), state.get()) == 0;
     }
 
     ChainView GetChain() const
