@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <interfaces/types.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_args.h>
 #include <node/mining_types.h>
@@ -32,6 +33,7 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -42,6 +44,7 @@
 #include <versionbits.h>
 
 #include <algorithm>
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
 #include <compare>
 #include <condition_variable>
 #include <cstddef>
@@ -50,9 +53,150 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace node {
+
+TxCollection::TxCollection(std::vector<Wtxid> wtxids, const NodeContext& node)
+    : m_wtxids(std::move(wtxids)),
+      m_node(node)
+{
+    // Check for excessively high numbers of transactions.
+    if (m_wtxids.size() > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT) {
+        throw std::runtime_error(strprintf("too many wtxids (%d > %d)", m_wtxids.size(), MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT));
+    }
+    CTxMemPool& mempool{*Assert(m_node.mempool)};
+    LOCK(mempool.cs);
+    for (const auto& wtxid : m_wtxids) {
+        const auto it{mempool.GetIter(wtxid)};
+        CTransactionRef tx{it ? (*it)->GetSharedTx() : nullptr};
+        if (!m_transactions.emplace(wtxid, std::move(tx)).second) {
+            throw std::runtime_error(strprintf("duplicate wtxid %s", wtxid.ToString()));
+        }
+    }
+}
+
+std::vector<uint32_t> TxCollection::UnknownTxPos() const
+{
+    LOCK(m_mutex);
+    std::vector<uint32_t> result;
+    for (size_t i{0}; i < m_wtxids.size(); ++i) {
+        // Every requested wtxid is a key (added in the constructor), so at()
+        // is safe; a null value means the transaction is still missing.
+        if (!m_transactions.at(m_wtxids[i])) result.push_back(static_cast<uint32_t>(i));
+    }
+    return result;
+}
+
+void TxCollection::AddMissingTxs(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    // Reject a list with more transactions than the whole collection.
+    // Ideally the IPC layer would enforce a limit based on the maximum block
+    // size before deserializing the transactions, but it currently cannot.
+    if (txs.size() > m_transactions.size()) {
+        throw std::runtime_error(strprintf("too many transactions (%d > %d)", txs.size(), m_transactions.size()));
+    }
+    // Check for null entries and unexpected wtxids before adding any
+    // transaction, so a failed call leaves the collection unchanged.
+    for (const auto& tx : txs) {
+        if (!tx) throw std::runtime_error("unexpected null transaction");
+        if (!m_transactions.contains(tx->GetWitnessHash())) {
+            throw std::runtime_error(strprintf("unexpected wtxid %s", tx->GetWitnessHash().ToString()));
+        }
+    }
+    for (const auto& tx : txs) {
+        auto& entry{m_transactions.at(tx->GetWitnessHash())};
+        if (!entry) entry = tx;
+    }
+}
+
+std::unique_ptr<CBlockTemplate> TxCollection::MakeTemplate(const uint256& prevhash,
+                                                           const CTransactionRef& coinbase,
+                                                           std::string& reason,
+                                                           std::string& debug)
+{
+    reason.clear();
+    debug.clear();
+
+    auto block_template{[&]() -> std::unique_ptr<CBlockTemplate> {
+        LOCK(m_mutex);
+        if (std::ranges::any_of(m_transactions, [](const auto& entry) { return !entry.second; })) {
+            reason = "missing-txs";
+            debug = "collected transaction(s) still missing";
+            return nullptr;
+        }
+        ChainstateManager& chainman{*Assert(m_node.chainman)};
+        LOCK(chainman.GetMutex());
+        const auto current_tip{GetTip(chainman)};
+        if (!current_tip || prevhash != current_tip->hash) {
+            const CBlockIndex* prev_block{chainman.m_blockman.LookupBlockIndex(prevhash)};
+            if (prev_block && chainman.ActiveChain().Contains(*prev_block)) {
+                reason = "stale-prevblk";
+            } else {
+                reason = "inconclusive-not-best-prevblk";
+            }
+            debug = strprintf("requested prevhash %s does not match current tip %s",
+                              prevhash.ToString(),
+                              current_tip ? current_tip->hash.ToString() : "(none)");
+            return nullptr;
+        }
+        const CBlockIndex* const prev_block{Assert(chainman.m_blockman.LookupBlockIndex(prevhash))};
+        auto block_template{std::make_unique<CBlockTemplate>()};
+        CBlock& block{block_template->block};
+
+        block.hashPrevBlock = prevhash;
+        block.nVersion = chainman.m_versionbitscache.ComputeBlockVersion(prev_block, chainman.GetParams().GetConsensus());
+        if (chainman.GetParams().MineBlocksOnDemand()) {
+            block.nVersion = gArgs.GetIntArg("-blockversion", block.nVersion);
+        }
+        block.nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
+
+        // Placeholder for the coinbase tx, filled in after the collected
+        // transactions are added so the witness commitment is current.
+        block.vtx.emplace_back();
+
+        for (const auto& wtxid : m_wtxids) {
+            const auto it{m_transactions.find(wtxid)};
+            Assert(it != m_transactions.end());
+            Assert(it->second);
+            block.vtx.push_back(it->second);
+        }
+
+        if (coinbase) {
+            // Validate the block with the caller-provided coinbase, which is
+            // expected to commit to the collected transactions (witness
+            // commitment) and the next block height (BIP34).
+            block.vtx[0] = coinbase;
+        } else {
+            // Validate with a node-generated dummy coinbase. Checks involving the
+            // coinbase still pass, but say nothing about the coinbase the caller
+            // intends to use.
+            BlockAssembler{
+                chainman.ActiveChainstate(),
+                m_node.mempool.get(),
+                BlockCreateOptions{.use_mempool = false},
+            }.CreateCoinbaseTx(block, *prev_block, /*fees=*/0);
+        }
+
+        UpdateTime(&block, chainman.GetParams().GetConsensus(), prev_block);
+        block.nBits = GetNextWorkRequired(prev_block, &block, chainman.GetParams().GetConsensus());
+        block.nNonce = 0;
+
+        BlockValidationState state{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)};
+        if (!state.IsValid()) {
+            reason = state.GetRejectReason();
+            debug = state.GetDebugMessage();
+            return nullptr;
+        }
+        return block_template;
+    }()};
+    // This follows the SubmitBlock convention: a missing template must set a
+    // rejection reason, and a successful one must not.
+    CHECK_NONFATAL((block_template != nullptr) == reason.empty());
+    return block_template;
+}
 
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
 {
@@ -123,6 +267,73 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
+CoinbaseTx BlockAssembler::CreateCoinbaseTx(CBlock& block,
+                                            const CBlockIndex& pindexPrev,
+                                            CAmount fees)
+{
+    Assert(!block.vtx.empty());
+    nHeight = pindexPrev.nHeight + 1;
+
+    // Create coinbase transaction.
+    CMutableTransaction coinbaseTx;
+
+    // Construct coinbase transaction struct in parallel
+    CoinbaseTx coinbase_tx;
+    coinbase_tx.version = coinbaseTx.version;
+
+    coinbaseTx.vin.resize(1);
+    coinbaseTx.vin[0].prevout.SetNull();
+    coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
+    coinbase_tx.sequence = coinbaseTx.vin[0].nSequence;
+
+    // Add an output that spends the full coinbase reward.
+    coinbaseTx.vout.resize(1);
+    coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
+    // Block subsidy + fees
+    const CAmount block_reward{fees + GetBlockSubsidy(nHeight, chainparams.GetConsensus())};
+    coinbaseTx.vout[0].nValue = block_reward;
+    coinbase_tx.block_reward_remaining = block_reward;
+
+    // Start the coinbase scriptSig with the block height as required by BIP34.
+    // Mining clients are expected to append extra data to this prefix, so
+    // increasing its length would reduce the space they can use and may break
+    // existing clients.
+    coinbaseTx.vin[0].scriptSig = CScript() << nHeight;
+    // Set script_sig_prefix here, so IPC mining clients are not affected by
+    // the optional scriptSig padding below. They provide their own extraNonce,
+    // and in a typical setup a pool name or realistic extraNonce already makes
+    // the scriptSig long enough.
+    coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
+    if (nHeight <= 16) {
+        // For blocks at heights <= 16, the BIP34-encoded height alone is only
+        // one byte. Consensus requires coinbase scriptSigs to be at least two
+        // bytes long (bad-cb-length), so an OP_0 is always appended at those
+        // heights.
+        coinbaseTx.vin[0].scriptSig << OP_0;
+    }
+    Assert(nHeight > 0);
+    coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
+    coinbase_tx.lock_time = coinbaseTx.nLockTime;
+
+    block.vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    m_chainstate.m_chainman.GenerateCoinbaseCommitment(block, &pindexPrev);
+
+    const CTransactionRef& final_coinbase{block.vtx[0]};
+    if (final_coinbase->HasWitness()) {
+        const auto& witness_stack{final_coinbase->vin[0].scriptWitness.stack};
+        // Consensus requires the coinbase witness stack to have exactly one
+        // element of 32 bytes.
+        Assert(witness_stack.size() == 1 && witness_stack[0].size() == 32);
+        coinbase_tx.witness = uint256(witness_stack[0]);
+    }
+    if (const int witness_index = GetWitnessCommitmentIndex(block); witness_index != NO_WITNESS_COMMITMENT) {
+        Assert(witness_index >= 0 && static_cast<size_t>(witness_index) < final_coinbase->vout.size());
+        coinbase_tx.required_outputs.push_back(final_coinbase->vout[witness_index]);
+    }
+
+    return coinbase_tx;
+}
+
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 {
     const auto time_start{SteadyClock::now()};
@@ -163,62 +374,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     m_last_block_num_txs = nBlockTx;
     m_last_block_weight = nBlockWeight;
 
-    // Create coinbase transaction.
-    CMutableTransaction coinbaseTx;
-
-    // Construct coinbase transaction struct in parallel
-    CoinbaseTx& coinbase_tx{pblocktemplate->m_coinbase_tx};
-    coinbase_tx.version = coinbaseTx.version;
-
-    coinbaseTx.vin.resize(1);
-    coinbaseTx.vin[0].prevout.SetNull();
-    coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
-    coinbase_tx.sequence = coinbaseTx.vin[0].nSequence;
-
-    // Add an output that spends the full coinbase reward.
-    coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
-    // Block subsidy + fees
-    const CAmount block_reward{nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus())};
-    coinbaseTx.vout[0].nValue = block_reward;
-    coinbase_tx.block_reward_remaining = block_reward;
-
-    // Start the coinbase scriptSig with the block height as required by BIP34.
-    // Mining clients are expected to append extra data to this prefix, so
-    // increasing its length would reduce the space they can use and may break
-    // existing clients.
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight;
-    // Set script_sig_prefix here, so IPC mining clients are not affected by
-    // the optional scriptSig padding below. They provide their own extraNonce,
-    // and in a typical setup a pool name or realistic extraNonce already makes
-    // the scriptSig long enough.
-    coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
-    if (nHeight <= 16) {
-        // For blocks at heights <= 16, the BIP34-encoded height alone is only
-        // one byte. Consensus requires coinbase scriptSigs to be at least two
-        // bytes long (bad-cb-length), so an OP_0 is always appended at those
-        // heights.
-        coinbaseTx.vin[0].scriptSig << OP_0;
-    }
-    Assert(nHeight > 0);
-    coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
-    coinbase_tx.lock_time = coinbaseTx.nLockTime;
-
-    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
-
-    const CTransactionRef& final_coinbase{pblock->vtx[0]};
-    if (final_coinbase->HasWitness()) {
-        const auto& witness_stack{final_coinbase->vin[0].scriptWitness.stack};
-        // Consensus requires the coinbase witness stack to have exactly one
-        // element of 32 bytes.
-        Assert(witness_stack.size() == 1 && witness_stack[0].size() == 32);
-        coinbase_tx.witness = uint256(witness_stack[0]);
-    }
-    if (const int witness_index = GetWitnessCommitmentIndex(*pblock); witness_index != NO_WITNESS_COMMITMENT) {
-        Assert(witness_index >= 0 && static_cast<size_t>(witness_index) < final_coinbase->vout.size());
-        coinbase_tx.required_outputs.push_back(final_coinbase->vout[witness_index]);
-    }
+    pblocktemplate->m_coinbase_tx = CreateCoinbaseTx(*pblock, *pindexPrev, nFees);
 
     LogInfo("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 

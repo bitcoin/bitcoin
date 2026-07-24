@@ -10,15 +10,17 @@
 #include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <threadsafety.h>
+#include <sync.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <util/hasher.h>
 #include <util/time.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class CBlockIndex;
@@ -38,6 +40,7 @@ using interfaces::BlockRef;
 
 namespace node {
 class KernelNotifications;
+struct NodeContext;
 
 struct CBlockTemplate
 {
@@ -84,6 +87,18 @@ public:
 
     /** Construct a new block template */
     std::unique_ptr<CBlockTemplate> CreateNewBlock();
+    /**
+     * Create a coinbase transaction and insert it into block.vtx[0].
+     *
+     * @param[in,out] block       Block whose coinbase transaction is replaced.
+     * @param[in]     pindexPrev  Previous block index. Used to derive the
+     *                            coinbase height, subsidy, and commitment.
+     * @param[in]     fees        Fees to add to the block subsidy.
+     * @return                    Metadata describing the inserted coinbase.
+     */
+    CoinbaseTx CreateCoinbaseTx(CBlock& block,
+                                const CBlockIndex& pindexPrev,
+                                CAmount fees);
 
     /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
@@ -177,6 +192,39 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
  * @returns false if interrupted.
  */
 bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt_mining);
+
+/** Node-side implementation of the interfaces::TxCollection interface: holds
+ *  the client-requested transactions, tracks which are still missing, and
+ *  assembles them into a block template. */
+class TxCollection
+{
+public:
+    TxCollection(std::vector<Wtxid> wtxids, const NodeContext& node);
+    /** Return zero-based positions for requested transactions that are still missing. */
+    std::vector<uint32_t> UnknownTxPos() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Add transactions matching previously requested wtxids. Throws on null
+     *  or unexpected transactions, in which case nothing is added. */
+    void AddMissingTxs(const std::vector<CTransactionRef>& txs) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /**
+     * Assemble and validate a block template from the collected transactions.
+     * If @p coinbase is provided the block is validated with it, otherwise a
+     * node-generated dummy coinbase is used.
+     */
+    std::unique_ptr<CBlockTemplate> MakeTemplate(const uint256& prevhash,
+                                                 const CTransactionRef& coinbase,
+                                                 std::string& reason,
+                                                 std::string& debug) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+private:
+    /** Requested transaction order as provided by the client. */
+    const std::vector<Wtxid> m_wtxids;
+    /** Protects m_transactions: IPC clients may call methods concurrently
+     *  from different threads. */
+    mutable Mutex m_mutex;
+    /** Collected transactions keyed by wtxid. */
+    std::unordered_map<Wtxid, CTransactionRef, SaltedWtxidHasher> m_transactions GUARDED_BY(m_mutex);
+    const NodeContext& m_node;
+};
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H
