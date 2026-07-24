@@ -15,6 +15,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/transaction_utils.h>
+#include <util/check.h>
 
 #include <array>
 #include <cstdint>
@@ -335,6 +336,22 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
 
         orphanage->SanityCheck();
+    }
+
+    // Three peers share a global latency score limit of two.
+    {
+        constexpr auto global_limit{2U};
+        auto orphanage{node::MakeTxOrphanage(/*max_global_latency_score=*/global_limit, /*reserved_peer_usage=*/TOTAL_SIZE)};
+
+        for (NodeId peer{0}; peer < global_limit; ++peer) {
+            orphanage->AddTx(txns.at(peer), peer);
+        }
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), 1);
+
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+        BOOST_CHECK_EXCEPTION(orphanage->AddTx(txns.at(2), /*peer=*/2), NonFatalCheckError, HasReason{"max_peer_latency_score > 0"}); // TODO: Trimming must not abort when the divided share is zero.
+        BOOST_CHECK( orphanage->HaveTxFromPeer(txns.at(2)->GetWitnessHash(), 2)); // TODO: Trimming must remove the excess announcement.
+        BOOST_CHECK_GT(orphanage->TotalLatencyScore(), global_limit); // TODO: Trimming must restore the global latency limit.
     }
 
     // Test eviction of multiple transactions at a time
