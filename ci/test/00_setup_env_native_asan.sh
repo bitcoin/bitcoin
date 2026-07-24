@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
 
 # Only install BCC tracing packages in CI. Container has to match the host for BCC to work.
 if [[ "${INSTALL_BCC_TRACING_TOOLS:-}" == "true" ]]; then
@@ -21,7 +21,7 @@ fi
 export CONTAINER_NAME=ci_native_asan
 export APT_LLVM_V="22"
 export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev mold python3-zmq qt6-base-dev qt6-tools-dev qt6-l10n-tools libboost-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE} libcapnp-dev capnproto python3-pip"
-export PIP_PACKAGES="--break-system-packages pycapnp"
+export PIP_PACKAGES="--break-system-packages --require-hashes -r ${BASE_ROOT_DIR}/ci/test/requirements/pycapnp.txt"
 export NO_DEPENDS=1
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1

@@ -47,7 +47,7 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "::notice title=debug_pull_request_number_str::${{ github.event.number }}"
           fi
-      - uses: actions/checkout@v6
+      - uses: &CHECKOUT_ACTION actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.FETCH_DEPTH }}
@@ -97,7 +97,7 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install clang mold ccache build-essential cmake ninja-build pkgconf python3-zmq libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev -y
-          sudo pip3 install --break-system-packages pycapnp
+          sudo pip3 install --break-system-packages --require-hashes -r ci/test/requirements/pycapnp.txt
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
@@ -139,7 +139,7 @@ jobs:
 
       - &CHECKOUT
         name: Checkout
-        uses: actions/checkout@v6
+        uses: *CHECKOUT_ACTION
         with:
           # Ensure the latest merged pull request state is used, even on re-runs.
           ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
@@ -166,7 +166,7 @@ jobs:
 
       - name: Restore Ccache cache
         id: ccache-cache
-        uses: actions/cache/restore@v5
+        uses: &CACHE_RESTORE_ACTION actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
@@ -186,7 +186,7 @@ jobs:
           FILE_ENV: ${{ matrix.file-env }}
 
       - name: Save Ccache cache
-        uses: actions/cache/save@v5
+        uses: &CACHE_SAVE_ACTION actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -235,7 +235,7 @@ jobs:
 
       - name: Restore vcpkg downloads cache
         id: vcpkg-downloads-cache
-        uses: actions/cache/restore@v5
+        uses: *CACHE_RESTORE_ACTION
         with:
           path: |
             ~/AppData/Local/vcpkg/downloads/*
@@ -243,7 +243,7 @@ jobs:
           key: ${{ github.job }}-vcpkg-downloads-${{ hashFiles('vcpkg.json') }}
 
       - name: Restore vcpkg binary cache
-        uses: actions/cache/restore@v5
+        uses: *CACHE_RESTORE_ACTION
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
@@ -254,14 +254,14 @@ jobs:
           py -3 .github/ci-windows.py ${{ matrix.job-type }} generate
 
       - name: Save vcpkg binary cache
-        uses: actions/cache/save@v5
+        uses: *CACHE_SAVE_ACTION
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
           key: ${{ steps.vcpkg-binary-cache.outputs.cache-primary-key }}
 
       - name: Save vcpkg downloads cache
-        uses: actions/cache/save@v5
+        uses: *CACHE_SAVE_ACTION
         # Only save cache from the 'standard' job, as it includes the necessary downloads for other jobs in the matrix. If the matrix is modified, this may need amending.
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && steps.vcpkg-downloads-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
@@ -329,7 +329,7 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: *CHECKOUT_ACTION
         with:
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
@@ -356,7 +356,7 @@ jobs:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
       - name: Upload built executables
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
           path: |
@@ -389,12 +389,12 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: *CHECKOUT_ACTION
         with:
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Download built executables
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
 
@@ -594,7 +594,7 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: *CHECKOUT_ACTION
         with:
           ref: *CHECKOUT_REF_TMPL
           fetch-depth: 0

@@ -7,10 +7,10 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_nowallet
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90"
 # Use minimum supported python3.10 (or best-effort 3.12) and clang-17, see doc/dependencies.md
 export PACKAGES="python3-zmq python3-pip clang-17 llvm-17 libc++abi-17-dev libc++-17-dev"
-export PIP_PACKAGES="--break-system-packages pycapnp"
+export PIP_PACKAGES="--break-system-packages --require-hashes -r ${BASE_ROOT_DIR}/ci/test/requirements/pycapnp.txt"
 export DEP_OPTS="NO_WALLET=1 CC=clang-17 CXX='clang++-17 -stdlib=libc++'"
 export GOAL="install"
 export BITCOIN_CONFIG="\

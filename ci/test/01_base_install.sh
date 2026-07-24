@@ -62,7 +62,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-22.1.7" /llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 --revision=a255c1ed36a1d06f79bd2633ba9f8d900153007c https://github.com/llvm/llvm-project /llvm-project # llvmorg-22.1.7
 
 # LLVM is configured with LIBCXXABI_USE_LLVM_UNWINDER=OFF,
 # because libunwind doesn't handle exceptions under MSAN.
@@ -88,7 +88,7 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
 fi
 
 if [[ ${BARE_METAL_RISCV} == "true" ]]; then
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2026.06.06 /riscv/gcc
+    ${CI_RETRY_EXE} git clone --depth=1 --revision=81bb1f89664aad156df3d2773195177c92dedc3a https://github.com/riscv-collab/riscv-gnu-toolchain /riscv/gcc # 2026.06.06
     ( cd /riscv/gcc;
       ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32 --disable-gdb;
       make "$MAKEJOBS"; )
@@ -96,7 +96,7 @@ if [[ ${BARE_METAL_RISCV} == "true" ]]; then
 fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${IWYU_LLVM_V}" /include-what-you-use
+  ${CI_RETRY_EXE} git clone --depth=1 --revision="${IWYU_COMMIT}" https://github.com/include-what-you-use/include-what-you-use /include-what-you-use
   pushd /include-what-you-use
   patch -p1 < /ci_container_base/ci/test/01_iwyu.patch
   patch -p1 < /ci_container_base/ci/test/02_iwyu_hash.patch
@@ -115,18 +115,20 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   if [ ! -f "$OSX_SDK_PATH" ]; then
     ${CI_RETRY_EXE} curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
   fi
+  sha256sum -c <<<"${OSX_SDK_SHA256} ${OSX_SDK_PATH}"
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
 if [ -n "$NETBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}" ]; then
   mkdir -p "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}"
-  for NETBSD_SDK_FILENAME in base.tar.xz comp.tar.xz; do
+  while read -r NETBSD_SDK_SHA512 NETBSD_SDK_FILENAME; do
     NETBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${NETBSD_SDK_FILENAME}"
     if [ ! -f "$NETBSD_SDK_PATH" ]; then
       ${CI_RETRY_EXE} curl --location --fail "https://cdn.netbsd.org/pub/NetBSD/NetBSD-${NETBSD_VERSION}/amd64/binary/sets/${NETBSD_SDK_FILENAME}" -o "$NETBSD_SDK_PATH"
     fi
+    sha512sum -c <<<"${NETBSD_SDK_SHA512}  ${NETBSD_SDK_PATH}"
     tar -C "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}" -xf "$NETBSD_SDK_PATH"
-  done
+  done < <(printf '%b\n' "${NETBSD_SDK_SHA512SUMS}")
 fi
 
 if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" ]; then
@@ -135,27 +137,29 @@ if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENA
   if [ ! -f "$FREEBSD_SDK_PATH" ]; then
     ${CI_RETRY_EXE} curl --location --fail "https://download.freebsd.org/releases/amd64/${FREEBSD_VERSION}-RELEASE/base.txz" -o "$FREEBSD_SDK_PATH"
   fi
+  sha256sum -c <<<"${FREEBSD_SDK_SHA256} ${FREEBSD_SDK_PATH}"
   mkdir -p "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}"
   tar -C "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" -xf "$FREEBSD_SDK_PATH"
 fi
 
 if [ -n "$OPENBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}" ]; then
   mkdir -p "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}"
-  for OPENBSD_SDK_FILENAME in base79.tgz comp79.tgz; do
+  while read -r OPENBSD_SDK_SHA256 OPENBSD_SDK_FILENAME; do
     OPENBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OPENBSD_SDK_FILENAME}"
     if [ ! -f "$OPENBSD_SDK_PATH" ]; then
       ${CI_RETRY_EXE} curl --location --fail "https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/amd64/${OPENBSD_SDK_FILENAME}" -o "$OPENBSD_SDK_PATH"
     fi
+    sha256sum -c <<<"${OPENBSD_SDK_SHA256}  ${OPENBSD_SDK_PATH}"
     tar -C "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}" -xf "$OPENBSD_SDK_PATH"
-    (
-      # The SDK has versioned shared libs, but no unversioned libfoo.so symlink,
-      # which breaks linking the kernel with lld. Create the symlinks.
-      cd "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}/usr/lib"
-      ln -sf libc++abi.so.*.*  libc++abi.so
-      ln -sf libc++.so.*.*     libc++.so
-      ln -sf libpthread.so.*.* libpthread.so
-    )
-  done
+  done < <(printf '%b\n' "${OPENBSD_SDK_SHA256SUMS}")
+  (
+    # The SDK has versioned shared libs, but no unversioned libfoo.so symlink,
+    # which breaks linking the kernel with lld. Create the symlinks.
+    cd "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}/usr/lib"
+    ln -sf libc++abi.so.*.*  libc++abi.so
+    ln -sf libc++.so.*.*     libc++.so
+    ln -sf libpthread.so.*.* libpthread.so
+  )
 fi
 
 echo -n "done" > "${CFG_DONE}"

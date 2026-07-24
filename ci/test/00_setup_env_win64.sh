@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_win64
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie"  # Check that https://packages.debian.org/trixie/g++-mingw-w64-ucrt64 can cross-compile
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie@sha256:fac46bff2e02f51425b6e33b0e1169f55dfb053d83511ca28aa50c09fd5ed7a4"  # Check that https://packages.debian.org/trixie/g++-mingw-w64-ucrt64 can cross-compile
 export HOST=x86_64-w64-mingw32ucrt
 export PACKAGES="g++-mingw-w64-ucrt64 nsis"
 export RUN_UNIT_TESTS=false

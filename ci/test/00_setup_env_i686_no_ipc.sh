@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export HOST=i686-pc-linux-gnu
 export CONTAINER_NAME=ci_i686_no_multiprocess
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb"
 export CI_IMAGE_PLATFORM="linux/amd64"
 export CI_CONTAINER_CAP="--security-opt seccomp=unconfined"
 export PACKAGES="g++-multilib"

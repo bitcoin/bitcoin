@@ -6,10 +6,10 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb"
 export CONTAINER_NAME=ci_native_valgrind
 export PACKAGES="clang llvm libclang-rt-dev valgrind python3-zmq libboost-dev libzmq3-dev libsqlite3-dev libcapnp-dev capnproto python3-pip"
-export PIP_PACKAGES="--break-system-packages pycapnp"
+export PIP_PACKAGES="--break-system-packages --require-hashes -r ${BASE_ROOT_DIR}/ci/test/requirements/pycapnp.txt"
 export USE_VALGRIND=1
 export NO_DEPENDS=1
 # bind tests excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547

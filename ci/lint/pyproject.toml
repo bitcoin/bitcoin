@@ -1,0 +1,15 @@
+[project]
+name = "bitcoin-core-lint"
+version = "0"
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+lint = [
+    "lief==0.17.5",
+    "mypy==2.3.0",
+    "pyzmq==27.1.0",
+]
+
+[tool.uv]
+package = false

@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_previous_releases
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:22.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:22.04@sha256:0e0a0fc6d18feda9db1590da249ac93e8d5abfea8f4c3c0c849ce512b5ef8982"
 # Use minimum supported python3.10 and gcc-12, see doc/dependencies.md
 export PACKAGES="gcc-12 g++-12 python3-zmq"
 export DEP_OPTS="CC=gcc-12 CXX=g++-12"

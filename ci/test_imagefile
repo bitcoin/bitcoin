@@ -18,6 +18,7 @@ ENV BASE_ROOT_DIR=${BASE_ROOT_DIR}
 COPY ./ci/retry/retry /usr/bin/retry
 COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh /ci_container_base/ci/test/
 COPY ./ci/test/*.patch /ci_container_base/ci/test/
+COPY ./ci/test/requirements ${BASE_ROOT_DIR}/ci/test/requirements
 
 # Bash is required, so install it when missing
 RUN sh -c "bash -c 'true' || ( apk update && apk add --no-cache bash )"
