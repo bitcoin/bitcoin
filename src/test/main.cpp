@@ -5,6 +5,8 @@
 /**
  * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
  */
+// Boost.Test's SIGSTKSZ alternate stack can be smaller than Linux requires on musl.
+#define BOOST_TEST_DISABLE_ALT_STACK
 #define BOOST_TEST_MODULE Bitcoin Core Test Suite
 
 #include <boost/test/included/unit_test.hpp>
