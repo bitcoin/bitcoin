@@ -186,18 +186,6 @@ public:
 
     virtual ~PubkeyProvider() = default;
 
-    /** Compare two public keys represented by this provider.
-     * Used by the Miniscript descriptors to check for duplicate keys in the script.
-     */
-    bool operator<(PubkeyProvider& other) const {
-        FlatSigningProvider dummy;
-
-        std::optional<CPubKey> a = GetPubKey(0, dummy, dummy);
-        std::optional<CPubKey> b = other.GetPubKey(0, dummy, dummy);
-
-        return a < b;
-    }
-
     /** Derive a public key and put it into out.
      *  read_cache is the cache to read keys from (if not nullptr)
      *  write_cache is the cache to write keys to (if not nullptr)
@@ -269,13 +257,20 @@ public:
     OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider, bool apostrophe) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)), m_apostrophe(apostrophe) {}
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
-        std::optional<CPubKey> pub = m_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
+        FlatSigningProvider subprovider;
+        std::optional<CPubKey> pub = m_provider->GetPubKey(pos, arg, subprovider, read_cache, write_cache);
         if (!pub) return std::nullopt;
-        Assert(out.pubkeys.contains(pub->GetID()));
-        auto& [pubkey, suborigin] = out.origins[pub->GetID()];
-        Assert(pubkey == *pub); // m_provider must have a valid origin by this point.
+        Assert(subprovider.pubkeys.contains(pub->GetID()));
+        const auto origin_it = subprovider.origins.find(pub->GetID());
+        Assert(origin_it != subprovider.origins.end());
+        Assert(origin_it->second.first == *pub); // m_provider must have a valid origin by this point.
+
+        KeyOriginInfo suborigin = origin_it->second.second;
         std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), suborigin.fingerprint);
         suborigin.path.insert(suborigin.path.begin(), m_origin.path.begin(), m_origin.path.end());
+
+        out.Merge(std::move(subprovider));
+        out.origins[pub->GetID()] = std::make_pair(*pub, std::move(suborigin));
         return pub;
     }
     bool IsRange() const override { return m_provider->IsRange(); }
@@ -2257,7 +2252,18 @@ struct KeyParser {
         : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
-        return *m_keys.at(a).at(0) < *m_keys.at(b).at(0);
+        // Hardened paths need the private keys collected while parsing.
+        const SigningProvider& sign_provider = m_out ? static_cast<const SigningProvider&>(*m_out) :
+            m_in ? *m_in : DUMMY_SIGNING_PROVIDER;
+        const PubkeyProvider& key_a = *m_keys.at(a).at(0);
+        const PubkeyProvider& key_b = *m_keys.at(b).at(0);
+        FlatSigningProvider out_a, out_b;
+        const std::optional<CPubKey> pub_a = key_a.GetPubKey(0, sign_provider, out_a);
+        const std::optional<CPubKey> pub_b = key_b.GetPubKey(0, sign_provider, out_b);
+        if (pub_a && pub_b) return *pub_a < *pub_b;
+        if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
+        // Distinct unresolvable expressions must not compare equal.
+        return key_a.ToString() < key_b.ToString();
     }
 
     ParseScriptContext ParseContext() const {
