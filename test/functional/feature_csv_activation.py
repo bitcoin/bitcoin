@@ -60,7 +60,8 @@ from test_framework.wallet import (
 )
 
 TESTING_TX_COUNT = 83  # Number of testing transactions: 1 BIP113 tx, 16 BIP68 txs, 66 BIP112 txs (see comments above)
-COINBASE_BLOCK_COUNT = TESTING_TX_COUNT  # Number of coinbase blocks we need to generate as inputs for our txs
+MTP_EDGE_CASE_INPUT_COUNT = 2  # Extra inputs for the "median-time-past can never reach UINT32_MAX" BIP113 test
+COINBASE_BLOCK_COUNT = TESTING_TX_COUNT + MTP_EDGE_CASE_INPUT_COUNT  # Number of coinbase blocks we need to generate as inputs for our txs
 BASE_RELATIVE_LOCKTIME = 10
 SEQ_DISABLE_FLAG = 1 << 31
 SEQ_RANDOM_HIGH_BIT = 1 << 25
@@ -231,13 +232,17 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # 1 normal input
         bip113input = self.send_generic_input_tx(self.coinbase_blocks)
 
+        # 2 normal inputs, used later to test that a transaction locked to UINT32_MAX can
+        # never be mined once median-time-past reaches UINT32_MAX - 1
+        mtp_edge_case_inputs = [self.send_generic_input_tx(self.coinbase_blocks) for _ in range(MTP_EDGE_CASE_INPUT_COUNT)]
+
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.generate(self.nodes[0], 1)[0]  # 1 block generated for inputs to be in chain at height 431
         self.nodes[0].setmocktime(0)
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
-        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + 1)
+        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + MTP_EDGE_CASE_INPUT_COUNT + 1)
 
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2)
@@ -473,6 +478,46 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.send_blocks([self.create_test_block(time_txs)])
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+
+        self.log.info("Test that a transaction locked to UINT32_MAX can never be mined, since MTP can never exceed UINT32_MAX")
+        UINT32_MAX = 2 ** 32 - 1
+        # Advance the node's own clock so that headers/blocks with a timestamp this far in
+        # the future aren't rejected outright for being too far ahead of adjusted time.
+        self.nodes[0].setmocktime(UINT32_MAX)
+        # setmocktime() times out the existing p2p connection, so re-add it
+        self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore())
+
+        def mtp_edge_case_tx(input_tx, locktime):
+            tx = self.create_self_transfer_from_utxo(input_tx)
+            tx.vin[0].nSequence = 0xFFFFFFFE  # not SEQUENCE_FINAL, so nLockTime is enforced
+            tx.nLockTime = locktime
+            self.miniwallet.sign_tx(tx)
+            return tx
+
+        # Mine 6 blocks at UINT32_MAX - 1 so that MTP (the median of the last 11 blocks) becomes UINT32_MAX - 1
+        for _ in range(6):
+            block = create_block(self.tip, height=self.tipheight + 1, ntime=UINT32_MAX - 1)
+            block.solve()
+            self.send_blocks([block])
+            self.tip = block.hash_int
+            self.tipheight += 1
+        assert_equal(self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['mediantime'], UINT32_MAX - 1)
+
+        # UINT32_MAX - 2 is the highest locktime that can be included in the next block:
+        # BIP113 requires nLockTime to be strictly less than the MTP of the previous block
+        max_locktime_tx = mtp_edge_case_tx(mtp_edge_case_inputs[0], UINT32_MAX - 2)
+        block = create_block(self.tip, height=self.tipheight + 1, ntime=UINT32_MAX, txlist=[max_locktime_tx])
+        block.solve()
+        self.send_blocks([block])
+        self.tip = block.hash_int
+        self.tipheight += 1
+
+        # A transaction locked to UINT32_MAX itself is never final: MTP can never exceed
+        # UINT32_MAX, so "nLockTime < MTP" can never be satisfied for nLockTime == UINT32_MAX
+        never_final_tx = mtp_edge_case_tx(mtp_edge_case_inputs[1], UINT32_MAX)
+        block = create_block(self.tip, height=self.tipheight + 1, ntime=UINT32_MAX, txlist=[never_final_tx])
+        block.solve()
+        self.send_blocks([block], success=False, reject_reason='bad-txns-nonfinal')
 
 
 if __name__ == '__main__':
