@@ -292,6 +292,16 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_witness_script)
     }
 }
 
+BOOST_AUTO_TEST_CASE(update_psbt_output_miniscript_timelock)
+{
+    for (bool has_input : {true}) { // TODO: Zero-input updates read a missing input through the checker.
+        PSBTOutputTest test{"wsh(and_v(v:pk(<KEY>),older(144)))"};
+        auto out{test.UpdateOutput(has_input)};
+        BOOST_CHECK(GetScriptForDestination(WitnessV0ScriptHash{out.witness_script}) == test.script_pubkey);
+        BOOST_CHECK(out.hd_keypaths.contains(test.pubkey));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
 {
     for (bool has_input : {false, true}) {
