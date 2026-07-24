@@ -100,6 +100,9 @@
 /* Define to the home page for this package. */
 #define CLIENT_URL "@PROJECT_HOMEPAGE_URL@"
 
+/* Define the install directory used for internal executables. */
+#define BITCOIN_LIBEXECDIR "@CMAKE_INSTALL_LIBEXECDIR@"
+
 /* Define to the version of this package. */
 #define CLIENT_VERSION_STRING "@CLIENT_VERSION_STRING@"
 

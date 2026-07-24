@@ -13,6 +13,8 @@ from test_framework.util import (
 )
 
 import platform
+import shutil
+import subprocess
 import re
 
 
@@ -84,6 +86,35 @@ class ToolBitcoinTest(BitcoinTestFramework):
             self.log.info("Ensure bitcoin recognizes -ipcbind in config file")
             append_config(node.datadir_path, ["ipcbind=unix"])
             self.test_args([], [], expect_exe="bitcoin-node")
+
+        self.log.info("Ensure installed bitcoin wrapper respects configured internal binary dir")
+        self.test_installed_internal_binary_dir()
+
+    def test_installed_internal_binary_dir(self):
+        install_root = self.nodes[0].datadir_path / "installed-wrapper"
+        bin_dir = install_root / "bin"
+        internal_dir = install_root / self.config["environment"]["CMAKE_INSTALL_LIBEXECDIR"]
+        bin_dir.mkdir(parents=True)
+        internal_dir.mkdir(parents=True)
+
+        exeext = self.config["environment"]["EXEEXT"]
+        build_dir = self.config["environment"]["BUILDDIR"]
+        bitcoin_src = self.get_binaries().paths.bitcoin_bin
+        test_src = f"{build_dir}/bin/test_bitcoin{exeext}"
+        bitcoin_dest = bin_dir / f"bitcoin{exeext}"
+        test_dest = internal_dir / f"test_bitcoin{exeext}"
+
+        shutil.copy2(bitcoin_src, bitcoin_dest)
+        shutil.copy2(test_src, test_dest)
+
+        result = subprocess.run(
+            [bitcoin_dest, "test", "--help"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert_equal(result.returncode, 0)
+        assert "test_bitcoin" in result.stderr
 
 
 def get_node_output(node):

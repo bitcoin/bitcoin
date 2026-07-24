@@ -11,6 +11,7 @@ CLIENT_BUGREPORT=@CLIENT_BUGREPORT@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@
+CMAKE_INSTALL_LIBEXECDIR=@CMAKE_INSTALL_LIBEXECDIR@
 RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 
 [components]
