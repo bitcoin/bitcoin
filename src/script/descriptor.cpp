@@ -32,6 +32,7 @@
 #include <util/vector.h>
 
 #include <algorithm>
+#include <compare>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -185,18 +186,6 @@ public:
     explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
 
     virtual ~PubkeyProvider() = default;
-
-    /** Compare two public keys represented by this provider.
-     * Used by the Miniscript descriptors to check for duplicate keys in the script.
-     */
-    bool operator<(PubkeyProvider& other) const {
-        FlatSigningProvider dummy;
-
-        std::optional<CPubKey> a = GetPubKey(0, dummy, dummy);
-        std::optional<CPubKey> b = other.GetPubKey(0, dummy, dummy);
-
-        return a < b;
-    }
 
     /** Derive a public key and put it into out.
      *  read_cache is the cache to read keys from (if not nullptr)
@@ -2264,7 +2253,19 @@ struct KeyParser {
         : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
-        return *m_keys.at(a).at(0) < *m_keys.at(b).at(0);
+        // Deriving a hardened step needs the private key, so use the provider that was filled
+        // while parsing, or the one we are inferring from, rather than an empty one.
+        const SigningProvider& provider{m_out ? *m_out : (m_in ? *m_in : DUMMY_SIGNING_PROVIDER)};
+        const PubkeyProvider& key_a{*m_keys.at(a).at(0)};
+        const PubkeyProvider& key_b{*m_keys.at(b).at(0)};
+        FlatSigningProvider out_a, out_b;
+        const std::optional<CPubKey> pub_a{key_a.GetPubKey(0, provider, out_a)};
+        const std::optional<CPubKey> pub_b{key_b.GetPubKey(0, provider, out_b)};
+        if (pub_a && pub_b) return *pub_a < *pub_b;
+        // Keys that cannot be derived sort before the ones that can, and are compared by their
+        // expression so that two different keys are not taken for duplicates.
+        if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
+        return key_a.ToString() < key_b.ToString();
     }
 
     ParseScriptContext ParseContext() const {
