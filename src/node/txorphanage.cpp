@@ -7,6 +7,7 @@
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/log.h>
@@ -161,7 +162,7 @@ class TxOrphanageImpl final : public TxOrphanage {
         * limits are exceeded, it must be that there is a peer whose DoS score > 1. */
         FeeFrac GetDosScore(TxOrphanage::Count max_peer_latency_score, TxOrphanage::Usage max_peer_memory) const
         {
-            assert(max_peer_latency_score > 0);
+            Assert(max_peer_latency_score > 0);
             assert(max_peer_memory > 0);
             const FeeFrac latency_score(m_total_latency_score, max_peer_latency_score);
             const FeeFrac mem_score(m_total_usage, max_peer_memory);
