@@ -40,22 +40,29 @@ define fetch_file
       $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(4),$(4),$(5)))
 endef
 
-# Shell script to create a source tarball in $(1)_source from local directory
-# $(1)_local_dir instead of downloading remote sources. Tarball is recreated if
-# any paths in the local directory have a newer mtime, and checksum of the
-# tarball is saved to $(1)_fetched and returned as output.
+# Create a deterministic, content-addressed source tarball from $(1)_local_dir.
+# The archive name and SHA256 are returned as output.
 define fetch_local_dir_sha256
-    if ! [ -f $($(1)_source) ] || [ -n "$$(find $($(1)_local_dir) -newer $($(1)_source) | head -n1)" ]; then \
-        mkdir -p $(dir $($(1)_source)) && \
-        $(build_TAR) -c -f $($(1)_source) -C $($(1)_local_dir) . && \
-        rm -f $($(1)_fetched); \
+    mkdir -p "$(SOURCES_PATH)/download-stamps" && \
+    archive_temp="$(SOURCES_PATH)/.$($(1)_file_name).$$$$" && \
+    cmake "-DLOCAL_DIR=$($(1)_local_dir)" "-DOUTPUT=$$archive_temp" -P "$(BASEDIR)/local_source.cmake" && \
+    archive_hash=`$(build_SHA256SUM) "$$archive_temp" | cut -d" " -f1` && \
+    archive_name=$($(1)_file_name) && \
+    archive_name=$${archive_name%.tar}-$$archive_hash.tar && \
+    archive="$(SOURCES_PATH)/$$archive_name" && \
+    if [ -f "$$archive" ] && echo "$$archive_hash  $$archive" | $(build_SHA256SUM) -c >/dev/null 2>&1; then \
+        rm -f "$$archive_temp"; \
+    else \
+        mv "$$archive_temp" "$$archive"; \
     fi && \
-    if ! [ -f $($(1)_fetched) ] || [ -n "$$(find $($(1)_source) -newer $($(1)_fetched))" ]; then \
-        mkdir -p $(dir $($(1)_fetched)) && \
-        cd $($(1)_source_dir) && \
-        $(build_SHA256SUM) $($(1)_all_sources) > $($(1)_fetched); \
+    if [ ! -f "$$archive.content-hash" ] || [ "$$(cat "$$archive.content-hash")" != "$$archive_hash" ]; then \
+        echo $$archive_hash > "$$archive.content-hash.$$$$" && \
+        mv "$$archive.content-hash.$$$$" "$$archive.content-hash"; \
     fi && \
-    cut -d" " -f1 $($(1)_fetched)
+    stamp="$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$$archive_name.hash" && \
+    (cd "$(SOURCES_PATH)" && $(build_SHA256SUM) "$$archive_name" $($(1)_extra_sources)) > "$$stamp.$$$$" && \
+    if ! cmp -s "$$stamp.$$$$" "$$stamp"; then mv "$$stamp.$$$$" "$$stamp"; else rm "$$stamp.$$$$"; fi && \
+    echo $$archive_name $$archive_hash
 endef
 
 define int_get_build_recipe_hash
@@ -65,7 +72,6 @@ $(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packa
 # use as the source of the package, and include a hash of the tarball in the
 # package id, so if directory contents change, the package and packages
 # depending on it will be rebuilt.
-$(if $($(1)_local_dir),$(eval $(1)_sha256_hash:=$(shell $(call fetch_local_dir_sha256,$(1)))))
 $(if $($(1)_local_dir),$(eval $(1)_all_file_checksums+=$($(1)_sha256_hash)))
 $(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | $(build_SHA256SUM) | cut -d" " -f1))
 endef
@@ -102,6 +108,10 @@ $(1)_source_dir:=$(SOURCES_PATH)
 # If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
 # .tar file with a friendly filename named after the directory path.
 $(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
+$(if $($(1)_local_dir),$(eval $(1)_local_source_info:=$(shell $(call fetch_local_dir_sha256,$(1)))))
+$(if $($(1)_local_dir),$(if $(filter-out 0,$(.SHELLSTATUS)),$(error Failed to create $(1) local source archive)))
+$(if $($(1)_local_dir),$(eval override $(1)_file_name:=$(word 1,$($(1)_local_source_info))))
+$(if $($(1)_local_dir),$(eval $(1)_sha256_hash:=$(word 2,$($(1)_local_source_info))))
 $(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
