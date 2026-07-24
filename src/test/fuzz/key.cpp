@@ -117,11 +117,12 @@ FUZZ_TARGET(key, .init = initialize_key)
 
     {
         const CScript tx_pubkey_script = GetScriptForRawPubKey(pubkey);
+        assert(tx_pubkey_script.IsCompressedPayToPubKey());
         assert(!tx_pubkey_script.IsPayToScriptHash());
         assert(!tx_pubkey_script.IsPayToWitnessScriptHash());
         assert(!tx_pubkey_script.IsPushOnly());
         assert(!tx_pubkey_script.IsUnspendable());
-        assert(tx_pubkey_script.HasValidOps());
+        assert(tx_pubkey_script.HasValidBaseOps());
         assert(tx_pubkey_script.size() == 35);
 
         const CScript tx_multisig_script = GetScriptForMultisig(1, {pubkey});
@@ -129,7 +130,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(!tx_multisig_script.IsPayToWitnessScriptHash());
         assert(!tx_multisig_script.IsPushOnly());
         assert(!tx_multisig_script.IsUnspendable());
-        assert(tx_multisig_script.HasValidOps());
+        assert(tx_multisig_script.HasValidBaseOps());
         assert(tx_multisig_script.size() == 37);
 
         FillableSigningProvider fillable_signing_provider;
@@ -180,6 +181,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
 
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
+        assert(script_for_destination.IsPayToPubKeyHash());
         assert(script_for_destination.size() == 25);
 
         const std::string destination_address = EncodeDestination(tx_destination);

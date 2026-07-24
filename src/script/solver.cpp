@@ -7,11 +7,11 @@
 
 #include <prevector.h>
 #include <pubkey.h>
-#include <script/interpreter.h>
 #include <script/script.h>
 
 #include <cassert>
 #include <string>
+#include <vector>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -35,11 +35,11 @@ std::string GetTxnOutputType(TxoutType t)
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
-    if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) {
+    if (script.IsUncompressedPayToPubKey()) {
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
-    if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) {
+    if (script.IsCompressedPayToPubKey()) {
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
@@ -48,11 +48,9 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 
 static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToPubKeyHash()) return false;
+    pubkeyhash = valtype(script.begin() + 3, script.begin() + 3 + HASH160_OUTPUT_SIZE);
+    return true;
 }
 
 /** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
@@ -146,7 +144,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
     if (scriptPubKey.IsPayToScriptHash())
     {
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin() + 2, scriptPubKey.begin() + 2 + HASH160_OUTPUT_SIZE);
         vSolutionsRet.push_back(hashBytes);
         return TxoutType::SCRIPTHASH;
     }
