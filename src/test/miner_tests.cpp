@@ -12,6 +12,7 @@
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <node/block_template_manager.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
 #include <node/mining_types.h>
@@ -53,7 +54,6 @@
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 
 namespace miner_tests {
@@ -70,6 +70,7 @@ struct MinerTestingSetup : public TestingSetup {
     }
     CTxMemPool& MakeMempool()
     {
+        m_node.block_template_manager.reset();
         // Delete the previous mempool to ensure with valgrind that the old
         // pointer is not accessed, when the new one should be accessed
         // instead.
@@ -82,6 +83,7 @@ struct MinerTestingSetup : public TestingSetup {
         opts.limits.cluster_size_vbytes = 1'200'000;
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
+        CreateBlockTemplateManager();
         return *m_node.mempool;
     }
     std::unique_ptr<Mining> MakeMining()
@@ -216,11 +218,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
     // Can't use the Mining interface because it needs access to m_package_feerates.
-    const auto block_package_feerates = BlockAssembler{
-        m_node.chainman->ActiveChainstate(),
-        &tx_mempool,
-        MergeMiningOptions(options, m_node.mining_args),
-    }.CreateNewBlock()->m_package_feerates;
+    const auto block_package_feerates = Assert(m_node.block_template_manager)->CreateNewTemplate(options)->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
     // parent_tx and high_fee_tx are added to the block as a package.
@@ -933,6 +931,22 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager)
+{
+    auto& block_template_manager = *Assert(m_node.block_template_manager);
+    BlockCreateOptions options;
+    options.use_mempool = false;
+    auto block_template = block_template_manager.CreateNewTemplate(options);
+    BOOST_REQUIRE(block_template);
+    const CBlock& block{block_template->block};
+    // Without the mempool the template holds only the coinbase, and the per-tx
+    // fee/sigops vectors exclude it.
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+    BOOST_CHECK(block.vtx[0]->IsCoinBase());
+    BOOST_CHECK(block_template->vTxFees.empty());
+    BOOST_CHECK(block_template->vTxSigOpsCost.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

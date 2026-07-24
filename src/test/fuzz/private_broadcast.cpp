@@ -13,6 +13,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/hasher.h>
 #include <util/overflow.h>
 #include <util/time.h>
 
@@ -22,13 +23,6 @@ struct CTransactionRefHash {
     size_t operator()(const CTransactionRef& tx) const
     {
         return static_cast<size_t>(tx->GetWitnessHash().ToUint256().GetUint64(0));
-    }
-};
-
-struct CTransactionRefComp {
-    bool operator()(const CTransactionRef& a, const CTransactionRef& b) const
-    {
-        return a->GetWitnessHash() == b->GetWitnessHash();
     }
 };
 
