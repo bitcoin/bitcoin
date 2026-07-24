@@ -1425,7 +1425,7 @@ class PSBTTest(BitcoinTestFramework):
         self.sync_all()
 
         self.log.info("Test descriptorprocesspsbt updates PSBT outputs")
-        for has_input in [True]:  # TODO: Zero-input updates abort during ECDSA sighash creation.
+        for has_input in [False, True]:
             output_psbt = self.nodes[2].createpsbt([utxo] if has_input else [], {address: 1})
             processed = self.nodes[2].descriptorprocesspsbt(psbt=output_psbt, descriptors=[descriptor], finalize=False)
             decoded = self.nodes[2].decodepsbt(processed["psbt"])
