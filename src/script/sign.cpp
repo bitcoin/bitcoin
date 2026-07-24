@@ -87,6 +87,8 @@ std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatu
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
 
+    if (!HasInput()) return std::nullopt;
+
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset
     // of data present, for now, only support signing when everything is provided.

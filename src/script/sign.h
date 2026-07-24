@@ -46,7 +46,7 @@ public:
     virtual bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const =0;
 };
 
-/** A signature creator for transactions. */
+/** A signature creator for transactions. Signing fails when input_idx has no corresponding input. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator
 {
     const CMutableTransaction& m_txto;

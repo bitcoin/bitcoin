@@ -23,6 +23,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 void initialize_script_sign()
@@ -132,6 +133,15 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
             (void)signature_creator.CreateSig(provider, vch_sig, address, script_code, sigversion);
             SignatureData sigdata;
             (void)ProduceSignature(provider, signature_creator, script_code, sigdata);
+            if (k.IsValid() && k.IsCompressed()) { // X-only lookup probes compressed key IDs
+                std::vector<CTxOut> spent_outputs(tx_to.vin.size(), CTxOut{CAmount{0}, CScript{}});
+                PrecomputedTransactionData txdata;
+                txdata.Init(tx_to, std::move(spent_outputs), /*force=*/true);
+                MutableTransactionSignatureCreator schnorr_creator{tx_to, n_in, CAmount{0}, &txdata, {.sighash_type = SIGHASH_DEFAULT}};
+                std::vector<uint8_t> schnorr_sig;
+                XOnlyPubKey xonly{k.GetPubKey()};
+                (void)schnorr_creator.CreateSchnorrSig(provider, schnorr_sig, xonly, /*leaf_hash=*/nullptr, /*merkle_root=*/nullptr, SigVersion::TAPROOT);
+            }
             std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
             std::map<int, bilingual_str> input_errors;
             (void)SignTransaction(sign_transaction_tx_to, &provider, coins, {.sighash_type = fuzzed_data_provider.ConsumeIntegral<int>()}, input_errors);
