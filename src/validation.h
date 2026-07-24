@@ -575,6 +575,13 @@ protected:
 
     std::optional<const char*> m_last_script_check_reason_logged GUARDED_BY(::cs_main){};
 
+    //! Internal helper for callers that already hold m_chainstate_mutex.
+    bool ActivateBestChain_(
+        BlockValidationState& state,
+        std::shared_ptr<const CBlock> pblock)
+        EXCLUSIVE_LOCKS_REQUIRED(m_chainstate_mutex)
+        LOCKS_EXCLUDED(::cs_main);
+
 public:
     //! Reference to a BlockManager instance which itself is shared across all
     //! Chainstate instances.

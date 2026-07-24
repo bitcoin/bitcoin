@@ -3339,11 +3339,6 @@ static void LimitValidationInterfaceQueue(ValidationSignals& signals) LOCKS_EXCL
 bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<const CBlock> pblock)
 {
     AssertLockNotHeld(m_chainstate_mutex);
-
-    // Note that while we're often called here from ProcessNewBlock, this is
-    // far from a guarantee. Things in the P2P/RPC will often end up calling
-    // us in the middle of ProcessNewBlock - do not assume pblock is set
-    // sanely for performance or correctness!
     AssertLockNotHeld(::cs_main);
 
     // ABC maintains a fair degree of expensive-to-calculate internal state
@@ -3351,6 +3346,18 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // during large connects - and to allow for e.g. the callback queue to drain
     // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
     LOCK(m_chainstate_mutex);
+    return ActivateBestChain_(state, std::move(pblock));
+}
+
+bool Chainstate::ActivateBestChain_(BlockValidationState& state, std::shared_ptr<const CBlock> pblock)
+{
+    AssertLockHeld(m_chainstate_mutex);
+
+    // Note that while we're often called here from ProcessNewBlock, this is
+    // far from a guarantee. Things in the P2P/RPC will often end up calling
+    // us in the middle of ProcessNewBlock - do not assume pblock is set
+    // sanely for performance or correctness!
+    AssertLockNotHeld(::cs_main);
 
     // Belt-and-suspenders check that we aren't attempting to advance the
     // chainstate past the target block.
