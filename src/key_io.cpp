@@ -15,9 +15,12 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <stdexcept>
 
 /// Maximum witness length for Bech32 addresses.
 static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 40;
+/// Data size for a BIP352 v0 address
+static constexpr std::size_t SILENT_PAYMENTS_V0_DATA_SIZE = 66;
 
 namespace {
 class DestinationEncoder
@@ -66,6 +69,36 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
+    std::string operator()(const V0SilentPaymentsDestination& sp) const
+    {
+        // The data_in is scan_pubkey + spend_pubkey
+        std::vector<unsigned char> data_in = {};
+        data_in.reserve(66);
+        // Set 0 as the silent payments version
+        std::vector<unsigned char> data_out = {0};
+        // ConvertBits will expand each 8-bit byte into 5-bit chunks,
+        // i.e. 1 + (66 * 8 / 5) = 106.6 -> so we reserve 107
+        data_out.reserve(107);
+
+        data_in.insert(data_in.end(), sp.GetScanPubKey().begin(), sp.GetScanPubKey().end());
+        data_in.insert(data_in.end(), sp.GetSpendPubKey().begin(), sp.GetSpendPubKey().end());
+        ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.SilentPaymentsHRP(), data_out);
+    }
+
+    std::string operator()(const UnknownSilentPaymentsDestination& sp) const
+    {
+        std::vector<unsigned char> data_in;
+        data_in.insert(data_in.end(), sp.GetScanPubKey().begin(), sp.GetScanPubKey().end());
+        data_in.insert(data_in.end(), sp.GetSpendPubKey().begin(), sp.GetSpendPubKey().end());
+        data_in.insert(data_in.end(), sp.GetExtraData().begin(), sp.GetExtraData().end());
+        std::vector<unsigned char> data_out = {static_cast<unsigned char>(sp.GetVersion())};
+        ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+        std::string result = bech32::Encode(bech32::Encoding::BECH32M, m_params.SilentPaymentsHRP(), data_out);
+        if (result.size() > bech32::CharLimit::SILENT_PAYMENTS) return {};
+        return result;
+    }
+
     std::string operator()(const WitnessUnknown& id) const
     {
         const std::vector<unsigned char>& program = id.GetWitnessProgram();
@@ -89,7 +122,9 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     error_str = "";
 
     // Note this will be false if it is a valid Bech32 address for a different network
-    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+    // BIP352 addresses are encoded using bech32m but with a higher character limit, so also check if it's a silent payments address
+    bool is_silent_payment = (ToLower(str.substr(0, params.SilentPaymentsHRP().size())) == params.SilentPaymentsHRP());
+    bool is_bech32 = is_silent_payment ? true : (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
 
     if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
         // base58-encoded Bitcoin addresses.
@@ -129,11 +164,55 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     }
 
     data.clear();
-    const auto dec = bech32::Decode(str);
+    const auto dec = bech32::Decode(str, is_silent_payment ? bech32::CharLimit::SILENT_PAYMENTS : bech32::CharLimit::BECH32);
     if (dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) {
         if (dec.data.empty()) {
             error_str = "Empty Bech32 data section";
             return CNoDestination();
+        }
+        if (is_silent_payment) {
+            if (dec.hrp != params.SilentPaymentsHRP()) {
+                error_str = strprintf("Invalid or unsupported prefix for Silent Payments address (expected %s, got %s).", params.SilentPaymentsHRP(), dec.hrp);
+                return CNoDestination();
+            }
+            if (dec.encoding != bech32::Encoding::BECH32M) {
+                error_str = "Silent Payments address must use Bech32m checksum";
+                return CNoDestination();
+            }
+            if (!ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin() + 1, dec.data.end())) {
+                return CNoDestination();
+            }
+            if (data.size() < SILENT_PAYMENTS_V0_DATA_SIZE) {
+                error_str = strprintf("Silent payments data payload is too small (expected at least %d, got %d).", SILENT_PAYMENTS_V0_DATA_SIZE, data.size());
+                return CNoDestination();
+            }
+            auto version = dec.data[0];  // retrieve the version
+            if (version >= 31) {
+                error_str = strprintf("This implementation only supports sending to Silent payments addresses v0 through v30 (got %d).", version);
+                return CNoDestination();
+            }
+            if (version == 0 && data.size() != SILENT_PAYMENTS_V0_DATA_SIZE) {
+                error_str = strprintf("Silent payments version is v0 but data is not the correct size (expected %d, got %d).", SILENT_PAYMENTS_V0_DATA_SIZE, data.size());
+                return CNoDestination();
+            }
+            CPubKey scan_pubkey{data.begin(), data.begin() + CPubKey::COMPRESSED_SIZE};
+            CPubKey spend_pubkey{data.begin() + CPubKey::COMPRESSED_SIZE, data.begin() + 2*CPubKey::COMPRESSED_SIZE};
+            try {
+                // This is a bit of a hack to disable silent payments until sending is implemented. The reason we return a valid SilentPayments Destination
+                // while also setting an error message is so that we can use DecodeDestination in the unit tests, but also have `validateaddress` fail
+                // when passed a silent payment address
+                // TODO: remove this error_str once sending support is implemented
+                error_str = strprintf("This is a valid Silent Payments v%u address, but sending support is not yet implemented.", version);
+                if (version == 0) {
+                    return V0SilentPaymentsDestination{scan_pubkey, spend_pubkey};
+                } else {
+                    std::vector<unsigned char> extra_data{data.begin() + 2 * CPubKey::COMPRESSED_SIZE, data.end()};
+                    return UnknownSilentPaymentsDestination{version, scan_pubkey, spend_pubkey, std::move(extra_data)};
+                }
+            } catch (const std::invalid_argument&) {
+                error_str = strprintf("Invalid Silent payments address");
+                return CNoDestination();
+            }
         }
         // Bech32 decoding
         if (dec.hrp != params.Bech32HRP()) {
@@ -204,7 +283,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     }
 
     // Perform Bech32 error location
-    auto res = bech32::LocateErrors(str);
+    auto res = bech32::LocateErrors(str, is_silent_payment ? bech32::CharLimit::SILENT_PAYMENTS : bech32::CharLimit::BECH32);
     error_str = res.first;
     if (error_locations) *error_locations = std::move(res.second);
     return CNoDestination();
