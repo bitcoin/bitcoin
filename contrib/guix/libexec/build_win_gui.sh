@@ -8,32 +8,8 @@ set -o errexit -o pipefail
 # shellcheck source=setup.sh
 source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 
-# Set environment variables to point the NATIVE toolchain to the right
-# includes/libs
-NATIVE_GCC="$(store_path gcc-toolchain)"
-
-# Set native toolchain
-build_CC="${NATIVE_GCC}/bin/gcc -isystem ${NATIVE_GCC}/include"
-build_CXX="${NATIVE_GCC}/bin/g++ -isystem ${NATIVE_GCC}/include/c++ -isystem ${NATIVE_GCC}/include"
-
-# Set environment variables to point the CROSS toolchain to the right
-# includes/libs for $HOST
-# Determine output paths to use in CROSS_* environment variables
-CROSS_GLIBC="$(store_path "mingw-w64-x86_64-winpthreads")"
-CROSS_GCC="$(store_path "gcc-cross-${HOST}")"
-CROSS_GCC_LIB_STORE="$(store_path "gcc-cross-${HOST}" lib)"
-CROSS_GCC_LIBS=( "${CROSS_GCC_LIB_STORE}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
-CROSS_GCC_LIB="${CROSS_GCC_LIBS[0]}" # ...we just want the first one (there should only be one)
-
-# The search path ordering is generally:
-#    1. gcc-related search paths
-#    2. libc-related search paths
-#    2. kernel-header-related search paths (not applicable to mingw-w64 hosts)
-export CROSS_C_INCLUDE_PATH="${CROSS_GCC_LIB}/include:${CROSS_GCC_LIB}/include-fixed:${CROSS_GLIBC}/include"
-export CROSS_CPLUS_INCLUDE_PATH="${CROSS_GCC}/include/c++:${CROSS_GCC}/include/c++/${HOST}:${CROSS_GCC}/include/c++/backward:${CROSS_C_INCLUDE_PATH}"
-export CROSS_LIBRARY_PATH="${CROSS_GCC_LIB_STORE}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib"
-
-check_cross_paths "${CROSS_C_INCLUDE_PATH}:${CROSS_CPLUS_INCLUDE_PATH}:${CROSS_LIBRARY_PATH}"
+# setup mingw-w64 toolchain
+mingw_w64_toolchain
 
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
