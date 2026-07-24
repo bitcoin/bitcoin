@@ -966,7 +966,9 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        if (!batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret)) {
+            return false;
+        }
         crypted_keys[pubkey.GetID()] = make_pair(pubkey, std::move(crypted_secret));
     }
 
