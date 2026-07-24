@@ -56,6 +56,8 @@ class SignalInterrupt;
 } // namespace util
 
 namespace kernel {
+class Notifications;
+
 class CBlockFileInfo
 {
 public:
@@ -484,6 +486,15 @@ public:
 
 // Calls ActivateBestChain() even if no blocks are imported.
 void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
+
+// Whether an interrupted reobfuscation left a staged key file behind and needs to be resumed.
+bool BlockReobfuscationPending(const fs::path& blocks_dir);
+
+bool ObfuscateBlocks(
+    const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
+    const fs::path& blocks_dir,
+    const std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>>& requested_key);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
