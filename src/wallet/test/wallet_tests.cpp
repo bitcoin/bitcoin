@@ -34,7 +34,9 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -125,6 +127,68 @@ BOOST_AUTO_TEST_CASE(reject_invalid_descriptor_ranges)
         BOOST_CHECK_EQUAL(results.front().error->wallet_error.message.original, expected_error);
         BOOST_CHECK(!results.front().error->is_general_error);
     }
+}
+
+namespace {
+struct EncryptionFailureSetup : TestingSetup {
+    WalletContext context;
+    FaultInjectingDatabase* fail_db{nullptr};
+    std::shared_ptr<CWallet> wallet;
+    FakeNodeClock clock; // Frozen time makes EncryptMasterKey use the default KDF iteration count
+
+    EncryptionFailureSetup()
+    {
+        context.args = &m_args;
+        m_args.ForceSetArg("-keypool", "1"); // Failure injection does not depend on keypool depth
+        context.chain = m_node.chain.get();
+        RecreateWallet(WALLET_FLAG_DESCRIPTORS);
+    }
+
+    void RecreateWallet(uint64_t create_flags)
+    {
+        if (wallet) TestUnloadWallet(std::move(wallet));
+        auto database{std::make_unique<FaultInjectingDatabase>()};
+        fail_db = database.get();
+        wallet = TestCreateWallet(std::move(database), context, create_flags);
+    }
+
+    ~EncryptionFailureSetup() { TestUnloadWallet(std::move(wallet)); }
+};
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: A failed master-key write must be reported and leave encryption retryable
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: A failed master-key write must leave the wallet unencrypted
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: A failed master-key write must not publish descriptor encryption state
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), false); // TODO: A successful retry must persist the master key
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), false); // TODO: A failed master-key write must preserve plaintext keys
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: A failed master-key write must not persist encrypted keys
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextCommit(); // The injected failure affects only the first attempt
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks; // Keep abort regressions observable
+    BOOST_CHECK_THROW(wallet->EncryptWallet("passphrase"), NonFatalCheckError); // TODO: A failed commit must return an error without aborting
+    BOOST_CHECK( wallet->HasEncryptionKeys()); // TODO: A failed commit must not publish the master key
+    BOOST_CHECK( wallet->HaveCryptedKeys()); // TODO: A failed commit must not publish encrypted descriptor keys
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY));
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase")); // TODO: Encryption must remain retryable after a failed commit
+    BOOST_CHECK( wallet->HasEncryptionKeys());
+    BOOST_CHECK( wallet->HaveCryptedKeys());
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY)); // TODO: A successful retry must persist the master key
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY)); // TODO: A successful retry must erase plaintext keys
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY)); // TODO: A successful retry must persist encrypted keys
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
