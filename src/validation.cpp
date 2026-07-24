@@ -3510,14 +3510,16 @@ bool Chainstate::ActivateBestChain_(BlockValidationState& state, std::shared_ptr
     return true;
 }
 
-bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex, bool& connected)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
+    LOCK(m_chainstate_mutex);
     {
         LOCK(cs_main);
         if (pindex->nChainWork < m_chain.Tip()->nChainWork) {
             // Nothing to do, this block is not at the tip.
+            connected = m_chain.Contains(*pindex);
             return true;
         }
         if (m_chain.Tip()->nChainWork > m_chainman.nLastPreciousChainwork) {
@@ -3538,7 +3540,9 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
         }
     }
 
-    return ActivateBestChain(state, std::shared_ptr<const CBlock>());
+    const bool activated{ActivateBestChain_(state, std::shared_ptr<const CBlock>())};
+    connected = WITH_LOCK(::cs_main, return m_chain.Contains(*pindex));
+    return activated;
 }
 
 bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const pindex)

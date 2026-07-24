@@ -917,11 +917,11 @@ public:
         return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, bool precious, std::string& reason, std::string& debug) override
     {
         if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), precious, reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -1022,9 +1022,9 @@ public:
         return state.IsValid();
     }
 
-    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    bool submitBlock(const CBlock& block_in, bool precious, std::string& reason, std::string& debug) override
     {
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
+        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), precious, reason, debug);
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
