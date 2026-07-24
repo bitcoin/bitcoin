@@ -14,6 +14,7 @@
 #include <protocol.h>
 #include <uint256.h>
 #include <util/expected.h>
+#include <util/time.h>
 #include <validationinterface.h>
 
 #include <atomic>
@@ -156,8 +157,8 @@ public:
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
 
-    /** Set the height of the best block and its time (seconds since epoch). */
-    virtual void SetBestBlock(int height, std::chrono::seconds time) = 0;
+    /// Set the height of the best block and its time.
+    virtual void SetBestBlock(int height, NodeSeconds time) = 0;
 
     /* Public for unit testing. */
     virtual void UnitTestMisbehaving(NodeId peer_id) = 0;
@@ -169,7 +170,7 @@ public:
     virtual void CheckForStaleTipAndEvictPeers() = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
-    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, NodeClock::time_point time) = 0;
 
     /**
      * Gets the set of service flags which are "desirable" for a given peer.

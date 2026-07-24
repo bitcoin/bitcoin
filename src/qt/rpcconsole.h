@@ -187,11 +187,6 @@ private:
     {
         return event > NodeClock::epoch ? GUIUtil::formatDurationStr(now - event) : tr("Never");
     }
-    /// DEPRECATED: Helper for the output of a time duration field. Inputs are UNIX epoch times.
-    QString TimeDurationField(std::chrono::seconds time_now, std::chrono::seconds time_at_event) const
-    {
-        return time_at_event.count() ? GUIUtil::formatDurationStr(time_now - time_at_event) : tr("Never");
-    }
 
     void updateWindowTitle();
 

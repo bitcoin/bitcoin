@@ -62,7 +62,7 @@ struct Announcement {
     /** Txid or wtxid that was announced. */
     const GenTxid m_gtxid;
     /** For CANDIDATE_{DELAYED,BEST,READY} the reqtime; for REQUESTED the expiry. */
-    std::chrono::microseconds m_time;
+    NodeClock::time_point m_time;
     /** What peer the request was from. */
     const NodeId m_peer;
     /** What sequence number this announcement has. */
@@ -93,7 +93,7 @@ struct Announcement {
     }
 
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
-    Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
+    Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, NodeClock::time_point reqtime,
                  SequenceNumber sequence)
         : m_gtxid(gtxid), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred) {}
 };
@@ -198,7 +198,7 @@ WaitState GetWaitState(const Announcement& ann)
 //   passed.
 // * Finding CANDIDATE_READY/BEST announcements whose reqtime is in the future (when the clock time went backwards).
 struct ByTime {};
-using ByTimeView = std::pair<WaitState, std::chrono::microseconds>;
+using ByTimeView = std::pair<WaitState, NodeClock::time_point>;
 struct ByTimeViewExtractor
 {
     using result_type = ByTimeView;
@@ -345,7 +345,7 @@ public:
         }
     }
 
-    void PostGetRequestableSanityCheck(std::chrono::microseconds now) const
+    void PostGetRequestableSanityCheck(NodeClock::time_point now) const
     {
         for (const Announcement& ann : m_index) {
             if (ann.IsWaiting()) {
@@ -479,7 +479,7 @@ private:
     //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
-    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
+    void SetTimePoint(NodeClock::time_point now, std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         if (expired) expired->clear();
 
@@ -573,7 +573,7 @@ public:
     }
 
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-                     std::chrono::microseconds reqtime)
+                     NodeClock::time_point reqtime)
     {
         // Bail out if we already have a CANDIDATE_BEST announcement for this (txhash, peer) combination. The case
         // where there is a non-CANDIDATE_BEST announcement already will be caught by the uniqueness property of the
@@ -592,7 +592,7 @@ public:
     }
 
     //! Find the GenTxids to request now from peer.
-    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
+    std::vector<GenTxid> GetRequestable(NodeId peer, NodeClock::time_point now,
                                         std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         // Move time.
@@ -621,7 +621,7 @@ public:
         return ret;
     }
 
-    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry)
+    void RequestedTx(NodeId peer, const uint256& txhash, NodeClock::time_point expiry)
     {
         auto it = m_index.get<ByPeer>().find(ByPeerView{peer, true, txhash});
         if (it == m_index.get<ByPeer>().end()) {
@@ -722,18 +722,18 @@ size_t TxRequestTracker::Size() const { return m_impl->Size(); }
 void TxRequestTracker::GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const { return m_impl->GetCandidatePeers(txhash, result_peers); }
 void TxRequestTracker::SanityCheck() const { m_impl->SanityCheck(); }
 
-void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds now) const
+void TxRequestTracker::PostGetRequestableSanityCheck(NodeClock::time_point now) const
 {
     m_impl->PostGetRequestableSanityCheck(now);
 }
 
 void TxRequestTracker::ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-                                   std::chrono::microseconds reqtime)
+                                   NodeClock::time_point reqtime)
 {
     m_impl->ReceivedInv(peer, gtxid, preferred, reqtime);
 }
 
-void TxRequestTracker::RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry)
+void TxRequestTracker::RequestedTx(NodeId peer, const uint256& txhash, NodeClock::time_point expiry)
 {
     m_impl->RequestedTx(peer, txhash, expiry);
 }
@@ -743,7 +743,7 @@ void TxRequestTracker::ReceivedResponse(NodeId peer, const uint256& txhash)
     m_impl->ReceivedResponse(peer, txhash);
 }
 
-std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now,
+std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, NodeClock::time_point now,
                                                       std::vector<std::pair<NodeId, GenTxid>>* expired)
 {
     return m_impl->GetRequestable(peer, now, expired);

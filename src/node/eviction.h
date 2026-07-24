@@ -7,6 +7,7 @@
 
 #include <node/connection_types.h>
 #include <net_permissions.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <cstdint>
@@ -19,8 +20,8 @@ struct NodeEvictionCandidate {
     NodeId id;
     NodeClock::time_point m_connected;
     NodeClock::duration m_min_ping_time;
-    std::chrono::seconds m_last_block_time;
-    std::chrono::seconds m_last_tx_time;
+    NodeClock::time_point m_last_block_time;
+    NodeClock::time_point m_last_tx_time;
     bool fRelevantServices;
     bool m_relay_txs;
     bool fBloomFilter;

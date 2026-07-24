@@ -30,7 +30,18 @@ struct NodeClock : public std::chrono::system_clock {
     static time_point now() noexcept;
     static std::time_t to_time_t(const time_point&) = delete; // unused
     static time_point from_time_t(std::time_t) = delete;      // unused
-    static constexpr time_point epoch{};
+
+    /// Default value assigned to a time point. Since C++20 this is guaranteed
+    /// to be the unix epoch time.
+    ///
+    /// Code may reference this constant and treat it as special, if an unset
+    /// variable should be represented as zero. For example, when the time
+    /// value is reported in debug logs or over RPC (see TicksSinceEpoch).
+    ///
+    /// In new code, it may be preferable to initialize an unset variable with
+    /// time_point::max or time_point::min values for more natural comparisons,
+    /// or to use std::optional.
+    static constexpr std::chrono::time_point<NodeClock, std::chrono::seconds> epoch{};
 };
 using NodeSeconds = std::chrono::time_point<NodeClock, std::chrono::seconds>;
 

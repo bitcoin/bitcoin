@@ -548,7 +548,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
         const bool currently_online{NodeClock::now() - addr.nTime < 24h};
         const auto update_interval{currently_online ? 1h : 24h};
         if (pinfo->nTime < addr.nTime - update_interval - time_penalty) {
-            pinfo->nTime = std::max(NodeSeconds{0s}, addr.nTime - time_penalty);
+            pinfo->nTime = std::max(NodeClock::epoch, addr.nTime - time_penalty);
         }
 
         // add services
@@ -574,7 +574,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
         }
     } else {
         pinfo = Create(addr, source, &nId);
-        pinfo->nTime = std::max(NodeSeconds{0s}, pinfo->nTime - time_penalty);
+        pinfo->nTime = std::max(NodeClock::epoch, pinfo->nTime - time_penalty);
     }
 
     int nUBucket = pinfo->GetNewBucket(nKey, source, m_netgroupman);
@@ -1080,10 +1080,10 @@ int AddrManImpl::CheckAddrman() const
         }
         if (info.nRandomPos < 0 || (size_t)info.nRandomPos >= vRandom.size() || vRandom[info.nRandomPos] != n)
             return -14;
-        if (info.m_last_try < NodeSeconds{0s}) {
+        if (info.m_last_try < NodeClock::epoch) {
             return -6;
         }
-        if (info.m_last_success < NodeSeconds{0s}) {
+        if (info.m_last_success < NodeClock::epoch) {
             return -8;
         }
     }
