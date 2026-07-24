@@ -602,6 +602,20 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
+    /** If an inbound peer wants tx relay and we are at capacity for those, attempt to
+     *  evict a tx-relaying inbound peer - possibly node itself, unless it is protected.
+     *  Only if no peer can be evicted, disconnect node.
+     *
+     * @param[in]   node          The node that wants to relay txs to us.
+     * @param[in]   msg_type      The message that triggered this check, for logging.
+     * @param[in]   protect_peer  Peer that is exempt from being evicted.
+     * @return                    True if the node was disconnected because no eviction candidate
+     *                            was found. If false is returned, a non-protected node may still have
+     *                            been marked for disconnection via regular eviction.
+     */
+    bool MaybeDisconnectForTxRelayCapacity(CNode& node, const std::string& msg_type,
+                                           std::optional<NodeId> protect_peer = std::nullopt);
+
     /** Handle a transaction whose result was not MempoolAcceptResult::ResultType::VALID.
      * @param[in]   first_time_failure            Whether we should consider inserting into vExtraTxnForCompact, adding
      *                                            a new orphan to resolve, or looking for a package to submit.
@@ -3782,6 +3796,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // MakeAndPushFeature(pfrom, NetMsgFeature::FOO, uint32_t{1});
         }
 
+        // If we have too many tx-relaying inbound peers, attempt to evict an existing one.
+        // Only if this fails, disconnect this peer.
+        if (MaybeDisconnectForTxRelayCapacity(pfrom, msg_type, /*protect_peer=*/pfrom.GetId())) return;
         MakeAndPushMessage(pfrom, NetMsgType::VERACK);
 
         // Potentially mark this peer as a preferred download peer.
@@ -5034,6 +5051,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             }
             pfrom.m_bloom_filter_loaded = true;
             pfrom.m_relays_txs = true;
+            MaybeDisconnectForTxRelayCapacity(pfrom, msg_type);
         }
         return;
     }
@@ -5082,6 +5100,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
         pfrom.m_bloom_filter_loaded = false;
         pfrom.m_relays_txs = true;
+        MaybeDisconnectForTxRelayCapacity(pfrom, msg_type);
         return;
     }
 
@@ -5169,6 +5188,16 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
     LogDebug(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
     if (m_banman) m_banman->Discourage(pnode.addr);
     m_connman.DisconnectNode(pnode.addr);
+    return true;
+}
+
+bool PeerManagerImpl::MaybeDisconnectForTxRelayCapacity(CNode& node, const std::string& msg_type, std::optional<NodeId> protect_peer)
+{
+    if (!node.IsInboundConn() || !node.m_relays_txs) return false;
+    if (m_connman.EvictTxPeerIfFull(protect_peer)) return false;
+
+    LogDebug(BCLog::NET, "failed to find a tx-relaying eviction candidate - connection dropped after %s message, peer=%d\n", msg_type, node.GetId());
+    node.fDisconnect = true;
     return true;
 }
 
