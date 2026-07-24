@@ -148,12 +148,12 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_write_failure, EncryptionF
 
     fail_db->FailNextWrite(DBKeys::WALLETDESCRIPTORCKEY, /*match_skip_count=*/1); // Only one write fails
     for (bool success : {false, true}) {
-        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: A failed encrypted-key write must be reported and leave encryption retryable
-        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: A failed encrypted-key write must leave the wallet unencrypted
-        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), true); // TODO: A failed encrypted-key write must not publish descriptor encryption state
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), true); // TODO: A failed encrypted-key write must not persist the master key
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), true); // TODO: A successful retry must erase plaintext keys
-        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: A failed encrypted-key write must roll back earlier encrypted-key writes
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
     }
 }
 
