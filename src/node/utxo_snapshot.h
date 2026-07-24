@@ -36,7 +36,7 @@ namespace node {
 //! before being used. Thus, new fields should be added only if needed.
 class SnapshotMetadata
 {
-    inline static const uint16_t VERSION{2};
+    static constexpr uint16_t VERSION{2};
     const std::set<uint16_t> m_supported_versions{VERSION};
     const MessageStartChars m_network_magic;
 public:

@@ -59,7 +59,7 @@ struct ScriptCompression
      * transactions, in which case this value becomes dependent on version
      * and nHeight of the enclosing transaction.
      */
-    static const unsigned int nSpecialScripts = 6;
+    static constexpr unsigned int nSpecialScripts{6};
 
     template<typename Stream>
     void Ser(Stream &s, const CScript& script) {

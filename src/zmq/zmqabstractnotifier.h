@@ -19,7 +19,7 @@ using CZMQNotifierFactory = std::function<std::unique_ptr<CZMQAbstractNotifier>(
 class CZMQAbstractNotifier
 {
 public:
-    static const int DEFAULT_ZMQ_SNDHWM {1000};
+    static constexpr int DEFAULT_ZMQ_SNDHWM {1000};
 
     virtual ~CZMQAbstractNotifier();
 
