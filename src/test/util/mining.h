@@ -11,14 +11,21 @@
 #include <vector>
 
 class CBlock;
+class CBlockHeader;
 class CBlockIndex;
 class CChainParams;
 class COutPoint;
 class CScript;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 namespace node {
 struct BlockCreateOptions;
 struct NodeContext;
 } // namespace node
+
+/** Increment the nonce until the block header satisfies proof of work. */
+void GrindBlock(CBlockHeader& block, const Consensus::Params& consensus);
 
 /** Create a blockchain, starting from genesis */
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);

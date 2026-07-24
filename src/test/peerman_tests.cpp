@@ -8,10 +8,10 @@
 #include <net_processing.h>
 #include <node/block_template_manager.h>
 #include <node/miner.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <sync.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/check.h>
@@ -36,7 +36,7 @@ static void mineBlock(node::NodeContext& node, FakeNodeClock& clock, std::chrono
     auto block_template{block_template_manager.CreateNewTemplate({})};
     BOOST_REQUIRE(block_template);
     CBlock block{block_template->block};
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
+    GrindBlock(block, node.chainman->GetConsensus());
     block.fChecked = true; // little speedup
     clock.set(curr_time); // process block at current time
     Assert(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
