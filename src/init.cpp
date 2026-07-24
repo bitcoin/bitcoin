@@ -36,6 +36,7 @@
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
+#include <ipc/types.h>
 #include <kernel/blockmanager_opts.h>
 #include <kernel/caches.h>
 #include <kernel/chainstatemanager_opts.h>
@@ -746,7 +747,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the maximum depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     if (can_listen_ipc) {
-        argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+        argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Append socat-style socket options like \",max-connections=<n>\" to set per-address listener options, for example \"unix:,max-connections=8\" or \"unix:/custom/path,max-connections=8\". If no max-connections option is specified, " + ToString(ipc::DEFAULT_MAX_CONNECTIONS) + " connection slots will be reserved per listener. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
     }
 
 #if HAVE_DECL_FORK
@@ -1054,6 +1055,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Make sure enough file descriptors are available. We need to reserve enough FDs to account for the bare minimum,
     // plus all manual connections and all bound interfaces. Any remainder will be available for connection sockets
 
+    // Keep IPC reservations far below int max so adding core and P2P
+    // reservations to the int-based min_required_fds cannot overflow.
+    constexpr size_t MAX_IPC_FDS{ipc::MAX_CONNECTIONS + 1};
+
     // Number of bound interfaces (we have at least one)
     int nBind = std::max(nUserBind, size_t(1));
     // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
@@ -1061,11 +1066,40 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (user_max_connection < 0) {
         return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
     }
+
+    // Reserve one listening socket per -ipcbind address plus its accepted
+    // connection slots. Unlike P2P, IPC has no default listener.
+    size_t ipc_addresses{0};
+    size_t ipc_max_connections{0};
+    for (const std::string& configured_address : args.GetArgs("-ipcbind")) {
+        auto listen_address{interfaces::Ipc::parseListenAddress(configured_address)};
+        if (!listen_address) {
+            return InitError(Untranslated(strprintf("Invalid -ipcbind address '%s': %s", configured_address, util::ErrorString(listen_address).original)));
+        }
+        // Check the aggregate before adding this listener so multiple
+        // individually valid -ipcbind values cannot exceed the IPC FD cap.
+        const size_t ipc_fds{ipc_addresses + ipc_max_connections};
+        if (listen_address->max_connections + 1 > MAX_IPC_FDS - ipc_fds) {
+            return InitError(Untranslated("Too many IPC file descriptors requested"));
+        }
+        ++ipc_addresses;
+        ipc_max_connections += listen_address->max_connections;
+    }
+
+    if (ipc_addresses > 0) {
+        LogInfo("Reserving %d file descriptors for IPC (%d listening sockets, %d connection slots)",
+                static_cast<int>(ipc_addresses + ipc_max_connections),
+                static_cast<int>(ipc_addresses),
+                static_cast<int>(ipc_max_connections));
+    }
+
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
-    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces
-    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind;
+
+    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus bound P2P interfaces,
+    // plus IPC listeners and their accepted connection slots.
+    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind + static_cast<int>(ipc_addresses + ipc_max_connections);
 
     // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
     available_fds = RaiseFileDescriptorLimit(user_max_connection + max_private + min_required_fds);
@@ -1522,13 +1556,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     uiInterface.InitWallet();
 
     if (interfaces::Ipc* ipc = node.init->ipc()) {
-        for (std::string address : gArgs.GetArgs("-ipcbind")) {
-            try {
-                ipc->listenAddress(address);
-            } catch (const std::exception& e) {
-                return InitError(Untranslated(strprintf("Unable to bind to IPC address '%s'. %s", address, e.what())));
+        for (const std::string& configured_address : gArgs.GetArgs("-ipcbind")) {
+            auto listen_address{interfaces::Ipc::parseListenAddress(configured_address)};
+            if (!listen_address) {
+                return InitError(Untranslated(strprintf("Invalid -ipcbind address '%s': %s", configured_address, util::ErrorString(listen_address).original)));
             }
-            LogInfo("Listening for IPC requests on address %s", address);
+            try {
+                ipc->listenAddress(*listen_address);
+            } catch (const std::exception& e) {
+                return InitError(Untranslated(strprintf("Unable to bind to IPC address '%s'. %s", configured_address, e.what())));
+            }
+            LogInfo("Listening for IPC requests on address %s", listen_address->address);
         }
     }
 
