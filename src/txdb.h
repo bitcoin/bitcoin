@@ -35,6 +35,8 @@ struct CoinsViewOptions {
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView
 {
+    friend struct CoinsViewDBTestAccess;
+
 protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
