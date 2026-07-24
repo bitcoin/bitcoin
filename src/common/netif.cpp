@@ -288,7 +288,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t)
 
 std::optional<CNetAddr> QueryDefaultGateway(Network network)
 {
-    Assume(network == NET_IPV4 || network == NET_IPV6);
+    Assume(IsClearnet(network));
 
     sa_family_t family;
     if (network == NET_IPV4) {
