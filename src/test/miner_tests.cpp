@@ -25,6 +25,7 @@
 #include <serialize.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/time.h>
@@ -139,14 +140,6 @@ static void MutateCoinbase(CBlock& block, int extra_nonce)
     block.vtx.at(0) = MakeTransactionRef(std::move(coinbase));
     block.hashMerkleRoot = BlockMerkleRoot(block);
     block.nNonce = 0;
-}
-
-static void GrindBlock(CBlock& block, const Consensus::Params& consensus)
-{
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) {
-        ++block.nNonce;
-        BOOST_REQUIRE(block.nNonce != 0);
-    }
 }
 
 static BlockCreateOptions BlockOptions()
@@ -970,7 +963,6 @@ BOOST_AUTO_TEST_SUITE_END()
 namespace miner_tests_precious {
 using miner_tests::ActiveTipHash;
 using miner_tests::BlockOptions;
-using miner_tests::GrindBlock;
 using miner_tests::MakeMining;
 using miner_tests::MutateCoinbase;
 } // namespace miner_tests_precious
