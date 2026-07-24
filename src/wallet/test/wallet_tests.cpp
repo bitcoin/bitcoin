@@ -21,6 +21,8 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -69,6 +71,68 @@ static void AddKey(CWallet& wallet, const CKey& key)
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+}
+
+namespace {
+struct EncryptionFailureSetup : TestingSetup {
+    WalletContext context;
+    FaultInjectingDatabase* fail_db{nullptr};
+    std::shared_ptr<CWallet> wallet;
+    FakeNodeClock clock; // Frozen time makes EncryptMasterKey skip its KDF benchmark rounds
+
+    EncryptionFailureSetup()
+    {
+        context.args = &m_args;
+        m_args.ForceSetArg("-keypool", "1"); // Failure injection does not depend on keypool depth
+        context.chain = m_node.chain.get();
+        RecreateWallet(WALLET_FLAG_DESCRIPTORS);
+    }
+
+    void RecreateWallet(uint64_t create_flags)
+    {
+        if (wallet) TestUnloadWallet(std::move(wallet));
+        auto database{std::make_unique<FaultInjectingDatabase>()};
+        fail_db = database.get();
+        wallet = TestCreateWallet(std::move(database), context, create_flags);
+    }
+
+    ~EncryptionFailureSetup() { TestUnloadWallet(std::move(wallet)); }
+};
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), !success); // TODO: The write failure is ignored, making the retry fail
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), true); // TODO: The failed attempt publishes encryption state
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), false); // TODO: Encryption succeeds without persisting the master key
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), false); // TODO: The failed attempt commits the plaintext-key erase
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), true); // TODO: The failed attempt commits the encrypted key
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextCommit(); // The injected failure affects only the first attempt
+    fail_db->MakeBatch(); // Batch construction must not consume the commit failure
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{}; // Keep abort regressions observable
+    BOOST_CHECK_THROW(wallet->EncryptWallet("passphrase"), NonFatalCheckError); // TODO: A local commit failure aborts the process
+    BOOST_CHECK( wallet->HasEncryptionKeys()); // TODO: The failed attempt publishes the master key
+    BOOST_CHECK( wallet->HaveCryptedKeys()); // TODO: The failed attempt publishes encrypted descriptor keys
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY));
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase")); // TODO: The published state prevents retry
+    BOOST_CHECK( wallet->HasEncryptionKeys());
+    BOOST_CHECK( wallet->HaveCryptedKeys());
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY)); // TODO: The published state prevents retry from persisting the master key
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY)); // TODO: The published state prevents retry from erasing the plaintext key
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY)); // TODO: The published state prevents retry from persisting the encrypted key
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
