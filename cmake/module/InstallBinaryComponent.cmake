@@ -28,4 +28,21 @@ function(install_binary_component component)
       COMPONENT ${component}
     )
   endif()
+  if(INSTALL_COMPLETIONS)
+    set(bash_comp ${PROJECT_SOURCE_DIR}/contrib/completions/bash/${target_name}.bash)
+    if(EXISTS ${bash_comp})
+      install(FILES ${bash_comp}
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME ${target_name}
+        COMPONENT ${component}
+      )
+    endif()
+    set(fish_comp ${PROJECT_SOURCE_DIR}/contrib/completions/fish/${target_name}.fish)
+    if(EXISTS ${fish_comp})
+      install(FILES ${fish_comp}
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/fish/vendor_completions.d
+        COMPONENT ${component}
+      )
+    endif()
+  endif()
 endfunction()
