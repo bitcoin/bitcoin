@@ -997,8 +997,6 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
             if(!new_tx) {
                 // There's some corruption here since the tx we just tried to load was already in the wallet.
-                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
-                result = DBErrors::CORRUPT;
                 return false;
             }
             value >> wtx;
@@ -1011,8 +1009,8 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
             return true;
         };
         if (!pwallet->LoadToWallet(hash, fill_wtx)) {
-            // Use std::max as fill_wtx may have already set result to CORRUPT
-            result = std::max(result, DBErrors::NEED_RESCAN);
+            err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
+            result = DBErrors::CORRUPT;
         }
         return result;
     });

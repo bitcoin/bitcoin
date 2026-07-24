@@ -67,7 +67,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
         tfm::format(std::cerr, "%s", warning.original);
     }
 
-    if (load_wallet_ret != DBErrors::LOAD_OK && load_wallet_ret != DBErrors::NONCRITICAL_ERROR && load_wallet_ret != DBErrors::NEED_RESCAN) {
+    if (load_wallet_ret != DBErrors::LOAD_OK && load_wallet_ret != DBErrors::NONCRITICAL_ERROR) {
         return nullptr;
     }
 
