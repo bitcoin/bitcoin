@@ -5,7 +5,9 @@
 #include <wallet/dump.h>
 
 #include <common/args.h>
+#include <streams.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -36,9 +38,8 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
         error = strprintf(_("File %s already exists. If you are sure this is what you want, move it out of the way first."), fs::PathToString(path));
         return false;
     }
-    std::ofstream dump_file;
-    dump_file.open(path.std_path());
-    if (dump_file.fail()) {
+    AutoFile dump_file{fsbridge::fopen(path, "w")};
+    if (dump_file.IsNull()) {
         error = strprintf(_("Unable to open %s for writing"), fs::PathToString(path));
         return false;
     }
@@ -57,8 +58,9 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
         throw_error(strprintf(_("Unable to write complete dump file %s."), fs::PathToString(path)));
     };
     auto write = [&](const std::string& line) {
-        dump_file.write(line.data(), line.size());
-        if (dump_file.fail()) {
+        try {
+            dump_file.write(MakeByteSpan(line));
+        } catch (const std::ios_base::failure&) {
             throw_write_error();
         }
     };
@@ -106,12 +108,13 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
         // Write the hash
         line = strprintf("checksum,%s\n", HexStr(hasher.GetHash()));
         write(line);
-        dump_file.close();
-        if (dump_file.fail()) throw_write_error();
+        if (!dump_file.Commit()) throw_write_error();
+        if (dump_file.fclose() != 0) throw_write_error();
+        DirectoryCommit(path.parent_path());
     } catch (const DumpWalletError& e) {
         error = e.message;
         // Remove the dumpfile on failure
-        dump_file.close();
+        (void)dump_file.fclose();
         fs::remove(path);
         return false;
     }
