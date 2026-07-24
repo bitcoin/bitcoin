@@ -39,11 +39,11 @@ void TxDownloadManager::DisconnectedPeer(NodeId nodeid)
 {
     m_impl->DisconnectedPeer(nodeid);
 }
-bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
+bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, NodeClock::time_point now)
 {
     return m_impl->AddTxAnnouncement(peer, gtxid, now);
 }
-std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, NodeClock::time_point current_time)
 {
     return m_impl->GetRequestsToSend(nodeid, current_time);
 }
@@ -167,7 +167,7 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 
 }
 
-bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
+bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, NodeClock::time_point now)
 {
     // If this is an orphan we are trying to resolve, consider this peer as a orphan resolution candidate instead.
     // - is wtxid matching something in orphanage
@@ -223,7 +223,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     return false;
 }
 
-bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now)
+bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, NodeClock::time_point now)
 {
     auto it_peer = m_peer_info.find(nodeid);
     if (it_peer == m_peer_info.end()) return false;
@@ -261,7 +261,7 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     return true;
 }
 
-std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, NodeClock::time_point current_time)
 {
     std::vector<GenTxid> requests;
     std::vector<std::pair<NodeId, GenTxid>> expired;
@@ -394,7 +394,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 std::erase_if(unique_parents, [&](const auto& txid) {
                     return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
                 });
-                const auto now{GetTime<std::chrono::microseconds>()};
+                const auto now{NodeClock::now()};
                 const auto& wtxid = ptx->GetWitnessHash();
                 // Potentially flip add_extra_compact_tx to false if tx is already in orphanage, which
                 // means it was already added to vExtraTxnForCompact.

@@ -250,8 +250,8 @@ static RPCMethod getpeerinfo()
         obj.pushKV("inv_to_send", statestats.m_inv_to_send);
         obj.pushKV("lastsend", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_send));
         obj.pushKV("lastrecv", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_recv));
-        obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
-        obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
+        obj.pushKV("last_transaction", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_tx_time));
+        obj.pushKV("last_block", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_block_time));
         obj.pushKV("bytessent", stats.nSendBytes);
         obj.pushKV("bytesrecv", stats.nRecvBytes);
         obj.pushKV("conntime", TicksSinceEpoch<std::chrono::seconds>(stats.m_connected));

@@ -163,10 +163,10 @@ public:
     /** Consider adding this tx hash to txrequest. Should be called whenever a new inv has been received.
      * Also called internally when a transaction is missing parents so that we can request them.
      */
-    bool AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now);
+    bool AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, NodeClock::time_point now);
 
     /** Get getdata requests to send. */
-    std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
+    std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, NodeClock::time_point current_time);
 
     /** Marks a tx as ReceivedResponse in txrequest. */
     void ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& gtxids);
@@ -198,7 +198,7 @@ protected:
      * this peer; add them as new invs to m_txrequest.
      * @returns whether this transaction was a valid orphan resolution candidate.
      * */
-    bool MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now);
+    bool MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, NodeClock::time_point now);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H

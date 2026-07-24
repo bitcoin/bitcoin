@@ -194,8 +194,8 @@ public:
     NodeId nodeid;
     NodeClock::time_point m_last_send;
     NodeClock::time_point m_last_recv;
-    std::chrono::seconds m_last_tx_time;
-    std::chrono::seconds m_last_block_time;
+    NodeClock::time_point m_last_tx_time;
+    NodeClock::time_point m_last_block_time;
     NodeClock::time_point m_connected;
     std::string m_addr_name;
     int nVersion;
@@ -894,13 +894,13 @@ public:
     /// preliminary validity checks and was saved to disk, even if we don't
     /// connect the block or it eventually fails to connect. Used as an inbound
     /// peer eviction criterion in CConnman::AttemptToEvictConnection.
-    std::atomic<std::chrono::seconds> m_last_block_time{0s};
+    std::atomic<NodeClock::time_point> m_last_block_time{NodeClock::epoch};
 
     /// UNIX epoch time of the last transaction received from this peer that we
     /// had not yet seen (e.g. not already received from another peer) and that
     /// was accepted into our mempool. Used as an inbound peer eviction criterion
     /// in CConnman::AttemptToEvictConnection.
-    std::atomic<std::chrono::seconds> m_last_tx_time{0s};
+    std::atomic<NodeClock::time_point> m_last_tx_time{NodeClock::epoch};
 
     /// Last measured round-trip duration. Used only for stats.
     std::atomic<NodeClock::duration> m_last_ping_time{0us};

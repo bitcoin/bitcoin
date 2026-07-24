@@ -32,13 +32,13 @@ struct TxRequestTest : BasicTestingSetup {
     void TestInterleavedScenarios();
 };
 
-constexpr std::chrono::microseconds MIN_TIME = std::chrono::microseconds::min();
-constexpr std::chrono::microseconds MAX_TIME = std::chrono::microseconds::max();
+constexpr NodeClock::time_point MIN_TIME = NodeClock::time_point::min();
+constexpr NodeClock::time_point MAX_TIME = NodeClock::time_point::max();
 constexpr std::chrono::microseconds MICROSECOND = std::chrono::microseconds{1};
 constexpr std::chrono::microseconds NO_TIME = std::chrono::microseconds{0};
 
 /** An Action is a function to call at a particular (simulated) timestamp. */
-using Action = std::pair<std::chrono::microseconds, std::function<void()>>;
+using Action = std::pair<NodeClock::time_point, std::function<void()>>;
 
 /** Object that stores actions from multiple interleaved scenarios, and data shared across them.
  *
@@ -80,11 +80,11 @@ class Scenario
 {
     FastRandomContext& m_rng;
     Runner& m_runner;
-    std::chrono::microseconds m_now;
+    NodeClock::time_point m_now;
     std::string m_testname;
 
 public:
-    Scenario(FastRandomContext& rng, Runner& runner, std::chrono::microseconds starttime) : m_rng(rng), m_runner(runner), m_now(starttime) {}
+    Scenario(FastRandomContext& rng, Runner& runner, NodeClock::time_point starttime) : m_rng(rng), m_runner(runner), m_now(starttime) {}
 
     /** Set a name for the current test, to give more clear error messages. */
     void SetTestName(std::string testname)
@@ -93,7 +93,7 @@ public:
     }
 
     /** Advance this Scenario's time; this affects the timestamps newly scheduled events get. */
-    void AdvanceTime(std::chrono::microseconds amount)
+    void AdvanceTime(NodeClock::duration amount)
     {
         assert(amount.count() >= 0);
         m_now += amount;
@@ -110,7 +110,7 @@ public:
     }
 
     /** Schedule a ReceivedInv call at the Scheduler's current time. */
-    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, std::chrono::microseconds reqtime)
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, NodeClock::time_point reqtime)
     {
         auto& runner = m_runner;
         runner.actions.emplace_back(m_now, [=, &runner]() {
@@ -130,7 +130,7 @@ public:
     }
 
     /** Schedule a RequestedTx call at the Scheduler's current time. */
-    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds exptime)
+    void RequestedTx(NodeId peer, const uint256& txhash, NodeClock::time_point exptime)
     {
         auto& runner = m_runner;
         runner.actions.emplace_back(m_now, [=, &runner]() {
@@ -255,7 +255,7 @@ public:
         return ret;
     }
 
-    std::chrono::microseconds Now() const { return m_now; }
+    NodeClock::time_point Now() const { return m_now; }
 };
 
 /** Add to scenario a test with a single tx announced by a single peer.
@@ -417,7 +417,7 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
 
     // Decide reqtimes in opposite order of the expected request order. This means that as time passes we expect the
     // to-be-requested-from-peer will change every time a subsequent reqtime is passed.
-    std::map<NodeId, std::chrono::microseconds> reqtimes;
+    std::map<NodeId, NodeClock::time_point> reqtimes;
     auto reqtime = scenario.Now();
     for (int i = peers - 1; i >= 0; --i) {
         reqtime += RandomTime8s();
@@ -717,7 +717,7 @@ void TxRequestTest::TestInterleavedScenarios()
     std::shuffle(builders.begin(), builders.end(), m_rng);
 
     Runner runner;
-    auto starttime = RandomTime1y();
+    auto starttime = NodeClock::now() + RandomTime1y();
     // Construct many scenarios, and run (up to) 10 randomly-chosen tests consecutively in each.
     while (builders.size()) {
         // Introduce some variation in the start time of each scenario, so they don't all start off

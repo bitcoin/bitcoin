@@ -177,7 +177,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
     FastRandomContext det_rand{true};
     node::TxDownloadManager txdownloadman{node::TxDownloadOptions{pool, det_rand, true}};
 
-    std::chrono::microseconds time{244466666};
+    NodeClock::time_point time{244466666us};
 
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 500) {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
@@ -301,7 +301,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
     FastRandomContext det_rand{true};
     node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{pool, det_rand, true}};
 
-    std::chrono::microseconds time{244466666};
+    NodeClock::time_point time{244466666us};
 
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 500) {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
