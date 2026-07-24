@@ -43,14 +43,14 @@ mkdir -p "$DISTSRC"
     env CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" \
     cmake -S . -B build \
           --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
-          -Werror=dev \
           -DBUILD_BENCH=OFF \
           -DBUILD_FUZZ_BINARY=OFF \
           -DBUILD_GUI=OFF \
           -DBUILD_GUI_TESTS=OFF \
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
           -DREDUCE_EXPORTS=ON \
-          -DWITH_CCACHE=OFF
+          -DWITH_CCACHE=OFF \
+          -Werror=dev
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS"

@@ -51,8 +51,8 @@ mkdir -p "$DISTSRC"
     env CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" \
     cmake -S . -B build \
           --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
-          -Werror=dev \
           -DBUILD_BENCH=OFF \
+          -DBUILD_BITCOIN_BIN=OFF \
           -DBUILD_CLI=OFF \
           -DBUILD_DAEMON=OFF \
           -DBUILD_FUZZ_BINARY=OFF \
@@ -65,7 +65,8 @@ mkdir -p "$DISTSRC"
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
           -DCMAKE_SKIP_RPATH=TRUE \
           -DREDUCE_EXPORTS=ON \
-          -DWITH_CCACHE=OFF
+          -DWITH_CCACHE=OFF \
+          -Werror=dev
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" --target bitcoin-gui bitcoin-qt
