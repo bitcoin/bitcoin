@@ -265,6 +265,17 @@ class ConfArgsTest(BitcoinTestFramework):
             ])
         self.stop_node(0)
 
+    def test_empty_addnode(self):
+        self.log.info("Test empty addnode configuration values are ignored")
+        node = self.nodes[0]
+        util.append_config(node.datadir_path, ["addnode="])
+
+        self.start_node(0)
+        util.assert_equal(node.getaddednodeinfo(), [])
+        self.stop_node(0)
+
+        node.replace_in_config([("addnode=\n", "")])
+
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
@@ -516,6 +527,7 @@ class ConfArgsTest(BitcoinTestFramework):
     def run_test(self):
         self.test_log_buffer()
         self.test_args_log()
+        self.test_empty_addnode()
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()
