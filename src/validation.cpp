@@ -814,9 +814,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
     }
 
-    // Transactions smaller than 65 non-witness bytes are not relayed to mitigate CVE-2017-12842.
-    if (::GetSerializeSize(TX_NO_WITNESS(tx)) < MIN_STANDARD_TX_NONWITNESS_SIZE)
+    // To mitigate CVE-2017-12842, transactions smaller than 65 non-witness bytes are not relayed,
+    // and BIP 54 extends this protection at consensus by making the 64-byte case invalid.
+    const auto stripped_size{::GetSerializeSize(TX_NO_WITNESS(tx))};
+    if (stripped_size == INVALID_TX_NONWITNESS_SIZE) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "txn-size-64", "Transactions with a witness-stripped size of exactly 64 bytes are invalid.");
+    } else if (stripped_size < MIN_STANDARD_TX_NONWITNESS_SIZE) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "tx-size-small");
+    }
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -894,7 +899,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, /*enforce_bip54=*/true)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -2527,6 +2532,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     std::optional<CCheckQueueControl<CScriptCheck>> control;
     if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
 
+    const bool enforce_bip54{DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)};
     std::vector<int> prevheights;
     CAmount nFees = 0;
     int nInputs = 0;
@@ -2543,7 +2549,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee, /*enforce_bip54=*/enforce_bip54)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),
@@ -4108,15 +4114,34 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
-    // Testnet4 and regtest only: Check timestamp against prev for difficulty-adjustment
-    // blocks to prevent timewarp attacks (see https://github.com/bitcoin/bitcoin/pull/15482).
-    if (consensusParams.enforce_BIP94) {
-        // Check timestamp for the first block of each difficulty adjustment
-        // interval, except the genesis block.
-        if (nHeight % consensusParams.DifficultyAdjustmentInterval() == 0) {
-            if (block.GetBlockTime() < pindexPrev->GetBlockTime() - MAX_TIMEWARP) {
-                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
-            }
+    // If the block is the first of a difficulty adjustment interval, check its timestamp against the previous
+    // one to prevent timewarp attacks (see BIP 54).
+    const int dai{static_cast<int>(consensusParams.DifficultyAdjustmentInterval())};
+    const bool is_first_block{nHeight % dai == 0};
+    if (is_first_block) {
+        std::optional<int64_t> max_timewarp;
+        if (consensusParams.enforce_BIP94) {
+            static_assert(MAX_TIMEWARP_TESTNET4 <= MAX_TIMEWARP_BIP54);
+            max_timewarp = MAX_TIMEWARP_TESTNET4;
+        } else if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)) {
+            max_timewarp = MAX_TIMEWARP_BIP54;
+        }
+        if (max_timewarp && block.GetBlockTime() < pindexPrev->GetBlockTime() - *max_timewarp) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
+        }
+    }
+
+    // Fix for the Murch-Zawy attack. See https://delvingbitcoin.org/t/zawy-s-alternating-timestamp-attack/1062 .
+    // TL;DR: the duration of a retarget period must not be negative or the difficulty adjustment limit may be exploited to unduly
+    // reduce difficulty similarly to the timewarp vulnerability. Along with the timewarp fix, this effectively makes retarget periods
+    // monotonic (modulo the timewarp fix grace period).
+    const bool is_last_block{nHeight % dai == dai - 1};
+    if (is_last_block && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)) {
+        int first_height{nHeight - dai + 1};
+        const CBlockIndex* first_block{Assert(pindexPrev->GetAncestor(first_height))};
+        if (block.GetBlockTime() < first_block->GetBlockTime()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-negative-interval",
+                                 "the last block’s timestamp in the difficulty adjustment interval is earlier than the first block’s");
         }
     }
 
@@ -4157,8 +4182,12 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                                       pindexPrev->GetMedianTimePast() :
                                       block.GetBlockTime()};
 
-    // Check that all transactions are finalized
+    // Check that no transaction is 64-byte and that all transactions are finalized.
+    const bool check_txs_size{DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)};
     for (const auto& tx : block.vtx) {
+        if (check_txs_size && GetSerializeSize(TX_NO_WITNESS(tx)) == INVALID_TX_NONWITNESS_SIZE) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-size", "block contains a 64 bytes transaction");
+        }
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final transaction");
         }
@@ -4171,6 +4200,17 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-height", "block height mismatch in coinbase");
+        }
+    }
+
+    // Make sure the coinbase transaction is timelocked to the block's height.
+    if (nHeight > 0 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)) {
+        Assert(!block.vtx.empty() && block.vtx[0] && !block.vtx[0]->vin.empty());
+        if (block.vtx[0]->nLockTime != static_cast<uint32_t>(nHeight - 1)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-locktime", "block height mismatch in coinbase nLockTime");
+        }
+        if (block.vtx[0]->vin[0].nSequence == CTxIn::SEQUENCE_FINAL) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-sequence", "locktime is disabled for coinbase");
         }
     }
 

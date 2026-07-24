@@ -21,6 +21,7 @@ from test_framework.messages import (
     tx_from_hex,
     TX_MAX_STANDARD_VERSION,
     WITNESS_SCALE_FACTOR,
+    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.script import (
     ANNEX_TAG,
@@ -1663,13 +1664,14 @@ class TaprootTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), 0)
         coinbase = CTransaction()
         coinbase.version = 1
-        coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
+        coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), MAX_SEQUENCE_NONFINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
-        assert_equal(coinbase.txid_hex, "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20")
+        assert_equal(coinbase.txid_hex, "2a8103d4574e66e8e2c746a4d40f2626ab084263b42c869d1b3c73f8341cc5d5")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.solve()
+
         self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getblockcount(), 1)
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY, self.nodesigner.getnewaddress()[2])
@@ -1875,7 +1877,7 @@ class TaprootTest(BitcoinTestFramework):
         aux = tx_test.setdefault("auxiliary", {})
         aux['fullySignedTx'] = tx.serialize().hex()
         keypath_tests.append(tx_test)
-        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "24bab662cb55a7f3bae29b559f651674c62bcc1cd442d44715c0133939107b38")
+        assert_equal(hashlib.sha256(tx.serialize()).hexdigest(), "c877e0e6ea6ebcb368bac23ccf09072c81a94d785457945d4dd277fb307e4f49")
         # Mine the spending transaction
         self.block_submit(self.nodes[0], [tx], "Spending txn", None, sigops_weight=10000, accept=True, witness=True)
 

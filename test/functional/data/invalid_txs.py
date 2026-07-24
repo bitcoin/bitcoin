@@ -115,9 +115,10 @@ class InputMissing(BadTxTemplate):
 
 # The following check prevents exploit of lack of merkle
 # tree depth commitment (CVE-2017-12842)
-class SizeTooSmall(BadTxTemplate):
-    reject_reason = "tx-size-small"
-    valid_in_block = True
+class SizeExactly64(BadTxTemplate):
+    reject_reason = "txn-size-64"
+    valid_in_block = False
+    block_reject_reason = "bad-txns-size"
 
     def get_tx(self):
         tx = CTransaction()
@@ -139,6 +140,19 @@ class ExtraWitness(BadTxTemplate):
         tx.vout.append(CTxOut(0, CScript()))
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        return tx
+
+class SizeSub64(BadTxTemplate):
+    reject_reason = "tx-size-small"
+    expect_disconnect = False
+    valid_in_block = True
+
+    def get_tx(self):
+        tx = CTransaction()
+        tx.vin.append(self.valid_txin)
+        tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 3)))))
+        assert len(tx.serialize_without_witness()) == 63
+        assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
         return tx
 
 

@@ -20,12 +20,18 @@ class TxValidationState;
 
 namespace Consensus {
 /**
+ * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
+ */
+bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs);
+
+/**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * @param[out] txfee Set to the transaction fee if successful.
+ * @param[in] enforce_bip54 Whether to perform the BIP54 sigops check.
  * Preconditions: tx.IsCoinBase() is false.
  */
-[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, bool enforce_bip54);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

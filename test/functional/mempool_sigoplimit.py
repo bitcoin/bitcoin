@@ -33,7 +33,7 @@ from test_framework.script_util import (
     keys_to_multisig_script,
     script_to_p2wsh_script,
     script_to_p2sh_script,
-    MAX_STD_LEGACY_SIGOPS,
+    MAX_TX_BIP54_SIGOPS,
     MAX_STD_P2SH_SIGOPS,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -183,7 +183,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_greater_than(2000, tx_parent.get_weight() + tx_child.get_weight())
 
     def test_legacy_sigops_stdness(self):
-        self.log.info("Test a transaction with too many legacy sigops in its inputs is non-standard.")
+        self.log.info("Test a transaction with too many legacy sigops in its inputs is invalid.")
 
         # Restart with the default settings
         self.restart_node(0)
@@ -198,26 +198,25 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # Create enough outputs to reach the sigops limit when spending them all at once.
         outpoints = []
-        for _ in range(int(MAX_STD_LEGACY_SIGOPS / MAX_STD_P2SH_SIGOPS) + 1):
+        for _ in range(int(MAX_TX_BIP54_SIGOPS / MAX_STD_P2SH_SIGOPS) + 1):
             res = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=packed_p2sh_script, amount=1_000)
             txid = int.from_bytes(bytes.fromhex(res["txid"]), byteorder="big")
             outpoints.append(COutPoint(txid, res["sent_vout"]))
         self.generate(self.nodes[0], 1)
 
-        # Spending all these outputs at once accounts for 2505 legacy sigops and is non-standard.
+        # Spending all these outputs at once accounts for 2505 legacy sigops and is invalid.
         nonstd_tx = CTransaction()
         nonstd_tx.vin = [CTxIn(op, CScript([b"", packed_redeem_script])) for op in outpoints]
         nonstd_tx.vout = [CTxOut(0, CScript([OP_RETURN, b""]))]
-        assert_raises_rpc_error(-26, "bad-txns-nonstandard-inputs, non-witness sigops exceed bip54 limit",
-                                        self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
+        assert_raises_rpc_error(-26, "bad-txns-legacy-sigops", self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
 
-        # Spending one less accounts for 2490 legacy sigops and is standard.
+        # Spending one less accounts for 2490 legacy sigops and is valid and standard.
         std_tx = deepcopy(nonstd_tx)
         std_tx.vin.pop()
         self.nodes[0].sendrawtransaction(std_tx.serialize().hex())
 
-        # Make sure the original, non-standard, transaction can be mined.
-        self.generateblock(self.nodes[0], output="raw(42)", transactions=[nonstd_tx.serialize().hex()])
+        # The invalid transaction also cannot appear in a block.
+        assert_raises_rpc_error(-25, "bad-txns-legacy-sigops", self.generateblock, self.nodes[0], "raw(42)", [nonstd_tx.serialize().hex()])
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
