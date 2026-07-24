@@ -94,8 +94,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
         install_root = self.nodes[0].datadir_path / "installed-wrapper"
         bin_dir = install_root / "bin"
         internal_dir = install_root / self.config["environment"]["CMAKE_INSTALL_LIBEXECDIR"]
-        bin_dir.mkdir(parents=True)
-        internal_dir.mkdir(parents=True)
+        bin_dir.mkdir(parents=True, exist_ok=True)
+        internal_dir.mkdir(parents=True, exist_ok=True)
 
         exeext = self.config["environment"]["EXEEXT"]
         build_dir = self.config["environment"]["BUILDDIR"]
