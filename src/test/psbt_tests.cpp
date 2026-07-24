@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_witness_script)
 
 BOOST_AUTO_TEST_CASE(update_psbt_output_miniscript_timelock)
 {
-    for (bool has_input : {true}) { // TODO: Zero-input updates read a missing input through the checker.
+    for (bool has_input : {false, true}) {
         PSBTOutputTest test{"wsh(and_v(v:pk(<KEY>),older(144)))"};
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(GetScriptForDestination(WitnessV0ScriptHash{out.witness_script}) == test.script_pubkey);

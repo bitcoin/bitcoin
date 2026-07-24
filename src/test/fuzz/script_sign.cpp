@@ -130,6 +130,8 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
             auto script_code = ConsumeScript(fuzzed_data_provider);
             auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
             (void)signature_creator.CreateSig(provider, vch_sig, address, script_code, sigversion);
+            SignatureData sigdata;
+            (void)ProduceSignature(provider, signature_creator, script_code, sigdata);
             std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
             std::map<int, bilingual_str> input_errors;
             (void)SignTransaction(sign_transaction_tx_to, &provider, coins, {.sighash_type = fuzzed_data_provider.ConsumeIntegral<int>()}, input_errors);
