@@ -520,16 +520,18 @@ public:
             };
         }
 
-        /** Parameters for child-with-parents package validation. */
+        /** Parameters for child-with-parents package validation. Also used for testsubmitpackage. */
         static ATMPArgs PackageChildWithParents(const CChainParams& chainparams, int64_t accept_time,
-                                                std::vector<COutPoint>& coins_to_uncache, const std::optional<CFeeRate>& client_maxfeerate) {
+                                                std::vector<COutPoint>& coins_to_uncache,
+                                                const std::optional<CFeeRate>& client_maxfeerate,
+                                                bool test_accept = false) {
             return ATMPArgs{/*chainparams=*/ chainparams,
                             /*accept_time=*/ accept_time,
                             /*bypass_limits=*/ false,
                             /*coins_to_uncache=*/ coins_to_uncache,
-                            /*test_accept=*/ false,
+                            /*test_accept=*/ test_accept,
                             /*allow_replacement=*/ true,
-                            /*allow_sibling_eviction=*/ false,
+                            /*allow_sibling_eviction=*/ test_accept,
                             /*package_submission=*/ true,
                             /*package_feerates=*/ true,
                             /*client_maxfeerate=*/ client_maxfeerate,
@@ -576,10 +578,10 @@ public:
               m_client_maxfeerate{client_maxfeerate}
         {
             // If we are using package feerates, we must be doing package submission.
-            // It also means sibling eviction is not permitted.
+            // Sibling eviction may still trigger in specific testing path
             if (m_package_feerates) {
                 Assume(m_package_submission);
-                Assume(!m_allow_sibling_eviction);
+                Assume(!m_allow_sibling_eviction || m_test_accept);
             }
             if (m_allow_sibling_eviction) Assume(m_allow_replacement);
         }
@@ -1393,6 +1395,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransactionInternal(const CTransa
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<int32_t>(ws.m_vsize)};
     // Tx was accepted, but not added
     if (args.m_test_accept) {
+        // Populate the would-be-replaced txs from the changeset for surfacing through the result.
+        // In real submission FinalizeSubpackage() does this; we exit before it runs.
+        if (Assume(m_subpackage.m_changeset)) {
+            for (CTxMemPool::txiter it : m_subpackage.m_changeset->GetRemovals()) {
+                m_subpackage.m_replaced_transactions.push_back(it->GetSharedTx());
+            }
+        }
         return MempoolAcceptResult::Success(std::move(m_subpackage.m_replaced_transactions), ws.m_vsize,
                                             ws.m_base_fees, effective_feerate, single_wtxid);
     }
@@ -1537,6 +1546,15 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
             package_state.Invalid(PackageValidationResult::PCKG_TX, "unspent-dust");
             results.emplace(child_wtxid, MempoolAcceptResult::Failure(child_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
+        }
+    }
+
+    // In test_accept mode, populate the would-be-replaced txs from the changeset's removals so
+    // they're visible in the per-tx results (FinalizeSubpackage handles this for real submission,
+    // but we exit before it runs).
+    if (args.m_test_accept && Assume(m_subpackage.m_changeset)) {
+        for (CTxMemPool::txiter it : m_subpackage.m_changeset->GetRemovals()) {
+            m_subpackage.m_replaced_transactions.push_back(it->GetSharedTx());
         }
     }
 
@@ -1699,7 +1717,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 // The transaction succeeded on its own and is now in the mempool. Don't include it
                 // in package validation, because its fees should only be "used" once.
-                assert(m_pool.exists(wtxid));
+                // In test_accept mode nothing is actually added; the assert only applies to real
+                // submission.
+                assert(args.m_test_accept || m_pool.exists(wtxid));
                 results_final.emplace(wtxid, single_res);
             } else if (package.size() == 1 || // If there is only one transaction, no need to retry it "as a package"
                        (single_res.m_state.GetResult() != TxValidationResult::TX_RECONSIDERABLE &&
@@ -1735,7 +1755,12 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // Make sure we haven't exceeded max mempool size.
     // Package transactions that were submitted to mempool or already in mempool may be evicted.
     // If mempool contents change, then the m_view cache is dirty. It has already been cleared above.
-    LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+    // Skipped in test_accept mode: nothing was submitted to the mempool, so there's nothing to
+    // trim and the eviction-recheck below would falsely report every package tx as "evicted"
+    // since they were never added in the first place.
+    if (!args.m_test_accept) {
+        LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+    }
 
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
@@ -1743,9 +1768,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             // We shouldn't have re-submitted if the tx result was already in results_final.
             Assume(!results_final.contains(wtxid));
             // If it was submitted, check to see if the tx is still in the mempool. It could have
-            // been evicted due to LimitMempoolSize() above.
+            // been evicted due to LimitMempoolSize() above. Eviction can't happen in test_accept
+            // mode since LimitMempoolSize was skipped; just pass the result through.
             const auto& txresult = multi_submission_result.m_tx_results.at(wtxid);
-            if (txresult.m_result_type == MempoolAcceptResult::ResultType::VALID && !m_pool.exists(wtxid)) {
+            if (!args.m_test_accept && txresult.m_result_type == MempoolAcceptResult::ResultType::VALID && !m_pool.exists(wtxid)) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
                 TxValidationState mempool_full_state;
                 mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
@@ -1755,11 +1781,11 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             }
         } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
             // Already-in-mempool transaction. Check to see if it's still there, as it could have
-            // been evicted when LimitMempoolSize() was called.
+            // been evicted when LimitMempoolSize() was called. Skipped in test_accept mode.
             Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
             Assume(!individual_results_nonfinal.contains(wtxid));
             // Query by txid to include the same-txid-different-witness ones.
-            if (!m_pool.exists(tx->GetHash())) {
+            if (!args.m_test_accept && !m_pool.exists(tx->GetHash())) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
                 TxValidationState mempool_full_state;
                 mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
@@ -1812,17 +1838,24 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 }
 
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& package, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
+                                                   const Package& package, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate,
+                                                   bool test_package_feerates)
 {
     AssertLockHeld(cs_main);
     assert(!package.empty());
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+    assert(!test_package_feerates || test_accept);
 
     std::vector<COutPoint> coins_to_uncache;
     const CChainParams& chainparams = active_chainstate.m_chainman.GetParams();
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         AssertLockHeld(cs_main);
         if (test_accept) {
+            if (test_package_feerates) {
+                // Used f.e. with testsubmitpackage to enable package evaluation
+                auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, GetTime(), coins_to_uncache, client_maxfeerate, /*test_accept=*/true);
+                return MemPoolAccept(pool, active_chainstate).AcceptPackage(package, args);
+            }
             auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache);
             return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactionsAndCleanup(package, args);
         } else {

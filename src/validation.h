@@ -284,12 +284,16 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 * @param[in]    test_accept         When true, run validation checks but don't submit to mempool.
 * @param[in]    client_maxfeerate    If exceeded by an individual transaction, rest of (sub)package evaluation is aborted.
 *                                   Only for sanity checks against local submission of transactions.
+* @param[in]    test_package_feerates If true (only honored when test_accept is true), use child-with-parents
+*                                   package feerate aggregation for fee-based policy checks. Required to make
+*                                   1p1c CPFP work in test_accept mode. Ignored when test_accept is false.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing. It is also
 * possible for the package to be partially submitted.
 */
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
+                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate,
+                                                   bool test_package_feerates = false)
                                                    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /* Mempool validation helper functions */
