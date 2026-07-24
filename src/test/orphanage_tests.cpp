@@ -15,7 +15,6 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/transaction_utils.h>
-#include <util/check.h>
 
 #include <array>
 #include <cstdint>
@@ -346,12 +345,11 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         for (auto peer{0U}; peer < global_limit; ++peer) orphanage->AddTx(txns.at(peer), peer);
 
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), 1);
-        test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
-        BOOST_CHECK_EXCEPTION(orphanage->AddTx(txns.at(2), /*peer=*/2), NonFatalCheckError, HasReason{"max_peer_latency_score > 0"}); // TODO: A zero share must not abort trimming.
-        BOOST_CHECK( orphanage->HaveTxFromPeer(txns.at(2)->GetWitnessHash(), 2)); // TODO: Trim the newly added peer.
+        BOOST_CHECK(orphanage->AddTx(txns.at(2), /*peer=*/2));
+        BOOST_CHECK(!orphanage->HaveTxFromPeer(txns.at(2)->GetWitnessHash(), 2));
 
-        BOOST_CHECK_GT(orphanage->TotalLatencyScore(), global_limit); // TODO: Trim back to the global limit.
-        BOOST_CHECK_GT(orphanage->CountAnnouncements(), global_limit); // TODO: Trim back to the global limit.
+        BOOST_CHECK_EQUAL(orphanage->TotalLatencyScore(), global_limit);
+        BOOST_CHECK_EQUAL(orphanage->CountAnnouncements(), global_limit);
     }
 
     // Test eviction of multiple transactions at a time
