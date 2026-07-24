@@ -47,6 +47,16 @@
 //! the sleep time needs to be small to avoid new sockets stalling.
 static constexpr auto SELECT_TIMEOUT{50ms};
 
+/**
+ * Maximum time to drain input after flushing an error reply and half-closing
+ * the send side. This bounds clients that do not close their side.
+ *
+ * Closing with unread input can reset the connection and hide the reply on
+ * Windows (https://github.com/bitcoin/bitcoin/issues/35632). For oversized
+ * requests the client may still be uploading when this timeout expires.
+ */
+static constexpr auto LINGERING_CLOSE_TIMEOUT{1s};
+
 //! Explicit alias for setting socket option methods.
 static constexpr int SOCKET_OPTION_TRUE{1};
 
@@ -182,9 +192,8 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
                 err_msg = "unknown error";
             }
             // Reply so the client doesn't hang waiting for the response.
-            req->WriteHeader("Connection", "close");
             // TODO: Implement specific error formatting for the REST and JSON-RPC servers responses.
-            req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, err_msg);
+            req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, err_msg, /*force_close=*/true);
         };
 
         if (auto res = g_threadpool_http.Submit(std::move(item)); !res.has_value()) {
@@ -262,6 +271,23 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 
 namespace http_bitcoin {
 using util::Split;
+
+/**
+ * Queue a parse-error reply and enable a lingering close.
+ *
+ * Runs only on the HTTP I/O thread. The send path starts the timeout and
+ * half-closes after flushing the reply; the receive path then drains to EOF.
+ */
+static void SendErrorReplyAndLingerClose(HTTPRequest& req, HTTPRemoteClient& client, HTTPStatusCode status)
+{
+    client.m_lingering_close = true;
+    // Keep the connection alive until the reply is flushed.
+    client.m_connection_busy = true;
+    // Further input is drained directly from the socket.
+    client.m_recv_buffer.clear();
+
+    req.WriteReply(status, std::span<const std::byte>{}, /*force_close=*/true);
+}
 
 std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
 {
@@ -512,7 +538,7 @@ bool HTTPRequest::LoadBody(LineReader& reader)
     }
 }
 
-void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body)
+void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body, bool force_close)
 {
     HTTPResponse res;
 
@@ -570,7 +596,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     }
 
     auto connection_header{m_headers.FindFirst("Connection")};
-    if (connection_header && ToLower(connection_header.value()) == "close") {
+    if (force_close || (connection_header && ToLower(connection_header.value()) == "close")) {
         // Might not exist already but we need to replace it, not append to it
         res.m_headers.RemoveAll("Connection");
 
@@ -892,18 +918,24 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                 // Prevent disconnect until all requests are completely handled.
                 client->m_connection_busy = true;
 
-                // Copy data from socket buffer to client receive buffer
-                client->m_recv_buffer.insert(
-                    client->m_recv_buffer.end(),
-                    buf,
-                    buf + nrecv);
+                if (client->m_lingering_close) {
+                    // Drain without parsing another request.
+                } else {
+                    // Copy data from socket buffer to client receive buffer
+                    client->m_recv_buffer.insert(
+                        client->m_recv_buffer.end(),
+                        buf,
+                        buf + nrecv);
+                }
             }
         }
         // Process as much received data as we can.
         // This executes for every client whether or not reading or writing
         // took place because it also (might) parse a request we have already
         // received and pass it to a worker thread.
-        MaybeDispatchRequestsFromClient(client);
+        if (!client->m_lingering_close) {
+            MaybeDispatchRequestsFromClient(client);
+        }
     }
 }
 
@@ -998,8 +1030,8 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
                 client->m_id,
                 e.what());
 
-            req->WriteReply(HTTP_CONTENT_TOO_LARGE);
-            client->m_disconnect = true;
+            // The client may still be uploading when the linger timeout expires.
+            SendErrorReplyAndLingerClose(*req, *client, HTTP_CONTENT_TOO_LARGE);
             return;
         } catch (const std::runtime_error& e) {
             LogDebug(
@@ -1009,9 +1041,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
                 client->m_id,
                 e.what());
 
-            // We failed to read a complete request from the buffer
-            req->WriteReply(HTTP_BAD_REQUEST);
-            client->m_disconnect = true;
+            SendErrorReplyAndLingerClose(*req, *client, HTTP_BAD_REQUEST);
             return;
         }
 
@@ -1045,6 +1075,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 void HTTPServer::DisconnectClients()
 {
     const auto now{Now<SteadySeconds>()};
+    const auto now_ms{Now<SteadyMilliseconds>()};
     size_t erased = std::erase_if(m_connected,
                                   [&](auto& client) {
                                         // First check for idle timeout. We reset the timer when we send and receive data,
@@ -1055,13 +1086,22 @@ void HTTPServer::DisconnectClients()
                                         const bool is_idle{m_rpcservertimeout.count() > 0 &&
                                                            now - client->m_idle_since.load() > m_rpcservertimeout &&
                                                            !client->m_req_busy};
+                                        const bool lingering_close_expired{
+                                            client->m_lingering_close &&
+                                            client->m_lingering_half_closed &&
+                                            now_ms >= client->m_lingering_close_deadline.load()};
 
-                                        // Disconnect this client due to error, end of communication, or idle timeout.
+                                        // Disconnect on error, EOF, idle timeout, or a stalled lingering close.
                                         // May drop unsent data if we are closing due to error.
-                                        if (client->m_disconnect || is_idle) {
+                                        if (client->m_disconnect || is_idle || lingering_close_expired) {
                                             if (is_idle) {
                                                 LogDebug(BCLog::HTTP,
                                                          "HTTP client idle timeout %s (id=%llu)",
+                                                         client->m_origin,
+                                                         client->m_id);
+                                            } else if (lingering_close_expired && !client->m_disconnect) {
+                                                LogDebug(BCLog::HTTP,
+                                                         "HTTP client lingering-close fallback timeout %s (id=%llu)",
                                                          client->m_origin,
                                                          client->m_id);
                                             }
@@ -1189,6 +1229,27 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
         // on an already-empty m_send_buffer because the connection might have just been opened.
         if (m_send_buffer.empty()) {
             m_send_ready = false;
+
+            if (m_lingering_close) {
+                // The reply is flushed. Half-close once, then drain to EOF.
+                m_connection_busy = true;
+                if (!m_lingering_half_closed) {
+                    // Arm the deadline before publishing the flag.
+                    m_lingering_close_deadline = Now<SteadyMilliseconds>() + LINGERING_CLOSE_TIMEOUT;
+                    m_lingering_half_closed = true;
+                    const int shut_ret{WITH_LOCK(m_sock_mutex, return m_sock->ShutdownSend();)};
+                    if (shut_ret != 0) {
+                        LogDebug(
+                            BCLog::HTTP,
+                            "shutdown(send) failed for client %s (id=%llu): %s; continuing drain",
+                            m_origin,
+                            m_id,
+                            NetworkErrorString(WSAGetLastError()));
+                    }
+                }
+                return true;
+            }
+
             m_connection_busy = false;
 
             // Our work is done here
