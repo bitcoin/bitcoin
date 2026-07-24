@@ -202,6 +202,9 @@ class WalletMuSigTest(BitcoinTestFramework):
         wallets, keys = self.create_wallets_and_keys_from_pattern(pat)
         self.construct_and_import_musig_descriptor_in_wallets(pat, wallets, keys, only_one_musig_wallet)
 
+        # The participant maps are keyed by the aggregate pubkey, which does not depend on the
+        # order of the participants nor on the derivation applied to the aggregate.
+        expected_participant_maps = len({tuple(sorted(musig.split(","))) for musig in MUSIG_RE.findall(pat)})
         expected_pubnonces = 0
         expected_partial_sigs = 0
         for musig in MUSIG_RE.findall(pat):
@@ -252,9 +255,9 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         dec_psbt = self.nodes[0].decodepsbt(psbt)
         assert_equal(len(dec_psbt["inputs"]), 1)
-        assert_equal(len(dec_psbt["inputs"][0]["musig2_participant_pubkeys"]), pattern.count("musig("))
+        assert_equal(len(dec_psbt["inputs"][0]["musig2_participant_pubkeys"]), expected_participant_maps)
         if has_internal:
-            assert_equal(len(dec_psbt["outputs"][1]["musig2_participant_pubkeys"]), pattern.count("musig("))
+            assert_equal(len(dec_psbt["outputs"][1]["musig2_participant_pubkeys"]), expected_participant_maps)
 
         # Check all participant pubkeys in the input and change output
         psbt_maps = [dec_psbt["inputs"][0]]
@@ -346,6 +349,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         self.test_success_case("tr(H,pk(musig/*))", "tr($H,pk(musig($0,$1,$2)/<0;1>/*))", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($3,$4,$5)/0/*)})", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(same keys different musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($1,$2)/0/*)})", scriptpath=True)
+        self.test_success_case("tr(H,and(pk(musig/*),pk(same musig, other derivation/*)))", "tr($H,and_v(v:pk(musig($0,$1,$2)/<0;1>/*),pk(musig($0,$1,$2)/<2;3>/*)))", scriptpath=True)
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})}", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})")
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})} script-path", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})", scriptpath=True, nosign_wallets=[0])
         self.test_success_case("tr(H,and(pk(musig/*),after(1)))", "tr($H,and_v(v:pk(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
