@@ -7,9 +7,11 @@
 #include <psbt.h>
 #include <script/descriptor.h>
 #include <script/script.h>
+#include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -309,6 +311,23 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
         BOOST_CHECK(out.hd_keypaths.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(schnorr_signature_creator_inputs)
+{
+    PSBTOutputTest test{"rawtr(<KEY>)"};
+    CTransaction tx_from{BuildCreditingTransaction(test.script_pubkey)};
+    CMutableTransaction tx_to{BuildSpendingTransaction(CScript(), CScriptWitness(), tx_from)};
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx_to, {tx_from.vout[0]}, /*force=*/true);
+
+    for (auto input_idx : {0U}) { // TODO: A missing input aborts during Schnorr sighash creation.
+        MutableTransactionSignatureCreator creator{tx_to, input_idx, CAmount{0}, &txdata, {.sighash_type = SIGHASH_DEFAULT}};
+        std::vector<uint8_t> sig;
+        BOOST_CHECK_EQUAL(
+            creator.CreateSchnorrSig(test.provider, sig, XOnlyPubKey{test.pubkey}, /*leaf_hash=*/nullptr, /*merkle_root=*/nullptr, SigVersion::TAPROOT),
+            input_idx == 0U);
     }
 }
 
