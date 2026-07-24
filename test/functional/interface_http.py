@@ -8,6 +8,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, str_to_b64str
 
 import http.client
+import socket
+import threading
 import time
 import urllib.parse
 
@@ -230,23 +232,37 @@ class HTTPBasicsTest (BitcoinTestFramework):
         assert_equal(response4.status, http.client.OK)
 
         conn = BitcoinHTTPConnection(self.node)
-        try:
-            # Excessive body size is invalid
-            conn.post_raw('/', f'{{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": ["{"0" * bytes_above_limit}"]}}')
-            self.log.info("Client finished sending request before connection was terminated")
-        except NETWORK_ERRORS:
-            self.log.info("Client did not finish sending request before connection was terminated")
 
-        # The server will send a 413 response and disconnect but due to a race
-        # condition, the python client may or may not read the response before
-        # detecting the broken socket (which it may still be trying to write to).
+        # Split off the send into a background thread. When the server detects
+        # the excessive size it will stop reading from the socket, but the client
+        # will continue trying to write until the backpressure eventually
+        # drops the TCP window size to 0. While the send operation is blocking until
+        # it times out, we can still receive the server's response in the foreground.
+
+        def send_excessive_body(self, conn):
+            try:
+                # Excessive body size is invalid
+                conn.post_raw('/', f'{{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": ["{"0" * bytes_above_limit}"]}}')
+                # On some platforms (e.g. Windows) the whole request may be
+                # accepted into the OS send buffer before the server disconnects.
+                # It's ok to allow that, the server-side behavior is asserted in
+                # the foreground thread via the 413 response.
+                self.log.info("Client finished sending request before connection was terminated")
+            except NETWORK_ERRORS:
+                self.log.info("Client did not finish sending request before connection was terminated")
+
+        send_thread = threading.Thread(target=send_excessive_body, args=(self, conn))
+        send_thread.start()
+
+        response5 = conn.recv_raw().decode()
+        assert "413 Content too large" in response5
+
         try:
-            response5 = conn.conn.getresponse()
-            assert_equal(response5.status, http.client.REQUEST_ENTITY_TOO_LARGE)
-            self.log.info(f"Client got expected response status {response5.status}")
-            assert conn.sock_closed()
-        except NETWORK_ERRORS:
-            self.log.info("Client did not read response before disconnecting")
+            conn.conn.sock.shutdown(socket.SHUT_RDWR)
+            self.log.info("Send thread force-closed by test framework")
+        except OSError:
+            self.log.info("Send thread was already closed by RST from server")
+        send_thread.join()
 
 
     def check_pipelining(self):
@@ -322,27 +338,41 @@ class HTTPBasicsTest (BitcoinTestFramework):
             b'3' * 10000000,
             b'"]}'
         ]
-        try:
-            conn.conn.request(
-                method='POST',
-                url='/',
-                body=iter(body_chunked),
-                headers=headers_chunked,
-                encode_chunked=True)
-            self.log.info("Client finished sending request before connection was terminated")
-        except NETWORK_ERRORS:
-            self.log.info("Client did not finish sending request before connection was terminated")
 
-        # The server will send a 413 response and disconnect but due to a race
-        # condition, the python client may or may not read the response before
-        # detecting the broken socket (which it may still be trying to write to).
+        # Split off the send into a background thread. When the server detects
+        # the excessive size it will stop reading from the socket, but the client
+        # will continue trying to write until the backpressure eventually
+        # drops the TCP window size to 0. While the send operation is blocking until
+        # it times out, we can still receive the server's response in the foreground.
+
+        def send_excessive_chunked(self, conn):
+            try:
+                conn.conn.request(
+                    method='POST',
+                    url='/',
+                    body=iter(body_chunked),
+                    headers=headers_chunked,
+                    encode_chunked=True)
+                # On some platforms (e.g. Windows) the whole request may be
+                # accepted into the OS send buffer before the server disconnects.
+                # It's ok to allow that, the server-side behavior is asserted in
+                # the foreground thread via the 413 response.
+                self.log.info("Client finished sending request before connection was terminated")
+            except NETWORK_ERRORS:
+                self.log.info("Client did not finish sending request before connection was terminated")
+
+        send_thread = threading.Thread(target=send_excessive_chunked, args=(self, conn))
+        send_thread.start()
+
+        response2 = conn.recv_raw().decode()
+        assert "413 Content too large" in response2
+
         try:
-            response2 = conn.conn.getresponse()
-            assert_equal(response2.status, http.client.REQUEST_ENTITY_TOO_LARGE)
-            self.log.info(f"Client got expected response status {response2.status}")
-            assert conn.sock_closed()
-        except NETWORK_ERRORS:
-            self.log.info("Client did not read response before disconnecting")
+            conn.conn.sock.shutdown(socket.SHUT_RDWR)
+            self.log.info("Send thread force-closed by test framework")
+        except OSError:
+            self.log.info("Send thread was already closed by RST from server")
+        send_thread.join()
 
 
     def check_idle_timeout(self):
