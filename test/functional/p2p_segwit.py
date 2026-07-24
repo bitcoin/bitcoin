@@ -1870,9 +1870,12 @@ class SegWitTest(BitcoinTestFramework):
         outputs = (MAX_SIGOP_COST // sigops_per_script) + 2
         extra_sigops_available = MAX_SIGOP_COST % sigops_per_script
         p2sh_outputs = MAX_SIGOP_COST // (sigops_per_script * WITNESS_SCALE_FACTOR) + 1
+        p2sh_witness_p2sh_input_count = p2sh_outputs - 1
+        p2sh_extra_sigops_available = (MAX_SIGOP_COST - p2sh_witness_p2sh_input_count * sigops_per_script * WITNESS_SCALE_FACTOR) // WITNESS_SCALE_FACTOR
 
         # We chose the number of checkmultisigs/checksigs to make this work:
         assert extra_sigops_available < 100  # steer clear of MAX_OPS_PER_SCRIPT
+        assert p2sh_extra_sigops_available < 100  # steer clear of MAX_OPS_PER_SCRIPT
 
         # This script, when spent with the first
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,
@@ -1884,6 +1887,7 @@ class SegWitTest(BitcoinTestFramework):
         # limit (for witness sigops).
         witness_script_justright = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * (extra_sigops_available) + [OP_ENDIF])
         script_pubkey_justright = script_to_p2wsh_script(witness_script_justright)
+        p2sh_script_justright = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG] * p2sh_extra_sigops_available + [OP_ENDIF])
 
         # First split our available utxo into a bunch of outputs
         split_value = self.utxo[0].nValue // outputs
@@ -1894,6 +1898,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vout[-2].scriptPubKey = script_pubkey_toomany
         tx.vout[-1].scriptPubKey = script_pubkey_justright
         tx.vout += [CTxOut(0, script_to_p2sh_script(witness_script)) for _ in range(p2sh_outputs)]
+        tx.vout.append(CTxOut(0, script_to_p2sh_script(p2sh_script_justright)))
 
         block_1 = self.build_next_block()
         self.update_witness_block_with_transactions(block_1, [tx])
@@ -1951,9 +1956,25 @@ class SegWitTest(BitcoinTestFramework):
         p2sh_tx = CTransaction()
         p2sh_tx.vin = [CTxIn(COutPoint(tx.txid_int, outputs + i), CScript([witness_script])) for i in range(p2sh_outputs)]
         p2sh_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        assert p2sh_outputs * sigops_per_script * WITNESS_SCALE_FACTOR > MAX_SIGOP_COST
         block_6 = self.build_next_block()
         self.update_witness_block_with_transactions(block_6, [p2sh_tx])
         test_witness_block(self.nodes[0], self.test_node, block_6, accepted=False, reason='bad-blk-sigops')
+
+        p2sh_witness_tx = CTransaction()
+        p2sh_witness_tx.vin = [CTxIn(COutPoint(tx.txid_int, outputs + i), CScript([witness_script])) for i in range(p2sh_witness_p2sh_input_count)]
+        p2sh_witness_tx.vin.append(CTxIn(COutPoint(tx.txid_int, outputs + p2sh_outputs), CScript([p2sh_script_justright])))
+        p2sh_witness_tx.vin.append(CTxIn(COutPoint(tx.txid_int, outputs - 2), b""))
+        p2sh_witness_tx.wit.vtxinwit = [CTxInWitness() for _ in p2sh_witness_tx.vin]
+        p2sh_witness_tx.wit.vtxinwit[-1].scriptWitness.stack = [witness_script_toomany]
+        p2sh_witness_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        p2sh_witness_p2sh_sigops_cost = p2sh_witness_p2sh_input_count * sigops_per_script * WITNESS_SCALE_FACTOR + p2sh_extra_sigops_available * WITNESS_SCALE_FACTOR
+        p2sh_witness_witness_sigops_cost = extra_sigops_available + 1
+        assert_equal(p2sh_witness_p2sh_sigops_cost, MAX_SIGOP_COST)
+        assert p2sh_witness_p2sh_sigops_cost + p2sh_witness_witness_sigops_cost > MAX_SIGOP_COST
+        block_7 = self.build_next_block()
+        self.update_witness_block_with_transactions(block_7, [p2sh_witness_tx])
+        test_witness_block(self.nodes[0], self.test_node, block_7, accepted=False, reason='bad-blk-sigops')
 
         # Cleanup and prep for next test
         self.utxo.pop(0)
