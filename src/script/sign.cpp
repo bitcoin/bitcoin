@@ -54,6 +54,8 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
 {
     assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0);
 
+    if (!HasInput()) return false;
+
     CKey key;
     if (!provider.GetKey(address, key))
         return false;

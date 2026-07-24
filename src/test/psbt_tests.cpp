@@ -261,7 +261,7 @@ struct PSBTOutputTest {
 
 BOOST_AUTO_TEST_CASE(update_psbt_output_keypaths)
 {
-    for (bool has_input : {true}) { // TODO: Zero-input updates abort during ECDSA sighash creation.
+    for (bool has_input : {false, true}) {
         for (const auto& descriptor : {"pkh(<KEY>)", "wpkh(<KEY>)"}) {
             PSBTOutputTest test{descriptor};
             auto out{test.UpdateOutput(has_input)};
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_keypaths)
 
 BOOST_AUTO_TEST_CASE(update_psbt_output_redeem_script)
 {
-    for (bool has_input : {true}) { // TODO: Zero-input updates abort during ECDSA sighash creation.
+    for (bool has_input : {false, true}) {
         PSBTOutputTest test{"sh(wpkh(<KEY>))"};
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(out.redeem_script == GetScriptForDestination(WitnessV0KeyHash{test.pubkey}));
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_redeem_script)
 
 BOOST_AUTO_TEST_CASE(update_psbt_output_witness_script)
 {
-    for (bool has_input : {true}) { // TODO: Zero-input updates abort during ECDSA sighash creation.
+    for (bool has_input : {false, true}) {
         PSBTOutputTest test{"wsh(pk(<KEY>))"};
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(out.witness_script == GetScriptForRawPubKey(test.pubkey));

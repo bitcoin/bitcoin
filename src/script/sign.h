@@ -8,6 +8,7 @@
 
 #include <attributes.h>
 #include <consensus/amount.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
@@ -22,13 +23,9 @@
 #include <utility>
 #include <vector>
 
-class COutPoint;
-class CTxIn;
-class CTxOut;
 class Coin;
 
 struct bilingual_str;
-struct CMutableTransaction;
 struct SignatureData;
 
 struct SignOptions {
@@ -59,6 +56,7 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
+    bool HasInput() const { return nIn < m_txto.vin.size(); }
     std::optional<uint256> ComputeSchnorrSignatureHash(const uint256* leaf_hash, SigVersion sigversion) const;
 
 public:
