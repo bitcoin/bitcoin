@@ -15,13 +15,16 @@ class uint256;
 namespace interfaces {
 class Chain;
 }
+namespace txindex_tests {
+class TxIndexTest;
+}
 
 static constexpr bool DEFAULT_TXINDEX{false};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
- * The index is written to a LevelDB database and records the filesystem
- * location of each transaction by transaction hash.
+ * The index is written to a LevelDB database and records the block sequence
+ * number and serialized block offset of each transaction by transaction hash.
  */
 class TxIndex final : public BaseIndex
 {
@@ -29,6 +32,7 @@ protected:
     class DB;
 
 private:
+    friend class txindex_tests::TxIndexTest;
     const std::unique_ptr<DB> m_db;
 
     bool AllowPrune() const override { return false; }
@@ -48,10 +52,10 @@ public:
     /// Look up a transaction by hash.
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.
-    /// @param[out]  block_hash  The hash of the block the transaction is found in.
-    /// @param[out]  tx  The transaction itself.
+    /// @param[out]  block_hash  The hash of the block the transaction is found in. Undefined if false is returned.
+    /// @param[out]  tx  The transaction itself. Undefined if false is returned.
     /// @return  true if transaction is found, false otherwise
-    bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
+    [[nodiscard]] bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.
