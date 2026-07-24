@@ -449,7 +449,7 @@ void TxOrphanageImpl::LimitOrphans()
 
     // Even though it's possible for MaxPeerLatencyScore to increase within this call to LimitOrphans
     // (e.g. if a peer's orphans are removed entirely, changing the number of peers), use consistent limits throughout.
-    const auto max_lat{MaxPeerLatencyScore()};
+    const auto max_lat{std::max<TxOrphanage::Count>(MaxPeerLatencyScore(), 1)};
     const auto max_mem{ReservedPeerUsage()};
 
     // We have exceeded the global limit(s). Now, identify who is using too much and evict their orphans.
@@ -459,7 +459,7 @@ void TxOrphanageImpl::LimitOrphans()
     for (const auto& [nodeid, entry] : m_peer_orphanage_info) {
         // Performance optimization: only consider peers with a DoS score > 1.
         const auto dos_score = entry.GetDosScore(max_lat, max_mem);
-        if (ByRatio{dos_score} > ByRatio{FeeFrac{1, 1}}) {
+        if (ByRatio{dos_score} >= ByRatio{FeeFrac{1, 1}}) {
             heap_peer_dos.emplace_back(nodeid, dos_score);
         }
     }
@@ -489,7 +489,7 @@ void TxOrphanageImpl::LimitOrphans()
         heap_peer_dos.pop_back();
 
         // If needs trim, then at least one peer has a DoS score higher than 1.
-        Assume(ByRatio{dos_score} > ByRatio{FeeFrac(1, 1)});
+        Assume(ByRatio{dos_score} >= ByRatio{FeeFrac(1, 1)});
 
         auto it_worst_peer = m_peer_orphanage_info.find(worst_peer);
 
