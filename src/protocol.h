@@ -268,6 +268,27 @@ inline constexpr const char* SENDTXRCNCL{"sendtxrcncl"};
  * BIP 434 Peer feature negotiation
  */
 inline constexpr const char* FEATURE{"feature"};
+/**
+ * Contains a 4-byte local reconciliation set size and 4-byte q-coefficient
+ * sent to initiate a transaction reconciliation round.
+ * Peer should respond with "sketch" message constructed using these arguments.
+ */
+inline constexpr const char* REQTXRCNCL{"reqtxrcncl"};
+/**
+ * Contains a sketch of the local reconciliation set,
+ * used to efficiently reconcile transactions.
+ * Peer should respond with "reconcildiff" or "reqsketchext" message.
+ */
+inline constexpr const char* SKETCH{"sketch"};
+/**
+ * Indicates whether ongoing reconciliation has succeeded,
+ * and requests the missing transactions by short ids.
+ */
+inline constexpr const char* RECONCILDIFF{"reconcildiff"};
+/**
+ * Requests a sketch extension for ongoing reconciliation.
+ */
+inline constexpr const char* REQSKETCHEXT{"reqsketchext"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -308,6 +329,10 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
     NetMsgType::FEATURE,
+    NetMsgType::REQTXRCNCL,
+    NetMsgType::SKETCH,
+    NetMsgType::RECONCILDIFF,
+    NetMsgType::REQSKETCHEXT,
 })};
 
 static constexpr size_t MAX_FEATUREID_LENGTH{80};

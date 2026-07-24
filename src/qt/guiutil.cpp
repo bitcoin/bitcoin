@@ -711,8 +711,9 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     }
     switch (conn_type) {
     case ConnectionType::INBOUND: return prefix;
-    //: Peer connection type that relays all network information.
+    //: Peer connection types that relay all network information.
     case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
+    case ConnectionType::OUTBOUND_FULL_RECONCILIATION: return prefix + QObject::tr("Full Reconciliation");
     /*: Peer connection type that relays network information about
         blocks and not transactions or addresses. */
     case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
