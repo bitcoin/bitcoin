@@ -206,6 +206,12 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
         }
         throw std::runtime_error("execvp returned unexpectedly");
     };
+    auto build_exec_path = [](const fs::path& base, const fs::path& subdir, const fs::path& filename) {
+        fs::path exe_path{base};
+        exe_path /= subdir;
+        exe_path /= filename;
+        return exe_path;
+    };
 
     // Get the wrapper executable path.
     const fs::path wrapper_path{util::GetExePath(wrapper_argv0)};
@@ -218,6 +224,7 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
 
     // Get path of the executable to be invoked.
     const fs::path arg0{fs::PathFromString(args[0])};
+    const fs::path internal_bindir{fs::PathFromString(BITCOIN_LIBEXECDIR)};
 
     // Decide whether to fall back to the operating system to search for the
     // specified executable. Avoid doing this if it looks like the wrapper
@@ -227,8 +234,8 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
     const bool fallback_os_search{!fs::PathFromString(std::string{wrapper_argv0}).has_parent_path()};
 
     // If wrapper is installed in a bin/ directory, look for target executable
-    // in libexec/
-    (wrapper_dir.filename() == "bin" && try_exec(wrapper_dir.parent_path() / "libexec" / arg0.filename())) ||
+    // in the configured install directory for internal executables.
+    (wrapper_dir.filename() == "bin" && try_exec(build_exec_path(wrapper_dir.parent_path(), internal_bindir, arg0.filename()))) ||
 #ifdef WIN32
     // Otherwise check the "daemon" subdirectory in a windows install.
     (!wrapper_dir.empty() && try_exec(wrapper_dir / "daemon" / arg0.filename())) ||
