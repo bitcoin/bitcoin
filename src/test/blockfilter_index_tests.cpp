@@ -10,9 +10,10 @@
 #include <index/base.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
-#include <interfaces/mining.h>
 #include <key.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -89,12 +90,12 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey)
 {
-    auto mining{interfaces::MakeMining(m_node)};
-    auto block_template{mining->createNewBlock({
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    auto block_template{block_template_manager.CreateNewTemplate({
         .coinbase_output_script = scriptPubKey,
-    }, /*cooldown=*/false)};
+    })};
     BOOST_REQUIRE(block_template);
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block};
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
 
