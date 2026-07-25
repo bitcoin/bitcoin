@@ -1071,7 +1071,7 @@ BOOST_FIXTURE_TEST_CASE(coins_db_cursor_resize, BasicTestingSetup)
 {
     CCoinsViewDB db{{.path = m_args.GetDataDirBase() / "coins_db_cursor_resize", .cache_bytes = 1_MiB, .wipe_data = true}, {}};
     auto cursor{WITH_LOCK(::cs_main, return db.Cursor())};
-    BOOST_CHECK( CoinsViewDBTestAccess::TryExclusiveLock(db)); // TODO: Cursor does not hold the DB mutex
+    BOOST_CHECK(!CoinsViewDBTestAccess::TryExclusiveLock(db));
     // Keep the cursor's DB alive to observe the resize without a LevelDB abort
     auto old_db{CoinsViewDBTestAccess::RetainOldDB(db, m_args.GetDataDirBase() / "coins_db_cursor_resize_new")};
 
@@ -1083,7 +1083,7 @@ BOOST_FIXTURE_TEST_CASE(coins_db_cursor_resize, BasicTestingSetup)
     auto status{resize.wait_for(100ms)};
     cursor.reset(); // Let ResizeCache() finish
     resize.get();
-    BOOST_CHECK_EQUAL(status, std::future_status::ready); // TODO: ResizeCache() replaces m_db while a cursor is live
+    BOOST_CHECK_EQUAL(status, std::future_status::timeout);
 }
 
 BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
