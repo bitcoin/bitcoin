@@ -399,8 +399,16 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, gsl::not_nul
     }
 
     CQuorumPtr pQuorum;
-    if (LOCK(cs_map_quorums); mapQuorumsCache[llmqType].get(quorumHash, pQuorum)) {
-        return pQuorum;
+    {
+        // Defence-in-depth: mapQuorumsCache only holds the LLMQ types InitQuorumsCache() seeded
+        // from the chain's consensus params. operator[] on any other type would insert a
+        // default-constructed, zero-capacity cache and abort in its constructor, so look up
+        // without inserting and fall through for unknown types.
+        LOCK(cs_map_quorums);
+        auto it = mapQuorumsCache.find(llmqType);
+        if (it != mapQuorumsCache.end() && it->second.get(quorumHash, pQuorum)) {
+            return pQuorum;
+        }
     }
 
     return BuildQuorumFromCommitment(llmqType, pQuorumBaseBlockIndex, populate_cache);
@@ -530,7 +538,10 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
 
         CQuorumPtr pQuorum;
         {
-            if (LOCK(cs_map_quorums); !mapQuorumsCache[request.GetLLMQType()].get(request.GetQuorumHash(), pQuorum)) {
+            // See GetQuorum(): never operator[] this map with a wire-supplied LLMQ type.
+            LOCK(cs_map_quorums);
+            auto it = mapQuorumsCache.find(request.GetLLMQType());
+            if (it == mapQuorumsCache.end() || !it->second.get(request.GetQuorumHash(), pQuorum)) {
                 // Don't bump score because we asked for it
                 LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: Quorum not found, from peer=%d\n", __func__, msg_type, pfrom.GetId());
                 return {};

@@ -332,6 +332,17 @@ void CSigSharesManager::ProcessMessage(const CNode& pfrom, const std::string& ms
         }
 
         for (const auto& sigShare : receivedSigShares) {
+            // The LLMQ type comes straight off the wire as an unvalidated uint8_t. Reject types
+            // this chain doesn't register before touching ProcessMessageSigShare(): the quorum
+            // caches are keyed by LLMQ type and only pre-seeded for Params().GetConsensus().llmqs,
+            // so an unknown type would default-construct a zero-capacity cache and abort the node.
+            // The sibling handlers (QSIGREC, QSIGSESANN, QFCOMMITMENT, QGETDATA) gate the same way.
+            if (!Params().GetLLMQ(sigShare.getLlmqType()).has_value()) {
+                LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- invalid llmqType[%d] from peer=%d\n", __func__,
+                         ToUnderlying(sigShare.getLlmqType()), pfrom.GetId());
+                BanNode(pfrom.GetId());
+                return;
+            }
             ProcessMessageSigShare(pfrom.GetId(), sigShare);
         }
     }

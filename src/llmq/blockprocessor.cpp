@@ -502,14 +502,31 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& l
 bool CQuorumBlockProcessor::HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     bool fExists;
-    if (LOCK(minableCommitmentsCs); mapHasMinedCommitmentCache[llmqType].get(quorumHash, fExists)) {
-        return fExists;
+    {
+        // Defence-in-depth: this map is only pre-seeded by InitQuorumsCache() with the LLMQ types
+        // from the chain's consensus params. operator[] with any other type would insert a
+        // default-constructed, zero-capacity cache and abort in its constructor, so treat an
+        // unregistered type as "no mined commitment" rather than indexing the map.
+        LOCK(minableCommitmentsCs);
+        auto it = mapHasMinedCommitmentCache.find(llmqType);
+        if (it == mapHasMinedCommitmentCache.end()) {
+            return false;
+        }
+        if (it->second.get(quorumHash, fExists)) {
+            return fExists;
+        }
     }
 
     fExists = m_evoDb.Exists(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash)));
 
-    LOCK(minableCommitmentsCs);
-    mapHasMinedCommitmentCache[llmqType].insert(quorumHash, fExists);
+    {
+        LOCK(minableCommitmentsCs);
+        // The key set is fixed at construction, so this can only miss if the type was unregistered,
+        // which the check above already returned on.
+        if (auto it = mapHasMinedCommitmentCache.find(llmqType); it != mapHasMinedCommitmentCache.end()) {
+            it->second.insert(quorumHash, fExists);
+        }
+    }
 
     return fExists;
 }
