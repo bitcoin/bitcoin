@@ -2365,6 +2365,14 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
 
 void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
 {
+    // First perform the stateless checks:
+    // A filtered-block can only ever be requested if we offer NODE_BLOOM
+    if (inv.IsMsgFilteredBlk() && !(peer.m_our_services & NODE_BLOOM)) {
+        LogDebug(BCLog::NET, "filtered block request received when NODE_BLOOM service disabled, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
     std::shared_ptr<const CBlock> a_recent_block;
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
     {
