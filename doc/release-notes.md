@@ -1,8 +1,10 @@
 # Dash Core version v23.1.8
 
-This is a new patch version release, bringing further hardening of the
-peer-to-peer message handlers along with networking, RPC and build fixes.
-This release is **recommended** for all nodes, and especially for masternodes.
+This is a new patch version release, fixing three remotely reachable crashes and
+bringing further hardening of the peer-to-peer message handlers along with
+networking, RPC and build fixes.
+Upgrading is **strongly recommended** for all nodes, and required for
+masternodes.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -25,6 +27,31 @@ Downgrading to a version older than v23.0.0 is not supported, and will
 require a reindex.
 
 # Release Notes
+
+## Critical fixes
+
+This release fixes three crashes that a remote party could trigger. None of
+them affect consensus rules or put funds at risk, but each one can take a node
+offline, so all operators should upgrade promptly.
+
+- Fixed a crash while removing provider transactions that a masternode's
+  operator-key change invalidates. Those transactions are collected before any
+  of them are removed, so when one was an in-mempool descendant of another it
+  was already erased along with its ancestor, and the stale entry was then
+  dereferenced. Such entries are now skipped. This is reachable whenever a block
+  carries a provider registrar update or revocation for a masternode that has
+  chained service updates pending in the mempool.
+- Fixed a crash caused by an unvalidated LLMQ type in a `qsigshare` message. A
+  masternode that received a signature share naming an LLMQ type its chain does
+  not register would index a per-type quorum cache that is only populated for
+  known types, aborting the process. Unregistered types are now rejected before
+  the lookup, and the affected cache lookups no longer create missing entries.
+- Fixed a crash caused by a quorum commitment naming a block with no parent,
+  such as the genesis block. The parentless block index reached a non-null
+  precondition and terminated the process instead of failing validation, which
+  no exception handler could contain. Commitments with a parentless quorum base
+  block are now rejected, and the LLMQ activation check treats a null
+  predecessor as "not enabled" rather than a contract violation.
 
 ## Security
 
