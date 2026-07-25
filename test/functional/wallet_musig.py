@@ -263,6 +263,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         psbt_maps = [dec_psbt["inputs"][0]]
         if has_internal:
             psbt_maps.append(dec_psbt["outputs"][1])
+        origin_paths = {ORIGIN_PATH_RE.search(pub).group(1) for _, pub in keys}
         for psbt_map in psbt_maps:
             part_pks = set()
             for agg in psbt_map["musig2_participant_pubkeys"]:
@@ -270,9 +271,13 @@ class WalletMuSigTest(BitcoinTestFramework):
                     part_pks.add(part_pub[2:])
             # Check that there are as many participants as we expected
             assert_equal(len(part_pks), len(keys))
-            # Check that each participant has a derivation path
+            # Check that each participant has a derivation path, and that its origin appears in
+            # that path just once no matter how many musig() expressions the participant is in
             for deriv_path in psbt_map["taproot_bip32_derivs"]:
                 if deriv_path["pubkey"] in part_pks:
+                    origin = next((o for o in origin_paths if deriv_path["path"].startswith(f"m{o}")), None)
+                    assert origin is not None, deriv_path["path"]
+                    assert_equal(deriv_path["path"].count(origin), 1)
                     part_pks.remove(deriv_path["pubkey"])
             assert_equal(len(part_pks), 0)
 
