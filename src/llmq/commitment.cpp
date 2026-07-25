@@ -31,7 +31,6 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 bool CFinalCommitment::VerifySignatureAsync(const llmq::UtilParameters& util_params,
                                             CCheckQueueControl<utils::BlsCheck>* queue_control) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, util_params);
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid llmqType=%d\n", quorumHash.ToString(),
@@ -39,6 +38,19 @@ bool CFinalCommitment::VerifySignatureAsync(const llmq::UtilParameters& util_par
         return false;
     }
     const auto& llmq_params = llmq_params_opt.value();
+
+    // Reachable directly from CQuorumBlockProcessor::ProcessBlock(), not only via Verify(), so
+    // repeat its parentless-base check here.
+    if (util_params.m_base_index->pprev == nullptr) {
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] parentless quorum base block\n", quorumHash.ToString());
+        return false;
+    }
+
+    auto members = utils::GetAllQuorumMembers(llmqType, util_params);
+    if (llmq_params.is_single_member() && members.empty()) {
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] no quorum members\n", quorumHash.ToString());
+        return false;
+    }
 
     uint256 commitmentHash = BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey,
                                                  quorumVvecHash);
@@ -102,6 +114,14 @@ bool CFinalCommitment::Verify(const llmq::UtilParameters& util_params, bool chec
         return false;
     }
     const auto& llmq_params = llmq_params_opt.value();
+
+    // A quorum base block must have a parent; genesis can never host a quorum. quorumHash is
+    // attacker-supplied (a mined commitment or an unsolicited qfcommit), and the members lookup
+    // below dereferences m_base_index->pprev, so reject it explicitly here.
+    if (util_params.m_base_index->pprev == nullptr) {
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] parentless quorum base block\n", quorumHash.ToString());
+        return false;
+    }
 
     const uint16_t expected_nversion{
         CFinalCommitment::GetVersion(IsQuorumRotationEnabled(llmq_params, util_params.m_base_index),

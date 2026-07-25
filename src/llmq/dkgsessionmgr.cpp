@@ -235,6 +235,12 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
             return MisbehavingError{10};
         }
 
+        // Genesis (or any parentless index) is never a valid quorum base.
+        if (pQuorumBaseBlockIndex->pprev == nullptr) {
+            LogPrintf("CDKGSessionManager -- parentless quorumHash %s\n", quorumHash.ToString());
+            return MisbehavingError{100};
+        }
+
         if (!m_chainman.IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             return MisbehavingError{100};

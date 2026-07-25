@@ -6064,10 +6064,17 @@ bool ChainstateManager::IsSnapshotActive() const
 }
 
 bool ChainstateManager::IsQuorumTypeEnabled(const Consensus::LLMQType llmqType,
-                                            gsl::not_null<const CBlockIndex*> pindexPrev,
+                                            const CBlockIndex* pindexPrev,
                                             std::optional<bool> optDIP0024IsActive,
                                             std::optional<bool> optHaveDIP0024Quorums) const
 {
+    // A parentless block index (i.e. genesis) has no prior height at which any LLMQ type could
+    // have activated, so nothing is enabled. This matches the behaviour before pindexPrev was
+    // hardened to gsl::not_null, when DeploymentActiveAfter(nullptr, ...) simply returned false.
+    if (pindexPrev == nullptr) {
+        return false;
+    }
+
     constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
 
     const bool fDIP0024IsActive{optDIP0024IsActive.value_or(

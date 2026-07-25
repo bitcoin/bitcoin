@@ -1080,7 +1080,12 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    bool IsQuorumTypeEnabled(const Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev,
+    //! pindexPrev may be nullptr -- genesis has no parent, and a block index with no parent can
+    //! never be a valid quorum base -- in which case no LLMQ type is enabled and this returns
+    //! false. Do not tighten this to gsl::not_null: attacker-supplied quorum hashes reach it as
+    //! `pindex->pprev`, and a not_null precondition turns that into a process abort rather than a
+    //! rejection.
+    bool IsQuorumTypeEnabled(const Consensus::LLMQType llmqType, const CBlockIndex* pindexPrev,
                              std::optional<bool> optDIP0024IsActive = std::nullopt,
                              std::optional<bool> optHaveDIP0024Quorums = std::nullopt) const;
 
