@@ -266,13 +266,21 @@ public:
     OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider, bool apostrophe) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)), m_apostrophe(apostrophe) {}
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
-        std::optional<CPubKey> pub = m_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
+        // Derive into a temporary provider. Another key expression may have already put this
+        // key into out with its origin prefixed, and prefixing that entry would double it up.
+        FlatSigningProvider subprovider;
+        std::optional<CPubKey> pub = m_provider->GetPubKey(pos, arg, subprovider, read_cache, write_cache);
         if (!pub) return std::nullopt;
-        Assert(out.pubkeys.contains(pub->GetID()));
-        auto& [pubkey, suborigin] = out.origins[pub->GetID()];
+        const CKeyID keyid{pub->GetID()};
+        Assert(subprovider.pubkeys.contains(keyid));
+        auto& [pubkey, suborigin] = subprovider.origins[keyid];
         Assert(pubkey == *pub); // m_provider must have a valid origin by this point.
         suborigin.fingerprint = m_origin.fingerprint;
         suborigin.path.insert(suborigin.path.begin(), m_origin.path.begin(), m_origin.path.end());
+        auto origin{subprovider.origins.extract(keyid)};
+        out.Merge(std::move(subprovider));
+        // An explicit origin takes precedence over an implicit one for the same key.
+        out.origins.insert_or_assign(keyid, std::move(origin.mapped()));
         return pub;
     }
     bool IsRange() const override { return m_provider->IsRange(); }
