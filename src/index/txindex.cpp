@@ -45,8 +45,8 @@ public:
     /// transaction hash is not indexed.
     bool ReadTxPos(const Txid& txid, CDiskTxPos& pos) const;
 
-    /// Write a batch of transaction positions to the DB.
-    void WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos);
+    /// Write a block of transaction positions to the DB.
+    void WriteTxs(const interfaces::BlockInfo& block);
 
     CBlockLocator ReadBestBlock() const override;
     void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
@@ -76,11 +76,13 @@ void TxIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
     batch.Write(DB_BEST_BLOCK_V2, locator);
 }
 
-void TxIndex::DB::WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos)
+void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
 {
     CDBBatch batch(*this);
-    for (const auto& [txid, pos] : v_pos) {
-        batch.Write(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
+    CDiskTxPos pos({block.file_number, block.data_pos}, GetSizeOfCompactSize(block.data->vtx.size()));
+    for (const auto& tx : block.data->vtx) {
+        batch.Write(std::make_pair(DB_TXINDEX, tx->GetHash().ToUint256()), pos);
+        pos.nTxOffset += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
     }
     WriteBatch(batch);
 }
@@ -97,14 +99,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
     if (block.height == 0) return true;
 
     assert(block.data);
-    CDiskTxPos pos({block.file_number, block.data_pos}, GetSizeOfCompactSize(block.data->vtx.size()));
-    std::vector<std::pair<Txid, CDiskTxPos>> vPos;
-    vPos.reserve(block.data->vtx.size());
-    for (const auto& tx : block.data->vtx) {
-        vPos.emplace_back(tx->GetHash(), pos);
-        pos.nTxOffset += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
-    }
-    m_db->WriteTxs(vPos);
+    m_db->WriteTxs(block);
     return true;
 }
 
