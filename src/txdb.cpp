@@ -203,8 +203,7 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
     m_compaction = std::async(std::launch::async, [this] {
         try {
             util::ThreadRename("utxocompact");
-            LOCK(m_db_mutex);
-
+            SharedLock db_lock{LOCK_ARGS(m_db_mutex)}; // Coexists with cursors and protects m_db lifetime
             LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
             m_db->CompactFull();
             LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));

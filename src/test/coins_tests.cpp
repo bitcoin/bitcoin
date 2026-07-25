@@ -1127,7 +1127,7 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
     auto status{compaction.wait_for(5s)};
     cursor.reset();
     compaction.wait();
-    BOOST_CHECK_EQUAL(status, std::future_status::timeout); // TODO: Compaction unnecessarily waits for live cursors
+    BOOST_CHECK_EQUAL(status, std::future_status::ready);
     BOOST_CHECK_EQUAL(level2_files(base), 1);
 
     BOOST_CHECK(*Assert(base.GetCoin(outpoint)) == coin);
