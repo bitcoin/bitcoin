@@ -503,6 +503,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     setup->m_node.validation_signals->UnregisterAllValidationInterfaces();
     connman.StopNodes();
+    connman.Reset();
 
     const size_t end_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     const uint64_t end_sequence{WITH_LOCK(mempool.cs, return mempool.GetSequence())};

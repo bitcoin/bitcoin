@@ -106,4 +106,5 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
     }
 
     node.connman->StopNodes();
+    connman.Reset();
 }
