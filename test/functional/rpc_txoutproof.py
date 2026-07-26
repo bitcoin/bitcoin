@@ -106,8 +106,37 @@ class MerkleBlockTest(BitcoinTestFramework):
         for n in self.nodes:
             assert not n.verifytxoutproof(tweaked_proof.serialize().hex())
 
-        # TODO: try more variants, eg transactions at different depths, and
-        # verify that the proofs are invalid
+        # Verify that proofs are invalid when the header hash is wrong
+        proof_bad_header = from_hex(CMerkleBlock(), proof)
+        proof_bad_header.header.hashPrevBlock = int("00" * 32, 16)
+        for n in self.nodes:
+            assert not n.verifytxoutproof(proof_bad_header.serialize().hex())
+
+        # Verify that proofs are invalid when nTransactions is inflated
+        proof_bad_ntx = from_hex(CMerkleBlock(), proof)
+        proof_bad_ntx.txn.nTransactions = 999999
+        for n in self.nodes:
+            assert not n.verifytxoutproof(proof_bad_ntx.serialize().hex())
+
+        # Verify that proofs are invalid when a hash in the tree is replaced
+        proof_bad_hash = from_hex(CMerkleBlock(), proof)
+        if len(proof_bad_hash.txn.vHash) > 0:
+            proof_bad_hash.txn.vHash[0] = int("aa" * 32, 16)
+            for n in self.nodes:
+                assert not n.verifytxoutproof(proof_bad_hash.serialize().hex())
+
+        # Verify that proofs are invalid when the hash list is emptied
+        proof_empty = from_hex(CMerkleBlock(), proof)
+        proof_empty.txn.vHash = []
+        for n in self.nodes:
+            assert not n.verifytxoutproof(proof_empty.serialize().hex())
+
+        # Verify that proofs are invalid when the bit path is flipped
+        proof_flip = from_hex(CMerkleBlock(), proof)
+        if len(proof_flip.txn.vBits) > 0:
+            proof_flip.txn.vBits[0] = not proof_flip.txn.vBits[0]
+            for n in self.nodes:
+                assert not n.verifytxoutproof(proof_flip.serialize().hex())
 
 if __name__ == '__main__':
     MerkleBlockTest(__file__).main()
