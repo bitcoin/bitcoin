@@ -14,6 +14,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <system_error>
 #include <thread>
 #include <type_traits>
@@ -31,6 +32,8 @@ void ContendedLock(std::string_view name, std::string_view file, int nLine, Lock
 }
 template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::mutex>& lock);
 template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::recursive_mutex>& lock);
+template void ContendedLock(std::string_view name, std::string_view file, int line, std::unique_lock<std::shared_mutex>& lock);
+template void ContendedLock(std::string_view name, std::string_view file, int line, std::shared_lock<std::shared_mutex>& lock);
 
 #endif
 
@@ -223,6 +226,7 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexTyp
 }
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::shared_mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
@@ -289,6 +293,7 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockHeldInternal(const char*, const char*, int, RecursiveMutex*);
+template void AssertLockHeldInternal(const char*, const char*, int, SharedMutex*);
 
 template <typename MutexType>
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
@@ -299,6 +304,7 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 }
 template void AssertLockNotHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockNotHeldInternal(const char*, const char*, int, RecursiveMutex*);
+template void AssertLockNotHeldInternal(const char*, const char*, int, SharedMutex*);
 
 void DeleteLock(void* cs)
 {

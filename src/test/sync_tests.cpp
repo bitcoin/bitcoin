@@ -139,4 +139,24 @@ BOOST_AUTO_TEST_CASE(inconsistent_lock_order_detected)
 #endif // DEBUG_LOCKORDER
 }
 
+BOOST_AUTO_TEST_CASE(shared_mutex)
+{
+    struct {
+        SharedMutex mutex;
+        int value GUARDED_BY(mutex){0};
+    } shared;
+
+    AssertLockNotHeld(shared.mutex);
+    WITH_LOCK(shared.mutex, AssertLockHeld(shared.mutex); shared.value = 1); // Exclusive lock permits guarded writes
+    {
+        READ_LOCK(shared.mutex); // Shared lock permits the guarded read below
+#ifdef DEBUG_LOCKORDER
+        BOOST_CHECK(!LockStackEmpty());
+#endif
+        BOOST_CHECK_EQUAL(shared.value, 1);
+    }
+    AssertLockNotHeld(shared.mutex);
+    BOOST_CHECK(LockStackEmpty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
