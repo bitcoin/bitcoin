@@ -22,8 +22,12 @@ repository must have been cloned. Finally, a fuzz target has to be picked
 before running the tool:
 
 ```
-cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name
+cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name [parallelism] [coverage_check]
 ```
+
+The optional `coverage_check` argument controls which checks are run: `0` runs
+both checks, `1` only checks each input individually, and `2` only checks all
+inputs in one go. The default is `0`.
 
 deterministic-unittest-coverage
 ===========================
