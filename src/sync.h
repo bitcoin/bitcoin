@@ -148,6 +148,20 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 inline void AssertLockNotHeldInline(const char* name, const char* file, int line, GlobalMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
 #define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
+//! Register and acquire a lock, logging contention if enabled.
+template <typename LockType>
+void EnterLock(LockType& lock, const char* name, const char* file, int line)
+{
+    EnterCritical(name, file, line, lock.mutex());
+#ifdef DEBUG_LOCKCONTENTION
+    if (!lock.try_lock()) {
+        ContendedLock(name, file, line, lock);
+    }
+#else
+    lock.lock();
+#endif
+}
+
 /** Wrapper around std::unique_lock style lock for MutexType. */
 template <typename MutexType>
 class SCOPED_LOCKABLE UniqueLock : public MutexType::unique_lock
@@ -155,16 +169,9 @@ class SCOPED_LOCKABLE UniqueLock : public MutexType::unique_lock
 private:
     using Base = typename MutexType::unique_lock;
 
-    void Enter(const char* pszName, const char* pszFile, int nLine)
+    void Enter(const char* name, const char* file, int line)
     {
-        EnterCritical(pszName, pszFile, nLine, Base::mutex());
-#ifdef DEBUG_LOCKCONTENTION
-        if (!Base::try_lock()) {
-            ContendedLock(pszName, pszFile, nLine, static_cast<Base&>(*this));
-        }
-#else
-        Base::lock();
-#endif
+        EnterLock(static_cast<Base&>(*this), name, file, line);
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
