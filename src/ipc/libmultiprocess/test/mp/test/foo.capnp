@@ -27,9 +27,11 @@ interface FooInterface $Proxy.wrap("mp::test::FooImplementation") {
     callbackExtended @10 (context :Proxy.Context, callback :ExtendedCallback, arg: Int32) -> (result :Int32);
     passCustom @11 (arg :FooCustom) -> (result :FooCustom);
     passEmpty @12 (arg :FooEmpty) -> (result :FooEmpty);
+    passData @24 (arg :Data) -> (result :Data);
     passMessage @13 (arg :FooMessage) -> (result :FooMessage);
     passMutable @14 (arg :FooMutable) -> (arg :FooMutable);
     passEnum @15 (arg :Int32) -> (result :Int32);
+    passDouble @23 (arg :Float64) -> (result :Float64);
     passFn @16 (context :Proxy.Context, fn :FooFn) -> (result :Int32);
     callFn @17 () -> ();
     callFnAsync @18 (context :Proxy.Context) -> ();
@@ -53,8 +55,12 @@ interface FooFn $Proxy.wrap("ProxyCallback<std::function<int()>>") {
 
 struct FooStruct $Proxy.wrap("mp::test::FooStruct") {
     name @0 :Text;
-    setint @1 :List(Int32);
-    vbool @2 :List(Bool);
+    setInt @1 :List(Int32) $Proxy.name("set_int");
+    vectorBool @2 :List(Bool) $Proxy.name("vector_bool");
+    optionalInt @3 :Int32 $Proxy.name("optional_int");
+    hasOptionalInt @4 :Bool;
+    unorderedSetInt @5 :List(Int32) $Proxy.name("unordered_set_int");
+    mapStringInt @6 :List(StringIntPair) $Proxy.name("map_string_int");
 }
 
 struct FooCustom $Proxy.wrap("mp::test::FooCustom") {
@@ -76,4 +82,9 @@ struct FooMutable {
 struct Pair(T1, T2) {
     first @0 :T1;
     second @1 :T2;
+}
+
+struct StringIntPair {
+    first @0 :Text;
+    second @1 :Int32;
 }

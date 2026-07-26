@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-set -o errexit -o pipefail -o xtrace
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # The source root dir, usually from git, usually read-only.
 # The ci system copies this folder.
@@ -20,15 +20,14 @@ export BASE_ROOT_DIR="${BASE_ROOT_DIR:-/ci_container_base}"
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
 # A folder for the ci system to put temporary files (build result, datadirs for tests, ...)
+# The name contains a space and a non-ASCII symbol to confirm the build and
+# tests handle word-splitting and UTF8 correctly.
 # This folder only exists on the ci guest.
-export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
+export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch_ ₿🧪_}
 
 echo "Setting specific values in env"
-if [ -n "${FILE_ENV}" ]; then
-  set -o errexit;
-  # shellcheck disable=SC1090
-  source "${FILE_ENV}"
-fi
+# shellcheck disable=SC1090
+source "${FILE_ENV}"
 
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py

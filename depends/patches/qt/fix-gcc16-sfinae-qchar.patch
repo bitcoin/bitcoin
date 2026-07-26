@@ -37,7 +37,7 @@ diff --git a/qtbase/src/corelib/kernel/qmetatype.cpp b/qtbase/src/corelib/kernel
 index e70583404a46..54a0fe671fe0 100644
 --- a/qtbase/src/corelib/kernel/qmetatype.cpp
 +++ b/qtbase/src/corelib/kernel/qmetatype.cpp
-@@ -1212,7 +1212,7 @@ QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
+@@ -1230,7 +1230,7 @@ QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
              return true;
          );
          QMETATYPE_CONVERTER(QString, Char32,

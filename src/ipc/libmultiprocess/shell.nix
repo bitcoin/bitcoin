@@ -39,6 +39,7 @@ let
       hash  = lib.attrByPath [capnprotoVersion] "" capnprotoHashes;
     };
     patches = lib.optionals (lib.versionAtLeast capnprotoVersion "0.9.0" && lib.versionOlder capnprotoVersion "0.10.4") [ ./ci/patches/spaceship.patch ];
+    cmakeFlags = (old.cmakeFlags or []) ++ (lib.optionals (lib.versionAtLeast "1.1.0" capnprotoVersion) ["-DCMAKE_POLICY_VERSION_MINIMUM=3.5"]);
   } // (lib.optionalAttrs (lib.versionOlder capnprotoVersion "0.10") {
     env = { }; # Drop -std=c++20 flag forced by nixpkgs
   }));

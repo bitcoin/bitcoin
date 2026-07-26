@@ -87,7 +87,9 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         # Ensure that generateblock can be called concurrently by many threads.
         self.log.info('Generate blocks in parallel')
-        generate_50_blocks = lambda n: [n.generateblock(output=address, transactions=[]) for _ in range(50)]
+        def generate_50_blocks(n):
+            return [n.generateblock(output=address, transactions=[]) for _ in range(50)]
+
         rpcs = [node.cli for _ in range(6)]
         with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
             list(threads.map(generate_50_blocks, rpcs))

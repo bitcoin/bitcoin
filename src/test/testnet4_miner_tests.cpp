@@ -2,9 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/system.h>
+#include <chain.h>
 #include <interfaces/mining.h>
-#include <node/miner.h>
+#include <node/mining_types.h>
+#include <primitives/block.h>
+#include <sync.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
@@ -13,9 +15,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
+
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockWaitOptions;
 
 namespace testnet4_miner_tests {
@@ -35,15 +38,13 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
-    BlockAssembler::Options options;
-    options.include_dummy_extranonce = true;
     std::unique_ptr<BlockTemplate> block_template;
 
     // Set node time a few minutes past the testnet4 genesis block
     const auto template_time{3min + WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->Time())};
-    NodeClockContext clock_ctx{template_time};
+    FakeNodeClock clock{template_time};
 
-    block_template = mining->createNewBlock(options, /*cooldown=*/false);
+    block_template = mining->createNewBlock({}, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
 
     // The template should use the mocked system time
@@ -56,14 +57,14 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     // This remains the case when exactly 20 minutes have gone by
-    clock_ctx += 17min;
+    clock += 17min;
     should_be_nullptr = block_template->waitNext(wait_options);
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
     // One second later the difficulty drops and it returns a new template
     // Note that we can't test the actual difficulty change, because the
     // difficulty is already at 1.
-    clock_ctx += 1s;
+    clock += 1s;
     block_template = block_template->waitNext(wait_options);
     BOOST_REQUIRE(block_template);
 }

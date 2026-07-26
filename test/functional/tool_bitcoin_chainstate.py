@@ -20,7 +20,7 @@ from test_framework.wallet import MiniWallet
 START_HEIGHT = 199
 # Hardcoded in regtest chainparams
 SNAPSHOT_BASE_BLOCK_HEIGHT = 299
-SNAPSHOT_BASE_BLOCK_HASH = "7cc695046fec709f8c9394b6f928f81e81fd3ac20977bb68760fa1faa7916ea2"
+SNAPSHOT_BASE_BLOCK_HASH = "0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853"
 
 
 class BitcoinChainstateTest(BitcoinTestFramework):
@@ -51,15 +51,15 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         assert_equal(n0.getbestblockhash(), SNAPSHOT_BASE_BLOCK_HASH)
         return n0.dumptxoutset('utxos.dat', "latest")
 
-    def add_block(self, datadir, input, expected_stderr=None, expected_stdout=None):
+    def add_block(self, datadir, input, *, expected_stderr=None, expected_stdout=None):
         proc = subprocess.Popen(
             self.get_binaries().chainstate_argv() + ["-regtest", datadir],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
         )
-        stdout, stderr = proc.communicate(input=input + "\n", timeout=5)
+        stdout, stderr = proc.communicate(input=input + "\n", timeout=5 * self.options.timeout_factor)
         self.log.debug("STDOUT: {0}".format(stdout.strip("\n")))
         self.log.info("STDERR: {0}".format(stderr.strip("\n")))
 

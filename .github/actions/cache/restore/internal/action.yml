@@ -1,0 +1,43 @@
+name: 'Cache Restore'
+description: 'Restore a cache with WarpBuild on Warp runners and GitHub Actions cache otherwise'
+inputs:
+  path:
+    description: 'A list of files, directories, and wildcard patterns to restore'
+    required: true
+  key:
+    description: 'An explicit key for restoring the cache'
+    required: true
+  restore-keys:
+    description: 'An ordered multiline string listing prefix-matched restore keys'
+    required: false
+    default: ''
+  provider:
+    description: 'The cache provider to use'
+    required: true
+outputs:
+  cache-hit:
+    description: 'A boolean value to indicate an exact match was found for the primary key'
+    value: ${{ steps.warp.outputs.cache-hit || steps.gha.outputs.cache-hit }}
+  cache-primary-key:
+    description: 'The primary key used to restore the cache'
+    value: ${{ steps.warp.outputs.cache-primary-key || steps.gha.outputs.cache-primary-key }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore cache with WarpBuild
+      id: warp
+      if: ${{ inputs.provider == 'warp' }}
+      uses: WarpBuilds/cache/restore@v1
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}
+
+    - name: Restore cache with GitHub Actions
+      id: gha
+      if: ${{ inputs.provider == 'gha' }}
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}

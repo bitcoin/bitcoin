@@ -57,6 +57,17 @@ static void print_buf_plain(const unsigned char *buf, size_t len) {
 #  define SECP256K1_INLINE inline
 # endif
 
+# if !defined(_DEBUG) && !defined(__NO_INLINE__) && !defined(__OPTIMIZE_SIZE__)
+#  if defined(__OPTIMIZE__) && (SECP256K1_GNUC_PREREQ(3, 0) || defined(__clang__))
+#   define SECP256K1_FORCE_INLINE SECP256K1_INLINE __attribute__((always_inline))
+#  elif defined(_MSC_VER)
+#   define SECP256K1_FORCE_INLINE __forceinline
+#  endif
+# endif
+# ifndef SECP256K1_FORCE_INLINE
+#  define SECP256K1_FORCE_INLINE SECP256K1_INLINE
+# endif
+
 /** Assert statically that expr is true.
  *
  * This is a statement-like macro and can only be used inside functions.

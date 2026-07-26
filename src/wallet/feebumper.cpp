@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/feebumper.h>
+
+#include <coins.h>
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
@@ -11,7 +14,6 @@
 #include <util/rbf.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
@@ -39,8 +41,8 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (wtx.mapValue.contains("replaced_by_txid")) {
-        errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid"))));
+    if (wtx.m_replaced_by_txid) {
+        errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.m_replaced_by_txid->ToString())));
         return feebumper::Result::WALLET_ERROR;
     }
 
@@ -337,8 +339,8 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
         // First fill transaction with our data without signing,
         // so external signers are not asked to sign more than once.
         bool complete;
-        wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
-        auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
+        wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete);
+        auto err{wallet.FillPSBT(psbtx, {.sign = true, .bip32_derivs = false}, complete)};
         if (err) return false;
         complete = FinalizeAndExtractPSBT(psbtx, mtx);
         return complete;
@@ -368,10 +370,7 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
 
     // commit/broadcast the tx
     CTransactionRef tx = MakeTransactionRef(std::move(mtx));
-    mapValue_t mapValue = oldWtx.mapValue;
-    mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
-
-    wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm);
+    wallet.CommitTransaction(tx, oldWtx.GetHash(), oldWtx.m_comment, oldWtx.m_comment_to, oldWtx.m_messages, oldWtx.m_payment_requests);
 
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();

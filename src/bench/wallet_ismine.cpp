@@ -11,17 +11,20 @@
 #include <script/signingprovider.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <wallet/context.h>
 #include <wallet/db.h>
+#include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace wallet {
 static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
@@ -35,7 +38,7 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
     // Setup the wallet
     // Loading the wallet will also create it
     uint64_t create_flags = WALLET_FLAG_DESCRIPTORS;
-    auto database = CreateMockableWalletDatabase();
+    auto database = MakeInMemoryWalletDatabase();
     auto wallet = TestCreateWallet(std::move(database), context, create_flags);
 
     // For a descriptor wallet, fill with num_combo combo descriptors with random keys

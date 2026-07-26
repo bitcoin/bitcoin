@@ -6,7 +6,6 @@
 
 #include <chain.h>
 #include <crypto/common.h>
-#include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <primitives/transaction.h>
@@ -14,6 +13,7 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>

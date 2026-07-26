@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test torcontrol functionality with a mock Tor control server."""
+from contextlib import contextmanager
 import socket
 import threading
 from test_framework.test_framework import BitcoinTestFramework
@@ -119,6 +120,25 @@ class TorControlTest(BitcoinTestFramework):
             "-debug=tor",
         ])
 
+        # Wait for connection and PROTOCOLINFO command
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+
+    @contextmanager
+    def expect_disconnect(self, expect, mock_tor):
+        initial_len = len(mock_tor.received_commands)
+        yield
+
+        if expect:
+            # Expect to receive a PROTOCOLINFO 1 on reconnect, bumping the received
+            # commands length.
+            self.wait_until(lambda: len(mock_tor.received_commands) == initial_len + 1)
+            assert_equal(mock_tor.received_commands[initial_len], "PROTOCOLINFO 1")
+        else:
+            # No disconnect, so no reconnect message
+            ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == initial_len)
+
     def test_basic(self):
         self.log.info("Test Tor control basic functionality")
 
@@ -143,11 +163,6 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
         self.restart_with_mock(mock_tor)
-
-        # Wait for connection and PROTOCOLINFO command
-        mock_tor.conn_ready.wait(timeout=10)
-        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
-        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
 
         # Send partial response (no \r\n on last line)
         mock_tor.send_raw(
@@ -202,24 +217,42 @@ class TorControlTest(BitcoinTestFramework):
         mock_tor.stop()
 
     def test_oversized_line(self):
-        self.log.info("Test that Tor control disconnects on oversized response lines")
-
         mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
         self.restart_with_mock(mock_tor)
 
-        # Wait for connection and PROTOCOLINFO command.
-        mock_tor.conn_ready.wait(timeout=10)
-        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
-        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
-
-        # Send a single line longer than MAX_LINE_LENGTH. The node should disconnect.
         MAX_LINE_LENGTH = 100000
-        mock_tor.send_raw("250-" + ("A" * (MAX_LINE_LENGTH + 1)) + "\r\n")
-        ensure_for(duration=2, f=lambda: self.nodes[0].process.poll() is None)
 
-        # Connection should be dropped and retried, causing another PROTOCOLINFO.
-        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
-        assert_equal(mock_tor.received_commands[1], "PROTOCOLINFO 1")
+        self.log.info("Test that Tor control does not disconnect with a MAX_LINE_LENGTH line.")
+        with self.expect_disconnect(False, mock_tor):
+            msg = "250-" + ("A" * (MAX_LINE_LENGTH - 5)) + "\r"
+            assert_equal(len(msg), MAX_LINE_LENGTH)
+            # The \n is not counted in line length.
+            mock_tor.send_raw(msg + "\n")
+
+        self.log.info("Test that Tor control disconnects with a MAX_LINE_LENGTH + 1 line")
+        with self.expect_disconnect(True, mock_tor):
+            msg = "250-" + ("A" * (MAX_LINE_LENGTH - 4)) + "\r"
+            assert_equal(len(msg), MAX_LINE_LENGTH + 1)
+            mock_tor.send_raw(msg + "\n")
+
+        mock_tor.stop()
+
+    def test_overmany_lines(self):
+        mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
+        self.restart_with_mock(mock_tor)
+
+        MAX_LINE_COUNT = 1000
+
+        self.log.info("Test that Tor control does not disconnect on receiving MAX_LINE_COUNT lines.")
+        with self.expect_disconnect(False, mock_tor):
+            for _ in range(MAX_LINE_COUNT - 1):
+                mock_tor.send_raw("250-Continuing\r\n")
+            mock_tor.send_raw("250 OK\r\n")
+
+        self.log.info("Test that Tor control disconnects on receiving MAX_LINE_COUNT + 1 lines.")
+        with self.expect_disconnect(True, mock_tor):
+            for _ in range(MAX_LINE_COUNT + 1):
+                mock_tor.send_raw("250-Continuing\r\n")
 
         mock_tor.stop()
 
@@ -228,6 +261,8 @@ class TorControlTest(BitcoinTestFramework):
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
+        self.test_overmany_lines()
+
 
 if __name__ == '__main__':
     TorControlTest(__file__).main()

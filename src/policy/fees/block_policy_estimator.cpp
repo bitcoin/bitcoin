@@ -8,7 +8,6 @@
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
-#include <logging.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -18,6 +17,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/serfloat.h>
 #include <util/syserror.h>
 #include <util/time.h>

@@ -40,7 +40,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
         apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Build and install gcc snapshot
-ARG GCC_SNAPSHOT_MAJOR=16
+ARG GCC_SNAPSHOT_MAJOR=17
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     wget libgmp-dev libmpfr-dev libmpc-dev flex && \
     mkdir gcc && cd gcc && \

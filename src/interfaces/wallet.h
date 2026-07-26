@@ -7,6 +7,7 @@
 
 #include <addresstype.h>
 #include <common/signmessage.h>
+#include <common/types.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <primitives/transaction_identifier.h>
@@ -31,7 +32,7 @@ class CFeeRate;
 class CKey;
 enum class FeeReason;
 enum class OutputType;
-struct PartiallySignedTransaction;
+class PartiallySignedTransaction;
 struct bilingual_str;
 namespace common {
 enum class PSBTError;
@@ -57,9 +58,6 @@ struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
 struct WalletMigrationResult;
-
-using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
-using WalletValueMap = std::map<std::string, std::string>;
 
 //! Interface for accessing a wallet.
 class Wallet
@@ -149,9 +147,7 @@ public:
         std::optional<unsigned int> change_pos) = 0;
 
     //! Commit transaction.
-    virtual void commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form) = 0;
+    virtual void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const Txid& txid) = 0;
@@ -197,14 +193,13 @@ public:
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
-        WalletOrderForm& order_form,
+        std::vector<std::string>& messages,
+        std::vector<std::string>& payment_requests,
         bool& in_mempool,
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual std::optional<common::PSBTError> fillPSBT(std::optional<int> sighash_type,
-        bool sign,
-        bool bip32derivs,
+    virtual std::optional<common::PSBTError> fillPSBT(const common::PSBTFillOptions& options,
         size_t* n_signed,
         PartiallySignedTransaction& psbtx,
         bool& complete) = 0;
@@ -369,11 +364,14 @@ struct WalletBalances
     CAmount balance = 0;
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
+    CAmount used_balance = 0;
+    CAmount nonmempool_balance = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
-               immature_balance != prev.immature_balance;
+               immature_balance != prev.immature_balance ||
+               used_balance != prev.used_balance || nonmempool_balance != prev.nonmempool_balance;
     }
 };
 
@@ -390,7 +388,10 @@ struct WalletTx
     CAmount debit;
     CAmount change;
     int64_t time;
-    std::map<std::string, std::string> value_map;
+    std::optional<std::string> from; // Deprecated
+    std::optional<std::string> message; // Deprecated
+    std::optional<std::string> comment;
+    std::optional<std::string> comment_to;
     bool is_coinbase;
 
     bool operator<(const WalletTx& a) const { return tx->GetHash() < a.tx->GetHash(); }

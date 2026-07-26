@@ -17,7 +17,7 @@ BOOST_FIXTURE_TEST_SUITE(banman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(file)
 {
-    NodeClockContext clock_ctx{777s};
+    FakeNodeClock clock{777s};
     const fs::path banlist_path{m_args.GetDataDirBase() / "banlist_test"};
     {
         const std::string entries_write{

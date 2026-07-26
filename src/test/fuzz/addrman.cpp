@@ -117,7 +117,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio());
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -130,7 +130,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
         }
     }
     AddrManDeterministic& addr_man = *addr_man_ptr;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -141,7 +141,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
             },
             [&] {
                 std::vector<CAddress> addresses;
-                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+                LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
                 auto net_addr = ConsumeNetAddr(fuzzed_data_provider);
@@ -202,7 +202,7 @@ FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
 
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     AddrManDeterministic addr_man1{netgroupman, fuzzed_data_provider, GetCheckRatio()};

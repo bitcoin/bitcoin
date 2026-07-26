@@ -40,7 +40,7 @@ alignas(uint32x4_t) static constexpr std::array<uint32_t, 64> K =
 namespace sha256_arm_shani {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 {
-    uint32x4_t STATE0, STATE1, ABEF_SAVE, CDGH_SAVE;
+    uint32x4_t STATE0, STATE1, ABCD_SAVE, EFGH_SAVE;
     uint32x4_t MSG0, MSG1, MSG2, MSG3;
     uint32x4_t TMP0, TMP2;
 
@@ -51,8 +51,8 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
     while (blocks--)
     {
         // Save state
-        ABEF_SAVE = STATE0;
-        CDGH_SAVE = STATE1;
+        ABCD_SAVE = STATE0;
+        EFGH_SAVE = STATE1;
 
         // Load and convert input chunk to Big Endian
         MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vld1q_u8(chunk + 0)));
@@ -186,8 +186,8 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
         STATE1 = vsha256h2q_u32(STATE1, TMP2, TMP0);
 
         // Update state
-        STATE0 = vaddq_u32(STATE0, ABEF_SAVE);
-        STATE1 = vaddq_u32(STATE1, CDGH_SAVE);
+        STATE0 = vaddq_u32(STATE0, ABCD_SAVE);
+        STATE1 = vaddq_u32(STATE1, EFGH_SAVE);
     }
 
     // Save final state
@@ -235,7 +235,7 @@ void Transform_2way(unsigned char* output, const unsigned char* input)
     /* Padding processed in the 3rd transform (byteswapped). */
     alignas(uint32x4_t) static constexpr std::array<uint32_t, 8> FINAL = {0x80000000, 0, 0, 0, 0, 0, 0, 0x100};
 
-    uint32x4_t STATE0A, STATE0B, STATE1A, STATE1B, ABEF_SAVEA, ABEF_SAVEB, CDGH_SAVEA, CDGH_SAVEB;
+    uint32x4_t STATE0A, STATE0B, STATE1A, STATE1B, ABCD_SAVEA, ABCD_SAVEB, EFGH_SAVEA, EFGH_SAVEB;
     uint32x4_t MSG0A, MSG0B, MSG1A, MSG1B, MSG2A, MSG2B, MSG3A, MSG3B;
     uint32x4_t TMP0A, TMP0B, TMP2A, TMP2B, TMP;
 
@@ -488,10 +488,10 @@ void Transform_2way(unsigned char* output, const unsigned char* input)
     STATE1B = vaddq_u32(STATE1B, TMP);
 
     // Transform 2: Save state
-    ABEF_SAVEA = STATE0A;
-    ABEF_SAVEB = STATE0B;
-    CDGH_SAVEA = STATE1A;
-    CDGH_SAVEB = STATE1B;
+    ABCD_SAVEA = STATE0A;
+    ABCD_SAVEB = STATE0B;
+    EFGH_SAVEA = STATE1A;
+    EFGH_SAVEB = STATE1B;
 
     // Transform 2: Rounds 1-4
     TMP = vld1q_u32(&MIDS[0]);
@@ -638,10 +638,10 @@ void Transform_2way(unsigned char* output, const unsigned char* input)
     STATE1B = vsha256h2q_u32(STATE1B, TMP2B, TMP);
 
     // Transform 2: Update state
-    STATE0A = vaddq_u32(STATE0A, ABEF_SAVEA);
-    STATE0B = vaddq_u32(STATE0B, ABEF_SAVEB);
-    STATE1A = vaddq_u32(STATE1A, CDGH_SAVEA);
-    STATE1B = vaddq_u32(STATE1B, CDGH_SAVEB);
+    STATE0A = vaddq_u32(STATE0A, ABCD_SAVEA);
+    STATE0B = vaddq_u32(STATE0B, ABCD_SAVEB);
+    STATE1A = vaddq_u32(STATE1A, EFGH_SAVEA);
+    STATE1B = vaddq_u32(STATE1B, EFGH_SAVEB);
 
     // Transform 3: Pad previous output
     MSG0A = STATE0A;

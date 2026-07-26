@@ -16,7 +16,6 @@ from test_framework.util import assert_equal
 class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.supports_cli = False
         self.extra_args = [["-coinstatsindex"],["-coinstatsindex"]]
 
     def skip_test_if_missing_module(self):

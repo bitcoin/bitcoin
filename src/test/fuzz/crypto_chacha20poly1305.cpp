@@ -39,8 +39,7 @@ FUZZ_TARGET(crypto_aeadchacha20poly1305)
     // data).
     InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
-    LIMITED_WHILE(provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (provider.ConsumeBool(), 100) {
         // Mode:
         // - Bit 0: whether to use single-plain Encrypt/Decrypt; otherwise use a split at prefix.
         // - Bit 2: whether this ciphertext will be corrupted (making it the last sent one)
@@ -130,8 +129,7 @@ FUZZ_TARGET(crypto_fschacha20poly1305)
     // data).
     InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
-    LIMITED_WHILE(provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (provider.ConsumeBool(), 100) {
         // Mode:
         // - Bit 0: whether to use single-plain Encrypt/Decrypt; otherwise use a split at prefix.
         // - Bit 2: whether this ciphertext will be corrupted (making it the last sent one)

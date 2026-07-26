@@ -7,7 +7,7 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <key_io.h>
-#include <logging.h>
+#include <util/log.h>
 
 namespace wallet {
 fs::path GetWalletDir()

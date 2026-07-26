@@ -14,6 +14,8 @@ $ FUZZ=process_message build_fuzz/bin/fuzz
 ```
 
 One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers enabled.
+Note that this preset uses a different build directory, so replace `build_fuzz` with
+`build_fuzz_nosan` in the build and run commands above.
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to

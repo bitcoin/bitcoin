@@ -3,11 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/keyorigin.h>
-#include <script/interpreter.h>
 #include <script/signingprovider.h>
 
-#include <logging.h>
+#include <musig.h>
+#include <script/interpreter.h>
+#include <script/keyorigin.h>
+#include <util/check.h>
+#include <util/log.h>
+
+#include <algorithm>
+#include <cstddef>
 
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 

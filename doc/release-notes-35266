@@ -1,0 +1,7 @@
+RPC
+---
+
+The `migratewallet` RPC now gives the option to not load the descriptor wallet after migrating it from a legacy wallet.
+This will now allow pruned nodes to migrate a wallet out of sync below the pruning height.
+Note that to use the new wallet it must be loaded to a full node anyway.
+

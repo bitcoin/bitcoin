@@ -17,6 +17,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
+#include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/sock.h>
 
@@ -178,17 +179,16 @@ class FuzzedSock : public Sock
     const bool m_selectable;
 
     /**
-     * Used to mock the steady clock in methods waiting for a given duration.
+     * Externally-provided context used to mock the steady clock in methods
+     * waiting for a given duration. It is a reference (rather than an owned
+     * member) so that several FuzzedSock instances sharing a test case (e.g.
+     * one per peer, or one created from Accept()) advance a single mocked
+     * clock.
      */
-    mutable std::chrono::milliseconds m_time;
-
-    /**
-     * Set the value of the mocked steady clock such as that many ms have passed.
-     */
-    void ElapseTime(std::chrono::milliseconds duration) const;
+    FakeSteadyClock& m_clock;
 
 public:
-    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
+    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock);
 
     ~FuzzedSock() override;
 
@@ -228,9 +228,9 @@ public:
     return FuzzedNetEvents{fdp};
 }
 
-[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
+[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock)
 {
-    return FuzzedSock{fuzzed_data_provider};
+    return FuzzedSock{fuzzed_data_provider, clock};
 }
 
 [[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
@@ -267,10 +267,10 @@ inline std::vector<CService> ConsumeServiceVector(FuzzedDataProvider& fuzzed_dat
 CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <bool ReturnUniquePtr = false>
-auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<NodeId>& node_id_in = std::nullopt) noexcept
+auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock, const std::optional<NodeId>& node_id_in = std::nullopt) noexcept
 {
     const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegralInRange<NodeId>(0, std::numeric_limits<NodeId>::max()));
-    const auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider);
+    const auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider, clock);
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
     const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
     const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
@@ -307,7 +307,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                      CNodeOptions{ .permission_flags = permission_flags }};
     }
 }
-inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
+inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, FakeSteadyClock& clock, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, clock, node_id_in); }
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 

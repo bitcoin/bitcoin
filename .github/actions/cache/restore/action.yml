@@ -1,0 +1,55 @@
+name: 'Restore Caches'
+description: 'Restore ccache, depends sources, and built depends caches'
+inputs:
+  provider:
+    description: 'The cache provider to use'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Ccache cache
+      id: ccache-cache
+      uses: ./.github/actions/cache/restore/internal
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
+        restore-keys: |
+          ccache-${{ env.CONTAINER_NAME }}-
+        provider: ${{ inputs.provider }}
+
+    - name: Restore depends sources cache
+      id: depends-sources
+      uses: ./.github/actions/cache/restore/internal
+      with:
+        path: ${{ env.SOURCES_PATH }}
+        key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+        restore-keys: |
+          depends-sources-${{ env.CONTAINER_NAME }}-
+        provider: ${{ inputs.provider }}
+
+    - name: Restore built depends cache
+      id: depends-built
+      uses: ./.github/actions/cache/restore/internal
+      with:
+        path: ${{ env.BASE_CACHE }}
+        key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+        restore-keys: |
+          depends-built-${{ env.CONTAINER_NAME }}-
+        provider: ${{ inputs.provider }}
+
+    - name: Restore previous releases cache
+      id: previous-releases
+      uses: ./.github/actions/cache/restore/internal
+      with:
+        path: ${{ env.PREVIOUS_RELEASES_DIR }}
+        key: previous-releases-${{ env.CONTAINER_NAME }}-${{ env.PREVIOUS_RELEASES_HASH }}
+        restore-keys: |
+          previous-releases-${{ env.CONTAINER_NAME }}-
+        provider: ${{ inputs.provider }}
+
+    - name: export cache hits
+      shell: bash
+      run: |
+        echo "depends-sources-cache-hit=${{ steps.depends-sources.outputs.cache-hit }}" >> $GITHUB_ENV
+        echo "depends-built-cache-hit=${{ steps.depends-built.outputs.cache-hit }}" >> $GITHUB_ENV
+        echo "previous-releases-cache-hit=${{ steps.previous-releases.outputs.cache-hit }}" >> $GITHUB_ENV

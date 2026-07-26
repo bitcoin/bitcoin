@@ -12,6 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_not_equal,
 )
 
 PRIVKEY_RE = re.compile(r"^tr\((.+?)/.+\)#.{8}$")
@@ -110,6 +111,31 @@ class WalletMuSigTest(BitcoinTestFramework):
         )["psbt"]
 
         return wallets, psbt
+
+    def assert_musig_signer_data(self, first, second, different_field):
+        assert_equal(first["participant_pubkey"], second["participant_pubkey"])
+        assert_equal(first["aggregate_pubkey"], second["aggregate_pubkey"])
+        if "leaf_hash" in first:
+            assert_equal(first["leaf_hash"], second["leaf_hash"])
+        else:
+            assert "leaf_hash" not in second
+
+        assert_not_equal(first[different_field], second[different_field])
+
+    def assert_musig_aggregate_in_script(self, signer_data, pattern, psbtin):
+        pubkey = signer_data["aggregate_pubkey"][2:]
+        if "pkh" in pattern or "pk_h" in pattern:
+            pubkey = hash160(bytes.fromhex(pubkey)).hex()
+        if pubkey in psbtin["witness_utxo"]["scriptPubKey"]["hex"]:
+            return
+        elif "taproot_scripts" in psbtin:
+            for leaf_scripts in psbtin["taproot_scripts"]:
+                if pubkey in leaf_scripts["script"]:
+                    break
+            else:
+                assert False, "Aggregate pubkey not seen as output key, or in any scripts"
+        else:
+            assert False, "Aggregate pubkey not seen as output key or internal key"
 
     def test_failure_case_1(self, comment, pat):
         self.log.info(f"Testing {comment}")
@@ -247,66 +273,55 @@ class WalletMuSigTest(BitcoinTestFramework):
                     part_pks.remove(deriv_path["pubkey"])
             assert_equal(len(part_pks), 0)
 
+        # Run 2 signing sessions simultaneously to verify no nonce reuse
         # Add pubnonces
         nonce_psbts = []
+        nonce_psbts2 = []
         for i, wallet in enumerate(wallets):
             if nosign_wallets and i in nosign_wallets:
                 continue
-            proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
-            assert_equal(proc["complete"], False)
-            nonce_psbts.append(proc["psbt"])
+            for psbt_list in [nonce_psbts, nonce_psbts2]:
+                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
+                assert_equal(proc["complete"], False)
+                psbt_list.append(proc["psbt"])
 
         comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
+        comb_nonce_psbt2 = self.nodes[0].combinepsbt(nonce_psbts2)
 
         dec_psbt = self.nodes[0].decodepsbt(comb_nonce_psbt)
-        assert_equal(len(dec_psbt["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
-        for pn in dec_psbt["inputs"][0]["musig2_pubnonces"]:
-            pubkey = pn["aggregate_pubkey"][2:]
-            if "pkh" in pattern or "pk_h" in pattern:
-                pubkey = hash160(bytes.fromhex(pubkey)).hex()
-            if pubkey in dec_psbt["inputs"][0]["witness_utxo"]["scriptPubKey"]["hex"]:
-                continue
-            elif "taproot_scripts" in dec_psbt["inputs"][0]:
-                for leaf_scripts in dec_psbt["inputs"][0]["taproot_scripts"]:
-                    if pubkey in leaf_scripts["script"]:
-                        break
-                else:
-                    assert False, "Aggregate pubkey for pubnonce not seen as output key, or in any scripts"
-            else:
-                assert False, "Aggregate pubkey for pubnonce not seen as output key or internal key"
+        dec_psbt2 = self.nodes[0].decodepsbt(comb_nonce_psbt2)
+        assert_equal(len(dec_psbt["inputs"][0]["musig2_pubnonces"]), len(dec_psbt2["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
+        for pn, pn2 in zip(dec_psbt["inputs"][0]["musig2_pubnonces"], dec_psbt2["inputs"][0]["musig2_pubnonces"]):
+            self.assert_musig_signer_data(pn, pn2, "pubnonce")
+            self.assert_musig_aggregate_in_script(pn, pattern, dec_psbt["inputs"][0])
 
         # Add partial sigs
         psig_psbts = []
+        psig_psbts2 = []
         for i, wallet in enumerate(wallets):
             if nosign_wallets and i in nosign_wallets:
                 continue
-            proc = wallet.walletprocesspsbt(psbt=comb_nonce_psbt, sighashtype=sighash_type)
-            assert_equal(proc["complete"], False)
-            psig_psbts.append(proc["psbt"])
+            for psbt, psbt_list in [(comb_nonce_psbt, psig_psbts), (comb_nonce_psbt2, psig_psbts2)]:
+                proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
+                assert_equal(proc["complete"], False)
+                psbt_list.append(proc["psbt"])
 
         comb_psig_psbt = self.nodes[0].combinepsbt(psig_psbts)
+        comb_psig_psbt2 = self.nodes[0].combinepsbt(psig_psbts2)
 
         dec_psbt = self.nodes[0].decodepsbt(comb_psig_psbt)
-        assert_equal(len(dec_psbt["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
-        for ps in dec_psbt["inputs"][0]["musig2_partial_sigs"]:
-            pubkey = ps["aggregate_pubkey"][2:]
-            if "pkh" in pattern or "pk_h" in pattern:
-                pubkey = hash160(bytes.fromhex(pubkey)).hex()
-            if pubkey in dec_psbt["inputs"][0]["witness_utxo"]["scriptPubKey"]["hex"]:
-                continue
-            elif "taproot_scripts" in dec_psbt["inputs"][0]:
-                for leaf_scripts in dec_psbt["inputs"][0]["taproot_scripts"]:
-                    if pubkey in leaf_scripts["script"]:
-                        break
-                else:
-                    assert False, "Aggregate pubkey for partial sig not seen as output key or in any scripts"
-            else:
-                assert False, "Aggregate pubkey for partial sig not seen as output key"
+        dec_psbt2 = self.nodes[0].decodepsbt(comb_psig_psbt2)
+        assert_equal(len(dec_psbt["inputs"][0]["musig2_partial_sigs"]), len(dec_psbt2["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
+        for ps, ps2 in zip(dec_psbt["inputs"][0]["musig2_partial_sigs"], dec_psbt2["inputs"][0]["musig2_partial_sigs"]):
+            self.assert_musig_signer_data(ps, ps2, "partial_sig")
+            self.assert_musig_aggregate_in_script(ps, pattern, dec_psbt["inputs"][0])
 
         # Non-participant aggregates partial sigs and send
         finalized = self.nodes[0].finalizepsbt(psbt=comb_psig_psbt, extract=False)
-        assert_equal(finalized["complete"], True)
+        finalized2 = self.nodes[0].finalizepsbt(psbt=comb_psig_psbt2, extract=False)
+        assert_equal(finalized["complete"], finalized2["complete"], True)
         witness = self.nodes[0].decodepsbt(finalized["psbt"])["inputs"][0]["final_scriptwitness"]
+        assert_not_equal(witness, self.nodes[0].decodepsbt(finalized2["psbt"])["inputs"][0]["final_scriptwitness"])
         if scriptpath:
             assert_greater_than(len(witness), 1)
         else:

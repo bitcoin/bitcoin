@@ -9,9 +9,9 @@
 #include <ipc/capnp/protocol.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>
-#include <logging.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/log.h>
 
 #include <csignal>
 #include <cstdio>

@@ -18,6 +18,8 @@ from decimal import Decimal
 from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
+from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
@@ -56,7 +58,6 @@ class BumpFeeTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.extra_args = [[
-            "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
@@ -547,9 +548,9 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
 
 def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     self.log.info('Test that PSBT is returned for bumpfee in watchonly wallets')
-    priv_rec_desc = "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0"
+    priv_rec_desc = descsum_create(f"wpkh([00000001/84'/1'/0']{ExtendedPrivateKey.generate().to_string()}/0/*)")
     pub_rec_desc = rbf_node.getdescriptorinfo(priv_rec_desc)["descriptor"]
-    priv_change_desc = "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#j6uzqvuh"
+    priv_change_desc = descsum_create(f"wpkh([00000001/84'/1'/0']{ExtendedPrivateKey.generate().to_string()}/1/*)")
     pub_change_desc = rbf_node.getdescriptorinfo(priv_change_desc)["descriptor"]
     # Create a wallet with private keys that can sign PSBTs
     rbf_node.createwallet(wallet_name="signer", disable_private_keys=False, blank=True)
@@ -608,14 +609,14 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
             {"fee_rate": 1, "add_inputs": False}, True)['psbt']
     psbt_signed = signer.walletprocesspsbt(psbt=psbt, sign=True, sighashtype="ALL", bip32derivs=True)
     original_txid = watcher.sendrawtransaction(psbt_signed["hex"])
-    assert_equal(len(watcher.decodepsbt(psbt)["tx"]["vin"]), 1)
+    assert_equal(len(watcher.decodepsbt(psbt)["inputs"]), 1)
 
     # bumpfee can't be used on watchonly wallets
     assert_raises_rpc_error(-4, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.", watcher.bumpfee, original_txid)
 
     # Bump fee, obnoxiously high to add additional watchonly input
     bumped_psbt = watcher.psbtbumpfee(original_txid, fee_rate=HIGH)
-    assert_greater_than(len(watcher.decodepsbt(bumped_psbt['psbt'])["tx"]["vin"]), 1)
+    assert_greater_than(len(watcher.decodepsbt(bumped_psbt['psbt'])["inputs"]), 1)
     assert "txid" not in bumped_psbt
     assert_equal(bumped_psbt["origfee"], -watcher.gettransaction(original_txid)["fee"])
     assert not watcher.finalizepsbt(bumped_psbt["psbt"])["complete"]

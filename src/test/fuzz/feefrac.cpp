@@ -84,9 +84,9 @@ FUZZ_TARGET(feefrac)
 
     // Feerate comparisons
     auto cmp_feerate = MulCompare(f1, s2, f2, s1);
-    assert(FeeRateCompare(fr1, fr2) == cmp_feerate);
-    assert((fr1 << fr2) == std::is_lt(cmp_feerate));
-    assert((fr1 >> fr2) == std::is_gt(cmp_feerate));
+    assert((ByRatio{fr1} <=> ByRatio{fr2}) == cmp_feerate);
+    assert((ByRatio{fr1} < ByRatio{fr2}) == std::is_lt(cmp_feerate));
+    assert((ByRatio{fr1} > ByRatio{fr2}) == std::is_gt(cmp_feerate));
 
     // Compare with manual invocation of FeeFrac::Mul.
     auto cmp_mul = FeeFrac::Mul(f1, s2) <=> FeeFrac::Mul(f2, s1);
@@ -98,13 +98,13 @@ FUZZ_TARGET(feefrac)
 
     // Total order comparisons
     auto cmp_total = std::is_eq(cmp_feerate) ? (s2 <=> s1) : cmp_feerate;
-    assert((fr1 <=> fr2) == cmp_total);
-    assert((fr1 < fr2) == std::is_lt(cmp_total));
-    assert((fr1 > fr2) == std::is_gt(cmp_total));
-    assert((fr1 <= fr2) == std::is_lteq(cmp_total));
-    assert((fr1 >= fr2) == std::is_gteq(cmp_total));
-    assert((fr1 == fr2) == std::is_eq(cmp_total));
-    assert((fr1 != fr2) == std::is_neq(cmp_total));
+    assert((ByRatioNegSize{fr1} <=> ByRatioNegSize{fr2}) == cmp_total);
+    assert((ByRatioNegSize{fr1} < ByRatioNegSize{fr2}) == std::is_lt(cmp_total));
+    assert((ByRatioNegSize{fr1} > ByRatioNegSize{fr2}) == std::is_gt(cmp_total));
+    assert((ByRatioNegSize{fr1} <= ByRatioNegSize{fr2}) == std::is_lteq(cmp_total));
+    assert((ByRatioNegSize{fr1} >= ByRatioNegSize{fr2}) == std::is_gteq(cmp_total));
+    assert((ByRatioNegSize{fr1} == ByRatioNegSize{fr2}) == std::is_eq(cmp_total));
+    assert((ByRatioNegSize{fr1} != ByRatioNegSize{fr2}) == std::is_neq(cmp_total));
 }
 
 FUZZ_TARGET(feefrac_div_fallback)

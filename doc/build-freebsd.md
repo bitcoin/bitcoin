@@ -1,8 +1,8 @@
 # FreeBSD Build Guide
 
-**Updated for FreeBSD [15.0](https://www.freebsd.org/releases/15.0R/announce/)**
+Bitcoin Core is supported on all [supported FreeBSD releases](https://www.freebsd.org/security/#sup).
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
+This guide describes how to build bitcoind, command-line utilities, and GUI on the most recent production release.
 
 ## Preparation
 
@@ -10,7 +10,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on F
 Run the following as root to install the base dependencies for building.
 
 ```bash
-pkg install boost-libs cmake git libevent pkgconf
+pkg install boost-libs cmake git
 ```
 
 SQLite is required for the wallet:
@@ -64,9 +64,9 @@ Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` 
 #### Notifications
 ###### ZeroMQ
 
-Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+Bitcoin Core can provide notifications via ZeroMQ. To compile ZMQ support, install the following dependency and pass `-DWITH_ZMQ=ON` when configuring.
 ```bash
-pkg install libzmq4
+pkg install libzmq4 pkgconf
 ```
 
 #### Test Suite Dependencies

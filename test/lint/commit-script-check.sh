@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -41,8 +41,12 @@ for commit in $(git rev-list --reverse "$1"); do
         else
             echo "Running script for: $commit" >&2
             echo "$SCRIPT" >&2
-            (eval "$SCRIPT")
-            git --no-pager diff --exit-code "$commit" && echo "OK" >&2 || (echo "Failed" >&2; false) || RET=1
+            if bash -o errexit -o nounset -o pipefail -c "$SCRIPT" && git --no-pager diff --exit-code "$commit"; then
+                echo "OK" >&2
+            else
+                echo "Failed" >&2
+                RET=1
+            fi
         fi
         git reset --quiet --hard HEAD
      else

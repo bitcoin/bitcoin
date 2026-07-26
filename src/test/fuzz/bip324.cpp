@@ -64,7 +64,7 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
     assert(std::ranges::equal(initiator.GetSendGarbageTerminator(), responder.GetReceiveGarbageTerminator()));
     assert(std::ranges::equal(initiator.GetReceiveGarbageTerminator(), responder.GetSendGarbageTerminator()));
 
-    LIMITED_WHILE(provider.remaining_bytes(), 1000) {
+    LIMITED_WHILE (provider.remaining_bytes(), 1000) {
         // Mode:
         // - Bit 0: whether the ignore bit is set in message
         // - Bit 1: whether the responder (0) or initiator (1) sends

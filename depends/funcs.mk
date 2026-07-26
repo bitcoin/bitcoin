@@ -222,7 +222,7 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                -DCMAKE_AR=`which $$($(1)_ar)` \
                -DCMAKE_NM=`which $$($(1)_nm)` \
                -DCMAKE_RANLIB=`which $$($(1)_ranlib)` \
-               -DCMAKE_INSTALL_LIBDIR=lib/ \
+               -DCMAKE_INSTALL_LIBDIR=lib \
                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(V) \
                -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY:BOOL=TRUE \

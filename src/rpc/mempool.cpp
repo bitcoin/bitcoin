@@ -60,6 +60,9 @@ static RPCMethod sendrawtransaction()
         "dedicated, short-lived connections to Tor or I2P peers or IPv4/IPv6 peers\n"
         "via the Tor network. This conceals the transaction's origin. The transaction\n"
         "will only enter the local mempool when it is received back from the network.\n"
+        "The private broadcast queue is bounded: when it is full, this RPC fails and\n"
+        "the transaction is not scheduled, until an existing one completes or is\n"
+        "aborted. Use getprivatebroadcastinfo to inspect the queue and abortprivatebroadcast to abort.\n"
 
         "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
 
@@ -143,7 +146,8 @@ static RPCMethod getprivatebroadcastinfo()
 {
     return RPCMethod{
         "getprivatebroadcastinfo",
-        "Returns information about transactions that are currently being privately broadcast.\n",
+        "Returns information about transactions that are currently being privately broadcast.\n"
+        "This method is only available when running with -privatebroadcast enabled.\n",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -176,6 +180,10 @@ static RPCMethod getprivatebroadcastinfo()
         {
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
             const PeerManager& peerman{EnsurePeerman(node)};
+            if (!peerman.GetInfo().private_broadcast) {
+                throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.");
+            }
+
             const auto txs{peerman.GetPrivateBroadcastInfo()};
 
             UniValue transactions(UniValue::VARR);
@@ -211,7 +219,8 @@ static RPCMethod abortprivatebroadcast()
     return RPCMethod{
         "abortprivatebroadcast",
         "Abort private broadcast attempts for a transaction currently being privately broadcast.\n"
-        "The transaction will be removed from the private broadcast queue.\n",
+        "The transaction will be removed from the private broadcast queue.\n"
+        "This method is only available when running with -privatebroadcast enabled.\n",
         {
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A transaction identifier to abort. It will be matched against both txid and wtxid for all transactions in the private broadcast queue.\n"
                                                                 "If the provided id matches a txid that corresponds to multiple transactions with different wtxids, multiple transactions will be removed and returned."},
@@ -236,10 +245,14 @@ static RPCMethod abortprivatebroadcast()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            const uint256 id{ParseHashV(self.Arg<UniValue>("id"), "id")};
 
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
             PeerManager& peerman{EnsurePeerman(node)};
+            if (!peerman.GetInfo().private_broadcast) {
+                throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.");
+            }
+
+            const uint256 id{ParseHashV(self.Arg<UniValue>("id"), "id")};
 
             const auto removed_txs{peerman.AbortPrivateBroadcast(id)};
             if (removed_txs.empty()) {
@@ -293,7 +306,11 @@ static RPCMethod testmempoolaccept()
                     {RPCResult::Type::STR, "package-error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
                     {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                        "If not present, the tx was not fully validated due to a failure in another tx in the list."},
-                    {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
+                    {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141 (only present when 'allowed' is true)."},
+                    {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+                                                                "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+                    {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141.\n"
+                                                                       "This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)."},
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
@@ -384,7 +401,9 @@ static RPCMethod testmempoolaccept()
                         // Only return the fee and vsize if the transaction would pass ATMP.
                         // These can be used to calculate the feerate.
                         result_inner.pushKV("allowed", true);
+                        result_inner.pushKV("vsize_adjusted", virtual_size);
                         result_inner.pushKV("vsize", virtual_size);
+                        result_inner.pushKV("vsize_bip141", GetVirtualTransactionSize(*tx));
                         UniValue fees(UniValue::VOBJ);
                         fees.pushKV("base", ValueFromAmount(fee));
                         fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
@@ -432,8 +451,12 @@ static std::vector<RPCResult> ClusterDescription()
 
 static std::vector<RPCResult> MempoolEntryDescription()
 {
-    return {
-        RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+    std::vector<RPCResult> list = {
+        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+        "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+        {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141.\n"
+        "This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)."},
+        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141 (only present when 'allowed' is true)."},
         RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
         RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
@@ -455,9 +478,12 @@ static std::vector<RPCResult> MempoolEntryDescription()
             {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "parent transaction id"}}},
         RPCResult{RPCResult::Type::ARR, "spentby", "unconfirmed transactions spending outputs from this transaction",
             {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
-        RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability. (DEPRECATED)\n"},
         RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
     };
+    if (IsDeprecatedRPCEnabled("bip125")) {
+        list.emplace_back(RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability. (DEPRECATED)\n");
+    }
+    return list;
 }
 
 void AppendChunkInfo(UniValue& all_chunks, FeePerWeight chunk_feerate, std::vector<const CTxMemPoolEntry *> chunk_txs)
@@ -514,7 +540,9 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     auto [ancestor_count, ancestor_size, ancestor_fees] = pool.CalculateAncestorData(e);
     auto [descendant_count, descendant_size, descendant_fees] = pool.CalculateDescendantData(e);
 
+    info.pushKV("vsize_adjusted", e.GetTxSize());
     info.pushKV("vsize", e.GetTxSize());
+    info.pushKV("vsize_bip141", GetVirtualTransactionSize(e.GetTx()));
     info.pushKV("weight", e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", e.GetHeight());
@@ -556,18 +584,19 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     }
 
     info.pushKV("spentby", std::move(spent));
+    info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
 
     // Add opt-in RBF status
-    bool rbfStatus = false;
-    RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
-    if (rbfState == RBFTransactionState::UNKNOWN) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Transaction is not in mempool");
-    } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
-        rbfStatus = true;
+    if (IsDeprecatedRPCEnabled("bip125")) {
+        bool rbfStatus = false;
+        RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
+        if (rbfState == RBFTransactionState::UNKNOWN) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Transaction is not in mempool");
+        } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+            rbfStatus = true;
+        }
+        info.pushKV("bip125-replaceable", rbfStatus);
     }
-
-    info.pushKV("bip125-replaceable", rbfStatus);
-    info.pushKV("unbroadcast", pool.IsUnbroadcastTx(tx.GetHash()));
 }
 
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempool_sequence)
@@ -1057,12 +1086,14 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("minrelaytxfee", ValueFromAmount(pool.m_opts.min_relay_feerate.GetFeePerK()));
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
     ret.pushKV("unbroadcastcount", pool.GetUnbroadcastTxs().size());
-    ret.pushKV("fullrbf", true);
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
     ret.pushKV("maxdatacarriersize", pool.m_opts.max_datacarrier_bytes.value_or(0));
     ret.pushKV("limitclustercount", pool.m_opts.limits.cluster_count);
     ret.pushKV("limitclustersize", pool.m_opts.limits.cluster_size_vbytes);
     ret.pushKV("optimal", pool.m_txgraph->DoWork(0)); // 0 work is a quick check for known optimality
+    if (IsDeprecatedRPCEnabled("fullrbf")) {
+        ret.pushKV("fullrbf", true);
+    }
     return ret;
 }
 
@@ -1073,24 +1104,30 @@ static RPCMethod getmempoolinfo()
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::BOOL, "loaded", "True if the initial load attempt of the persisted mempool finished"},
-                {RPCResult::Type::NUM, "size", "Current tx count"},
-                {RPCResult::Type::NUM, "bytes", "Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted"},
-                {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
-                {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritisetransaction"},
-                {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
-                {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
-                {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
-                {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
-                {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
-                {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)"},
-                {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
-                {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
-                {RPCResult::Type::NUM, "limitclustercount", "Maximum number of transactions that can be in a cluster (configured by -limitclustercount)"},
-                {RPCResult::Type::NUM, "limitclustersize", "Maximum size of a cluster in virtual bytes (configured by -limitclustersize)"},
-                {RPCResult::Type::BOOL, "optimal", "If the mempool is in a known-optimal transaction ordering"},
-            }},
+            [](){
+                std::vector<RPCResult> list = {
+                    {RPCResult::Type::BOOL, "loaded", "True if the initial load attempt of the persisted mempool finished"},
+                    {RPCResult::Type::NUM, "size", "Current tx count"},
+                    {RPCResult::Type::NUM, "bytes", "Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted"},
+                    {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
+                    {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritisetransaction"},
+                    {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
+                    {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
+                    {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
+                    {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                    {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
+                    {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
+                    {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
+                    {RPCResult::Type::NUM, "limitclustercount", "Maximum number of transactions that can be in a cluster (configured by -limitclustercount)"},
+                    {RPCResult::Type::NUM, "limitclustersize", "Maximum size of a cluster in virtual bytes (configured by -limitclustersize)"},
+                    {RPCResult::Type::BOOL, "optimal", "If the mempool is in a known-optimal transaction ordering"},
+                };
+                if (IsDeprecatedRPCEnabled("fullrbf")) {
+                    list.emplace_back(RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)");
+                }
+                return list;
+            }()
+            },
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")
             + HelpExampleRpc("getmempoolinfo", "")
@@ -1207,7 +1244,8 @@ static std::vector<RPCResult> OrphanDescription()
         RPCResult{RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
         RPCResult{RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
         RPCResult{RPCResult::Type::NUM, "bytes", "The serialized transaction size in bytes"},
-        RPCResult{RPCResult::Type::NUM, "vsize", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "vsize", "(DEPRECATED) use vsize_bip141 instead. The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "vsize_bip141", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
         RPCResult{RPCResult::Type::NUM, "weight", "The transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::ARR, "from", "",
         {
@@ -1223,6 +1261,7 @@ static UniValue OrphanToJSON(const node::TxOrphanage::OrphanInfo& orphan)
     o.pushKV("wtxid", orphan.tx->GetWitnessHash().ToString());
     o.pushKV("bytes", orphan.tx->ComputeTotalSize());
     o.pushKV("vsize", GetVirtualTransactionSize(*orphan.tx));
+    o.pushKV("vsize_bip141", GetVirtualTransactionSize(*orphan.tx));
     o.pushKV("weight", GetTransactionWeight(*orphan.tx));
     UniValue from(UniValue::VARR);
     for (const auto fromPeer: orphan.announcers) {
@@ -1336,7 +1375,10 @@ static RPCMethod submitpackage()
                     {RPCResult::Type::OBJ, "wtxid", "transaction wtxid", {
                         {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                         {RPCResult::Type::STR_HEX, "other-wtxid", /*optional=*/true, "The wtxid of a different transaction with the same txid but different witness found in the mempool. This means the submitted transaction was ignored."},
-                        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Sigops-adjusted virtual transaction size."},
+                        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141."},
+                        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+                                                                    "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+                        {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141."},
                         {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees", {
                             {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
                             {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/true, "if the transaction was not already in the mempool, the effective feerate in " + CURRENCY_UNIT + " per KvB. For example, the package feerate and/or feerate with modified fees from prioritisetransaction."},
@@ -1484,7 +1526,9 @@ static RPCMethod submitpackage()
                     break;
                 case MempoolAcceptResult::ResultType::VALID:
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
+                    result_inner.pushKV("vsize_adjusted", it->second.m_vsize.value());
                     result_inner.pushKV("vsize", it->second.m_vsize.value());
+                    result_inner.pushKV("vsize_bip141", GetVirtualTransactionSize(*tx));
                     UniValue fees(UniValue::VOBJ);
                     fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
                     if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {

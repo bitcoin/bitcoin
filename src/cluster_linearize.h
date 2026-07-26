@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -316,7 +317,7 @@ public:
     {
         DepGraphIndex old_len = list.size();
         for (auto i : select) list.push_back(i);
-        std::sort(list.begin() + old_len, list.end(), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+        std::ranges::sort(std::span{list}.subspan(old_len), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
             const auto a_anc_count = entries[a].ancestors.Count();
             const auto b_anc_count = entries[b].ancestors.Count();
             if (a_anc_count != b_anc_count) return a_anc_count < b_anc_count;
@@ -432,7 +433,7 @@ std::vector<SetInfo<SetType>> ChunkLinearizationInfo(const DepGraph<SetType>& de
         /** The new chunk to be added, initially a singleton. */
         SetInfo<SetType> new_chunk(depgraph, i);
         // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
-        while (!ret.empty() && new_chunk.feerate >> ret.back().feerate) {
+        while (!ret.empty() && ByRatio{new_chunk.feerate} > ByRatio{ret.back().feerate}) {
             new_chunk |= ret.back();
             ret.pop_back();
         }
@@ -452,7 +453,7 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
         /** The new chunk to be added, initially a singleton. */
         auto new_chunk = depgraph.FeeRate(i);
         // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
-        while (!ret.empty() && new_chunk >> ret.back()) {
+        while (!ret.empty() && ByRatio{new_chunk} > ByRatio{ret.back()}) {
             new_chunk += ret.back();
             ret.pop_back();
         }
@@ -953,11 +954,16 @@ private:
         Assume(m_chunk_idxs[bottom_idx]);
         auto& top_chunk_info = m_set_info[top_idx];
         auto& bottom_chunk_info = m_set_info[bottom_idx];
-        // Count the number of dependencies between bottom_chunk and top_chunk.
+        // Count the number of dependencies between bottom_chunk and top_chunk, remembering the
+        // per-transaction counts so the picking loop below does not need to recompute the
+        // intersections.
         unsigned num_deps{0};
+        std::array<SetIdx, SetType::Size()> counts;
         for (auto tx_idx : top_chunk_info.transactions) {
             auto& tx_data = m_tx_data[tx_idx];
-            num_deps += (tx_data.children & bottom_chunk_info.transactions).Count();
+            auto count = (tx_data.children & bottom_chunk_info.transactions).Count();
+            counts[tx_idx] = count;
+            num_deps += count;
         }
         m_cost.MergeChunksMid(/*num_txns=*/top_chunk_info.transactions.Count());
         Assume(num_deps > 0);
@@ -966,10 +972,10 @@ private:
         unsigned num_steps = 0;
         for (auto tx_idx : top_chunk_info.transactions) {
             ++num_steps;
-            auto& tx_data = m_tx_data[tx_idx];
-            auto intersect = tx_data.children & bottom_chunk_info.transactions;
-            auto count = intersect.Count();
+            auto count = counts[tx_idx];
             if (pick < count) {
+                auto& tx_data = m_tx_data[tx_idx];
+                auto intersect = tx_data.children & bottom_chunk_info.transactions;
                 for (auto child_idx : intersect) {
                     if (pick == 0) {
                         m_cost.MergeChunksEnd(/*num_steps=*/num_steps);
@@ -1031,8 +1037,8 @@ private:
             auto& reached_chunk_info = m_set_info[reached_chunk_idx];
             todo -= reached_chunk_info.transactions;
             // See if it has an acceptable feerate.
-            auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached_chunk_info.feerate)
-                                : FeeRateCompare(reached_chunk_info.feerate, best_other_chunk_feerate);
+            auto cmp = DownWard ? ByRatio{best_other_chunk_feerate} <=> ByRatio{reached_chunk_info.feerate}
+                                : ByRatio{reached_chunk_info.feerate} <=> ByRatio{best_other_chunk_feerate};
             if (cmp > 0) continue;
             uint64_t tiebreak = m_rng.rand64();
             if (cmp < 0 || tiebreak >= best_other_chunk_tiebreak) {
@@ -1154,7 +1160,7 @@ private:
                 auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
                 // Skip if this dependency is ineligible (the top chunk that would be created
                 // does not have higher feerate than the chunk it is currently part of).
-                auto cmp = FeeRateCompare(dep_top_info.feerate, chunk_info.feerate);
+                auto cmp = ByRatio{dep_top_info.feerate} <=> ByRatio{chunk_info.feerate};
                 if (cmp <= 0) continue;
                 // Generate a random tiebreak for this dependency, and reject it if its tiebreak
                 // is worse than the best so far. This means that among all eligible
@@ -1182,6 +1188,7 @@ public:
         m_tx_data.resize(depgraph.PositionRange());
         m_set_info.resize(num_transactions);
         m_reachable.resize(num_transactions);
+        m_suboptimal_chunks.reserve(num_transactions);
         size_t num_chunks = 0;
         size_t num_deps = 0;
         for (auto tx_idx : m_transaction_idxs) {
@@ -1381,7 +1388,7 @@ public:
                 // Skip if this dependency does not have equal top and bottom set feerates. Note
                 // that the top cannot have higher feerate than the bottom, or OptimizeSteps would
                 // have dealt with it.
-                if (dep_top_info.feerate << chunk_info.feerate) continue;
+                if (ByRatio{dep_top_info.feerate} < ByRatio{chunk_info.feerate}) continue;
                 have_any = true;
                 // Skip if this dependency does not have pivot in the right place.
                 if (move_pivot_down == dep_top_info.transactions[pivot_idx]) continue;
@@ -1470,16 +1477,22 @@ public:
         /** A heap with all chunks (by set index) that can currently be included, sorted by
          *  chunk feerate (high to low), chunk size (small to large), and by least maximum element
          *  according to the fallback order (which is the second pair element). */
-        std::vector<std::pair<SetIdx, TxIdx>> ready_chunks;
+        std::array<std::pair<SetIdx, TxIdx>, SetType::Size()> ready_chunks;
+        /** The number of entries of ready_chunks in use. */
+        unsigned num_ready_chunks{0};
         /** For every chunk, indexed by SetIdx, the number of unmet dependencies the chunk has on
          *  other chunks (not including dependencies within the chunk itself). */
-        std::vector<TxIdx> chunk_deps(m_set_info.size(), 0);
+        std::array<TxIdx, SetType::Size()> chunk_deps;
+        std::fill_n(chunk_deps.begin(), m_set_info.size(), TxIdx{0});
         /** For every transaction, indexed by TxIdx, the number of unmet dependencies the
          *  transaction has. */
-        std::vector<TxIdx> tx_deps(m_tx_data.size(), 0);
+        std::array<TxIdx, SetType::Size()> tx_deps;
+        std::fill_n(tx_deps.begin(), m_tx_data.size(), TxIdx{0});
         /** A heap with all transactions within the current chunk that can be included, sorted by
          *  tx feerate (high to low), tx size (small to large), and fallback order. */
-        std::vector<TxIdx> ready_tx;
+        std::array<TxIdx, SetType::Size()> ready_tx;
+        /** The number of entries of ready_tx in use. */
+        unsigned num_ready_tx{0};
         // Populate chunk_deps and tx_deps.
         unsigned num_deps{0};
         for (TxIdx chl_idx : m_transaction_idxs) {
@@ -1510,7 +1523,7 @@ public:
             // First sort by increasing transaction feerate.
             auto& a_feerate = m_depgraph.FeeRate(a);
             auto& b_feerate = m_depgraph.FeeRate(b);
-            auto feerate_cmp = FeeRateCompare(a_feerate, b_feerate);
+            auto feerate_cmp = ByRatio{a_feerate} <=> ByRatio{b_feerate};
             if (feerate_cmp != 0) return feerate_cmp < 0;
             // Then by decreasing transaction size.
             if (a_feerate.size != b_feerate.size) {
@@ -1532,7 +1545,7 @@ public:
             // First sort by increasing chunk feerate.
             auto& chunk_feerate_a = m_set_info[a.first].feerate;
             auto& chunk_feerate_b = m_set_info[b.first].feerate;
-            auto feerate_cmp = FeeRateCompare(chunk_feerate_a, chunk_feerate_b);
+            auto feerate_cmp = ByRatio{chunk_feerate_a} <=> ByRatio{chunk_feerate_b};
             if (feerate_cmp != 0) return feerate_cmp < 0;
             // Then by decreasing chunk size.
             if (chunk_feerate_a.size != chunk_feerate_b.size) {
@@ -1548,31 +1561,31 @@ public:
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
         for (SetIdx chunk_idx : m_chunk_idxs) {
             if (chunk_deps[chunk_idx] == 0) {
-                ready_chunks.emplace_back(chunk_idx, max_fallback_fn(chunk_idx));
+                ready_chunks[num_ready_chunks++] = {chunk_idx, max_fallback_fn(chunk_idx)};
             }
         }
-        std::make_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
+        std::make_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
         // Pop chunks off the heap.
-        while (!ready_chunks.empty()) {
+        while (num_ready_chunks > 0) {
             auto [chunk_idx, _rnd] = ready_chunks.front();
-            std::pop_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
-            ready_chunks.pop_back();
+            std::pop_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
+            --num_ready_chunks;
             Assume(chunk_deps[chunk_idx] == 0);
             const auto& chunk_txn = m_set_info[chunk_idx].transactions;
             // Build heap of all includable transactions in chunk.
-            Assume(ready_tx.empty());
+            Assume(num_ready_tx == 0);
             for (TxIdx tx_idx : chunk_txn) {
-                if (tx_deps[tx_idx] == 0) ready_tx.push_back(tx_idx);
+                if (tx_deps[tx_idx] == 0) ready_tx[num_ready_tx++] = tx_idx;
             }
-            Assume(!ready_tx.empty());
-            std::make_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
+            Assume(num_ready_tx > 0);
+            std::make_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
             // Pick transactions from the ready heap, append them to linearization, and decrement
             // dependency counts.
-            while (!ready_tx.empty()) {
+            while (num_ready_tx > 0) {
                 // Pop an element from the tx_ready heap.
                 auto tx_idx = ready_tx.front();
-                std::pop_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
-                ready_tx.pop_back();
+                std::pop_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
+                --num_ready_tx;
                 // Append to linearization.
                 ret.push_back(tx_idx);
                 // Decrement dependency counts.
@@ -1583,16 +1596,16 @@ public:
                     Assume(tx_deps[chl_idx] > 0);
                     if (--tx_deps[chl_idx] == 0 && chunk_txn[chl_idx]) {
                         // Child tx has no dependencies left, and is in this chunk. Add it to the tx heap.
-                        ready_tx.push_back(chl_idx);
-                        std::push_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
+                        ready_tx[num_ready_tx++] = chl_idx;
+                        std::push_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
                     }
                     // Decrement chunk dependency count if this is out-of-chunk dependency.
                     if (chl_data.chunk_idx != chunk_idx) {
                         Assume(chunk_deps[chl_data.chunk_idx] > 0);
                         if (--chunk_deps[chl_data.chunk_idx] == 0) {
                             // Child chunk has no dependencies left. Add it to the chunk heap.
-                            ready_chunks.emplace_back(chl_data.chunk_idx, max_fallback_fn(chl_data.chunk_idx));
-                            std::push_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
+                            ready_chunks[num_ready_chunks++] = {chl_data.chunk_idx, max_fallback_fn(chl_data.chunk_idx)};
+                            std::push_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
                         }
                     }
                 }
@@ -1622,7 +1635,7 @@ public:
         for (auto chunk_idx : m_chunk_idxs) {
             ret.push_back(m_set_info[chunk_idx].feerate);
         }
-        std::sort(ret.begin(), ret.end(), std::greater{});
+        std::ranges::sort(ret, std::greater<ByRatioNegSize<FeeFrac>>{});
         return ret;
     }
 
@@ -1651,8 +1664,8 @@ public:
                 }
             }
         }
-        std::sort(expected_dependencies.begin(), expected_dependencies.end());
-        std::sort(all_dependencies.begin(), all_dependencies.end());
+        std::ranges::sort(expected_dependencies);
+        std::ranges::sort(all_dependencies);
         assert(expected_dependencies == all_dependencies);
 
         //
@@ -1976,7 +1989,7 @@ void PostLinearize(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> l
             DepGraphIndex next_group = SENTINEL; // We inserted at the end, so next group is sentinel.
             DepGraphIndex prev_group = entries[cur_group].prev_group;
             // Continue as long as the current group has higher feerate than the previous one.
-            while (entries[cur_group].feerate >> entries[prev_group].feerate) {
+            while (ByRatio{entries[cur_group].feerate} > ByRatio{entries[prev_group].feerate}) {
                 // prev_group/cur_group/next_group refer to (the last transactions of) 3
                 // consecutive entries in groups list.
                 Assume(cur_group == entries[next_group].prev_group);

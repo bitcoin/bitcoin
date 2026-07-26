@@ -1,0 +1,31 @@
+Fix compiling on OpenBSD
+
+1. The `net/if_types.h` header does not define the `IFT_STF` symbol.
+2. The `netinet6/in6_var.h` header defines some of the used symbols.
+
+For the reference, see:
+ - https://codeberg.org/OpenBSD/ports/src/commit/f8f1aedbe8aff550c69930b5d92b9c392e298382/x11/qt6/qtbase/patches/patch-src_network_kernel_qnetworkinterface_unix_cpp
+
+
+--- a/qtbase/src/network/kernel/qnetworkinterface_unix.cpp
++++ b/qtbase/src/network/kernel/qnetworkinterface_unix.cpp
+@@ -392,6 +392,9 @@ QT_BEGIN_INCLUDE_NAMESPACE
+ #  include <net/if_media.h>
+ #  include <net/if_types.h>
+ #  include <netinet/in_var.h>
++#  ifdef Q_OS_OPENBSD
++#    include <netinet6/in6_var.h>
++#  endif
+ #endif // QT_PLATFORM_UIKIT
+ QT_END_INCLUDE_NAMESPACE
+ 
+@@ -419,7 +422,9 @@ static QNetworkInterface::InterfaceType probeIfType(int socket, int iftype, stru
+         return QNetworkInterface::Ieee1394;
+ 
+     case IFT_GIF:
++#ifndef Q_OS_OPENBSD
+     case IFT_STF:
++#endif
+         return QNetworkInterface::Virtual;
+     }
+ 

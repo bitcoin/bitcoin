@@ -46,8 +46,7 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
     if (!random_ckey.IsValid()) return;
     CPubKey pubkey{random_ckey.GetPubKey()};
 
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -64,7 +63,7 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
                 (void)crypt.Decrypt(cipher_text_ed, plain_text_ed);
             },
             [&] {
-                const CKeyingMaterial master_key(random_key.begin(), random_key.end());;
+                const CKeyingMaterial master_key(random_key.begin(), random_key.end());
                 (void)EncryptSecret(master_key, plain_text_ed, pubkey.GetHash(), cipher_text_ed);
             },
             [&] {

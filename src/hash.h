@@ -13,19 +13,27 @@
 #include <prevector.h>
 #include <serialize.h>
 #include <span.h>
+#include <support/cleanse.h>
 #include <uint256.h>
 
 #include <string>
 #include <vector>
 
-typedef uint256 ChainCode;
+/** A BIP32 chain code. Cleansed on destruction. */
+class ChainCode : public base_blob<256> {
+public:
+    constexpr ChainCode() = default;
+    constexpr explicit ChainCode(std::span<const unsigned char> vch) : base_blob<256>(vch) {}
+    constexpr explicit ChainCode(const base_blob<256>& b) : base_blob<256>(b) {}
+    ~ChainCode() { memory_cleanse(data(), size()); }
+};
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
 class CHash256 {
 private:
     CSHA256 sha;
 public:
-    static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
+    static constexpr size_t OUTPUT_SIZE{CSHA256::OUTPUT_SIZE};
 
     void Finalize(std::span<unsigned char> output) {
         assert(output.size() == OUTPUT_SIZE);
@@ -50,7 +58,7 @@ class CHash160 {
 private:
     CSHA256 sha;
 public:
-    static const size_t OUTPUT_SIZE = CRIPEMD160::OUTPUT_SIZE;
+    static constexpr size_t OUTPUT_SIZE{CRIPEMD160::OUTPUT_SIZE};
 
     void Finalize(std::span<unsigned char> output) {
         assert(output.size() == OUTPUT_SIZE);

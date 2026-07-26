@@ -180,7 +180,6 @@ can be called after the TestShell is shut down.
 | `loglevel` | `INFO` | Logs events at this level and higher. Can be set to `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL`. |
 | `nocleanup` | `False` | Cleans up temporary test directory if set to `True` during `shutdown`. |
 | `num_nodes` | `1` | Sets the number of initialized bitcoind processes. |
-| `perf` | False | Profiles running nodes with `perf` for the duration of the test if set to `True`. |
 | `rpc_timeout` | `60` | Sets the RPC server timeout for the underlying bitcoind processes. |
 | `setup_clean_chain` | `False` | A 200-block-long chain is initialized from cache by default. Instead, `setup_clean_chain` initializes an empty blockchain if set to `True`. |
 | `randomseed` | Random Integer | `TestShell().options.randomseed` is a member of `TestShell` which can be accessed during a test to seed a random generator. User can override default with a constant value for reproducible test runs. |

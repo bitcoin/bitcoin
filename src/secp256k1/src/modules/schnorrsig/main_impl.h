@@ -123,7 +123,6 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
     secp256k1_scalar sk;
     secp256k1_scalar e;
     secp256k1_scalar k;
-    secp256k1_gej rj;
     secp256k1_ge pk;
     secp256k1_ge r;
     unsigned char nonce32[32] = { 0 };
@@ -160,8 +159,7 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
     ret &= !secp256k1_scalar_is_zero(&k);
     secp256k1_scalar_cmov(&k, &secp256k1_scalar_one, !ret);
 
-    secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &rj, &k);
-    secp256k1_ge_set_gej(&r, &rj);
+    secp256k1_ecmult_gen_ge(&ctx->ecmult_gen_ctx, &r, &k);
 
     /* We declassify r to allow using it as a branch point. This is fine
      * because r is not a secret. */
@@ -183,7 +181,6 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
     secp256k1_scalar_clear(&sk);
     secp256k1_memclear_explicit(seckey, sizeof(seckey));
     secp256k1_memclear_explicit(nonce32, sizeof(nonce32));
-    secp256k1_gej_clear(&rj);
 
     return ret;
 }

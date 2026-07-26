@@ -4,8 +4,6 @@
 
 #include <script/parsing.h>
 
-#include <span.h>
-
 #include <algorithm>
 #include <cstddef>
 #include <string>

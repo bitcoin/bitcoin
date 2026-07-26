@@ -33,7 +33,7 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 
 ## Number of peers
 
-- `-maxconnections=<n>` - the maximum number of connections, which defaults to 125. Each active connection takes up some
+- `-maxconnections=<n>` - the maximum number of connections, which defaults to 200. Each active connection takes up some
   memory. This option applies only if inbound connections are enabled; otherwise, the number of connections will not
   be more than 11. Of the 11 outbound peers, there can be 8 full-relay connections, 2 block-relay-only ones,
   and occasionally 1 short-lived feeler or extra outbound block-relay-only connection.
@@ -49,6 +49,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 
 - `-par=<n>` - the number of script verification threads, defaults to the number of cores in the system minus one.
 - `-rpcthreads=<n>` - the number of threads used for processing RPC requests, defaults to `16`.
+- `-prevoutfetchthreads=<n>` - the number of threads used to fetch block input prevouts, defaults to `8`.
 
 ## Linux specific
 

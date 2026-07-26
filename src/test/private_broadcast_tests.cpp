@@ -5,10 +5,22 @@
 #include <primitives/transaction.h>
 #include <private_broadcast.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/time.h>
 
 #include <algorithm>
+#include <ostream>
 #include <boost/test/unit_test.hpp>
+
+std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
+{
+    switch (r) {
+    case PrivateBroadcast::AddResult::Added: return os << "Added";
+    case PrivateBroadcast::AddResult::AlreadyPresent: return os << "AlreadyPresent";
+    case PrivateBroadcast::AddResult::QueueFull: return os << "QueueFull";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)
 
@@ -26,7 +38,7 @@ static CTransactionRef MakeDummyTx(uint32_t id, size_t num_witness)
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-    SetMockTime(Now<NodeSeconds>());
+    FakeNodeClock clock{};
 
     PrivateBroadcast pb;
     const NodeId recipient1{1};
@@ -43,15 +55,15 @@ BOOST_AUTO_TEST_CASE(basic)
     // Make a transaction and add it.
     const auto tx1{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
 
-    BOOST_CHECK(pb.Add(tx1));
-    BOOST_CHECK(!pb.Add(tx1));
+    BOOST_CHECK_EQUAL(pb.Add(tx1), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.Add(tx1), PrivateBroadcast::AddResult::AlreadyPresent);
 
     // Make another transaction with same txid, different wtxid and add it.
     const auto tx2{MakeDummyTx(/*id=*/1, /*num_witness=*/1)};
     BOOST_REQUIRE(tx1->GetHash() == tx2->GetHash());
     BOOST_REQUIRE(tx1->GetWitnessHash() != tx2->GetWitnessHash());
 
-    BOOST_CHECK(pb.Add(tx2));
+    BOOST_CHECK_EQUAL(pb.Add(tx2), PrivateBroadcast::AddResult::Added);
     const auto find_tx_info{[](auto& infos, const CTransactionRef& tx) -> const PrivateBroadcast::TxBroadcastInfo& {
         const auto it{std::ranges::find(infos, tx->GetWitnessHash(), [](const auto& info) { return info.tx->GetWitnessHash(); })};
         BOOST_REQUIRE(it != infos.end());
@@ -94,7 +106,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
 
     // 2. Fast-forward the mock clock past the INITIAL_STALE_DURATION.
-    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION + 1min);
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1min;
 
     // 3. Now that the initial duration has passed, both unconfirmed transactions should be stale.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
@@ -125,7 +137,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(stale_state.size(), 1);
     BOOST_CHECK_EQUAL(stale_state[0], tx_for_recipient2);
 
-    SetMockTime(Now<NodeSeconds>() + 10h);
+    clock += 10h;
 
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
@@ -141,20 +153,72 @@ BOOST_AUTO_TEST_CASE(basic)
 
 BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
 {
-    SetMockTime(Now<NodeSeconds>());
+    FakeNodeClock clock{};
 
     PrivateBroadcast pb;
     const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
-    BOOST_REQUIRE(pb.Add(tx));
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
 
     // Unpicked transactions use the longer INITIAL_STALE_DURATION.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
-    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION - 1min);
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION - 1min;
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
-    SetMockTime(Now<NodeSeconds>() + 2min);
+    clock += 2min;
     const auto stale_state{pb.GetStale()};
     BOOST_REQUIRE_EQUAL(stale_state.size(), 1);
     BOOST_CHECK_EQUAL(stale_state[0], tx);
+}
+
+BOOST_AUTO_TEST_CASE(rejection_at_cap)
+{
+    PrivateBroadcast pb;
+    constexpr size_t num_cap{PrivateBroadcast::MAX_TRANSACTIONS};
+    constexpr size_t num_over{5};
+
+    // Fill the queue exactly to the cap; every distinct Add() succeeds.
+    std::vector<CTransactionRef> txs;
+    txs.reserve(num_cap);
+    for (size_t i{0}; i < num_cap; ++i) {
+        auto tx{MakeDummyTx(/*id=*/static_cast<uint32_t>(i), /*num_witness=*/0)};
+        BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+        txs.push_back(std::move(tx));
+    }
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+
+    // Further distinct transactions are rejected, and the queue is unchanged.
+    for (size_t i{0}; i < num_over; ++i) {
+        const auto tx{MakeDummyTx(/*id=*/static_cast<uint32_t>(num_cap + i), /*num_witness=*/0)};
+        BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::QueueFull);
+    }
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+
+    // Nothing was evicted: all originally-added transactions are still present.
+    const auto infos{pb.GetBroadcastInfo()};
+    std::set<uint256> present_wtxids;
+    for (const auto& info : infos) {
+        present_wtxids.insert(info.tx->GetWitnessHash().ToUint256());
+    }
+    BOOST_CHECK_EQUAL(present_wtxids.size(), infos.size());
+    for (size_t i{0}; i < num_cap; ++i) {
+        BOOST_CHECK_MESSAGE(present_wtxids.contains(txs[i]->GetWitnessHash().ToUint256()),
+                            "tx index " << i << " should still be present");
+    }
+
+    // Re-adding an already-present tx is AlreadyPresent even at the cap (not QueueFull).
+    BOOST_CHECK_EQUAL(pb.Add(txs[0]), PrivateBroadcast::AddResult::AlreadyPresent);
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+
+    // Removing one frees exactly one slot for a new transaction.
+    BOOST_REQUIRE(pb.Remove(txs[0]).has_value());
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap - 1);
+    const auto fresh{MakeDummyTx(/*id=*/0xffffffff, /*num_witness=*/0)};
+    BOOST_CHECK_EQUAL(pb.Add(fresh), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+
+    // A previously-removed tx can be added again as a brand-new entry.
+    BOOST_REQUIRE(pb.Remove(fresh).has_value());
+    BOOST_CHECK_EQUAL(pb.Add(fresh), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

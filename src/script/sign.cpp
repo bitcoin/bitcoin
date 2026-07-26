@@ -5,31 +5,45 @@
 
 #include <script/sign.h>
 
+#include <addresstype.h>
+#include <coins.h>
 #include <consensus/amount.h>
+#include <hash.h>
 #include <key.h>
 #include <musig.h>
 #include <policy/policy.h>
+#include <prevector.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <script/verify_flags.h>
+#include <serialize.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <util/vector.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <span>
+#include <string>
+
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, int hash_type)
-    : m_txto{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount}, checker{&m_txto, nIn, amount, MissingDataBehavior::FAIL},
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, const SignOptions& options)
+    : m_txto{tx}, nIn{input_idx}, m_options{options}, amount{amount}, checker{&m_txto, nIn, amount, MissingDataBehavior::FAIL},
       m_txdata(nullptr)
 {
 }
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type)
-    : m_txto{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount},
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, const SignOptions& options)
+    : m_txto{tx}, nIn{input_idx}, m_options{options}, amount{amount},
       checker{txdata ? MutableTransactionSignatureChecker{&m_txto, nIn, amount, *txdata, MissingDataBehavior::FAIL} :
                        MutableTransactionSignatureChecker{&m_txto, nIn, amount, MissingDataBehavior::FAIL}},
       m_txdata(txdata)
@@ -52,7 +66,7 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (sigversion == SigVersion::WITNESS_V0 && !MoneyRange(amount)) return false;
 
     // BASE/WITNESS_V0 signatures don't support explicit SIGHASH_DEFAULT, use SIGHASH_ALL instead.
-    const int hashtype = nHashType == SIGHASH_DEFAULT ? SIGHASH_ALL : nHashType;
+    const int hashtype = m_options.sighash_type == SIGHASH_DEFAULT ? SIGHASH_ALL : m_options.sighash_type;
 
     uint256 hash = SignatureHash(scriptCode, m_txto, nIn, hashtype, amount, sigversion, m_txdata);
     if (!key.Sign(hash, vchSig))
@@ -81,7 +95,7 @@ std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatu
         execdata.m_tapleaf_hash = *leaf_hash;
     }
     uint256 hash;
-    if (!SignatureHashSchnorr(hash, execdata, m_txto, nIn, nHashType, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
+    if (!SignatureHashSchnorr(hash, execdata, m_txto, nIn, m_options.sighash_type, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
     return hash;
 }
 
@@ -96,7 +110,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     sig.resize(64);
     // Use uint256{} as aux_rnd for now.
     if (!key.SignSchnorr(*hash, sig, merkle_root, {})) return false;
-    if (nHashType) sig.push_back(nHashType);
+    if (m_options.sighash_type) sig.push_back(m_options.sighash_type);
     return true;
 }
 
@@ -119,11 +133,11 @@ std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const
     if (!sighash.has_value()) return {};
 
     MuSig2SecNonce secnonce;
-    std::vector<uint8_t> out = key.CreateMuSig2Nonce(secnonce, *sighash, aggregate_pubkey, pubkeys);
+    std::vector<uint8_t> out = ::CreateMuSig2Nonce(secnonce, *sighash, key, aggregate_pubkey, pubkeys);
     if (out.empty()) return {};
 
     // Store the secnonce in the SigningProvider
-    provider.SetMuSig2SecNonce(MuSig2SessionID(script_pubkey, part_pubkey, *sighash), std::move(secnonce));
+    provider.SetMuSig2SecNonce(MuSig2SessionID(script_pubkey, part_pubkey, *sighash, out), std::move(secnonce));
 
     return out;
 }
@@ -156,12 +170,14 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     if (!sighash.has_value()) return false;
 
     // Retrieve the secnonce
-    uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash);
+    auto part_pubnonce_it = pubnonces.find(part_pubkey);
+    if (part_pubnonce_it == pubnonces.end()) return false;
+    uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash, part_pubnonce_it->second);
     std::optional<std::reference_wrapper<MuSig2SecNonce>> secnonce = provider.GetMuSig2SecNonce(session_id);
     if (!secnonce || !secnonce->get().IsValid()) return false;
 
     // Compute the sig
-    std::optional<uint256> sig = key.CreateMuSig2PartialSig(*sighash, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
+    std::optional<uint256> sig = ::CreateMuSig2PartialSig(*sighash, key, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
     if (!sig) return false;
     partial_sig = std::move(*sig);
 
@@ -197,7 +213,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vec
     std::optional<std::vector<uint8_t>> res = ::CreateMuSig2AggregateSig(participants, aggregate_pubkey, tweaks, *sighash, pubnonces, partial_sigs);
     if (!res) return false;
     sig = res.value();
-    if (nHashType) sig.push_back(nHashType);
+    if (m_options.sighash_type) sig.push_back(m_options.sighash_type);
 
     return true;
 }
@@ -1006,9 +1022,9 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
-bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, int nHashType, std::map<int, bilingual_str>& input_errors)
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const SignOptions& options, std::map<int, bilingual_str>& input_errors)
 {
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((options.sighash_type & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
@@ -1044,7 +1060,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, &txdata, options), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);

@@ -50,20 +50,19 @@ TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + OVERLOADED_PEER
 
 def cleanup(func):
     def wrapper(self):
-        try:
-            func(self)
-        finally:
-            # Clear mempool
-            self.generate(self.nodes[0], 1)
-            self.nodes[0].disconnect_p2ps()
-            # Check that mempool and orphanage have been cleared
-            self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
-            assert_equal(0, len(self.nodes[0].getrawmempool()))
+        func(self)
 
-            self.restart_node(0, extra_args=["-persistmempool=0"])
-            # Allow use of bumpmocktime again
-            self.nodes[0].setmocktime(int(time.time()))
-            self.wallet.rescan_utxos(include_mempool=True)
+        # Clear mempool
+        self.generate(self.nodes[0], 1)
+        self.nodes[0].disconnect_p2ps()
+        # Check that mempool and orphanage have been cleared
+        self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
+        assert_equal(0, len(self.nodes[0].getrawmempool()))
+
+        self.restart_node(0, extra_args=["-persistmempool=0"])
+        # Allow use of bumpmocktime again
+        self.nodes[0].setmocktime(int(time.time()))
+        self.wallet.rescan_utxos(include_mempool=True)
     return wrapper
 
 class PeerTxRelayer(P2PTxInvStore):

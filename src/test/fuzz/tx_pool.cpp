@@ -2,26 +2,53 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
+#include <coins.h>
+#include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <node/context.h>
-#include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/mining_types.h>
+#include <policy/feerate.h>
+#include <policy/packages.h>
+#include <policy/policy.h>
 #include <policy/truc_policy.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 #include <test/util/mining.h>
+#include <test/util/random.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <txmempool.h>
 #include <util/check.h>
-#include <util/rbf.h>
+#include <util/string.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 using node::BlockAssembler;
+using node::BlockCreateOptions;
 using node::NodeContext;
 using util::ToString;
 
@@ -46,12 +73,10 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
     SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = P2WSH_OP_TRUE;
-    options.include_dummy_extranonce = true;
-
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(g_setup->m_node, options)};
+        COutPoint prevout{MineBlock(g_setup->m_node, {
+            .coinbase_output_script = P2WSH_OP_TRUE,
+        })};
         // Remember the txids to avoid expensive disk access later on
         auto& outpoints = i < COINBASE_MATURITY ?
                               g_outpoints_coinbase_init_mature :
@@ -95,10 +120,10 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
-        BlockAssembler::Options options;
-        options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
-        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        options.include_dummy_extranonce = true;
+        BlockCreateOptions options{
+            .block_min_fee_rate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)},
+            .block_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(DEFAULT_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT),
+        };
         auto assembler = BlockAssembler{chainstate, &tx_pool, options};
         auto block_template = assembler.CreateNewBlock();
         Assert(block_template->block.vtx.size() >= 1);
@@ -248,8 +273,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         return coin.out.nValue;
     };
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         {
             // Total supply is the mempool fee + all outpoints
             CAmount supply_now{WITH_LOCK(tx_pool.cs, return tx_pool.GetTotalFee())};
@@ -430,8 +454,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     // If we ever bypass limits, do not do TRUC invariants checks
     bool ever_bypassed_limits{false};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 300) {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
 
         if (fuzzed_data_provider.ConsumeBool()) {

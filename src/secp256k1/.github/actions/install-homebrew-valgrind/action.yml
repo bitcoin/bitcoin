@@ -5,6 +5,7 @@ runs:
   steps:
     - run: |
         brew tap LouisBrunner/valgrind
+        brew trust --formula LouisBrunner/valgrind/valgrind
         brew fetch --HEAD LouisBrunner/valgrind/valgrind
         echo "CI_HOMEBREW_CELLAR_VALGRIND=$(brew --cellar valgrind)" >> "$GITHUB_ENV"
       shell: bash

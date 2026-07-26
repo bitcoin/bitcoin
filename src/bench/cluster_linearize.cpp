@@ -4,13 +4,18 @@
 
 #include <bench/bench.h>
 #include <cluster_linearize.h>
+#include <serialize.h>
+#include <streams.h>
 #include <test/util/cluster_linearize.h>
+#include <tinyformat.h>
 #include <util/bitset.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
-#include <algorithm>
-#include <cassert>
 #include <cstdint>
+#include <span>
+#include <string>
+#include <tuple>
 #include <vector>
 
 using namespace cluster_linearize;

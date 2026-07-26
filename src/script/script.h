@@ -8,14 +8,15 @@
 
 #include <attributes.h>
 #include <crypto/common.h>
-#include <prevector.h> // IWYU pragma: export
+#include <prevector.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
+#include <iterator>
 #include <limits>
 #include <span>
 #include <stdexcept>
@@ -240,7 +241,7 @@ public:
         m_value = n;
     }
 
-    static const size_t nDefaultMaxNumSize = 4;
+    static constexpr size_t nDefaultMaxNumSize{4};
 
     explicit CScriptNum(const std::vector<unsigned char>& vch, bool fRequireMinimal,
                         const size_t nMaxNumSize = nDefaultMaxNumSize)
@@ -587,6 +588,8 @@ struct CScriptWitness
     void SetNull() { stack.clear(); stack.shrink_to_fit(); }
 
     std::string ToString() const;
+
+    bool operator==(const CScriptWitness&) const = default;
 };
 
 /** A reference to a CScript: the Hash160 of its serialization */

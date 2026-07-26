@@ -18,6 +18,9 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+// IWYU incorrectly suggests removing this header.
+// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
+#include <util/byte_units.h> // IWYU pragma: keep
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
@@ -116,11 +119,11 @@ using kernel::CBlockFileInfo;
 using kernel::BlockTreeDB;
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
-static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
+static const unsigned int BLOCKFILE_CHUNK_SIZE{16_MiB};
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
-static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+static const unsigned int UNDOFILE_CHUNK_SIZE{1_MiB};
 /** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
+static const unsigned int MAX_BLOCKFILE_SIZE{128_MiB};
 
 /** Size of header written by WriteBlock before a serialized CBlock (8 bytes) */
 static constexpr uint32_t STORAGE_HEADER_BYTES{std::tuple_size_v<MessageStartChars> + sizeof(unsigned int)};
@@ -206,7 +209,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
+    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Return false if undo file flushing fails. */
     [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
@@ -220,9 +223,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
-    bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
@@ -254,8 +257,6 @@ private:
         const Chainstate& chain,
         ChainstateManager& chainman);
 
-    RecursiveMutex cs_LastBlockFile;
-
     //! Since assumedvalid chainstates may be syncing a range of the chain that is very
     //! far away from the normal/background validation process, we should segment blockfiles
     //! for assumed chainstates. Otherwise, we might have wildly different height ranges
@@ -267,12 +268,13 @@ private:
     //!
     //! The first element is the NORMAL cursor, second is ASSUMED.
     std::array<std::optional<BlockfileCursor>, BlockfileType::NUM_TYPES>
-        m_blockfile_cursors GUARDED_BY(cs_LastBlockFile) = {
+        m_blockfile_cursors GUARDED_BY(::cs_main) = {
             BlockfileCursor{},
             std::nullopt,
     };
-    int MaxBlockfileNum() const EXCLUSIVE_LOCKS_REQUIRED(cs_LastBlockFile)
+    int MaxBlockfileNum() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         static const BlockfileCursor empty_cursor;
         const auto& normal = m_blockfile_cursors[BlockfileType::NORMAL].value_or(empty_cursor);
         const auto& assumed = m_blockfile_cursors[BlockfileType::ASSUMED].value_or(empty_cursor);
@@ -350,9 +352,9 @@ public:
 
     /**
      * All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
-     * Pruned nodes may have entries where B is missing data.
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
+    void AddUnlinkedBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
@@ -378,7 +380,7 @@ public:
     const CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Get block file info entry for one block file */
-    CBlockFileInfo* GetBlockFileInfo(size_t n);
+    CBlockFileInfo* GetBlockFileInfo(size_t n) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     bool WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -391,7 +393,7 @@ public:
      * @returns in case of success, the position to which the block was written to
      *          in case of an error, an empty FlatFilePos
      */
-    FlatFilePos WriteBlock(const CBlock& block, int nHeight);
+    FlatFilePos WriteBlock(const CBlock& block, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *
@@ -399,7 +401,7 @@ public:
      * @param[in]  nHeight      the height of the block
      * @param[in]  pos          the position of the serialized CBlock on disk
      */
-    void UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos);
+    void UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Whether running in -prune mode. */
     [[nodiscard]] bool IsPruneMode() const { return m_prune_mode; }
@@ -411,7 +413,7 @@ public:
     [[nodiscard]] bool LoadingBlocks() const { return m_importing || !m_blockfiles_indexed; }
 
     /** Calculate the amount of disk space the block & undo files currently use */
-    uint64_t CalculateCurrentUsage();
+    uint64_t CalculateCurrentUsage() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Check if all blocks in the [upper_block, lower_block] range have data available as
     //! defined by the status mask.
@@ -455,6 +457,9 @@ public:
 
     //! Create or update a prune lock identified by its name
     void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Delete a prune lock identified by its name. Returns true if the lock existed.
+    bool DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Open a block file (blk?????.dat) */
     AutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const;

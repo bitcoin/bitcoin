@@ -3,8 +3,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "builtin-baseline": "120deac3062162151622ca4860575a33844ba10b",
   "dependencies": [
-    "boost-multi-index",
-    "libevent"
+    "boost-multi-index"
   ],
   "default-features": [
     "qt",
@@ -49,12 +48,5 @@
         "zeromq"
       ]
     }
-  },
-  "overrides": [
-    {
-      "$comment": "Newer unreleased libevent versions cause https://github.com/bitcoin/bitcoin/issues/30096",
-      "name": "libevent",
-      "version": "2.1.12#7"
-    }
-  ]
+  }
 }

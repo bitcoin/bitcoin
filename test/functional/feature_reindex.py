@@ -20,6 +20,7 @@ from test_framework.util import (
 
 class ReindexTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.rpc_timeout *= 2  # To avoid timeout when generating the reindex chain
         self.setup_clean_chain = True
         self.num_nodes = 1
 

@@ -4,9 +4,9 @@
 
 #include <bench/bench.h>
 #include <random.h>
-#include <support/allocators/secure.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/context.h>
@@ -14,7 +14,6 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <memory>
 #include <optional>
 #include <string>
@@ -47,17 +46,21 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
     const auto wallet_path = test_setup->m_path_root / "test_wallet";
     const auto wallet_name = fs::PathToString(wallet_path);
 
-    bench.run([&] {
-        auto wallet = CreateWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error_string, warnings);
-        assert(status == DatabaseStatus::SUCCESS);
-        assert(wallet != nullptr);
-
+    std::shared_ptr<CWallet> wallet;
+    auto cleanup{[&] {
+        if (!wallet) return;
         // Release wallet
-        RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
+        RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt);
         WaitForDeleteWallet(std::move(wallet));
         fs::remove(wallet_path / "wallet.dat");
         fs::remove(wallet_path);
+    }};
+    bench.setup(cleanup).run([&] {
+        wallet = CreateWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error_string, warnings);
+        assert(status == DatabaseStatus::SUCCESS);
+        assert(wallet != nullptr);
     });
+    cleanup();
 }
 
 static void WalletCreatePlain(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/false); }

@@ -24,6 +24,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
 )
 
+
 Key = namedtuple('Key', ['privkey',
                          'pubkey',
                          'p2pkh_script',

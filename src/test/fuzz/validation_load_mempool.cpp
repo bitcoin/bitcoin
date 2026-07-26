@@ -41,7 +41,7 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
     bilingual_str error;

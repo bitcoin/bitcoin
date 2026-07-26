@@ -61,6 +61,7 @@ add_library(bitcoinkernel
   ../uint256.cpp
   ../util/chaintype.cpp
   ../util/check.cpp
+  ../util/exception.cpp
   ../util/expected.cpp
   ../util/feefrac.cpp
   ../util/fs.cpp
@@ -68,9 +69,9 @@ add_library(bitcoinkernel
   ../util/hasher.cpp
   ../util/moneystr.cpp
   ../util/rbf.cpp
-  ../util/serfloat.cpp
   ../util/signalinterrupt.cpp
   ../util/syserror.cpp
+  ../util/thread.cpp
   ../util/threadnames.cpp
   ../util/time.cpp
   ../util/tokenpipe.cpp

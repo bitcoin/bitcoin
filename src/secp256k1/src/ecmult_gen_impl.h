@@ -51,7 +51,7 @@ static void secp256k1_ecmult_gen_scalar_diff(secp256k1_scalar* diff) {
     secp256k1_scalar_add(diff, diff, &neghalf);
 }
 
-static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
+static void secp256k1_ecmult_gen_gej(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
     uint32_t comb_off;
     secp256k1_ge add;
     secp256k1_fe neg;
@@ -281,11 +281,19 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
     secp256k1_memclear_explicit(&recoded, sizeof(recoded));
 }
 
+SECP256K1_INLINE static void secp256k1_ecmult_gen_ge(const secp256k1_ecmult_gen_context *ctx, secp256k1_ge *r, const secp256k1_scalar *a) {
+    secp256k1_gej rj;
+    secp256k1_ecmult_gen_gej(ctx, &rj, a);
+    secp256k1_ge_set_gej(r, &rj);
+    /* Jacobian coordinates resulting from our multiplication algorithm could potentially leak
+     * information about the secret input scalar, so clear the memory out to be on the safe side. */
+    secp256k1_gej_clear(&rj);
+}
+
 /* Setup blinding values for secp256k1_ecmult_gen. */
 static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const secp256k1_hash_ctx *hash_ctx, const unsigned char *seed32) {
     secp256k1_scalar b;
     secp256k1_scalar diff;
-    secp256k1_gej gb;
     secp256k1_fe f;
     unsigned char nonce32[32];
     secp256k1_rfc6979_hmac_sha256 rng;
@@ -325,15 +333,13 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
      * which secp256k1_gej_add_ge cannot handle. */
     secp256k1_scalar_cmov(&b, &secp256k1_scalar_one, secp256k1_scalar_is_zero(&b));
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
-    secp256k1_ecmult_gen(ctx, &gb, &b);
+    secp256k1_ecmult_gen_ge(ctx, &ctx->ge_offset, &b);
     secp256k1_scalar_negate(&b, &b);
     secp256k1_scalar_add(&ctx->scalar_offset, &b, &diff);
-    secp256k1_ge_set_gej(&ctx->ge_offset, &gb);
 
     /* Clean up. */
     secp256k1_memclear_explicit(nonce32, sizeof(nonce32));
     secp256k1_scalar_clear(&b);
-    secp256k1_gej_clear(&gb);
     secp256k1_fe_clear(&f);
     secp256k1_rfc6979_hmac_sha256_clear(&rng);
 }

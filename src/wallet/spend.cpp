@@ -94,7 +94,7 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoin
     if (!provider) return -1;
 
     if (const auto desc = InferDescriptor(txout.scriptPubKey, *provider)) {
-        if (const auto weight = MaxInputWeight(*desc, {}, coin_control, true, can_grind_r)) {
+        if (const auto weight = MaxInputWeight(*desc, CTxIn{outpoint}, coin_control, true, can_grind_r)) {
             return static_cast<int>(GetVirtualTransactionSize(*weight, 0, 0));
         }
     }
@@ -208,10 +208,6 @@ std::vector<COutput> CoinsResult::All() const
         all.insert(all.end(), it.second.begin(), it.second.end());
     }
     return all;
-}
-
-void CoinsResult::Clear() {
-    coins.clear();
 }
 
 void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher>& coins_to_remove)
@@ -382,7 +378,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // be a 1-block reorg away from the chain where transactions A and C
             // were accepted to another chain where B, B', and C were all
             // accepted.
-            if (nDepth == 0 && wtx.mapValue.contains("replaces_txid")) {
+            if (nDepth == 0 && wtx.m_replaces_txid) {
                 safeTx = false;
             }
 
@@ -394,7 +390,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // intending to replace A', but potentially resulting in a scenario
             // where A, A', and D could all be accepted (instead of just B and
             // D, or just A and A' like the user would want).
-            if (nDepth == 0 && wtx.mapValue.contains("replaced_by_txid")) {
+            if (nDepth == 0 && wtx.m_replaced_by_txid) {
                 safeTx = false;
             }
 
@@ -800,7 +796,8 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
             return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
-        if (bump_fee_overestimate) {
+        // Avoid negative discount if mempool changed between the two bump fee snapshots.
+        if (bump_fee_overestimate > 0) {
             result.SetBumpFeeDiscount(bump_fee_overestimate);
         }
         result.RecalculateWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);

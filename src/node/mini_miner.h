@@ -5,13 +5,12 @@
 #ifndef BITCOIN_NODE_MINI_MINER_H
 #define BITCOIN_NODE_MINI_MINER_H
 
+#include <attributes.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
-#include <uint256.h>
 
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <optional>
 #include <set>
 #include <vector>

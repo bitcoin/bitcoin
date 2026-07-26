@@ -36,6 +36,7 @@ from test_framework.util import (
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_WEIGHT = 4000000
+MAX_BLOCK_SIGOPS_COST = 80000
 DEFAULT_BLOCK_RESERVED_WEIGHT = 8000
 MINIMUM_BLOCK_RESERVED_WEIGHT = 2000
 MAX_BLOOM_FILTER_SIZE = 36000
@@ -687,24 +688,34 @@ class CTransaction:
         return self.serialize_with_witness()
 
     @property
+    def wtxid(self):
+        """Return wtxid (transaction hash with witness) as little-endian bytes."""
+        return hash256(self.serialize_with_witness())
+
+    @property
     def wtxid_hex(self):
         """Return wtxid (transaction hash with witness) as hex string."""
-        return hash256(self.serialize())[::-1].hex()
+        return self.wtxid[::-1].hex()
 
     @property
     def wtxid_int(self):
         """Return wtxid (transaction hash with witness) as integer."""
-        return uint256_from_str(hash256(self.serialize_with_witness()))
+        return uint256_from_str(self.wtxid)
+
+    @property
+    def txid(self):
+        """Return txid (transaction hash without witness) as little-endian bytes."""
+        return hash256(self.serialize_without_witness())
 
     @property
     def txid_hex(self):
         """Return txid (transaction hash without witness) as hex string."""
-        return hash256(self.serialize_without_witness())[::-1].hex()
+        return self.txid[::-1].hex()
 
     @property
     def txid_int(self):
         """Return txid (transaction hash without witness) as integer."""
-        return uint256_from_str(hash256(self.serialize_without_witness()))
+        return uint256_from_str(self.txid)
 
     def is_valid(self):
         for tout in self.vout:
@@ -1671,7 +1682,7 @@ class msg_sendcmpct:
     __slots__ = ("announce", "version")
     msgtype = b"sendcmpct"
 
-    def __init__(self, announce=False, version=1):
+    def __init__(self, announce=False, version=2):
         self.announce = announce
         self.version = version
 
@@ -1926,6 +1937,28 @@ class msg_sendtxrcncl:
     def __repr__(self):
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
+
+class msg_feature:
+    """FEATURE message for negotiating optional features."""
+    __slots__ = ("feature_id", "feature_data")
+    msgtype = b"feature"
+
+    def __init__(self, feature_id="", feature_data=b""):
+        self.feature_id = feature_id
+        self.feature_data = feature_data
+
+    def deserialize(self, f):
+        self.feature_id = deser_string(f).decode()
+        self.feature_data = deser_string(f)
+
+    def serialize(self):
+        r = ser_string(self.feature_id.encode())
+        r += ser_string(self.feature_data)
+        return r
+
+    def __repr__(self):
+        return f"msg_feature(feature_id={self.feature_id}, data={self.feature_data.hex()})"
+
 
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):

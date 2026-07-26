@@ -44,11 +44,9 @@ using interfaces::WalletAddress;
 using interfaces::WalletBalances;
 using interfaces::WalletLoader;
 using interfaces::WalletMigrationResult;
-using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
-using interfaces::WalletValueMap;
 
 namespace wallet {
 // All members of the classes in this namespace are intentionally public, as the
@@ -79,7 +77,10 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/true);
     result.change = CachedTxGetChange(wallet, wtx);
     result.time = wtx.GetTxTime();
-    result.value_map = wtx.mapValue;
+    result.from = wtx.m_from;
+    result.message = wtx.m_message;
+    result.comment = wtx.m_comment;
+    result.comment_to = wtx.m_comment_to;
     result.is_coinbase = wtx.IsCoinBase();
     return result;
 }
@@ -265,12 +266,10 @@ public:
         LOCK(m_wallet->cs_wallet);
         return CreateTransaction(*m_wallet, recipients, change_pos, coin_control, sign);
     }
-    void commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form) override
+    void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) override
     {
         LOCK(m_wallet->cs_wallet);
-        m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
+        m_wallet->CommitTransaction(std::move(tx), /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, messages);
     }
     bool transactionCanBeAbandoned(const Txid& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const Txid& txid) override
@@ -349,7 +348,8 @@ public:
     }
     WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
-        WalletOrderForm& order_form,
+        std::vector<std::string>& messages,
+        std::vector<std::string>& payment_requests,
         bool& in_mempool,
         int& num_blocks) override
     {
@@ -358,20 +358,19 @@ public:
         if (mi != m_wallet->mapWallet.end()) {
             num_blocks = m_wallet->GetLastBlockHeight();
             in_mempool = mi->second.InMempool();
-            order_form = mi->second.vOrderForm;
+            messages = mi->second.m_messages;
+            payment_requests = mi->second.m_payment_requests;
             tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
             return MakeWalletTx(*m_wallet, mi->second);
         }
         return {};
     }
-    std::optional<PSBTError> fillPSBT(std::optional<int> sighash_type,
-        bool sign,
-        bool bip32derivs,
+    std::optional<PSBTError> fillPSBT(const common::PSBTFillOptions& options,
         size_t* n_signed,
         PartiallySignedTransaction& psbtx,
         bool& complete) override
     {
-        return m_wallet->FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, n_signed);
+        return m_wallet->FillPSBT(psbtx, options, complete, n_signed);
     }
     WalletBalances getBalances() override
     {
@@ -380,6 +379,8 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
+        result.used_balance = bal.m_mine_used;
+        result.nonmempool_balance = bal.m_mine_nonmempool;
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
@@ -544,6 +545,7 @@ public:
                 wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
+            m_rpc_commands.back().metadata_fn = command.metadata_fn;
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
     }
@@ -605,8 +607,8 @@ public:
         if (!res) return util::Error{util::ErrorString(res)};
         WalletMigrationResult out{
             .wallet = MakeWallet(m_context, res->wallet),
-            .watchonly_wallet_name = res->watchonly_wallet ? std::make_optional(res->watchonly_wallet->GetName()) : std::nullopt,
-            .solvables_wallet_name = res->solvables_wallet ? std::make_optional(res->solvables_wallet->GetName()) : std::nullopt,
+            .watchonly_wallet_name = res->watchonly_wallet_name,
+            .solvables_wallet_name = res->solvables_wallet_name,
             .backup_path = res->backup_path,
         };
         return out;

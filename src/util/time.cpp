@@ -33,6 +33,8 @@ static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
 std::atomic<bool> g_used_system_time{false};
 static std::atomic<MockableSteadyClock::mock_time_point::duration> g_mock_steady_time{}; //!< For testing
 
+static_assert(NodeClock::epoch.time_since_epoch().count() == 0);
+
 NodeClock::time_point NodeClock::now() noexcept
 {
     const auto mocktime{g_mock_time.load(std::memory_order_relaxed)};

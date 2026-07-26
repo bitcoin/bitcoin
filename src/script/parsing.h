@@ -5,8 +5,7 @@
 #ifndef BITCOIN_SCRIPT_PARSING_H
 #define BITCOIN_SCRIPT_PARSING_H
 
-#include <span.h>
-
+#include <span>
 #include <string>
 
 namespace script {

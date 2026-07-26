@@ -4,9 +4,9 @@
 
 #include <headerssync.h>
 
-#include <logging.h>
 #include <pow.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/time.h>
 #include <util/vector.h>
 

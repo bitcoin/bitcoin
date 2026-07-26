@@ -9,6 +9,7 @@
 #include <crypto/siphash.h>
 #include <logging/categories.h> // IWYU pragma: export
 #include <span.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/log.h> // IWYU pragma: export
 #include <util/stdmutex.h>
@@ -62,7 +63,7 @@ struct LogCategory {
 namespace BCLog {
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
-    constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
+    constexpr uint64_t RATELIMIT_MAX_BYTES{1_MiB}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
     constexpr auto RATELIMIT_WINDOW{1h}; // time window after which log ratelimit stats are reset
     constexpr bool DEFAULT_LOGRATELIMIT{true};
 
@@ -128,21 +129,11 @@ namespace BCLog {
 
     class Logger
     {
-    public:
-        struct BufferedLog {
-            SystemClock::time_point now;
-            std::chrono::seconds mocktime;
-            std::string str, threadname;
-            SourceLocation source_loc;
-            LogFlags category;
-            Level level;
-        };
-
     private:
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
-        std::list<BufferedLog> m_msgs_before_open GUARDED_BY(m_cs);
+        std::list<util::log::Entry> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
         size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
@@ -161,16 +152,15 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const SourceLocation& source_loc, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        std::string Format(const util::log::Entry& entry) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         /** Slots that connect to the print signal */
-        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs){};
 
-        /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Send an entry to the log output (internal) */
+        void LogPrint_(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
@@ -187,9 +177,8 @@ namespace BCLog {
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
-        /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        /** Send an entry to the log output */
+        void LogPrint(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
@@ -238,7 +227,7 @@ namespace BCLog {
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        void ShrinkDebugFile();
+        void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
@@ -286,19 +275,12 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
-    };
 
+        //! Return log flag if str parses as a log category.
+        static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
+    };
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();
-
-/** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
-{
-    return LogInstance().WillLogCategoryLevel(category, level);
-}
-
-/// Return log flag if str parses as a log category.
-std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
 
 #endif // BITCOIN_LOGGING_H

@@ -14,7 +14,6 @@
 #include <common/settings.h>
 #include <cstdint>
 #include <hash.h>
-#include <logging.h>
 #include <logging/timer.h>
 #include <netbase.h>
 #include <netgroup.h>
@@ -24,6 +23,7 @@
 #include <univalue.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/syserror.h>
 #include <util/translation.h>
 

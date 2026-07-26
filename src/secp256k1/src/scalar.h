@@ -22,10 +22,10 @@
 /** Clear a scalar to prevent the leak of sensitive data. */
 static void secp256k1_scalar_clear(secp256k1_scalar *r);
 
-/** Access bits (1 < count <= 32) from a scalar. All requested bits must belong to the same 32-bit limb. */
+/** Access bits (1 <= count <= 32) from a scalar. All requested bits must belong to the same 32-bit limb. */
 static uint32_t secp256k1_scalar_get_bits_limb32(const secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
-/** Access bits (1 < count <= 32) from a scalar. offset + count must be < 256. Not constant time in offset and count. */
+/** Access bits (1 <= count <= 32) from a scalar. offset + count must be <= 256. Not constant time in offset and count. */
 static uint32_t secp256k1_scalar_get_bits_var(const secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
 /** Set a scalar from a big endian byte array. The scalar will be reduced modulo group order `n`.

@@ -3,18 +3,30 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <key.h>
 #include <key_io.h>
-#include <outputtype.h>
 #include <random.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <support/allocators/secure.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
-#include <util/time.h>
+#include <test/util/time.h>
+#include <util/check.h>
 #include <wallet/context.h>
+#include <wallet/crypter.h>
+#include <wallet/db.h>
+#include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace wallet {
 static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)
@@ -30,48 +42,47 @@ static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)
     context.chain = test_setup->m_node.chain.get();
 
     uint64_t create_flags = WALLET_FLAG_DESCRIPTORS;
-    auto database = CreateMockableWalletDatabase();
-    auto wallet = TestCreateWallet(std::move(database), context, create_flags);
 
-    {
-        LOCK(wallet->cs_wallet);
-        for (unsigned int i = 0; i < key_count; i++) {
-            CKey key = GenerateRandomKey();
-            FlatSigningProvider keys;
-            std::string error;
-            std::vector<std::unique_ptr<Descriptor>> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
-            WalletDescriptor w_desc(std::move(desc.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
-            Assert(wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false));
-        }
+    std::vector<std::pair<WalletDescriptor, FlatSigningProvider>> descs;
+    descs.reserve(key_count);
+    for (unsigned int i = 0; i < key_count; i++) {
+        CKey key = GenerateRandomKey();
+        FlatSigningProvider keys;
+        std::string error;
+        std::vector<std::unique_ptr<Descriptor>> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
+        WalletDescriptor w_desc(std::move(desc.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+        descs.emplace_back(w_desc, keys);
     }
-
-    database = DuplicateMockDatabase(wallet->GetDatabase());
-
-    // reload the wallet for the actual benchmark
-    TestUnloadWallet(std::move(wallet));
 
     // Setting a mock time is necessary to force default derive iteration count during
     // wallet encryption.
-    SetMockTime(1);
+    FakeNodeClock clock{1s};
 
-    // This benchmark has a lot of overhead, this should be good enough to catch
-    // any regressions, but for an accurate measurement of how long wallet
-    // encryption takes, this should be reworked after something like
-    // https://github.com/bitcoin/bitcoin/pull/34208 is merged.
-    bench.batch(key_count).unit("key").run([&] {
-        wallet = TestLoadWallet(std::move(database), context);
+    std::unique_ptr<WalletDatabase> database;
+    std::shared_ptr<CWallet> wallet;
+    bench.batch(key_count).unit("key").setup([&] {
+            if (wallet) {
+                TestUnloadWallet(std::move(wallet));
+            }
 
-        // Save a copy of the db before encrypting
-        database = DuplicateMockDatabase(wallet->GetDatabase());
+            std::unique_ptr<WalletDatabase> database = MakeInMemoryWalletDatabase();
+            wallet = TestCreateWallet(std::move(database), context, create_flags);
 
-        wallet->EncryptWallet(secure_pass);
+            {
+                LOCK(wallet->cs_wallet);
+                for (auto& [desc, keys] : descs) {
+                    Assert(wallet->AddWalletDescriptor(desc, keys, /*label=*/"", /*internal=*/false));
+                }
+            }
+        })
+        .run([&] {
+            wallet->EncryptWallet(secure_pass);
 
-        for (const auto& [_, key] : wallet->mapMasterKeys){
-            assert(key.nDeriveIterations == CMasterKey::DEFAULT_DERIVE_ITERATIONS);
-        }
-
-        TestUnloadWallet(std::move(wallet));
-    });
+            for (const auto& [_, key] : wallet->mapMasterKeys){
+                assert(key.nDeriveIterations == CMasterKey::DEFAULT_DERIVE_ITERATIONS);
+            }
+        });
+    TestUnloadWallet(std::move(wallet));
 }
 
 constexpr unsigned int KEY_COUNT = 2000;

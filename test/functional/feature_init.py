@@ -63,6 +63,7 @@ class InitTest(BitcoinTestFramework):
                 node.process.terminate()
             assert_equal(0, node.process.wait())
 
+        reindex_log_line = b'Reindexing block file blk00000.dat'
         lines_to_terminate_after = [
             b'Validating signatures for all blocks',
             b'scheduler thread start',
@@ -77,26 +78,30 @@ class InitTest(BitcoinTestFramework):
             b'net thread start',
             b'addcon thread start',
             b'initload thread start',
-            b'txindex thread start',
-            b'block filter index thread start',
-            b'coinstatsindex thread start',
-            b'txospenderindex thread start',
+            b'txidx thread start',
+            b'blkfltbscidx thread start',
+            b'coinstatsidx thread start',
+            b'txospenderidx thread start',
             b'msghand thread start',
             b'net thread start',
             b'addcon thread start',
         ]
         if self.is_wallet_compiled():
             lines_to_terminate_after.append(b'Verifying wallet')
+        lines_to_terminate_after.append(reindex_log_line)
 
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
+                extra_args = [*ALL_INDEX_ARGS]
+                if terminate_line == reindex_log_line:
+                    extra_args += ['-reindex']
                 if platform.system() == 'Windows':
                     # CREATE_NEW_PROCESS_GROUP is required in order to be able
                     # to terminate the child without terminating the test.
-                    node.start(extra_args=ALL_INDEX_ARGS, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                    node.start(extra_args=extra_args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                 else:
-                    node.start(extra_args=ALL_INDEX_ARGS)
+                    node.start(extra_args=extra_args)
             self.log.debug("Terminating node after terminate line was found")
             sigterm_node()
 
@@ -323,12 +328,48 @@ class InitTest(BitcoinTestFramework):
         for option in options:
             self.restart_node(1, option)
 
+    def restart_node_with_fd_limit(self, limit):
+        """Restart node 1 with a given soft RLIMIT_NOFILE. Skips if the limit cannot be set."""
+        import resource
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
+        except (ValueError, OSError):
+            self.log.info(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
+            return
+        try:
+            self.restart_node(1)
+            self.log.debug(f"Node started successfully with RLIM_INFINITY limit (soft={limit})")
+        finally:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+            self.log.debug(f"Restored previous RLIMIT_NOFILE limits (soft={soft}, hard={hard})")
+
+    def init_rlimit_test(self):
+        """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is RLIM_INFINITY."""
+        if self.RLIM_INFINITY is None:
+            self.log.info("Skipping: resource module not available")
+            return
+
+        self.log.info("Testing node startup with RLIM_INFINITY fd limit")
+        self.restart_node_with_fd_limit(self.RLIM_INFINITY)
+
+    def init_rlimit_large_test(self):
+        """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is above INT_MAX."""
+        if self.RLIM_INFINITY is None:
+            self.log.info("Skipping: resource module not available")
+            return
+
+        self.log.info("Testing node startup with fd limit above INT_MAX")
+        self.restart_node_with_fd_limit(1 << 31)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()
         self.init_empty_test()
+        self.init_rlimit_test()
+        self.init_rlimit_large_test()
 
 
 if __name__ == '__main__':

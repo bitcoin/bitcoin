@@ -8,10 +8,20 @@
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
+#include <prevector.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <serialize.h>
+#include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+
+#include <algorithm>
+#include <cassert>
+#include <compare>
+#include <cstring>
+#include <limits>
+#include <stdexcept>
 
 typedef std::vector<unsigned char> valtype;
 

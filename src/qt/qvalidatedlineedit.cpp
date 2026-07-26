@@ -126,3 +126,5 @@ bool QValidatedLineEdit::isValid()
 
     return valid;
 }
+
+#include <moc_qvalidatedlineedit.cpp>

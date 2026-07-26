@@ -84,10 +84,13 @@ static constexpr int DEFAULT_CHECKLEVEL{3};
 // full block file chunks, we need the high water mark which triggers the prune to be
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
 // Setting the target to >= 550 MiB will make it likely we can respect the target.
-static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
+static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES{550_MiB};
 
 /** Maximum number of dedicated script-checking threads allowed */
 static constexpr int MAX_SCRIPTCHECK_THREADS{15};
+
+/** Maximum number of dedicated threads allowed for prefetching block input prevouts */
+static constexpr int32_t MAX_PREVOUTFETCH_THREADS{16};
 
 /** Current sync state passed to tip changed callbacks. */
 enum class SynchronizationState {
@@ -503,7 +506,7 @@ public:
     CoinsViews(DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
-    void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void InitCache(int32_t prevoutfetch_threads) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 enum class CoinsCacheSizeState
@@ -809,8 +812,6 @@ public:
 
     /** Whether the chain state needs to be redownloaded due to lack of witness data */
     [[nodiscard]] bool NeedsRedownload() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
-    bool LoadGenesisBlock();
 
     /** Add a block to the candidate set if it has as much work as the current tip. */
     void TryAddBlockIndexCandidate(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -839,6 +840,9 @@ public:
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Get the last block that was flushed to disk.
+    const CBlockIndex* GetLastFlushedBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_last_flushed_block; }
+
     //! Indirection necessary to make lock annotations work with an optional mempool.
     RecursiveMutex* MempoolMutex() const LOCK_RETURNED(m_mempool->cs)
     {
@@ -851,7 +855,7 @@ public:
     std::pair<int, int> GetPruneRange(int last_height_can_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 protected:
-    bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
+    bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(
         BlockValidationState& state,
         CBlockIndex* pindexNew,
@@ -889,6 +893,7 @@ protected:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     NodeClock::time_point m_next_write{NodeClock::time_point::max()};
+    const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
@@ -1084,6 +1089,9 @@ public:
     //! The total number of bytes available for us to use across all leveldb
     //! coins databases. This will be split somehow across chainstates.
     size_t m_total_coinsdb_cache{0};
+
+    /// Ensures a genesis block is in the block tree, possibly writing one to disk.
+    [[nodiscard]] bool LoadGenesisBlock();
 
     //! Instantiate a new chainstate.
     //!

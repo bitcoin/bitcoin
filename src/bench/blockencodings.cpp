@@ -7,15 +7,23 @@
 #include <consensus/amount.h>
 #include <kernel/cs_main.h>
 #include <net_processing.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <random.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <memory>
+#include <span>
+#include <utility>
 #include <vector>
 
 

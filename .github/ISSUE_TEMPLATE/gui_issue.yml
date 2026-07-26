@@ -2,6 +2,11 @@ name: Issue or feature request related to the GUI
 description: Any report, issue or feature request related to the GUI
 labels: [GUI]
 body:
+- type: markdown
+  attributes:
+    value: |
+      If you use AI tools when opening this issue, please read the [AI policy](https://github.com/bitcoin/bitcoin/blob/master/doc/AI_POLICY.md).
+
 - type: checkboxes
   id: acknowledgement
   attributes:

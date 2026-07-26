@@ -7,18 +7,16 @@
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
+from test_framework.util import assert_equal, assert_raises_rpc_error, rpc_port
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.bind_to_localhost_only = False
         self.num_nodes = 1
-        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
-        # due to OS-specific network stats queries, this test works only on Linux
-        self.skip_if_platform_not_linux()
+        self.skip_if_platform_not_posix()
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, None)
@@ -71,8 +69,9 @@ class RPCBindTest(BitcoinTestFramework):
             ['-rpcbind='+addr for addr in ['127.0.0.1', "%s:%d" % (rpchost, rpcport)]] # Bind to localhost as well so start_nodes doesn't hang
         self.nodes[0].rpchost = None
         self.start_nodes([node_args])
+        self.nodes[0].rpchost = f"{rpchost}:{rpcport}"
         # connect to node through non-loopback interface
-        node = get_rpc_proxy(rpc_url(self.nodes[0].datadir_path, 0, self.chain, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
+        node = self.nodes[0].create_new_rpc_connection()
         node.getnetworkinfo()
         self.stop_nodes()
 
@@ -105,9 +104,12 @@ class RPCBindTest(BitcoinTestFramework):
             raise SkipTest("This test requires ipv6 support.")
 
         self.log.info("Check for non-loopback interface")
+        interfaces = all_interfaces()
+        if not interfaces:
+            raise AssertionError("all_interfaces() returned no IPv4 interfaces")
         self.non_loopback_ip = None
-        for name,ip in all_interfaces():
-            if ip != '127.0.0.1':
+        for name,ip in interfaces:
+            if not ip.startswith('127.'):
                 self.non_loopback_ip = ip
                 break
         if self.non_loopback_ip is None and self.options.run_nonloopback:
@@ -162,6 +164,9 @@ class RPCBindTest(BitcoinTestFramework):
 
         # Check that with invalid rpcallowip, we are denied
         self.run_allowip_test([self.non_loopback_ip], self.non_loopback_ip, self.defaultport)
+        if self.options.usecli:
+            self.log.info("Skip negative IP test with CLI, because the CLI can not throw the tested exception type")
+            return
         assert_raises_rpc_error(-342, "non-JSON HTTP response with '403 Forbidden' from server", self.run_allowip_test, ['1.1.1.1'], self.non_loopback_ip, self.defaultport)
 
 if __name__ == '__main__':

@@ -38,13 +38,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v24.0.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v23.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1", f"-keypool={LAST_KEYPOOL_INDEX + 1}"], # v22.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.21.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v24.0.1
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v23.0
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1", f"-keypool={LAST_KEYPOOL_INDEX + 1}"], # v22.0
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.21.0
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
         ]
         self.wallet_names = [self.default_wallet_name]
 
@@ -349,7 +349,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Restore the wallet to master
             load_res = node_master.restorewallet(wallet_name, backup_path)
-
             # There should be no warnings
             assert "warnings" not in load_res
 

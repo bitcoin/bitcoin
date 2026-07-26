@@ -6,7 +6,9 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
+#include <algorithm>
 #include <vector>
+#include <utility>
 
 #include <boost/test/unit_test.hpp>
 
@@ -186,6 +188,103 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     BOOST_CHECK(!chain.FindEarliestAtLeast(300, 9));
     CBlockIndex* ret2 = chain.FindEarliestAtLeast(200, 4);
     BOOST_CHECK(ret2->nTimeMax >= 200 && ret2->nHeight == 4);
+}
+
+BOOST_AUTO_TEST_CASE(build_skip_height_test)
+{
+    // clang-format off
+    const std::pair<int, int> TEST_DATA[]{
+        // EVEN values: the rightmost set bit is zeroed
+        // Various even values with at least 2 bits set
+        { 0b00010010 ,
+          0b00010000 },
+        { 0b00100010 ,
+          0b00100000 },
+        { 0b01000010 ,
+          0b01000000 },
+        { 0b00010100 ,
+          0b00010000 },
+        { 0b00011000 ,
+          0b00010000 },
+        { 0b10101010 ,
+          0b10101000 },
+        // ODD values: the 2nd and 3rd set bits are zeroed
+        // Various odd values with at least 4 bits set
+        { 0b10010011 ,
+          0b10000001 },
+        { 0b10100011 ,
+          0b10000001 },
+        { 0b11000011 ,
+          0b10000001 },
+        { 0b10010101 ,
+          0b10000001 },
+        { 0b10011001 ,
+          0b10000001 },
+        { 0b10101011 ,
+          0b10100001 },
+        // Some longer random values (even and odd)
+        { 0b0001011101101000 ,
+          0b0001011101100000 },
+        { 0b0001011101101001 ,
+          0b0001011101000001 },
+        { 0b0110101101011000 ,
+          0b0110101101010000 },
+        { 0b0110101101011001 ,
+          0b0110101101000001 },
+        // All values 1-20
+        {  1,  0 },
+        {  2,  0 },
+        {  3,  1 },
+        {  4,  0 },
+        {  5,  1 },
+        {  6,  4 },
+        {  7,  1 },
+        {  8,  0 },
+        {  9,  1 },
+        { 10,  8 },
+        { 11,  1 },
+        { 12,  8 },
+        { 13,  1 },
+        { 14, 12 },
+        { 15,  9 },
+        { 16,  0 },
+        { 17,  1 },
+        { 18, 16 },
+        { 19,  1 },
+        { 20, 16 },
+    };
+    // clang-format on
+
+    // Test `CBlockIndex::BuildSkip()` and that the skip height conforms to expected logic.
+    // It tests that:
+    // - `pprev` field is set (to an earlier block index),
+    // - the skip is to the index as dictated by the `GetSkipHeight()` bit-manipulation logic,
+    // - `GetAncestor()` works as expected (indirectly).
+
+    // Build a chain (up to the highest test input value)
+    const auto max_test_input{std::ranges::max_element(TEST_DATA, [](auto& a, auto& b) { return a.first < b.first; })};
+    const int chain_size{max_test_input->first + 1};
+    std::vector<CBlockIndex> block_index(chain_size);
+    for (auto i{0}; i < chain_size; ++i) {
+        // pprev and nHeight are used by BuildSkip()
+        block_index[i].pprev = i == 0 ? nullptr : &block_index[i - 1];
+        block_index[i].nHeight = i;
+        block_index[i].BuildSkip();
+        BOOST_CHECK(block_index[i].pskip || i == 0);
+    }
+
+    for (auto& [input, expected] : TEST_DATA) {
+        BOOST_REQUIRE_LT(input, chain_size);
+        BOOST_REQUIRE_GT(input, 0);
+        BOOST_REQUIRE_LT(expected, input);
+        BOOST_REQUIRE(block_index[input].pskip);
+
+        const int skip_height{block_index[input].pskip->nHeight};
+        BOOST_CHECK_EQUAL(skip_height, expected);
+    }
+
+    // Special value: height 0 (genesis) has no skip
+    BOOST_CHECK(!block_index[0].pskip);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -10,13 +10,13 @@
 #include <netgroup.h>
 #include <protocol.h>
 #include <random.h>
-#include <span.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
 
 #include <cstring>
 #include <optional>
+#include <span>
 #include <vector>
 
 /* A "source" is a source address from which we have received a bunch of other addresses. */
@@ -162,8 +162,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
     CreateAddresses();
 
     std::optional<AddrMan> addrman;
-    bench.epochIterations(1)
-        .setup([&] {
+    bench.setup([&] {
             addrman.emplace(EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO);
             AddAddressesToAddrMan(*addrman);
         })

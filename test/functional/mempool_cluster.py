@@ -30,13 +30,12 @@ def weight_to_vsize(weight):
 
 def cleanup(func):
     def wrapper(self, *args, **kwargs):
-        try:
-            func(self, *args, **kwargs)
-        finally:
-            # Mine blocks to clear the mempool and replenish the wallet's confirmed UTXOs.
-            while (len(self.nodes[0].getrawmempool()) > 0):
-                self.generate(self.nodes[0], 1)
-            self.wallet.rescan_utxos(include_mempool=True)
+        func(self, *args, **kwargs)
+
+        # Mine blocks to clear the mempool and replenish the wallet's confirmed UTXOs.
+        while (len(self.nodes[0].getrawmempool()) > 0):
+            self.generate(self.nodes[0], 1)
+        self.wallet.rescan_utxos(include_mempool=True)
     return wrapper
 
 class MempoolClusterTest(BitcoinTestFramework):

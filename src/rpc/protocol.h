@@ -16,9 +16,32 @@ enum HTTPStatusCode : int
     HTTP_FORBIDDEN             = 403,
     HTTP_NOT_FOUND             = 404,
     HTTP_BAD_METHOD            = 405,
+    HTTP_CONTENT_TOO_LARGE     = 413,
     HTTP_INTERNAL_SERVER_ERROR = 500,
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
+
+//! Mapping of HTTP status codes to short string explanation.
+//! Copied from libevent http.c success_phrases[] and client_error_phrases[]
+inline std::string_view HTTPStatusReasonString(HTTPStatusCode code)
+{
+    switch (code) {
+    case HTTP_OK: return "OK";
+    case HTTP_NO_CONTENT: return "No Content";
+    case HTTP_BAD_REQUEST: return "Bad Request";
+    case HTTP_UNAUTHORIZED: return "Unauthorized";
+    case HTTP_FORBIDDEN: return "Forbidden";
+    case HTTP_NOT_FOUND: return "Not Found";
+    case HTTP_BAD_METHOD: return "Method Not Allowed";
+    case HTTP_CONTENT_TOO_LARGE: return "Content too large";
+    case HTTP_INTERNAL_SERVER_ERROR: return "Internal Server Error";
+    case HTTP_SERVICE_UNAVAILABLE: return "Service Unavailable";
+    }
+
+    // Reason phrases are optional and may be replaced by local variants.
+    // https://httpwg.org/specs/rfc9110.html#rfc.section.15.1
+    return "";
+}
 
 //! Bitcoin RPC error codes
 enum RPCErrorCode
@@ -49,6 +72,7 @@ enum RPCErrorCode
     RPC_VERIFY_ALREADY_IN_UTXO_SET  = -27, //!< Transaction already in utxo set
     RPC_IN_WARMUP                   = -28, //!< Client still warming up
     RPC_METHOD_DEPRECATED           = -32, //!< RPC method is deprecated
+    RPC_LIMIT_EXCEEDED              = -37, //!< A bounded resource is currently at capacity
 
     //! Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,

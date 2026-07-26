@@ -171,6 +171,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Setup
     std::vector<COutput> utxo_pool;
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
+    size_t expected_attempts;
 
     ////////////////////
     // Behavior tests //
@@ -202,12 +203,14 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         BOOST_CHECK(!SelectCoinsBnB(GroupCoins(available_coins.All()), 1 * CENT, coin_selection_params_bnb.m_cost_of_change));
 
         // Test fees subtracted from output:
-        available_coins.Clear();
+        available_coins = {};
         add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate);
         available_coins.All().at(0).input_bytes = 40;
         const auto result9 = SelectCoinsBnB(GroupCoins(available_coins.All()), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);
+        expected_attempts = 1;
+        BOOST_CHECK_MESSAGE(result9->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result9->GetSelectionsEvaluated()));
     }
 
     {
@@ -230,6 +233,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         LOCK(wallet->cs_wallet);
         const auto result10 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
+        expected_attempts = 3;
+        BOOST_CHECK_MESSAGE(result10->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result10->GetSelectionsEvaluated()));
     }
     {
         std::unique_ptr<CWallet> wallet = NewWallet(m_node);
@@ -259,6 +264,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         available_coins.Erase({(++available_coins.coins[OutputType::BECH32].begin())->outpoint});
         const auto result13 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
+        expected_attempts = 2;
+        BOOST_CHECK_MESSAGE(result13->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result13->GetSelectionsEvaluated()));
     }
 
     {
@@ -290,6 +297,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(5 * CENT, 2, expected_result);
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
+        expected_attempts = 22;
+        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
     }
 }
 
@@ -343,7 +352,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
     {
-        available_coins.Clear();
+        available_coins = {};
 
         // with an empty wallet we can't even pay one cent
         BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_standard), 1 * CENT, CENT));
@@ -412,7 +421,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(result8->GetInputSet().size(), 1U);
 
         // now clear out the wallet and start again to test choosing between subsets of smaller coins and the next biggest coin
-        available_coins.Clear();
+        available_coins = {};
 
         add_coin(available_coins, *wallet,  6*CENT);
         add_coin(available_coins, *wallet,  7*CENT);
@@ -470,7 +479,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
         // empty the wallet and start again, now with fractions of a cent, to test small change avoidance
 
-        available_coins.Clear();
+        available_coins = {};
         add_coin(available_coins, *wallet, CENT * 1 / 10);
         add_coin(available_coins, *wallet, CENT * 2 / 10);
         add_coin(available_coins, *wallet, CENT * 3 / 10);
@@ -502,7 +511,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
         // run the 'mtgox' test (see https://blockexplorer.com/tx/29a3efd3ef04f9153d47a990bd7b048a4b2d213daaa5fb8ed670fb85f13bdbcf)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
-        available_coins.Clear();
+        available_coins = {};
         for (int j = 0; j < 20; j++)
             add_coin(available_coins, *wallet, 50000 * COIN);
 
@@ -515,7 +524,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         // we need to try finding an exact subset anyway
 
         // sometimes it will fail, and so we use the next biggest coin:
-        available_coins.Clear();
+        available_coins = {};
         add_coin(available_coins, *wallet, CENT * 5 / 10);
         add_coin(available_coins, *wallet, CENT * 6 / 10);
         add_coin(available_coins, *wallet, CENT * 7 / 10);
@@ -526,7 +535,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(result20->GetInputSet().size(), 1U);
 
         // but sometimes it's possible, and we use an exact subset (0.4 + 0.6 = 1.0)
-        available_coins.Clear();
+        available_coins = {};
         add_coin(available_coins, *wallet, CENT * 4 / 10);
         add_coin(available_coins, *wallet, CENT * 6 / 10);
         add_coin(available_coins, *wallet, CENT * 8 / 10);
@@ -537,7 +546,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(result21->GetInputSet().size(), 2U); // in two coins 0.4+0.6
 
         // test avoiding small change
-        available_coins.Clear();
+        available_coins = {};
         add_coin(available_coins, *wallet, CENT * 5 / 100);
         add_coin(available_coins, *wallet, CENT * 1);
         add_coin(available_coins, *wallet, CENT * 100);
@@ -557,7 +566,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
     // test with many inputs
     for (CAmount amt=1500; amt < COIN; amt*=10) {
-        available_coins.Clear();
+        available_coins = {};
         // Create 676 inputs (=  (old MAX_STANDARD_TX_SIZE == 100000)  / 148 bytes per input)
         for (uint16_t j = 0; j < 676; j++)
             add_coin(available_coins, *wallet, amt);
@@ -583,7 +592,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
     // test randomness
     {
-        available_coins.Clear();
+        available_coins = {};
         for (int i2 = 0; i2 < 100; i2++)
             add_coin(available_coins, *wallet, COIN);
 

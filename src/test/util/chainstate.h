@@ -6,12 +6,13 @@
 #define BITCOIN_TEST_UTIL_CHAINSTATE_H
 
 #include <clientversion.h>
-#include <logging.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
 #include <rpc/blockchain.h>
 #include <test/util/setup_common.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <univalue.h>
@@ -79,10 +80,10 @@ CreateAndActivateUTXOSnapshot(
             node.chainman->ResetChainstates();
             node.chainman->InitializeChainstate(node.mempool.get());
             Chainstate& chain = node.chainman->ActiveChainstate();
-            Assert(chain.LoadGenesisBlock());
+            Assert(node.chainman->LoadGenesisBlock());
             // These cache values will be corrected shortly in `MaybeRebalanceCaches`.
-            chain.InitCoinsDB(1 << 20, /*in_memory=*/true, /*should_wipe=*/false);
-            chain.InitCoinsCache(1 << 20);
+            chain.InitCoinsDB(1_MiB, /*in_memory=*/true, /*should_wipe=*/false);
+            chain.InitCoinsCache(1_MiB);
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.LoadChainTip();
             node.chainman->MaybeRebalanceCaches();

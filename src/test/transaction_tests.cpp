@@ -563,7 +563,7 @@ SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutabl
     SignatureData sigdata;
     sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
     sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0]));
-    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
+    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, {.sighash_type = SIGHASH_DEFAULT}), tx->vout[0].scriptPubKey, sigdata);
     return sigdata;
 }
 
@@ -1089,6 +1089,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
 
     // The transaction now contains exactly 2500 sigops, the check should pass.
+    BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
     BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Now, add some Segwit inputs. We add one for each defined Segwit output type. The limit

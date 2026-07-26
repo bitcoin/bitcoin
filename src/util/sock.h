@@ -23,6 +23,11 @@ class CThreadInterrupt;
  */
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
+inline bool IOErrorIsPermanent(int err)
+{
+    return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
+}
+
 /**
  * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */
@@ -143,25 +148,25 @@ public:
     /**
      * If passed to `Wait()`, then it will wait for readiness to read from the socket.
      */
-    static constexpr Event RECV = 0b001;
+    static constexpr Event RecvEvent = 0b001;
 
     /**
      * If passed to `Wait()`, then it will wait for readiness to send to the socket.
      */
-    static constexpr Event SEND = 0b010;
+    static constexpr Event SendEvent = 0b010;
 
     /**
      * Ignored if passed to `Wait()`, but could be set in the occurred events if an
      * exceptional condition has occurred on the socket or if it has been disconnected.
      */
-    static constexpr Event ERR = 0b100;
+    static constexpr Event ErrorEvent = 0b100;
 
     /**
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
-     * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
+     * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
-     * indicates which of the requested events occurred (`ERR` will be added, even if
+     * indicates which of the requested events occurred (`ErrorEvent` will be added, even if
      * not requested, if an exceptional event occurs on the socket).
      * A timeout is indicated by return value of `true` and `occurred` being set to 0.
      * @return true on success (or timeout, if `occurred` of 0 is returned), false otherwise

@@ -92,6 +92,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[
             '-testactivationheight=bip34@2',
+            # Override the functional-test default of 1 thread to exercise the multi-threaded
+            # prevout prefetching path in this block-heavy test.
+            '-prevoutfetchthreads=8',
         ]]
 
     def add_options(self, parser):
@@ -1374,12 +1377,12 @@ class FullBlockTest(BitcoinTestFramework):
         for additional_script in additional_output_scripts:
             coinbase.vout.append(CTxOut(0, additional_script))
         if spend is None:
-            block = create_block(base_block_hash, coinbase, block_time, version=version)
+            block = create_block(base_block_hash, coinbase, ntime=block_time, version=version)
         else:
             coinbase.vout[0].nValue += spend.vout[0].nValue - 1  # all but one satoshi to fees
             tx = self.create_tx(spend, 0, 1, output_script=script)  # spend 1 satoshi
             self.sign_tx(tx, spend)
-            block = create_block(base_block_hash, coinbase, block_time, version=version, txlist=[tx])
+            block = create_block(base_block_hash, coinbase, ntime=block_time, version=version, txlist=[tx])
         # Block is created. Find a valid nonce.
         block.solve()
         self.tip = block

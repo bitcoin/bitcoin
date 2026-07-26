@@ -9,21 +9,22 @@
 #include <consensus/amount.h>
 #include <hash.h>
 #include <primitives/transaction.h>
-#include <script/script_error.h> // IWYU pragma: export
-#include <script/verify_flags.h> // IWYU pragma: export
-#include <span.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <script/verify_flags.h>
 #include <uint256.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
+#include <span>
+#include <string>
+#include <utility>
 #include <vector>
 
 class CPubKey;
-class CScript;
-class CScriptNum;
 class XOnlyPubKey;
-struct CScriptWitness;
 
 /** Signature hash types/flags */
 enum

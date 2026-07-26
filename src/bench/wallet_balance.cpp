@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
 #include <kernel/chainparams.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -12,14 +13,15 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
-#include <util/time.h>
+#include <util/check.h>
 #include <validation.h>
+#include <wallet/db.h>
 #include <wallet/receive.h>
+#include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <memory>
 #include <optional>
 #include <string>
@@ -33,8 +35,8 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
     // The reason is 'generatetoaddress', which creates a chain with deterministic timestamps in the past.
-    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
-    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
+    FakeNodeClock clock{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
+    CWallet wallet{test_setup->m_node.chain.get(), "", MakeInMemoryWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -53,20 +55,21 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     auto bal = GetBalance(wallet); // Cache
 
-    bench.run([&] {
-        if (set_dirty) wallet.MarkDirty();
-        bal = GetBalance(wallet);
-        if (add_mine) assert(bal.m_mine_trusted > 0);
-    });
+    bench.setup([&] {
+            if (set_dirty) wallet.MarkDirty();
+        })
+        .run([&] {
+            bal = GetBalance(wallet);
+            ankerl::nanobench::doNotOptimizeAway(bal);
+            assert(add_mine == (bal.m_mine_trusted > 0));
+        });
 }
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true); }
 static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false); }
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);
-BENCHMARK(WalletBalanceMine);
 BENCHMARK(WalletBalanceWatch);
 } // namespace wallet

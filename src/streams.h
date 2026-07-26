@@ -124,6 +124,38 @@ public:
     }
 };
 
+/** Minimal stream for writing to an existing span of bytes.
+ */
+class SpanWriter
+{
+private:
+    std::span<std::byte> m_dest;
+
+public:
+    explicit SpanWriter(std::span<std::byte> dest) : m_dest{dest} {}
+    template <typename... Args>
+    SpanWriter(std::span<std::byte> dest, Args&&... args) : SpanWriter{dest}
+    {
+        ::SerializeMany(*this, std::forward<Args>(args)...);
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        if (src.size() > m_dest.size()) {
+            throw std::ios_base::failure("SpanWriter::write(): exceeded buffer size");
+        }
+        memcpy(m_dest.data(), src.data(), src.size());
+        m_dest = m_dest.subspan(src.size());
+    }
+
+    template<typename T>
+    SpanWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.
@@ -156,7 +188,6 @@ public:
         return std::string{UCharCast(data()), UCharCast(data() + size())};
     }
 
-
     //
     // Vector subset
     //
@@ -174,32 +205,9 @@ public:
     value_type* data()                               { return vch.data() + m_read_pos; }
     const value_type* data() const                   { return vch.data() + m_read_pos; }
 
-    inline void Compact()
-    {
-        vch.erase(vch.begin(), vch.begin() + m_read_pos);
-        m_read_pos = 0;
-    }
-
-    bool Rewind(std::optional<size_type> n = std::nullopt)
-    {
-        // Total rewind if no size is passed
-        if (!n) {
-            m_read_pos = 0;
-            return true;
-        }
-        // Rewind by n characters if the buffer hasn't been compacted yet
-        if (*n > m_read_pos)
-            return false;
-        m_read_pos -= *n;
-        return true;
-    }
-
-
     //
     // Stream subset
     //
-    int in_avail() const         { return size(); }
-
     void read(std::span<value_type> dst)
     {
         if (dst.size() == 0) return;
@@ -211,8 +219,8 @@ public:
         }
         memcpy(dst.data(), &vch[m_read_pos], dst.size());
         if (next_read_pos.value() == vch.size()) {
-            m_read_pos = 0;
-            vch.clear();
+            // If fully consumed, reset to empty state.
+            clear();
             return;
         }
         m_read_pos = next_read_pos.value();
@@ -226,8 +234,8 @@ public:
             throw std::ios_base::failure("DataStream::ignore(): end of data");
         }
         if (next_read_pos.value() == vch.size()) {
-            m_read_pos = 0;
-            vch.clear();
+            // If all bytes are ignored, reset to empty state.
+            clear();
             return;
         }
         m_read_pos = next_read_pos.value();
@@ -255,6 +263,20 @@ public:
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
     size_t GetMemoryUsage() const noexcept;
+};
+
+// Require empty scratch streams on entry and reset them on exit.
+class ScopedDataStreamUsage
+{
+    DataStream& m_stream;
+
+public:
+    explicit ScopedDataStreamUsage(DataStream& stream) : m_stream{stream} { assert(m_stream.empty()); }
+
+    ScopedDataStreamUsage(const ScopedDataStreamUsage&) = delete;
+    ScopedDataStreamUsage& operator=(const ScopedDataStreamUsage&) = delete;
+
+    ~ScopedDataStreamUsage() { m_stream.clear(); }
 };
 
 template <typename IStream>

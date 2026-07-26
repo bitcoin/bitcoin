@@ -45,7 +45,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
 
     const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
@@ -66,8 +66,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
         // might call DumpBanlist (or other methods that are at least linear
         // complexity of the input size).
         bool contains_invalid{false};
-        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
-        {
+        LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 300) {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
@@ -125,7 +124,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
         }
         if (!force_read_and_write_to_err) {
             ban_man.DumpBanlist();
-            clock_ctx.set(ConsumeTime(fuzzed_data_provider));
+            clock.set(ConsumeTime(fuzzed_data_provider));
             banmap_t banmap;
             ban_man.GetBanned(banmap);
             BanMan ban_man_read{banlist_file, /*client_interface=*/nullptr, /*default_ban_time=*/0};

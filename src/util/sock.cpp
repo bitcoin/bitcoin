@@ -26,11 +26,6 @@
 #include <poll.h>
 #endif
 
-static inline bool IOErrorIsPermanent(int err)
-{
-    return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
-}
-
 Sock::Sock(SOCKET s) : m_socket(s) {}
 
 Sock::Sock(Sock&& other)
@@ -77,15 +72,15 @@ int Sock::Listen(int backlog) const
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
 #ifdef WIN32
-    static constexpr auto ERR = INVALID_SOCKET;
+    static constexpr auto accept_error = INVALID_SOCKET;
 #else
-    static constexpr auto ERR = SOCKET_ERROR;
+    static constexpr auto accept_error = SOCKET_ERROR;
 #endif
 
     std::unique_ptr<Sock> sock;
 
     const auto socket = accept(m_socket, addr, addr_len);
-    if (socket != ERR) {
+    if (socket != accept_error) {
         try {
             sock = std::make_unique<Sock>(socket);
         } catch (const std::exception&) {
@@ -173,10 +168,10 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         pfds.emplace_back();
         auto& pfd = pfds.back();
         pfd.fd = sock->m_socket;
-        if (events.requested & RECV) {
+        if (events.requested & RecvEvent) {
             pfd.events |= POLLIN;
         }
-        if (events.requested & SEND) {
+        if (events.requested & SendEvent) {
             pfd.events |= POLLOUT;
         }
     }
@@ -191,13 +186,13 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         assert(sock->m_socket == static_cast<SOCKET>(pfds[i].fd));
         events.occurred = 0;
         if (pfds[i].revents & POLLIN) {
-            events.occurred |= RECV;
+            events.occurred |= RecvEvent;
         }
         if (pfds[i].revents & POLLOUT) {
-            events.occurred |= SEND;
+            events.occurred |= SendEvent;
         }
         if (pfds[i].revents & (POLLERR | POLLHUP)) {
-            events.occurred |= ERR;
+            events.occurred |= ErrorEvent;
         }
         ++i;
     }
@@ -217,10 +212,10 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
             return false;
         }
         const auto& s = sock->m_socket;
-        if (events.requested & RECV) {
+        if (events.requested & RecvEvent) {
             FD_SET(s, &recv);
         }
-        if (events.requested & SEND) {
+        if (events.requested & SendEvent) {
             FD_SET(s, &send);
         }
         FD_SET(s, &err);
@@ -237,13 +232,13 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         const auto& s = sock->m_socket;
         events.occurred = 0;
         if (FD_ISSET(s, &recv)) {
-            events.occurred |= RECV;
+            events.occurred |= RecvEvent;
         }
         if (FD_ISSET(s, &send)) {
-            events.occurred |= SEND;
+            events.occurred |= SendEvent;
         }
         if (FD_ISSET(s, &err)) {
-            events.occurred |= ERR;
+            events.occurred |= ErrorEvent;
         }
     }
 
@@ -288,7 +283,7 @@ void Sock::SendComplete(std::span<const unsigned char> data,
         // Wait for a short while (or the socket to become ready for sending) before retrying
         // if nothing was sent.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, SEND);
+        (void)Wait(wait_time, SendEvent);
     }
 }
 
@@ -378,7 +373,7 @@ std::string Sock::RecvUntilTerminator(uint8_t terminator,
 
         // Wait for a short while (or the socket to become ready for reading) before retrying.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, RECV);
+        (void)Wait(wait_time, RecvEvent);
     }
 }
 

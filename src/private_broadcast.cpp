@@ -3,17 +3,23 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 #include <private_broadcast.h>
+
 #include <util/check.h>
 
 #include <algorithm>
 
 
-bool PrivateBroadcast::Add(const CTransactionRef& tx)
+PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    const bool inserted{m_transactions.try_emplace(tx).second};
-    return inserted;
+    // Re-adding an already-tracked transaction is a no-op regardless of the cap.
+    if (m_transactions.contains(tx)) return AddResult::AlreadyPresent;
+
+    if (m_transactions.size() >= m_max_transactions) return AddResult::QueueFull;
+
+    m_transactions.try_emplace(tx);
+    return AddResult::Added;
 }
 
 std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
@@ -32,6 +38,11 @@ std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& wil
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
+
+    if (GetSendStatusByNode(will_send_to_nodeid).has_value()) { // nodeid reuse, shouldn't send >1 tx to a given node
+        Assume(false);
+        return std::nullopt;
+    }
 
     const auto it{std::ranges::max_element(
             m_transactions,

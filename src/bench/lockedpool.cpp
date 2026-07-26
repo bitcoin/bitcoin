@@ -4,6 +4,9 @@
 
 #include <bench/bench.h>
 #include <support/lockedpool.h>
+// IWYU incorrectly suggests removing this header.
+// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
+#include <util/byte_units.h> // IWYU pragma: keep
 
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +18,7 @@
 static void BenchLockedPool(benchmark::Bench& bench)
 {
     void *synth_base = reinterpret_cast<void*>(0x08000000);
-    const size_t synth_size = 1024*1024;
+    const size_t synth_size{1_MiB};
     Arena b(synth_base, synth_size, 16);
 
     std::vector<void*> addr{ASIZE, nullptr};

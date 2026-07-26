@@ -15,7 +15,7 @@ See: https://en.cppreference.com/w/cpp/preprocessor/include.html.
 
 
 Prefer C++ headers over C counterparts.
-See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/iwyu_include_picker.cc#L587-L629.
+See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_22/iwyu_include_picker.cc#L645-L687.
 
 --- a/iwyu_include_picker.cc
 +++ b/iwyu_include_picker.cc

@@ -40,10 +40,20 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <chrono>        // high_resolution_clock
+#include <cassert>       // assert
+#include <cstdint>
 #include <cstring>       // memcpy
+// IWYU will only see this header with ANKERL_NANOBENCH_IMPLEMENT defined, which
+// makes it suggest removing forward declarations for the Input/output library.
+// IWYU pragma: begin_keep
 #include <iosfwd>        // for std::ostream* custom output target in Config
+// IWYU pragma: end_keep
+#include <limits>
+#include <ratio>
 #include <string>        // all names
+#include <type_traits>
 #include <unordered_map> // holds context information of results
+#include <utility>
 #include <vector>        // holds all results
 
 #define ANKERL_NANOBENCH(x) ANKERL_NANOBENCH_PRIVATE_##x()
@@ -125,6 +135,11 @@
 #define ANKERL_NANOBENCH_PRIVATE_NOEXCEPT_STRING_MOVE() std::is_nothrow_move_assignable<std::string>::value
 
 // declarations ///////////////////////////////////////////////////////////////////////////////////
+
+// As definitions follow these declarations within this
+// header, IWYU considers some of them redundant and
+// suggests removing them. Disable this IWYU behavior.
+// IWYU pragma: begin_keep
 
 namespace ankerl {
 namespace nanobench {
@@ -368,6 +383,8 @@ class LinuxPerformanceCounters;
 } // namespace detail
 } // namespace nanobench
 } // namespace ankerl
+
+// IWYU pragma: end_keep
 
 // definitions ////////////////////////////////////////////////////////////////////////////////////
 
@@ -1013,7 +1030,7 @@ public:
     ANKERL_NANOBENCH(NODISCARD) Config const& config() const noexcept;
 
     /**
-     * @brief Configure an untimed setup step per epoch (fluent API).
+     * @brief Configure an untimed setup step per epoch (forces single-iteration epochs).
      *
      * Example: `bench.setup(...).run(...);`
      */
@@ -1238,6 +1255,9 @@ public:
     template <typename Op>
     ANKERL_NANOBENCH_NO_SANITIZE("integer")
     Bench& run(Op&& op) {
+        assert((mBench.epochIterations() <= 1) &&
+               "setup() runs once per epoch, not once per iteration; it requires epochIterations(1)");
+        mBench.epochIterations(1);
         return mBench.runImpl(mSetupOp, std::forward<Op>(op));
     }
 
@@ -1355,12 +1375,15 @@ void doNotOptimizeAway(T const& val) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #    include <algorithm> // sort, reverse
-#    include <atomic>    // compare_exchange_strong in loop overhead
+#    include <cmath>
+#    include <compare>
 #    include <cstdlib>   // getenv
-#    include <cstring>   // strstr, strncmp
 #    include <fstream>   // ifstream to parse proc files
+#    include <functional>
 #    include <iomanip>   // setw, setprecision
 #    include <iostream>  // cout
+#    include <iterator>
+#    include <locale>
 #    include <numeric>   // accumulate
 #    include <random>    // random_device
 #    include <sstream>   // to_s in Number
@@ -1375,17 +1398,21 @@ void doNotOptimizeAway(T const& val) {
 #        include <linux/perf_event.h>
 #        include <sys/ioctl.h>
 #        include <sys/syscall.h>
+#        include <sys/types.h>
 #    endif
 
 // declarations ///////////////////////////////////////////////////////////////////////////////////
+
+// As definitions follow these declarations within this
+// header, IWYU considers some of them redundant and
+// suggests removing them. Disable this IWYU behavior.
+// IWYU pragma: begin_keep
 
 namespace ankerl {
 namespace nanobench {
 
 // helper stuff that is only intended to be used internally
 namespace detail {
-
-struct TableInfo;
 
 // formatting utilities
 namespace fmt {
@@ -1400,6 +1427,8 @@ class MarkDownCode;
 } // namespace detail
 } // namespace nanobench
 } // namespace ankerl
+
+// IWYU pragma: end_keep
 
 // definitions ////////////////////////////////////////////////////////////////////////////////////
 
@@ -2625,9 +2654,9 @@ private:
     std::map<uint64_t, Target> mIdToTarget{};
 
     // start with minimum size of 3 for read_format
-    std::vector<uint64_t> mCounters{3};
-    std::vector<uint64_t> mCalibratedOverhead{3};
-    std::vector<uint64_t> mLoopOverhead{3};
+    std::vector<uint64_t> mCounters = std::vector<uint64_t>(3);
+    std::vector<uint64_t> mCalibratedOverhead = std::vector<uint64_t>(3);
+    std::vector<uint64_t> mLoopOverhead = std::vector<uint64_t>(3);
 
     uint64_t mTimeEnabledNanos = 0;
     uint64_t mTimeRunningNanos = 0;

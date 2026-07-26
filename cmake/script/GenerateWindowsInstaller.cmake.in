@@ -1,0 +1,40 @@
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+find_program(MAKENSIS_EXECUTABLE makensis REQUIRED)
+
+# Project variables.
+set(CLIENT_NAME "@CLIENT_NAME@")
+set(CLIENT_VERSION_MAJOR @CLIENT_VERSION_MAJOR@)
+set(CLIENT_VERSION_MINOR @CLIENT_VERSION_MINOR@)
+set(CLIENT_VERSION_BUILD @CLIENT_VERSION_BUILD@)
+set(CLIENT_VERSION_STRING "@CLIENT_VERSION_STRING@")
+set(CLIENT_URL "@PROJECT_HOMEPAGE_URL@")
+set(COPYRIGHT_YEAR "@COPYRIGHT_YEAR@")
+set(COPYRIGHT_HOLDERS_FINAL "@COPYRIGHT_HOLDERS_FINAL@")
+set(abs_top_srcdir @PROJECT_SOURCE_DIR@)
+set(EXEEXT @CMAKE_EXECUTABLE_SUFFIX@)
+
+# Script variables.
+cmake_path(ABSOLUTE_PATH BIN_DIR NORMALIZE)
+cmake_path(ABSOLUTE_PATH LIBEXEC_DIR NORMALIZE)
+
+# Other variables required by the `setup.nsi.in` template.
+set(CLIENT_TARNAME "bitcoin")
+set(BITCOIN_WRAPPER_NAME "bitcoin")
+set(BITCOIN_GUI_NAME "bitcoin-qt")
+set(BITCOIN_DAEMON_NAME "bitcoind")
+set(BITCOIN_CLI_NAME "bitcoin-cli")
+set(BITCOIN_TX_NAME "bitcoin-tx")
+set(BITCOIN_WALLET_TOOL_NAME "bitcoin-wallet")
+set(BITCOIN_TEST_NAME "test_bitcoin")
+configure_file(@PROJECT_SOURCE_DIR@/share/setup.nsi.in ${CMAKE_CURRENT_LIST_DIR}/bitcoin-win64-setup.nsi
+  USE_SOURCE_PERMISSIONS @ONLY
+)
+
+execute_process(
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND ${MAKENSIS_EXECUTABLE} -V2 bitcoin-win64-setup.nsi
+  COMMAND_ERROR_IS_FATAL ANY
+)

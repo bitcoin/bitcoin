@@ -8,13 +8,12 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <memory>
 #include <vector>
 
 constexpr size_t BLOCK_VTX_COUNT{4000};

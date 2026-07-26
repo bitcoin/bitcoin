@@ -88,6 +88,24 @@ BOOST_AUTO_TEST_CASE(obfuscation_empty)
     BOOST_CHECK(non_null_obf);
 }
 
+BOOST_AUTO_TEST_CASE(streams_scoped_data_stream_usage)
+{
+    DataStream stream{};
+    {
+        ScopedDataStreamUsage usage{stream};
+        stream << uint8_t{42};
+        BOOST_CHECK_GT(stream.size(), 0U);
+    }
+    BOOST_CHECK(stream.empty());
+
+    {
+        ScopedDataStreamUsage usage{stream};
+        stream << uint16_t{42};
+        BOOST_CHECK_GT(stream.size(), 0U);
+    }
+    BOOST_CHECK(stream.empty());
+}
+
 BOOST_AUTO_TEST_CASE(xor_file)
 {
     fs::path xor_path{m_args.GetDataDirBase() / "test_xor.bin"};
@@ -206,6 +224,28 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
+}
+
+BOOST_AUTO_TEST_CASE(streams_span_writer)
+{
+    unsigned char a(1);
+    unsigned char b(2);
+    unsigned char bytes[] = {3, 4, 5, 6};
+    std::array<std::byte, 8> arr{};
+
+    // Test operator<<
+    SpanWriter writer{arr};
+    writer << a << b;
+    BOOST_CHECK_EQUAL(HexStr(arr), "0102000000000000");
+
+    // Use variadic constructor and write to subspan.
+    SpanWriter{std::span{arr}.subspan(2), a, bytes, b};
+    BOOST_CHECK_EQUAL(HexStr(arr), "0102010304050602");
+
+    // Writing past the end throws
+    std::array<std::byte, 1> small{};
+    BOOST_CHECK_THROW(SpanWriter(std::span{small}, a, b), std::ios_base::failure);
+    BOOST_CHECK_THROW(SpanWriter(std::span{small}) << a << b, std::ios_base::failure);
 }
 
 BOOST_AUTO_TEST_CASE(streams_vector_reader)

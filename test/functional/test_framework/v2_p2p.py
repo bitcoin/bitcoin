@@ -50,6 +50,7 @@ SHORTID = {
     26: b"getcfcheckpt",
     27: b"cfcheckpt",
     28: b"addrv2",
+    37: b"feature",
 }
 
 # Dictionary which contains short message type ID for the P2P message

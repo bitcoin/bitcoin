@@ -4,24 +4,45 @@
 
 #include <addresstype.h>
 #include <blockfilter.h>
-#include <chainparams.h>
+#include <chain.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <index/base.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
-#include <node/miner.h>
+#include <interfaces/mining.h>
+#include <key.h>
+#include <node/blockstorage.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/blockfilter.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
-#include <future>
 
-using node::BlockAssembler;
+#include <compare>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <future>
+#include <memory>
+#include <span>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
+
 using node::BlockManager;
-using node::CBlockTemplate;
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
@@ -68,11 +89,12 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey)
 {
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
-    options.include_dummy_extranonce = true;
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
-    CBlock& block = pblocktemplate->block;
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({
+        .coinbase_output_script = scriptPubKey,
+    }, /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
 
@@ -116,7 +138,7 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
 
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 {
-    BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1 << 20, true);
+    BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, true);
     BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;
@@ -132,7 +154,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 
         for (const CBlockIndex* block_index = m_node.chainman->ActiveChain().Genesis();
              block_index != nullptr;
-             block_index = m_node.chainman->ActiveChain().Next(block_index)) {
+             block_index = m_node.chainman->ActiveChain().Next(*block_index)) {
             BOOST_CHECK(!filter_index.LookupFilter(block_index, filter));
             BOOST_CHECK(!filter_index.LookupFilterHeader(block_index, filter_header));
             BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
@@ -152,7 +174,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         const CBlockIndex* block_index;
         for (block_index = m_node.chainman->ActiveChain().Genesis();
              block_index != nullptr;
-             block_index = m_node.chainman->ActiveChain().Next(block_index)) {
+             block_index = m_node.chainman->ActiveChain().Next(*block_index)) {
             CheckFilterLookups(filter_index, block_index, last_header, m_node.chainman->m_blockman);
         }
     }
@@ -277,14 +299,14 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
     BOOST_CHECK(filter_index == nullptr);
 
-    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1 << 20, true, false));
+    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
     BOOST_CHECK(filter_index != nullptr);
     BOOST_CHECK(filter_index->GetFilterType() == BlockFilterType::BASIC);
 
     // Initialize returns false if index already exists.
-    BOOST_CHECK(!InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1 << 20, true, false));
+    BOOST_CHECK(!InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
 
     int iter_count = 0;
     ForEachBlockFilterIndex([&iter_count](BlockFilterIndex& _index) { iter_count++; });
@@ -299,7 +321,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
     BOOST_CHECK(filter_index == nullptr);
 
     // Reinitialize index.
-    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1 << 20, true, false));
+    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
 
     DestroyAllBlockFilterIndexes();
 
@@ -310,14 +332,14 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 class IndexReorgCrash : public BaseIndex
 {
 private:
+    FakeNodeClock& m_clock;
     std::unique_ptr<BaseIndex::DB> m_db;
     std::shared_future<void> m_blocker;
     int m_blocking_height;
 
 public:
-    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
-                             int blocking_height) : BaseIndex(std::move(chain), "test index"), m_blocker(blocker),
-                                                    m_blocking_height(blocking_height)
+    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker, int blocking_height, FakeNodeClock& clock)
+        : BaseIndex(std::move(chain), "test index", "testidx"), m_clock(clock), m_blocker(blocker), m_blocking_height(blocking_height)
     {
         const fs::path path = gArgs.GetDataDirNet() / "index";
         fs::create_directories(path);
@@ -334,7 +356,7 @@ public:
 
         // Move mock time forward so the best index gets updated only when we are not at the blocking height
         if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
-            SetMockTime(GetTime<std::chrono::seconds>() + 31s);
+            m_clock += 31s;
         }
 
         return true;
@@ -343,14 +365,11 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
 {
-    // Enable mock time
-    SetMockTime(GetTime<std::chrono::minutes>());
-
     std::promise<void> promise;
     std::shared_future<void> blocker(promise.get_future());
     int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
 
-    IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
+    IndexReorgCrash index{interfaces::MakeChain(m_node), blocker, blocking_height, m_clock};
     BOOST_REQUIRE(index.Init());
     BOOST_REQUIRE(index.StartBackgroundSync());
 

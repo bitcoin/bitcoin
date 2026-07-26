@@ -14,7 +14,9 @@ from test_framework.messages import (
     msg_cmpctblock,
     msg_block,
     msg_blocktxn,
+    msg_headers,
     HeaderAndShortIDs,
+    msg_sendcmpct,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import (
@@ -42,6 +44,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         self.generate(self.wallet, COINBASE_MATURITY)
 
         honest_relayer = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-full-relay")
+        honest_relayer.send_and_ping(msg_sendcmpct())
         attacker = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # Create new block with two transactions (coinbase + 1 self-transfer).
@@ -56,6 +59,10 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # version on the self-transfer.
         mutated_block = copy.deepcopy(block)
         mutated_block.vtx[1].version = 4
+
+        # Send block header through the honest relayer
+        honest_relayer.send_without_ping(msg_headers([block]))
+        honest_relayer.wait_for_getdata([block.hash_int], timeout=30)
 
         # Announce the new block via a compact block through the honest relayer
         cmpctblock = HeaderAndShortIDs()

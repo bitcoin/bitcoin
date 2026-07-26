@@ -7,12 +7,10 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <addresstype.h>
-#include <btcsignals.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/cs_main.h>
-#include <logging.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -24,8 +22,11 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -74,7 +75,7 @@ struct CBlockLocator;
 struct CExtKey;
 struct FlatSigningProvider;
 struct KeyOriginInfo;
-struct PartiallySignedTransaction;
+class PartiallySignedTransaction;
 struct SignatureData;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
@@ -347,7 +348,6 @@ private:
      * block_hash.IsNull(), then wallet state is not updated in AddToWallet, but
      * notifications happen and cached balances are marked dirty.
      *
-     * If fUpdate is true, existing transactions will be updated.
      * TODO: One exception to this is that the abandoned state is cleared under the
      * assumption that any further notification of a transaction that was considered
      * abandoned is an indication that it is not safe to be considered abandoned.
@@ -357,7 +357,7 @@ private:
      * Should be called with rescanning_old_block set to true, if the transaction is
      * not discovered in real time, but during a rescan of old blocks.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx);
@@ -375,7 +375,7 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool update_tx = true, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
@@ -553,6 +553,13 @@ public:
     int GetTxBlocksToMaturity(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTxImmatureCoinBase(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    enum class SpendType {
+        UNSPENT,
+        CONFIRMED,
+        MEMPOOL,
+        NONMEMPOOL,
+    };
+    SpendType HowSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // Whether this or any known scriptPubKey with the same single key has been spent.
@@ -628,7 +635,7 @@ public:
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
-    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
+    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver);
 
     struct ScanResult {
         enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
@@ -645,7 +652,7 @@ public:
         //! USER_ABORT.
         uint256 last_failed_block;
     };
-    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, bool save_progress);
+    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
@@ -663,26 +670,20 @@ public:
 
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
-     * them. Tries to sign if sign=true. Sets `complete` if the PSBT is now complete
-     * (i.e. has all required signatures or signature-parts, and is ready to
-     * finalize.) Sets `error` and returns false if something goes wrong.
+     * them. Tries to sign if options.sign=true.
+     * Sets `complete` if the PSBT is now complete (i.e. has all required
+     * signatures or signature-parts, and is ready to finalize.)
      *
      * @param[in]  psbtx PartiallySignedTransaction to fill in
+     * @param[in]  options options for filling or signing
      * @param[out] complete indicates whether the PSBT is now complete
-     * @param[in]  sighash_type the sighash type to use when signing (if PSBT does not specify)
-     * @param[in]  sign whether to sign or not
-     * @param[in]  bip32derivs whether to fill in bip32 derivation information if available
      * @param[out] n_signed the number of inputs signed by this wallet
-     * @param[in] finalize whether to create the final scriptSig or scriptWitness if possible
-     * return error
+     * @returns an error if something goes wrong
      */
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbtx,
+                  const common::PSBTFillOptions& options,
                   bool& complete,
-                  std::optional<int> sighash_type = std::nullopt,
-                  bool sign = true,
-                  bool bip32derivs = true,
-                  size_t* n_signed = nullptr,
-                  bool finalize = true) const;
+                  size_t* n_signed = nullptr) const;
 
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
@@ -690,10 +691,19 @@ public:
      * broadcasting the transaction.
      *
      * @param[in] tx The transaction to be broadcast.
-     * @param[in] mapValue key-values to be set on the transaction.
-     * @param[in] orderForm BIP 70 / BIP 21 order form details to be set on the transaction.
+     * @param[in] replaces_txid The txid of the transaction that this transaction replaces
+     * @param[in] comment The user's comment for this transaction
+     * @param[in] comment_to The comment for this transaction indicating where coins are sent to
+     * @param[in] messages The BIP 21 URI messages to attach to this transaction
      */
-    void CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm);
+    void CommitTransaction(
+        CTransactionRef tx,
+        std::optional<Txid> replaces_txid = std::nullopt,
+        std::optional<std::string> comment = std::nullopt,
+        std::optional<std::string> comment_to = std::nullopt,
+        const std::vector<std::string>& messages = {},
+        const std::vector<std::string>& payment_requests = {}
+    );
 
     /** Pass this transaction to node for optional mempool insertion and relay to peers. */
     bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method) const
@@ -870,7 +880,7 @@ public:
     static bool LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContext& context, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     /* Initializes, creates and returns a new CWallet; returns a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateNew(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    static std::shared_ptr<CWallet> CreateNew(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bool born_encrypted, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     /* Initializes, loads, and returns a CWallet from an existing wallet; returns a null pointer in case of an error */
     static std::shared_ptr<CWallet> LoadExisting(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, bilingual_str& error, std::vector<bilingual_str>& warnings);
@@ -881,7 +891,7 @@ public:
      */
     void postInitProcess();
 
-    bool BackupWallet(const std::string& strDest) const;
+    [[nodiscard]] bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
@@ -1003,7 +1013,7 @@ public:
     void ConnectScriptPubKeyManNotifiers();
 
     //! Instantiate a descriptor ScriptPubKeyMan from the WalletDescriptor and load it
-    DescriptorScriptPubKeyMan& LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc);
+    void LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, const KeyMap& keys, const CryptedKeyMap& ckeys);
 
     //! Adds the active ScriptPubKeyMan for the specified type and internal. Writes it to the wallet file
     //! @param[in] id The unique id for the ScriptPubKeyMan
@@ -1031,6 +1041,9 @@ public:
 
     //! Create new seed and default DescriptorScriptPubKeyMans for this wallet
     void SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Setup new descriptors or seed for new address generation
+    void SetupWalletGeneration() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Return the DescriptorScriptPubKeyMan for a WalletDescriptor if it is already in the wallet
     DescriptorScriptPubKeyMan* GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const;
@@ -1100,6 +1113,10 @@ public:
         if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
+        // Discard any abort request left over from previous reservation, so
+        // that an abort requested while the reservation is held always applies
+        // to abort this rescan, even if it arrives before the scan loop starts.
+        m_wallet.fAbortRescan = false;
         m_wallet.m_scanning_with_passphrase.exchange(with_passphrase);
         m_wallet.m_scanning_start = SteadyClock::now();
         m_wallet.m_scanning_progress = 0;
@@ -1133,6 +1150,8 @@ bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_nam
 
 struct MigrationResult {
     std::string wallet_name;
+    std::optional<std::string> watchonly_wallet_name;
+    std::optional<std::string> solvables_wallet_name;
     std::shared_ptr<CWallet> wallet;
     std::shared_ptr<CWallet> watchonly_wallet;
     std::shared_ptr<CWallet> solvables_wallet;
@@ -1140,9 +1159,12 @@ struct MigrationResult {
 };
 
 //! Do all steps to migrate a legacy wallet to a descriptor wallet
-[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
+[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context, bool load_wallet = true);
 //! Requirement: The wallet provided to this function must be isolated, with no attachment to the node's context.
-[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context);
+[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool load_wallet = true);
+
+//! Determine the path that the wallet is stored in
+util::Result<fs::path> GetWalletPath(const std::string& name);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H

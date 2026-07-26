@@ -17,7 +17,7 @@ using util::ToString;
 
 BOOST_AUTO_TEST_SUITE(util_threadnames_tests)
 
-const std::string TEST_THREAD_NAME_BASE = "test_thread.";
+const std::string TEST_THREAD_NAME_BASE = "test_thrd.";
 
 /**
  * Run a bunch of threads to all call util::ThreadRename.
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     BOOST_CHECK_EQUAL(names.size(), 100U);
 
-    // Names "test_thread.[n]" should exist for n = [0, 99]
+    // Names "test_thrd.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {
         BOOST_CHECK(names.contains(TEST_THREAD_NAME_BASE + ToString(i)));
     }

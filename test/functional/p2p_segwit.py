@@ -10,7 +10,6 @@ from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
     add_witness_commitment,
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -230,7 +229,7 @@ class SegWitTest(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
-        block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        block = create_block(int(tip, 16), height=height, ntime=block_time)
         return block
 
     def update_witness_block_with_transactions(self, block, tx_list, nonce=0):
@@ -616,7 +615,9 @@ class SegWitTest(BitcoinTestFramework):
                     'txid': tx3.txid_hex,
                     'wtxid': tx3.wtxid_hex,
                     'allowed': True,
+                    'vsize_adjusted': tx3.get_vsize(),
                     'vsize': tx3.get_vsize(),
+                    'vsize_bip141': tx3.get_vsize(),
                     'fees': {
                         'base': Decimal('0.00001000'),
                     },
@@ -634,7 +635,9 @@ class SegWitTest(BitcoinTestFramework):
                     'txid': tx3.txid_hex,
                     'wtxid': tx3.wtxid_hex,
                     'allowed': True,
+                    'vsize_adjusted': tx3.get_vsize(),
                     'vsize': tx3.get_vsize(),
+                    'vsize_bip141': tx3.get_vsize(),
                     'fees': {
                         'base': Decimal('0.00011000'),
                     },

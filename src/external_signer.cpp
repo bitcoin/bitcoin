@@ -48,12 +48,15 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
             throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
         const std::string& fingerprintStr{fingerprint.get_str()};
+        if (fingerprintStr.size() != 8 || !IsHex(fingerprintStr)) {
+            throw std::runtime_error(strprintf("'%s' received invalid fingerprint, must be 8 hex characters", command));
+        }
         // Skip duplicate signer
         bool duplicate = false;
         for (const ExternalSigner& signer : signers) {
             if (signer.m_fingerprint.compare(fingerprintStr) == 0) duplicate = true;
         }
-        if (duplicate) break;
+        if (duplicate) continue;
         std::string name;
         const UniValue& model_field = signer.find_value("model");
         if (model_field.isStr() && model_field.getValStr() != "") {
@@ -112,14 +115,13 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    PartiallySignedTransaction signer_psbtx;
-    std::string signer_psbt_error;
-    if (!DecodeBase64PSBT(signer_psbtx, signer_result.find_value("psbt").get_str(), signer_psbt_error)) {
-        error = strprintf("TX decode failed %s", signer_psbt_error);
+    util::Result<PartiallySignedTransaction> signer_psbtx = DecodeBase64PSBT(signer_result.find_value("psbt").get_str());
+    if (!signer_psbtx) {
+        error = strprintf("TX decode failed %s", util::ErrorString(signer_psbtx).original);
         return false;
     }
 
-    psbtx = signer_psbtx;
+    psbtx = *signer_psbtx;
 
     return true;
 }

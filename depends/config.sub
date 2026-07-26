@@ -1,10 +1,10 @@
 #! /bin/sh
 # Configuration validation subroutine script.
-#   Copyright 1992-2025 Free Software Foundation, Inc.
+#   Copyright 1992-2026 Free Software Foundation, Inc.
 
 # shellcheck disable=SC2006,SC2268,SC2162 # see below for rationale
 
-timestamp='2025-07-10'
+timestamp='2026-05-17'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ Report bugs and patches to <config-patches@gnu.org>."
 version="\
 GNU config.sub ($timestamp)
 
-Copyright 1992-2025 Free Software Foundation, Inc.
+Copyright 1992-2026 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -1432,6 +1432,7 @@ case $cpu-$vendor in
 			| sparcv9v \
 			| spu \
 			| sv1 \
+			| sw_64 \
 			| sx* \
 			| tahoe \
 			| thumbv7* \
@@ -1525,7 +1526,7 @@ EOF
 		;;
 	ironclad*)
 		kernel=ironclad
-		os=`echo "$basic_os" | sed -e 's|ironclad|mlibc|'`
+		os=`echo "$basic_os" | sed -e 's|ironclad|gnu|'`
 		;;
 	linux*)
 		kernel=linux
@@ -2220,7 +2221,7 @@ case $kernel-$os-$obj in
 		;;
 	uclinux-uclibc*- | uclinux-gnu*- )
 		;;
-	ironclad-mlibc*-)
+	ironclad-gnu*- | ironclad-mlibc*- )
 		;;
 	managarm-mlibc*- | managarm-kernel*- )
 		;;

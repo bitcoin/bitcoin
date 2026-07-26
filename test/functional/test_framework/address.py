@@ -56,10 +56,12 @@ def create_deterministic_address_bcrt1_p2tr_op_true(explicit_internal_key=None):
 
 
 def byte_to_base58(b, version):
-    result = ''
-    b = bytes([version]) + b  # prepend version
+    if isinstance(version, int):
+        version = bytes([version])
+    b = version + b # prepend version
     b += hash256(b)[:4]       # append checksum
     value = int.from_bytes(b, 'big')
+    result = ''
     while value > 0:
         result = b58chars[value % 58] + result
         value //= 58

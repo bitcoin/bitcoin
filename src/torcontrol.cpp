@@ -10,7 +10,6 @@
 #include <common/args.h>
 #include <compat/compat.h>
 #include <crypto/hmac_sha256.h>
-#include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -18,6 +17,7 @@
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -63,6 +63,11 @@ constexpr std::chrono::duration<double> RECONNECT_TIMEOUT_MAX{600.0};
  * this is belt-and-suspenders sanity limit to prevent memory exhaustion.
  */
 constexpr int MAX_LINE_LENGTH = 100000;
+/** Maximum number of lines received on TorControlConnection per reply to avoid
+ * memory exhaustion. The largest expected now is 5 (PROTOCOLINFO), but future
+ * changes to this file might need to re-evaluate MAX_LINE_COUNT.
+ */
+constexpr int MAX_LINE_COUNT = 1000;
 /** Timeout for socket operations */
 constexpr auto SOCKET_SEND_TIMEOUT = 10s;
 
@@ -128,16 +133,16 @@ bool TorControlConnection::WaitForData(std::chrono::milliseconds timeout)
     if (!m_sock) return false;
 
     Sock::Event event{0};
-    if (!m_sock->Wait(timeout, Sock::RECV, &event)) {
+    if (!m_sock->Wait(timeout, Sock::RecvEvent, &event)) {
         return false;
     }
-    if (event & Sock::ERR) {
+    if (event & Sock::ErrorEvent) {
         LogDebug(BCLog::TOR, "Socket error detected");
         Disconnect();
         return false;
     }
 
-    return (event & Sock::RECV);
+    return (event & Sock::RecvEvent);
 }
 
 bool TorControlConnection::ReceiveAndProcess()
@@ -177,13 +182,16 @@ bool TorControlConnection::ProcessBuffer()
     auto start = reader.it;
 
     while (auto line = reader.ReadLine()) {
+        if (m_message.lines.size() == MAX_LINE_COUNT) {
+            throw std::runtime_error(strprintf("Control port reply exceeded %d lines, disconnecting", MAX_LINE_COUNT));
+        }
         // Skip short lines
         if (line->size() < 4) continue;
 
         // Parse: <code><separator><data>
         // <status>(-|+| )<data>
         m_message.code = ToIntegral<int>(line->substr(0, 3)).value_or(0);
-        m_message.lines.push_back(line->substr(4));
+        m_message.lines.emplace_back(line->substr(4));
         char separator = (*line)[3]; // '-', '+', or ' '
 
         if (separator == ' ') {

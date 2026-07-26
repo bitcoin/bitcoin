@@ -42,6 +42,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     };
     BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
+    LOCK(::cs_main);
     BOOST_CHECK_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
     // simulate what happens during reindex
     // simulate a well-formed genesis block being found at offset 8 in the blk00000.dat file
@@ -257,6 +258,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     constexpr int TEST_BLOCK_SIZE{81};
 
     // Blockstore is empty
+    LOCK(::cs_main);
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), 0);
 
     // Write the first block to a new location.
@@ -298,6 +300,28 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     // Block 2 was not overwritten:
     BOOST_CHECK(!blockman.ReadBlock(read_block, pos2, {}));
     BOOST_CHECK_EQUAL(read_block.nVersion, 2);
+}
+
+BOOST_FIXTURE_TEST_CASE(prune_lock_update_and_delete, TestingSetup)
+{
+    LOCK(::cs_main);
+    auto& chainman{*Assert(m_node.chainman)};
+    auto& blockman{chainman.m_blockman};
+
+    // Create a prune lock
+    blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 100});
+
+    // Update it to a new height
+    blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 200});
+
+    // Delete existing prune lock
+    BOOST_CHECK(blockman.DeletePruneLock("test_lock"));
+
+    // Verify deletion worked by trying to delete the same lock again
+    BOOST_CHECK(!blockman.DeletePruneLock("test_lock"));
+
+    // Deleting a non-existent lock returns false
+    BOOST_CHECK(!blockman.DeletePruneLock("nonexistent"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

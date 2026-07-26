@@ -25,19 +25,23 @@ FUZZ_TARGET(psbt)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    PartiallySignedTransaction psbt_mut;
-    std::string error;
     auto str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_mut, MakeByteSpan(str), error)) {
+    util::Result<PartiallySignedTransaction> psbt_res = DecodeRawPSBT(MakeByteSpan(str));
+    if (!psbt_res) {
         return;
     }
+    PartiallySignedTransaction psbt_mut = *psbt_res;
     const PartiallySignedTransaction psbt = psbt_mut;
 
+    // We are on purpose not forward compatible, and version 1 is disabled.
+    const auto psbt_version{psbt.GetVersion()};
+    Assert(psbt_version == 0 || psbt_version == 2);
+
     // A PSBT must roundtrip.
-    PartiallySignedTransaction psbt_roundtrip;
     std::vector<uint8_t> psbt_ser;
     VectorWriter{psbt_ser, 0, psbt};
-    SpanReader{psbt_ser} >> psbt_roundtrip;
+    SpanReader reader{psbt_ser};
+    PartiallySignedTransaction psbt_roundtrip(deserialize, reader);
 
     // And be stable across roundtrips.
     std::vector<uint8_t> roundtrip_ser;
@@ -51,29 +55,71 @@ FUZZ_TARGET(psbt)
     }
 
     (void)psbt.IsNull();
-
-    std::optional<CMutableTransaction> tx = psbt.tx;
-    if (tx) {
-        const CMutableTransaction& mtx = *tx;
-        const PartiallySignedTransaction psbt_from_tx{mtx};
-    }
+    (void)psbt.GetUnsignedTx();
 
     for (const PSBTInput& input : psbt.inputs) {
         (void)PSBTInputSigned(input);
         (void)input.IsNull();
+        PSBTInput input_mod = input;
+        CTxOut tx_out;
+        if (input.GetUTXO(tx_out)) {
+            (void)tx_out.IsNull();
+            (void)tx_out.ToString();
+        }
+        // A PSBT input must roundtrip to signature data.
+        PSBTInput input_fill{psbt_version, input_mod.prev_txid, input_mod.prev_out, input_mod.sequence};
+        SignatureData sig_data;
+        input_mod.FillSignatureData(sig_data);
+        input_fill.FromSignatureData(sig_data);
+
+        // Only final_script_sig and final_script_witness are filled when sigdata is complete
+        if (sig_data.complete) {
+            Assert(input_mod.final_script_sig == input_fill.final_script_sig);
+            Assert(input_mod.final_script_witness == input_fill.final_script_witness);
+        } else {
+            // UTXOs don't go into SignatureData
+            input_mod.non_witness_utxo.reset();
+            input_mod.witness_utxo.SetNull();
+            // Sighash type doesn't go into SignatureData
+            input_mod.sighash_type.reset();
+            // Timelocks don't go into SignatureData
+            input_mod.time_locktime.reset();
+            input_mod.height_locktime.reset();
+            // Proprietary fields are not included in SignatureData
+            input_mod.m_proprietary.clear();
+            // Unknown fields are not included in SignatureData
+            input_mod.unknown.clear();
+
+            Assert(input_mod == input_fill);
+        }
     }
     (void)CountPSBTUnsignedInputs(psbt);
 
     for (const PSBTOutput& output : psbt.outputs) {
         (void)output.IsNull();
-    }
+        PSBTOutput output_mod = output;
+        // A PSBT output must roundtrip to signature data.
+        PSBTOutput output_fill{psbt_version, output_mod.amount, output_mod.script};
+        SignatureData sig_data;
+        output_mod.FillSignatureData(sig_data);
+        output_fill.FromSignatureData(sig_data);
 
-    for (size_t i = 0; i < psbt.tx->vin.size(); ++i) {
-        CTxOut tx_out;
-        if (psbt.GetInputUTXO(tx_out, i)) {
-            (void)tx_out.IsNull();
-            (void)tx_out.ToString();
+        // FillSignatureData will not fill tap tree or internal key if the tree is empty or
+        // the key is not fully valid. These need to be cleared before checking for equivalence
+        if (output_mod.m_tap_tree.empty() || !output_mod.m_tap_internal_key.IsFullyValid()) {
+            output_mod.m_tap_tree.clear();
+            std::fill(output_mod.m_tap_internal_key.begin(), output_mod.m_tap_internal_key.end(), 0);
         }
+        // Sort m_tap_tree to ensure the vectors match
+        std::sort(output_mod.m_tap_tree.begin(), output_mod.m_tap_tree.end());
+        std::sort(output_fill.m_tap_tree.begin(), output_fill.m_tap_tree.end());
+        // Proprietary fields are not included in SignatureData
+        output_mod.m_proprietary.clear();
+        // Unknown fields are not included in SignatureData
+        output_mod.unknown.clear();
+
+        Assert(output_mod.m_tap_internal_key == output_fill.m_tap_internal_key);
+        Assert(output_mod == output_fill);
     }
 
     psbt_mut = psbt;
@@ -85,21 +131,26 @@ FUZZ_TARGET(psbt)
         const PartiallySignedTransaction psbt_from_tx{result};
     }
 
-    PartiallySignedTransaction psbt_merge;
+    PartiallySignedTransaction psbt_merge = psbt;
     str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_merge, MakeByteSpan(str), error)) {
-        psbt_merge = psbt;
+    util::Result<PartiallySignedTransaction> psbt_merge_res = DecodeRawPSBT(MakeByteSpan(str));
+    if (psbt_merge_res) {
+        psbt_merge = *psbt_merge_res;
     }
     psbt_mut = psbt;
     (void)psbt_mut.Merge(psbt_merge);
     psbt_mut = psbt;
-    (void)CombinePSBTs(psbt_mut, {psbt_mut, psbt_merge});
-    psbt_mut = psbt;
-    for (unsigned int i = 0; i < psbt_merge.tx->vin.size(); ++i) {
-        (void)psbt_mut.AddInput(psbt_merge.tx->vin[i], psbt_merge.inputs[i]);
+    std::optional<PartiallySignedTransaction> comb_res = CombinePSBTs({psbt_mut, psbt_merge});
+    if (comb_res) {
+        psbt_mut = *comb_res;
     }
-    for (unsigned int i = 0; i < psbt_merge.tx->vout.size(); ++i) {
-        Assert(psbt_mut.AddOutput(psbt_merge.tx->vout[i], psbt_merge.outputs[i]));
+    for (const auto& psbt_in : psbt_merge.inputs) {
+        (void)psbt_mut.AddInput(psbt_in);
+    }
+    for (const auto& psbt_out : psbt_merge.outputs) {
+        (void)psbt_mut.AddOutput(psbt_out);
     }
     psbt_mut.unknown.insert(psbt_merge.unknown.begin(), psbt_merge.unknown.end());
+
+    RemoveUnnecessaryTransactions(psbt_mut);
 }

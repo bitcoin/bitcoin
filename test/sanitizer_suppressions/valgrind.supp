@@ -12,7 +12,7 @@
 #       --error-limit=no build/bin/test_bitcoin
 #
 # Note that suppressions may depend on OS and/or library versions.
-# Tested on Debian Trixie system libs,
+# Tested on Ubuntu 26.04 system libs,
 # * using clang (only x86_64, see https://bugs.kde.org/show_bug.cgi?id=485276),
 # * and GCC (only -O1, see https://bugs.kde.org/show_bug.cgi?id=472329),
 # without gui (because it only passes with a DEBUG=1 depends build).

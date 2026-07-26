@@ -7,7 +7,6 @@
 #include <chainparams.h>
 #include <flatfile.h>
 #include <node/blockstorage.h>
-#include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -18,8 +17,8 @@
 #include <cstdio>
 #include <map>
 #include <memory>
+#include <span>
 #include <stdexcept>
-#include <vector>
 
 /**
  * The LoadExternalBlockFile() function is used during -reindex and -loadblock.
@@ -62,8 +61,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
 
     std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
     FlatFilePos pos;
-    bench.epochIterations(1)
-        .setup([&] {
+    bench.setup([&] {
             blocks_with_unknown_parent.clear();
             pos = FlatFilePos{};
         })

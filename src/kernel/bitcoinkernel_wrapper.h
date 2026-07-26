@@ -79,6 +79,22 @@ enum class BlockValidationResult : btck_BlockValidationResult {
     HEADER_LOW_WORK = btck_BlockValidationResult_HEADER_LOW_WORK
 };
 
+enum class TxValidationResult : btck_TxValidationResult {
+    UNSET               = btck_TxValidationResult_UNSET,
+    CONSENSUS           = btck_TxValidationResult_CONSENSUS,
+    INPUTS_NOT_STANDARD = btck_TxValidationResult_INPUTS_NOT_STANDARD,
+    NOT_STANDARD        = btck_TxValidationResult_NOT_STANDARD,
+    MISSING_INPUTS      = btck_TxValidationResult_MISSING_INPUTS,
+    PREMATURE_SPEND     = btck_TxValidationResult_PREMATURE_SPEND,
+    WITNESS_MUTATED     = btck_TxValidationResult_WITNESS_MUTATED,
+    WITNESS_STRIPPED    = btck_TxValidationResult_WITNESS_STRIPPED,
+    CONFLICT            = btck_TxValidationResult_CONFLICT,
+    MEMPOOL_POLICY      = btck_TxValidationResult_MEMPOOL_POLICY,
+    NO_MEMPOOL          = btck_TxValidationResult_NO_MEMPOOL,
+    RECONSIDERABLE      = btck_TxValidationResult_RECONSIDERABLE,
+    UNKNOWN             = btck_TxValidationResult_UNKNOWN
+};
+
 enum class ScriptVerifyStatus : btck_ScriptVerifyStatus {
     OK = btck_ScriptVerifyStatus_OK,
     ERROR_INVALID_FLAGS_COMBINATION = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION,
@@ -341,8 +357,10 @@ public:
     Handle(Handle&& other) noexcept : m_ptr(other.m_ptr) { other.m_ptr = nullptr; }
     Handle& operator=(Handle&& other) noexcept
     {
-        DestroyFunc(m_ptr);
-        m_ptr = std::exchange(other.m_ptr, nullptr);
+        if (this != &other) {
+            DestroyFunc(m_ptr);
+            m_ptr = std::exchange(other.m_ptr, nullptr);
+        }
         return *this;
     }
 
@@ -547,6 +565,49 @@ public:
 };
 
 template <typename Derived>
+class WitnessStackApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    WitnessStackApi() = default;
+
+public:
+    size_t CountItems() const
+    {
+        return btck_witness_stack_count_items(impl());
+    }
+
+    std::vector<std::byte> GetItem(size_t index) const
+    {
+        struct Item { const btck_WitnessStack* stack; size_t index; };
+        Item item{impl(), index};
+        return write_bytes(&item, +[](const Item* c, btck_WriteBytes w, void* ud) {
+            return btck_witness_stack_get_item_at(c->stack, c->index, w, ud);
+        });
+    }
+
+    MAKE_RANGE_METHOD(Items, Derived, &WitnessStackApi<Derived>::CountItems, &WitnessStackApi<Derived>::GetItem, *static_cast<const Derived*>(this))
+};
+
+class WitnessStackView : public View<btck_WitnessStack>, public WitnessStackApi<WitnessStackView>
+{
+public:
+    explicit WitnessStackView(const btck_WitnessStack* ptr) : View{ptr} {}
+};
+
+class WitnessStack : public Handle<btck_WitnessStack, btck_witness_stack_copy, btck_witness_stack_destroy>, public WitnessStackApi<WitnessStack>
+{
+public:
+    WitnessStack(const WitnessStackView& view)
+        : Handle(view) {}
+};
+
+template <typename Derived>
 class TransactionInputApi
 {
 private:
@@ -567,6 +628,16 @@ public:
     uint32_t GetSequence() const
     {
         return btck_transaction_input_get_sequence(impl());
+    }
+
+    WitnessStackView GetWitnessStack() const
+    {
+        return WitnessStackView{btck_transaction_input_get_witness_stack(impl())};
+    }
+
+    std::vector<std::byte> GetScriptSig() const
+    {
+        return write_bytes(impl(), btck_transaction_input_get_script_sig);
     }
 };
 
@@ -768,6 +839,16 @@ public:
     {
         return btck_block_header_get_nonce(impl());
     }
+
+    std::array<std::byte, 80> ToBytes() const
+    {
+        std::array<std::byte, 80> header;
+        int res{btck_block_header_to_bytes(impl(), reinterpret_cast<unsigned char*>(header.data()))};
+        if (res != 0) {
+            throw std::runtime_error("Failed to serialize block header");
+        }
+        return header;
+    }
 };
 
 class BlockHeaderView : public View<btck_BlockHeader>, public BlockHeaderApi<BlockHeaderView>
@@ -914,6 +995,12 @@ public:
     {
         return BlockHeader{btck_block_tree_entry_get_block_header(get())};
     }
+
+    BlockTreeEntry GetAncestor(int32_t height) const
+    {
+        return BlockTreeEntry{btck_block_tree_entry_get_ancestor(get(), height)};
+    }
+
 };
 
 class KernelNotifications
@@ -971,7 +1058,9 @@ class BlockValidationState : public Handle<btck_BlockValidationState, btck_block
 public:
     explicit BlockValidationState() : Handle{btck_block_validation_state_create()} {}
 
-    BlockValidationState(const BlockValidationStateView& view) : Handle{view} {}
+    explicit BlockValidationState(const BlockValidationStateView& view) : Handle{view} {}
+
+    explicit BlockValidationState(btck_BlockValidationState* state) : Handle{state} {}
 };
 
 inline bool Block::Check(const ConsensusParamsView& consensus_params,
@@ -979,6 +1068,28 @@ inline bool Block::Check(const ConsensusParamsView& consensus_params,
     BlockValidationState& state) const
 {
     return btck_block_check(get(), consensus_params.get(), static_cast<btck_BlockCheckFlags>(flags), state.get()) == 1;
+}
+
+class TxValidationState : public UniqueHandle<btck_TxValidationState, btck_tx_validation_state_destroy>
+{
+public:
+    using UniqueHandle::UniqueHandle; // inherit ctor
+    explicit TxValidationState() : UniqueHandle{btck_tx_validation_state_create()} {}
+
+    ValidationMode GetValidationMode() const
+    {
+        return static_cast<ValidationMode>(btck_tx_validation_state_get_validation_mode(get()));
+    }
+
+    TxValidationResult GetTxValidationResult() const
+    {
+        return static_cast<TxValidationResult>(btck_tx_validation_state_get_tx_validation_result(get()));
+    }
+};
+
+inline bool CheckTransaction(const Transaction& tx, TxValidationState& state)
+{
+    return btck_transaction_check(tx.get(), state.get()) == 1;
 }
 
 class ValidationInterface
@@ -998,8 +1109,11 @@ public:
 class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_copy, btck_chain_parameters_destroy>
 {
 public:
-    ChainParams(ChainType chain_type)
+    explicit ChainParams(ChainType chain_type)
         : Handle{btck_chain_parameters_create(static_cast<btck_ChainType>(chain_type))} {}
+
+    explicit ChainParams(std::span<const std::byte> signet_challenge)
+        : Handle{btck_chain_parameters_create_signet(signet_challenge.data(), signet_challenge.size())} {}
 
     ConsensusParamsView GetConsensusParams() const
     {
@@ -1112,12 +1226,12 @@ public:
         return btck_chain_get_height(get());
     }
 
-    int CountEntries() const
+    int32_t CountEntries() const
     {
         return btck_chain_get_height(get()) + 1;
     }
 
-    BlockTreeEntry GetByHeight(int height) const
+    BlockTreeEntry GetByHeight(int32_t height) const
     {
         auto index{btck_chain_get_by_height(get(), height)};
         if (!index) throw std::runtime_error("No entry in the chain at the provided height");
@@ -1261,9 +1375,10 @@ public:
         return res == 0;
     }
 
-    bool ProcessBlockHeader(const BlockHeader& header, BlockValidationState& state)
+    BlockValidationState ProcessBlockHeader(const BlockHeader& header)
     {
-        return btck_chainstate_manager_process_block_header(get(), header.get(), state.get()) == 0;
+        auto state = btck_chainstate_manager_process_block_header(get(), header.get());
+        return BlockValidationState{state};
     }
 
     ChainView GetChain() const

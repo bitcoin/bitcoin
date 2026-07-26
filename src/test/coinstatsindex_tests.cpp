@@ -2,16 +2,30 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
+#include <consensus/validation.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
 #include <kernel/coinstats.h>
 #include <kernel/types.h>
+#include <key.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <memory>
+#include <optional>
+#include <span>
+#include <vector>
 
 using kernel::ChainstateRole;
 
@@ -19,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
 
 BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 {
-    CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1 << 20, true};
+    CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1_MiB, true};
     BOOST_REQUIRE(coin_stats_index.Init());
 
     const CBlockIndex* block_index;
@@ -75,14 +89,14 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
     const CChainParams& params = Params();
     {
-        CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
         BOOST_REQUIRE(index.Init());
         index.Sync();
         std::shared_ptr<const CBlock> new_block;
         CBlockIndex* new_block_index = nullptr;
         {
             const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
-            const CBlock block = this->CreateBlock({}, script_pub_key, chainstate);
+            const CBlock block = this->CreateBlock({}, script_pub_key);
 
             new_block = std::make_shared<CBlock>(block);
 
@@ -101,7 +115,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
     }
 
     {
-        CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1_MiB};
         BOOST_REQUIRE(index.Init());
         // Make sure the index can be loaded.
         BOOST_REQUIRE(index.StartBackgroundSync());

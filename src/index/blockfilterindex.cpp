@@ -49,9 +49,9 @@
  */
 constexpr uint8_t DB_FILTER_POS{'P'};
 
-constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
+constexpr unsigned int MAX_FLTR_FILE_SIZE{16_MiB};
 /** The pre-allocation chunk size for fltr?????.dat files */
-constexpr unsigned int FLTR_FILE_CHUNK_SIZE = 0x100000; // 1 MiB
+constexpr unsigned int FLTR_FILE_CHUNK_SIZE{1_MiB};
 /** Maximum size of the cfheaders cache
  *  We have a limit to prevent a bug in filling this cache
  *  potentially turning into an OOM. At 2000 entries, this cache
@@ -60,6 +60,15 @@ constexpr unsigned int FLTR_FILE_CHUNK_SIZE = 0x100000; // 1 MiB
 constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
 
 namespace {
+
+std::string BlockFilterThreadName(BlockFilterType filter_type)
+{
+    switch (filter_type) {
+    case BlockFilterType::BASIC: return "blkfltbscidx";
+    case BlockFilterType::INVALID: return "";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
 
 struct DBVal {
     uint256 hash;
@@ -75,7 +84,7 @@ static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
 BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), BlockFilterTypeName(filter_type) + " block filter index")
+    : BaseIndex(std::move(chain), BlockFilterTypeName(filter_type) + " block filter index", BlockFilterThreadName(filter_type))
     , m_filter_type(filter_type)
 {
     const std::string& filter_name = BlockFilterTypeName(filter_type);

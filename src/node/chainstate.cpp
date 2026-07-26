@@ -14,6 +14,7 @@
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/signalinterrupt.h>
@@ -61,7 +62,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // If we're not mid-reindex (based on disk + args), add a genesis block on disk
     // (otherwise we use the one already on disk).
     // This is called again in ImportBlocks after the reindex completes.
-    if (chainman.m_blockman.m_blockfiles_indexed && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+    if (chainman.m_blockman.m_blockfiles_indexed && !chainman.LoadGenesisBlock()) {
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
 
@@ -163,7 +164,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
     } else if (chainman.m_blockman.GetPruneTarget()) {
         LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
-                chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
+                chainman.m_blockman.GetPruneTarget() / 1_MiB);
     }
 
     LOCK(cs_main);

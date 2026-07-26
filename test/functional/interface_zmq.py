@@ -15,7 +15,6 @@ from test_framework.address import (
 from test_framework.blocktools import (
     add_witness_commitment,
     create_block,
-    create_coinbase,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
@@ -419,7 +418,7 @@ class ZMQTest (BitcoinTestFramework):
         bump_txid = self.nodes[0].sendrawtransaction(orig_tx['tx'].serialize().hex())
         # Mine the pre-bump tx
         txs_to_add = [orig_tx['hex']] + [tx['hex'] for tx in more_tx]
-        block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(self.nodes[0].getblockcount()+1), txlist=txs_to_add)
+        block = create_block(int(self.nodes[0].getbestblockhash(), 16), height=self.nodes[0].getblockcount() + 1, txlist=txs_to_add)
         add_witness_commitment(block)
         block.solve()
         assert_equal(self.nodes[0].submitblock(block.serialize().hex()), None)

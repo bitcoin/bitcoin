@@ -4,10 +4,10 @@
 
 #include <ipc/process.h>
 #include <ipc/protocol.h>
-#include <logging.h>
 #include <mp/util.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
 

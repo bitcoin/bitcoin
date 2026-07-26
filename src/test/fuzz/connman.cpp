@@ -41,7 +41,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
+    FakeSteadyClock steady_clock;
     auto netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr{std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio())};
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -58,8 +59,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;
-    CreateSock = [&fuzzed_data_provider](int, int, int) {
-        return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+    CreateSock = [&fuzzed_data_provider, &steady_clock](int, int, int) {
+        return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
     };
 
     // Mock g_dns_lookup() to return a fuzzed address.
@@ -81,6 +82,13 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
 
+    const auto local_services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
+    options.m_local_services = local_services;
+
+    const auto use_addrman_outgoing{fuzzed_data_provider.ConsumeBool()};
+    options.m_use_addrman_outgoing = use_addrman_outgoing;
+    options.m_max_automatic_connections = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1000);
+
     auto consume_whitelist = [&]() {
         std::vector<NetWhitelistPermissions> result(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3));
         for (auto& entry : result) {
@@ -94,20 +102,27 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     connman.Init(options);
 
+    const uint64_t total_bytes_recv_initial{connman.GetTotalBytesRecv()};
+    const uint64_t total_bytes_sent_initial{connman.GetTotalBytesSent()};
+
     CNetAddr random_netaddr;
     CAddress random_address;
-    CNode random_node = ConsumeNode(fuzzed_data_provider);
+    CNode random_node = ConsumeNode(fuzzed_data_provider, steady_clock);
     CSubNet random_subnet;
     std::string random_string;
+    std::vector<NodeId> node_ids;
+    std::vector<std::string> node_addr_names;
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
-        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
+        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, steady_clock).release()};
         // Simulate post-handshake state.
         p2p_node.fSuccessfullyConnected = true;
         connman.AddTestNode(p2p_node);
+        node_ids.push_back(p2p_node.GetId());
+        node_addr_names.push_back(p2p_node.m_addr_name);
     }
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -123,7 +138,23 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
             },
             [&] {
-                connman.AddNode({random_string, fuzzed_data_provider.ConsumeBool()});
+                const std::string& node_str = (!node_addr_names.empty() && fuzzed_data_provider.ConsumeBool())
+                    ? PickValue(fuzzed_data_provider, node_addr_names)
+                    : random_string;
+                const auto added_node_info{connman.GetAddedNodeInfo(/*include_connected=*/true)};
+                const auto add_node{connman.AddNode({node_str, /*use_v2transport=*/fuzzed_data_provider.ConsumeBool()})};
+                if (add_node) {
+                    assert(!connman.AddNode({node_str, /*use_v2transport=*/fuzzed_data_provider.ConsumeBool()}));
+                    assert(added_node_info.size() < connman.GetAddedNodeInfo(/*include_connected=*/true).size());
+                    const auto remove{fuzzed_data_provider.ConsumeBool()};
+                    if (remove) {
+                        assert(connman.RemoveAddedNode(node_str));
+                        assert(added_node_info.size() == connman.GetAddedNodeInfo(/*include_connected=*/true).size());
+                    }
+                }
+            },
+            [&] {
+                (void)connman.RemoveAddedNode(random_string);
             },
             [&] {
                 connman.CheckIncomingNonce(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
@@ -141,10 +172,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.DisconnectNode(random_subnet);
             },
             [&] {
-                connman.ForEachNode([](auto) {});
-            },
-            [&] {
-                (void)connman.ForNode(fuzzed_data_provider.ConsumeIntegral<NodeId>(), [&](auto) { return fuzzed_data_provider.ConsumeBool(); });
+                NodeId id = node_ids.empty() || fuzzed_data_provider.ConsumeBool()
+                    ? fuzzed_data_provider.ConsumeIntegral<NodeId>()
+                    : PickValue(fuzzed_data_provider, node_ids);
+                (void)connman.ForNode(id, [&](CNode* pnode) {
+                    (void)pnode->GetId();
+                    (void)pnode->IsInboundConn();
+                    (void)pnode->IsFullOutboundConn();
+                    return true;
+                });
             },
             [&] {
                 auto max_addresses = fuzzed_data_provider.ConsumeIntegral<size_t>();
@@ -173,13 +209,28 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.PushMessage(&random_node, std::move(serialized_net_msg));
             },
             [&] {
-                connman.RemoveAddedNode(random_string);
-            },
-            [&] {
-                connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
+                const auto set_active{fuzzed_data_provider.ConsumeBool()};
+                connman.SetNetworkActive(set_active);
+                assert(connman.GetNetworkActive() == set_active);
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
+            },
+            [&] {
+                const auto services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
+                const auto before{connman.GetLocalServices()};
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    connman.AddLocalServices(services);
+                    assert((connman.GetLocalServices() & services) == services);
+                    // Restore by clearing only the bits that weren't already set.
+                    connman.RemoveLocalServices(ServiceFlags(services & ~before));
+                } else {
+                    connman.RemoveLocalServices(services);
+                    assert((connman.GetLocalServices() & services) == 0);
+                    // Restore by re-adding only the bits that were previously set.
+                    connman.AddLocalServices(ServiceFlags(services & before));
+                }
+                assert(connman.GetLocalServices() == before);
             },
             [&] {
                 ConnectionType conn_type{
@@ -188,13 +239,19 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                     conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
                 }
 
+                std::optional<Proxy> proxy_override;
+                if (conn_type == ConnectionType::PRIVATE_BROADCAST || fuzzed_data_provider.ConsumeBool()) {
+                    proxy_override.emplace(ConsumeService(fuzzed_data_provider));
+                }
+
                 connman.OpenNetworkConnection(
                     /*addrConnect=*/random_address,
                     /*fCountFailure=*/fuzzed_data_provider.ConsumeBool(),
                     /*grant_outbound=*/{},
                     /*pszDest=*/fuzzed_data_provider.ConsumeBool() ? nullptr : random_string.c_str(),
                     /*conn_type=*/conn_type,
-                    /*use_v2transport=*/fuzzed_data_provider.ConsumeBool());
+                    /*use_v2transport=*/fuzzed_data_provider.ConsumeBool(),
+                    /*proxy_override=*/proxy_override);
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
@@ -228,20 +285,31 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.SocketHandlerPublic();
             });
     }
-    (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
+    connman.ForEachNode([](CNode* pnode) {
+        (void)pnode->GetId();
+        (void)pnode->IsInboundConn();
+        (void)pnode->IsFullOutboundConn();
+        (void)pnode->ConnectionTypeAsString();
+    });
+    (void)connman.GetAddedNodeInfo(/*include_connected=*/false);
     (void)connman.GetExtraFullOutboundCount();
-    (void)connman.GetLocalServices();
+    assert(connman.GetLocalServices() == local_services);
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
-    (void)connman.GetMaxOutboundTimeframe();
-    (void)connman.GetMaxOutboundTimeLeftInCycle();
-    (void)connman.GetNetworkActive();
+    const auto time_left_in_cycle{connman.GetMaxOutboundTimeLeftInCycle()};
     std::vector<CNodeStats> stats;
     connman.GetNodeStats(stats);
-    (void)connman.GetOutboundTargetBytesLeft();
-    (void)connman.GetTotalBytesRecv();
-    (void)connman.GetTotalBytesSent();
+    const auto bytes_left{connman.GetOutboundTargetBytesLeft()};
+    assert(bytes_left <= max_outbound_limit);
+    if (max_outbound_limit == 0) {
+        assert(bytes_left == 0);
+        assert(time_left_in_cycle == std::chrono::seconds{0});
+        assert(!connman.OutboundTargetReached(/*historicalBlockServingLimit=*/false));
+        assert(!connman.OutboundTargetReached(/*historicalBlockServingLimit=*/true));
+    }
+    assert(connman.GetTotalBytesRecv() >= total_bytes_recv_initial);
+    assert(connman.GetTotalBytesSent() >= total_bytes_sent_initial);
     (void)connman.GetTryNewOutboundPeer();
-    (void)connman.GetUseAddrmanOutgoing();
+    assert(connman.GetUseAddrmanOutgoing() == use_addrman_outgoing);
     (void)connman.ASMapHealthCheck();
 
     connman.ClearTestNodes();

@@ -65,7 +65,7 @@ Almost all options can be negated by being specified with a `no` prefix. For exa
 
 In general, negating an option is like setting it to `0` if it is a boolean or integer option, and setting it to an empty string or path or list if it is a string or path or list option.
 
-However, there are exceptions to this general rule. For example, it is an error to negate some options (e.g. `-nodatadir` is disallowed), and some negated strings are treated like `"0"` instead of `""` (e.g. `-noproxy` is treated like `-proxy=0`), and some negating some lists can have side effects in addition to clearing the lists (e.g. `-noconnect` disables automatic connections in addition to dropping any manual connections specified previously with `-connect=<host>`). When there are exceptions to the rule, they should either be obvious from context, or should be mentioned in usage documentation. Nonobvious, undocumented exceptions should be reported as bugs.
+However, there are exceptions to this general rule. For example, it is an error to negate some options (e.g. `-nodatadir` is disallowed), and some negated strings are treated like `"0"` instead of `""` (e.g. `-noproxy` is treated like `-proxy=0`), and some negating lists can have side effects in addition to clearing the lists (e.g. `-noconnect` disables automatic connections in addition to dropping any manual connections specified previously with `-connect=<host>`). When there are exceptions to the rule, they should either be obvious from context, or should be mentioned in usage documentation. Nonobvious, undocumented exceptions should be reported as bugs.
 
 ## Configuration File Path
 

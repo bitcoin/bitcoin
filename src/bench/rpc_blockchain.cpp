@@ -5,21 +5,22 @@
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
 #include <chain.h>
+#include <consensus/params.h>
 #include <core_io.h>
+#include <kernel/chainparams.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
 #include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <validation.h>
 
-#include <cstddef>
 #include <memory>
-#include <vector>
+#include <span>
+#include <string>
 
 namespace {
 
@@ -31,10 +32,7 @@ struct TestBlockAndIndex {
 
     TestBlockAndIndex()
     {
-        DataStream stream{benchmark::data::block413567};
-        std::byte a{0};
-        stream.write({&a, 1}); // Prevent compaction
-
+        SpanReader stream{benchmark::data::block413567};
         stream >> TX_WITH_WITNESS(block);
 
         blockHash = block.GetHash();

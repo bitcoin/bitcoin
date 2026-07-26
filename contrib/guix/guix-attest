@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-export LC_ALL=C
-set -e -o pipefail
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+export LC_ALL=C.UTF-8
+set -o errexit -o pipefail
 
 # Source the common prelude, which:
 #   1. Checks if we're at the top directory of the Bitcoin Core repository
@@ -138,14 +141,6 @@ fi
 ##############
 ##  Attest  ##
 ##############
-
-# Usage: out_name $outdir
-#
-#   HOST: The output directory being attested
-#
-out_name() {
-    basename "$(dirname "$1")"
-}
 
 shasum_already_exists() {
 cat <<EOF

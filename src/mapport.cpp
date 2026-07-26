@@ -8,11 +8,11 @@
 #include <common/netif.h>
 #include <common/pcp.h>
 #include <common/system.h>
-#include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
+#include <util/log.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 
@@ -119,6 +119,7 @@ static void ProcessPCP()
     // we rather just choose a fairly short expiry time.
 }
 
+/// \anchor mapport
 static void ThreadMapPort()
 {
     do {

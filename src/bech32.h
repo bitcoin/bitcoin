@@ -14,8 +14,10 @@
 #ifndef BITCOIN_BECH32_H
 #define BITCOIN_BECH32_H
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace bech32

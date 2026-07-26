@@ -58,18 +58,17 @@ GETDATA_WAIT = 60
 
 def cleanup(func):
     def wrapper(self, *args, **kwargs):
-        try:
-            func(self, *args, **kwargs)
-        finally:
-            self.nodes[0].disconnect_p2ps()
-            # Do not clear the node's mempool, as each test requires mempool min feerate > min
-            # relay feerate. However, do check that this is the case.
-            assert self.nodes[0].getmempoolinfo()["mempoolminfee"] > self.nodes[0].getnetworkinfo()["relayfee"]
-            # Ensure we do not try to spend the same UTXOs in subsequent tests, as they will look like RBF attempts.
-            self.wallet.rescan_utxos(include_mempool=True)
+        func(self, *args, **kwargs)
 
-            # Resets if mocktime was used
-            self.nodes[0].setmocktime(0)
+        self.nodes[0].disconnect_p2ps()
+        # Do not clear the node's mempool, as each test requires mempool min feerate > min
+        # relay feerate. However, do check that this is the case.
+        assert_greater_than(self.nodes[0].getmempoolinfo()["mempoolminfee"], self.nodes[0].getnetworkinfo()["relayfee"])
+        # Ensure we do not try to spend the same UTXOs in subsequent tests, as they will look like RBF attempts.
+        self.wallet.rescan_utxos(include_mempool=True)
+
+        # Resets if mocktime was used
+        self.nodes[0].setmocktime(0)
     return wrapper
 
 class PackageRelayTest(BitcoinTestFramework):
@@ -77,7 +76,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxmempool=5",
+            "-maxmempool=5","-inboundrelaypercent=100"
         ]]
 
     def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None):

@@ -7,7 +7,7 @@
 
 #include <consensus/amount.h>
 #include <interfaces/types.h>
-#include <node/types.h>
+#include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
@@ -16,14 +16,13 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace node {
 struct NodeContext;
 } // namespace node
-
-class BlockValidationState;
-class CScript;
 
 namespace interfaces {
 
@@ -34,7 +33,8 @@ public:
     virtual ~BlockTemplate() = default;
 
     virtual CBlockHeader getBlockHeader() = 0;
-    // Block contains a dummy coinbase transaction that should not be used.
+    // Block contains a dummy coinbase transaction that should not be used and
+    // it may not match a transaction constructed from getCoinbaseTx().
     virtual CBlock getBlock() = 0;
 
     // Fees per transaction, not including coinbase transaction.
@@ -60,17 +60,28 @@ public:
      * @param[in] timestamp time block header field (unix timestamp)
      * @param[in] nonce nonce block header field
      * @param[in] coinbase complete coinbase transaction (including witness)
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
      *
-     * @note unlike the submitblock RPC, this method does NOT add the
-     *       coinbase witness automatically.
+     * @note Unlike the submitblock RPC, this method does not call
+     *       UpdateUncommittedBlockStructures to add a missing coinbase witness
+     *       reserved value. Callers must provide a complete coinbase transaction,
+     *       including the witness when a witness commitment is present.
      *
-     * @returns if the block was processed, does not necessarily indicate validity.
+     * @note for heights <= 16, the BIP34 height push in getCoinbaseTx().script_sig_prefix
+     *       is only one byte long, so the coinbase scriptSig needs at least
+     *       one additional byte of data to avoid bad-cb-length.
      *
-     * @note Returns true if the block is already known, which can happen if
-     *       the solved block is constructed and broadcast by multiple nodes
-     *       (e.g. both the miner who constructed the template and the pool).
+     * @returns true if the block was accepted as a new block
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) = 0;
+
+    //! Deprecated older method preserved to return an explicit error for IPC
+    //! clients using mining.capnp @7.
+    virtual bool submitSolutionOld7(uint32_t, uint32_t, uint32_t, CTransactionRef)
+    {
+        throw std::runtime_error("Old submitSolution (@7) not supported. Please update your client!");
+    }
 
     /**
      * Waits for fees in the next block to rise, a new tip or the timeout.
@@ -154,9 +165,48 @@ public:
      */
     virtual bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) = 0;
 
+    /**
+     * Process a fully assembled block.
+     *
+     * Similar to the submitblock RPC. Accepts a complete block, validates
+     * it, and if accepted as new, processes it into chainstate. Accepted
+     * blocks may then be announced to peers through normal validation signals.
+     *
+     * @param[in]  block  the complete block to submit
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
+     * @returns           true if the block was accepted as a new block. Returns
+     *                    false and sets reason if the block is a duplicate or
+     *                    the validation result is inconclusive.
+     *
+     * @note Unlike the submitblock RPC, this method does not call
+     *       UpdateUncommittedBlockStructures to add a missing coinbase witness
+     *       reserved value. Callers must submit a fully formed block, including
+     *       the coinbase witness when a witness commitment is present.
+     */
+    virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
+
+    /**
+     * Fetch raw transactions from the mempool by txid.
+     *
+     * @param[in] txids   transaction ids to look up
+     * @returns           one entry per requested txid containing the
+     *                    transaction if found, otherwise nullptr
+     */
+    virtual std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) = 0;
+
+    /**
+     * Fetch raw transactions from the mempool by wtxid.
+     *
+     * @param[in] wtxids   witness transaction ids to look up
+     * @returns            one entry per requested wtxid containing the
+     *                     transaction if found, otherwise nullptr
+     */
+    virtual std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) = 0;
+
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
-    virtual node::NodeContext* context() { return nullptr; }
+    virtual const node::NodeContext* context() { return nullptr; }
 };
 
 //! Return implementation of Mining interface.
@@ -164,7 +214,7 @@ public:
 //! @param[in] wait_loaded waits for chainstate data to be loaded before
 //!                        returning. Used to prevent external clients from
 //!                        being able to crash the node during startup.
-std::unique_ptr<Mining> MakeMining(node::NodeContext& node, bool wait_loaded=true);
+std::unique_ptr<Mining> MakeMining(const node::NodeContext& node, bool wait_loaded=true);
 
 } // namespace interfaces
 

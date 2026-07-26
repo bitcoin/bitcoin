@@ -415,7 +415,7 @@ static int secp256k1_musig_nonce_gen_internal(const secp256k1_context* ctx, secp
 
     /* Compute pubnonce as two gejs */
     for (i = 0; i < 2; i++) {
-        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &nonce_ptj[i], &k[i]);
+        secp256k1_ecmult_gen_gej(&ctx->ecmult_gen_ctx, &nonce_ptj[i], &k[i]);
         secp256k1_scalar_clear(&k[i]);
     }
 
@@ -483,11 +483,9 @@ int secp256k1_musig_nonce_gen_counter(const secp256k1_context* ctx, secp256k1_mu
     (void) ret;
 #endif
 
-    if (!secp256k1_musig_nonce_gen_internal(ctx, secnonce, pubnonce, buf, seckey, &pubkey, msg32, keyagg_cache, extra_input32)) {
-        return 0;
-    }
+    ret = secp256k1_musig_nonce_gen_internal(ctx, secnonce, pubnonce, buf, seckey, &pubkey, msg32, keyagg_cache, extra_input32);
     secp256k1_memclear_explicit(seckey, sizeof(seckey));
-    return 1;
+    return ret;
 }
 
 static int secp256k1_musig_sum_pubnonces(const secp256k1_context* ctx, secp256k1_gej *summed_pubnonces, const secp256k1_musig_pubnonce * const* pubnonces, size_t n_pubnonces) {

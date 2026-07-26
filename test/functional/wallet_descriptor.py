@@ -12,6 +12,9 @@ except ImportError:
 import re
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.messages import ser_string
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -172,7 +175,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
         with WalletUnlock(send_wrpc, "pass"):
             send_wrpc.importdescriptors([{
-                "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+                "desc": descsum_create(f"wpkh({ExtendedPrivateKey.generate().to_string()}/0h/*h)"),
                 "timestamp": "now",
                 "range": [0,10],
                 "active": True
@@ -267,6 +270,25 @@ class WalletDescriptorTest(BitcoinTestFramework):
             conn.execute('INSERT INTO main VALUES(?, ?)', (b'\x07cscript' + b'\x00'*20, b'\x00'))
         conn.close()
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
+
+        self.log.info("Test that loading descriptor wallet containing both unencrypted and encrypted keys for same descriptor fails to load")
+        wallet_name = "mixed_crypt"
+        self.nodes[0].createwallet(wallet_name)
+        self.nodes[0].unloadwallet(wallet_name)
+        wallet_db = self.nodes[0].wallets_path / wallet_name / self.wallet_data_filename
+        conn = sqlite3.connect(wallet_db)
+        with conn:
+            key_prefix = ser_string(b"walletdescriptorkey")
+            ckey_prefix = ser_string(b"walletdescriptorckey")
+            rows = conn.execute('SELECT key, value FROM main').fetchall()
+            key_rows = [(k, v) for k, v in rows if k.startswith(key_prefix)]
+            # Test the test, want to be sure there is at least one unencrypted key.
+            assert len(key_rows) >= 1
+            k, v = key_rows[0]
+            conn.execute('INSERT INTO main VALUES(?, ?)', (k.replace(key_prefix, ckey_prefix), v))
+        conn.close()
+        with self.nodes[0].assert_debug_log(["Wallet contains both unencrypted and encrypted keys"]):
+            assert_raises_rpc_error(-4, "Wallet corrupted", self.nodes[0].loadwallet, wallet_name)
 
         self.test_parent_descriptors()
 

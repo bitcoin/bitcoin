@@ -22,7 +22,7 @@ FUZZ_TARGET(timeoffsets, .init = initialize_timeoffsets)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     node::Warnings warnings{};
     TimeOffsets offsets{warnings};
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 4'000) {
+    LIMITED_WHILE (fuzzed_data_provider.remaining_bytes() > 0, 4'000) {
         (void)offsets.Median();
         offsets.Add(std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<std::chrono::seconds::rep>()});
         offsets.WarnIfOutOfSync();

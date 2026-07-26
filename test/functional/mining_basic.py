@@ -235,7 +235,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(node.getblocktemplate(template_request={
             'data': block.serialize().hex(),
             'mode': 'proposal',
-            'rules': ['segwit'],
+            **NORMAL_GBT_REQUEST_PARAMS,
         }), None)
 
         bad_block = copy.deepcopy(block)
@@ -357,21 +357,28 @@ class MiningTest(BitcoinTestFramework):
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT + 1}"],
-            expected_msg=f"Error: Specified -blockreservedweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
+            expected_msg=f"Error: -blockreservedweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
         )
 
         self.log.info(f"Test that node will fail to start when user provide -blockreservedweight below {MINIMUM_BLOCK_RESERVED_WEIGHT}")
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f"-blockreservedweight={MINIMUM_BLOCK_RESERVED_WEIGHT - 1}"],
-            expected_msg=f"Error: Specified -blockreservedweight ({MINIMUM_BLOCK_RESERVED_WEIGHT - 1}) is lower than minimum safety value of ({MINIMUM_BLOCK_RESERVED_WEIGHT})",
+            expected_msg=f"Error: -blockreservedweight ({MINIMUM_BLOCK_RESERVED_WEIGHT - 1}) is lower than minimum safety value of ({MINIMUM_BLOCK_RESERVED_WEIGHT})",
         )
 
         self.log.info("Test that node will fail to start when user provide invalid -blockmaxweight")
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f"-blockmaxweight={MAX_BLOCK_WEIGHT + 1}"],
-            expected_msg=f"Error: Specified -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
+            expected_msg=f"Error: -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
+        )
+
+        self.log.info("Test that node will fail to start when -blockmaxweight is lower than -blockreservedweight")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f"-blockmaxweight={DEFAULT_BLOCK_RESERVED_WEIGHT - 1}"],
+            expected_msg=f"Error: -blockreservedweight ({DEFAULT_BLOCK_RESERVED_WEIGHT}) exceeds -blockmaxweight ({DEFAULT_BLOCK_RESERVED_WEIGHT - 1})",
         )
 
     def test_height_in_locktime(self):

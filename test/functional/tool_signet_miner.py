@@ -69,7 +69,7 @@ class SignetMinerTest(BitcoinTestFramework):
         n_blocks = node.getblockcount()
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
-        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.cli.datadir}"]
+        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"]
         util_argv = node.binaries.util_argv() + ["grind"]
         subprocess.run([
                 sys.executable,
@@ -89,7 +89,7 @@ class SignetMinerTest(BitcoinTestFramework):
         n_blocks = node.getblockcount()
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
-        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.cli.datadir}"]
+        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"]
         util_argv = node.binaries.util_argv() + ["grind"]
         base_cmd = [
             sys.executable,

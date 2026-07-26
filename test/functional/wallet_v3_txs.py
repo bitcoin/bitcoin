@@ -6,7 +6,6 @@
 
 from decimal import Decimal, getcontext
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.messages import (
     COIN,
     CTransaction,
@@ -28,6 +27,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    JSONRPCException,
 )
 
 from test_framework.mempool_util import (
@@ -38,28 +38,27 @@ from test_framework.mempool_util import (
 # sweep alice and bob's wallets and clear the mempool
 def cleanup(func):
     def wrapper(self, *args):
-        try:
-            self.generate(self.nodes[0], 1)
-            func(self, *args)
-        finally:
-            self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1)
+        func(self, *args)
+
+        self.generate(self.nodes[0], 1)
+        for wallet in [self.alice, self.bob]:
+            txs = set(tx["txid"] for tx in wallet.listtransactions("*", 1000) if tx["confirmations"] == 0 and not tx["abandoned"])
+            for tx in txs:
+                wallet.abandontransaction(tx)
             try:
-                self.alice.sendall([self.charlie.getnewaddress()])
+                wallet.sendall([self.charlie.getnewaddress()])
             except JSONRPCException as e:
                 assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
-            try:
-                self.bob.sendall([self.charlie.getnewaddress()])
-            except JSONRPCException as e:
-                assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
-            self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1)
 
-            for wallet in [self.alice, self.bob]:
-                balance = wallet.getbalances()["mine"]
-                for balance_type in ["untrusted_pending", "trusted", "immature"]:
-                    assert_equal(balance[balance_type], 0)
+        for wallet in [self.alice, self.bob]:
+            balance = wallet.getbalances()["mine"]
+            for balance_type in ["untrusted_pending", "trusted", "immature", "nonmempool"]:
+                assert_equal(balance[balance_type], 0)
 
-            assert_equal(self.alice.getrawmempool(), [])
-            assert_equal(self.bob.getrawmempool(), [])
+        assert_equal(self.alice.getrawmempool(), [])
+        assert_equal(self.bob.getrawmempool(), [])
 
     return wrapper
 
@@ -448,7 +447,7 @@ class WalletV3Test(BitcoinTestFramework):
 
         outputs = {self.alice.getnewaddress() : 10}
         psbt = self.charlie.createpsbt(inputs=[], outputs=outputs, version=3)
-        assert_equal(self.charlie.decodepsbt(psbt)["tx"]["version"], 3)
+        assert_equal(self.charlie.decodepsbt(psbt)["tx_version"], 3)
 
     @cleanup
     def send_v3(self):
@@ -526,7 +525,7 @@ class WalletV3Test(BitcoinTestFramework):
 
         outputs = {self.alice.getnewaddress() : 10}
         psbt = self.charlie.walletcreatefundedpsbt(inputs=[], outputs=outputs, version=3)["psbt"]
-        assert_equal(self.charlie.decodepsbt(psbt)["tx"]["version"], 3)
+        assert_equal(self.charlie.decodepsbt(psbt)["tx_version"], 3)
 
     @cleanup
     def sendall_truc_weight_limit(self):

@@ -21,6 +21,15 @@ if(SECP256K1_ENABLE_MODULE_MUSIG)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_musig.h)
 endif()
 
+if(SECP256K1_ENABLE_MODULE_SILENTPAYMENTS)
+  if(DEFINED SECP256K1_ENABLE_MODULE_EXTRAKEYS AND NOT SECP256K1_ENABLE_MODULE_EXTRAKEYS)
+    message(FATAL_ERROR "Module dependency error: You have disabled the extrakeys module explicitly, but it is required by the silent payments module.")
+  endif()
+  set(SECP256K1_ENABLE_MODULE_EXTRAKEYS ON)
+  add_compile_definitions(ENABLE_MODULE_SILENTPAYMENTS=1)
+  set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_silentpayments.h)
+endif()
+
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   if(DEFINED SECP256K1_ENABLE_MODULE_EXTRAKEYS AND NOT SECP256K1_ENABLE_MODULE_EXTRAKEYS)
     message(FATAL_ERROR "Module dependency error: You have disabled the extrakeys module explicitly, but it is required by the schnorrsig module.")
@@ -94,35 +103,12 @@ set_target_properties(secp256k1_objs PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:secp256k1,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 
-# This emulates Libtool to make sure Libtool and CMake agree on the ABI version,
-# see below "Calculate the version variables" in autotools-aux/ltmain.sh.
-math(EXPR ${PROJECT_NAME}_soversion "${${PROJECT_NAME}_LIB_VERSION_CURRENT} - ${${PROJECT_NAME}_LIB_VERSION_AGE}")
-set_target_properties(secp256k1 PROPERTIES
-  SOVERSION ${${PROJECT_NAME}_soversion}
+include(SetLibtoolAbiVersion)
+set_libtool_abi_version(secp256k1
+  ${${PROJECT_NAME}_LIB_VERSION_CURRENT}
+  ${${PROJECT_NAME}_LIB_VERSION_REVISION}
+  ${${PROJECT_NAME}_LIB_VERSION_AGE}
 )
-if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD)$")
-  set_target_properties(secp256k1 PROPERTIES
-    VERSION ${${PROJECT_NAME}_soversion}.${${PROJECT_NAME}_LIB_VERSION_AGE}.${${PROJECT_NAME}_LIB_VERSION_REVISION}
-  )
-elseif(APPLE)
-  math(EXPR ${PROJECT_NAME}_compatibility_version "${${PROJECT_NAME}_LIB_VERSION_CURRENT} + 1")
-  set_target_properties(secp256k1 PROPERTIES
-    MACHO_COMPATIBILITY_VERSION ${${PROJECT_NAME}_compatibility_version}
-    MACHO_CURRENT_VERSION ${${PROJECT_NAME}_compatibility_version}.${${PROJECT_NAME}_LIB_VERSION_REVISION}
-  )
-  unset(${PROJECT_NAME}_compatibility_version)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  set(${PROJECT_NAME}_windows "secp256k1")
-  if(MSVC)
-    set(${PROJECT_NAME}_windows "${PROJECT_NAME}")
-  endif()
-  set_target_properties(secp256k1 PROPERTIES
-    ARCHIVE_OUTPUT_NAME "${${PROJECT_NAME}_windows}"
-    RUNTIME_OUTPUT_NAME "${${PROJECT_NAME}_windows}-${${PROJECT_NAME}_soversion}"
-  )
-  unset(${PROJECT_NAME}_windows)
-endif()
-unset(${PROJECT_NAME}_soversion)
 
 if(SECP256K1_BUILD_BENCHMARK)
   add_executable(bench bench.c)

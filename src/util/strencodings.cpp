@@ -10,7 +10,6 @@
 #include <util/check.h>
 #include <util/overflow.h>
 
-#include <compare>
 #include <limits>
 #include <optional>
 #include <sstream>

@@ -120,6 +120,21 @@ class WalletSignerTest(BitcoinTestFramework):
             result = hww.walletdisplayaddress(address)
             assert_equal(result, {"address": address})
 
+        assert_raises_rpc_error(
+            -4,
+            "Error: sendtoaddress and sendmany are not supported for wallets with external signers; use send instead",
+            hww.sendtoaddress,
+            self.nodes[0].getnewaddress(),
+            0.01,
+        )
+        assert_raises_rpc_error(
+            -4,
+            "Error: sendtoaddress and sendmany are not supported for wallets with external signers; use send instead",
+            hww.sendmany,
+            "",
+            {self.nodes[0].getnewaddress(): 0.01},
+        )
+
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")
         assert_raises_rpc_error(-1, 'RunCommandParseJSON error',

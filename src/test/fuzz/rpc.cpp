@@ -78,15 +78,16 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "dumptxoutset",   // avoid writing to disk
     "enumeratesigners",
     "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
+    "exportasmap",          // avoid writing to disk
     "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
-    "importmempool", // avoid reading from disk
-    "loadtxoutset",   // avoid reading from disk
-    "loadwallet",   // avoid reading from disk
-    "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
-    "setban",                // avoid DNS lookups
-    "stop",                  // avoid shutdown state
+    "importmempool",        // avoid reading from disk
+    "loadtxoutset",         // avoid reading from disk
+    "loadwallet",           // avoid reading from disk
+    "savemempool",          // disabled as a precautionary measure: may take a file path argument in the future
+    "setban",               // avoid DNS lookups
+    "stop",                 // avoid shutdown state
 };
 
 // RPC commands which are safe for fuzzing.
@@ -146,6 +147,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getnetworkhashps",
     "getnetworkinfo",
     "getnodeaddresses",
+    "getopenrpcinfo",
     "getorphantxs",
     "getpeerinfo",
     "getprioritisedtransactions",
@@ -168,6 +170,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "prioritisetransaction",
     "pruneblockchain",
     "reconsiderblock",
+    "rpc.discover",
     "scanblocks",
     "scantxoutset",
     "sendmsgtopeer", // when no peers are connected, no p2p message is sent
@@ -291,7 +294,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
         },
         [&] {
             // base64 encoded psbt
-            std::optional<PartiallySignedTransaction> opt_psbt = ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider);
+            std::optional<PartiallySignedTransaction> opt_psbt = ConsumeDeserializableConstructor<PartiallySignedTransaction>(fuzzed_data_provider);
             if (!opt_psbt) {
                 good_data = false;
                 return;
@@ -324,8 +327,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
 std::string ConsumeArrayRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
 {
     std::vector<std::string> scalar_arguments;
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
         scalar_arguments.push_back(ConsumeScalarRPCArgument(fuzzed_data_provider, good_data));
     }
     return "[\"" + Join(scalar_arguments, "\",\"") + "\"]";
@@ -371,7 +373,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     const std::string rpc_command = fuzzed_data_provider.ConsumeRandomLengthString(64);
     if (!g_limit_to_rpc_command.empty() && rpc_command != g_limit_to_rpc_command) {
         return;
@@ -381,8 +383,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
         return;
     }
     std::vector<std::string> arguments;
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
-    {
+    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
         arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data));
     }
     try {

@@ -1,19 +1,19 @@
-qt_details_version := 6.8.3
+qt_details_version := 6.8.4
 qt_details_download_path := https://download.qt.io/archive/qt/6.8/$(qt_details_version)/submodules
-qt_details_suffix := everywhere-src-$(qt_details_version).tar.xz
+qt_details_suffix := everywhere-opensource-src-$(qt_details_version).tar.xz
 
 qt_details_qtbase_file_name := qtbase-$(qt_details_suffix)
-qt_details_qtbase_sha256_hash := 56001b905601bb9023d399f3ba780d7fa940f3e4861e496a7c490331f49e0b80
+qt_details_qtbase_sha256_hash := 532dfbf3fa3cbc68fa37441ea9e81c5009da044eaecda78ffaeafd8bd125532f
 
 qt_details_qttranslations_file_name := qttranslations-$(qt_details_suffix)
-qt_details_qttranslations_sha256_hash := c3c61d79c3d8fe316a20b3617c64673ce5b5519b2e45535f49bee313152fa531
+qt_details_qttranslations_sha256_hash := 33b1fd1d75598cbf54da12263957f18292c9fb01e42fcc3ab9bd2f8ac79763b7
 
 qt_details_qttools_file_name := qttools-$(qt_details_suffix)
-qt_details_qttools_sha256_hash := 02a4e219248b94f1333df843d25763f35251c1074cdc4fb5bda67d340f8c8b3a
+qt_details_qttools_sha256_hash := c6030ea66d7be1ca7e3b40578beb35b0f4ff4014277d8e051d3219759f6ab399
 
 qt_details_patches_path := $(PATCHES_PATH)/qt
 
-qt_details_top_download_path := https://raw.githubusercontent.com/qt/qt5/refs/heads/$(qt_details_version)
+qt_details_top_download_path := https://raw.githubusercontent.com/qt/qt5/refs/tags/v$(qt_details_version)-lts-lgpl
 qt_details_top_cmakelists_file_name := CMakeLists.txt
 qt_details_top_cmakelists_download_file := $(qt_details_top_cmakelists_file_name)
 qt_details_top_cmakelists_sha256_hash := 54e9a4e554da37792446dda4f52bc308407b01a34bcc3afbad58e4e0f71fac9b

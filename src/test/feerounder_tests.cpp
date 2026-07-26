@@ -9,7 +9,7 @@
 
 #include <set>
 
-BOOST_AUTO_TEST_SUITE(fee_rounder_tests)
+BOOST_AUTO_TEST_SUITE(feerounder_tests)
 
 BOOST_AUTO_TEST_CASE(FeeRounder)
 {

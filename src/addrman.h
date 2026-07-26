@@ -7,17 +7,20 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <netaddress.h>
-#include <netgroup.h>
 #include <protocol.h>
-#include <streams.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+class NetGroupManager;
 
 /** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
 static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
@@ -69,10 +72,7 @@ struct AddressPosition {
     const int bucket;
     const int position;
 
-    bool operator==(AddressPosition other) {
-        return std::tie(tried, multiplicity, bucket, position) ==
-               std::tie(other.tried, other.multiplicity, other.bucket, other.position);
-    }
+    bool operator==(const AddressPosition&) const = default;
     explicit AddressPosition(bool tried_in, int multiplicity_in, int bucket_in, int position_in)
         : tried{tried_in}, multiplicity{multiplicity_in}, bucket{bucket_in}, position{position_in} {}
 };

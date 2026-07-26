@@ -2,27 +2,35 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/mini_miner.h>
+
+#include <consensus/amount.h>
+#include <kernel/cs_main.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/fuzz/util/mempool.h>
-#include <test/util/mining.h>
 #include <test/util/script.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
-
-#include <node/miner.h>
-#include <node/mini_miner.h>
-#include <node/types.h>
-#include <primitives/transaction.h>
-#include <random.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
-#include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <deque>
+#include <functional>
+#include <map>
+#include <optional>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -41,7 +49,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
     Assert(error.empty());
@@ -49,8 +57,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
     std::deque<COutPoint> available_coins = g_available_coins;
     LOCK2(::cs_main, pool.cs);
     // Cluster size cannot exceed 500
-    LIMITED_WHILE(!available_coins.empty(), 100)
-    {
+    LIMITED_WHILE (!available_coins.empty(), 100) {
         CMutableTransaction mtx = CMutableTransaction();
         const size_t num_inputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, available_coins.size());
         const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 50);
@@ -87,7 +94,6 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
                 outpoints.push_back(*outpoint);
             }
         }
-
     }
 
     const CFeeRate target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/1000)}};

@@ -43,7 +43,6 @@ jobs:
               clang-22
               llvm-22
               libclang-rt-22-dev
-              libevent-dev
               libboost-dev
               libsqlite3-dev
               libcapnp-dev
@@ -65,7 +64,7 @@ jobs:
             nproc_multiplier: 2
             functional_timeout_factor: 40
             runner: macos-15
-            brew-packages: ccache capnp boost libevent sqlite pkgconf ninja
+            brew-packages: ccache capnp boost sqlite pkgconf ninja
             pip-packages: --break-system-packages pycapnp
             cmake-args: |-
               -DREDUCE_EXPORTS=ON

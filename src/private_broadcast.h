@@ -38,6 +38,15 @@ public:
     /// after it is broadcast, then we consider it stale / for rebroadcasting.
     static constexpr auto STALE_DURATION{1min};
 
+    /// Maximum number of transactions tracked simultaneously.
+    /// Additions that would exceed this are rejected (see Add()).
+    static constexpr size_t MAX_TRANSACTIONS{10'000};
+
+    /// @param[in] max_transactions Cap on the number of simultaneously tracked
+    /// transactions. Defaults to MAX_TRANSACTIONS.
+    explicit PrivateBroadcast(size_t max_transactions = MAX_TRANSACTIONS)
+        : m_max_transactions{max_transactions} {}
+
     struct PeerSendInfo {
         CService address;
         NodeClock::time_point sent;
@@ -50,13 +59,23 @@ public:
         std::vector<PeerSendInfo> peers;
     };
 
+    /// Outcome of Add().
+    enum class AddResult {
+        //! The transaction was newly added.
+        Added,
+        //! The transaction was already present; no change.
+        AlreadyPresent,
+        //! Rejected: the queue is already at MAX_TRANSACTIONS.
+        QueueFull,
+    };
+
     /**
      * Add a transaction to the storage.
      * @param[in] tx The transaction to add.
-     * @retval true The transaction was added.
-     * @retval false The transaction was already present.
+     * @return Whether the transaction was newly added, was already present, or
+     * was rejected because the queue is full (see AddResult).
      */
-    bool Add(const CTransactionRef& tx)
+    [[nodiscard]] AddResult Add(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -73,7 +92,9 @@ public:
      * Pick the transaction with the fewest send attempts, and confirmations,
      * and oldest send/confirm times.
      * @param[in] will_send_to_nodeid Will remember that the returned transaction
-     * was picked for sending to this node.
+     * was picked for sending to this node. Calling this method more than once with
+     * the same `will_send_to_nodeid` is not allowed because sending more than one
+     * transaction to one node would be a privacy leak.
      * @param[in] will_send_to_address Address of the peer to which this transaction
      * will be sent.
      * @return Most urgent transaction or nullopt if there are no transactions.
@@ -194,6 +215,8 @@ private:
         const NodeClock::time_point time_added{NodeClock::now()};
         std::vector<SendStatus> send_statuses;
     };
+    /// Cap on the number of simultaneously tracked transactions (see Add()).
+    const size_t m_max_transactions;
     mutable Mutex m_mutex;
     std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);

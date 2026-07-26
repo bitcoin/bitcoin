@@ -27,12 +27,13 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
+    FakeSteadyClock steady_clock;
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;
-    CreateSock = [&fuzzed_data_provider](int, int, int) {
-        return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+    CreateSock = [&fuzzed_data_provider, &steady_clock](int, int, int) {
+        return std::make_unique<FuzzedSock>(fuzzed_data_provider, steady_clock);
     };
 
     const fs::path private_key_path = gArgs.GetDataDirNet() / "fuzzed_i2p_private_key";

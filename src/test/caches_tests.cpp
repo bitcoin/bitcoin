@@ -7,37 +7,33 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
+
 using namespace node;
+
+namespace {
+void CheckDbCacheWarnThreshold(uint64_t threshold, uint64_t total_ram)
+{
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(threshold, total_ram));
+    BOOST_CHECK( ShouldWarnOversizedDbCache(threshold + 1, total_ram));
+}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(caches_tests)
 
 BOOST_AUTO_TEST_CASE(oversized_dbcache_warning)
 {
-    // memory restricted setup - cap is DEFAULT_DB_CACHE (450 MiB)
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/4_MiB, /*total_ram=*/1024_MiB));    // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/512_MiB, /*total_ram=*/1024_MiB));  // At cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/1024_MiB)); // Over cap
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(MIN_DB_CACHE, 1_GiB));
 
-    // 2 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/2048_MiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/1600_MiB, /*total_ram=*/2048_MiB)); // Over cap
+    // Below DBCACHE_WARNING_RESERVED_RAM the existing fixed default dominates.
+    CheckDbCacheWarnThreshold(DEFAULT_DB_CACHE, 1_GiB);
+    CheckDbCacheWarnThreshold(DEFAULT_DB_CACHE, DBCACHE_WARNING_RESERVED_RAM);
 
-    if constexpr (SIZE_MAX == UINT64_MAX) {
-        // 4 GiB RAM - cap is 75%
-        BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/2500_MiB, /*total_ram=*/4096_MiB)); // Under cap
-        BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/3500_MiB, /*total_ram=*/4096_MiB)); // Over cap
+    // Above DBCACHE_WARNING_RESERVED_RAM the warning fires at 75% of the headroom.
+    CheckDbCacheWarnThreshold(((3_GiB - DBCACHE_WARNING_RESERVED_RAM) / 4) * 3, 3_GiB);
 
-        // 8 GiB RAM - cap is 75%
-        BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/6000_MiB, /*total_ram=*/8192_MiB)); // Under cap
-        BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/7000_MiB, /*total_ram=*/8192_MiB)); // Over cap
-
-        // 16 GiB RAM - cap is 75%
-        BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/10'000_MiB, /*total_ram=*/16384_MiB)); // Under cap
-        BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/15'000_MiB, /*total_ram=*/16384_MiB)); // Over cap
-
-        // 32 GiB RAM - cap is 75%
-        BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/20'000_MiB, /*total_ram=*/32768_MiB)); // Under cap
-        BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/30'000_MiB, /*total_ram=*/32768_MiB)); // Over cap
+    for (const auto total_ram : {8_GiB, 16_GiB, 32_GiB}) {
+        CheckDbCacheWarnThreshold(((total_ram - DBCACHE_WARNING_RESERVED_RAM) / 4) * 3, total_ram);
     }
 }
 

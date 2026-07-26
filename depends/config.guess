@@ -1,10 +1,10 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
-#   Copyright 1992-2025 Free Software Foundation, Inc.
+#   Copyright 1992-2026 Free Software Foundation, Inc.
 
 # shellcheck disable=SC2006,SC2268 # see below for rationale
 
-timestamp='2025-07-10'
+timestamp='2026-05-17'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ version="\
 GNU config.guess ($timestamp)
 
 Originally written by Per Bothner.
-Copyright 1992-2025 Free Software Foundation, Inc.
+Copyright 1992-2026 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -150,7 +150,7 @@ UNAME_SYSTEM=`(uname -s) 2>/dev/null` || UNAME_SYSTEM=unknown
 UNAME_VERSION=`(uname -v) 2>/dev/null` || UNAME_VERSION=unknown
 
 case $UNAME_SYSTEM in
-Linux|GNU|GNU/*)
+Ironclad|Linux|GNU|GNU/*)
 	LIBC=unknown
 
 	set_cc_for_build
@@ -167,6 +167,8 @@ Linux|GNU|GNU/*)
 	LIBC=gnu
 	#elif defined(__LLVM_LIBC__)
 	LIBC=llvm
+	#elif defined(__mlibc__)
+	LIBC=mlibc
 	#else
 	#include <stdarg.h>
 	/* First heuristic to detect musl libc.  */
@@ -1186,6 +1188,9 @@ EOF
     sparc:Linux:*:* | sparc64:Linux:*:*)
 	GUESS=$UNAME_MACHINE-unknown-linux-$LIBC
 	;;
+    sw_64:Linux:*:*)
+	GUESS=$UNAME_MACHINE-unknown-linux-$LIBC
+	;;
     tile*:Linux:*:*)
 	GUESS=$UNAME_MACHINE-unknown-linux-$LIBC
 	;;
@@ -1598,10 +1603,10 @@ EOF
 	GUESS=$UNAME_MACHINE-unknown-unleashed$UNAME_RELEASE
 	;;
     x86_64:[Ii]ronclad:*:*|i?86:[Ii]ronclad:*:*)
-	GUESS=$UNAME_MACHINE-pc-ironclad-mlibc
+	GUESS=$UNAME_MACHINE-pc-ironclad-$LIBC
 	;;
     *:[Ii]ronclad:*:*)
-	GUESS=$UNAME_MACHINE-unknown-ironclad-mlibc
+	GUESS=$UNAME_MACHINE-unknown-ironclad-$LIBC
 	;;
 esac
 

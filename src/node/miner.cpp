@@ -7,29 +7,50 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/params.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <deploymentstatus.h>
-#include <logging.h>
-#include <node/context.h>
+#include <interfaces/types.h>
+#include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
+#include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <util/moneystr.h>
+#include <script/script.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txgraph.h>
+#include <txmempool.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/feefrac.h>
+#include <util/log.h>
+#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
+#include <versionbits.h>
 
 #include <algorithm>
-#include <utility>
+#include <compare>
+#include <condition_variable>
+#include <cstddef>
+#include <functional>
 #include <numeric>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace node {
 
@@ -76,36 +97,19 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
-{
-    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT when the caller left it unset.
-    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
-    options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
-    // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
-    // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
-    return options;
-}
-
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
+BlockAssembler::BlockAssembler(Chainstate& chainstate,
+                               const CTxMemPool* mempool,
+                               BlockCreateOptions options)
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_options{[&] {
+          if (auto result{CheckMiningOptions(options, /*use_argnames=*/false)}; !result) {
+              throw std::runtime_error(util::ErrorString(result).original);
+          }
+          return FlattenMiningOptions(std::move(options));
+      }()}
 {
-}
-
-void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
-{
-    // Block resource limits
-    options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", options.nBlockMaxWeight);
-    if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
-        if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
-    }
-    options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
-    if (!options.block_reserved_weight) {
-        options.block_reserved_weight = args.GetIntArg("-blockreservedweight");
-    }
 }
 
 void BlockAssembler::resetBlock()
@@ -184,14 +188,18 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     // increasing its length would reduce the space they can use and may break
     // existing clients.
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight;
-    if (m_options.include_dummy_extranonce) {
+    // Set script_sig_prefix here, so IPC mining clients are not affected by
+    // the optional scriptSig padding below. They provide their own extraNonce,
+    // and in a typical setup a pool name or realistic extraNonce already makes
+    // the scriptSig long enough.
+    coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
+    if (nHeight <= 16) {
         // For blocks at heights <= 16, the BIP34-encoded height alone is only
         // one byte. Consensus requires coinbase scriptSigs to be at least two
-        // bytes long (bad-cb-length), so tests and regtest include a dummy
-        // extraNonce (OP_0)
+        // bytes long (bad-cb-length), so an OP_0 is always appended at those
+        // heights.
         coinbaseTx.vin[0].scriptSig << OP_0;
     }
-    coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
     Assert(nHeight > 0);
     coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
     coinbase_tx.lock_time = coinbaseTx.nLockTime;
@@ -221,7 +229,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
-        // if nHeight <= 16, and include_dummy_extranonce=false this will fail due to bad-cb-length.
         if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
@@ -238,7 +245,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
 bool BlockAssembler::TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const
 {
-    if (nBlockWeight + chunk_feerate.size >= m_options.nBlockMaxWeight) {
+    // block_max_weight has been flattened before block assembly limit checks.
+    Assert(m_options.block_max_weight);
+    if (nBlockWeight + chunk_feerate.size >= *m_options.block_max_weight) {
         return false;
     }
     if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
@@ -269,7 +278,7 @@ void BlockAssembler::AddToBlock(const CTxMemPoolEntry& entry)
     nBlockSigOpsCost += entry.GetSigOpCost();
     nFees += entry.GetFee();
 
-    if (m_options.print_modified_fee) {
+    if (*m_options.print_modified_fee) {
         LogInfo("fee rate %s txid %s\n",
                   CFeeRate(entry.GetModifiedFee(), entry.GetTxSize()).ToString(),
                   entry.GetTx().GetHash().ToString());
@@ -295,7 +304,7 @@ void BlockAssembler::addChunks()
 
     while (selected_transactions.size() > 0) {
         // Check to see if min fee rate is still respected.
-        if (chunk_feerate_vsize << m_options.blockMinFeeRate.GetFeePerVSize()) {
+        if (ByRatio{chunk_feerate_vsize} < ByRatio{m_options.block_min_fee_rate->GetFeePerVSize()}) {
             // Everything else we might consider has a lower feerate
             return;
         }
@@ -311,8 +320,10 @@ void BlockAssembler::addChunks()
             m_mempool->SkipBuilderChunk();
             ++nConsecutiveFailed;
 
+            // block_max_weight has been flattened before block assembly limit checks.
+            Assert(m_options.block_max_weight);
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight +
-                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.nBlockMaxWeight) {
+                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > *m_options.block_max_weight) {
                 // Give up if we're close to full and haven't succeeded in a while
                 return;
             }
@@ -351,6 +362,69 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.fChecked = false;
 }
 
+namespace {
+class SubmitBlockStateCatcher final : public CValidationInterface
+{
+public:
+    uint256 m_hash;
+    bool m_found{false};
+    BlockValidationState m_state;
+
+    explicit SubmitBlockStateCatcher(const uint256& hash) : m_hash{hash} {}
+
+protected:
+    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
+    {
+        if (block->GetHash() != m_hash) return;
+        // ProcessNewBlock emits BlockChecked synchronously while holding cs_main,
+        // so SubmitBlock can read these fields after ProcessNewBlock returns
+        // without extra synchronization.
+        m_found = true;
+        m_state = state;
+    }
+};
+} // namespace
+
+bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
+{
+    reason.clear();
+    debug.clear();
+
+    // This follows the submitblock RPC's validation-state capture pattern, but
+    // is intentionally kept separate from the RPC implementation. The RPC entry
+    // point decodes hex, formats BIP22/JSONRPC results, and calls
+    // UpdateUncommittedBlockStructures() for legacy witness handling. IPC
+    // callers submit already-formed blocks and need bool + reason/debug
+    // results.
+    auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
+    CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
+    bool new_block;
+    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    // No queue drain is needed. The BlockChecked notification used above is
+    // emitted synchronously by ProcessNewBlock, unlike most validation signals.
+    CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
+
+    if (!new_block && accepted) {
+        reason = "duplicate";
+    } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
+        // ProcessNewBlock can fail without a validation result, for example
+        // from an activation or system error. It can also fail after a valid
+        // BlockChecked result. In these cases the validation result is
+        // inconclusive.
+        reason = "inconclusive";
+    } else if (!sc->m_found) {
+        // The block was accepted but not connected, for example if it does not
+        // have more work than the current tip.
+        reason = "inconclusive";
+    } else if (!sc->m_state.IsValid()) {
+        reason = sc->m_state.GetRejectReason();
+        debug = sc->m_state.GetDebugMessage();
+    }
+    const bool result{accepted && new_block && reason.empty()};
+    CHECK_NONFATAL(result == reason.empty());
+    return result;
+}
+
 void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait)
 {
     LOCK(kernel_notifications.m_tip_block_mutex);
@@ -362,8 +436,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       KernelNotifications& kernel_notifications,
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
+                                                      const BlockWaitOptions& wait_options,
+                                                      const BlockCreateOptions& create_options,
                                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
@@ -373,7 +447,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
     auto now{NodeClock::now()};
-    const auto deadline = now + options.timeout;
+    const auto deadline = now + wait_options.timeout;
     const MillisecondsDouble tick{1000};
     const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
 
@@ -420,12 +494,12 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          *
          * We'll also create a new template if the tip changed during this iteration.
          */
-        if (options.fee_threshold < MAX_MONEY || tip_changed) {
+        if (wait_options.fee_threshold < MAX_MONEY || tip_changed) {
             auto new_tmpl{BlockAssembler{
                 chainman.ActiveChainstate(),
                 mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+                create_options
+                }.CreateNewBlock()};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
@@ -437,8 +511,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
             // Check if fees increased enough to return the new template
             const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
-            Assume(options.fee_threshold != MAX_MONEY);
-            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
+            Assume(wait_options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();

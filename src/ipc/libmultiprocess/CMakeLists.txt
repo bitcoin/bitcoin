@@ -90,13 +90,6 @@ if(MP_ENABLE_CLANG_TIDY)
     message(FATAL_ERROR "MP_ENABLE_CLANG_TIDY is ON but clang-tidy is not found.")
   endif()
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}")
-
-  # Workaround for nix from https://gitlab.kitware.com/cmake/cmake/-/issues/20912#note_793338
-  # Nix injects header paths via $NIX_CFLAGS_COMPILE; CMake tags these as
-  # CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES and omits them from the compile
-  # database, so clang-tidy, which ignores $NIX_CFLAGS_COMPILE, can't find capnp
-  # headers. Setting them as standard passes them to clang-tidy.
-  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 endif()
 
 option(MP_ENABLE_IWYU "Run include-what-you-use with the compiler." OFF)
@@ -109,6 +102,15 @@ if(MP_ENABLE_IWYU)
   if(DEFINED ENV{IWYU_MAPPING_FILE})
     list(APPEND CMAKE_CXX_INCLUDE_WHAT_YOU_USE "-Xiwyu" "--mapping_file=$ENV{IWYU_MAPPING_FILE}")
   endif()
+endif()
+
+if(MP_ENABLE_CLANG_TIDY OR MP_ENABLE_IWYU)
+  # Workaround for nix from https://gitlab.kitware.com/cmake/cmake/-/issues/20912#note_793338
+  # Nix injects header paths via $NIX_CFLAGS_COMPILE; CMake tags these as
+  # CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES and omits them from the compile
+  # database, so clang-tidy, which ignores $NIX_CFLAGS_COMPILE, can't find capnp
+  # headers. Setting them as standard passes them to clang-tidy.
+  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 endif()
 
 include("cmake/compat_config.cmake")
@@ -137,6 +139,10 @@ configure_file(include/mp/config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/mp/co
 # Generated C++ Capn'Proto schema files
 capnp_generate_cpp(MP_PROXY_SRCS MP_PROXY_HDRS include/mp/proxy.capnp)
 set_source_files_properties("${MP_PROXY_SRCS}" PROPERTIES SKIP_LINTING TRUE) # Ignored before cmake 3.27
+# Build-graph node for generated headers. This lets targets that include
+# the headers order themselves after generation without depending on the
+# library target that also uses them.
+add_custom_target(mp_headers DEPENDS ${MP_PROXY_HDRS})
 
 # util library
 add_library(mputil OBJECT src/mp/util.cpp)

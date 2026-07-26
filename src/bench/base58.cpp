@@ -4,7 +4,6 @@
 
 #include <base58.h>
 #include <bench/bench.h>
-#include <span.h>
 
 #include <array>
 #include <cstring>

@@ -40,8 +40,8 @@ def main():
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DCMAKE_COMPILE_WARNING_AS_ERROR=ON",
         "--preset=dev-mode",
-        # Tolerate unused member functions in intermediate commits in a pull request
-        "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function",
+        # Tolerate unused (member) functions in intermediate commits in a pull request
+        "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function -Wno-error=unused-function",
     ])
 
     if run(["cmake", "--build", build_dir, "-j", str(num_procs)], check=False).returncode != 0:

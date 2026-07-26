@@ -142,11 +142,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327");
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
     BOOST_CHECK_EQUAL(out110.m_chain_tx_count, 111U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"6affe030b7965ab538f820a56ef56c8149b7dc1d1c144af57113be080db7c397"});
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327");
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"135eec25a6fb277884e5824e7aa7d052c4868161c99a5122170b5266f86c273d"});
+    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
     BOOST_CHECK_EQUAL(out110_2.m_chain_tx_count, 111U);
 }
 

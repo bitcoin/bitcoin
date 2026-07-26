@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <consensus/amount.h>
-#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <script/script.h>
@@ -17,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 class CCoinsViewCache;

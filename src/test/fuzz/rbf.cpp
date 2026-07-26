@@ -54,7 +54,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
     if (!mtx) {
         return;
@@ -64,8 +64,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
     Assert(error.empty());
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), NUM_ITERS) {
         const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
         if (!another_mtx) {
             break;
@@ -96,7 +95,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
 
     // "Real" virtual size is not important for this test since ConsumeTxMemPoolEntry generates its own virtual size values
     // so we construct small transactions for performance reasons. Child simply needs an input for later to perhaps connect to parent.
@@ -211,12 +210,12 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         FeeFrac first_sum;
         for (size_t i = 0; i < calc_results->first.size(); ++i) {
             first_sum += calc_results->first[i];
-            if (i) assert(!(calc_results->first[i - 1] << calc_results->first[i]));
+            if (i) assert(ByRatio{calc_results->first[i - 1]} >= ByRatio{calc_results->first[i]});
         }
         FeeFrac second_sum;
         for (size_t i = 0; i < calc_results->second.size(); ++i) {
             second_sum += calc_results->second[i];
-            if (i) assert(!(calc_results->second[i - 1] << calc_results->second[i]));
+            if (i) assert(ByRatio{calc_results->second[i - 1]} >= ByRatio{calc_results->second[i]});
         }
 
         FeeFrac replaced;

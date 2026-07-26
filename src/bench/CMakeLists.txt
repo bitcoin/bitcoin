@@ -70,6 +70,10 @@ target_link_libraries(bench_bitcoin
   Boost::headers
 )
 
+if(WITH_EMBEDDED_ASMAP)
+  target_sources(bench_bitcoin PRIVATE asmap.cpp)
+endif()
+
 if(ENABLE_WALLET)
   target_sources(bench_bitcoin
     PRIVATE

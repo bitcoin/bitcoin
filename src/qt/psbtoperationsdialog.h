@@ -35,14 +35,14 @@ public Q_SLOTS:
 
 private:
     Ui::PSBTOperationsDialog* m_ui;
-    PartiallySignedTransaction m_transaction_data;
+    std::optional<PartiallySignedTransaction> m_transaction_data;
     WalletModel* m_wallet_model;
     ClientModel* m_client_model;
 
     enum class StatusLevel {
-        INFO,
-        WARN,
-        ERR
+        Info,
+        Warn,
+        Error
     };
 
     size_t couldSignInputs(const PartiallySignedTransaction &psbtx);

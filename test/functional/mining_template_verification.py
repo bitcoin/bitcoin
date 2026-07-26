@@ -13,8 +13,8 @@ import copy
 
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
     add_witness_commitment,
+    NORMAL_GBT_REQUEST_PARAMS,
 )
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -39,7 +39,7 @@ def assert_template(node, block, expect, *, rehash=True, submit=True, solve=True
     rsp = node.getblocktemplate(template_request={
         'data': block.serialize().hex(),
         'mode': 'proposal',
-        'rules': ['segwit'],
+        **NORMAL_GBT_REQUEST_PARAMS,
     })
     assert_equal(rsp, expect)
     # Only attempt to submit invalid templates
@@ -82,7 +82,7 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
             template_request={
                 "data": block.serialize()[:-1].hex(),
                 "mode": "proposal",
-                "rules": ["segwit"],
+                **NORMAL_GBT_REQUEST_PARAMS,
             }
         )
 
@@ -115,7 +115,7 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
             'data': bad_block_sn.hex(),
             'mode': 'proposal',
-            'rules': ['segwit'],
+            **NORMAL_GBT_REQUEST_PARAMS,
         })
 
     def nbits_test(self, node, block):
@@ -183,8 +183,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
 
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[tx["hex"]],
         )
         assert_equal(len(block_3.vtx), 2)
@@ -211,8 +211,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         )
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[bad_tx_hex],
         )
         assert_equal(len(block_3.vtx), 2)
@@ -239,8 +239,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         )
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[tx_hex, tx_2_hex],
         )
         assert_equal(len(block_3.vtx), 3)
@@ -253,10 +253,11 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
     def parallel_test(self, node, block_3):
         # Ensure that getblocktemplate can be called concurrently by many threads.
         self.log.info("Check blocks in parallel")
-        check_50_blocks = lambda n: [
-            assert_template(n, block_3, "bad-txns-inputs-missingorspent", submit=False)
-            for _ in range(50)
-        ]
+        def check_50_blocks(n):
+            return [
+                assert_template(n, block_3, "bad-txns-inputs-missingorspent", submit=False)
+                for _ in range(50)
+            ]
         rpcs = [node.cli for _ in range(6)]
         with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
             list(threads.map(check_50_blocks, rpcs))
@@ -269,8 +270,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         block_1 = node.getblock(node.getbestblockhash())
         block_2 = create_block(
             int(block_1["hash"], 16),
-            create_coinbase(block_0_height + 2),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 2,
+            ntime=block_1["mediantime"] + 1,
         )
 
         self.valid_block_test(node, block_2)

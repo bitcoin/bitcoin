@@ -8,7 +8,7 @@
 #define PASTE(x, y) x ## y
 #define PASTE2(x, y) PASTE(x, y)
 
-#define UNIQUE_NAME(name) PASTE2(name, __COUNTER__)
+#define BITCOIN_UNIQUE_NAME(name) PASTE2(name, __COUNTER__)
 
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.

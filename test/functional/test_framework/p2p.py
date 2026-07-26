@@ -43,6 +43,7 @@ from test_framework.messages import (
     msg_cfheaders,
     msg_cfilter,
     msg_cmpctblock,
+    msg_feature,
     msg_feefilter,
     msg_filteradd,
     msg_filterclear,
@@ -99,7 +100,8 @@ logger = logging.getLogger("TestFramework.p2p")
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
 # Version 70016 supports wtxid relay
-P2P_VERSION = 70016
+# Version 70017 supports feature
+P2P_VERSION = 70017
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 # The P2P user agent string that this test framework sends in its `version` message
@@ -124,6 +126,7 @@ MESSAGEMAP = {
     b"cfheaders": msg_cfheaders,
     b"cfilter": msg_cfilter,
     b"cmpctblock": msg_cmpctblock,
+    b"feature": msg_feature,
     b"feefilter": msg_feefilter,
     b"filteradd": msg_filteradd,
     b"filterclear": msg_filterclear,
@@ -543,6 +546,7 @@ class P2PInterface(P2PConnection):
     def on_cfheaders(self, message): pass
     def on_cfilter(self, message): pass
     def on_cmpctblock(self, message): pass
+    def on_feature(self, message): pass
     def on_feefilter(self, message): pass
     def on_filteradd(self, message): pass
     def on_filterclear(self, message): pass
@@ -606,11 +610,15 @@ class P2PInterface(P2PConnection):
         wait_until_helper_internal(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor, check_interval=check_interval)
 
     def wait_for_connect(self, *, timeout=60):
-        test_function = lambda: self.is_connected
+        def test_function():
+            return self.is_connected
+
         self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     def wait_for_disconnect(self, *, timeout=60):
-        test_function = lambda: not self.is_connected
+        def test_function():
+            return not self.is_connected
+
         self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     def wait_for_reconnect(self, *, timeout=60):
@@ -973,3 +981,27 @@ class P2PTxInvStore(P2PInterface):
         self.wait_until(lambda: set(self.tx_invs_received.keys()) == set([int(tx, 16) for tx in txns]), timeout=timeout)
         # Flush messages and wait for the getdatas to be processed
         self.sync_with_ping()
+
+def start_p2p_listener(network_thread, listener):
+    listen_addr = ""
+    listen_port = 0
+
+    def on_listen_done(addr, port):
+        nonlocal listen_addr
+        nonlocal listen_port
+        listen_addr = addr
+        listen_port = port
+
+    # Use port=0 to let the OS assign an available port. This
+    # avoids "address already in use" errors when tests run
+    # concurrently or ports are still in TIME_WAIT state.
+    network_thread.listen(
+        addr="127.0.0.1",
+        port=0,
+        p2p=listener,
+        callback=on_listen_done)
+
+    # Wait until the callback has been called.
+    wait_until_helper_internal(lambda: listen_port != 0)
+
+    return listen_addr, listen_port

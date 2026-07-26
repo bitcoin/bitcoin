@@ -5,7 +5,7 @@
 """Test message sending before handshake completion.
 
 Before receiving a VERACK, a node should not send anything but VERSION/VERACK
-and feature negotiation messages (WTXIDRELAY, SENDADDRV2).
+and feature negotiation messages (WTXIDRELAY, SENDADDRV2, FEATURE).
 
 This test connects to a node and sends it a few messages, trying to entice it
 into sending us something it shouldn't."""
@@ -39,6 +39,7 @@ class LazyPeer(P2PInterface):
         self.ever_connected = False
         self.got_wtxidrelay = False
         self.got_sendaddrv2 = False
+        self.got_feature = False
 
     def bad_message(self, message):
         self.unexpected_msg = True
@@ -70,6 +71,7 @@ class LazyPeer(P2PInterface):
     def on_blocktxn(self, message): self.bad_message(message)
     def on_wtxidrelay(self, message): self.got_wtxidrelay = True
     def on_sendaddrv2(self, message): self.got_sendaddrv2 = True
+    def on_feature(self, message): self.got_feature = True
 
 
 # Peer that sends a version but not a verack.
@@ -119,7 +121,7 @@ class P2PLeakTest(BitcoinTestFramework):
         no_verack_idle_peer = self.nodes[0].add_p2p_connection(NoVerackIdlePeer(), wait_for_verack=False)
 
         # Pre-wtxidRelay peer that sends a version but not a verack and does not support feature negotiation
-        # messages which start at nVersion == 70016
+        # messages which start at nVersion >= 70016
         pre_wtxidrelay_peer = self.nodes[0].add_p2p_connection(NoVerackIdlePeer(), send_version=False, wait_for_verack=False)
         pre_wtxidrelay_peer.send_without_ping(self.create_old_version(70015))
 
@@ -145,14 +147,17 @@ class P2PLeakTest(BitcoinTestFramework):
         assert not no_version_idle_peer.unexpected_msg
         assert not no_version_idle_peer.got_wtxidrelay
         assert not no_version_idle_peer.got_sendaddrv2
+        assert not no_version_idle_peer.got_feature
 
         assert not no_verack_idle_peer.unexpected_msg
         assert no_verack_idle_peer.got_wtxidrelay
         assert no_verack_idle_peer.got_sendaddrv2
+        #assert no_verack_idle_peer.got_feature ## uncomment once a feature message is supported
 
         assert not pre_wtxidrelay_peer.unexpected_msg
         assert not pre_wtxidrelay_peer.got_wtxidrelay
         assert not pre_wtxidrelay_peer.got_sendaddrv2
+        assert not pre_wtxidrelay_peer.got_feature
 
         # Expect peers to be disconnected due to timeout
         assert not no_version_idle_peer.is_connected

@@ -114,7 +114,9 @@ protected:
 
 private:
     interfaces::Node& m_node;
+#ifdef ENABLE_WALLET
     WalletController* m_wallet_controller{nullptr};
+#endif // ENABLE_WALLET
     std::unique_ptr<interfaces::Handler> m_handler_message_box;
     std::unique_ptr<interfaces::Handler> m_handler_question;
     ClientModel* clientModel = nullptr;
@@ -158,15 +160,17 @@ private:
     QAction* m_restore_wallet_action{nullptr};
     QAction* m_close_wallet_action{nullptr};
     QAction* m_close_all_wallets_action{nullptr};
+#ifdef ENABLE_WALLET
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
+#endif // ENABLE_WALLET
     QAction* m_mask_values_action{nullptr};
     QAction* m_migrate_wallet_action{nullptr};
     QMenu* m_migrate_wallet_menu{nullptr};
-
+#ifdef ENABLE_WALLET
     QLabel *m_wallet_selector_label = nullptr;
     QComboBox* m_wallet_selector = nullptr;
-
+#endif // ENABLE_WALLET
     QSystemTrayIcon* trayIcon = nullptr;
     const std::unique_ptr<QMenu> trayIconMenu;
     Notificator* notificator = nullptr;

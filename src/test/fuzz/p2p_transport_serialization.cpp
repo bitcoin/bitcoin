@@ -78,13 +78,13 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
             break;
         }
         if (recv_transport.ReceivedMessageComplete()) {
-            const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
+            const auto time{NodeClock::time_point::max()};
             bool reject_message{false};
-            CNetMessage msg = recv_transport.GetReceivedMessage(m_time, reject_message);
+            CNetMessage msg = recv_transport.GetReceivedMessage(time, reject_message);
             assert(msg.m_type.size() <= CMessageHeader::MESSAGE_TYPE_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
-            assert(msg.m_time == m_time);
+            assert(msg.m_time == time);
 
             std::vector<unsigned char> header;
             auto msg2 = NetMsg::Make(msg.m_type, std::span{msg.m_recv});
@@ -294,7 +294,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
     };
 
     // Main loop, interleaving new messages, sends, and receives.
-    LIMITED_WHILE(provider.remaining_bytes(), 1000) {
+    LIMITED_WHILE (provider.remaining_bytes(), 1000) {
         CallOneOf(provider,
             // (Try to) give the next message to the transport.
             [&] { new_msg_fn(/*side=*/0); },

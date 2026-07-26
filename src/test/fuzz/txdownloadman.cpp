@@ -73,7 +73,7 @@ static std::vector<COutPoint> PickCoins(FuzzedDataProvider& fuzzed_data_provider
 {
     std::vector<COutPoint> ret;
     ret.push_back(fuzzed_data_provider.PickValueInArray(COINS));
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10) {
         ret.push_back(fuzzed_data_provider.PickValueInArray(COINS));
     }
     return ret;
@@ -169,7 +169,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
 
     // Initialize txdownloadman
     bilingual_str error;
@@ -179,8 +179,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 
     std::chrono::microseconds time{244466666};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 500) {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
 
         // Transaction can be one of the premade ones or a randomly generated one
@@ -294,7 +293,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
 
     // Initialize a TxDownloadManagerImpl
     bilingual_str error;
@@ -304,8 +303,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 
     std::chrono::microseconds time{244466666};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 500) {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
 
         // Transaction can be one of the premade ones or a randomly generated one

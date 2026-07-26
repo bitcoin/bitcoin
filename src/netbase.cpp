@@ -8,9 +8,9 @@
 #include <netbase.h>
 
 #include <compat/compat.h>
-#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -333,7 +333,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::m
                 // we're approaching the end of the specified total timeout
                 const auto remaining = std::chrono::milliseconds{endTime - curTime};
                 const auto timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-                if (!sock.Wait(timeout, Sock::RECV)) {
+                if (!sock.Wait(timeout, Sock::RecvEvent)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {
@@ -431,8 +431,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
             vAuth.push_back(auth->password.size());
             vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
+            LogDebug(BCLog::PROXY, "SOCKS5 sending username/password authentication\n");
             sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
-            LogDebug(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
                 LogError("Error reading proxy authentication response\n");
@@ -587,7 +587,12 @@ static void LogConnectFailure(bool manual_connection, util::ConstevalFormatStrin
     }
 }
 
-static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen_t len, const std::string& dest_str, bool manual_connection)
+static bool ConnectToSocket(const Sock& sock,
+                            struct sockaddr* sockaddr,
+                            socklen_t len,
+                            const std::string& dest_str,
+                            bool manual_connection,
+                            std::chrono::milliseconds timeout)
 {
     // Connect to `sockaddr` using `sock`.
     if (sock.Connect(sockaddr, len) == SOCKET_ERROR) {
@@ -598,9 +603,9 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             // Connection didn't actually fail, but is being established
             // asynchronously. Thus, use async I/O api (select/poll)
             // synchronously to check for successful connection with a timeout.
-            const Sock::Event requested = Sock::RECV | Sock::SEND;
+            const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent;
             Sock::Event occurred;
-            if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
+            if (!sock.Wait(timeout, requested, &occurred)) {
                 LogInfo("wait for connect to %s failed: %s\n",
                           dest_str,
                           NetworkErrorString(WSAGetLastError()));
@@ -644,6 +649,13 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
 
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
 {
+    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout});
+}
+
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
+                                      bool manual_connection,
+                                      std::chrono::milliseconds timeout)
+{
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
         LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
@@ -658,7 +670,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
         return {};
     }
 
-    if (!ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), manual_connection)) {
+    if (!ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), manual_connection, timeout)) {
         return {};
     }
 
@@ -687,7 +699,12 @@ std::unique_ptr<Sock> Proxy::Connect() const
     memcpy(addrun.sun_path, path.c_str(), std::min(sizeof(addrun.sun_path) - 1, path.length()));
     socklen_t len = sizeof(addrun);
 
-    if(!ConnectToSocket(*sock, (struct sockaddr*)&addrun, len, path, /*manual_connection=*/true)) {
+    if (!ConnectToSocket(*sock,
+                         (struct sockaddr*)&addrun,
+                         len,
+                         path,
+                         /*manual_connection=*/true,
+                         std::chrono::milliseconds{nConnectTimeout})) {
         return {};
     }
 

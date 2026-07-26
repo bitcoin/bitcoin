@@ -5,7 +5,7 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -56,7 +56,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
         height = 1
-        block = create_block(tip, create_coinbase(height), block_time)
+        block = create_block(tip, height=height, ntime=block_time)
         block.solve()
         # Save the coinbase for later
         block1 = block
@@ -171,7 +171,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         tip = int(node.getbestblockhash(), 16)
         height = node.getblockcount() + 1
-        block_A = create_block(tip, create_coinbase(height))
+        block_A = create_block(tip, height=height)
         block_A.vtx.extend([tx_withhold, tx_withhold_until_block_A, tx_orphan_include_by_block_A])
         block_A.hashMerkleRoot = block_A.calc_merkle_root()
         block_A.solve()
@@ -198,7 +198,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         tip = int(node.getbestblockhash(), 16)
         height = node.getblockcount() + 1
-        block_B = create_block(tip, create_coinbase(height))
+        block_B = create_block(tip, height=height)
         block_B.vtx.extend([tx_withhold_until_block_B, tx_orphan_include_by_block_B])
         block_B.hashMerkleRoot = block_B.calc_merkle_root()
         block_B.solve()

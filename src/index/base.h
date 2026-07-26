@@ -65,7 +65,7 @@ protected:
     {
     public:
         DB(const fs::path& path, size_t n_cache_size,
-           bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
+           bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false, bool f_bloom = true);
 
         /// Read block locator of the chain that the index is in sync with.
         /// Note, the returned locator will be empty if no record exists.
@@ -94,14 +94,10 @@ private:
     CThreadInterrupt m_interrupt;
 
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
-    ///
-    /// Recommendations for error handling:
-    /// If called on a successor of the previous committed best block in the index, the index can
-    /// continue processing without risk of corruption, though the index state will need to catch up
-    /// from further behind on reboot. If the new state is not a successor of the previous state (due
-    /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
-    /// getting corrupted.
-    bool Commit();
+    /// Will skip the commit if no block has been indexed yet or if the index's best block is
+    /// ahead of the chainstate's last flushed block. This avoids persisting state an unclean shutdown
+    /// could not roll back from. A later call commits when the chainstate has flushed far enough.
+    void Commit();
 
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
@@ -117,6 +113,7 @@ protected:
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
+    const std::string m_thread_name;
 
     void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
@@ -141,7 +138,7 @@ protected:
     void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
-    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
+    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
@@ -167,6 +164,7 @@ public:
     /// Starts the initial sync process on a background thread.
     [[nodiscard]] bool StartBackgroundSync();
 
+    /// \anchor index_sync
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
     /// interrupted with m_interrupt. Once the index gets in sync, the m_synced

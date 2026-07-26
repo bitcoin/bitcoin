@@ -16,6 +16,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <kernel/context.h>
+#include <logging.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <node/warnings.h>
@@ -258,6 +259,7 @@ static bool AppInit(NodeContext& node)
     return fRet;
 }
 
+/// \anchor main
 MAIN_FUNCTION
 {
     NodeContext node;

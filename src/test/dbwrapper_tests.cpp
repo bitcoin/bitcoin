@@ -7,6 +7,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/string.h>
 
 #include <memory>
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
     // Perform tests both obfuscated and non-obfuscated.
     for (bool obfuscate : {false, true}) {
         fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_1_obfuscate_true" : "dbwrapper_1_obfuscate_false");
-        CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = false, .wipe_data = true, .obfuscate = obfuscate});
+        CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB, .memory_only = false, .wipe_data = true, .obfuscate = obfuscate});
 
         uint256 res;
         uint32_t res_uint_32;
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
     // Perform tests both obfuscated and non-obfuscated.
     for (const bool obfuscate : {false, true}) {
         fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_batch_obfuscate_true" : "dbwrapper_batch_obfuscate_false");
-        CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
+        CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
 
         uint8_t key{'i'};
         uint256 in = m_rng.rand256();
@@ -183,6 +184,13 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 
         // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
+
+        batch.Clear();
+        batch.Write(key3, in3);
+        dbw.WriteBatch(batch);
+
+        BOOST_CHECK(dbw.Read(key3, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in3.ToString());
     }
 }
 
@@ -191,7 +199,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
     // Perform tests both obfuscated and non-obfuscated.
     for (const bool obfuscate : {false, true}) {
         fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_iterator_obfuscate_true" : "dbwrapper_iterator_obfuscate_false");
-        CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
+        CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
 
         // The two keys are intentionally chosen for ordering
         uint8_t key{'j'};
@@ -201,24 +209,46 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = m_rng.rand256();
         dbw.Write(key2, in2);
 
-        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
+        std::unique_ptr<CDBIterator> it(dbw.NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
 
+        // A failed key decode must not consume the current iterator entry.
+        uint16_t key_too_large{0};
+        BOOST_CHECK(!it->GetKey(key_too_large));
+
         uint8_t key_res;
-        uint256 val_res;
 
         BOOST_REQUIRE(it->GetKey(key_res));
-        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key);
+        // A failed value decode must not leave the iterator's scratch stream dirty.
+        std::pair<uint256, uint8_t> value_too_large;
+        BOOST_CHECK(!it->GetValue(value_too_large));
+
+        uint256 val_res;
+        BOOST_REQUIRE(it->GetValue(val_res));
+        BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
+
+        it->Seek(key2);
+
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_CHECK_EQUAL(key_res, key2);
+        BOOST_REQUIRE(it->GetValue(val_res));
+        BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
+
+        it->Seek(key);
+
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_CHECK_EQUAL(key_res, key);
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
 
         it->Next();
 
         BOOST_REQUIRE(it->GetKey(key_res));
-        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key2);
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
 
         it->Next();
@@ -307,7 +337,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 BOOST_AUTO_TEST_CASE(iterator_ordering)
 {
     fs::path ph = m_args.GetDataDirBase() / "iterator_ordering";
-    CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = false});
+    CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB, .memory_only = true, .wipe_data = false, .obfuscate = false});
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
         uint32_t value = x*x;
@@ -375,7 +405,7 @@ struct StringContentsSerializer {
 BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
     fs::path ph = m_args.GetDataDirBase() / "iterator_string_ordering";
-    CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = false});
+    CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB, .memory_only = true, .wipe_data = false, .obfuscate = false});
     for (int x = 0; x < 10; ++x) {
         for (int y = 0; y < 10; ++y) {
             std::string key{ToString(x)};
@@ -417,7 +447,7 @@ BOOST_AUTO_TEST_CASE(unicodepath)
     // the ANSI CreateDirectoryA call and the code page isn't UTF8.
     // It will succeed if created with CreateDirectoryW.
     fs::path ph = m_args.GetDataDirBase() / "test_runner_₿_🏃_20191128_104644";
-    CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20});
+    CDBWrapper dbw({.path = ph, .cache_bytes = 1_MiB});
 
     fs::path lockPath = ph / "LOCK";
     BOOST_CHECK(fs::exists(lockPath));

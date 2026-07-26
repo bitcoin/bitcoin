@@ -29,7 +29,7 @@ void initialize_load_external_block_file()
 FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_file)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
     AutoFile fuzzed_block_file{fuzzed_file_provider.open()};
     if (fuzzed_block_file.IsNull()) {

@@ -14,11 +14,11 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
-#include <logging.h>
 #include <random.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/log.h>
@@ -58,7 +58,7 @@ public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
     void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB, util::log::Level::Debug)) {
+            if (!util::log::ShouldDebugLog(BCLog::LEVELDB)) {
                 return;
             }
             char buffer[500];
@@ -136,12 +136,12 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
              options->max_open_files, default_open_files);
 }
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+static leveldb::Options GetOptions(size_t nCacheSize, bool bloom_filter)
 {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
-    options.filter_policy = leveldb::NewBloomFilterPolicy(10);
+    options.filter_policy = bloom_filter ? leveldb::NewBloomFilterPolicy(10) : nullptr;
     options.compression = leveldb::kNoCompression;
     options.info_log = new CBitcoinLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
@@ -149,7 +149,6 @@ static leveldb::Options GetOptions(size_t nCacheSize)
         // on corruption in later versions.
         options.paranoid_checks = true;
     }
-    options.max_file_size = std::max(options.max_file_size, DBWRAPPER_MAX_FILE_SIZE);
     SetMaxOpenFiles(&options);
     return options;
 }
@@ -162,6 +161,8 @@ CDBBatch::CDBBatch(const CDBWrapper& _parent)
     : parent{_parent},
       m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()}
 {
+    m_key_scratch.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+    m_value_scratch.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
     Clear();
 };
 
@@ -170,13 +171,15 @@ CDBBatch::~CDBBatch() = default;
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
+    assert(m_key_scratch.empty());
+    assert(m_value_scratch.empty());
 }
 
-void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
+void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& value)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
-    dbwrapper_private::GetObfuscation(parent)(ssValue);
-    leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
+    dbwrapper_private::GetObfuscation(parent)(value);
+    leveldb::Slice slValue(CharCast(value.data()), value.size());
     m_impl_batch->batch.Put(slKey, slValue);
 }
 
@@ -222,18 +225,25 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     DBContext().iteroptions.verify_checksums = true;
     DBContext().iteroptions.fill_cache = false;
     DBContext().syncoptions.sync = true;
-    DBContext().options = GetOptions(params.cache_bytes);
+    DBContext().options = GetOptions(params.cache_bytes, params.bloom_filter);
     DBContext().options.create_if_missing = true;
-    if (params.memory_only) {
+    DBContext().options.max_file_size = params.max_file_size;
+    assert(!(params.testing_env && params.memory_only));
+    if (params.testing_env) {
+        DBContext().options.env = params.testing_env;
+    } else if (params.memory_only) {
         DBContext().penv = leveldb::NewMemEnv(leveldb::Env::Default());
         DBContext().options.env = DBContext().penv;
-    } else {
+    }
+    if (!params.memory_only) {
         if (params.wipe_data) {
             LogInfo("Wiping LevelDB in %s", fs::PathToString(params.path));
             leveldb::Status result = leveldb::DestroyDB(fs::PathToString(params.path), DBContext().options);
             HandleError(result);
         }
-        TryCreateDirectories(params.path);
+        if (!params.testing_env) {
+            TryCreateDirectories(params.path);
+        }
         LogInfo("Opening LevelDB in %s", fs::PathToString(params.path));
     }
     // PathToString() return value is safe to pass to leveldb open function,
@@ -246,7 +256,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
 
     if (params.options.force_compact) {
         LogInfo("Starting database compaction of %s", fs::PathToString(params.path));
-        DBContext().pdb->CompactRange(nullptr, nullptr);
+        CompactFull();
         LogInfo("Finished database compaction of %s", fs::PathToString(params.path));
     }
 
@@ -277,25 +287,32 @@ CDBWrapper::~CDBWrapper()
 
 void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
-    const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, util::log::Level::Debug);
+    const bool log_memory = util::log::ShouldDebugLog(BCLog::LEVELDB);
     double mem_before = 0;
     if (log_memory) {
-        mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
+        mem_before = DynamicMemoryUsage() / double(1_MiB);
     }
     leveldb::Status status = DBContext().pdb->Write(fSync ? DBContext().syncoptions : DBContext().writeoptions, &batch.m_impl_batch->batch);
     HandleError(status);
     if (log_memory) {
-        double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
+        double mem_after{DynamicMemoryUsage() / double(1_MiB)};
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
                  m_name, mem_before, mem_after);
     }
 }
 
+std::optional<std::string> CDBWrapper::GetProperty(const std::string& property) const
+{
+    if (std::string value; DBContext().pdb->GetProperty(property, &value)) return value;
+    return std::nullopt;
+}
+
+void CDBWrapper::CompactFull() { DBContext().pdb->CompactRange(nullptr, nullptr); }
+
 size_t CDBWrapper::DynamicMemoryUsage() const
 {
-    std::string memory;
     std::optional<size_t> parsed;
-    if (!DBContext().pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
+    if (auto memory{GetProperty("leveldb.approximate-memory-usage")}; !memory || !(parsed = ToIntegral<size_t>(*memory))) {
         LogDebug(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
@@ -355,7 +372,10 @@ struct CDBIterator::IteratorImpl {
 };
 
 CDBIterator::CDBIterator(const CDBWrapper& _parent, std::unique_ptr<IteratorImpl> _piter) : parent(_parent),
-                                                                                            m_impl_iter(std::move(_piter)) {}
+                                                                                            m_impl_iter(std::move(_piter))
+{
+    m_scratch.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+}
 
 CDBIterator* CDBWrapper::NewIterator()
 {
@@ -370,6 +390,8 @@ void CDBIterator::SeekImpl(std::span<const std::byte> key)
 
 std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
+    // The returned span borrows from the current iterator entry and is only
+    // valid until the iterator is advanced.
     return MakeByteSpan(m_impl_iter->iter->key());
 }
 

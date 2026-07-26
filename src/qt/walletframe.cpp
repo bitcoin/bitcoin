@@ -223,15 +223,14 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
         }
     }
 
-    std::string error;
-    PartiallySignedTransaction psbtx;
-    if (!DecodeRawPSBT(psbtx, MakeByteSpan(data), error)) {
-        Q_EMIT message(tr("Error"), tr("Unable to decode PSBT") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
+    util::Result<PartiallySignedTransaction> psbt_res = DecodeRawPSBT(MakeByteSpan(data));
+    if (!psbt_res) {
+        Q_EMIT message(tr("Error"), tr("Unable to decode PSBT") + "\n" + QString::fromStdString(util::ErrorString(psbt_res).original), CClientUIInterface::MSG_ERROR);
         return;
     }
 
     auto dlg = new PSBTOperationsDialog(this, currentWalletModel(), clientModel);
-    dlg->openWithPSBT(psbtx);
+    dlg->openWithPSBT(*psbt_res);
     GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 

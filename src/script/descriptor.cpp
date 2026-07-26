@@ -4,29 +4,45 @@
 
 #include <script/descriptor.h>
 
+#include <addresstype.h>
+#include <attributes.h>
+#include <consensus/consensus.h>
+#include <crypto/hex_base.h>
+#include <crypto/sha256.h>
 #include <hash.h>
+#include <key.h>
 #include <key_io.h>
-#include <pubkey.h>
 #include <musig.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/parsing.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <serialize.h>
+#include <tinyformat.h>
 #include <uint256.h>
-
-#include <common/args.h>
-#include <span.h>
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/vector.h>
 
 #include <algorithm>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <span>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 using util::Split;
@@ -231,6 +247,9 @@ public:
 
     /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
     virtual size_t GetKeyCount() const { return 1; }
+
+    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
+    virtual bool CanSelfExpand() const = 0;
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -301,6 +320,7 @@ public:
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
     }
+    bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -365,6 +385,7 @@ public:
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
+    bool CanSelfExpand() const final { return true; }
 };
 
 enum class DeriveType {
@@ -591,6 +612,7 @@ public:
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
+    bool CanSelfExpand() const override { return !IsHardened(); }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -794,6 +816,15 @@ public:
     {
         return 1 + m_participants.size();
     }
+    bool CanSelfExpand() const override
+    {
+        // Participants must be self expandable for all MuSig expressions to be self expandable; the aggregate pubkey cannot be stored
+        // in the descriptor cache, so even aggregate-then-derive still requires the self expansion of participants prior to aggregation.
+        for (const auto& key : m_participants) {
+            if (!key->CanSelfExpand()) return false;
+        }
+        return true;
+    }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -808,7 +839,7 @@ protected:
     std::vector<std::string> m_warnings;
 
     //! The sub-descriptor arguments (empty for everything but SH and WSH).
-    //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
+    //! In doc/descriptors.md this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
     //! Subdescriptors can only ever generate a single script.
     const std::vector<std::unique_ptr<DescriptorImpl>> m_subdescriptor_args;
@@ -1038,6 +1069,8 @@ public:
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
 
+    bool HasScripts() const override { return true; }
+
     // NOLINTNEXTLINE(misc-no-recursion)
     std::vector<std::string> Warnings() const override {
         std::vector<std::string> all = m_warnings;
@@ -1080,6 +1113,18 @@ public:
             }
         }
         return count;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    bool CanSelfExpand() const override
+    {
+        for (const auto& key : m_pubkey_args) {
+            if (!key->CanSelfExpand()) return false;
+        }
+        for (const auto& sub : m_subdescriptor_args) {
+            if (!sub->CanSelfExpand()) return false;
+        }
+        return true;
     }
 };
 
@@ -1737,6 +1782,23 @@ public:
         return std::make_unique<RawTRDescriptor>(m_pubkey_args.at(0)->Clone());
     }
 };
+
+/** A parsed unused(KEY) descriptor */
+class UnusedDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
+public:
+    UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
+    bool IsSingleType() const final { return true; }
+    bool HasScripts() const override { return false; }
+
+    std::unique_ptr<DescriptorImpl> Clone() const override
+    {
+        return std::make_unique<UnusedDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
@@ -2573,6 +2635,27 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return ret;
     } else if (Func("rawtr", expr)) {
         error = "Can only have rawtr at top level";
+        return {};
+    }
+    if (ctx == ParseScriptContext::TOP && Func("unused", expr)) {
+        // Check for only one expression, should not find commas, brackets, or parentheses
+        auto arg = Expr(expr);
+        if (expr.size()) {
+            error = strprintf("unused(): only one key expected");
+            return {};
+        }
+        auto keys = ParsePubkey(key_exp_index, arg, ctx, out, error);
+        if (keys.empty()) return {};
+        for (auto& pubkey : keys) {
+            if (pubkey->IsRange()) {
+                error = "unused(): key cannot be ranged";
+                return {};
+            }
+            ret.emplace_back(std::make_unique<UnusedDescriptor>(std::move(pubkey)));
+        }
+        return ret;
+    } else if (Func("unused", expr)) {
+        error = "Can only have unused at top level";
         return {};
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {

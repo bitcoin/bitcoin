@@ -21,6 +21,7 @@
 #endif // ENABLE_WALLET
 #include <rpc/client.h>
 #include <rpc/server.h>
+#include <util/byte_units.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -529,7 +530,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
-    ui->lineEdit->setMaxLength(16 * 1024 * 1024);
+    ui->lineEdit->setMaxLength(16_MiB);
     ui->messagesWidget->installEventFilter(this);
 
     connect(ui->hidePeersDetailButton, &QAbstractButton::clicked, this, &RPCConsole::clearSelectedNode);
@@ -1165,12 +1166,13 @@ void RPCConsole::updateDetailWidget()
     if (stats->nodeStats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
     if (bip152_hb_settings.isEmpty()) bip152_hb_settings = ts.no;
     ui->peerHighBandwidth->setText(bip152_hb_settings);
+    const auto now{NodeClock::now()};
     const auto time_now{GetTime<std::chrono::seconds>()};
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.m_connected));
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(now - stats->nodeStats.m_connected));
     ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.m_last_block_time));
     ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.m_last_tx_time));
-    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.m_last_send));
-    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.m_last_recv));
+    ui->peerLastSend->setText(TimeDurationField(now, stats->nodeStats.m_last_send));
+    ui->peerLastRecv->setText(TimeDurationField(now, stats->nodeStats.m_last_recv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));

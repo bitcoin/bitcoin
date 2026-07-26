@@ -7,8 +7,8 @@
 from decimal import Decimal, getcontext
 from itertools import product
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -18,6 +18,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
+    JSONRPCException,
 )
 from test_framework.wallet_util import (
     calculate_input_weight,
@@ -31,10 +32,7 @@ class WalletSendTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.supports_cli = False
-        self.extra_args = [
-            ["-walletrbf=1"],
-            ["-walletrbf=1"]
-        ]
+        self.extra_args = [["-datacarriersize=16"]] * self.num_nodes
         getcontext().prec = 8 # Satoshi precision for Decimal
 
     def skip_test_if_missing_module(self):
@@ -45,7 +43,7 @@ class WalletSendTest(BitcoinTestFramework):
                   conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, psbt=None,
                   inputs=None, add_inputs=None, include_unsafe=None, change_address=None, change_position=None, change_type=None,
                   locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
-                  expect_error=None, solving_data=None, minconf=None):
+                  expect_error=None, solving_data=None, minconf=None, nonmempool=False):
         assert_not_equal((amount is None), (data is None))
 
         from_balance_before = from_wallet.getbalances()["mine"]["trusted"]
@@ -170,17 +168,20 @@ class WalletSendTest(BitcoinTestFramework):
             # Ensure transaction exists in the wallet:
             tx = from_wallet.gettransaction(res["txid"])
             assert tx
-            assert_equal(tx["bip125-replaceable"], "yes" if replaceable else "no")
-            # Ensure transaction exists in the mempool:
-            tx = from_wallet.getrawtransaction(res["txid"], True)
-            assert tx
-            if amount:
-                if subtract_fee_from_outputs:
-                    assert_equal(from_balance_before - from_balance, amount)
-                else:
-                    assert_greater_than(from_balance_before - from_balance, amount)
+            if nonmempool:
+                assert_raises_rpc_error(-5, "No such mempool transaction", from_wallet.getrawtransaction, res["txid"])
+                assert from_wallet.getbalances()["mine"]["nonmempool"] < 0
             else:
-                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
+                # Ensure transaction exists in the mempool:
+                tx = from_wallet.getrawtransaction(res["txid"], True)
+                assert tx
+                if amount:
+                    if subtract_fee_from_outputs:
+                        assert_equal(from_balance_before - from_balance, amount)
+                    else:
+                        assert_greater_than(from_balance_before - from_balance, amount)
+                else:
+                    assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
         else:
             assert_equal(from_balance_before, from_balance)
 
@@ -204,8 +205,9 @@ class WalletSendTest(BitcoinTestFramework):
         # w2 contains the private keys for w3
         self.nodes[1].createwallet(wallet_name="w2", blank=True)
         w2 = self.nodes[1].get_wallet_rpc("w2")
-        xpriv = "tprv8ZgxMBicQKsPfHCsTwkiM1KT56RXbGGTqvc2hgqzycpwbHqqpcajQeMRZoBD35kW4RtyCemu6j34Ku5DEspmgjKdt2qe4SvRch5Kk8B8A2v"
-        xpub = "tpubD6NzVbkrYhZ4YkEfMbRJkQyZe7wTkbTNRECozCtJPtdLRn6cT1QKb8yHjwAPcAr26eHBFYs5iLiFFnCbwPRsncCKUKCfubHDMGKzMVcN1Jg"
+        extendedkey = ExtendedPrivateKey.generate()
+        xpriv = extendedkey.to_string()
+        xpub = extendedkey.pubkey().to_string()
         w2.importdescriptors([{
             "desc": descsum_create("wpkh(" + xpriv + "/0/0/*)"),
             "timestamp": "now",
@@ -279,6 +281,9 @@ class WalletSendTest(BitcoinTestFramework):
         res = self.test_send(from_wallet=w3, data="23")
         res = w2.walletprocesspsbt(res["psbt"])
         assert res["complete"]
+
+        self.log.info("Create mempool-invalid tx (due to large OP_RETURN)...")
+        self.test_send(from_wallet=w0, data=b"The quick brown fox jumps over the lazy dog".hex(), nonmempool=True)
 
         self.log.info("Test setting explicit fee rate")
         res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate="1", add_to_wallet=False)
@@ -388,10 +393,10 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address, change_position=0)
         assert res["complete"]
-        assert_equal(self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["address"], change_address)
+        assert_equal(self.nodes[0].decodepsbt(res["psbt"])["outputs"][0]["script"]["address"], change_address)
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_type="legacy", change_position=0)
         assert res["complete"]
-        change_address = self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["address"]
+        change_address = self.nodes[0].decodepsbt(res["psbt"])["outputs"][0]["script"]["address"]
         assert change_address[0] in ("m", "n")
 
         self.log.info("Set lock time...")
@@ -426,14 +431,6 @@ class WalletSendTest(BitcoinTestFramework):
         # Locked coins are automatically unlocked when manually selected
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1], add_to_wallet=False)
         assert res["complete"]
-
-        self.log.info("Replaceable...")
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=True)
-        assert res["complete"]
-        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "yes")
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=True, replaceable=False)
-        assert res["complete"]
-        assert_equal(self.nodes[0].gettransaction(res["txid"])["bip125-replaceable"], "no")
 
         self.log.info("Subtract fee from output")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, subtract_fee_from_outputs=[0])
@@ -491,11 +488,9 @@ class WalletSendTest(BitcoinTestFramework):
         assert signed["complete"]
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
-        for i, txin in enumerate(dec["tx"]["vin"]):
-            if txin["txid"] == ext_utxo["txid"] and txin["vout"] == ext_utxo["vout"]:
-                input_idx = i
+        for psbt_in in dec["inputs"]:
+            if psbt_in["previous_txid"] == ext_utxo["txid"] and psbt_in["previous_vout"] == ext_utxo["vout"]:
                 break
-        psbt_in = dec["inputs"][input_idx]
         scriptsig_hex = psbt_in["final_scriptSig"]["hex"] if "final_scriptSig" in psbt_in else ""
         witness_stack_hex = psbt_in["final_scriptwitness"] if "final_scriptwitness" in psbt_in else None
         input_weight = calculate_input_weight(scriptsig_hex, witness_stack_hex)

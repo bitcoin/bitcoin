@@ -166,7 +166,7 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
 std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     std::map<COutPoint, Coin> coins;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::optional<COutPoint> outpoint{ConsumeDeserializable<COutPoint>(fuzzed_data_provider)};
         if (!outpoint) {
             break;

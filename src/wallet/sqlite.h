@@ -75,6 +75,7 @@ private:
     void SetupSQLStatements();
     bool ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> blob);
 
+protected:
     bool ReadKey(DataStream&& key, DataStream& value) override;
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
     bool EraseKey(DataStream&& key) override;
@@ -102,11 +103,13 @@ public:
 class SQLiteDatabase : public WalletDatabase
 {
 private:
-    const bool m_mock{false};
+    friend class SQLiteBatch;
 
     const fs::path m_dir_path;
 
     const std::string m_file_path;
+
+    const int m_additional_flags;
 
     /**
      * This mutex protects SQLite initialization and shutdown.
@@ -119,11 +122,16 @@ private:
 
     void Cleanup() noexcept EXCLUSIVE_LOCKS_REQUIRED(!g_sqlite_mutex);
 
+    void Open(int additional_flags);
+
+protected:
+    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, int additional_flags);
+
 public:
     SQLiteDatabase() = delete;
 
     /** Create DB handle to real database */
-    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock = false);
+    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options);
 
     ~SQLiteDatabase();
 
@@ -167,7 +175,18 @@ public:
     bool m_use_unsafe_sync;
 };
 
+/** An in-memory SQLiteDatabase. Used as a temporary build artifact where no
+ *  on-disk persistence is needed. */
+class InMemoryWalletDatabase : public SQLiteDatabase
+{
+public:
+    InMemoryWalletDatabase();
+    std::vector<fs::path> Files() override { return {}; }
+};
+
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+
+std::unique_ptr<WalletDatabase> MakeInMemoryWalletDatabase();
 
 std::string SQLiteDatabaseVersion();
 } // namespace wallet

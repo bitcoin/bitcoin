@@ -25,7 +25,7 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
     CThreadInterrupt interrupt;
     TorControlConnection conn{interrupt};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         TorControlReply tor_control_reply;
         CallOneOf(
             fuzzed_data_provider,

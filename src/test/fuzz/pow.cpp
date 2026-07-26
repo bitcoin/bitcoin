@@ -30,7 +30,7 @@ FUZZ_TARGET(pow, .init = initialize_pow)
     std::vector<std::unique_ptr<CBlockIndex>> blocks;
     const uint32_t fixed_time = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const uint32_t fixed_bits = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 10000) {
+    LIMITED_WHILE (fuzzed_data_provider.remaining_bytes() > 0, 10000) {
         const std::optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
         if (!block_header) {
             continue;

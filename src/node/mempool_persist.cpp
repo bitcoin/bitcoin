@@ -6,7 +6,6 @@
 
 #include <clientversion.h>
 #include <consensus/amount.h>
-#include <logging.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
@@ -16,6 +15,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/signalinterrupt.h>
 #include <util/syserror.h>

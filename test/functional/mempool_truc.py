@@ -29,15 +29,14 @@ TRUC_CHILD_MAX_VSIZE = 1000
 def cleanup(extra_args=None):
     def decorator(func):
         def wrapper(self):
-            try:
-                if extra_args is not None:
-                    self.restart_node(0, extra_args=extra_args)
-                func(self)
-            finally:
-                # Clear mempool again after test
-                self.generate(self.nodes[0], 1)
-                if extra_args is not None:
-                    self.restart_node(0)
+            if extra_args is not None:
+                self.restart_node(0, extra_args=extra_args)
+            func(self)
+
+            # Clear mempool again after test
+            self.generate(self.nodes[0], 1)
+            if extra_args is not None:
+                self.restart_node(0)
         return wrapper
     return decorator
 

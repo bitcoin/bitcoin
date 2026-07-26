@@ -47,4 +47,19 @@ if(BUILD_TESTS)
   )
 endif()
 
+if (BUILD_FUZZ_BINARY)
+  add_library(bitcoin_ipc_fuzz STATIC EXCLUDE_FROM_ALL)
+  target_capnp_sources(bitcoin_ipc_fuzz ${CMAKE_CURRENT_SOURCE_DIR}
+    test/fuzz/ipc_fuzz.capnp
+  )
+  add_dependencies(bitcoin_ipc_fuzz bitcoin_ipc_headers)
+
+  target_link_libraries(bitcoin_ipc_fuzz
+    PRIVATE
+      core_interface
+      univalue
+      Boost::headers
+  )
+endif()
+
 configure_file(.clang-tidy.in .clang-tidy USE_SOURCE_PERMISSIONS COPYONLY)

@@ -91,7 +91,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Create the first block with a coinbase output to our key
         height = 1
-        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time)
+        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), ntime=self.block_time)
         self.blocks.append(block)
         self.block_time += 1
         block.solve()
@@ -102,7 +102,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Bury the block 100 deep so the coinbase output is spendable
         for _ in range(100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
+            block = create_block(self.tip, height=height, ntime=self.block_time)
             block.solve()
             self.blocks.append(block)
             self.tip = block.hash_int
@@ -114,7 +114,7 @@ class AssumeValidTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].txid_int, 0), scriptSig=b""))
         tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
 
-        block102 = create_block(self.tip, create_coinbase(height), self.block_time, txlist=[tx])
+        block102 = create_block(self.tip, height=height, ntime=self.block_time, txlist=[tx])
         self.block_time += 1
         block102.solve()
         self.blocks.append(block102)
@@ -124,7 +124,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Bury the assumed valid block 2100 deep
         for _ in range(2100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
+            block = create_block(self.tip, height=height, ntime=self.block_time)
             block.solve()
             self.blocks.append(block)
             self.tip = block.hash_int
@@ -198,7 +198,7 @@ class AssumeValidTest(BitcoinTestFramework):
         second_chain_tip, second_chain_time, second_chain_height = int(best_hash, 16), tip_block["time"] + 1, tip_block["height"] + 1
         second_chain = []
         for _ in range(150):
-            block = create_block(second_chain_tip, create_coinbase(second_chain_height), second_chain_time)
+            block = create_block(second_chain_tip, height=second_chain_height, ntime=second_chain_time)
             block.solve()
             second_chain.append(block)
             second_chain_tip, second_chain_time, second_chain_height = block.hash_int, second_chain_time + 1, second_chain_height + 1
@@ -215,7 +215,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.log.info("Send a block not in the assumevalid header chain to node4.")
         genesis_hash = self.nodes[4].getbestblockhash()
         genesis_time = self.nodes[4].getblock(genesis_hash)['time']
-        alt1 = create_block(int(genesis_hash, 16), create_coinbase(1), genesis_time + 2)
+        alt1 = create_block(int(genesis_hash, 16), height=1, ntime=genesis_time + 2)
         alt1.solve()
         p2p4 = self.nodes[4].add_p2p_connection(BaseNode())
         p2p4.send_header_for_blocks(self.blocks[0:103])

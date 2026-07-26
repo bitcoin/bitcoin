@@ -63,9 +63,9 @@ FeeFrac EvaluateDiagram(int32_t size, std::span<const FeeFrac> diagram)
     return {point_a.fee * dir_coef.size + dir_coef.fee * (size - point_a.size), dir_coef.size};
 }
 
-std::weak_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, std::span<const FeeFrac> diagram)
+std::strong_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, std::span<const FeeFrac> diagram)
 {
-    return FeeRateCompare(FeeFrac{ff.fee, 1}, EvaluateDiagram(ff.size, diagram));
+    return ByRatio{FeeFrac{ff.fee, 1}} <=> ByRatio{EvaluateDiagram(ff.size, diagram)};
 }
 
 std::partial_ordering CompareDiagrams(std::span<const FeeFrac> dia1, std::span<const FeeFrac> dia2)
@@ -92,8 +92,7 @@ void PopulateChunks(FuzzedDataProvider& fuzzed_data_provider, std::vector<FeeFra
 {
     chunks.clear();
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 50)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 50) {
         chunks.emplace_back(fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(INT32_MIN>>1, INT32_MAX>>1), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000));
     }
     return;
@@ -122,11 +121,11 @@ FUZZ_TARGET(build_and_compare_feerate_diagram)
     assert(real == sim);
 
     // Do explicit evaluation at up to 1000 points, and verify consistency with the result.
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 1000) {
+    LIMITED_WHILE (fuzzed_data_provider.remaining_bytes(), 1000) {
         int32_t size = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(0, diagram2.back().size);
         auto eval1 = EvaluateDiagram(size, diagram1);
         auto eval2 = EvaluateDiagram(size, diagram2);
-        auto cmp = FeeRateCompare(eval1, eval2);
+        auto cmp = ByRatio{eval1} <=> ByRatio{eval2};
         if (std::is_lt(cmp)) assert(!std::is_gt(real));
         if (std::is_gt(cmp)) assert(!std::is_lt(real));
     }

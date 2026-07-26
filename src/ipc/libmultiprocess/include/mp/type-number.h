@@ -82,7 +82,7 @@ decltype(auto) CustomReadField(TypeList<LocalType>,
     InvokeContext& invoke_context,
     Input&& input,
     ReadDest&& read_dest,
-    typename std::enable_if<std::is_floating_point<LocalType>::value>::type* enable = 0)
+    typename std::enable_if<std::is_floating_point<LocalType>::value>::type* enable = nullptr)
 {
     auto value = input.get();
     static_assert(std::is_same<LocalType, decltype(value)>::value, "floating point type mismatch");

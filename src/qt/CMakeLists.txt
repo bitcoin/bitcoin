@@ -16,7 +16,7 @@ get_target_property(qt_lib_type Qt6::Core TYPE)
 function(import_plugins target)
   if(qt_lib_type STREQUAL "STATIC_LIBRARY")
     set(plugins Qt6::QMinimalIntegrationPlugin)
-    if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD)$")
+    if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD|OpenBSD)$")
       list(APPEND plugins Qt6::QXcbIntegrationPlugin)
     elseif(WIN32)
       list(APPEND plugins Qt6::QWindowsIntegrationPlugin Qt6::QModernWindowsStylePlugin)
@@ -306,7 +306,6 @@ else()
   add_custom_target(translate COMMAND ${CMAKE_COMMAND}
     -D "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
     -D "COPYRIGHT_HOLDERS=${COPYRIGHT_HOLDERS}"
-    -D "LCONVERT_EXECUTABLE=$<TARGET_FILE:Qt6::lconvert>"
     -D "LUPDATE_EXECUTABLE=$<TARGET_FILE:Qt6::lupdate>"
     -D "XGETTEXT_EXECUTABLE=${XGETTEXT_EXECUTABLE}"
     -P ${PROJECT_SOURCE_DIR}/share/qt/translate.cmake

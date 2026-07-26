@@ -11,6 +11,7 @@
 #include <rpc/util.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <univalue.h>
 #include <util/time.h>
 
@@ -133,6 +134,39 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
     // Make sure options object specified through args array conflicts.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
                           HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_remove_command_cleans_up_empty_entry)
+{
+    CRPCTable table;
+    RpcMethodFnType method{
+        []() -> RPCMethod {
+            return RPCMethod{
+                "method",
+                "Test RPC method.\n",
+                {},
+                RPCResult{RPCResult::Type::STR, "", ""},
+                RPCExamples{""},
+                [](const RPCMethod&, const JSONRPCRequest&) -> UniValue { return "ok"; },
+            };
+        }
+    };
+    CRPCCommand command{"test", method};
+
+    table.appendCommand(command.name, &command);
+    BOOST_CHECK(table.removeCommand(command.name, &command));
+
+    bool found{false};
+    for (const auto& name : table.listCommands()) {
+        if (name == command.name) {
+            found = true;
+            break;
+        }
+    }
+    BOOST_CHECK(!found);
+
+    UniValue doc{table.buildOpenRPCDoc()};
+    BOOST_CHECK(doc.isObject());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
@@ -341,10 +375,9 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
 
-    auto now = 10'000s;
-    SetMockTime(now);
+    FakeNodeClock clock{10'000s};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 200")));
-    SetMockTime(now += 2s);
+    clock += 2s;
     const int64_t time_remaining_expected{198};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
@@ -355,7 +388,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     const int64_t ban_duration{o1.find_value("ban_duration").getInt<int64_t>()};
     const int64_t time_remaining{o1.find_value("time_remaining").getInt<int64_t>()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    BOOST_CHECK_EQUAL(banned_until, time_remaining_expected + now.count());
+    BOOST_CHECK_EQUAL(banned_until, time_remaining_expected + TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
     BOOST_CHECK_EQUAL(ban_duration, banned_until - ban_created);
     BOOST_CHECK_EQUAL(time_remaining, time_remaining_expected);
 

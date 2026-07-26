@@ -94,8 +94,8 @@ def load_capnp_modules(config):
     }
 
 
-async def make_capnp_init_ctx(self):
-    node = self.nodes[0]
+async def make_capnp_init_ctx(self, node_index=0):
+    node = self.nodes[node_index]
     # Establish a connection, and create Init proxy object.
     connection = await capnp.AsyncIoStream.create_unix_connection(node.ipc_socket_path)
     client = capnp.TwoPartyClient(connection)
@@ -109,9 +109,9 @@ async def make_capnp_init_ctx(self):
     return ctx, init
 
 
-async def mining_create_block_template(mining, stack, ctx, opts):
+async def mining_create_block_template(mining, stack, ctx, *args, **kwargs):
     """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
-    response = await mining.createNewBlock(ctx, opts)
+    response = await mining.createNewBlock(ctx, *args, **kwargs)
     if not response._has("result"):
         return None
     return await stack.enter_async_context(destroying(response.result, ctx))
@@ -152,9 +152,9 @@ async def mining_get_coinbase_tx(block_template, ctx) -> CoinbaseTxData:
         lockTime=int(template_capnp.lockTime),
     )
 
-async def make_mining_ctx(self):
+async def make_mining_ctx(self, node_index=0):
     """Create IPC context and Mining proxy object."""
-    ctx, init = await make_capnp_init_ctx(self)
+    ctx, init = await make_capnp_init_ctx(self, node_index)
     self.log.debug("Create Mining proxy object")
     mining = init.makeMining(ctx).result
     return ctx, mining
@@ -162,3 +162,12 @@ async def make_mining_ctx(self):
 def assert_capnp_failed(e, description_prefix):
     assert e.description.startswith(description_prefix), f"Expected description starting with '{description_prefix}', got '{e.description}'"
     assert_equal(e.type, "FAILED")
+
+
+async def assert_create_new_block_fails(ctx, mining, opts, expected_msg):
+    """Assert that mining.createNewBlock fails with the expected remote exception."""
+    try:
+        await mining.createNewBlock(ctx, opts)
+        raise AssertionError("createNewBlock unexpectedly succeeded")
+    except capnp.lib.capnp.KjException as e:
+        assert_capnp_failed(e, f"remote exception: std::exception: {expected_msg}")

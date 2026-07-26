@@ -34,7 +34,7 @@ FUZZ_TARGET(crypto_poly1305_split)
     std::vector<std::byte> total_input;
 
     // Process input in pieces.
-    LIMITED_WHILE(provider.remaining_bytes(), 100) {
+    LIMITED_WHILE (provider.remaining_bytes(), 100) {
         auto in = ConsumeRandomLengthByteVector<std::byte>(provider);
         poly_split.Update(in);
         // Update total_input to match what was processed.

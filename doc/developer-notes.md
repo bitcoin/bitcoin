@@ -40,10 +40,10 @@ code.
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
   - Constant names are all uppercase, and use `_` to separate words.
-  - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
-    This is a more tolerant policy than the [C++ Core
-    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
-    which recommend using `snake_case`.  Please use what seems appropriate.
+  - Enumerator constants may be `snake_case`, or `PascalCase`. They should not
+    be `ALL_CAPS`, according to the [C++ Core
+    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#renum-caps),
+    to avoid clashing with macros.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`. See [Internal interface
     naming style](#internal-interface-naming-style) for an exception to this
@@ -55,16 +55,13 @@ code.
 
 - **Miscellaneous**
   - `++i` is preferred over `i++`.
-  - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
   - Use a named cast or functional cast, not a C-Style cast. When casting
     between integer types, use functional casts such as `int(x)` or `int{x}`
     instead of `(int) x`. When casting between more complex types, use `static_cast`.
     Use `reinterpret_cast` and `const_cast` as appropriate.
-  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-list) where possible.
+  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-list) where possible.
     For example `int x{0};` instead of `int x = 0;` or `int x(0);`
-  - Recursion is checked by clang-tidy and thus must be made explicit. Use
-    `NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
@@ -140,7 +137,18 @@ public:
   non-optional in-out and output parameters should usually be references, as
   they cannot be null.
 
-### Coding Style (C++ named arguments)
+### Coding Style (clang-tidy rules)
+
+The clang-tidy tool is used to check some rules. Please refer to the [upstream
+documentation](https://clang.llvm.org/extra/clang-tidy/checks/list.html) about
+the details and rationale for each rule.
+
+#### C++ Recursive Functions
+
+Recursion is checked by clang-tidy and thus must be made explicit. Use
+`NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
+
+#### C++ named arguments
 
 When passing named arguments, use a format that clang-tidy understands. The
 argument names can otherwise not be verified by clang-tidy.
@@ -156,7 +164,7 @@ int main()
 }
 ```
 
-### Running clang-tidy
+#### Running clang-tidy
 
 To run clang-tidy on Ubuntu/Debian, install the dependencies:
 
@@ -164,7 +172,7 @@ To run clang-tidy on Ubuntu/Debian, install the dependencies:
 apt install clang-tidy clang
 ```
 
-Configure with clang as the compiler:
+Configure with clang as the compiler with the below command that should create a `compile_commands.json` file within the build directory:
 
 ```sh
 cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
@@ -172,21 +180,24 @@ cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXP
 
 The output is denoised of errors from external dependencies.
 
-To run clang-tidy on all source files:
+To run clang-tidy on all source files using the checks mentioned in the `./src/.clang-tidy` file:
 
 ```sh
 ( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) )
 ```
+
+To run clang-tidy on one file:
+```sh
+( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) ./path/to/single_file.cpp )
+```
+
+Optionally, append the `run-clang-tidy` command with the `-quiet` option to suppress printing of statistics and ignored warnings that can clutter the output. The `-fix` option also comes in handy to apply the fixes suggested by the tool but need to ensure that unrelated changes in the file are not committed.
 
 To run clang-tidy on the changed source lines:
 
 ```sh
 git diff | ( cd ./src/ && clang-tidy-diff -p2 -path ../build -j $(nproc) )
 ```
-
-## Coding Style (Python)
-
-Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
 ## Coding Style (Doxygen-compatible comments)
 
@@ -291,6 +302,10 @@ Linux: `sudo apt install doxygen graphviz`
 
 MacOS: `brew install doxygen graphviz`
 
+## Coding Style (Python)
+
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
 ## Development tips and tricks
 
 ### Compiling for debugging
@@ -379,22 +394,6 @@ other input.
      assumption may or may not result in a slightly degraded user experience,
      but it is safe to continue program execution.
 
-### Valgrind suppressions file
-
-Valgrind is a programming tool for memory debugging, memory leak detection, and
-profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
-which includes known Valgrind warnings in our dependencies that cannot be fixed
-in-tree. Example use:
-
-```shell
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
-$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
-$ ./build/test/functional/test_runner.py --valgrind
-```
-
 ### Compiling for test coverage
 
 #### Using LCOV
@@ -457,7 +456,8 @@ LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" ctest --test-dir
 LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" build/test/functional/test_runner.py # Append "-j N" here for N parallel jobs
 
 # Merge all the raw profile data into a single file
-find build/raw_profile_data -name "*.profraw" | xargs llvm-profdata merge -o build/coverage.profdata
+find build/raw_profile_data -name "*.profraw" > build/raw_profile_data_files.txt
+llvm-profdata merge -f build/raw_profile_data_files.txt -o build/coverage.profdata
 ```
 
 > **Note:** The "counter mismatch" warning can be safely ignored, though it can be resolved by updating to Clang 19.
@@ -531,30 +531,39 @@ The generated coverage report can be accessed at `build/coverage_report/index.ht
 The [`include-what-you-use`](https://github.com/include-what-you-use/include-what-you-use) tool (IWYU)
 helps to enforce the source code organization [policy](#source-code-organization) in this repository.
 
-To ensure consistency, it is recommended to run the IWYU CI job locally rather than running the tool directly.
+To reproduce the IWYU CI job locally, run:
+```bash
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_native_iwyu.sh" ./ci/test_run_all.sh || echo "IWYU failed"
+```
 
 In some cases, IWYU might suggest headers that seem unnecessary at first glance, but are actually required.
 For example, a macro may use a symbol that requires its own include. Another example is passing a string literal
 to a function that accepts a `std::string` parameter. An implicit conversion occurs at the callsite using the
 `std::string` constructor, which makes the corresponding header required. We accept these suggestions as is.
 
-Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion of headers
-and undermines the specific purpose of IWYU.
+If the provided IWYU CI job still produces a false positive, reduce it to a minimal reproducer and report it upstream.
+
+Use IWYU pragmas sparingly.
+
+Use `IWYU pragma: keep` only as a narrow workaround when needed.
+
+Use `IWYU pragma: associated` only when IWYU cannot infer the intended associated header.
+
+Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion of headers and undermines the specific purpose of IWYU.
 
 The acceptable cases for using `IWYU pragma: export` are:
 1. Facade headers. For example, see [`compat/compat.h`](/src/compat/compat.h).
 2. Drop-in replacement headers. For example, see [`util/time.h`](/src/util/time.h).
 3. Presenting a complete interface across multiple headers.
 
-A comment explaining the rationale is required for every use of `IWYU pragma: export`.
+For IWYU pragmas, prefer adding a nearby source comment that explains why the annotation is needed.
 
 ### Performance profiling with perf
 
 Profiling is a good way to get a precise idea of where time is being spent in
 code. One tool for doing profiling on Linux platforms is called
-[`perf`](https://www.brendangregg.com/perf.html), and has been integrated into
-the functional test framework. Perf can observe a running process and sample
-(at some frequency) where its execution is.
+[`perf`](https://www.brendangregg.com/perf.html). It can observe a running
+process and sample (at some frequency) where its execution is.
 
 Perf installation is contingent on which kernel version you're running; see
 [this thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
@@ -589,8 +598,21 @@ perf report --stdio | c++filt | less
 
 or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
-See the functional test documentation for how to invoke perf within tests.
+### Valgrind
 
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
+
+```shell
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
+$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
+$ ./build/test/functional/test_runner.py --valgrind
+```
 
 ### Sanitizers
 
@@ -646,6 +668,11 @@ Additional resources:
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
 
+# Development guidelines
+
+A few non-style-related recommendations for developers, as well as points to
+pay attention to for reviewers of Bitcoin Core code.
+
 ## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
@@ -664,61 +691,56 @@ and its `cs_KeyStore` lock for example).
 
 ## Threads
 
-- [Main thread (`bitcoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
+- [Main thread (`bitcoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#main)
   : Started from `main()` in `bitcoind.cpp`. Responsible for starting up and
   shutting down the application.
 
-- [Init load (`b-initload`)](https://doxygen.bitcoincore.org/namespacenode.html#ab4305679079866f0f420f7dbf278381d)
+- [Init load (`b-initload`)](https://doxygen.bitcoincore.org/init_8cpp.html#initload)
   : Performs various loading tasks that are part of init but shouldn't block the node from being started: external block import,
    reindex, reindex-chainstate, main chain activation, spawn indexes background sync threads and mempool load.
 
-- [CCheckQueue::Loop (`b-scriptch.x`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#a6e7fa51d3a25e7cb65446d4b50e6a987)
+- [CCheckQueue::Loop (`b-scriptch.xx`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#checkqueue)
   : Parallel script validation threads for transactions in blocks.
 
-- [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#abb9f6ea8819672bd9a62d3695070709c)
-  : Libevent thread to listen for RPC and REST connections.
+- [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http)
+  : Thread to listen for RPC and REST connections.
 
-- [HTTP worker threads (`b-http_pool_x`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#a2ad0a49dc9b5e8117c0dee98c24187d8)
+- [HTTP worker threads (`b-http.xx`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
   : Threads to service RPC and REST requests.
 
-- [Indexer threads (`b-txindex`, etc)](https://doxygen.bitcoincore.org/class_base_index.html#a96a7407421fbf877509248bbe64f8d87)
+- [Indexer threads (`b-txidx`, `b-blkfltbscidx`, `b-coinstatsidx`, `b-txospenderidx`)](https://doxygen.bitcoincore.org/class_base_index.html#index_sync)
   : One thread per indexer.
 
-- [SchedulerThread (`b-scheduler`)](https://doxygen.bitcoincore.org/class_c_scheduler.html#a14d2800815da93577858ea078aed1fba)
+- [SchedulerThread (`b-scheduler`)](https://doxygen.bitcoincore.org/class_c_scheduler.html#scheduler)
   : Does asynchronous background tasks like dumping wallet contents, dumping
   addrman and running asynchronous validationinterface callbacks.
 
-- [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a52a3efff23634500bb42c6474f306091)
-  : Libevent thread for tor connections.
+- [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/class_tor_controller.html#torcontrol)
+  : Thread for tor connections.
 
 - Net threads:
 
-  - [ThreadMessageHandler (`b-msghand`)](https://doxygen.bitcoincore.org/class_c_connman.html#aacdbb7148575a31bb33bc345e2bf22a9)
+  - [ThreadMessageHandler (`b-msghand`)](https://doxygen.bitcoincore.org/class_c_connman.html#msghand)
     : Application level message handling (sending and receiving). Almost
     all net_processing and validation logic runs on this thread.
 
-  - [ThreadDNSAddressSeed (`b-dnsseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13)
+  - [ThreadDNSAddressSeed (`b-dnsseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#dnsseed)
     : Loads addresses of peers from the DNS.
 
-  - ThreadMapPort (`b-mapport`)
+  - [ThreadMapPort (`b-mapport`)](https://doxygen.bitcoincore.org/mapport_8cpp.html#mapport)
     : Universal plug-and-play startup/shutdown.
 
-  - [ThreadSocketHandler (`b-net`)](https://doxygen.bitcoincore.org/class_c_connman.html#a765597cbfe99c083d8fa3d61bb464e34)
+  - [ThreadSocketHandler (`b-net`)](https://doxygen.bitcoincore.org/class_c_connman.html#net)
     : Sends/Receives data from peers on port 8333.
 
-  - [ThreadOpenAddedConnections (`b-addcon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a0b787caf95e52a346a2b31a580d60a62)
+  - [ThreadOpenAddedConnections (`b-addcon`)](https://doxygen.bitcoincore.org/class_c_connman.html#addcon)
     : Opens network connections to added nodes.
 
-  - [ThreadOpenConnections (`b-opencon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a55e9feafc3bab78e5c9d408c207faa45)
+  - [ThreadOpenConnections (`b-opencon`)](https://doxygen.bitcoincore.org/class_c_connman.html#opencon)
     : Initiates new connections to peers.
 
-  - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
+  - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#i2paccept)
     : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
-
-# Development guidelines
-
-A few non-style-related recommendations for developers, as well as points to
-pay attention to for reviewers of Bitcoin Core code.
 
 ## General Bitcoin Core
 
@@ -736,13 +758,12 @@ logging messages. They should be used as follows:
   most of the time, and it should be used for log messages that are
   useful for debugging and can reasonably be enabled on a production
   system (that has sufficient free storage space). They will be logged
-  if the program is started with `-debug=category` or `-debug=1`.
+  if the program is started with `-debug=category` or `-debug=1`, or
+  the category is enabled through the `logging` RPC.
 
 - `LogInfo(fmt, params...)` should only be used rarely, e.g. for startup
   messages or for infrequent and important events such as a new block tip
-  being found or a new outbound connection being made. These log messages
-  are unconditional, so care must be taken that they can't be used by an
-  attacker to fill up storage.
+  being found or a new outbound connection being made.
 
 - `LogError(fmt, params...)` should be used in place of `LogInfo` for
   severe problems that require the node (or a subsystem) to shut down
@@ -764,6 +785,13 @@ Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.
 
+While `LogInfo`, `LogWarning` and `LogError` messages should be rare,
+in case there are circumstances where they are not, those messages
+are automatically rate-limited to prevent potential disk-filling
+attacks. For the cases where this protection is undesirable,
+rate-limiting can be avoided with the `util::log::NO_RATE_LIMIT` tag, eg
+`LogInfo(util::log::NO_RATE_LIMIT, "UpdateTip: new best=%s ...",...)`.
+
 ## General C++
 
 For general C++ guidelines, you may refer to the [C++ Core
@@ -772,7 +800,7 @@ Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
 Common misconceptions are clarified in those sections:
 
 - Passing (non-)fundamental types in the [C++ Core
-  Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
+  Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rf-conventional).
 
 - If you use the `.h`, you must link the `.cpp`.
 
@@ -1355,6 +1383,46 @@ A few guidelines for modifying existing RPC interfaces:
 - It's preferable to avoid changing an RPC in a backward-incompatible manner, but in that case, add an associated `-deprecatedrpc=` option to retain previous RPC behavior during the deprecation period. Backward-incompatible changes include: data type changes (e.g. from `{"warnings":""}` to `{"warnings":[]}`, changing a value from a string to a number, etc.), logical meaning changes of a value, key name changes (e.g. `{"warning":""}` to `{"warnings":""}`), or removing a key from an object. Adding a key to an object is generally considered backward-compatible. Include a release note that refers the user to the RPC help for details of feature deprecation and re-enabling previous behavior. [Example RPC help](https://github.com/bitcoin/bitcoin/blob/94f0adcc/src/rpc/blockchain.cpp#L1316-L1323).
 
   - *Rationale*: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace period for downstream applications to migrate. Release notes provide notification to downstream users.
+
+## Feature deprecation and removal process
+
+Bitcoin Core uses a structured process for deprecating and removing features to give
+downstream users and applications time to migrate.
+
+### General principles
+
+- The minimum deprecation **grace period** for a feature that is going to be removed is one
+  major release.
+- Any deprecation or removal must come with a release note.
+
+### RPC methods and fields
+
+- To deprecate an entire RPC method, gate the old behavior behind `-deprecatedrpc=<feature>`.
+  Deprecated features should remain accessible via this flag during the grace period so
+  downstream users are not immediately broken.
+- The RPC help text must mention the deprecation and the `-deprecatedrpc=<feature>` flag
+  that re-enables it. For example:
+  ```
+  "\nDeprecated in v25.0, use the `newfoo` RPC instead. Start bitcoind with"
+  " `-deprecatedrpc=foo` to continue using this RPC.\n"
+  ```
+
+### Startup options
+
+- To deprecate a startup option, emit a warning via `LogWarning` or `InitWarning` when the
+  option is used, so users are notified at startup.
+- Update the option's help text to indicate it is deprecated and, if applicable, will be
+  removed in a future release.
+
+### REST interface
+
+- Deprecated REST endpoints or behaviors should be documented in `doc/REST-interface.md`
+  with the version they were deprecated.
+
+### ZMQ
+
+- Deprecated ZMQ topics or behaviors should be documented in `doc/zmq.md` with the version
+  they were deprecated.
 
 ## Internal interface guidelines
 

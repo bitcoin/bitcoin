@@ -11,9 +11,8 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    JSONRPCException,
 )
-
-from test_framework.authproxy import JSONRPCException
 
 import http
 import subprocess
@@ -120,6 +119,19 @@ class RpcMiscTest(BitcoinTestFramework):
 
         # Specifying an unknown index name returns an empty result
         assert_equal(node.getindexinfo("foo"), {})
+
+        # Test a deprecated category
+        all_result = node.logging(include=['all'])
+        assert_equal(True, all(enabled is True for category, enabled in all_result.items()))
+        assert_equal(True, 'libevent' not in all_result)
+        assert_equal(all_result, node.logging())
+        libevent_warning = "The logging category `libevent` is deprecated"
+        with self.nodes[0].assert_debug_log([libevent_warning]):
+            assert_equal(all_result, node.logging(include=['libevent']))
+        assert_equal(all_result, node.logging())
+        with self.nodes[0].assert_debug_log([libevent_warning]):
+            assert_equal(all_result, node.logging(exclude=['libevent']))
+        assert_equal(all_result, node.logging())
 
 
 if __name__ == '__main__':

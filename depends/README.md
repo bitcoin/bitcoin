@@ -53,6 +53,10 @@ To build dependencies for the current arch+OS:
 
     pkg_add bash cmake curl gmake gtar
 
+Skip the following packages if you don't intend to use the GUI and will build with [`NO_QT=1`](#dependency-options):
+
+    pkg_add bison ninja
+
 To build dependencies for the current arch+OS:
 
     gmake
@@ -90,7 +94,6 @@ The following can be set when running make: `make FOO=bar`
 - `C_STANDARD`: Set the C standard version used. Defaults to `c11`.
 - `CXX_STANDARD`: Set the C++ standard version used. Defaults to `c++20`.
 - `NO_BOOST`: Don't download/build/cache Boost
-- `NO_LIBEVENT`: Don't download/build/cache Libevent
 - `NO_QT`: Don't download/build/cache Qt and its dependencies
 - `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
 - `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ

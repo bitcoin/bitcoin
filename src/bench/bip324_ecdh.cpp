@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <span>
 
 static void BIP324_ECDH(benchmark::Bench& bench)
 {

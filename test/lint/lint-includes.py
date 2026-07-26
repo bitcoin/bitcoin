@@ -21,7 +21,6 @@ EXCLUDED_DIRS = ["contrib/devtools/bitcoin-tidy/",
                 ] + SHARED_EXCLUDED_SUBTREES
 
 EXPECTED_BOOST_INCLUDES = [
-                           "boost/cstdlib.hpp",
                            "boost/multi_index/detail/hash_index_iterator.hpp",
                            "boost/multi_index/hashed_index.hpp",
                            "boost/multi_index/identity.hpp",
@@ -71,7 +70,11 @@ def find_included_cpps():
         if e.returncode > 1:
             raise e
 
-    return included_cpps
+    # Exception: `#include <moc_*.cpp>` statements in src/qt source files are permitted.
+    # See:
+    # - https://doc.qt.io/qt-6/moc.html
+    # - https://cmake.org/cmake/help/latest/prop_tgt/AUTOMOC.html
+    return [i for i in included_cpps if not re.match(r"src/qt/[^:]+\.cpp:#include <moc_[^<>:]+\.cpp>$", i)]
 
 
 def find_extra_boosts():

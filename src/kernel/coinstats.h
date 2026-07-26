@@ -13,7 +13,7 @@
 #include <functional>
 #include <optional>
 
-class CCoinsView;
+class CCoinsViewDB;
 class Coin;
 class COutPoint;
 class CScript;
@@ -77,7 +77,7 @@ uint64_t GetBogoSize(const CScript& script_pub_key);
 void ApplyCoinHash(MuHash3072& muhash, const COutPoint& outpoint, const Coin& coin);
 void RemoveCoinHash(MuHash3072& muhash, const COutPoint& outpoint, const Coin& coin);
 
-std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point = {});
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, const CCoinsViewDB& view, node::BlockManager& blockman, const std::function<void()>& interruption_point = {});
 } // namespace kernel
 
 #endif // BITCOIN_KERNEL_COINSTATS_H

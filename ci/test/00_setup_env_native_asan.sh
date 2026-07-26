@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 
 # Only install BCC tracing packages in CI. Container has to match the host for BCC to work.
-if [[ "${INSTALL_BCC_TRACING_TOOLS}" == "true" ]]; then
+if [[ "${INSTALL_BCC_TRACING_TOOLS:-}" == "true" ]]; then
   # Required for USDT functional tests to run
   BPFCC_PACKAGE="bpfcc-tools linux-headers-$(uname --kernel-release)"
   export CI_CONTAINER_CAP="--privileged -v /sys/kernel:/sys/kernel:rw"
@@ -20,7 +20,7 @@ fi
 
 export CONTAINER_NAME=ci_native_asan
 export APT_LLVM_V="22"
-export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev mold python3-zmq qt6-base-dev qt6-tools-dev qt6-l10n-tools libevent-dev libboost-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE} libcapnp-dev capnproto python3-pip"
+export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev mold python3-zmq qt6-base-dev qt6-tools-dev qt6-l10n-tools libboost-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE} libcapnp-dev capnproto python3-pip"
 export PIP_PACKAGES="--break-system-packages pycapnp"
 export NO_DEPENDS=1
 export GOAL="install"

@@ -9,8 +9,10 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 namespace mp {
@@ -19,8 +21,11 @@ namespace test {
 struct FooStruct
 {
     std::string name;
-    std::set<int> setint;
-    std::vector<bool> vbool;
+    std::set<int> set_int;
+    std::vector<bool> vector_bool;
+    std::optional<int> optional_int;
+    std::unordered_set<int> unordered_set_int;
+    std::map<std::string, int> map_string_int;
 };
 
 enum class FooEnum : uint8_t { ONE = 1, TWO = 2, };
@@ -79,9 +84,11 @@ public:
     int callbackExtended(ExtendedCallback& callback, int arg) { return callback.callExtended(arg); }
     FooCustom passCustom(FooCustom foo) { return foo; }
     FooEmpty passEmpty(FooEmpty foo) { return foo; }
+    FooData passData(FooData foo) { return foo; }
     FooMessage passMessage(FooMessage foo) { foo.message += " call"; return foo; }
     void passMutable(FooMutable& foo) { foo.message += " call"; }
     FooEnum passEnum(FooEnum foo) { return foo; }
+    double passDouble(double value) { return value; }
     int passFn(std::function<int()> fn) { return fn(); }
     std::vector<FooDataRef> passDataPointers(std::vector<FooDataRef> values) { return values; }
     std::shared_ptr<FooCallback> m_callback;

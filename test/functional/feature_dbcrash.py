@@ -25,8 +25,6 @@
          - restart until recovery succeeds
          - check that utxo matches node3 using gettxoutsetinfo"""
 
-import errno
-import http.client
 import random
 import time
 
@@ -49,7 +47,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.rpc_timeout = 480
-        self.supports_cli = False
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         self.base_args = [
@@ -73,7 +70,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.start_nodes()
         # Leave them unconnected, we'll use submitblock directly in this test
 
-    def restart_node(self, node_index, expected_tip):
+    def restart_node(self, node_index, *, expected_tip):
         """Start up a given node id, wait for the tip to reach the given block hash, and calculate the utxo hash.
 
         Exceptions during startup or subsequent RPC calls should indicate a node crash (due to -dbcrashratio), in which case we try again. Give up
@@ -90,7 +87,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             except Exception:
                 # An exception here should mean the node is about to crash.
                 # If bitcoind exits, then try again.  wait_for_node_exit()
-                # should raise an exception if bitcoind doesn't exit.
+                # enforces that bitcoind crashed.
                 self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
 
@@ -105,22 +102,15 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         """Try submitting a block to the given node.
 
         Catch any exceptions that indicate the node has crashed.
+        The caller will check that a crash happened.
         Returns true if the block was submitted successfully; false otherwise."""
 
         try:
             self.nodes[node_index].submitblock(block)
             return True
-        except (http.client.CannotSendRequest, http.client.RemoteDisconnected) as e:
+        except Exception as e:
             self.log.debug(f"node {node_index} submitblock raised exception: {e}")
             return False
-        except OSError as e:
-            self.log.debug(f"node {node_index} submitblock raised OSError exception: errno={e.errno}")
-            if e.errno in [errno.EPIPE, errno.ECONNREFUSED, errno.ECONNRESET]:
-                # The node has likely crashed
-                return False
-            else:
-                # Unexpected exception, raise
-                raise
 
     def sync_node3blocks(self, block_hashes):
         """Use submitblock to sync node3's chain with the other nodes
@@ -146,9 +136,10 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 if not self.submit_block_catch_error(i, block):
                     # TODO: more carefully check that the crash is due to -dbcrashratio
                     # (change the exit code perhaps, and check that here?)
+                    # wait_for_node_exit() enforces that bitcoind crashed.
                     self.wait_for_node_exit(i, timeout=30)
                     self.log.debug(f"Restarting node {i} after block hash {block_hash}")
-                    nodei_utxo_hash = self.restart_node(i, block_hash)
+                    nodei_utxo_hash = self.restart_node(i, expected_tip=block_hash)
                     assert nodei_utxo_hash is not None
                     self.restart_counts[i] += 1
                 else:
@@ -177,9 +168,10 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         for i in range(3):
             try:
                 nodei_utxo_hash = self.nodes[i].gettxoutsetinfo()['hash_serialized_3']
-            except OSError:
+            except Exception:
                 # probably a crash on db flushing
-                nodei_utxo_hash = self.restart_node(i, self.nodes[3].getbestblockhash())
+                self.wait_for_node_exit(i, timeout=10)
+                nodei_utxo_hash = self.restart_node(i, expected_tip=self.nodes[3].getbestblockhash())
             assert_equal(nodei_utxo_hash, node3_utxo_hash)
 
     def generate_small_transactions(self, node, count, utxo_list):
@@ -193,12 +185,12 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 # Sanity check -- if we chose inputs that are too small, skip
                 continue
 
-            self.wallet.send_self_transfer_multi(
-                from_node=node,
+            tx = self.wallet.create_self_transfer_multi(
                 utxos_to_spend=utxos_to_spend,
                 num_outputs=3,
                 fee_per_output=FEE // 3,
             )
+            node.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0)
             num_transactions += 1
 
     def run_test(self):

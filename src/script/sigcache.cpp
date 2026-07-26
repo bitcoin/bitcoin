@@ -9,12 +9,12 @@
 #include <pubkey.h>
 #include <random.h>
 #include <script/interpreter.h>
-#include <span.h>
 #include <uint256.h>
 #include <util/log.h>
 
 #include <mutex>
 #include <shared_mutex>
+#include <utility>
 #include <vector>
 
 SignatureCache::SignatureCache(const size_t max_size_bytes)

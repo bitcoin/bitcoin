@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <net.h>
 #include <node/txorphanage.h>
+#include <node/types.h>
 #include <private_broadcast.h>
 #include <protocol.h>
 #include <uint256.h>
@@ -41,6 +42,8 @@ static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
     orphan, replaced, and rejected transactions. */
 static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
+/** Default maximum per-second rate for sending transaction inventory to peers. */
+static constexpr unsigned int DEFAULT_TX_SEND_RATE{14};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
@@ -48,11 +51,13 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
+/** The compactblocks version we support. See BIP 152. */
+static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
-    std::chrono::microseconds m_ping_wait;
+    NodeClock::duration m_ping_wait;
     std::vector<int> vHeightInFlight;
     bool m_relay_txs;
     int m_inv_to_send = 0;
@@ -67,8 +72,18 @@ struct CNodeStateStats {
 };
 
 struct PeerManagerInfo {
+    struct InvBucketInfo {
+        size_t backlog_count{0};
+        double count_bucket{0};
+        double size_bucket{0};
+    };
+
     std::chrono::seconds median_outbound_time_offset{0s};
     bool ignores_incoming_txs{false};
+    bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+    unsigned int tx_send_rate{0};
+    InvBucketInfo inbound_bucket;
+    InvBucketInfo outbound_bucket;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -92,6 +107,8 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Maximum per-second rate for sending transaction inventory to peers.
+        unsigned int tx_send_rate{DEFAULT_TX_SEND_RATE};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -135,17 +152,19 @@ public:
 
     /**
      * Initiate a transaction broadcast to eligible peers.
-     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
-     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
+     * Queue the witness transaction id to the inbound and outbound inv backlogs.
+     * Later, depending on `-txsendrate`, `Peer::TxRelay::m_next_inv_send_time` and if
      * the transaction is in the mempool, an `INV` about it may be sent to the peer.
      */
-    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
+    virtual void InitiateTxBroadcastToAll(const Wtxid& wtxid) = 0;
 
     /**
      * Initiate a private transaction broadcast. This is done
      * asynchronously via short-lived connections to peers on privacy networks.
+     * @retval node::TransactionError::OK The transaction is scheduled for private broadcast (or was already scheduled).
+     * @retval node::TransactionError::PRIVATE_BROADCAST_FULL Rejected because the private broadcast queue is full.
      */
-    virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+    [[nodiscard]] virtual node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;

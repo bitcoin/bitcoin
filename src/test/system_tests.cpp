@@ -11,33 +11,65 @@
 #include <univalue.h>
 #include <util/string.h>
 
+#include <cstdlib>
+#include <iostream>
+#include <string_view>
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 #include <util/subprocess.h>
 #endif // ENABLE_EXTERNAL_SIGNER
 
-#include <boost/cstdlib.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+
+namespace {
+// When set in the environment, test_bitcoin acts as a mock subprocess for the
+// run_command test below instead of running unit tests.
+constexpr const char* MOCK_PROCESS_ENV = "BITCOIN_TEST_MOCK_PROCESS";
+
+const bool g_maybe_run_mock_dispatcher_before_main{[]() {
+    const char* name = std::getenv(MOCK_PROCESS_ENV);
+    if (!name) return false;
+    const std::string_view n{name};
+    if (n == "valid_json") {
+        std::cout << R"({"success": true})" << std::endl;
+        std::_Exit(EXIT_SUCCESS);
+    }
+    if (n == "nonzeroexit_nooutput") {
+        std::_Exit(EXIT_FAILURE);
+    }
+    if (n == "nonzeroexit_stderroutput") {
+        std::cerr << "err" << std::endl;
+        std::_Exit(EXIT_FAILURE);
+    }
+    if (n == "invalid_json") {
+        std::cout << "{" << std::endl;
+        std::_Exit(EXIT_SUCCESS);
+    }
+    if (n == "pass_stdin_to_stdout") {
+        std::string s;
+        std::getline(std::cin, s);
+        std::cout << s << std::endl;
+        std::_Exit(EXIT_SUCCESS);
+    }
+    std::cerr << "Unknown mock process: " << n << std::endl;
+    std::_Exit(EXIT_FAILURE);
+}()};
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
-static std::vector<std::string> mock_executable(std::string name)
+static std::vector<std::string> mock_executable(const std::string& name)
 {
-    // Invoke the mock_process/* test case with all unsolicited output suppressed.
-    return {
-        boost::unit_test::framework::master_test_suite().argv[0],
-        // Disable false-positive memory leak dumps to stderr
-        // in debug builds when using the Windows UCRT.
-        "--detect_memory_leaks=0",
-        // Disable logging to stdout.
-        "--log_level=nothing",
-        // Disable the test report to stderr.
-        "--report_level=no",
-        "--run_test=mock_process/" + name,
-    };
+#if defined(WIN32)
+    _putenv_s(MOCK_PROCESS_ENV, name.c_str());
+#else
+    setenv(MOCK_PROCESS_ENV, name.c_str(), /*overwrite=*/1);
+#endif
+    return {boost::unit_test::framework::master_test_suite().argv[0]};
 }
 
 BOOST_AUTO_TEST_CASE(run_command)
@@ -67,7 +99,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         const std::vector<std::string> command = mock_executable("nonzeroexit_nooutput");
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what{e.what()};
-            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %d: \n", util::Join(command, " "), boost::exit_test_failure)) != std::string::npos);
+            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %d: \n", util::Join(command, " "), EXIT_FAILURE)) != std::string::npos);
             return true;
         });
     }
@@ -77,7 +109,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
-            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %s: %s", util::Join(command, " "), boost::exit_test_failure, "err")) != std::string::npos);
+            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %s: %s", util::Join(command, " "), EXIT_FAILURE, "err")) != std::string::npos);
             BOOST_CHECK(what.find(expected) != std::string::npos);
             return true;
         });

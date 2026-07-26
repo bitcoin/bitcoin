@@ -12,7 +12,6 @@ import platform
 import shutil
 import stat
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
@@ -20,7 +19,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     ensure_for,
-    get_rpc_proxy,
+    JSONRPCException,
 )
 
 got_loading_error = False
@@ -86,6 +85,8 @@ class MultiWalletTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         assert_equal(node.listwalletdir(), {'wallets': [{'name': self.default_wallet_name, "warnings": []}]})
+
+        self.test_invalid_wallet_names()
 
         # check wallet.dat is created
         self.stop_nodes()
@@ -326,7 +327,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Concurrent wallet loading")
         threads = []
         for _ in range(3):
-            n = node.cli if self.options.usecli else get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
+            n = node.create_new_rpc_connection()
             t = Thread(target=test_load_unload, args=(n, wallet_names[2]))
             t.start()
             threads.append(t)
@@ -458,6 +459,21 @@ class MultiWalletTest(BitcoinTestFramework):
         node.unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
 
+    def test_invalid_wallet_names(self):
+        self.log.info("Test weird paths are not allowed as wallet names")
+        NON_NORMALIZED = ["bad/./path", "bad/../path", "/bad/./path", "/bad/../path", "../", "./", "./wallet", "../wallets/../wallets/wallet"]
+        for name in NON_NORMALIZED:
+            assert_raises_rpc_error(-4, "Wallet name given as a path must be normalized", self.nodes[0].createwallet, name)
+
+        INVALID_RELPATH = ["../wallets/wallet", "..", "."]
+        for name in INVALID_RELPATH:
+            assert_raises_rpc_error(-4, "Wallet name given as a relative path cannot begin with ./ or ../", self.nodes[0].createwallet, name)
+
+        INVALID_ROOT = ["/"]
+        if platform.system() == "Windows":
+            INVALID_ROOT.extend(["C:\\", "C:"])
+        for name in INVALID_ROOT:
+            assert_raises_rpc_error(-4, "Wallet name cannot be the root path", self.nodes[0].createwallet, name)
 
 if __name__ == '__main__':
     MultiWalletTest(__file__).main()

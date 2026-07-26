@@ -36,7 +36,6 @@ def call_with_auth(node, user, password, method="getbestblockhash"):
 class HTTPBasicsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.supports_cli = False
 
     def conf_setup(self):
         #Append rpcauth to bitcoin.conf before initialization
@@ -61,6 +60,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         rpcauth3 = lines[1]
         self.password = lines[3]
 
+        self.stop_nodes()
         with open(self.nodes[0].datadir_path / "bitcoin.conf", "a") as f:
             f.write(rpcauth + "\n")
             f.write(rpcauth2 + "\n")
@@ -68,8 +68,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         with open(self.nodes[1].datadir_path / "bitcoin.conf", "a") as f:
             f.write("rpcuser={}\n".format(self.rpcuser))
             f.write("rpcpassword={}\n".format(self.rpcpassword))
-        self.restart_node(0)
-        self.restart_node(1)
+        self.start_nodes()
 
     def test_auth(self, node, user, password):
         self.log.info('Correct...')
@@ -109,6 +108,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
             assert_equal(expected_perms, actual_perms)
 
         # Remove any leftover rpc{user|password} config options from previous tests
+        self.stop_node(1)
         self.nodes[1].replace_in_config([("rpcuser", "#rpcuser"), ("rpcpassword", "#rpcpassword")])
 
         self.log.info('Check default cookie permission')

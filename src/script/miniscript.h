@@ -5,32 +5,34 @@
 #ifndef BITCOIN_SCRIPT_MINISCRIPT_H
 #define BITCOIN_SCRIPT_MINISCRIPT_H
 
-#include <algorithm>
-#include <compare>
-#include <concepts>
-#include <cstdint>
-#include <cstdlib>
-#include <functional>
-#include <iterator>
-#include <memory>
-#include <optional>
-#include <set>
-#include <stdexcept>
-#include <tuple>
-#include <utility>
-#include <vector>
-
 #include <consensus/consensus.h>
+#include <crypto/hex_base.h>
 #include <policy/policy.h>
 #include <script/interpreter.h>
 #include <script/parsing.h>
 #include <script/script.h>
 #include <serialize.h>
-#include <span.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
+
+#include <algorithm>
+#include <concepts>
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <set>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace miniscript {
 

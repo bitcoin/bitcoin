@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+class CKey;
 struct secp256k1_musig_keyagg_cache;
 class MuSig2SecNonceImpl;
 struct secp256k1_musig_secnonce;
@@ -56,8 +57,14 @@ public:
     bool IsValid();
 };
 
-uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash);
+/**
+ * Computes an arbitrary unique session ID to identify ongoing signing sessions.
+ * It is the SHA256 of the signing (aggregate) pubkey, the participant pubkey, the sighash, and the pubnonce
+ */
+uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash, const std::vector<uint8_t>& pubnonce);
 
+std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+std::optional<uint256> CreateMuSig2PartialSig(const uint256& hash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks);
 std::optional<std::vector<uint8_t>> CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, const CPubKey& aggregate_pubkey, const std::vector<std::pair<uint256, bool>>& tweaks, const uint256& sighash, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, const std::map<CPubKey, uint256>& partial_sigs);
 
 #endif // BITCOIN_MUSIG_H

@@ -15,7 +15,7 @@ static void BenchTimeDeprecated(benchmark::Bench& bench)
 
 static void BenchTimeMock(benchmark::Bench& bench)
 {
-    NodeClockContext clock_ctx{111s};
+    FakeNodeClock clock{111s};
     bench.run([&] {
         (void)GetTime<std::chrono::seconds>();
     });

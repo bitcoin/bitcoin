@@ -7,6 +7,7 @@
 #include <util/obfuscation.h>
 
 #include <cstddef>
+#include <span>
 #include <vector>
 
 static void ObfuscationBench(benchmark::Bench& bench)

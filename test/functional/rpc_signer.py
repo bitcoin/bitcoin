@@ -72,6 +72,25 @@ class RPCSignerTest(BitcoinTestFramework):
         )
         self.clear_mock_result(self.nodes[1])
 
+        # Duplicate fingerprints
+        self.set_mock_result(self.nodes[1],
+            '0 ['
+            '{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, '
+            '{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, '
+            '{"fingerprint": "00000002", "type": "trezor", "model": "trezor_one"}'
+            ']')
+        assert_equal(self.nodes[1].enumeratesigners(), {"signers": [
+            {"fingerprint": "00000001", "name": "trezor_t"},
+            {"fingerprint": "00000002", "name": "trezor_one"},
+        ]})
+        self.clear_mock_result(self.nodes[1])
+
+        # Invalid fingerprints are rejected
+        for fingerprint in ["", "0000001", "000000001", "0000000g", "zzzzzzzz"]:
+            self.set_mock_result(self.nodes[1], '0 [{"type": "trezor", "model": "trezor_t", "fingerprint": "%s"}]' % fingerprint)
+            assert_raises_rpc_error(-1, 'invalid fingerprint', self.nodes[1].enumeratesigners)
+            self.clear_mock_result(self.nodes[1])
+
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
 if __name__ == '__main__':

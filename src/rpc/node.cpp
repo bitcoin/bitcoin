@@ -29,6 +29,7 @@
 #include <util/time.h>
 
 #include <cstdint>
+#include <limits>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
@@ -61,7 +62,9 @@ static RPCMethod setmocktime()
     LOCK(cs_main);
 
     const int64_t time{request.params[0].getInt<int64_t>()};
-    constexpr int64_t max_time{Ticks<std::chrono::seconds>(std::chrono::nanoseconds::max())};
+    // block timestamps are uint32_t, so mocking time beyond that is meaningless for anything
+    // consensus-related and can cause integer overflow/truncation issues in time arithmetic.
+    constexpr int64_t max_time{std::numeric_limits<uint32_t>::max()};
     if (time < 0 || time > max_time) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime must be in the range [0, %s], not %s.", max_time, time));
     }
@@ -245,23 +248,15 @@ static RPCMethod logging()
                 },
                 RPCExamples{
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-            + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
+            + HelpExampleRpc("logging", "[\"all\"], [\"leveldb\"]")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    BCLog::CategoryMask original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }
     if (request.params[1].isArray()) {
         EnableOrDisableLogCategories(request.params[1], false);
-    }
-    BCLog::CategoryMask updated_log_categories = LogInstance().GetCategoryMask();
-    BCLog::CategoryMask changed_log_categories = original_log_categories ^ updated_log_categories;
-
-    // Update libevent logging if BCLog::LIBEVENT has changed.
-    if (changed_log_categories & BCLog::LIBEVENT) {
-        UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
     }
 
     UniValue result(UniValue::VOBJ);

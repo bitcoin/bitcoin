@@ -34,7 +34,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     const auto& node = g_setup->m_node;
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
     ArgsManager& args = *node.args;
@@ -59,8 +59,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
 
     int next_locktime{0};
     CAmount all_values{0};
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
-    {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CMutableTransaction tx;
         tx.nLockTime = next_locktime++;
         tx.vout.resize(1);
@@ -76,7 +75,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
     }
 
     std::vector<CRecipient> recipients;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 100) {
         CTxDestination destination;
         CallOneOf(
             fuzzed_data_provider,

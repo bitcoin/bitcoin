@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(case_insensitive_equal_test)
 BOOST_AUTO_TEST_CASE(line_reader_test)
 {
     {
-        // Check three lines terminated by \n and \r\n, trimming whitespace
+        // Check three lines terminated by \n and \r\n, preserving whitespace
         std::string_view input = "once upon a time\n there was a dog \r\nwho liked food\n";
         LineReader reader(input, /*max_line_length=*/128);
         BOOST_CHECK_EQUAL(reader.Consumed(), 0);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         BOOST_CHECK(line3);
         BOOST_CHECK(!line4);
         BOOST_CHECK_EQUAL(line1.value(), "once upon a time");
-        BOOST_CHECK_EQUAL(line2.value(), "there was a dog");
+        BOOST_CHECK_EQUAL(line2.value(), " there was a dog ");
         BOOST_CHECK_EQUAL(line3.value(), "who liked food");
         BOOST_CHECK_EQUAL(reader.Consumed(), 51);
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
@@ -227,6 +227,13 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         // Empty buffers are null
         std::string_view input;
         LineReader reader(input, /*max_line_length=*/1024);
+        BOOST_CHECK(!reader.ReadLine());
+    }
+    {
+        // Don't trim any more than \r\n
+        std::string_view input = "\r\r\n";
+        LineReader reader(input, /*max_line_length=*/1024);
+        BOOST_CHECK_EQUAL(reader.ReadLine(), "\r");
         BOOST_CHECK(!reader.ReadLine());
     }
     {

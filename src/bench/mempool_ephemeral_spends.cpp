@@ -4,9 +4,10 @@
 
 #include <bench/bench.h>
 #include <consensus/amount.h>
+#include <consensus/validation.h>
 #include <kernel/cs_main.h>
 #include <policy/ephemeral_policy.h>
-#include <policy/policy.h>
+#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
@@ -15,6 +16,7 @@
 #include <txmempool.h>
 #include <util/check.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -59,8 +61,8 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     CMutableTransaction tx2;
     tx2.vin.resize(tx1.vout.size());
     for (size_t i = 0; i < tx2.vin.size(); i++) {
-        tx2.vin[0].prevout.hash = parent_txid;
-        tx2.vin[0].prevout.n = i;
+        tx2.vin[i].prevout.hash = parent_txid;
+        tx2.vin[i].prevout.n = i;
     }
     tx2.vout.resize(1);
 
@@ -71,6 +73,7 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     const CTransactionRef tx2_r{MakeTransactionRef(tx2)};
 
     AddTx(tx1_r, pool);
+    assert(tx2_r->vin.back().prevout == COutPoint(parent_txid, tx1_r->vout.size() - 1));
 
     uint32_t iteration{0};
 

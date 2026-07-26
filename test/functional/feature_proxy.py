@@ -135,6 +135,9 @@ class ProxyTest(BitcoinTestFramework):
         if self.have_unix_sockets:
             args[5] = ['-listen', f'-proxy=unix:{socket_path}']
             args[6] = ['-listen', f'-onion=unix:{socket_path}']
+        # This test launches many nodes; disable prevout prefetching so we don't spin up a
+        # thread pool for each one.
+        args = [a + ['-prevoutfetchthreads=0'] for a in args]
         self.add_nodes(self.num_nodes, extra_args=args)
         self.start_nodes()
 

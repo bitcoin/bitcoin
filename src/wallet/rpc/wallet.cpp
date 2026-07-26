@@ -5,6 +5,9 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <wallet/rpc/wallet.h>
+
+#include <coins.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/server.h>
@@ -12,9 +15,9 @@
 #include <univalue.h>
 #include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/export.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
-#include <wallet/rpc/wallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -593,6 +596,7 @@ static RPCMethod migratewallet()
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to migrate. If provided both here and in the RPC endpoint, the two must be identical."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The wallet passphrase"},
+            {"load_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "Load the wallet after migration."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -617,19 +621,21 @@ static RPCMethod migratewallet()
                 wallet_pass = std::string_view{request.params[1].get_str()};
             }
 
+            const bool loadwallet = self.Arg<bool>("load_wallet");
+
             WalletContext& context = EnsureWalletContext(request.context);
-            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context);
+            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
             if (!res) {
                 throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
             }
 
             UniValue r{UniValue::VOBJ};
             r.pushKV("wallet_name", res->wallet_name);
-            if (res->watchonly_wallet) {
-                r.pushKV("watchonly_name", res->watchonly_wallet->GetName());
+            if (res->watchonly_wallet_name.has_value()) {
+                r.pushKV("watchonly_name", res->watchonly_wallet_name.value());
             }
-            if (res->solvables_wallet) {
-                r.pushKV("solvables_name", res->solvables_wallet->GetName());
+            if (res->solvables_wallet_name.has_value()) {
+                r.pushKV("solvables_name", res->solvables_wallet_name.value());
             }
             r.pushKV("backup_path", res->backup_path.utf8string());
 
@@ -840,6 +846,125 @@ static RPCMethod createwalletdescriptor()
     };
 }
 
+RPCMethod addhdkey()
+{
+    return RPCMethod{
+        "addhdkey",
+        "Add a BIP 32 HD key to the wallet that can be used with 'createwalletdescriptor'\n",
+        {
+            {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"Automatically generated new key"}, "The BIP 32 extended private key to add. If none is provided, a randomly generated one will be added."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "xpub", "The xpub of the HD key that was added to the wallet"}
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", "xprv")
+        },
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "addhdkey is not available for wallets without private keys");
+            }
+
+            EnsureWalletIsUnlocked(*wallet);
+
+            CExtKey hdkey;
+            if (request.params[0].isNull()) {
+                CKey seed_key = GenerateRandomKey();
+                hdkey.SetSeed(seed_key);
+            } else {
+                hdkey = DecodeExtKey(request.params[0].get_str());
+                if (!hdkey.key.IsValid()) {
+                    // Check if the user gave us an xpub and give a more descriptive error if so
+                    CExtPubKey xpub = DecodeExtPubKey(request.params[0].get_str());
+                    if (xpub.pubkey.IsValid()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Extended public key (xpub) provided, but extended private key (xprv) is required");
+                    } else {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not parse HD key");
+                    }
+                }
+            }
+
+            LOCK(wallet->cs_wallet);
+            std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
+            FlatSigningProvider keys;
+            std::string error;
+            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
+            CHECK_NONFATAL(!descs.empty());
+            WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), 0, 0, 0);
+            if (wallet->GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
+            }
+
+            auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
+            if (!spkm) {
+                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(spkm).original);
+            }
+
+            UniValue response(UniValue::VOBJ);
+            const DescriptorScriptPubKeyMan& desc_spkm = spkm->get();
+            LOCK(desc_spkm.cs_desc_man);
+            std::set<CPubKey> pubkeys;
+            std::set<CExtPubKey> extpubs;
+            desc_spkm.GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+            CHECK_NONFATAL(pubkeys.size() == 0);
+            CHECK_NONFATAL(extpubs.size() == 1);
+            response.pushKV("xpub", EncodeExtPubKey(*extpubs.begin()));
+
+            return response;
+        },
+    };
+}
+
+static RPCMethod exportwatchonlywallet()
+{
+    return RPCMethod{"exportwatchonlywallet",
+        "Creates a wallet file at the specified destination containing a watchonly version "
+        "of the current wallet. This watchonly wallet contains the wallet's public descriptors, "
+        "its transactions, and address book data. Descriptors that use hardened derivation will "
+        "only have a limited number of derived keys included in the export due to hardened "
+        "derivation requiring private keys. Descriptors with unhardened derivation do not have "
+        "this limitation. The watchonly wallet can be imported into another node using 'restorewallet'.",
+        {
+            {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The path to the filename the exported watchonly wallet will be saved to"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "exported_file", "The full path that the file has been exported to"},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("exportwatchonlywallet", "\"/path/to/export.dat\"")
+            + HelpExampleRpc("exportwatchonlywallet", "\"/path/to/export.dat\"")
+        },
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            WalletContext& context = EnsureWalletContext(request.context);
+
+            std::string dest = request.params[0].get_str();
+
+            LOCK(pwallet->cs_wallet);
+            pwallet->TopUpKeyPool();
+            util::Result<std::string> exported = ExportWatchOnlyWallet(*pwallet, fs::PathFromString(dest), context);
+            if (!exported) {
+                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(exported).original);
+            }
+            UniValue out{UniValue::VOBJ};
+            out.pushKV("exported_file", *exported);
+            return out;
+        }
+    };
+}
+
 // addresses
 RPCMethod getaddressinfo();
 RPCMethod getnewaddress();
@@ -907,6 +1032,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"rawtransactions", &fundrawtransaction},
         {"wallet", &abandontransaction},
         {"wallet", &abortrescan},
+        {"wallet", &addhdkey},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
         {"wallet", &psbtbumpfee},
@@ -914,6 +1040,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &createwalletdescriptor},
         {"wallet", &restorewallet},
         {"wallet", &encryptwallet},
+        {"wallet", &exportwatchonlywallet},
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},
         {"wallet", &getbalance},

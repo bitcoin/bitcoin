@@ -182,7 +182,12 @@ private:
     /** Update UI with latest network info from model. */
     void updateNetworkState();
 
-    /** Helper for the output of a time duration field. Inputs are UNIX epoch times. */
+    /// Format the duration between now and event as a string.
+    QString TimeDurationField(NodeClock::time_point now, NodeClock::time_point event) const
+    {
+        return event > NodeClock::epoch ? GUIUtil::formatDurationStr(now - event) : tr("Never");
+    }
+    /// DEPRECATED: Helper for the output of a time duration field. Inputs are UNIX epoch times.
     QString TimeDurationField(std::chrono::seconds time_now, std::chrono::seconds time_at_event) const
     {
         return time_at_event.count() ? GUIUtil::formatDurationStr(time_now - time_at_event) : tr("Never");

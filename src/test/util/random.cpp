@@ -4,10 +4,10 @@
 
 #include <test/util/random.h>
 
-#include <logging.h>
 #include <random.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 
 #include <cstdlib>
 #include <iostream>

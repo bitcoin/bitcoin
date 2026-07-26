@@ -177,9 +177,9 @@ class TestBitcoinCli(BitcoinTestFramework):
         conf_rpcport = "rpcport=" + str(node_rpc_port)
         self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
         # prefer rpcport over rpcconnect
-        assert_raises_process_error(1, "Could not connect to the server 127.0.0.1:1", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
+        assert_raises_process_error(1, "Error while attempting to communicate with server 127.0.0.1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
         if have_ipv6:
-            assert_raises_process_error(1, "Could not connect to the server ::1:1", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+            assert_raises_process_error(1, "Error while attempting to communicate with server ::1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
 
         assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
         if have_ipv6:
@@ -421,6 +421,18 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.test_netinfo()
 
+        self.log.info("Test -rpcid option sets custom JSON-RPC request ID")
+        with self.nodes[0].assert_debug_log(expected_msgs=['id=myrpcid']):
+            self.nodes[0].cli('-rpcid=myrpcid').getblockcount()
+
+        self.log.info("Test default request logs default id=1")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=1"]):
+            self.nodes[0].cli.getblockcount()
+
+        self.log.info("Test that request ids with unsafe characters are sanitized in the log")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=abcdef"]):
+            self.nodes[0].cli('-rpcid=abc<\n>def').getblockcount()
+
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
         cli_response = self.nodes[0].cli('-version').send_cli()
@@ -446,7 +458,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             # This tests behavior when ENABLE_IPC is off. When it is on,
             # behavior is checked by the interface_ipc_cli.py test.
             self.log.info("Test bitcoin-cli -ipcconnect triggers error if not built with IPC support")
-            args = [self.binary_paths.bitcoincli, "-ipcconnect=unix", "-getinfo"]
+            # node.cli.options includes -rpcconnect which can't be combined with -ipcconnect, so pass just -datadir directly to keep bitcoin-cli on the test's bitcoin.conf
+            args = self.nodes[0].binaries.valgrind_cmd + [self.nodes[0].binaries.paths.bitcoincli, f"-datadir={self.nodes[0].datadir_path}", "-ipcconnect=unix", "-getinfo"]
             result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             assert_equal(result.stdout, "error: bitcoin-cli was not built with IPC support\n")
             assert_equal(result.stderr, None)
