@@ -10,12 +10,12 @@
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
 #include <script/interpreter.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/hasher.h>
 
 #include <cstddef>
-#include <shared_mutex>
 #include <span>
 #include <vector>
 
@@ -43,8 +43,8 @@ private:
     CSHA256 m_salted_hasher_ecdsa;
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
-    map_type setValid;
-    std::shared_mutex cs_sigcache;
+    SharedMutex cs_sigcache;
+    map_type setValid GUARDED_BY(cs_sigcache);
 
 public:
     SignatureCache(size_t max_size_bytes);

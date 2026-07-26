@@ -12,8 +12,6 @@
 #include <uint256.h>
 #include <util/log.h>
 
-#include <mutex>
-#include <shared_mutex>
 #include <utility>
 #include <vector>
 
@@ -50,13 +48,13 @@ void SignatureCache::ComputeEntrySchnorr(uint256& entry, const uint256& hash, st
 
 bool SignatureCache::Get(const uint256& entry, const bool erase)
 {
-    std::shared_lock<std::shared_mutex> lock(cs_sigcache);
+    READ_LOCK(cs_sigcache);
     return setValid.contains(entry, erase);
 }
 
 void SignatureCache::Set(const uint256& entry)
 {
-    std::unique_lock<std::shared_mutex> lock(cs_sigcache);
+    LOCK(cs_sigcache);
     setValid.insert(entry);
 }
 
