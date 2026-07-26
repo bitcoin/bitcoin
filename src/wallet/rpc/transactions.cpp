@@ -379,6 +379,35 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     }
 }
 
+/**
+ * Build a raw transaction entry for the given wallet transaction.
+ *
+ * @param  wallet         The wallet.
+ * @param  wtx            The wallet transaction.
+ * @return                A JSON object with the net wallet balance change and
+ *                        transaction metadata, without logical interpretation
+ *                        (no category assignment, no change suppression).
+ */
+static UniValue ListRawTransaction(const CWallet& wallet, const CWalletTx& wtx)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    UniValue entry(UniValue::VOBJ);
+
+    CAmount nCredit = CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount nDebit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount nNet = nCredit - nDebit;
+    bool is_from_me = CachedTxIsFromMe(wallet, wtx);
+    CAmount nFee = (is_from_me ? wtx.tx->GetValueOut() - nDebit : 0);
+
+    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
+    if (is_from_me)
+        entry.pushKV("fee", ValueFromAmount(nFee));
+
+    WalletTxToJSON(wallet, wtx, entry);
+    entry.pushKV("abandoned", wtx.isAbandoned());
+
+    return entry;
+}
 
 static std::vector<RPCResult> TransactionDescriptionString()
 {
@@ -518,6 +547,89 @@ RPCMethod listtransactions()
     auto txs_rev_it{std::make_move_iterator(ret.rend())};
     UniValue result{UniValue::VARR};
     result.push_backV(txs_rev_it - nFrom - nCount, txs_rev_it - nFrom); // Return oldest to newest
+    return result;
+},
+    };
+}
+
+RPCMethod listrawtransactions()
+{
+    return RPCMethod{
+        "listrawtransactions",
+        "Returns up to 'count' most recent wallet transactions ordered from oldest to newest, "
+        "skipping the first 'skip' transactions. Unlike `listtransactions`, each wallet transaction "
+        "appears exactly once with its net wallet balance change, without logical interpretation "
+        "(no category assignment, no change suppression). This means consolidation and self-transfer "
+        "transactions that are invisible in `listtransactions` are included here.\n",
+        {
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return."},
+            {"skip",  RPCArg::Type::NUM, RPCArg::Default{0},  "The number of transactions to skip."},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
+                {
+                    {RPCResult::Type::STR_AMOUNT, "amount", "The net change to the wallet balance caused by this transaction "
+                        "(excluding fee). Positive means the wallet gained funds, negative means it lost funds, "
+                        "zero means a pure self-transfer (e.g. consolidation)."},
+                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The fee paid in " + CURRENCY_UNIT + ". "
+                        "Only present when the wallet funded the transaction."},
+                },
+                Cat(TransactionDescriptionString(),
+                {
+                    {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                }))},
+            }
+        },
+        RPCExamples{
+            "\nList the most recent 10 transactions\n"
+            + HelpExampleCli("listrawtransactions", "") +
+            "\nList transactions 100 to 120\n"
+            + HelpExampleCli("listrawtransactions", "20 100") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("listrawtransactions", "20, 100")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    int nCount = 10;
+    if (!request.params[0].isNull())
+        nCount = request.params[0].getInt<int>();
+    int nFrom = 0;
+    if (!request.params[1].isNull())
+        nFrom = request.params[1].getInt<int>();
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    std::vector<UniValue> ret;
+    {
+        LOCK(pwallet->cs_wallet);
+
+        const CWallet::TxItems& txOrdered = pwallet->wtxOrdered;
+
+        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+            CWalletTx* const pwtx = (*it).second;
+            ret.push_back(ListRawTransaction(*pwallet, *pwtx));
+            if ((int)ret.size() >= (nCount + nFrom)) break;
+        }
+    }
+
+    if (nFrom > (int)ret.size())
+        nFrom = ret.size();
+    if ((nFrom + nCount) > (int)ret.size())
+        nCount = ret.size() - nFrom;
+
+    auto txs_rev_it{std::make_move_iterator(ret.rend())};
+    UniValue result{UniValue::VARR};
+    result.push_backV(txs_rev_it - nFrom - nCount, txs_rev_it - nFrom);
     return result;
 },
     };
