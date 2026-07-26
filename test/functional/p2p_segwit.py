@@ -1949,11 +1949,69 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block_5, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block_5, accepted=True)
 
-        # TODO: test p2sh sigop counting
+        # Test P2SH sigop counting in segwit-active blocks.
+        self.log.info("Test P2SH sigop counting")
+
+        # Generate a keypair for P2SH spending
+        p2sh_key, p2sh_pubkey = generate_keypair()
+        p2sh_redeem_script = CScript([p2sh_pubkey, OP_CHECKSIG])
+        p2sh_script_pubkey = script_to_p2sh_script(p2sh_redeem_script)
+
+        # Fund a P2SH output by spending tx2's anyone-can-spend output
+        tx_p2sh = CTransaction()
+        tx_p2sh.vin.append(CTxIn(COutPoint(tx2.txid_int, 0), b""))
+        tx_p2sh.vout.append(CTxOut(tx2.vout[0].nValue - 1000, p2sh_script_pubkey))
+
+        block_p2sh = self.build_next_block()
+        self.update_witness_block_with_transactions(block_p2sh, [tx_p2sh])
+        test_witness_block(self.nodes[0], self.test_node, block_p2sh, accepted=True)
+
+        # Spend the P2SH output with a valid signature (positive test)
+        spend_tx = CTransaction()
+        spend_tx.vin.append(CTxIn(COutPoint(tx_p2sh.txid_int, 0), b""))
+        spend_tx.vout.append(CTxOut(tx_p2sh.vout[0].nValue - 1000, CScript([OP_TRUE])))
+        spend_tx.vin[0].scriptSig = CScript([p2sh_redeem_script])
+        sign_input_legacy(spend_tx, 0, p2sh_redeem_script, p2sh_key)
+
+        block_spend = self.build_next_block()
+        self.update_witness_block_with_transactions(block_spend, [spend_tx])
+        test_witness_block(self.nodes[0], self.test_node, block_spend, accepted=True)
+
+        # Negative test: create a block with too many P2SH sigops.
+        # Use a redeem script with 200 OP_CHECKSIG (200 sigops each).
+        # Each input costs 200 * WITNESS_SCALE_FACTOR (4) = 800 sigop cost.
+        # 101 inputs => 80800 > MAX_SIGOP_COST (80000).
+        high_sigop_redeem = CScript([OP_CHECKSIG] * 200)
+        high_sigop_p2sh = script_to_p2sh_script(high_sigop_redeem)
+        num_inputs = 101
+
+        # Fund many high-sigop P2SH outputs in one transaction
+        tx_high_fund = CTransaction()
+        tx_high_fund.vin.append(CTxIn(COutPoint(spend_tx.txid_int, 0), b""))
+        split_value = (spend_tx.vout[0].nValue - 1000) // num_inputs
+        assert_greater_than_or_equal(split_value, 1)
+        for _ in range(num_inputs):
+            tx_high_fund.vout.append(CTxOut(split_value, high_sigop_p2sh))
+
+        block_high_fund = self.build_next_block()
+        self.update_witness_block_with_transactions(block_high_fund, [tx_high_fund])
+        test_witness_block(self.nodes[0], self.test_node, block_high_fund, accepted=True)
+
+        # Spend all high-sigop P2SH outputs in one block.
+        # Should be rejected for exceeding the sigop cost limit.
+        tx_high_spend = CTransaction()
+        for i in range(num_inputs):
+            tx_high_spend.vin.append(CTxIn(COutPoint(tx_high_fund.txid_int, i), b""))
+            tx_high_spend.vin[i].scriptSig = CScript([b'\x00', high_sigop_redeem])
+        tx_high_spend.vout.append(CTxOut(split_value * num_inputs - 1000, CScript([OP_TRUE])))
+
+        block_high_spend = self.build_next_block()
+        self.update_witness_block_with_transactions(block_high_spend, [tx_high_spend])
+        test_witness_block(self.nodes[0], self.test_node, block_high_spend, accepted=False, reason='bad-blk-sigops')
 
         # Cleanup and prep for next test
         self.utxo.pop(0)
-        self.utxo.append(UTXO(tx2.txid_int, 0, tx2.vout[0].nValue))
+        self.utxo.append(UTXO(tx_high_fund.txid_int, 0, tx_high_fund.vout[0].nValue))
 
     @subtest
     def test_superfluous_witness(self):
