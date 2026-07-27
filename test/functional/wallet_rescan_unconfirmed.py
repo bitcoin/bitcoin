@@ -8,6 +8,10 @@ from test_framework.address import (
     address_to_scriptpubkey,
     ADDRESS_BCRT1_UNSPENDABLE,
 )
+from test_framework.blocktools import (
+    create_empty_fork,
+    trigger_reorg,
+)
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -32,13 +36,17 @@ class WalletRescanUnconfirmed(BitcoinTestFramework):
 
         self.log.info("Create a parent tx and mine it in a block that will later be disconnected")
         parent_address = w0.getnewaddress()
+
+        # Prep for fork with empty blocks
+        fork_blocks = create_empty_fork(node)
+
         tx_parent_to_reorg = tester_wallet.send_to(
             from_node=node,
             scriptPubKey=address_to_scriptpubkey(parent_address),
             amount=COIN,
         )
         assert tx_parent_to_reorg["txid"] in node.getrawmempool()
-        block_to_reorg = self.generate(tester_wallet, 1)[0]
+        self.generate(tester_wallet, 1)[0]
         assert_equal(len(node.getrawmempool()), 0)
         node.syncwithvalidationinterfacequeue()
         assert_equal(w0.gettransaction(tx_parent_to_reorg["txid"])["confirmations"], 1)
@@ -58,7 +66,7 @@ class WalletRescanUnconfirmed(BitcoinTestFramework):
         node.syncwithvalidationinterfacequeue()
 
         self.log.info("Mock a reorg, causing parent to re-enter mempools after its child")
-        node.invalidateblock(block_to_reorg)
+        trigger_reorg(node, fork_blocks)
         assert tx_parent_to_reorg["txid"] in node.getrawmempool()
 
         self.log.info("Import descriptor wallet on another node")
