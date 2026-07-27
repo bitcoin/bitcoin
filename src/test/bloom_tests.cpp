@@ -17,9 +17,11 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <cfenv>
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -73,6 +75,11 @@ BOOST_AUTO_TEST_CASE(bloom_create_filter_size)
     BOOST_CHECK_EQUAL(filter_size(/*elements=*/1, /*false_positive_rate=*/1), 0);
 
     std::feclearexcept(FE_ALL_EXCEPT);
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/0, /*false_positive_rate=*/0), 0);
+    // Negative zero compares equal to zero, so it is a valid zero rate.
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/1, /*false_positive_rate=*/-0.0), MAX_BLOOM_FILTER_SIZE);
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/1, /*false_positive_rate=*/0), MAX_BLOOM_FILTER_SIZE);
+    BOOST_CHECK_EQUAL(filter_size(std::numeric_limits<unsigned int>::max(), /*false_positive_rate=*/0.01), MAX_BLOOM_FILTER_SIZE);
     for (double rate : {std::numeric_limits<double>::denorm_min(), std::numeric_limits<double>::min(), std::numeric_limits<double>::epsilon()}) {
         const auto size{filter_size(/*elements=*/1, rate)};
         BOOST_CHECK_GT(size, 0);
@@ -88,6 +95,18 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_empty)
     filter.insert("beef"_hex_u8);
     BOOST_CHECK(filter.contains("beef"_hex_u8));
     BOOST_CHECK(filter.contains("deadbeef"_hex_u8)); // An empty filter holds no bits, so it matches everything
+}
+
+BOOST_AUTO_TEST_CASE(bloom_create_invalid_false_positive_rate)
+{
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+
+    BOOST_CHECK_EXCEPTION((CBloomFilter{1, std::numeric_limits<double>::signaling_NaN(), /*nTweak=*/0, BLOOM_UPDATE_ALL}), NonFatalCheckError, HasReason{"Internal bug detected"}); // Classifying a signaling NaN may raise FE_INVALID
+    std::feclearexcept(FE_ALL_EXCEPT);
+    for (double rate : {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::denorm_min(), std::nextafter(1.0, 2.0), std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+        BOOST_CHECK_EXCEPTION((CBloomFilter{1, rate, /*nTweak=*/0, BLOOM_UPDATE_ALL}), NonFatalCheckError, HasReason{"Internal bug detected"});
+    }
+    BOOST_REQUIRE_EQUAL(std::fetestexcept(FE_DIVBYZERO | FE_INVALID), 0);
 }
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
