@@ -1766,9 +1766,20 @@ class WalletMigrationTest(BitcoinTestFramework):
         os.makedirs(master_wallet_path, exist_ok=True)
         shutil.copyfile(wallet_dat, master_wallet_path / "wallet.dat")
 
-        # Before the fix migratewallet aborted with this error.
-        assert_raises_rpc_error(-4, "cannot be identified to belong to migrated wallets",
-                                self.master_node.migratewallet, wallet_name)
+        # Migration must succeed (not abort) and log a warning for the dropped tx.
+        with self.master_node.assert_debug_log(
+            expected_msgs=["cannot be identified to belong to migrated wallets; dropping it"],
+        ):
+            self.master_node.migratewallet(wallet_name)
+
+        migrated = self.master_node.get_wallet_rpc(wallet_name)
+        assert_equal(migrated.getwalletinfo()["descriptors"], True)
+
+        # The unidentified transaction must have been removed from the migrated wallet.
+        txids_after = {tx["txid"] for tx in migrated.listtransactions("*", 100)}
+        assert txid not in txids_after
+
+        migrated.unloadwallet()
 
     @staticmethod
     def erase_bdb_record(wallet_dat_path, key):
