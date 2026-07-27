@@ -970,7 +970,11 @@ void PrintSlotException(
 {
     std::string description = sender->metaObject()->className();
     description += "->";
-    description += receiver->metaObject()->className();
+    if (receiver) {
+        description += receiver->metaObject()->className();
+    } else {
+        description += "anonymous function";
+    }
     PrintExceptionContinue(exception, description);
 }
 

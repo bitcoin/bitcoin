@@ -399,6 +399,38 @@ namespace GUIUtil
             },
             type);
     }
+    template <typename Sender, typename Signal, typename Slot>
+    auto ExceptionSafeConnect(
+        Sender sender, Signal signal, Slot method)
+    {
+        return QObject::connect(
+            sender, signal,
+            [sender, method](auto&&... args) {
+                bool ok{true};
+                try {
+                    method(std::forward<decltype(args)>(args)...);
+                } catch (const NonFatalCheckError& e) {
+                    PrintSlotException(&e, sender, nullptr);
+                    ok = QMetaObject::invokeMethod(
+                        qApp, "handleNonFatalException",
+                        blockingGUIThreadConnection(),
+                        Q_ARG(QString, QString::fromStdString(e.what())));
+                } catch (const std::exception& e) {
+                    PrintSlotException(&e, sender, nullptr);
+                    ok = QMetaObject::invokeMethod(
+                        qApp, "handleRunawayException",
+                        blockingGUIThreadConnection(),
+                        Q_ARG(QString, QString::fromStdString(e.what())));
+                } catch (...) {
+                    PrintSlotException(nullptr, sender, nullptr);
+                    ok = QMetaObject::invokeMethod(
+                        qApp, "handleRunawayException",
+                        blockingGUIThreadConnection(),
+                        Q_ARG(QString, "Unknown failure occurred."));
+                }
+                assert(ok);
+            });
+    }
 
     /**
      * Shows a QDialog instance asynchronously, and deletes it on close.
