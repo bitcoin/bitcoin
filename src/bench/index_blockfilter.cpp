@@ -4,6 +4,7 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
+#include <bench/index_sync_util.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <index/base.h>
@@ -60,3 +61,27 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
 }
 
 BENCHMARK(BlockFilterIndexSync);
+
+// Returns a fresh, not-yet-initialized BASIC BlockFilterIndex. `f_memory=false`
+// exercises the real disk write path, true isolates CPU cost from I/O.
+static std::unique_ptr<BlockFilterIndex> MakeBlockFilterIndex(TestChain100Setup& test_setup, bool f_memory)
+{
+    return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(test_setup.m_node), BlockFilterType::BASIC,
+                                              /*n_cache_size=*/1 << 20, f_memory, /*f_wipe=*/true);
+}
+
+// Same sync as BlockFilterIndexSync above, but over blocks that carry
+// transactions paying to distinct scripts, so the filters hold elements
+// proportional to the number of transactions rather than a handful per block.
+static void BlockFilterIndexSyncRealistic(benchmark::Bench& bench, bool f_memory)
+{
+    const auto test_setup = MakeNoLogFileContext<TestChain100Setup>();
+    ExtendChainWithSpends(*test_setup, BENCH_INDEX_NUM_BLOCKS, BENCH_INDEX_TXS_PER_BLOCK);
+
+    BenchIndexSync(bench, *test_setup, [&] { return MakeBlockFilterIndex(*test_setup, f_memory); });
+}
+
+static void BlockFilterIndexSyncRealisticDisk(benchmark::Bench& bench) { BlockFilterIndexSyncRealistic(bench, /*f_memory=*/false); }
+static void BlockFilterIndexSyncRealisticMem(benchmark::Bench& bench) { BlockFilterIndexSyncRealistic(bench, /*f_memory=*/true); }
+BENCHMARK(BlockFilterIndexSyncRealisticDisk);
+BENCHMARK(BlockFilterIndexSyncRealisticMem);
