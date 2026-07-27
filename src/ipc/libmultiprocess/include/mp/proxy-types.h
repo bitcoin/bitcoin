@@ -285,7 +285,7 @@ void BuildList(TypeList<LocalType>, InvokeContext& invoke_context, Output&& outp
 {
     auto list = output.init(value.size());
     size_t i = 0;
-    for (const auto& elem : value) {
+    for (auto&& elem : value) {
         BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
         ++i;
     }
