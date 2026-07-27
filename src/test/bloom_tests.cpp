@@ -19,6 +19,8 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 
+#include <cfenv>
+#include <limits>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -56,6 +58,36 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
     BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
 
     BOOST_CHECK_MESSAGE( filter.contains("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter doesn't contain just-inserted object!");
+}
+
+BOOST_AUTO_TEST_CASE(bloom_create_filter_size)
+{
+    auto filter_size{[](unsigned int elements, double false_positive_rate) {
+        DataStream stream{};
+        stream << CBloomFilter{elements, false_positive_rate, /*nTweak=*/0, BLOOM_UPDATE_ALL};
+        return ReadCompactSize(stream);
+    }};
+
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/10, /*false_positive_rate=*/0.01), 11);
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/10'000'000, /*false_positive_rate=*/0.01), MAX_BLOOM_FILTER_SIZE);
+    BOOST_CHECK_EQUAL(filter_size(/*elements=*/1, /*false_positive_rate=*/1), 0);
+
+    std::feclearexcept(FE_ALL_EXCEPT);
+    for (double rate : {std::numeric_limits<double>::denorm_min(), std::numeric_limits<double>::min(), std::numeric_limits<double>::epsilon()}) {
+        const auto size{filter_size(/*elements=*/1, rate)};
+        BOOST_CHECK_GT(size, 0);
+        BOOST_CHECK_LE(size, MAX_BLOOM_FILTER_SIZE);
+    }
+    BOOST_REQUIRE_EQUAL(std::fetestexcept(FE_DIVBYZERO | FE_INVALID), 0);
+}
+
+BOOST_AUTO_TEST_CASE(bloom_create_insert_empty)
+{
+    CBloomFilter filter{/*nElements=*/1, /*nFPRate=*/1, /*nTweak=*/0, BLOOM_UPDATE_ALL};
+    BOOST_CHECK(filter.IsWithinSizeConstraints());
+    filter.insert("beef"_hex_u8);
+    BOOST_CHECK(filter.contains("beef"_hex_u8));
+    BOOST_CHECK(filter.contains("deadbeef"_hex_u8)); // An empty filter holds no bits, so it matches everything
 }
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
