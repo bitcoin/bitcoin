@@ -48,7 +48,7 @@ TRY_LOCK(mutex, name);
 #ifdef DEBUG_LOCKORDER
 template <typename MutexType>
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false);
-void LeaveCritical();
+void LeaveCritical(void* mutex);
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line);
 template <typename MutexType>
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -66,7 +66,7 @@ extern bool g_debug_lockorder_abort;
 #else
 template <typename MutexType>
 inline void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false) {}
-inline void LeaveCritical() {}
+inline void LeaveCritical(void* mutex) {}
 inline void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line) {}
 template <typename MutexType>
 inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
@@ -190,7 +190,7 @@ private:
         if (Base::try_lock()) {
             return true;
         }
-        LeaveCritical();
+        LeaveCritical(Base::mutex());
         return false;
     }
 
@@ -217,7 +217,7 @@ public:
     ~UniqueLock() UNLOCK_FUNCTION()
     {
         if (Base::owns_lock())
-            LeaveCritical();
+            LeaveCritical(Base::mutex());
     }
 
     operator bool()
@@ -241,7 +241,7 @@ public:
 
             CheckLastCritical((void*)lock.mutex(), lockname, _guardname, _file, _line);
             lock.unlock();
-            LeaveCritical();
+            LeaveCritical(lock.mutex());
             lock.swap(templock);
         }
 
@@ -281,7 +281,7 @@ struct SCOPED_LOCKABLE SharedLock : private std::shared_lock<std::shared_mutex> 
 
     ~SharedLock() UNLOCK_FUNCTION()
     {
-        if (owns_lock()) LeaveCritical();
+        if (owns_lock()) LeaveCritical(mutex());
     }
 
 private:
