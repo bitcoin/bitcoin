@@ -37,6 +37,7 @@ interface FooInterface $Proxy.wrap("mp::test::FooImplementation") {
     callFnAsync @18 (context :Proxy.Context) -> ();
     callIntFnAsync @21 (context :Proxy.Context, arg :Int32) -> (result :Int32);
     passDataPointers @22 (arg :List(Data)) -> (result :List(Data));
+    listCallbacks @25 (context :Proxy.Context, n :Int32) -> (result :List(FooCallback));
 }
 
 interface FooCallback $Proxy.wrap("mp::test::FooCallback") {

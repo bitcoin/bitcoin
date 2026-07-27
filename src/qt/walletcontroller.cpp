@@ -409,7 +409,7 @@ void RestoreWalletActivity::restore(const fs::path& backup_file, const std::stri
         tr("Restoring Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, backup_file, wallet_name] {
-        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message, /*load_after_restore=*/true)};
+        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, /*load_after_restore=*/true, m_warning_message)};
 
         if (wallet) {
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
@@ -515,7 +515,7 @@ void MigrateWalletActivity::restore_and_migrate(const fs::path& path, const std:
         tr("Restoring Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(wallet_name))));
 
     QTimer::singleShot(0, worker(), [this, path, wallet_name] {
-        auto res{node().walletLoader().restoreWallet(path, wallet_name, m_warning_message, /*load_after_restore=*/false)};
+        auto res{node().walletLoader().restoreWallet(path, wallet_name, /*load_after_restore=*/false, m_warning_message)};
 
         if (!res) {
             m_error_message = util::ErrorString(res);
