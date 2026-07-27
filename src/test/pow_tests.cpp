@@ -157,13 +157,17 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
     }
 }
 
-void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
+void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type, int64_t target_timespan, int64_t target_spacing)
 {
     const auto chainParams = CreateChainParams(args, chain_type);
     const auto consensus = chainParams->GetConsensus();
 
     // hash genesis is correct
     BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
+
+    // retarget period and block spacing are wired up as expected
+    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan, target_timespan);
+    BOOST_CHECK_EQUAL(consensus.nPowTargetSpacing, target_spacing);
 
     // target timespan is an even multiple of spacing
     BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
@@ -186,27 +190,27 @@ void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
 
 BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
 {
-    sanity_check_chainparams(*m_node.args, ChainType::MAIN);
+    sanity_check_chainparams(*m_node.args, ChainType::MAIN, /*target_timespan=*/1'209'600, /*target_spacing=*/600);
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_REGTEST_sanity)
 {
-    sanity_check_chainparams(*m_node.args, ChainType::REGTEST);
+    sanity_check_chainparams(*m_node.args, ChainType::REGTEST, /*target_timespan=*/86'400, /*target_spacing=*/600);
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
 {
-    sanity_check_chainparams(*m_node.args, ChainType::TESTNET);
+    sanity_check_chainparams(*m_node.args, ChainType::TESTNET, /*target_timespan=*/1'209'600, /*target_spacing=*/600);
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_TESTNET4_sanity)
 {
-    sanity_check_chainparams(*m_node.args, ChainType::TESTNET4);
+    sanity_check_chainparams(*m_node.args, ChainType::TESTNET4, /*target_timespan=*/1'209'600, /*target_spacing=*/600);
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
 {
-    sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
+    sanity_check_chainparams(*m_node.args, ChainType::SIGNET, /*target_timespan=*/1'209'600, /*target_spacing=*/600);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
