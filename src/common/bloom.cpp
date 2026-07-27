@@ -11,6 +11,7 @@
 #include <script/solver.h>
 #include <span.h>
 #include <streams.h>
+#include <util/check.h>
 #include <util/fastrange.h>
 #include <util/overflow.h>
 
@@ -23,19 +24,27 @@
 static constexpr double LN2SQUARED = 0.4804530139182014246671025263266649717305529515945455;
 static constexpr double LN2 = 0.6931471805599453094172321214581765680755001343602552;
 
+static unsigned int BloomFilterSize(const unsigned int elements, const double false_positive_rate)
+{
+    Assert(std::isfinite(false_positive_rate) && false_positive_rate >= 0 && false_positive_rate <= 1);
+    if (elements == 0) return 0; // Must precede the zero-rate case to preserve empty-filter semantics.
+    if (false_positive_rate == 0) return MAX_BLOOM_FILTER_SIZE; // Avoid log(0) raising FE_DIVBYZERO.
+    return std::min(-1 / LN2SQUARED * elements * log(false_positive_rate), MAX_BLOOM_FILTER_SIZE * 8.0) / 8;
+}
+
 CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweakIn, unsigned char nFlagsIn) :
     /**
      * The ideal size for a bloom filter with a given number of elements and false positive rate is:
      * - nElements * log(fp rate) / ln(2)^2
      * We ignore filter parameters which will create a bloom filter larger than the protocol limits
      */
-    vData(std::min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
+    vData(BloomFilterSize(nElements, nFPRate)),
     /**
      * The ideal number of hash functions is filter size * ln(2) / number of elements
      * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
      * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
      */
-    nHashFuncs(std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
+    nHashFuncs(nElements == 0 ? 0 : std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
     nTweak(nTweakIn),
     nFlags(nFlagsIn)
 {
