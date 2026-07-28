@@ -83,14 +83,20 @@ git-subtree-check.sh
 Run this script from the root of the repository to verify that a subtree matches the contents of
 the commit it claims to have been updated to.
 
+It also checks that the most recent subtree merge in `COMMIT`'s history is stacked on the
+previous subtree merge, as recommended in the
+[developer notes](/doc/developer-notes.md#subtrees), so the merge commit can be reused
+verbatim when backporting; if not, the script errors.
+
 ```
-Usage: test/lint/git-subtree-check.sh [--remote] DIR [COMMIT]
+Usage: test/lint/git-subtree-check.sh [--remote] [--incompatible] DIR [COMMIT]
        test/lint/git-subtree-check.sh -?
 ```
 
 - `DIR` is the prefix within the repository to check.
 - `COMMIT` is the commit to check, if it is not provided, HEAD will be used.
 - `--remote` checks that subtree commit is present in repository.
+- `--incompatible` allows a merge that is not stacked on the previous subtree merge.
 
 To do a full check with `--remote`, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
