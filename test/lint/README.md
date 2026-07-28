@@ -84,15 +84,15 @@ Run this script from the root of the repository to verify that a subtree matches
 the commit it claims to have been updated to.
 
 ```
-Usage: test/lint/git-subtree-check.sh [-r] DIR [COMMIT]
+Usage: test/lint/git-subtree-check.sh [--remote] DIR [COMMIT]
        test/lint/git-subtree-check.sh -?
 ```
 
 - `DIR` is the prefix within the repository to check.
 - `COMMIT` is the commit to check, if it is not provided, HEAD will be used.
-- `-r` checks that subtree commit is present in repository.
+- `--remote` checks that subtree commit is present in repository.
 
-To do a full check with `-r`, make sure that you have fetched the upstream repository branch in which the subtree is
+To do a full check with `--remote`, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
 * for `src/crc32c`: https://github.com/bitcoin-core/crc32c-subtree.git (branch bitcoin-fork)
 * for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)

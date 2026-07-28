@@ -6,10 +6,10 @@
 export LC_ALL=C
 
 check_remote=0
-while getopts "?hr" opt; do
-  case $opt in
-    '?' | h)
-      echo "Usage: $0 [-r] DIR [COMMIT]"
+
+usage()
+{
+      echo "Usage: $0 [--remote] DIR [COMMIT]"
       echo "       $0 -?"
       echo ""
       echo "Checks that a certain prefix is pure subtree, and optionally whether the"
@@ -18,19 +18,23 @@ while getopts "?hr" opt; do
       echo "DIR is the prefix within the repository to check."
       echo "COMMIT is the commit to check, if it is not provided, HEAD will be used."
       echo ""
-      echo "-r      Check that subtree commit is present in repository."
-      echo "        To do this check, fetch the subtreed remote first. Example:"
+      echo "--remote Check that subtree commit is present in repository."
+      echo "         To do this check, fetch the subtreed remote first. Example:"
       echo ""
       echo "            git fetch https://github.com/bitcoin-core/secp256k1.git"
-      echo "            test/lint/git-subtree-check.sh -r src/secp256k1"
-      exit 1
-    ;;
-    r)
-      check_remote=1
-    ;;
-  esac
+      echo "            test/lint/git-subtree-check.sh --remote src/secp256k1"
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -\? | -h | --help) usage; exit 1 ;;
+        -r | --remote) check_remote=1 ;;
+        --) shift; break ;;
+        -*) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+        *) break ;;
+    esac
+    shift
 done
-shift $((OPTIND-1))
 
 if [ -z "$1" ]; then
     echo "Need to provide a DIR, see $0 -?"
