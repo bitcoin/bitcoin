@@ -5507,7 +5507,9 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
 
     CNodeState &state = *State(pto.GetId());
 
-    if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && state.fSyncStarted) {
+    // Syncing headers from this peer arms the check; once a timeout is set it stays
+    // armed until cleared below, so releasing the sync slot does not disarm it.
+    if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && (state.fSyncStarted || state.m_chain_sync.m_timeout != 0s)) {
         // This is an outbound peer subject to disconnection if they don't
         // announce a block with as much work as the current tip within
         // CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME seconds (note: if

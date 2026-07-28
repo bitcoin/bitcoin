@@ -129,12 +129,12 @@ class HeadersSyncTest(BitcoinTestFramework):
         node.bumpmocktime(CHAIN_SYNC_TIMEOUT_SEC + 1)
         peer.sync_with_ping()
         with p2p_lock:
-            assert_equal("getheaders" in peer.last_message, False)  # TODO: Continue an armed old-chain eviction after releasing the sync slot.
+            assert_equal("getheaders" in peer.last_message, True)
 
         peer.send_and_ping(msg_headers([old_header]))
-        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Outbound peer has old chain"]):  # TODO: Log old-chain eviction after the released slot expires.
+        with node.assert_debug_log(["Outbound peer has old chain"]):
             node.bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
-            peer.sync_with_ping()  # TODO: Disconnect the peer when the armed old-chain eviction expires.
+            peer.wait_for_disconnect()
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
