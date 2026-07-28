@@ -1001,6 +1001,8 @@ private:
 
     bool IsBestHeaderStale() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    void ReleaseHeadersSyncSlot(CNodeState& state, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
      *  at most count entries.
      */
@@ -1445,6 +1447,15 @@ bool PeerManagerImpl::IsBestHeaderStale() const
 {
     AssertLockHeld(cs_main);
     return m_chainman.m_best_header->Time() <= NodeClock::now() - BEST_HEADER_STALE_AGE;
+}
+
+void PeerManagerImpl::ReleaseHeadersSyncSlot(CNodeState& state, Peer& peer)
+{
+    AssertLockHeld(cs_main);
+    Assume(state.fSyncStarted);
+    state.fSyncStarted = false;
+    nSyncStarted--;
+    peer.m_headers_sync_timeout = 0us;
 }
 
 int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
@@ -6460,9 +6471,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         // Note: this will also result in at least one more
                         // getheaders message to be sent to
                         // this peer (eventually).
-                        state.fSyncStarted = false;
-                        nSyncStarted--;
-                        peer.m_headers_sync_timeout = 0us;
+                        ReleaseHeadersSyncSlot(state, peer);
                     }
                 }
             } else {
