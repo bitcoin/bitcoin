@@ -5,6 +5,7 @@
 """Test createwallet arguments.
 """
 import os
+import platform
 import stat
 
 from test_framework.descriptors import descsum_create
@@ -55,6 +56,11 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.",
             self.nodes[0].createwallet, wallet_name='w0', disable_private_keys=True, passphrase="passphrase")
         assert_raises_rpc_error(-8, "Wallet name cannot be empty", self.nodes[0].createwallet, "")
+        if platform.system() != 'Windows':  # Windows disallows newlines in filenames
+            wallet_name = "w0\ninvalid"
+            with node.assert_debug_log([f"[{wallet_name}]"]):  # TODO: Newlines in wallet names can forge log lines
+                assert_equal(node.createwallet(wallet_name)["name"], wallet_name)
+            node.unloadwallet(wallet_name)
 
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')
