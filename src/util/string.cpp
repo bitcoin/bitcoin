@@ -36,9 +36,10 @@ std::optional<std::string_view> LineReader::ReadLine()
         // If the character we just consumed was \n, the line is terminated.
         // The \n itself does not count against max_line_length.
         if (c == '\n') {
-            const std::string_view untrimmed_line(reinterpret_cast<const char*>(std::to_address(line_start)), count);
-            std::string_view line = RemoveSuffixView(untrimmed_line, "\n");
-            return RemoveSuffixView(line, "\r");
+            std::string_view line{reinterpret_cast<const char*>(std::to_address(line_start)), count - 1};
+            if (!line.empty() && line.back() == '\r')
+                line.remove_suffix(1);
+            return line;
         }
         // If the character we just consumed gives us a line length greater
         // than max_line_length, and we are not at the end of the line (or buffer) yet,
