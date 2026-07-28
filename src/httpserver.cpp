@@ -872,7 +872,11 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         // This executes for every client whether or not reading or writing
         // took place because it also (might) parse a request we have already
         // received and pass it to a worker thread.
-        MaybeDispatchRequestsFromClient(client);
+        if (std::unique_ptr<HTTPRequest> request{HTTPRemoteClient::ReadRequests(client)})
+        {
+            LOCK(m_request_dispatcher_mutex);
+            m_request_dispatcher(std::move(request));
+        }
     }
 }
 
@@ -991,7 +995,7 @@ void HTTPServer::ThreadSocketHandler()
     }
 }
 
-void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
+std::unique_ptr<HTTPRequest> HTTPRemoteClient::ReadRequests(const std::shared_ptr<HTTPRemoteClient>& client)
 {
     // Try reading (potentially multiple) HTTP requests from the buffer
     while (!client->m_recv_buffer.empty()) {
@@ -1010,7 +1014,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 
             req->WriteReply(HTTP_CONTENT_TOO_LARGE);
             client->m_disconnect = true;
-            return;
+            return nullptr;
         } catch (const std::runtime_error& e) {
             LogDebug(
                 BCLog::HTTP,
@@ -1022,7 +1026,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
             // We failed to read a complete request from the buffer
             req->WriteReply(HTTP_BAD_REQUEST);
             client->m_disconnect = true;
-            return;
+            return nullptr;
         }
 
         // We read a complete request from the buffer into the queue
@@ -1041,15 +1045,16 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
     // If we are already handling a request from
     // this client, do nothing. We'll check again on the next I/O
     // loop iteration.
-    if (client->m_req_busy) return;
+    if (client->m_req_busy) return nullptr;
 
-    // Otherwise, if there is a pending request in the queue, handle it.
-    if (!client->m_req_queue.empty()) {
-        LOCK(m_request_dispatcher_mutex);
-        client->m_req_busy = true;
-        m_request_dispatcher(std::move(client->m_req_queue.front()));
-        client->m_req_queue.pop_front();
-    }
+    // Bail if we have no queued requests.
+    if (client->m_req_queue.empty()) return nullptr;
+
+    // Otherwise, return a pending request from the queue.
+    client->m_req_busy = true;
+    std::unique_ptr<HTTPRequest> req{std::move(client->m_req_queue.front())};
+    client->m_req_queue.pop_front();
+    return req;
 }
 
 void HTTPServer::DisconnectClients()
