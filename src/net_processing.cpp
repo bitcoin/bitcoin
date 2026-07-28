@@ -99,6 +99,9 @@ static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{2min};
+/** Age threshold for considering ourselves far behind: initial headers sync is then
+ *  limited to one peer at a time, and a stalling peer's slot is released. */
+static constexpr auto BEST_HEADER_STALE_AGE{24h};
 /** Protect at least this many outbound peers from disconnection due to slow/
  * behind headers chain.
  */
@@ -996,6 +999,8 @@ private:
 
     bool TipMayBeStale() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    bool IsBestHeaderStale() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
      *  at most count entries.
      */
@@ -1434,6 +1439,12 @@ bool PeerManagerImpl::TipMayBeStale()
         m_last_tip_update = GetTime<std::chrono::seconds>();
     }
     return m_last_tip_update.load() < GetTime<std::chrono::seconds>() - std::chrono::seconds{consensusParams.nPowTargetSpacing * 3} && mapBlocksInFlight.empty();
+}
+
+bool PeerManagerImpl::IsBestHeaderStale() const
+{
+    AssertLockHeld(cs_main);
+    return m_chainman.m_best_header->Time() <= NodeClock::now() - BEST_HEADER_STALE_AGE;
 }
 
 int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
@@ -6106,7 +6117,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         if (!state.fSyncStarted && CanServeBlocks(peer) && !m_chainman.m_blockman.LoadingBlocks()) {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
+            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || !IsBestHeaderStale()) {
                 const CBlockIndex* pindexStart = m_chainman.m_best_header;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -6431,7 +6442,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // Check for headers sync timeouts
         if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
-            if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
+            if (IsBestHeaderStale()) {
                 if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
