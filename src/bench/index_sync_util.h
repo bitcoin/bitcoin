@@ -14,13 +14,13 @@
 #include <validation.h>
 
 #include <cassert>
-#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 /** Size of the chain the index benchmarks build. Building it is not timed, but it is most of a run. */
-static constexpr size_t BENCH_INDEX_NUM_BLOCKS{50};
-static constexpr size_t BENCH_INDEX_TXS_PER_BLOCK{50};
+static constexpr uint32_t BENCH_INDEX_NUM_BLOCKS{50};
+static constexpr uint32_t BENCH_INDEX_TXS_PER_BLOCK{50};
 /** First height added by ExtendChainWithSpends to a fresh TestChain100Setup. */
 static constexpr int BENCH_INDEX_FIRST_SPEND_HEIGHT{101};
 
@@ -30,7 +30,7 @@ static constexpr int BENCH_INDEX_FIRST_SPEND_HEIGHT{101};
  * transaction before it in the same block and creates two new ones, each paying
  * a distinct key.
  */
-void ExtendChainWithSpends(TestChain100Setup& test_setup, size_t num_blocks, size_t num_txs_per_block);
+void ExtendChainWithSpends(TestChain100Setup& test_setup, uint32_t num_blocks, uint32_t num_txs_per_block);
 
 /**
  * Times `make_index()` plus a full Init -> BlockUntilSyncedToCurrentChain ->
@@ -42,15 +42,19 @@ void ExtendChainWithSpends(TestChain100Setup& test_setup, size_t num_blocks, siz
 template <typename MakeIndex>
 void BenchIndexSync(benchmark::Bench& bench, TestChain100Setup& test_setup, MakeIndex make_index)
 {
+    // The tip doesn't change during the run, so take it once here to keep the
+    // lock out of the measurement.
+    const auto expected_tip{WITH_LOCK(::cs_main, return test_setup.m_node.chainman->ActiveTip()->GetBlockHash())};
+
     bench.minEpochIterations(5).run([&] {
         std::unique_ptr<BaseIndex> index{make_index()};
         assert(index->Init());
         assert(!index->BlockUntilSyncedToCurrentChain());
         index->Sync();
 
-        IndexSummary summary{index->GetSummary()};
+        const IndexSummary summary{index->GetSummary()};
         assert(summary.synced);
-        assert(summary.best_block_hash == WITH_LOCK(::cs_main, return test_setup.m_node.chainman->ActiveTip()->GetBlockHash()));
+        assert(summary.best_block_hash == expected_tip);
 
         // Shutdown sequence (c.f. Shutdown() in init.cpp)
         index->Stop();
@@ -77,11 +81,11 @@ void BenchIndexLookup(benchmark::Bench& bench, const std::vector<Key>& keys, Loo
 {
     assert(!keys.empty());
     bench.batch(keys.size()).unit("lookup").run([&] {
-        for (const Key& key : keys) {
-            const bool ok{lookup_one(key)};
-            assert(ok);
-            ankerl::nanobench::doNotOptimizeAway(ok);
-        }
+        // Accumulated without short-circuiting, so every key is queried and the
+        // reported per-lookup time really divides by keys.size().
+        bool all_found{true};
+        for (const Key& key : keys) all_found &= lookup_one(key);
+        assert(all_found);
     });
 }
 

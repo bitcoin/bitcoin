@@ -19,11 +19,12 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <utility>
 #include <vector>
 
-void ExtendChainWithSpends(TestChain100Setup& test_setup, size_t num_blocks, size_t num_txs_per_block)
+void ExtendChainWithSpends(TestChain100Setup& test_setup, uint32_t num_blocks, uint32_t num_txs_per_block)
 {
     assert(num_txs_per_block > 0);
 
@@ -49,18 +50,25 @@ void ExtendChainWithSpends(TestChain100Setup& test_setup, size_t num_blocks, siz
     auto& coinbase_to_spend{test_setup.m_coinbase_txns[0]};
     size_t k0{0};
     size_t k1{1};
-    const CMutableTransaction first_tx{test_setup.CreateValidTransaction({coinbase_to_spend}, {COutPoint(coinbase_to_spend->GetHash(), 0)},
-                                                                        next_height, {test_setup.coinbaseKey}, {outs[k0], outs[k1]}, {}, {})
-                                           .first};
+    const CMutableTransaction first_tx{
+        test_setup.CreateValidTransaction(
+            /*input_transactions=*/{coinbase_to_spend},
+            /*inputs=*/{COutPoint(coinbase_to_spend->GetHash(), 0)},
+            /*input_height=*/next_height,
+            /*input_signing_keys=*/{test_setup.coinbaseKey},
+            /*outputs=*/{outs[k0], outs[k1]},
+            /*feerate=*/{},
+            /*fee_output=*/{})
+            .first};
     test_setup.CreateAndProcessBlock({first_tx}, coinbase_spk);
     ++next_height;
 
     CTransactionRef tx_to_spend{MakeTransactionRef(first_tx)};
     size_t next_key{2 % num_keys};
-    for (size_t b{0}; b < num_blocks; ++b) {
+    for (uint32_t b{0}; b < num_blocks; ++b) {
         std::vector<CMutableTransaction> txs;
         txs.reserve(num_txs_per_block);
-        for (size_t i{0}; i < num_txs_per_block; ++i) {
+        for (uint32_t i{0}; i < num_txs_per_block; ++i) {
             const std::vector<COutPoint> inputs{
                 COutPoint(tx_to_spend->GetHash(), 0),
                 COutPoint(tx_to_spend->GetHash(), 1),
@@ -70,9 +78,16 @@ void ExtendChainWithSpends(TestChain100Setup& test_setup, size_t num_blocks, siz
             next_key = (next_key + 1) % num_keys;
             k1 = next_key;
             next_key = (next_key + 1) % num_keys;
-            const CMutableTransaction tx{test_setup.CreateValidTransaction({tx_to_spend}, inputs, next_height,
-                                                                          signing_keys, {outs[k0], outs[k1]}, {}, {})
-                                             .first};
+            const CMutableTransaction tx{
+                test_setup.CreateValidTransaction(
+                    /*input_transactions=*/{tx_to_spend},
+                    /*inputs=*/inputs,
+                    /*input_height=*/next_height,
+                    /*input_signing_keys=*/signing_keys,
+                    /*outputs=*/{outs[k0], outs[k1]},
+                    /*feerate=*/{},
+                    /*fee_output=*/{})
+                    .first};
             txs.emplace_back(tx);
             tx_to_spend = MakeTransactionRef(tx);
         }

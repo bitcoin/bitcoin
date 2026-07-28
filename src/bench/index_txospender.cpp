@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/byte_units.h> // IWYU pragma: keep
 #include <util/expected.h>
 
 #include <cassert>
@@ -23,7 +24,7 @@
 static std::unique_ptr<TxoSpenderIndex> MakeTxoSpenderIndex(TestChain100Setup& test_setup, bool f_memory)
 {
     return std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(test_setup.m_node),
-                                             /*n_cache_size=*/1 << 20, f_memory, /*f_wipe=*/true);
+                                             /*n_cache_size=*/1_MiB, f_memory, /*f_wipe=*/true);
 }
 
 // End-to-end sync of a TxoSpenderIndex: BaseIndex::Sync -> CustomAppend ->
@@ -38,8 +39,6 @@ static void TxoSpenderIndexSync(benchmark::Bench& bench, bool f_memory)
 
 static void TxoSpenderIndexSyncDisk(benchmark::Bench& bench) { TxoSpenderIndexSync(bench, /*f_memory=*/false); }
 static void TxoSpenderIndexSyncMem(benchmark::Bench& bench) { TxoSpenderIndexSync(bench, /*f_memory=*/true); }
-BENCHMARK(TxoSpenderIndexSyncDisk);
-BENCHMARK(TxoSpenderIndexSyncMem);
 
 // After a full sync, time FindSpender() over every spent outpoint in the chain.
 // See BenchIndexLookup() for what the number covers.
@@ -63,4 +62,7 @@ static void TxoSpenderIndexLookup(benchmark::Bench& bench)
 
     index->Stop();
 }
+
+BENCHMARK(TxoSpenderIndexSyncDisk);
+BENCHMARK(TxoSpenderIndexSyncMem);
 BENCHMARK(TxoSpenderIndexLookup);

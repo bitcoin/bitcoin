@@ -18,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
+#include <util/byte_units.h> // IWYU pragma: keep
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -60,14 +61,12 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BlockFilterIndexSync);
-
 // Returns a fresh, not-yet-initialized BASIC BlockFilterIndex. `f_memory=false`
 // exercises the real disk write path, true isolates CPU cost from I/O.
 static std::unique_ptr<BlockFilterIndex> MakeBlockFilterIndex(TestChain100Setup& test_setup, bool f_memory)
 {
     return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(test_setup.m_node), BlockFilterType::BASIC,
-                                              /*n_cache_size=*/1 << 20, f_memory, /*f_wipe=*/true);
+                                              /*n_cache_size=*/1_MiB, f_memory, /*f_wipe=*/true);
 }
 
 // Same sync as BlockFilterIndexSync above, but over blocks that carry
@@ -83,5 +82,7 @@ static void BlockFilterIndexSyncRealistic(benchmark::Bench& bench, bool f_memory
 
 static void BlockFilterIndexSyncRealisticDisk(benchmark::Bench& bench) { BlockFilterIndexSyncRealistic(bench, /*f_memory=*/false); }
 static void BlockFilterIndexSyncRealisticMem(benchmark::Bench& bench) { BlockFilterIndexSyncRealistic(bench, /*f_memory=*/true); }
+
+BENCHMARK(BlockFilterIndexSync);
 BENCHMARK(BlockFilterIndexSyncRealisticDisk);
 BENCHMARK(BlockFilterIndexSyncRealisticMem);
