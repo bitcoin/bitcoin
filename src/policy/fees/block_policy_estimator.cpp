@@ -1008,51 +1008,51 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         if (nVersionRequired > CURRENT_FEES_FILE_VERSION) {
             throw std::runtime_error{strprintf("File version (%d) too high to be read.", nVersionRequired)};
         }
+        if (nVersionRequired < CURRENT_FEES_FILE_VERSION) {
+            throw std::runtime_error{strprintf("File version (%d) incompatible: Too old to be read", nVersionRequired)};
+        }
 
         // Read fee estimates file into temporary variables so existing data
         // structures aren't corrupted if there is an exception.
         unsigned int nFileBestSeenHeight;
         filein >> nFileBestSeenHeight;
 
-        if (nVersionRequired < CURRENT_FEES_FILE_VERSION) {
-            LogWarning("Incompatible old fee estimation data (non-fatal). Version: %d", nVersionRequired);
-        } else { // nVersionRequired == CURRENT_FEES_FILE_VERSION
-            unsigned int nFileHistoricalFirst, nFileHistoricalBest;
-            filein >> nFileHistoricalFirst >> nFileHistoricalBest;
-            if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
-                throw std::runtime_error("Corrupt estimates file. Historical block range for estimates is invalid");
-            }
-            std::vector<double> fileBuckets;
-            filein >> Using<VectorFormatter<EncodedDoubleFormatter>>(fileBuckets);
-            size_t numBuckets = fileBuckets.size();
-            if (numBuckets <= 1 || numBuckets > 1000) {
-                throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
-            }
-
-            std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
-            std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
-            std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
-            fileFeeStats->Read(filein, numBuckets);
-            fileShortStats->Read(filein, numBuckets);
-            fileLongStats->Read(filein, numBuckets);
-
-            // Fee estimates file parsed correctly
-            // Copy buckets from file and refresh our bucketmap
-            buckets = fileBuckets;
-            bucketMap.clear();
-            for (unsigned int i = 0; i < buckets.size(); i++) {
-                bucketMap[buckets[i]] = i;
-            }
-
-            // Destroy old TxConfirmStats and point to new ones that already reference buckets and bucketMap
-            feeStats = std::move(fileFeeStats);
-            shortStats = std::move(fileShortStats);
-            longStats = std::move(fileLongStats);
-
-            nBestSeenHeight = nFileBestSeenHeight;
-            historicalFirst = nFileHistoricalFirst;
-            historicalBest = nFileHistoricalBest;
+        // nVersionRequired == CURRENT_FEES_FILE_VERSION
+        unsigned int nFileHistoricalFirst, nFileHistoricalBest;
+        filein >> nFileHistoricalFirst >> nFileHistoricalBest;
+        if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
+            throw std::runtime_error("Corrupt estimates file. Historical block range for estimates is invalid");
         }
+        std::vector<double> fileBuckets;
+        filein >> Using<VectorFormatter<EncodedDoubleFormatter>>(fileBuckets);
+        size_t numBuckets = fileBuckets.size();
+        if (numBuckets <= 1 || numBuckets > 1000) {
+            throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
+        }
+
+        std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
+        std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
+        std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
+        fileFeeStats->Read(filein, numBuckets);
+        fileShortStats->Read(filein, numBuckets);
+        fileLongStats->Read(filein, numBuckets);
+
+        // Fee estimates file parsed correctly
+        // Copy buckets from file and refresh our bucketmap
+        buckets = fileBuckets;
+        bucketMap.clear();
+        for (unsigned int i = 0; i < buckets.size(); i++) {
+            bucketMap[buckets[i]] = i;
+        }
+
+        // Destroy old TxConfirmStats and point to new ones that already reference buckets and bucketMap
+        feeStats = std::move(fileFeeStats);
+        shortStats = std::move(fileShortStats);
+        longStats = std::move(fileLongStats);
+
+        nBestSeenHeight = nFileBestSeenHeight;
+        historicalFirst = nFileHistoricalFirst;
+        historicalBest = nFileHistoricalBest;
     }
     catch (const std::exception& e) {
         LogWarning("Unable to read policy estimator data (non-fatal): %s", e.what());
