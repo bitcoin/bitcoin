@@ -145,7 +145,6 @@ class HTTPRemoteClient;
 
 class HTTPRequest
 {
-public:
     HTTPRequestMethod m_method;
     std::string m_target;
     HTTPVersion m_version;
@@ -158,6 +157,7 @@ public:
     //! Response headers may be set in advance before response body is known
     HTTPHeaders m_response_headers;
 
+public:
     explicit HTTPRequest(std::shared_ptr<HTTPRemoteClient> client) : m_client{std::move(client)} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
@@ -181,6 +181,9 @@ public:
     {
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
+
+    const HTTPVersion& GetVersion() const { return m_version; }
+    std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client; }
 
     // These methods reimplement the API from http_libevent::HTTPRequest
     // for downstream JSONRPC and REST modules.

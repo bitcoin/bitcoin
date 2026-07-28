@@ -1019,8 +1019,8 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%llu)",
-            RequestMethodString(req->m_method),
-            req->m_target,
+            RequestMethodString(req->GetRequestMethod()),
+            req->GetURI(),
             client->m_origin,
             client->m_id);
 

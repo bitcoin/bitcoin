@@ -206,19 +206,16 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::POST);
-        BOOST_CHECK_EQUAL(req.m_target, "/");
         BOOST_CHECK_EQUAL(req.GetURI(), "/");
-        BOOST_CHECK_EQUAL(req.m_version.major, 1);
-        BOOST_CHECK_EQUAL(req.m_version.minor, 1);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Connection"), "close");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Type"), "application/json");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Authorization"), "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Length"), "46");
-        BOOST_CHECK_EQUAL(req.m_body.size(), 46);
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+        BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
+        BOOST_CHECK_EQUAL(req.GetVersion().minor, 1);
+        BOOST_CHECK_EQUAL(req.GetHeader("Host").second, "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetHeader("Connection").second, "close");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Type").second, "application/json");
+        BOOST_CHECK_EQUAL(req.GetHeader("Authorization").second, "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Length").second, "46");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount","params":[],"id":1})""\n");
     }
     {
         // Malformed: no spaces between data
@@ -313,13 +310,13 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::GET);
-        BOOST_CHECK_EQUAL(req.m_target, "/");
-        BOOST_CHECK_EQUAL(req.m_version.major, 1);
-        BOOST_CHECK_EQUAL(req.m_version.minor, 0);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::GET);
+        BOOST_CHECK_EQUAL(req.GetURI(), "/");
+        BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
+        BOOST_CHECK_EQUAL(req.GetVersion().minor, 0);
+        BOOST_CHECK_EQUAL(req.GetHeader("Host").second, "127.0.0.1");
         // no body is OK
-        BOOST_CHECK_EQUAL(req.m_body.size(), 0);
+        BOOST_CHECK_EQUAL(req.ReadBody(), "");
     }
     {
         // Malformed: missing colon
@@ -345,7 +342,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         // Don't try to read request body if Content-Length is missing
-        BOOST_CHECK_EQUAL(req.m_body.size(), 0);
+        BOOST_CHECK_EQUAL(req.ReadBody(), "");
     }
     {
         // Malformed: Content-Length is not a number
@@ -409,7 +406,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
     }
     {
         // Prevent "chunked" transfer from exceeding size limit
@@ -445,7 +442,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
         // Chunk Trailer was cleared
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
     }
@@ -572,11 +569,11 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
             // Connected client should have one request already from the static content.
             if (requests.size() == 1) {
                 // Check the received request
-                BOOST_CHECK_EQUAL(requests.front()->m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+                BOOST_CHECK_EQUAL(requests.front()->ReadBody(), R"({"method":"getblockcount","params":[],"id":1})""\n");
                 BOOST_CHECK_EQUAL(requests.front()->GetPeer().ToStringAddrPort(), "5.5.5.5:6789");
 
                 // Inspect the connection pointed to from the request
-                client = requests.front()->m_client;
+                client = requests.front()->GetClient();
                 BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
 
                 // Respond to request
