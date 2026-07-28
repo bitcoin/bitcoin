@@ -85,27 +85,25 @@ class HeadersSyncTest(BitcoinTestFramework):
         unconnecting_header.solve()
         peer1.send_and_ping(msg_headers([unconnecting_header]))
         with p2p_lock:
-            assert_equal("getheaders" in peer1.last_message, True)  # TODO: Retain the request timestamp after an empty response.
-            peer1.last_message.pop("getheaders", None)
+            assert_equal("getheaders" in peer1.last_message, False)
 
         peer2 = self.nodes[0].add_p2p_connection(P2PInterface())
         peer3 = self.nodes[0].add_p2p_connection(P2PInterface())
         for peer in [peer1, peer2, peer3]:
             peer.sync_with_ping()
 
-        assert_equal(len(self.getheaders_recipients([peer2, peer3])), 0)  # TODO: Empty headers should release the sync slot.
+        assert_equal(len(self.getheaders_recipients([peer2, peer3])), 1)
 
         peer1.send_and_ping(msg_headers())
         unconnecting_header.hashPrevBlock = 2
         unconnecting_header.solve()
         peer1.send_and_ping(msg_headers([unconnecting_header]))
         with p2p_lock:
-            assert_equal("getheaders" in peer1.last_message, True)  # TODO: Retain the request timestamp after a repeated empty response.
-            peer1.last_message.pop("getheaders", None)
+            assert_equal("getheaders" in peer1.last_message, False)
 
         self.announce_random_block([peer1])
         with p2p_lock:
-            assert_equal("getheaders" in peer1.last_message, False)  # TODO: Let a block announcement retry a peer after its sync slot was released.
+            assert_equal("getheaders" in peer1.last_message, True)
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
