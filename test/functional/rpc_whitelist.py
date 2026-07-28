@@ -119,7 +119,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         rejected_method = f"getblock\n{forged_log_line}"
         for batch in [False, True]:
             self.log.info(f"[{self.users[0][0]}]: Testing rejected method logging (batch={batch})")
-            with self.nodes[0].assert_debug_log([f"not allowed to call method {rejected_method}"]):  # TODO: Rejected RPC input can forge a log line
+            with self.nodes[0].assert_debug_log([f"not allowed to call method getblock{forged_log_line}"]):
                 assert_equal(403, rpccall(self.nodes[0], self.users[0], rejected_method, batch=batch).status)
 
     def test_users_permissions(self):
