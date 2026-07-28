@@ -272,8 +272,6 @@ class LineReader
     std::string_view::iterator m_it;
 
 public:
-    explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length)
-        : LineReader{std::string_view{reinterpret_cast<const char*>(buffer.data()), buffer.size()}, max_line_length} {}
     explicit LineReader(std::string_view str, size_t max_line_length);
 
     /**

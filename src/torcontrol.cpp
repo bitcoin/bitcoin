@@ -149,7 +149,7 @@ bool TorControlConnection::ReceiveAndProcess()
 {
     if (!m_sock) return false;
 
-    std::byte buf[4096];
+    char buf[4096];
     ssize_t nread = m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);
 
     if (nread < 0) {

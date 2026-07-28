@@ -861,7 +861,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         }
 
         if (recv_ready || err_ready) {
-            std::byte buf[0x10000]; // typical socket buffer is 8K-64K
+            char buf[0x10000]; // typical socket buffer is 8K-64K
 
             const ssize_t nrecv{WITH_LOCK(
                 client->m_sock_mutex,

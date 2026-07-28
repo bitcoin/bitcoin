@@ -109,7 +109,7 @@ private:
     /** Response handlers */
     std::deque<ReplyHandlerCB> m_reply_handlers;
     /** Buffer for incoming data */
-    std::vector<std::byte> m_recv_buffer;
+    std::string m_recv_buffer;
     /** Process complete lines from the receive buffer */
     bool ProcessBuffer();
 };

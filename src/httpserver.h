@@ -461,7 +461,7 @@ public:
      * we copy data from the socket buffer to the client object
      * and attempt to read HTTP requests from here.
      */
-    std::vector<std::byte> m_recv_buffer{};
+    std::string m_recv_buffer{};
 
     //! Requests from a client must be processed in the order in which
     //! they were received, blocking on a per-client basis. We won't
