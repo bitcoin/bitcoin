@@ -4345,6 +4345,14 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     if (msg_type == NetMsgType::GETBLOCKTXN) {
         BlockTransactionsRequest req;
         vRecv >> req;
+
+        // No legitimate reason to send indexes empty
+        if (req.indexes.empty()) {
+            LogDebug(BCLog::NET, "getblocktxn received with no transaction indexes, %s", pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
         // Verify differential encoding invariant: indexes must be strictly increasing
         // DifferenceFormatter should guarantee this property during deserialization
         for (size_t i = 1; i < req.indexes.size(); ++i) {

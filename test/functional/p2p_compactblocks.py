@@ -843,6 +843,17 @@ class CompactBlocksTest(BitcoinTestFramework):
         msg = msg_cmpctblock(comp_block.to_p2p())
         test_node.send_await_disconnect(msg)
 
+    def test_empty_getblocktxn_disconnects(self):
+        self.log.info("Testing empty getblocktxn disconnects the peer...")
+        node = self.nodes[0]
+        block_hash = int(node.getbestblockhash(), 16)
+        peer = node.add_p2p_connection(P2PInterface())
+        msg = msg_getblocktxn()
+        msg.block_txn_request = BlockTransactionsRequest(blockhash=block_hash, indexes=[])
+        with node.assert_debug_log(['getblocktxn received with no transaction indexes']):
+            peer.send_without_ping(msg)
+            peer.wait_for_disconnect()
+
     # peer generates a block and sends it to node, which makes the peer a
     # candidate for high-bandwidth 'to' (up to 3 peers according to BIP 152)
     def make_peer_hb_to_candidate(self, node, peer):
@@ -1097,6 +1108,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing handling of invalid compact blocks...")
         self.test_invalid_tx_in_compactblock(self.segwit_node)
+        self.test_empty_getblocktxn_disconnects()
 
         # The previous test will lead to a disconnection. Reconnect before continuing.
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
