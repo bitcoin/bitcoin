@@ -7,6 +7,7 @@
 Verify that a bitcoind node can maintain list of wallets loading on startup
 """
 import os
+import platform
 import shutil
 import stat
 import uuid
@@ -93,6 +94,26 @@ class WalletStartupTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(set(node.listwallets()), {'w2', 'w3'})
 
+    def test_startup_warning_log_injection(self, node):
+        self.log.info("Test that a wallet name cannot forge log lines through startup warnings")
+        forged_log_line = "ERROR: ConnectTip: ConnectBlock 0000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef failed, bad-txns-inputs-missingorspent"
+        wallet_name = f"w5\n{forged_log_line}"
+        if platform.system() == 'Windows':
+            # Windows disallows newlines in filenames
+            assert_raises_rpc_error(None, None, node.createwallet, wallet_name, load_on_startup=True)
+            return
+
+        with node.assert_debug_log([f"[{wallet_name}]"]):  # TODO: A wallet name can forge a creation log line
+            assert_equal(node.createwallet(wallet_name=wallet_name, load_on_startup=True)["name"], wallet_name)
+        self.stop_node(0)
+
+        wallet_path = node.wallets_path / wallet_name
+        self.cleanup_folder(wallet_path)
+        warning = f"Skipping -wallet path that doesn't exist. Failed to load database path '{wallet_path}'. Path does not exist."
+        with node.assert_debug_log([warning], unexpected_msgs=[f"[warning] {forged_log_line}"]):  # TODO: A wallet name can forge a startup log line
+            self.start_node(0)
+        self.stop_node(0, expected_stderr=f"Warning: {warning}")
+
     def run_test(self):
         self.log.info('Should start without any wallets')
         assert_equal(self.nodes[0].listwallets(), [])
@@ -124,6 +145,7 @@ class WalletStartupTest(BitcoinTestFramework):
 
         self.test_load_unwritable_wallet(self.nodes[0])
         self.test_disabled_settings(self.nodes[0])
+        self.test_startup_warning_log_injection(self.nodes[0])
 
 if __name__ == '__main__':
     WalletStartupTest(__file__).main()
