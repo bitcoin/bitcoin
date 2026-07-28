@@ -600,10 +600,14 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         keep_alive = false;
     }
 
-    std::shared_ptr client{m_client.lock()};
-    if (!client) return;
+    if (std::shared_ptr client{m_client.lock()}) {
+        client->Send(res, reply_body, keep_alive);
+    }
+}
 
-    client->m_keep_alive = keep_alive;
+void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive)
+{
+    m_keep_alive = keep_alive;
 
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
@@ -612,14 +616,14 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     bool send_buffer_was_empty{false};
     // Fill the send buffer with the complete serialized response headers + body
     {
-        LOCK(client->m_send_mutex);
-        send_buffer_was_empty = client->m_send_buffer.empty();
-        client->m_send_buffer.insert(client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+        LOCK(m_send_mutex);
+        send_buffer_was_empty = m_send_buffer.empty();
+        m_send_buffer.insert(m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
 
         // We've been using std::span up until now but it is finally time to copy
         // data. The original data will go out of scope when WriteReply() returns.
         // This is analogous to the memcpy() in libevent's evbuffer_add()
-        client->m_send_buffer.insert(client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
+        m_send_buffer.insert(m_send_buffer.end(), reply_body.begin(), reply_body.end());
 
         // If the buffer already held data, the I/O thread is (or soon will be)
         // draining it, so flag that there is more data to send. This must happen
@@ -629,27 +633,27 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // between, leaving m_send_ready set on an empty buffer. The I/O loop would
         // then only ever poll the socket for writeability, never read the client's
         // next request, and wedge the connection.
-        if (!send_buffer_was_empty) client->m_send_ready = true;
+        if (!send_buffer_was_empty) m_send_ready = true;
     }
 
     LogDebug(
         BCLog::HTTP,
         "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%llu)",
-        status,
+        res.status,
         headers_bytes.size() + reply_body.size(),
-        client->m_origin,
-        client->m_id);
+        m_origin,
+        m_id);
 
     // If the send buffer was empty before we wrote this reply, we can try an
     // optimistic send akin to CConnman::PushMessage() in which we
     // push the data directly out the socket to client right now, instead
     // of waiting for the next iteration of the I/O loop.
     if (send_buffer_was_empty) {
-        client->MaybeSendBytesFromBuffer();
+        MaybeSendBytesFromBuffer();
     }
 
     // Signal to the I/O loop that we are ready to handle the next request.
-    client->m_req_busy = false;
+    m_req_busy = false;
 }
 
 CService HTTPRequest::GetPeer() const
@@ -900,49 +904,54 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         }
 
         if (recv_ready || err_ready) {
-            char buf[0x10000]; // typical socket buffer is 8K-64K
-
-            const ssize_t nrecv{WITH_LOCK(
-                client->m_sock_mutex,
-                return client->m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
-
-            if (nrecv < 0) {
-                const int err = WSAGetLastError();
-                if (IOErrorIsPermanent(err)) {
-                    LogDebug(
-                        BCLog::HTTP,
-                        "Permanent read error from %s (id=%llu): %s",
-                        client->m_origin,
-                        client->m_id,
-                        NetworkErrorString(err));
-                    client->m_disconnect = true;
-                }
-            } else if (nrecv == 0) {
-                LogDebug(
-                    BCLog::HTTP,
-                    "Received EOF from %s (id=%llu)",
-                    client->m_origin,
-                    client->m_id);
-                client->m_disconnect = true;
-            } else {
-                // Reset idle timeout
-                client->m_idle_since = Now<SteadySeconds>();
-
-                // Prevent disconnect until all requests are completely handled.
-                client->m_connection_busy = true;
-
-                // Copy data from socket buffer to client receive buffer
-                client->m_recv_buffer.insert(
-                    client->m_recv_buffer.end(),
-                    buf,
-                    buf + nrecv);
-            }
+            client->Receive();
         }
         // Process as much received data as we can.
         // This executes for every client whether or not reading or writing
         // took place because it also (might) parse a request we have already
         // received and pass it to a worker thread.
         MaybeDispatchRequestsFromClient(client);
+    }
+}
+
+void HTTPRemoteClient::Receive()
+{
+    char buf[0x10000]; // typical socket buffer is 8K-64K
+
+    const ssize_t nrecv{WITH_LOCK(
+        m_sock_mutex,
+        return m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
+
+    if (nrecv < 0) {
+        const int err = WSAGetLastError();
+        if (IOErrorIsPermanent(err)) {
+            LogDebug(
+                BCLog::HTTP,
+                "Permanent read error from %s (id=%llu): %s",
+                m_origin,
+                m_id,
+                NetworkErrorString(err));
+            m_disconnect = true;
+        }
+    } else if (nrecv == 0) {
+        LogDebug(
+            BCLog::HTTP,
+            "Received EOF from %s (id=%llu)",
+            m_origin,
+            m_id);
+        m_disconnect = true;
+    } else {
+        // Reset idle timeout
+        m_idle_since = Now<SteadySeconds>();
+
+        // Prevent disconnect until all requests are completely handled.
+        m_connection_busy = true;
+
+        // Copy data from socket buffer to client receive buffer
+        m_recv_buffer.insert(
+            m_recv_buffer.end(),
+            buf,
+            buf + nrecv);
     }
 }
 
