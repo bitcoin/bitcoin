@@ -1092,14 +1092,12 @@ void HTTPServer::DisconnectClients()
 
                                         // Disconnect this client due to error, end of communication, or idle timeout.
                                         // May drop unsent data if we are closing due to error.
-                                        if (client->m_disconnect || is_idle) {
-                                            if (is_idle) {
-                                                LogDebug(BCLog::HTTP,
-                                                         "HTTP client idle timeout %s (id=%llu)",
-                                                         client->m_origin,
-                                                         client->m_id);
-                                            }
-                                        } else {
+                                        if (is_idle) {
+                                            LogDebug(BCLog::HTTP,
+                                                     "HTTP client idle timeout %s (id=%llu)",
+                                                     client->m_origin,
+                                                     client->m_id);
+                                        } else if (!client->m_disconnect) {
                                             // Disconnect this client because the server is shutting
                                             // down and we need to disconnect all clients...
                                             if (m_disconnect_all_clients) {
