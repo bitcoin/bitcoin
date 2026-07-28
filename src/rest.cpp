@@ -37,7 +37,6 @@
 
 #include <univalue.h>
 
-using bitcoin_http::HTTPRequest;
 using node::GetTransaction;
 using node::NodeContext;
 using util::SplitString;

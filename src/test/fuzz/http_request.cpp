@@ -20,8 +20,6 @@ std::string_view RequestMethodString(HTTPRequestMethod m);
 
 FUZZ_TARGET(http_request)
 {
-    using bitcoin_http::HTTPRequest;
-    using bitcoin_http::MAX_HEADERS_SIZE;
     using util::LineReader;
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};

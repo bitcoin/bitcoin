@@ -145,10 +145,6 @@
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
 
-using bitcoin_http::InitHTTPServer;
-using bitcoin_http::InterruptHTTPServer;
-using bitcoin_http::StartHTTPServer;
-using bitcoin_http::StopHTTPServer;
 using node::ApplyArgsManOptions;
 using node::BlockManager;
 using node::CalculateCacheSizes;

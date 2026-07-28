@@ -51,7 +51,6 @@ static constexpr auto SELECT_TIMEOUT{50ms};
 static constexpr int SOCKET_OPTION_TRUE{1};
 
 using common::InvalidPortErrMsg;
-using bitcoin_http::HTTPRequest;
 
 struct HTTPPathHandler
 {
@@ -66,7 +65,7 @@ struct HTTPPathHandler
 
 /** HTTP module state */
 
-static std::unique_ptr<bitcoin_http::HTTPServer> g_http_server{nullptr};
+static std::unique_ptr<HTTPServer> g_http_server{nullptr};
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Handlers for (sub)paths
@@ -199,7 +198,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     }
 }
 
-static void RejectRequest(std::unique_ptr<bitcoin_http::HTTPRequest> hreq)
+static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
 {
     LogDebug(BCLog::HTTP, "Rejecting request while shutting down");
     hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE);
@@ -260,7 +259,6 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
     }
 }
 
-namespace bitcoin_http {
 using util::Split;
 
 std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
@@ -1328,4 +1326,3 @@ void StopHTTPServer()
     }
     LogDebug(BCLog::HTTP, "Stopped HTTP server");
 }
-} // namespace bitcoin_http
