@@ -1080,55 +1080,62 @@ void HTTPServer::DisconnectClients()
     const auto now{Now<SteadySeconds>()};
     size_t erased = std::erase_if(m_connected,
                                   [&](auto& client) {
-                                        // First check for idle timeout. We reset the timer when we send and receive data,
-                                        // but if the server is busy handling a request we should ignore the timeout until
-                                        // the reply is sent. If we did erase the shared_ptr<HTTPRemoteClient> reference in m_connected
-                                        // while the server is busy with a request, it might be prematurely dropped before
-                                        // the response has been sent, or if the HTTPRequest was holding a temporary shared_ptr
-                                        // client on a worker thread - it would keep the socket open even after "disconnecting".
-                                        const bool is_idle{m_rpcservertimeout.count() > 0 &&
-                                                           now - client->m_idle_since.load() > m_rpcservertimeout &&
-                                                           !client->m_req_busy};
-
-                                        // Disconnect this client due to error, end of communication, or idle timeout.
-                                        // May drop unsent data if we are closing due to error.
-                                        if (client->m_disconnect || is_idle) {
-                                            if (is_idle) {
-                                                LogDebug(BCLog::HTTP,
-                                                         "HTTP client idle timeout %s (id=%llu)",
-                                                         client->m_origin,
-                                                         client->m_id);
-                                            }
-                                        } else {
-                                            // Disconnect this client because the server is shutting
-                                            // down and we need to disconnect all clients...
-                                            if (m_disconnect_all_clients) {
-                                                // ...unless we still have data for this client.
-                                                if (client->m_connection_busy) {
-                                                    // There is still data for this healthy-connected client.
-                                                    // Continue the I/O loop until all data is sent or an error is encountered.
-                                                    return false;
-                                                } else {
-                                                    // This is a healthy persistent connection (e.g. keep-alive)
-                                                    // but it's time to say goodbye.
-                                                    ;
-                                                }
-                                            } else {
-                                                // No reason to disconnect.
-                                                return false;
-                                            }
-                                        }
-                                        // No reason NOT to disconnect, log and remove.
-                                        LogDebug(BCLog::HTTP,
-                                                 "Disconnecting HTTP client %s (id=%llu)",
-                                                 client->m_origin,
-                                                 client->m_id);
-                                        return true;
-                                    });
+                                      return client->MaybeDisconnect(now,
+                                                                     m_rpcservertimeout,
+                                                                     /*disconnect_all=*/m_disconnect_all_clients);
+                                  });
     if (erased > 0) {
         // Report back to the main thread
         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
+}
+
+bool HTTPRemoteClient::MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all)
+{
+    // First check for idle timeout. We reset the timer when we send and receive data,
+    // but if the server is busy handling a request we should ignore the timeout until
+    // the reply is sent. If we did erase the shared_ptr<HTTPRemoteClient> reference in m_connected
+    // while the server is busy with a request, it might be prematurely dropped before
+    // the response has been sent, or if the HTTPRequest was holding a temporary shared_ptr
+    // client on a worker thread - it would keep the socket open even after "disconnecting".
+    const bool is_idle{rpcservertimeout.count() > 0 &&
+                       now - m_idle_since.load() > rpcservertimeout &&
+                       !m_req_busy};
+
+    // Disconnect this client due to error, end of communication, or idle timeout.
+    // May drop unsent data if we are closing due to error.
+    if (m_disconnect || is_idle) {
+        if (is_idle) {
+            LogDebug(BCLog::HTTP,
+                     "HTTP client idle timeout %s (id=%llu)",
+                     m_origin,
+                     m_id);
+        }
+    } else {
+        // Disconnect this client because the server is shutting
+        // down and we need to disconnect all clients...
+        if (disconnect_all) {
+            // ...unless we still have data for this client.
+            if (m_connection_busy) {
+                // There is still data for this healthy-connected client.
+                // Continue the I/O loop until all data is sent or an error is encountered.
+                return false;
+            } else {
+                // This is a healthy persistent connection (e.g. keep-alive)
+                // but it's time to say goodbye.
+                ;
+            }
+        } else {
+            // No reason to disconnect.
+            return false;
+        }
+    }
+    // No reason NOT to disconnect, log and remove.
+    LogDebug(BCLog::HTTP,
+             "Disconnecting HTTP client %s (id=%llu)",
+             m_origin,
+             m_id);
+    return true;
 }
 
 void HTTPServer::ClearConnectedClients()

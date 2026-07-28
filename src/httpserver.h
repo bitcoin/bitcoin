@@ -580,6 +580,8 @@ public:
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
 
+    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+
     /**
      * Try to read an HTTP request from the receive buffer.
      * Updates HTTPRequest.m_state and drains buffer on error.
