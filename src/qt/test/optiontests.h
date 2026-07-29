@@ -23,6 +23,8 @@ private Q_SLOTS:
     void integerGetArgBug();
     void parametersInteraction();
     void extractFilter();
+    void effectivePointSize();
+    void updateFontsWithPixelSizedWidget();
 
 private:
     interfaces::Node& m_node;

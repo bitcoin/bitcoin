@@ -5,12 +5,17 @@
 #include <init.h>
 #include <qt/bitcoin.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
 #include <util/system.h>
 
+#include <QApplication>
+#include <QFont>
+#include <QLabel>
 #include <QSettings>
 #include <QTest>
+#include <QWidget>
 
 #include <univalue.h>
 
@@ -131,4 +136,68 @@ void OptionTests::extractFilter()
 
     filter = QString("Image (*.png *.jpg)");
     QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "png");
+}
+
+void OptionTests::effectivePointSize()
+{
+    using GUIUtil::internal::effectivePointSize;
+
+    // A point-sized font reports its size directly, fractions included, whatever the DPI.
+    QFont point_font;
+    point_font.setPointSizeF(12.5);
+    QCOMPARE(effectivePointSize(point_font, 96).value_or(0), 12.5);
+    QCOMPARE(effectivePointSize(point_font, 72).value_or(0), 12.5);
+
+    // A pixel-sized font carries no point size and must be converted using the target DPI.
+    QFont pixel_font;
+    pixel_font.setPixelSize(17);
+    QVERIFY(pixel_font.pointSizeF() <= 0);
+    QCOMPARE(effectivePointSize(pixel_font, 96).value_or(0), 17 * 72.0 / 96);
+    QCOMPARE(effectivePointSize(pixel_font, 144).value_or(0), 8.5);
+    // At 72 DPI points and pixels coincide; pinned so the identity is deliberate rather
+    // than an accident of whichever DPI the host happens to report.
+    QCOMPARE(effectivePointSize(pixel_font, 72).value_or(0), 17.0);
+
+    // A non-positive DPI cannot yield a conversion factor, so the pixel size is unusable
+    // even though it is valid. QWidget::logicalDpiY() is not guaranteed to be positive.
+    QVERIFY(!effectivePointSize(pixel_font, 0).has_value());
+    QVERIFY(!effectivePointSize(pixel_font, -1).has_value());
+
+    // The remaining branch -- neither size usable -- is guarded but not asserted here: Qt
+    // rejects non-positive sizes in the setters, and once a QGuiApplication exists (as it
+    // does in this binary) every QFont is handed a valid default point size. The state is
+    // still reachable in production, e.g. a font engine that populates no size at all, so
+    // the helper compares against 0 rather than trusting any particular sentinel.
+}
+
+void OptionTests::updateFontsWithPixelSizedWidget()
+{
+    if (QApplication::platformName() == "minimal") {
+        QSKIP("AppTests cannot initialize fonts with the 'minimal' platform plugin.");
+    }
+
+    // updateFonts() is a no-op until loadFonts() has run, and loadFonts() is process-global,
+    // non-idempotent state owned by AppTests. Treat missing initialization as a failure on
+    // supported platforms so the regression test cannot pass without exercising updateFonts().
+    QVERIFY2(GUIUtil::fontsLoaded(),
+             "GUIUtil::loadFonts() must succeed in AppTests::appTests() before OptionTests run.");
+
+    QWidget host;
+    QLabel* label{new QLabel(&host)};
+    QFont pixel_font{label->font()};
+    pixel_font.setPixelSize(17);
+    label->setFont(pixel_font);
+    QVERIFY(label->font().pointSizeF() <= 0);
+
+    // The pre-fix code asserted pointSize() > 0 here and aborted the process. The widget must
+    // now be swept normally and end up with a usable point size. The exact value depends on
+    // the host DPI, so the arithmetic is pinned in effectivePointSize() above instead.
+    GUIUtil::updateFonts();
+    const double scaled_size{label->font().pointSizeF()};
+    QVERIFY(scaled_size > 0);
+
+    // The size is cached per widget on the first sweep, so repeated passes must not compound
+    // it -- the defect that makes the cache load-bearing rather than an optimisation.
+    GUIUtil::updateFonts();
+    QCOMPARE(label->font().pointSizeF(), scaled_size);
 }

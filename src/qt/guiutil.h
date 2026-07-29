@@ -187,6 +187,19 @@ namespace GUIUtil
      */
     void LoadFont(const QString& file_name);
 
+    //! Implementation details exposed only so qt/test can cover them directly.
+    namespace internal {
+    /** Return `font`'s size in points, converting from pixels when it was specified that way
+     *  (e.g. a stylesheet's `font-size: Npx`). QFont stores exactly one of the two sizes and
+     *  reports -1 for the other, so a pixel-sized font yields -1 from both pointSize() and
+     *  pointSizeF() and must be converted rather than read directly.
+     *
+     *  `dpi_y` is the target device's vertical logical DPI (QPaintDevice::logicalDpiY()).
+     *  Returns std::nullopt when no usable size can be derived, which callers must handle:
+     *  a font can carry no valid size at all, and `dpi_y` is not guaranteed to be positive. */
+    std::optional<double> effectivePointSize(const QFont& font, int dpi_y);
+    } // namespace internal
+
     /**
      * Determine default data directory for operating system.
      */
