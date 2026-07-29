@@ -8,21 +8,8 @@ set -o errexit -o pipefail
 # shellcheck source=setup.sh
 source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 
-# Set toolchain
-CLANG_TOOLCHAIN="$(store_path clang-toolchain)"
-LIBCXX="$(store_path libcxx)"
-build_CC="${CLANG_TOOLCHAIN}/bin/clang \
-    -isystem ${CLANG_TOOLCHAIN}/include"
-build_CXX="${CLANG_TOOLCHAIN}/bin/clang++ \
-    -stdlib=libc++ \
-    -isystem ${LIBCXX}/include/c++/v1 \
-    -isystem ${CLANG_TOOLCHAIN}/include"
-build_LDFLAGS="-fuse-ld=lld -rtlib=compiler-rt -unwindlib=libunwind -L${LIBCXX}/lib -Wl,-rpath,${LIBCXX}/lib"
-build_AR="${CLANG_TOOLCHAIN}/bin/llvm-ar"
-build_RANLIB="${CLANG_TOOLCHAIN}/bin/llvm-ranlib"
-build_OBJDUMP="${CLANG_TOOLCHAIN}/bin/llvm-objdump"
-build_NM="${CLANG_TOOLCHAIN}/bin/llvm-nm"
-build_STRIP="${CLANG_TOOLCHAIN}/bin/llvm-strip"
+# Setup toolchain
+llvm_toolchain
 
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
@@ -49,8 +36,6 @@ mkdir -p "$DISTSRC"
     # Configure this DISTSRC for $HOST
     env cmake -S . -B build \
           --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
-          -DWITH_CCACHE=OFF \
-          -Werror=dev \
           -DBUILD_BENCH=OFF \
           -DBUILD_BITCOIN_BIN=OFF \
           -DBUILD_CLI=OFF \
@@ -63,7 +48,9 @@ mkdir -p "$DISTSRC"
           -DBUILD_WALLET_TOOL=OFF \
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
           -DCMAKE_SKIP_RPATH=TRUE \
-          -DREDUCE_EXPORTS=ON
+          -DREDUCE_EXPORTS=ON \
+          -DWITH_CCACHE=OFF \
+          -Werror=dev
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" --target bitcoin-gui bitcoin-qt
