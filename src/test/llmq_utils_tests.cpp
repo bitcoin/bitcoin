@@ -103,6 +103,7 @@ BOOST_AUTO_TEST_CASE(sig_ses_ann_limit_is_per_llmq_type)
     node_state.GetOrCreateSessionFromAnn(other_type_ann);
     BOOST_CHECK_EQUAL(node_state.GetSessionCount(), 2U);
     BOOST_CHECK_EQUAL(node_state.GetSessionCount(Consensus::LLMQType::LLMQ_400_60), 1U);
+}
 
 BOOST_AUTO_TEST_CASE(sig_share_map_size_tracks_mutations)
 {

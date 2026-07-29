@@ -1,7 +1,7 @@
-# Dash Core version v23.1.7
+# Dash Core version v23.1.8
 
-This is a new patch version release, bringing security hardening and build fixes
-for newer compiler toolchains.
+This is a new patch version release, bringing further hardening of the
+peer-to-peer message handlers along with networking, RPC and build fixes.
 This release is **recommended** for all nodes, and especially for masternodes.
 
 Please report bugs using the issue tracker at GitHub:
@@ -28,32 +28,71 @@ require a reindex.
 
 ## Security
 
-This release hardens several peer-to-peer message handlers against
+This release continues the hardening of peer-to-peer message handlers against
 denial-of-service from remote peers. These issues do not affect consensus and do
 not put funds at risk, but they could be used to crash or degrade nodes -
 masternodes in particular - so upgrading is recommended.
 
-- Networking: a peer whose receive buffer filled up could keep the socket-handler
-  thread spinning at 100% CPU for the duration of the backpressure. The thread now
-  falls back to its normal poll wait while such peers are paused.
-- LLMQ / DKG: pushed DKG messages are now accepted only from verified masternodes,
-  are bounded in size, and are structurally validated before being retained;
-  malformed signatures can no longer trigger an assertion failure during batch
-  signature verification.
-- BLS: verifying a DKG contribution share whose verification vector was never
-  received no longer dereferences a null pointer.
-- InstantSend: locks with an oversized input set are now rejected before any
-  expensive processing, and the queues holding not-yet-verified and
-  awaiting-transaction locks are bounded to prevent unbounded memory growth.
-- Governance: vote-sync requests carrying a bloom filter outside the permitted size
-  are rejected, preventing a CPU-amplification stall of P2P message processing.
+- LLMQ / signing: the queues of not-yet-verified recovered signatures and
+  signature shares are now bounded, and the vectors carried by the QSIGSHARE,
+  QSIGSESANN, QSIGSHARESINV, QGETSIGSHARES and QBSIGSHARES messages are bounded
+  before any allocation or decoding takes place. The number of signing share
+  sessions a single peer may announce is also capped, so a peer can no longer
+  grow that per-peer state without limit (dash#7351).
+- LLMQ / DKG: the number of encrypted contribution blobs in a DKG contribution
+  is now checked against the quorum's lower bound as well as its upper bound.
+- LLMQ / quorum data: the verification vector and encrypted contribution
+  vectors in QDATA responses are validated against their expected sizes before
+  any BLS decoding is performed.
+- Transaction relay: an oversized `notfound` message is now penalised rather
+  than silently ignored (dash#7348).
+- ChainLocks: the cache of seen ChainLock signatures is now bounded.
+- Governance: per-object vote sync requests are now throttled per peer, and
+  governance object and vote responses are only accepted from a peer if that
+  peer announced them or they were requested from it, using the net-layer
+  per-peer request tracker. Governance vote signatures are bounded when read
+  from the network and must use one of the two legitimate encodings.
+- CoinJoin: the vectors carried by CoinJoin mixing messages are bounded before
+  allocation, and a non-participant can no longer abort another session's
+  signing phase. An invalid `dstx` message now carries a misbehaviour score
+  instead of being dropped for free (dash#7347).
+- Bloom filters: filterload and filteradd payloads are bounded before
+  allocation.
+- Sporks: spork signatures are bounded during deserialization, and malformed
+  spork messages now attribute misbehaviour to the sending peer.
+- Compact block relay: batched hardening backported from upstream Bitcoin Core
+  (dash#7398), including detection of mutated blocks as a defence-in-depth
+  measure.
 
-## Build
+## RPC
 
-- Fixed GCC 16 build failures in warning-enabled builds by tightening header
-  includes and initializing LevelDB compaction output size.
+- `protx listdiff` no longer reports an always-zero `platformP2PPort` /
+  `platformHTTPPort` for masternodes registered with extended addresses; the
+  live Platform ports are reported instead.
 
-# v23.1.7 Change log
+## GUI
+
+- The PoSe score column is no longer hidden together with banned masternodes in
+  the masternode list.
+- Fixed an abort when scaling widgets whose font was set in pixels rather than
+  points (for example by a stylesheet's `font-size: Npx`); such fonts are now
+  converted to a point size instead of being assumed to have one (dash#7465).
+
+## Build and CI
+
+- Fixed a CMake compatibility error when building the freetype dependency with
+  newer CMake (dash#7372).
+- Stabilized the `-par` / `-parbls` help text (and the generated man pages) so
+  they no longer embed the core count of the build machine.
+- Updated GitHub Actions pins for the Node 24 runtime.
+- Fixed the circular-dependencies lint script under Python 3.15.
+
+## Tests
+
+- Governance inventory cache coverage moved from a functional test to unit
+  tests, and governance vote test fixtures are now wire-valid.
+
+# v23.1.8 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -61,8 +100,10 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- knst
+- Konstantin Akimov
+- PastaClaw
 - PastaPastaPasta
+- UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -71,6 +112,7 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
+- [v23.1.7](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.7.md) released Jun/30/2026
 - [v23.1.5](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.5.md) released Jun/19/2026
 - [v23.1.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.4.md) released Jun/18/2026
 - [v23.1.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.3.md) released May/28/2026
@@ -89,4 +131,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v21.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.0.md) released Jul/25/2024
 - [v20.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.1.1.md) released April/3/2024
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.5...dashpay:v23.1.7
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.7...dashpay:v23.1.8
