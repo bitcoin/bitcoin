@@ -15,6 +15,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
+#include <util/overloaded.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -28,8 +29,8 @@
 #include <mutex>
 #include <span>
 #include <string_view>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 
 using util::SplitString;
@@ -318,11 +319,12 @@ void ApplyTypeStrOverride(UniValue& schema, const RPCArg& arg)
 
 void ApplyArgFallback(UniValue& schema, const RPCArg& arg)
 {
-    if (const auto* def = std::get_if<RPCArg::Default>(&arg.m_fallback)) {
-        schema.pushKV("default", *def);
-    } else if (const auto* hint = std::get_if<RPCArg::DefaultHint>(&arg.m_fallback)) {
-        schema.pushKV("x-bitcoin-default-hint", *hint);
-    }
+    std::visit(util::Overloaded{
+                   [&](const RPCArg::Default& def) { schema.pushKV("default", def); },
+                   [&](const RPCArg::DefaultHint& hint) { schema.pushKV("x-bitcoin-default-hint", hint); },
+                   [](const RPCArg::Optional&) {},
+               },
+               arg.m_fallback);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
