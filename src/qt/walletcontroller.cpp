@@ -23,6 +23,7 @@
 #include <chrono>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QMutexLocker>
@@ -439,7 +440,7 @@ void RestoreWalletActivity::finish()
     Q_EMIT finished();
 }
 
-void MigrateWalletActivity::do_migrate(const std::string& name)
+void MigrateWalletActivity::do_migrate(const std::string& name, bool load_wallet)
 {
     SecureString passphrase;
     if (node().walletLoader().isEncrypted(name)) {
@@ -450,8 +451,8 @@ void MigrateWalletActivity::do_migrate(const std::string& name)
 
     showProgressDialog(tr("Migrate Wallet"), tr("Migrating Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(name)));
 
-    QTimer::singleShot(0, worker(), [this, name, passphrase] {
-        auto res{node().walletLoader().migrateWallet(name, passphrase)};
+    QTimer::singleShot(0, worker(), [this, name, passphrase, load_wallet] {
+        auto res{node().walletLoader().migrateWallet(name, passphrase, load_wallet)};
 
         if (res) {
             m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name)));
@@ -461,7 +462,12 @@ void MigrateWalletActivity::do_migrate(const std::string& name)
             if (res->solvables_wallet_name) {
                 m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->solvables_wallet_name.value())));
             }
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
+            if (load_wallet) {
+                assert(res->wallet);
+                m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
+            } else {
+                m_success_message += QChar(' ') + tr("The wallet was not loaded after migration. You can open it from the \"File > Open wallet\" menu.");
+            }
         } else {
             m_error_message = util::ErrorString(res);
         }
@@ -482,11 +488,15 @@ void MigrateWalletActivity::migrate(const std::string& name)
                 "The migration process will create a backup of the wallet before migrating. This backup file will be named "
                 "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
                 "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
+    auto* load_wallet_checkbox = new QCheckBox(tr("Load wallet after migration"), &box);
+    load_wallet_checkbox->setToolTip(tr("If the node is pruned and the wallet was created before the pruned height, the migration process may fail trying to load the migrated wallet."));
+    load_wallet_checkbox->setChecked(true);
+    box.setCheckBox(load_wallet_checkbox);
     box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
     box.setDefaultButton(QMessageBox::Yes);
     if (box.exec() != QMessageBox::Yes) return;
 
-    do_migrate(name);
+    do_migrate(name, load_wallet_checkbox->isChecked());
 }
 
 void MigrateWalletActivity::restore_and_migrate(const fs::path& path, const std::string& wallet_name)
@@ -523,7 +533,7 @@ void MigrateWalletActivity::restore_and_migrate(const fs::path& path, const std:
             return;
         }
         QTimer::singleShot(0, this, [this, wallet_name] {
-            do_migrate(wallet_name);
+            do_migrate(wallet_name, /*load_wallet=*/true);
         });
     });
 }

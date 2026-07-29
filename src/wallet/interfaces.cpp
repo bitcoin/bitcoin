@@ -601,9 +601,9 @@ public:
         }
         return wallet;
     }
-    util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
+    util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase, bool load_wallet) override
     {
-        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context);
+        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context, load_wallet);
         if (!res) return util::Error{util::ErrorString(res)};
         WalletMigrationResult out{
             .wallet = MakeWallet(m_context, res->wallet),
