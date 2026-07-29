@@ -228,7 +228,7 @@ CKey GenerateRandomKey(bool compressed = true) noexcept;
 
 struct CExtKey {
     unsigned char nDepth;
-    unsigned char vchFingerprint[4];
+    KeyFingerprint fingerprint;
     unsigned int nChild;
     ChainCode chaincode;
     CKey key;
@@ -236,16 +236,18 @@ struct CExtKey {
     friend bool operator==(const CExtKey& a, const CExtKey& b)
     {
         return a.nDepth == b.nDepth &&
-            memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
+            a.fingerprint == b.fingerprint &&
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.key == b.key;
     }
 
     CExtKey() = default;
-    CExtKey(const CExtPubKey& xpub, const CKey& key_in) : nDepth(xpub.nDepth), nChild(xpub.nChild), chaincode(xpub.chaincode), key(key_in)
+    CExtKey(const CExtPubKey& xpub, const CKey& key_in) : nDepth(xpub.nDepth), fingerprint(xpub.fingerprint), nChild(xpub.nChild), chaincode(xpub.chaincode), key(key_in) {}
+
+    KeyFingerprint id_key_fingerprint() const
     {
-        std::copy(xpub.vchFingerprint, xpub.vchFingerprint + sizeof(xpub.vchFingerprint), vchFingerprint);
+        return key.GetPubKey().GetID().fingerprint();
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;

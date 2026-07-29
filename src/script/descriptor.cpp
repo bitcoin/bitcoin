@@ -274,7 +274,7 @@ public:
         Assert(out.pubkeys.contains(pub->GetID()));
         auto& [pubkey, suborigin] = out.origins[pub->GetID()];
         Assert(pubkey == *pub); // m_provider must have a valid origin by this point.
-        std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), suborigin.fingerprint);
+        suborigin.fingerprint = m_origin.fingerprint;
         suborigin.path.insert(suborigin.path.begin(), m_origin.path.begin(), m_origin.path.end());
         return pub;
     }
@@ -343,7 +343,7 @@ public:
     {
         KeyOriginInfo info;
         CKeyID keyid = m_pubkey.GetID();
-        std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
+        info.fingerprint = keyid.fingerprint();
         out.origins.emplace(keyid, std::make_pair(m_pubkey, info));
         out.pubkeys.emplace(keyid, m_pubkey);
         return m_pubkey;
@@ -409,7 +409,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
         CKey key;
         if (!arg.GetKey(m_root_extkey.pubkey.GetID(), key)) return false;
         ret.nDepth = m_root_extkey.nDepth;
-        std::copy(m_root_extkey.vchFingerprint, m_root_extkey.vchFingerprint + sizeof(ret.vchFingerprint), ret.vchFingerprint);
+        ret.fingerprint = m_root_extkey.fingerprint;
         ret.nChild = m_root_extkey.nChild;
         ret.chaincode = m_root_extkey.chaincode;
         ret.key = key;
@@ -446,8 +446,7 @@ public:
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
         KeyOriginInfo info;
-        CKeyID keyid = m_root_extkey.pubkey.GetID();
-        std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
+        info.fingerprint = m_root_extkey.id_key_fingerprint();
         info.path = m_path;
         if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.push_back((uint32_t)pos);
         if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
@@ -564,9 +563,7 @@ public:
         for (; k < (int)m_path.size(); ++k) {
             end_path.push_back(m_path.at(k));
         }
-        // Get the fingerprint
-        CKeyID id = m_root_extkey.pubkey.GetID();
-        std::copy(id.begin(), id.begin() + 4, origin.fingerprint);
+        origin.fingerprint = m_root_extkey.id_key_fingerprint();
 
         CExtPubKey xpub;
         CExtKey lh_xprv;
@@ -2191,7 +2188,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     KeyOriginInfo info;
     static_assert(sizeof(info.fingerprint) == 4, "Fingerprint must be 4 bytes");
     assert(fpr_bytes.size() == 4);
-    std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
+    std::copy_n(fpr_bytes.begin(), info.fingerprint.size(), info.fingerprint.begin());
     std::vector<KeyPath> path;
     if (!ParseKeyPath(slash_split, path, apostrophe, error, /*allow_multipath=*/false)) return {};
     info.path = path.at(0);
