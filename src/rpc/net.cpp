@@ -47,6 +47,7 @@
 
 using node::NodeContext;
 using util::Join;
+using util::TrimStringView;
 
 const std::vector<std::string> CONNECTION_TYPE_DOC{
         "outbound-full-relay (default automatic connections)",
@@ -348,6 +349,11 @@ static RPCMethod addnode()
     CConnman& connman = EnsureConnman(node);
 
     const auto node_arg{self.Arg<std::string_view>("node")};
+    if (TrimStringView(node_arg).empty()) {
+        // Such a node would never resolve, but would be retried indefinitely.
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Node address cannot be empty");
+    }
+
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 
