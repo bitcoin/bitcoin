@@ -1089,6 +1089,11 @@ void HTTPServer::DisconnectClients()
                                                  "Disconnecting HTTP client %s (id=%llu)",
                                                  client->m_origin,
                                                  client->m_id);
+                                        // Drop the requests we are never going to answer. They each
+                                        // hold a shared_ptr back to this client, so erasing our own
+                                        // reference below would otherwise leave the client and
+                                        // everything it owns alive in a reference cycle.
+                                        client->m_req_queue.clear();
                                         return true;
                                     });
     if (erased > 0) {
@@ -1103,6 +1108,11 @@ void HTTPServer::ClearConnectedClients()
     if (m_connected.empty()) return;
     LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
     m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
+    // Break the client <-> queued request reference cycle before dropping our
+    // own references, same as in DisconnectClients().
+    for (const auto& client : m_connected) {
+        client->m_req_queue.clear();
+    }
     m_connected.clear();
 }
 

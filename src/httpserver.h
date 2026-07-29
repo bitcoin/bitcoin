@@ -467,6 +467,13 @@ public:
     //! they were received, blocking on a per-client basis. We won't
     //! process the next request in the queue if we are currently busy
     //! handling a previous request.
+    //! Every queued request holds a shared_ptr back to this client
+    //! (see HTTPRequest::m_client), so a non-empty queue keeps its own client
+    //! alive. The queue must therefore be cleared when the client is
+    //! disconnected, otherwise dropping the server's reference in
+    //! `HTTPServer::m_connected` frees nothing.
+    //! Only accessed from the I/O thread (or from the main thread once the
+    //! I/O thread has been joined), so no lock is needed.
     std::deque<std::unique_ptr<HTTPRequest>> m_req_queue;
 
     //! Set to true by the I/O thread when a request is popped off
