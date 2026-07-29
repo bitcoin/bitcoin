@@ -49,7 +49,7 @@ public:
 };
 
 /** Returns an error string on failure */
-util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args);
+util::ResultPtr<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args);
 
 /**
  * Dump the anchor IP address database (anchors.dat)
