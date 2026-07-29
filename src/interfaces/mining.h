@@ -37,12 +37,15 @@ public:
     // it may not match a transaction constructed from getCoinbaseTx().
     virtual CBlock getBlock() = 0;
 
-    // Fees per transaction, not including coinbase transaction.
+    // Fees per transaction, not including coinbase transaction. Throws for
+    // externally generated templates.
     virtual std::vector<CAmount> getTxFees() = 0;
-    // Sigop cost per transaction, not including coinbase transaction.
+    // Sigop cost per transaction, not including coinbase transaction. Throws
+    // for externally generated templates.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
-    /** Return fields needed to construct a coinbase transaction */
+    /** Return fields needed to construct a coinbase transaction.
+     * Throws for externally generated templates. */
     virtual node::CoinbaseTx getCoinbaseTx() = 0;
 
     /**
@@ -93,6 +96,8 @@ public:
      *
      * On testnet this will additionally return a template with difficulty 1 if
      * the tip is more than 20 minutes old.
+     *
+     * Throws for externally generated templates.
      */
     virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}) = 0;
 
@@ -100,6 +105,72 @@ public:
      * Interrupts the current wait for the next block template.
     */
     virtual void interruptWait() = 0;
+};
+
+/**
+ * Collect transactions in a client-specified order and later assemble and
+ * validate them as a block template.
+ *
+ * Usage:
+ * - Call Mining::collectTxs() with the requested wtxids in final block order.
+ * - Use unknownTxPos() to learn which transactions are still missing.
+ * - Provide missing transactions with addMissingTxs().
+ * - Once all requested transactions are available, call makeTemplate() to
+ *   validate the requested prevhash and build a block template.
+ */
+class TxCollection
+{
+public:
+    virtual ~TxCollection() = default;
+
+    //! Return the zero-based positions of transactions that are still missing.
+    virtual std::vector<uint32_t> unknownTxPos() = 0;
+
+    /**
+     * Add transactions that were missing from the initial collection.
+     *
+     * The list is checked for null entries and unexpected wtxids before any
+     * transaction is added, so a failed call leaves the collection unchanged.
+     *
+     * @throws std::runtime_error on a null transaction, a wtxid that was not
+     *         among those requested, or a list with more transactions than
+     *         the whole collection.
+     */
+    virtual void addMissingTxs(const std::vector<CTransactionRef>& txs) = 0;
+
+    /**
+     * Construct a block template using the collected transactions in their
+     * requested order.
+     *
+     * Requires all requested transactions to be present, and prevhash to
+     * match the current tip.
+     *
+     * The resulting block is validated with the same final TestBlockValidity()
+     * call used by checkBlock(), with the proof-of-work and merkle-root checks
+     * disabled.
+     *
+     * Possible @p reason values:
+     * - `missing-txs`: one or more requested transactions have not been
+     *   provided yet
+     * - `stale-prevblk`: the requested prevhash is an ancestor of the
+     *   current tip
+     * - `inconclusive-not-best-prevblk`: the requested prevhash does not
+     *   match the current tip and is not in the active chain (e.g. it is
+     *   on a fork, or the node has not seen it yet)
+     * - otherwise BIP-22 style
+     *
+     * @param[in] prevhash hash of the tip the template must build on top of
+     * @param[in] coinbase optional coinbase transaction to validate the block
+     *                     with. When null, a node-generated dummy
+     *                     coinbase is used.
+     * @param[out] reason  failure reason; see above
+     * @param[out] debug   more detailed rejection reason
+     * @returns            block template on success, otherwise nullptr
+     */
+    virtual std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                        CTransactionRef coinbase,
+                                                        std::string& reason,
+                                                        std::string& debug) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
@@ -203,6 +274,14 @@ public:
      *                     transaction if found, otherwise nullptr
      */
     virtual std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) = 0;
+
+    /**
+     * Look up transactions by witness id and keep references to any that are
+     * currently in the mempool.
+     *
+     * @throws std::runtime_error if the same wtxid is requested more than once.
+     */
+    virtual std::unique_ptr<TxCollection> collectTxs(const std::vector<Wtxid>& wtxids) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
