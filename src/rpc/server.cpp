@@ -570,10 +570,10 @@ static RPCMethod getopenrpcinfo()
             + HelpExampleRpc("getopenrpcinfo", "")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
-{
-    const bool include_hidden{!request.params[0].isNull() && request.params[0].get_bool()};
-    return tableRPC.buildOpenRPCDoc(include_hidden);
-},
+        {
+            const bool include_hidden{self.Arg<bool>("show_hidden")};
+            return tableRPC.buildOpenRPCDoc(include_hidden);
+        },
     };
 }
 
@@ -589,9 +589,9 @@ static RPCMethod rpc_discover()
             + HelpExampleRpc("rpc.discover", "")
         },
         [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
-{
-    return tableRPC.buildOpenRPCDoc(/*include_hidden=*/false);
-},
+        {
+            return tableRPC.buildOpenRPCDoc(/*include_hidden=*/false);
+        },
     };
 }
 
