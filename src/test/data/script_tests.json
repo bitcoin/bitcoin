@@ -2757,5 +2757,16 @@
 ["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66-compliant but not NULLFAIL-compliant"],
 ["0 0x09 0x300602010102010101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "NULLFAIL", "BIP66-compliant but not NULLFAIL-compliant"],
 
+["CONST_SCRIPTCODE tests"],
+["OP_CODESEPARATOR in a pre-segwit script and a signature push found in the scriptCode"],
+["are rejected with their own error codes when the CONST_SCRIPTCODE flag is set. Both"],
+["checks run before any signature verification, so the signatures never have to be valid."],
+["1", "CODESEPARATOR", "CONST_SCRIPTCODE", "OP_CODESEPARATOR", "OP_CODESEPARATOR in an executed pre-segwit script"],
+["0", "IF CODESEPARATOR ENDIF 1", "CONST_SCRIPTCODE", "OP_CODESEPARATOR", "OP_CODESEPARATOR is rejected even in an unexecuted branch"],
+["0", "IF CODESEPARATOR ENDIF 1", "", "OK", "Without CONST_SCRIPTCODE, OP_CODESEPARATOR in an unexecuted branch is allowed"],
+["0x02 0x0001", "0x02 0x0001 DROP 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG", "CONST_SCRIPTCODE", "SIG_FINDANDDELETE", "CHECKSIG fails when the signature push is found in the scriptCode"],
+["0 0x02 0x0001", "0x02 0x0001 DROP 1 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 1 CHECKMULTISIG", "CONST_SCRIPTCODE", "SIG_FINDANDDELETE", "CHECKMULTISIG fails when a signature push is found in the scriptCode"],
+["0x02 0x0001", "0x02 0x0001 DROP 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT", "", "OK", "Without CONST_SCRIPTCODE, FindAndDelete silently drops the signature push from the scriptCode"],
+
 ["The End"]
 ]
