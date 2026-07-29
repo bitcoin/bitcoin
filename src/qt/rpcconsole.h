@@ -21,6 +21,8 @@
 #include <QThread>
 #include <QWidget>
 
+#include <chrono>
+
 class PlatformStyle;
 class RPCExecutor;
 class WalletModel;
@@ -131,7 +133,7 @@ public Q_SLOTS:
     /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
     /** Ban a selected node on the Peers tab */
-    void banSelectedNode(int bantime);
+    void banSelectedNode(std::chrono::seconds bantime);
     /** Unban a selected node on the Bans tab */
     void unbanSelectedNode();
     /** set which tab has the focus (is visible) */
