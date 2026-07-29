@@ -50,11 +50,10 @@ enum class HTTPRequestMethod {
     PUT
 };
 
-namespace http_bitcoin {
-    class HTTPRequest;
-}
+class HTTPRequest;
+
 /** Handler for requests to a certain HTTP path */
-using HTTPRequestHandler = std::function<void(http_bitcoin::HTTPRequest* req, const std::string&)>;
+using HTTPRequestHandler = std::function<void(HTTPRequest* req, const std::string&)>;
 
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
@@ -64,7 +63,6 @@ void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPR
 /** Unregister handler for prefix */
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
-namespace http_bitcoin {
 using util::LineReader;
 
 //! Shortest valid request line, used by libevent in evhttp_parse_request_line()
@@ -133,14 +131,10 @@ struct HTTPVersion {
     /// @}
 };
 
-
-class HTTPResponse
-{
-public:
-    HTTPVersion m_version;
-
-    HTTPStatusCode m_status{HTTP_INTERNAL_SERVER_ERROR};
-    HTTPHeaders m_headers;
+struct HTTPResponse {
+    HTTPVersion version;
+    HTTPStatusCode status{HTTP_INTERNAL_SERVER_ERROR};
+    HTTPHeaders headers;
 
     std::string StringifyHeaders() const;
 };
@@ -149,7 +143,6 @@ class HTTPRemoteClient;
 
 class HTTPRequest
 {
-public:
     HTTPRequestMethod m_method;
     std::string m_target;
     HTTPVersion m_version;
@@ -162,6 +155,7 @@ public:
     //! Response headers may be set in advance before response body is known
     HTTPHeaders m_response_headers;
 
+public:
     explicit HTTPRequest(std::shared_ptr<HTTPRemoteClient> client) : m_client{std::move(client)} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
@@ -185,6 +179,9 @@ public:
     {
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
+
+    const HTTPVersion& GetVersion() const { return m_version; }
+    std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client; }
 
     // These methods reimplement the API from http_libevent::HTTPRequest
     // for downstream JSONRPC and REST modules.
@@ -401,7 +398,7 @@ private:
      * Do the read/write for connected sockets that are ready for IO.
      * @param[in] io_readiness Which sockets are ready and their corresponding HTTPRemoteClients.
      */
-    void SocketHandlerConnected(const IOReadiness& io_readiness) const
+    void SocketHandlerConnected(const IOReadiness& io_readiness)
         EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
@@ -424,16 +421,6 @@ private:
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
-     * Try to read HTTPRequests from a client's receive buffer.
-     * Complete requests are dispatched, incomplete requests are
-     * left in the buffer to wait for more data. Some read errors
-     * will mark this client for disconnection.
-     * @param[in] client The HTTPRemoteClient to read requests from
-     */
-    void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
-        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
-
-    /**
      * Close underlying socket connections for flagged clients
      * by removing their shared pointer from m_connected. If an HTTPRemoteClient
      * is busy in a worker thread, its connection will be closed once that
@@ -446,7 +433,6 @@ std::optional<std::string> GetQueryParameterFromUri(std::string_view uri, std::s
 
 class HTTPRemoteClient
 {
-public:
     //! ID provided by HTTPServer upon connection and instantiation
     const HTTPServer::Id m_id;
 
@@ -478,7 +464,7 @@ public:
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
     /// @{
-    Mutex m_send_mutex;
+    mutable Mutex m_send_mutex;
     std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
     /// @}
 
@@ -533,12 +519,31 @@ public:
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
     std::atomic<SteadySeconds> m_idle_since;
 
+public:
     explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
         : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
 
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    const std::string& GetOrigin() const { return m_origin; }
+    const CService& GetPeer() const { return m_addr; }
+    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
+    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
+
+    void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+    void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
+
+    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+
+    /**
+     * Try to read HTTPRequests from a client's receive buffer.
+     * Complete requests are returned, incomplete requests are
+     * left in the buffer to wait for more data. Some read errors
+     * will mark this client for disconnection.
+     */
+    static std::unique_ptr<HTTPRequest> ReadRequests(const std::shared_ptr<HTTPRemoteClient>& client);
 
     /**
      * Try to read an HTTP request from the receive buffer.
@@ -570,6 +575,5 @@ void InterruptHTTPServer();
 
 /** Stop HTTP server */
 void StopHTTPServer();
-} // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H

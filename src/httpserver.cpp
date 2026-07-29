@@ -51,7 +51,6 @@ static constexpr auto SELECT_TIMEOUT{50ms};
 static constexpr int SOCKET_OPTION_TRUE{1};
 
 using common::InvalidPortErrMsg;
-using http_bitcoin::HTTPRequest;
 
 struct HTTPPathHandler
 {
@@ -66,7 +65,7 @@ struct HTTPPathHandler
 
 /** HTTP module state */
 
-static std::unique_ptr<http_bitcoin::HTTPServer> g_http_server{nullptr};
+static std::unique_ptr<HTTPServer> g_http_server{nullptr};
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Handlers for (sub)paths
@@ -199,7 +198,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     }
 }
 
-static void RejectRequest(std::unique_ptr<http_bitcoin::HTTPRequest> hreq)
+static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
 {
     LogDebug(BCLog::HTTP, "Rejecting request while shutting down");
     hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE);
@@ -260,7 +259,6 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
     }
 }
 
-namespace http_bitcoin {
 using util::Split;
 
 std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
@@ -357,11 +355,11 @@ std::string HTTPHeaders::Stringify() const
 std::string HTTPResponse::StringifyHeaders() const
 {
     return strprintf("HTTP/%d.%d %d %s\r\n%s",
-                     m_version.major,
-                     m_version.minor,
-                     m_status,
-                     HTTPStatusReasonString(m_status),
-                     m_headers.Stringify());
+                     version.major,
+                     version.minor,
+                     status,
+                     HTTPStatusReasonString(status),
+                     headers.Stringify());
 }
 
 bool HTTPRequest::LoadControlData(LineReader& reader)
@@ -517,13 +515,13 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     HTTPResponse res;
 
     // Some response headers are determined in advance and stored in the request
-    res.m_headers = std::move(m_response_headers);
+    res.headers = std::move(m_response_headers);
 
     // Response version matches request version
-    res.m_version = m_version;
+    res.version = m_version;
 
     // Add response code
-    res.m_status = status;
+    res.status = status;
 
     // See libevent evhttp_response_needs_body()
     // Response headers are different if no body is needed
@@ -539,7 +537,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         if (m_version.minor == 0) {
             auto connection_header{m_headers.FindFirst("Connection")};
             if (connection_header && ToLower(connection_header.value()) == "keep-alive") {
-                res.m_headers.Write("Connection", "keep-alive");
+                res.headers.Write("Connection", "keep-alive");
                 keep_alive = true;
                 // HTTP/1.0 connections are closed by default so EOF is sufficient
                 // to indicate end of the body. Adding Content-Length a special case.
@@ -550,7 +548,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // HTTP/1.1
         if (m_version.minor >= 1) {
             const int64_t now_seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
-            res.m_headers.Write("Date", FormatRFC1123DateTime(now_seconds));
+            res.headers.Write("Date", FormatRFC1123DateTime(now_seconds));
 
             // HTTP/1.1 connections are kept alive by default and always require Content-Length.
             if (needs_body) needs_content_length = true;
@@ -561,24 +559,29 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     }
 
     if (needs_content_length) {
-        res.m_headers.Write("Content-Length", util::ToString(reply_body.size()));
+        res.headers.Write("Content-Length", util::ToString(reply_body.size()));
     }
 
-    if (needs_body && !res.m_headers.FindFirst("Content-Type")) {
+    if (needs_body && !res.headers.FindFirst("Content-Type")) {
         // Default type from libevent evhttp_new_object()
-        res.m_headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
+        res.headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
     }
 
     auto connection_header{m_headers.FindFirst("Connection")};
     if (connection_header && ToLower(connection_header.value()) == "close") {
         // Might not exist already but we need to replace it, not append to it
-        res.m_headers.RemoveAll("Connection");
+        res.headers.RemoveAll("Connection");
 
-        res.m_headers.Write("Connection", "close");
+        res.headers.Write("Connection", "close");
         keep_alive = false;
     }
 
-    m_client->m_keep_alive = keep_alive;
+    m_client->Send(res, reply_body, keep_alive);
+}
+
+void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive)
+{
+    m_keep_alive = keep_alive;
 
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
@@ -587,14 +590,14 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     bool send_buffer_was_empty{false};
     // Fill the send buffer with the complete serialized response headers + body
     {
-        LOCK(m_client->m_send_mutex);
-        send_buffer_was_empty = m_client->m_send_buffer.empty();
-        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+        LOCK(m_send_mutex);
+        send_buffer_was_empty = m_send_buffer.empty();
+        m_send_buffer.insert(m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
 
         // We've been using std::span up until now but it is finally time to copy
         // data. The original data will go out of scope when WriteReply() returns.
         // This is analogous to the memcpy() in libevent's evbuffer_add()
-        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
+        m_send_buffer.insert(m_send_buffer.end(), reply_body.begin(), reply_body.end());
 
         // If the buffer already held data, the I/O thread is (or soon will be)
         // draining it, so flag that there is more data to send. This must happen
@@ -604,32 +607,32 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // between, leaving m_send_ready set on an empty buffer. The I/O loop would
         // then only ever poll the socket for writeability, never read the client's
         // next request, and wedge the connection.
-        if (!send_buffer_was_empty) m_client->m_send_ready = true;
+        if (!send_buffer_was_empty) m_send_ready = true;
     }
 
     LogDebug(
         BCLog::HTTP,
         "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%llu)",
-        status,
+        res.status,
         headers_bytes.size() + reply_body.size(),
-        m_client->m_origin,
-        m_client->m_id);
+        m_origin,
+        m_id);
 
     // If the send buffer was empty before we wrote this reply, we can try an
     // optimistic send akin to CConnman::PushMessage() in which we
     // push the data directly out the socket to client right now, instead
     // of waiting for the next iteration of the I/O loop.
     if (send_buffer_was_empty) {
-        m_client->MaybeSendBytesFromBuffer();
+        MaybeSendBytesFromBuffer();
     }
 
     // Signal to the I/O loop that we are ready to handle the next request.
-    m_client->m_req_busy = false;
+    m_req_busy = false;
 }
 
 CService HTTPRequest::GetPeer() const
 {
-    return m_client->m_addr;
+    return m_client->GetPeer();
 }
 
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string_view key) const
@@ -834,7 +837,7 @@ void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& a
              addr.ToStringAddrPort(), id);
 }
 
-void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
+void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness)
 {
     for (const auto& [sock, events] : io_readiness.events_per_sock) {
         if (m_interrupt_net) {
@@ -861,49 +864,58 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         }
 
         if (recv_ready || err_ready) {
-            std::byte buf[0x10000]; // typical socket buffer is 8K-64K
-
-            const ssize_t nrecv{WITH_LOCK(
-                client->m_sock_mutex,
-                return client->m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
-
-            if (nrecv < 0) {
-                const int err = WSAGetLastError();
-                if (IOErrorIsPermanent(err)) {
-                    LogDebug(
-                        BCLog::HTTP,
-                        "Permanent read error from %s (id=%llu): %s",
-                        client->m_origin,
-                        client->m_id,
-                        NetworkErrorString(err));
-                    client->m_disconnect = true;
-                }
-            } else if (nrecv == 0) {
-                LogDebug(
-                    BCLog::HTTP,
-                    "Received EOF from %s (id=%llu)",
-                    client->m_origin,
-                    client->m_id);
-                client->m_disconnect = true;
-            } else {
-                // Reset idle timeout
-                client->m_idle_since = Now<SteadySeconds>();
-
-                // Prevent disconnect until all requests are completely handled.
-                client->m_connection_busy = true;
-
-                // Copy data from socket buffer to client receive buffer
-                client->m_recv_buffer.insert(
-                    client->m_recv_buffer.end(),
-                    buf,
-                    buf + nrecv);
-            }
+            client->Receive();
         }
         // Process as much received data as we can.
         // This executes for every client whether or not reading or writing
         // took place because it also (might) parse a request we have already
         // received and pass it to a worker thread.
-        MaybeDispatchRequestsFromClient(client);
+        if (std::unique_ptr<HTTPRequest> request{HTTPRemoteClient::ReadRequests(client)})
+        {
+            LOCK(m_request_dispatcher_mutex);
+            m_request_dispatcher(std::move(request));
+        }
+    }
+}
+
+void HTTPRemoteClient::Receive()
+{
+    std::byte buf[0x10000]; // typical socket buffer is 8K-64K
+
+    const ssize_t nrecv{WITH_LOCK(
+        m_sock_mutex,
+        return m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
+
+    if (nrecv < 0) {
+        const int err = WSAGetLastError();
+        if (IOErrorIsPermanent(err)) {
+            LogDebug(
+                BCLog::HTTP,
+                "Permanent read error from %s (id=%llu): %s",
+                m_origin,
+                m_id,
+                NetworkErrorString(err));
+            m_disconnect = true;
+        }
+    } else if (nrecv == 0) {
+        LogDebug(
+            BCLog::HTTP,
+            "Received EOF from %s (id=%llu)",
+            m_origin,
+            m_id);
+        m_disconnect = true;
+    } else {
+        // Reset idle timeout
+        m_idle_since = Now<SteadySeconds>();
+
+        // Prevent disconnect until all requests are completely handled.
+        m_connection_busy = true;
+
+        // Copy data from socket buffer to client receive buffer
+        m_recv_buffer.insert(
+            m_recv_buffer.end(),
+            buf,
+            buf + nrecv);
     }
 }
 
@@ -937,7 +949,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
 
     for (const auto& http_client : m_connected) {
         // Safely copy the shared pointer to the socket
-        std::shared_ptr<Sock> sock{WITH_LOCK(http_client->m_sock_mutex, return http_client->m_sock;)};
+        std::shared_ptr<Sock> sock{http_client->GetSock()};
 
         // Check if client is ready to send data. Don't try to receive again
         // until the send buffer is cleared (all data sent to client).
@@ -945,8 +957,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         // never hold m_sock_mutex and m_send_mutex at the same time here.
         // MaybeSendBytesFromBuffer() locks m_send_mutex then m_sock_mutex, so nesting
         // them in the opposite order here would risk a lock-order inversion deadlock.
-        const bool send_ready{WITH_LOCK(http_client->m_send_mutex, return http_client->m_send_ready;)};
-        Sock::Event event = (send_ready ? Sock::SendEvent : Sock::RecvEvent);
+        Sock::Event event = (http_client->ReadyToSend() ? Sock::SendEvent : Sock::RecvEvent);
         io_readiness.events_per_sock.emplace(sock, Sock::Events{event});
         io_readiness.httpclients_per_sock.emplace(sock, http_client);
     }
@@ -981,7 +992,7 @@ void HTTPServer::ThreadSocketHandler()
     }
 }
 
-void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
+std::unique_ptr<HTTPRequest> HTTPRemoteClient::ReadRequests(const std::shared_ptr<HTTPRemoteClient>& client)
 {
     // Try reading (potentially multiple) HTTP requests from the buffer
     while (!client->m_recv_buffer.empty()) {
@@ -1000,7 +1011,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 
             req->WriteReply(HTTP_CONTENT_TOO_LARGE);
             client->m_disconnect = true;
-            return;
+            return nullptr;
         } catch (const std::runtime_error& e) {
             LogDebug(
                 BCLog::HTTP,
@@ -1012,15 +1023,15 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
             // We failed to read a complete request from the buffer
             req->WriteReply(HTTP_BAD_REQUEST);
             client->m_disconnect = true;
-            return;
+            return nullptr;
         }
 
         // We read a complete request from the buffer into the queue
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%llu)",
-            RequestMethodString(req->m_method),
-            req->m_target,
+            RequestMethodString(req->GetRequestMethod()),
+            req->GetURI(),
             client->m_origin,
             client->m_id);
 
@@ -1031,15 +1042,16 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
     // If we are already handling a request from
     // this client, do nothing. We'll check again on the next I/O
     // loop iteration.
-    if (client->m_req_busy) return;
+    if (client->m_req_busy) return nullptr;
 
-    // Otherwise, if there is a pending request in the queue, handle it.
-    if (!client->m_req_queue.empty()) {
-        LOCK(m_request_dispatcher_mutex);
-        client->m_req_busy = true;
-        m_request_dispatcher(std::move(client->m_req_queue.front()));
-        client->m_req_queue.pop_front();
-    }
+    // Bail if we have no queued requests.
+    if (client->m_req_queue.empty()) return nullptr;
+
+    // Otherwise, return a pending request from the queue.
+    client->m_req_busy = true;
+    std::unique_ptr<HTTPRequest> req{std::move(client->m_req_queue.front())};
+    client->m_req_queue.pop_front();
+    return req;
 }
 
 void HTTPServer::DisconnectClients()
@@ -1047,54 +1059,59 @@ void HTTPServer::DisconnectClients()
     const auto now{Now<SteadySeconds>()};
     size_t erased = std::erase_if(m_connected,
                                   [&](auto& client) {
-                                        // First check for idle timeout. We reset the timer when we send and receive data,
-                                        // but if the server is busy handling a request we should ignore the timeout until
-                                        // the reply is sent. If we did erase the shared_ptr<HTTPRemoteClient> reference in m_connected
-                                        // while the server is busy with a request, there would still be a reference in a worker
-                                        // thread keeping the socket open even after "disconnecting".
-                                        const bool is_idle{m_rpcservertimeout.count() > 0 &&
-                                                           now - client->m_idle_since.load() > m_rpcservertimeout &&
-                                                           !client->m_req_busy};
-
-                                        // Disconnect this client due to error, end of communication, or idle timeout.
-                                        // May drop unsent data if we are closing due to error.
-                                        if (client->m_disconnect || is_idle) {
-                                            if (is_idle) {
-                                                LogDebug(BCLog::HTTP,
-                                                         "HTTP client idle timeout %s (id=%llu)",
-                                                         client->m_origin,
-                                                         client->m_id);
-                                            }
-                                        } else {
-                                            // Disconnect this client because the server is shutting
-                                            // down and we need to disconnect all clients...
-                                            if (m_disconnect_all_clients) {
-                                                // ...unless we still have data for this client.
-                                                if (client->m_connection_busy) {
-                                                    // There is still data for this healthy-connected client.
-                                                    // Continue the I/O loop until all data is sent or an error is encountered.
-                                                    return false;
-                                                } else {
-                                                    // This is a healthy persistent connection (e.g. keep-alive)
-                                                    // but it's time to say goodbye.
-                                                    ;
-                                                }
-                                            } else {
-                                                // No reason to disconnect.
-                                                return false;
-                                            }
-                                        }
-                                        // No reason NOT to disconnect, log and remove.
-                                        LogDebug(BCLog::HTTP,
-                                                 "Disconnecting HTTP client %s (id=%llu)",
-                                                 client->m_origin,
-                                                 client->m_id);
-                                        return true;
-                                    });
+                                      return client->MaybeDisconnect(now,
+                                                                     m_rpcservertimeout,
+                                                                     /*disconnect_all=*/m_disconnect_all_clients);
+                                  });
     if (erased > 0) {
         // Report back to the main thread
         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
+}
+
+bool HTTPRemoteClient::MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all)
+{
+    // First check for idle timeout. We reset the timer when we send and receive data,
+    // but if the server is busy handling a request we should ignore the timeout until
+    // the reply is sent. If we did erase the shared_ptr<HTTPRemoteClient> reference in m_connected
+    // while the server is busy with a request, there would still be a reference in a worker
+    // thread keeping the socket open even after "disconnecting".
+    const bool is_idle{rpcservertimeout.count() > 0 &&
+                       now - m_idle_since.load() > rpcservertimeout &&
+                       !m_req_busy};
+
+    // Disconnect this client due to error, end of communication, or idle timeout.
+    // May drop unsent data if we are closing due to error.
+    if (is_idle) {
+        LogDebug(BCLog::HTTP,
+                 "HTTP client idle timeout %s (id=%llu)",
+                 m_origin,
+                 m_id);
+    } else if (!m_disconnect) {
+        // Disconnect this client because the server is shutting
+        // down and we need to disconnect all clients...
+        if (disconnect_all) {
+            // ...unless we still have data for this client.
+            if (m_connection_busy) {
+                // There is still data for this healthy-connected client.
+                // Continue the I/O loop until all data is sent or an error is encountered.
+                return false;
+            } else {
+                // This is a healthy persistent connection (e.g. keep-alive)
+                // but it's time to say goodbye.
+                ;
+            }
+        } else {
+            // No reason to disconnect.
+            return false;
+        }
+    }
+    // No reason NOT to disconnect, log and remove.
+    LogDebug(BCLog::HTTP,
+             "Disconnecting HTTP client %s (id=%llu)",
+             m_origin,
+             m_id);
+    return true;
 }
 
 void HTTPServer::ClearConnectedClients()
@@ -1309,4 +1326,3 @@ void StopHTTPServer()
     }
     LogDebug(BCLog::HTTP, "Stopped HTTP server");
 }
-} // namespace http_bitcoin

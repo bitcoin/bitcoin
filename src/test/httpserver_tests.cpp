@@ -12,14 +12,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using http_bitcoin::GetQueryParameterFromUri;
-using http_bitcoin::HTTPHeaders;
-using http_bitcoin::HTTPRemoteClient;
-using http_bitcoin::HTTPRequest;
-using http_bitcoin::HTTPResponse;
-using http_bitcoin::HTTPServer;
-using http_bitcoin::MAX_BODY_SIZE;
-using http_bitcoin::MAX_HEADERS_SIZE;
 using util::LineReader;
 
 // HTTP request captured from bitcoin-cli
@@ -188,9 +180,9 @@ BOOST_AUTO_TEST_CASE(http_response_tests)
     // Response points to headers which already exist because some of them
     // are set before we even know what the response will be.
     HTTPResponse res;
-    res.m_version = {.major = 1, .minor = 1};
-    res.m_status = HTTP_OK;
-    res.m_headers = std::move(headers);
+    res.version = {.major = 1, .minor = 1};
+    res.status = HTTP_OK;
+    res.headers = std::move(headers);
     BOOST_CHECK_EQUAL(
         res.StringifyHeaders(),
         "HTTP/1.1 200 OK\r\n"
@@ -206,19 +198,16 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::POST);
-        BOOST_CHECK_EQUAL(req.m_target, "/");
         BOOST_CHECK_EQUAL(req.GetURI(), "/");
-        BOOST_CHECK_EQUAL(req.m_version.major, 1);
-        BOOST_CHECK_EQUAL(req.m_version.minor, 1);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Connection"), "close");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Type"), "application/json");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Authorization"), "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Length"), "46");
-        BOOST_CHECK_EQUAL(req.m_body.size(), 46);
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+        BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
+        BOOST_CHECK_EQUAL(req.GetVersion().minor, 1);
+        BOOST_CHECK_EQUAL(req.GetHeader("Host").second, "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetHeader("Connection").second, "close");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Type").second, "application/json");
+        BOOST_CHECK_EQUAL(req.GetHeader("Authorization").second, "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Length").second, "46");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount","params":[],"id":1})""\n");
     }
     {
         // Malformed: no spaces between data
@@ -313,13 +302,13 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::GET);
-        BOOST_CHECK_EQUAL(req.m_target, "/");
-        BOOST_CHECK_EQUAL(req.m_version.major, 1);
-        BOOST_CHECK_EQUAL(req.m_version.minor, 0);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::GET);
+        BOOST_CHECK_EQUAL(req.GetURI(), "/");
+        BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
+        BOOST_CHECK_EQUAL(req.GetVersion().minor, 0);
+        BOOST_CHECK_EQUAL(req.GetHeader("Host").second, "127.0.0.1");
         // no body is OK
-        BOOST_CHECK_EQUAL(req.m_body.size(), 0);
+        BOOST_CHECK_EQUAL(req.ReadBody(), "");
     }
     {
         // Malformed: missing colon
@@ -345,7 +334,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         // Don't try to read request body if Content-Length is missing
-        BOOST_CHECK_EQUAL(req.m_body.size(), 0);
+        BOOST_CHECK_EQUAL(req.ReadBody(), "");
     }
     {
         // Malformed: Content-Length is not a number
@@ -372,7 +361,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         LineReader reader(request, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), http_bitcoin::ContentTooLargeError, HasReason{"Max body size exceeded"});
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), ContentTooLargeError, HasReason{"Max body size exceeded"});
     }
     {
         // Content-Length exactly on the limit
@@ -409,7 +398,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
     }
     {
         // Prevent "chunked" transfer from exceeding size limit
@@ -426,7 +415,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         LineReader reader(excessive_chunk_size, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), http_bitcoin::ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
     }
     {
         // Allow (but ignore) Chunk Extensions
@@ -445,7 +434,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
         // Chunk Trailer was cleared
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
     }
@@ -572,12 +561,12 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
             // Connected client should have one request already from the static content.
             if (requests.size() == 1) {
                 // Check the received request
-                BOOST_CHECK_EQUAL(requests.front()->m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+                BOOST_CHECK_EQUAL(requests.front()->ReadBody(), R"({"method":"getblockcount","params":[],"id":1})""\n");
                 BOOST_CHECK_EQUAL(requests.front()->GetPeer().ToStringAddrPort(), "5.5.5.5:6789");
 
                 // Inspect the connection pointed to from the request
-                client = requests.front()->m_client;
-                BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+                client = requests.front()->GetClient();
+                BOOST_CHECK_EQUAL(client->GetOrigin(), "5.5.5.5:6789");
 
                 // Respond to request
                 requests.front()->WriteReply(HTTP_OK, "874140\n");
