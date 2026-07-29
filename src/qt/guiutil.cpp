@@ -290,6 +290,8 @@ bool hasEntryData(const QAbstractItemView *view, int column, int role)
 
 void LoadFont(const QString& file_name)
 {
+    // The qminimal plugin does not provide font loading support.
+    if (QApplication::platformName() == "minimal") return;
     const int id = QFontDatabase::addApplicationFont(file_name);
     assert(id != -1);
 }
