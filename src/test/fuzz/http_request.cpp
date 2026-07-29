@@ -25,7 +25,7 @@ FUZZ_TARGET(http_request)
     using util::LineReader;
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    const std::vector<std::byte> http_buffer{ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider, 4096)};
+    const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(4096)};
 
     HTTPRequest http_request;
     LineReader reader(http_buffer, MAX_HEADERS_SIZE);

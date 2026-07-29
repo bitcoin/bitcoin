@@ -149,7 +149,7 @@ bool TorControlConnection::ReceiveAndProcess()
 {
     if (!m_sock) return false;
 
-    std::byte buf[4096];
+    char buf[4096];
     ssize_t nread = m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);
 
     if (nread < 0) {
@@ -179,7 +179,6 @@ bool TorControlConnection::ReceiveAndProcess()
 bool TorControlConnection::ProcessBuffer()
 {
     util::LineReader reader(m_recv_buffer, MAX_LINE_LENGTH);
-    auto start = reader.it;
 
     while (auto line = reader.ReadLine()) {
         if (m_message.lines.size() == MAX_LINE_COUNT) {
@@ -210,7 +209,7 @@ bool TorControlConnection::ProcessBuffer()
         }
     }
 
-    m_recv_buffer.erase(m_recv_buffer.begin(), m_recv_buffer.begin() + std::distance(start, reader.it));
+    m_recv_buffer.erase(m_recv_buffer.begin(), m_recv_buffer.begin() + reader.Consumed());
     return true;
 }
 
