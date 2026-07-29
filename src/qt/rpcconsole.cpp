@@ -680,10 +680,10 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         });
         peersTableContextMenu->addSeparator();
         peersTableContextMenu->addAction(tr("&Disconnect"), this, &RPCConsole::disconnectSelectedNode);
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(60 * 60); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(60 * 60 * 24); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &week"), [this] { banSelectedNode(60 * 60 * 24 * 7); });
-        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &year"), [this] { banSelectedNode(60 * 60 * 24 * 365); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(std::chrono::hours{1}); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(std::chrono::days{1}); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &week"), [this] { banSelectedNode(std::chrono::weeks{1}); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &year"), [this] { banSelectedNode(std::chrono::days{365}); }); // Not an average year.
         connect(ui->peerWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showPeersTableContextMenu);
 
         // peer table signal handling - update peer details when selecting new node
@@ -1294,7 +1294,7 @@ void RPCConsole::disconnectSelectedNode()
     }
 }
 
-void RPCConsole::banSelectedNode(int bantime)
+void RPCConsole::banSelectedNode(std::chrono::seconds bantime)
 {
     if (!clientModel)
         return;
@@ -1303,7 +1303,7 @@ void RPCConsole::banSelectedNode(int bantime)
         // Find possible nodes, ban it and clear the selected node
         const auto stats = peer.data(PeerTableModel::StatsRole).value<CNodeCombinedStats*>();
         if (stats) {
-            m_node.ban(stats->nodeStats.addr, bantime);
+            m_node.ban(stats->nodeStats.addr, bantime / 1s);
             m_node.disconnectByAddress(stats->nodeStats.addr);
         }
     }
