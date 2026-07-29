@@ -1707,4 +1707,30 @@ BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
     fDiscover = discover_orig;
 }
 
+BOOST_AUTO_TEST_CASE(oversized_locator_handling)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+    const CAddress addr{Lookup("1.2.3.4", 8333, /*fAllowLookup=*/false).value(), NODE_NETWORK};
+
+    // Exercise advertised counts below and above ReadCompactSize's default MAX_SIZE limit
+    for (const uint64_t locator_count : {MAX_SIZE / sizeof(uint256), MAX_SIZE + 1}) {
+        for (auto msg_type : {NetMsgType::GETBLOCKS, NetMsgType::GETHEADERS}) {
+            CNode node{/*id=*/0, /*sock=*/nullptr, addr, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, /*addrBindIn=*/CService{}, /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+
+            connman.Handshake(node, /*successfully_connected=*/true, /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS), /*local_services=*/NODE_NETWORK, PROTOCOL_VERSION, /*relay_txs=*/true);
+            connman.FlushSendBuffer(node);
+
+            auto oversized_locator{NetMsg::Make(msg_type, CBlockLocator::DUMMY_VERSION, COMPACTSIZE(locator_count))};
+
+            BOOST_REQUIRE(connman.ReceiveMsgFrom(node, std::move(oversized_locator)));
+            node.fPauseSend = false;
+            BOOST_CHECK(!connman.ProcessMessagesOnce(node));
+            BOOST_CHECK(!node.fDisconnect); // TODO: reject oversized locators before allocating
+
+            m_node.peerman->FinalizeNode(node);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
