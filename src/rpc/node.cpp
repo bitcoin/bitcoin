@@ -96,16 +96,16 @@ static RPCMethod mockscheduler()
         throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
     }
 
-    int64_t delta_seconds = request.params[0].getInt<int64_t>();
-    if (delta_seconds <= 0 || delta_seconds > 3600) {
+    std::chrono::seconds delta_time{request.params[0].getInt<int64_t>()};
+    if (delta_time <= 0s || delta_time > 1h) {
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }
 
     const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
-    CHECK_NONFATAL(node_context.scheduler)->MockForward(std::chrono::seconds{delta_seconds});
+    CHECK_NONFATAL(node_context.scheduler)->MockForward(delta_time);
     CHECK_NONFATAL(node_context.validation_signals)->SyncWithValidationInterfaceQueue();
     for (const auto& chain_client : node_context.chain_clients) {
-        chain_client->schedulerMockForward(std::chrono::seconds(delta_seconds));
+        chain_client->schedulerMockForward(delta_time);
     }
 
     return UniValue::VNULL;
