@@ -116,6 +116,32 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
+/** Get a list of wtxids to query from the mempool for relay. Make the list heterogeneous with
+ * wtxids of mempool transactions, non-mempool transactions, and duplicates. */
+std::vector<Wtxid> WtxidsToRelay(FuzzedDataProvider& fuzzed_data_provider, const MockedTxPool& tx_pool)
+{
+    LOCK(tx_pool.cs);
+    std::vector<Wtxid> res;
+
+    uint8_t dummy{0};
+    const auto mempool_entries{tx_pool.entryAll()};
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
+        if (!mempool_entries.empty() && fuzzed_data_provider.ConsumeBool()) {
+            // Wtxid of an in-mempool transaction
+            const auto& entry_ref{PickValue(fuzzed_data_provider, mempool_entries).get()};
+            res.push_back(entry_ref.GetTx().GetWitnessHash());
+            // Don't remove it from the mempool, so the next pick is possibly a duplicate
+        } else {
+            // Wtxid of a not-in-mempool transaction
+            res.push_back(Wtxid::FromUint256(uint256{dummy}));
+            // Possibly make the next wtxid of a not-in-mempool transaction, a duplicate
+            if (fuzzed_data_provider.ConsumeBool()) dummy++;
+        }
+    }
+
+    return res;
+}
+
 void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
@@ -149,6 +175,28 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
         WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
         assert(tx_pool.size() < info_all.size());
+    }
+
+    // Query a number of mempool entries as if to relay them, and assert some invariants on the result.
+    auto wtxids_to_relay{WtxidsToRelay(fuzzed_data_provider, tx_pool)};
+    const auto wtxids_count_before{wtxids_to_relay.size()};
+    const auto n_to_sort{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 100)};
+    const auto sorted_iter{WITH_LOCK(tx_pool.cs, return tx_pool.ExtractBestByMiningScoreWithTopology(wtxids_to_relay, n_to_sort))};
+    const auto expected_count{std::min(n_to_sort, wtxids_count_before)};
+    // We removed at least as many transactions from the list as we expected sorted entries.
+    Assert(wtxids_to_relay.size() <= wtxids_count_before - expected_count);
+    // When there is enough non-duplicate in-mempool transactions (list of remaining wtxids is
+    // non-empty), we must have received the expected number of entries.
+    Assert(sorted_iter.size() == expected_count || wtxids_to_relay.empty());
+    if (n_to_sort > 0) {
+        // If we asked for a positive number of entries, we must have removed all wtxids that do
+        // not correspond to a mempool entry..
+        const auto is_in_mempool = [&](const auto& wtxid) EXCLUSIVE_LOCKS_REQUIRED(tx_pool.cs) { return tx_pool.GetIter(wtxid).has_value(); };
+        Assert(WITH_LOCK(tx_pool.cs, return std::ranges::all_of(wtxids_to_relay, is_in_mempool)));
+        // ..As well as all duplicates.
+        const auto wtxids_count{wtxids_to_relay.size()};
+        const std::set<Wtxid> unique_wtxids{std::make_move_iterator(wtxids_to_relay.begin()), std::make_move_iterator(wtxids_to_relay.end())};
+        Assert(unique_wtxids.size() == wtxids_count);
     }
 
     if (fuzzed_data_provider.ConsumeBool()) {
