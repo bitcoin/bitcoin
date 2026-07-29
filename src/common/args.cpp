@@ -214,8 +214,51 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             }
             m_command.push_back(key);
             while (++i < argc) {
-                // The remaining args are command args
-                m_command.emplace_back(argv[i]);
+                std::string cmd_arg(argv[i]);
+                // "--" ends option processing; all subsequent args are positional
+                if (cmd_arg == "--") {
+                    while (++i < argc) m_command.emplace_back(argv[i]);
+                    break;
+                }
+                // cmd_key is used only for option-name matching; cmd_arg preserves
+                // the original case so positional args are not corrupted on Windows.
+                std::string cmd_key = cmd_arg;
+#ifdef WIN32
+                cmd_key = ToLower(cmd_key);
+                // Unlike pre-command args (options only), post-command args can be
+                // file paths. Only treat /foo as -foo when there is no embedded
+                // slash, which distinguishes Windows options (/rpcwallet=foo) from
+                // paths (/bad/./path). Bare '/' is excluded by the size > 1 check.
+                if (cmd_key.size() > 1 && cmd_key[0] == '/' && cmd_key.find('/', 1) == std::string::npos)
+                    cmd_key[0] = '-';
+#endif
+                // Negative integers (e.g. -10, -3) are positional args, not options.
+                bool is_number = cmd_key.size() > 1 && cmd_key[1] != '-' &&
+                                 std::all_of(cmd_key.begin() + 1, cmd_key.end(), IsDigit);
+                bool is_option = !cmd_key.empty() && cmd_key[0] == '-' && !is_number;
+                if (is_option) {
+                    // Options after a command are parsed the same way as options
+                    // before a command — unrecognized options are always errors.
+                    std::optional<std::string> cmd_val;
+                    size_t eq = cmd_key.find('=');
+                    if (eq != std::string::npos) {
+                        cmd_val = cmd_arg.substr(eq + 1);
+                        cmd_key.erase(eq);
+                    }
+                    if (cmd_key.length() > 1 && cmd_key[1] == '-') cmd_key.erase(0, 1);
+                    cmd_key.erase(0, 1);
+                    KeyInfo keyinfo = InterpretKey(cmd_key);
+                    std::optional<unsigned int> flags = GetArgFlags_('-' + keyinfo.name);
+                    if (!flags || !keyinfo.section.empty()) {
+                        error = strprintf("Invalid parameter %s", argv[i]);
+                        return false;
+                    }
+                    std::optional<common::SettingsValue> value = InterpretValue(keyinfo, cmd_val ? &*cmd_val : nullptr, *flags, error);
+                    if (!value) return false;
+                    m_settings.command_line_options[keyinfo.name].push_back(*value);
+                } else {
+                    m_command.emplace_back(cmd_arg);
+                }
             }
             break;
         }
