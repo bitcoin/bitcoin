@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(too_little_work)
 
 BOOST_AUTO_TEST_CASE(system_clock_lagging_behind_chain_start)
 {
-    FakeNodeClock clock{(chain_start.GetBlockTime() - MAX_FUTURE_BLOCK_TIME) * 1s};
+    FakeNodeClock clock{chain_start.Time() - MAX_FUTURE_BLOCK_TIME};
     BOOST_CHECK_NO_THROW(CreateState());
 
     clock -= 1s;

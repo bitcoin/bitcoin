@@ -44,6 +44,8 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {
+    BOOST_CHECK_EQUAL(MAX_FUTURE_BLOCK_TIME / 1s, 2 * 60 * 60);
+
     // An empty chain
     const CChain chain_0;
     // A chain with 2 blocks
