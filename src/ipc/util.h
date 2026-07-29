@@ -1,0 +1,64 @@
+// Copyright (c) The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef BITCOIN_IPC_UTIL_H
+#define BITCOIN_IPC_UTIL_H
+
+#include <tinyformat.h>
+#include <util/strencodings.h>
+
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <kj/debug.h>
+#include <mp/proxy-io.h>
+#include <mp/util.h>
+#include <mp/version.h>
+#include <sys/socket.h>
+
+namespace mp {
+// Definitions that can be deleted when libmultiprocess subtree is updated to
+// v14. Having these allows Bitcoin Core changes to be decoupled from
+// libmultiprocess changes so they don't have to be reviewed in a single PR.
+#if MP_MAJOR_VERSION < 14
+class EventLoop;
+using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
+
+using Stream = SocketId;
+inline Stream MakeStream(EventLoop&, SocketId socket)
+{
+    return socket;
+}
+
+inline std::array<SocketId, 2> SocketPair()
+{
+    int pair[2];
+    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
+    return {pair[0], pair[1]};
+}
+
+inline std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std::string>(std::string)>& spawn_argv)
+{
+    ProcessId pid;
+    SocketId socket = SpawnProcess(pid, [&](int fd) { return spawn_argv(strprintf("%d", fd)); });
+    return {pid, socket};
+}
+
+inline SocketId StartSpawned(const std::string& connect_info)
+{
+    auto socket = ToIntegral<SocketId>(connect_info);
+    if (!socket) throw std::invalid_argument(strprintf("Invalid socket descriptor '%s'", connect_info));
+    return *socket;
+}
+
+inline ThreadContext& CurrentThread()
+{
+    return g_thread_context;
+}
+#endif
+} // namespace mp
+
+#endif // BITCOIN_IPC_UTIL_H
