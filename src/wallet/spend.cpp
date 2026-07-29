@@ -21,6 +21,7 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/time.h>
 #include <util/trace.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -982,7 +983,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
     if (chain.isInitialBlockDownload()) {
         return false;
     }
-    constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 8 * 60 * 60; // in seconds
+    constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE{8h / 1s};
     int64_t block_time;
     CHECK_NONFATAL(chain.findBlock(block_hash, FoundBlock().time(block_time)));
     if (block_time < (GetTime() - MAX_ANTI_FEE_SNIPING_TIP_AGE)) {
