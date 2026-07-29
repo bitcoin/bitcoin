@@ -8,15 +8,17 @@ Test that only one peer at a time initially syncs headers and each block
 announcement triggers one additional getheaders.
 
 Also test peer timeout during initial headers sync, including normal peer
-disconnection vs noban peer behavior.
+disconnection vs noban behavior, and old-chain eviction after releasing a sync slot.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import REGTEST_N_BITS
 from test_framework.messages import (
     CBlock,
+    CBlockHeader,
     CInv,
     MSG_BLOCK,
+    from_hex,
     msg_headers,
     msg_inv,
 )
@@ -32,6 +34,7 @@ import random
 import time
 
 # Constants from net_processing
+CHAIN_SYNC_TIMEOUT_SEC = 20 * 60
 HEADERS_DOWNLOAD_TIMEOUT_BASE_SEC = 15 * 60
 HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER_MS = 1
 HEADERS_RESPONSE_TIME_SEC = 2 * 60
@@ -104,6 +107,34 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.announce_random_block([peer1])
         with p2p_lock:
             assert_equal("getheaders" in peer1.last_message, True)
+
+    def test_released_slot_outbound_eviction(self):
+        self.log.info("Test outbound eviction after releasing a headers sync slot")
+        self.restart_node(0)
+        node = self.nodes[0]
+        node.setmocktime(node.getblockchaininfo()["time"] + 1)
+        self.generate(node, 2)
+        old_header = from_hex(CBlockHeader(), node.getblockheader(node.getblockhash(1), False))
+        node.setmocktime(int(time.time()))
+
+        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-full-relay")
+        peer.wait_for_getheaders()
+        peer.send_and_ping(msg_headers())
+
+        # Occupy the released slot so `peer` stays released; its eviction timeout then
+        # has to keep running on m_chain_sync.m_timeout alone.
+        sync_peer = node.add_p2p_connection(P2PInterface())
+        sync_peer.wait_for_getheaders()
+
+        node.bumpmocktime(CHAIN_SYNC_TIMEOUT_SEC + 1)
+        peer.sync_with_ping()
+        with p2p_lock:
+            assert_equal("getheaders" in peer.last_message, False)  # TODO: Continue an armed old-chain eviction after releasing the sync slot.
+
+        peer.send_and_ping(msg_headers([old_header]))
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Outbound peer has old chain"]):  # TODO: Log old-chain eviction after the released slot expires.
+            node.bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
+            peer.sync_with_ping()  # TODO: Disconnect the peer when the armed old-chain eviction expires.
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
@@ -218,6 +249,7 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.test_initial_headers_sync()
         self.test_normal_peer_timeout()
         self.test_noban_peer_timeout()
+        self.test_released_slot_outbound_eviction()
 
 
 if __name__ == '__main__':
