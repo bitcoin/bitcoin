@@ -2671,6 +2671,10 @@ static RPCMethod scanblocks()
         g_scanfilter_progress_height = start_block_height;
         bool completed = true;
 
+        // Only used to classify a failed range lookup below; the requested range
+        // may be available even while the index is behind the tip.
+        const bool index_ready = index->BlockUntilSyncedToCurrentChain();
+
         const CBlockIndex* end_range = nullptr;
         do {
             node.rpc_interruption_point(); // allow a clean shutdown
@@ -2685,21 +2689,26 @@ static RPCMethod scanblocks()
                     WITH_LOCK(::cs_main, return chainman.ActiveChain()[start_block + amount_per_chunk]) :
                     stop_block;
 
-            if (index->LookupFilterRange(start_block, end_range, filters)) {
-                for (const BlockFilter& filter : filters) {
-                    // compare the elements-set with each filter
-                    if (filter.GetFilter().MatchAny(needle_set)) {
-                        if (filter_false_positives) {
-                            // Double check the filter matches by scanning the block
-                            const CBlockIndex& blockindex = *CHECK_NONFATAL(WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(filter.GetBlockHash())));
+            if (!index->LookupFilterRange(start_block, end_range, filters)) {
+                // Report the failure like getblockfilter: still indexing vs. corruption.
+                if (!index_ready) {
+                    throw JSONRPCError(RPC_MISC_ERROR, "Block filters are still in the process of being indexed.");
+                }
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block filter range. This error is unexpected and indicates index corruption.");
+            }
+            for (const BlockFilter& filter : filters) {
+                // compare the elements-set with each filter
+                if (filter.GetFilter().MatchAny(needle_set)) {
+                    if (filter_false_positives) {
+                        // Double check the filter matches by scanning the block
+                        const CBlockIndex& blockindex = *CHECK_NONFATAL(WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(filter.GetBlockHash())));
 
-                            if (!CheckBlockFilterMatches(chainman.m_blockman, blockindex, needle_set)) {
-                                continue;
-                            }
+                        if (!CheckBlockFilterMatches(chainman.m_blockman, blockindex, needle_set)) {
+                            continue;
                         }
-
-                        blocks.push_back(filter.GetBlockHash().GetHex());
                     }
+
+                    blocks.push_back(filter.GetBlockHash().GetHex());
                 }
             }
             start_index = end_range;
