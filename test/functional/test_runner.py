@@ -476,7 +476,7 @@ def main():
         assert results_filepath.parent.exists(), "Results file parent directory does not exist"
         logging.debug("Test results will be written to " + str(results_filepath))
 
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_bitcoind = config.getboolean("components", "ENABLE_BITCOIND")
 
     if not enable_bitcoind:
         print("No functional tests to run.")
@@ -545,7 +545,7 @@ def main():
                 # Exclude all variants of a test
                 remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
 
-    if config["components"].getboolean("BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
+    if config.getboolean("components", "BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
         # Remove it, and expand it for each bench in the list
         test_list.remove(TOOL_BENCH_SANITY_CHECK)
         bench_cmd = Binaries(get_binary_paths(config), bin_dir=None).bench_argv() + ["-list"]
