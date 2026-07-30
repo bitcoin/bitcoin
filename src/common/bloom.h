@@ -73,7 +73,9 @@ public:
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
     CBloomFilter() : nHashFuncs(0), nTweak(0), nFlags(0) {}
 
-    SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
+    // Bound vData at MAX_BLOOM_FILTER_SIZE before allocation. Wire format is unchanged;
+    // IsWithinSizeConstraints() still guards the exact boundary and nHashFuncs.
+    SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(LIMITED_VECTOR(obj.vData, MAX_BLOOM_FILTER_SIZE), obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
     void insert(Span<const unsigned char> vKey);
     void insert(const COutPoint& outpoint);

@@ -45,6 +45,11 @@ class CSuperblock;
 
 class UniValue;
 
+namespace governance {
+// How long a requested governance inv hash remains in the request cache.
+inline constexpr std::chrono::seconds RELIABLE_PROPAGATION_TIME{60};
+} // namespace governance
+
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
@@ -255,7 +260,6 @@ private:
     object_ref_cm_t cmapVoteToObject;
     std::map<uint256, std::shared_ptr<CGovernanceObject>> mapPostponedObjects;
     std::set<uint256> setAdditionalRelayObjects;
-    std::map<uint256, std::chrono::seconds> m_requested_hash_time;
     bool fRateChecksEnabled{true};
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
@@ -324,6 +328,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void AddGovernanceObject(CGovernanceObject& govobj, const CNode* pfrom = nullptr) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
+    /** Test-only helper: inserts an object into the syncable object store without
+     *  running collateral or chain validation. */
+    void AddGovernanceObjectForTesting(const CGovernanceObject& govobj)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
     // Superblocks
     bool GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
@@ -340,6 +348,10 @@ public:
                            int nBlockHeight) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool HaveObjectForHash(const uint256& nHash) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool HaveObjectForFetch(const uint256& nHash) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool HaveSyncableObjectForHash(const uint256& nHash) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool HaveVoteForHash(const uint256& nHash) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
@@ -374,8 +386,6 @@ public:
     /** Returns inventory items for syncable votes on a specific object, filtered by bloom filter */
     [[nodiscard]] std::vector<CInv> GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    /// Called to indicate a requested object or vote has been received
-    bool AcceptMessage(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_store, !cs_relay);
 

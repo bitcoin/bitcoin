@@ -31,7 +31,13 @@ namespace {
 constexpr std::chrono::seconds GOVERNANCE_DELETION_DELAY{10min};
 constexpr std::chrono::seconds GOVERNANCE_ORPHAN_EXPIRATION_TIME{10min};
 constexpr std::chrono::seconds MAX_TIME_FUTURE_DEVIATION{1h};
-constexpr std::chrono::seconds RELIABLE_PROPAGATION_TIME{1min};
+using governance::RELIABLE_PROPAGATION_TIME;
+
+bool IsSyncableObject(const std::shared_ptr<CGovernanceObject>& govobj)
+{
+    const auto& obj = *Assert(govobj);
+    return !obj.IsSetCachedDelete() && !obj.IsSetExpired();
+}
 
 class ScopedLockBool
 {
@@ -129,6 +135,38 @@ bool CGovernanceManager::HaveObjectForHash(const uint256& nHash) const
 {
     LOCK(cs_store);
     return (mapObjects.count(nHash) == 1 || mapPostponedObjects.count(nHash) == 1);
+}
+
+bool CGovernanceManager::HaveObjectForFetch(const uint256& nHash) const
+{
+    LOCK(cs_store);
+
+    if (mapErasedGovernanceObjects.count(nHash) != 0) {
+        return false;
+    }
+
+    auto it = mapObjects.find(nHash);
+    if (it != mapObjects.end()) {
+        return IsSyncableObject(it->second);
+    }
+
+    it = mapPostponedObjects.find(nHash);
+    if (it != mapPostponedObjects.end()) {
+        return IsSyncableObject(it->second);
+    }
+
+    return false;
+}
+
+bool CGovernanceManager::HaveSyncableObjectForHash(const uint256& nHash) const
+{
+    LOCK(cs_store);
+    const auto it = mapObjects.find(nHash);
+    if (it == mapObjects.end()) {
+        return false;
+    }
+
+    return IsSyncableObject(it->second);
 }
 
 bool CGovernanceManager::SerializeObjectForHash(const uint256& nHash, CDataStream& ss) const
@@ -328,6 +366,13 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, const CN
     AddGovernanceObjectInternal(govobj, pfrom);
 }
 
+void CGovernanceManager::AddGovernanceObjectForTesting(const CGovernanceObject& govobj)
+{
+    AssertLockNotHeld(cs_store);
+    LOCK(cs_store);
+    mapObjects.emplace(govobj.GetHash(), std::make_shared<CGovernanceObject>(govobj));
+}
+
 void CGovernanceManager::CheckAndRemove()
 {
     AssertLockNotHeld(cs_store);
@@ -431,18 +476,9 @@ void CGovernanceManager::CheckAndRemove()
         }
     }
 
-    // forget about expired requests
-    for (auto r_it = m_requested_hash_time.begin(); r_it != m_requested_hash_time.end();) {
-        if (r_it->second < nNow) {
-            m_requested_hash_time.erase(r_it++);
-        } else {
-            ++r_it;
-        }
-    }
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s, m_requested_hash_time size=%d\n",
-             ToString(), m_requested_hash_time.size());
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s\n", ToString());
 }
 
 std::vector<CInv> CGovernanceManager::FetchRelayInventory()
@@ -586,16 +622,9 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-    const auto valid_until = GetTime<std::chrono::seconds>() + RELIABLE_PROPAGATION_TIME;
-    const auto& [_itr, inserted] = m_requested_hash_time.emplace(inv.hash, valid_until);
-
-    if (inserted) {
-        LogPrint(BCLog::GOBJECT, /* Continued */
-                 "CGovernanceManager::ConfirmInventoryRequest added %s inv hash to m_requested_hash_time, size=%d\n",
-                 inv.type == MSG_GOVERNANCE_OBJECT ? "object" : "vote", m_requested_hash_time.size());
-    }
-
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest reached end, returning true\n");
+    // We don't have it and it's a known type: signal that we want to fetch it.
+    // The net-layer per-peer request tracker records the pending request; acceptance
+    // of the eventual response is gated on that tracker (see NetGovernance::ProcessMessage).
     return true;
 }
 
@@ -608,14 +637,14 @@ std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, 
         return {};
     }
 
-    const auto& govobj = *Assert(it->second);
-    if (govobj.IsSetCachedDelete() || govobj.IsSetExpired()) {
+    if (!IsSyncableObject(it->second)) {
         return {};
     }
 
     std::vector<CInv> invs;
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
 
+    const auto& govobj = *Assert(it->second);
     LOCK(govobj.cs);
     const auto& fileVotes = govobj.GetVoteFile();
     for (const auto& vote : fileVotes.GetVotes()) {
@@ -640,7 +669,7 @@ std::vector<CInv> CGovernanceManager::GetSyncableObjectInvs() const
     invs.reserve(mapObjects.size());
 
     for (const auto& [nHash, govobj] : mapObjects) {
-        if (Assert(govobj)->IsSetCachedDelete() || govobj->IsSetExpired()) {
+        if (!IsSyncableObject(govobj)) {
             continue;
         }
         invs.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
@@ -931,20 +960,6 @@ std::pair<std::vector<uint256>, std::vector<uint256>> CGovernanceManager::FetchG
     return {vTriggerObjHashes, vOtherObjHashes};
 }
 
-bool CGovernanceManager::AcceptMessage(const uint256& nHash)
-{
-    AssertLockNotHeld(cs_store);
-    LOCK(cs_store);
-    auto it = m_requested_hash_time.find(nHash);
-    if (it == m_requested_hash_time.end()) {
-        // We never requested this
-        return false;
-    }
-    // Only accept one response
-    m_requested_hash_time.erase(it);
-    return true;
-}
-
 void CGovernanceManager::RebuildIndexes()
 {
     AssertLockHeld(cs_store);
@@ -1011,7 +1026,6 @@ void CGovernanceManager::Clear()
     cmapVoteToObject.Clear();
     mapPostponedObjects.clear();
     setAdditionalRelayObjects.clear();
-    m_requested_hash_time.clear();
     fRateChecksEnabled = true;
     mapTrigger.clear();
 }
@@ -1146,7 +1160,6 @@ void CGovernanceManager::RemoveInvalidVotes()
                 cmapVoteToObject.Erase(voteHash);
                 cmapInvalidVotes.Erase(voteHash);
                 cmmapOrphanVotes.Erase(voteHash);
-                m_requested_hash_time.erase(voteHash);
             }
         }
     }

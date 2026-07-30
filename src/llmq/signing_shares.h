@@ -157,46 +157,132 @@ public:
 public:
     SERIALIZE_METHODS(CBatchedSigShares, obj)
     {
-        READWRITE(VARINT(obj.sessionId), obj.sigShares);
+        READWRITE(VARINT(obj.sessionId), LIMITED_VECTOR(obj.sigShares, MAX_MSGS_TOTAL_BATCHED_SIGS));
     }
 
     [[nodiscard]] std::string ToInvString() const;
+};
+
+//! Decode a QBSIGSHARES payload into its vector of CBatchedSigShares.
+//!
+//! The inner sigShares vector of each batch is bounded by CBatchedSigShares's
+//! SERIALIZE_METHODS via LIMITED_VECTOR, but many individually-valid batches
+//! could still exceed the total sig-share cap, so this bounds the outer batch
+//! count and checks the running total of inner sig shares as it decodes,
+//! stopping before an attacker forces us through the full cross product of the
+//! per-vector limits. A wire count above the cap (outer batch count or running
+//! inner total) throws std::ios_base::failure once detected, leaving the caller
+//! to log, ban, and rethrow uniformly.
+std::vector<CBatchedSigShares> UnserializeBatchedSigShares(CDataStream& vRecv);
+
+/**
+ * Two-level (signHash -> quorumMember) map with a running entry count, so Size() is O(1)
+ * instead of a fold over all sign hash buckets. All structural mutations go through the
+ * counted methods; Buckets() is for lookups and in-place value updates only.
+ */
+template<typename T>
+class CountedBucketMap
+{
+public:
+    using BucketMap = Uint256HashMap<std::unordered_map<uint16_t, T>>;
+
+private:
+    BucketMap m_data;
+    size_t m_num_entries{0};
+
+public:
+    BucketMap& Buckets() { return m_data; }
+    const BucketMap& Buckets() const { return m_data; }
+    [[nodiscard]] size_t Size() const { return m_num_entries; }
+
+    bool Emplace(const SigShareKey& k, const T& v)
+    {
+        if (!m_data[k.first].emplace(k.second, v).second) {
+            return false;
+        }
+        ++m_num_entries;
+        return true;
+    }
+
+    void Erase(const SigShareKey& k)
+    {
+        auto it = m_data.find(k.first);
+        if (it == m_data.end()) {
+            return;
+        }
+        m_num_entries -= it->second.erase(k.second);
+        if (it->second.empty()) {
+            m_data.erase(it);
+        }
+    }
+
+    void EraseBucket(const uint256& signHash)
+    {
+        auto it = m_data.find(signHash);
+        if (it == m_data.end()) {
+            return;
+        }
+        m_num_entries -= it->second.size();
+        m_data.erase(it);
+    }
+
+    template<typename F>
+    void EraseIf(F&& f)
+    {
+        for (auto it = m_data.begin(); it != m_data.end(); ) {
+            SigShareKey k;
+            k.first = it->first;
+            for (auto jt = it->second.begin(); jt != it->second.end(); ) {
+                k.second = jt->first;
+                if (f(k, jt->second)) {
+                    jt = it->second.erase(jt);
+                    --m_num_entries;
+                } else {
+                    ++jt;
+                }
+            }
+            if (it->second.empty()) {
+                it = m_data.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    void Clear()
+    {
+        m_data.clear();
+        m_num_entries = 0;
+    }
 };
 
 template<typename T>
 class SigShareMap
 {
 private:
-    Uint256HashMap<std::unordered_map<uint16_t, T>> internalMap;
+    CountedBucketMap<T> internalMap;
 
 public:
     bool Add(const SigShareKey& k, const T& v)
     {
-        auto& m = internalMap[k.first];
-        return m.emplace(k.second, v).second;
+        return internalMap.Emplace(k, v);
     }
 
     void Erase(const SigShareKey& k)
     {
-        auto it = internalMap.find(k.first);
-        if (it == internalMap.end()) {
-            return;
-        }
-        it->second.erase(k.second);
-        if (it->second.empty()) {
-            internalMap.erase(it);
-        }
+        internalMap.Erase(k);
     }
 
     void Clear()
     {
-        internalMap.clear();
+        internalMap.Clear();
     }
 
     [[nodiscard]] bool Has(const SigShareKey& k) const
     {
-        auto it = internalMap.find(k.first);
-        if (it == internalMap.end()) {
+        auto& m = internalMap.Buckets();
+        auto it = m.find(k.first);
+        if (it == m.end()) {
             return false;
         }
         return it->second.count(k.second) != 0;
@@ -204,8 +290,9 @@ public:
 
     T* Get(const SigShareKey& k)
     {
-        auto it = internalMap.find(k.first);
-        if (it == internalMap.end()) {
+        auto& m = internalMap.Buckets();
+        auto it = m.find(k.first);
+        if (it == m.end()) {
             return nullptr;
         }
 
@@ -229,25 +316,23 @@ public:
 
     const T* GetFirst() const
     {
-        if (internalMap.empty()) {
+        auto& m = internalMap.Buckets();
+        if (m.empty()) {
             return nullptr;
         }
-        return &internalMap.begin()->second.begin()->second;
+        return &m.begin()->second.begin()->second;
     }
 
     [[nodiscard]] size_t Size() const
     {
-        size_t s = 0;
-        for (auto& p : internalMap) {
-            s += p.second.size();
-        }
-        return s;
+        return internalMap.Size();
     }
 
     [[nodiscard]] size_t CountForSignHash(const uint256& signHash) const
     {
-        auto it = internalMap.find(signHash);
-        if (it == internalMap.end()) {
+        auto& m = internalMap.Buckets();
+        auto it = m.find(signHash);
+        if (it == m.end()) {
             return 0;
         }
         return it->second.size();
@@ -255,13 +340,14 @@ public:
 
     [[nodiscard]] bool Empty() const
     {
-        return internalMap.empty();
+        return internalMap.Buckets().empty();
     }
 
     const std::unordered_map<uint16_t, T>* GetAllForSignHash(const uint256& signHash) const
     {
-        auto it = internalMap.find(signHash);
-        if (it == internalMap.end()) {
+        auto& m = internalMap.Buckets();
+        auto it = m.find(signHash);
+        if (it == m.end()) {
             return nullptr;
         }
         return &it->second;
@@ -269,35 +355,19 @@ public:
 
     void EraseAllForSignHash(const uint256& signHash)
     {
-        internalMap.erase(signHash);
+        internalMap.EraseBucket(signHash);
     }
 
     template<typename F>
     void EraseIf(F&& f)
     {
-        for (auto it = internalMap.begin(); it != internalMap.end(); ) {
-            SigShareKey k;
-            k.first = it->first;
-            for (auto jt = it->second.begin(); jt != it->second.end(); ) {
-                k.second = jt->first;
-                if (f(k, jt->second)) {
-                    jt = it->second.erase(jt);
-                } else {
-                    ++jt;
-                }
-            }
-            if (it->second.empty()) {
-                it = internalMap.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        internalMap.EraseIf(f);
     }
 
     template<typename F>
     void ForEach(F&& f)
     {
-        for (auto& p : internalMap) {
+        for (auto& p : internalMap.Buckets()) {
             SigShareKey k;
             k.first = p.first;
             for (auto& p2 : p.second) {
@@ -338,8 +408,9 @@ public:
         CSigSharesInv announced;
         CSigSharesInv requested;
         CSigSharesInv knows;
+
+        bool receivedAnnouncement{false};
     };
-    // TODO limit number of sessions per node
     Uint256HashMap<Session> sessions;
 
     std::unordered_map<uint32_t, Session*> sessionByRecvId;
@@ -351,6 +422,10 @@ public:
 
     Session& GetOrCreateSessionFromShare(const CSigShare& sigShare);
     Session& GetOrCreateSessionFromAnn(const CSigSesAnn& ann);
+    [[nodiscard]] bool CanCreateSessionFromAnn(const CSigSesAnn& ann, size_t maxSessions) const;
+    [[nodiscard]] size_t GetSessionCount() const;
+    [[nodiscard]] size_t GetSessionCount(Consensus::LLMQType llmqType) const;
+    [[nodiscard]] size_t GetAnnouncementSessionCount(Consensus::LLMQType llmqType) const;
     Session* GetSessionBySignHash(const uint256& signHash);
     Session* GetSessionByRecvId(uint32_t sessionId);
     bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo);
@@ -474,8 +549,13 @@ private:
     static bool PreVerifyBatchedSigShares(const CActiveMasternodeManager& mn_activeman, const CQuorumManager& quorum_manager,
                                           const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
+    // CollectPendingSigSharesToVerify returns true if there's more work to do.
+    // The returned batch contains at most maxShares actual sig shares, drawn one
+    // at a time in randomized round-robin order across peers so that no single
+    // peer can dominate a batch. Bounding by shares (not by unique sessions)
+    // caps the amount of BLS work that can be in-flight in the worker pool.
     bool CollectPendingSigSharesToVerify(
-        size_t maxUniqueSessions, std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
+        size_t maxShares, std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
         std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool ProcessPendingSigShares() EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -492,6 +572,8 @@ private:
     bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     static CSigShare RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const std::pair<uint16_t, CBLSLazySignature>& in);
+    bool TryAddPendingIncomingSigShare(NodeId nodeId, CSigSharesNodeState& nodeState, const CSigShare& sigShare)
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void RemoveSigSharesForSession(const uint256& signHash) EXCLUSIVE_LOCKS_REQUIRED(cs);

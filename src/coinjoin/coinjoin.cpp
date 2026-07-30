@@ -92,7 +92,7 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
     if (tx->vin.size() < size_t(CoinJoin::GetMinPoolParticipants())) {
         return false;
     }
-    if (tx->vin.size() > CoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
+    if (tx->vin.size() > CoinJoin::GetMaxPoolInputOutputCount()) {
         return false;
     }
     return ranges::all_of(tx->vout, [] (const auto& txOut){

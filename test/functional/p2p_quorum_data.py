@@ -3,9 +3,20 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import copy
+import struct
 import time
 
-from test_framework.messages import CSigSharesInv, msg_qgetdata, msg_qsigsinv, msg_qwatch
+from test_framework.messages import (
+    CSigSharesInv,
+    msg_qdata,
+    msg_qgetdata,
+    msg_qsigsinv,
+    msg_qwatch,
+    ser_compact_size,
+    ser_uint256,
+    ser_vector,
+)
 from test_framework.p2p import (
     p2p_lock,
     P2PInterface,
@@ -52,6 +63,46 @@ uacomment_m3_2 = "MN3_2"
 # hundreds of GiB of memory.
 oversized_inv_bits = 0x02000000  # MAX_SIZE; ~4 MiB per vector<bool>
 oversized_inv_count = 65536      # ~512 KiB wire -> ~256 GiB declared allocation
+
+
+class _QDataWithRawPayload(msg_qdata):
+    """A msg_qdata that ships arbitrary bytes as its wire body.
+
+    The p2p framework calls serialize() to build the message payload; overriding
+    it lets us craft a QDATA whose declared vvec/contribs CompactSize does not
+    match the wire body — the exact shape a malicious peer would send.
+    """
+    __slots__ = ("_raw_payload",)
+
+    def __init__(self, raw_payload):
+        super().__init__()
+        self._raw_payload = raw_payload
+
+    def serialize(self):
+        return self._raw_payload
+
+
+def craft_qdata_with_bad_section(qdata_valid, *, bad_vvec=None, bad_contribs=None):
+    """Build a QDATA payload from qdata_valid with a single malformed vector section.
+
+    Both `bad_vvec` and `bad_contribs`, if provided, are raw wire bytes that
+    fully replace that vector's section (compact-size prefix + any element
+    bytes the attacker wants to include, typically none). Sections not
+    overridden are copied verbatim from qdata_valid, so ProcessMessage reaches
+    the intended check point (a valid vvec is required to reach the
+    contributions check).
+    """
+    payload = b""
+    payload += struct.pack("<B", qdata_valid.quorum_type)
+    payload += ser_uint256(qdata_valid.quorum_hash)
+    payload += struct.pack("<H", qdata_valid.data_mask)
+    payload += ser_uint256(qdata_valid.protx_hash)
+    payload += struct.pack("<B", qdata_valid.error)
+    if qdata_valid.data_mask & 0x01:
+        payload += bad_vvec if bad_vvec is not None else ser_vector(qdata_valid.quorum_vvec)
+    if qdata_valid.data_mask & 0x02:
+        payload += bad_contribs if bad_contribs is not None else ser_vector(qdata_valid.enc_contributions)
+    return _QDataWithRawPayload(payload)
 
 
 def assert_qdata(qdata, qgetdata, error, len_vvec=0, len_contributions=0):
@@ -222,26 +273,48 @@ class QuorumDataMessagesTest(DashTestFramework):
             force_request_expire()
             assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
-            qdata_invalid_request = qdata_valid
+            qdata_invalid_request = copy.deepcopy(qdata_valid)
             qdata_invalid_request.data_mask = 2
             p2p_mn1.send_message(qdata_invalid_request)
             wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 30)
-            # - Invalid verification vector
-            force_request_expire()
-            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
-            p2p_mn1.wait_for_qmessage("qgetdata")
-            qdata_invalid_vvec = qdata_valid
+            # Invalid vector sizes now bump ban score to 100 and disconnect the peer,
+            # so each of the following cases uses a fresh authenticated connection.
+
+            def send_bad_qdata_expect_disconnect(bad_qdata):
+                mn1.get_node(self).disconnect_p2ps()
+                fresh_p2p = p2p_connection(mn1.get_node(self))
+                fresh_id = get_p2p_id(mn1.get_node(self))
+                mnauth(mn1.get_node(self), fresh_id, fake_mnauth_1[0], fake_mnauth_1[1])
+                force_request_expire()
+                assert mn1.get_node(self).quorum("getdata", fresh_id, 100, quorum_hash, 0x03, mn1.proTxHash)
+                fresh_p2p.wait_for_qmessage("qgetdata")
+                fresh_p2p.send_message(bad_qdata)
+                self.wait_until(lambda: not fresh_p2p.is_connected, timeout=10)
+
+            # - Invalid verification vector size
+            qdata_invalid_vvec = copy.deepcopy(qdata_valid)
             qdata_invalid_vvec.quorum_vvec.pop()
-            p2p_mn1.send_message(qdata_invalid_vvec)
-            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 40)
-            # - Invalid contributions
-            force_request_expire()
-            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
-            p2p_mn1.wait_for_qmessage("qgetdata")
-            qdata_invalid_contribution = qdata_valid
+            send_bad_qdata_expect_disconnect(qdata_invalid_vvec)
+            # - Undersized contributions
+            qdata_invalid_contribution = copy.deepcopy(qdata_valid)
             qdata_invalid_contribution.enc_contributions.pop()
-            p2p_mn1.send_message(qdata_invalid_contribution)
-            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 50)
+            send_bad_qdata_expect_disconnect(qdata_invalid_contribution)
+            # - Oversized contributions
+            qdata_oversized_contribution = copy.deepcopy(qdata_valid)
+            qdata_oversized_contribution.enc_contributions.append(qdata_oversized_contribution.enc_contributions[0])
+            send_bad_qdata_expect_disconnect(qdata_oversized_contribution)
+            # - Raw vectors with a declared count above the protocol limit but within
+            #   ReadCompactSize's supported range, and no element bytes following. A correctly
+            #   bounded node rejects the count before attempting a BLS element decode and
+            #   disconnects the peer; a post-decode size check would instead hit stream
+            #   underrun and leave the authenticated responder connected.
+            # Cover both vector fields: the vvec check is first, so an oversized-vvec case
+            # exercises the ProcessMessage path; the oversized-contribs case must include a
+            # valid vvec so ProcessMessage reaches ProcessContribQDATA.
+            send_bad_qdata_expect_disconnect(craft_qdata_with_bad_section(
+                qdata_valid, bad_vvec=ser_compact_size(1000)))
+            send_bad_qdata_expect_disconnect(craft_qdata_with_bad_section(
+                qdata_valid, bad_contribs=ser_compact_size(1000)))
             mn1.get_node(self).disconnect_p2ps()
             mn2.get_node(self).disconnect_p2ps()
 

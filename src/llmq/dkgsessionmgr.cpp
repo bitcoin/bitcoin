@@ -82,6 +82,7 @@ size_t MaxDKGMessageSize(std::string_view msg_type, const Consensus::LLMQParams&
 bool CheckDKGMessageStructure(std::string_view msg_type, const CDataStream& vRecv, const Consensus::LLMQParams& params)
 {
     const size_t size = params.size > 0 ? static_cast<size_t>(params.size) : 0;
+    const size_t min_size = params.minSize > 0 ? static_cast<size_t>(params.minSize) : 0;
     const size_t threshold = params.threshold > 0 ? static_cast<size_t>(params.threshold) : 0;
     try {
         CDataStream s(vRecv); // copy; deserialization does not advance the caller's stream
@@ -89,7 +90,9 @@ bool CheckDKGMessageStructure(std::string_view msg_type, const CDataStream& vRec
             CDKGContribution qc;
             s >> qc;
             return qc.vvec != nullptr && qc.vvec->size() == threshold &&
-                   qc.contributions != nullptr && qc.contributions->blobs.size() == size;
+                   qc.contributions != nullptr &&
+                   qc.contributions->blobs.size() >= min_size &&
+                   qc.contributions->blobs.size() <= size;
         } else if (msg_type == NetMsgType::QCOMPLAINT) {
             CDKGComplaint qc;
             s >> qc;

@@ -14,8 +14,26 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <scheduler.h>
+#include <streams.h>
+#include <version.h>
+
+#include <vector>
 
 class CConnman;
+
+namespace {
+bool IsEmptyBloomFilter(const CBloomFilter& filter)
+{
+    // CBloomFilter does not expose its backing bytes. Governance uses an empty
+    // filter as an object-fetch signal, so inspect the serialized vector field.
+    CDataStream serialized_filter{SER_NETWORK, PROTOCOL_VERSION};
+    serialized_filter << filter;
+
+    std::vector<unsigned char> filter_data;
+    serialized_filter >> filter_data;
+    return filter_data.empty();
+}
+} // namespace
 
 void NetGovernance::Schedule(CScheduler& scheduler)
 {
@@ -71,9 +89,16 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
         if (!m_node_sync.IsSynced()) return;
 
         uint256 nProp;
-        CBloomFilter filter;
         vRecv >> nProp;
-        vRecv >> filter;
+
+        CBloomFilter filter;
+        try {
+            vRecv >> filter;
+        } catch (const std::ios_base::failure& e) {
+            // An oversized filter now throws pre-allocation; punish here instead of the outer catch.
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 100, strprintf("misformatted govsync bloom filter. peer=%d error=%s", peer.GetId(), e.what()));
+            return;
+        }
 
         // The per-object vote-sync path tests this peer-supplied filter against every
         // cached vote (CBloomFilter::contains() loops nHashFuncs times). An unbounded
@@ -85,17 +110,39 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
         }
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
-        if (nProp == uint256()) {
-            // Full sync of all governance objects
-            assert(m_netfulfilledman.IsValid());
-            if (m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
-                // Asking for the whole list multiple times in a short period of time is no good
-                LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- peer already asked me for the list\n");
-                m_peer_manager->PeerMisbehaving(peer.GetId(), 20);
-                return;
-            }
-            m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
+        const bool full_sync{nProp == uint256()};
+        const bool object_fetch{!full_sync && IsEmptyBloomFilter(filter)};
+        // Nonzero govsync with an empty filter is used to retry missing-object
+        // fetches for orphan votes. Only full sync and actual known-object vote
+        // sync are fulfilled-request limited.
+        const bool track_request{full_sync || (!object_fetch && m_gov_manager.HaveSyncableObjectForHash(nProp))};
+        const std::string fulfilled_request{full_sync ?
+                                                NetMsgType::MNGOVERNANCESYNC :
+                                                strprintf("%s-votes-%s", NetMsgType::MNGOVERNANCESYNC,
+                                                          nProp.ToString())};
+        assert(m_netfulfilledman.IsValid());
+        if (track_request && m_netfulfilledman.HasFulfilledRequest(peer.addr, fulfilled_request)) {
+            // Asking for the same governance data multiple times in a short period of time is no good
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- peer already asked me for %s\n",
+                     full_sync ? "the list" : strprintf("votes for %s", nProp.ToString()));
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 20);
+            return;
+        }
+        if (track_request) {
+            m_netfulfilledman.AddFulfilledRequest(peer.addr, fulfilled_request);
+        }
 
+        if (object_fetch) {
+            if (m_gov_manager.HaveObjectForFetch(nProp)) {
+                CNetMsgMaker msgMaker(peer.GetCommonVersion());
+                m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::INV,
+                                                           std::vector<CInv>{CInv{MSG_GOVERNANCE_OBJECT, nProp}}));
+            }
+            return;
+        }
+
+        if (full_sync) {
+            // Full sync of all governance objects
             auto invs = m_gov_manager.GetSyncableObjectInvs();
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing %d objects to peer=%d\n", invs.size(), peer.GetId());
 
@@ -127,8 +174,6 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         uint256 nHash = govobj.GetHash();
 
-        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT, nHash}));
-
         if (!m_node_sync.IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
             return;
@@ -138,7 +183,13 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
 
-        if (!m_gov_manager.AcceptMessage(nHash)) {
+        // Only accept an object if this peer announced it or we requested it from this peer. The
+        // net-layer per-peer request tracker is the authorization source (already bounded), so no
+        // separate governance-side request cache is needed. Consume only after the sync gate, so a
+        // message dropped while not synced does not burn the authorization for a later retransmit.
+        const bool announced_or_requested = WITH_LOCK(
+            ::cs_main, return m_peer_manager->PeerConsumeObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT, nHash}));
+        if (!announced_or_requested) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
             return;
         }
@@ -152,11 +203,17 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
     else if (msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
         CGovernanceVote vote;
-        vRecv >> vote;
+        // Catch malformed/truncated votes locally so the wire-cap rejection
+        // in CGovernanceVote scores the peer instead of falling through to
+        // the outer log-only handler.
+        try {
+            vRecv >> vote;
+        } catch (const std::ios_base::failure&) {
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 100, "malformed governance vote");
+            return;
+        }
 
         uint256 nHash = vote.GetHash();
-
-        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash}));
 
         // Ignore such messages until masternode list is synced
         if (!m_node_sync.IsBlockchainSynced()) {
@@ -169,7 +226,13 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         std::string strHash = nHash.ToString();
 
-        if (!m_gov_manager.AcceptMessage(nHash)) {
+        // Only accept a vote if this peer announced it or we requested it from this peer. Consume
+        // after the sync gate (see MNGOVERNANCEOBJECT above) so a vote dropped while not synced does
+        // not burn the authorization for a later retransmit.
+        const bool announced_or_requested = WITH_LOCK(
+            ::cs_main,
+            return m_peer_manager->PeerConsumeObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash}));
+        if (!announced_or_requested) {
             LogPrint(BCLog::GOBJECT, /* Continued */
                      "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
                      vote.ToString(tip_mn_list), strHash, peer.GetId());

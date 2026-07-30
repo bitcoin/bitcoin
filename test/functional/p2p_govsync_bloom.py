@@ -13,13 +13,16 @@ standard size constraints (vData <= 36000 bytes, nHashFuncs <= 50), matching fil
 """
 import struct
 
-from test_framework.messages import ser_string, ser_uint256
+from test_framework.messages import msg_generic, ser_compact_size, ser_string, ser_uint256
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import force_finish_mnsync
 
 # CBloomFilter size constraints (src/common/bloom.h).
 MAX_HASH_FUNCS = 50
+# serialize.h MAX_SIZE: the largest count ReadCompactSize() accepts, so a declared
+# vData length of this value reaches the vData cap, not the compact-size guard.
+MAX_SIZE = 0x02000000
 
 
 class msg_govsync:
@@ -64,6 +67,15 @@ class GovsyncBloomCapTest(BitcoinTestFramework):
         bad_peer = node.add_p2p_connection(P2PInterface())
         bad_peer.send_message(msg_govsync(n_hash_funcs=0xFFFFFFFF))
         bad_peer.wait_for_disconnect()
+
+        self.log.info("A govsync request declaring an oversized filter vData length with the bytes omitted is rejected before allocation")
+        # nProp (32 bytes) then a CompactSize(MAX_SIZE) vData length with no bytes. Without the
+        # cap this would fall into net_processing's outer catch (no Misbehaving, no disconnect).
+        raw_peer = node.add_p2p_connection(P2PInterface())
+        raw_payload = ser_uint256(0) + ser_compact_size(MAX_SIZE)
+        with node.assert_debug_log(['Misbehaving']):
+            raw_peer.send_message(msg_generic(b'govsync', raw_payload))
+            raw_peer.wait_for_disconnect()
 
 
 if __name__ == '__main__':

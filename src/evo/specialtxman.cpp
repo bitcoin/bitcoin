@@ -355,6 +355,14 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                 if (opt_proTx->nVersion < ProTxVersion::ExtAddr) {
                     newState->platformP2PPort = opt_proTx->platformP2PPort;
                     newState->platformHTTPPort = opt_proTx->platformHTTPPort;
+                } else {
+                    // From ExtAddr onwards the Platform ports are stored in netInfo. Clear the
+                    // legacy scalar fields (which a legacy registration may have left set) so the
+                    // in-memory state matches its serialized form, which omits them for ExtAddr
+                    // (see CDeterministicMNState serialization). Otherwise a stale value would
+                    // survive in diff-reconstructed lists but vanish through a snapshot round-trip.
+                    newState->platformP2PPort = 0;
+                    newState->platformHTTPPort = 0;
                 }
             }
             if (newState->IsBanned()) {

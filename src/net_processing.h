@@ -47,6 +47,8 @@ static const bool DEFAULT_PEERBLOOMFILTERS = true;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
+/** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
+static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 
 struct CNodeStateStats {
     int m_misbehavior_score = 0;
@@ -66,7 +68,15 @@ class PeerManagerInternal
 {
 public:
     virtual void PeerMisbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") = 0;
+    virtual bool PeerIsBanned(const NodeId node_id) = 0;
+    /** Erase a pending object request for a peer and update global request tracking. */
     virtual void PeerEraseObjectRequest(const NodeId nodeid, const CInv& inv) = 0;
+    /** Consume this peer's pending request for the inv -- erase the matching per-peer announced /
+     *  in-flight state -- and return whether such a request existed (the peer announced the inv, or
+     *  we requested it from the peer). Any queued m_object_process_time entry is left in place; the
+     *  SendMessages drain skips it once the announced/in-flight state is gone.
+     *  Requires ::cs_main (see the PeerManagerImpl override). */
+    virtual bool PeerConsumeObjectRequest(NodeId nodeid, const CInv& inv) = 0;
     virtual void PeerRelayInv(const CInv& inv) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) = 0;

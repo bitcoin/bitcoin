@@ -87,11 +87,29 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
         if (fields & Field_platformNodeID) {
             obj.pushKV("platformNodeID", state.platformNodeID.ToString());
         }
-        if (fields & Field_platformP2PPort) {
-            obj.pushKV("platformP2PPort", state.platformP2PPort);
-        }
-        if (fields & Field_platformHTTPPort) {
-            obj.pushKV("platformHTTPPort", state.platformHTTPPort);
+        // v23.1.x adaptation: upstream gates these deprecated fields behind
+        // IsServiceDeprecatedRPCEnabled(), but on this branch they deliberately
+        // remain unenforced through gating (see bbcd9d543e6) and were always
+        // returned in v23.1.7. Keep `if (true)` so the block structure stays
+        // aligned with develop for future backports.
+        if (true) {
+            // platformP2PPort/platformHTTPPort are deprecated scalar duplicates of netInfo's
+            // Platform entries. From ExtAddr onwards the scalar fields are unused (always 0), so
+            // when the diff carries an ExtAddr netInfo report the live port from it to stay
+            // consistent with the "addresses" output below.
+            const bool has_ext_netinfo = (fields & Field_netInfo) && state.netInfo->CanStorePlatform();
+            if (fields & Field_platformP2PPort) {
+                obj.pushKV("platformP2PPort",
+                           has_ext_netinfo && state.netInfo->HasEntries(NetInfoPurpose::PLATFORM_P2P)
+                               ? state.netInfo->GetEntries(NetInfoPurpose::PLATFORM_P2P)[0].GetPort()
+                               : state.platformP2PPort);
+            }
+            if (fields & Field_platformHTTPPort) {
+                obj.pushKV("platformHTTPPort",
+                           has_ext_netinfo && state.netInfo->HasEntries(NetInfoPurpose::PLATFORM_HTTPS)
+                               ? state.netInfo->GetEntries(NetInfoPurpose::PLATFORM_HTTPS)[0].GetPort()
+                               : state.platformHTTPPort);
+            }
         }
     }
     {

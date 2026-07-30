@@ -36,6 +36,36 @@ using namespace std::literals;
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, RegTestingSetup)
 
+namespace {
+std::unique_ptr<CNode> MakeTestPeer(NodeId id)
+{
+    in_addr peer_in_addr{};
+    peer_in_addr.s_addr = htonl(0x01020304 + id);
+    auto peer{std::make_unique<CNode>(id,
+                                      /*sock=*/nullptr,
+                                      /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
+                                      /*nKeyedNetGroupIn=*/0,
+                                      /*nLocalHostNonceIn=*/0,
+                                      /*addrBindIn=*/CAddress{},
+                                      /*addrNameIn=*/std::string{},
+                                      /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
+                                      /*inbound_onion=*/false)};
+    peer->nVersion = PROTOCOL_VERSION;
+    peer->SetCommonVersion(PROTOCOL_VERSION);
+    peer->fSuccessfullyConnected = true;
+    return peer;
+}
+
+void ProcessInv(PeerManager& peerman, CNode& peer, const CInv& inv)
+    EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+{
+    CDataStream inv_stream{SER_NETWORK, PROTOCOL_VERSION};
+    inv_stream << std::vector<CInv>{inv};
+    std::atomic<bool> interrupt_dummy{false};
+    peerman.ProcessMessage(peer, NetMsgType::INV, inv_stream, GetTime<std::chrono::microseconds>(), interrupt_dummy);
+}
+} // namespace
+
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
@@ -46,6 +76,61 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(gArgs.SoftSetArg("-port", ToString(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
+}
+
+BOOST_AUTO_TEST_CASE(peer_requested_object_authorizes_and_erases_per_peer_state)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    TestChainState& chainstate =
+        *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
+    chainstate.JumpOutOfIbd();
+
+    auto peer{MakeTestPeer(/*id=*/0)};
+    m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
+
+    const CInv announced_inv{MSG_SPORK, uint256S("01")};
+    ProcessInv(*m_node.peerman, *peer, announced_inv);
+    // The announcement is queued for a GETDATA that hasn't been sent yet.
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.peerman->GetRequestedObjectCount(peer->GetId())), 1U);
+    // Consuming clears the peer's announced/in-flight state and returns true exactly once.
+    BOOST_CHECK(WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), announced_inv)));
+    BOOST_CHECK(!WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), announced_inv)));
+    // The queued GETDATA is left in place by the consume, but SendMessages must skip it (the
+    // per-peer request was consumed) rather than re-requesting, and drains the stale entry.
+    // Since this path never sets g_erased_object_requests, that skip relies on the drain-side
+    // announced/in-flight check.
+    SetMockTime(GetTime<std::chrono::seconds>() + 61s);
+    m_node.peerman->SendMessages(peer.get());
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.peerman->GetRequestedObjectCount(peer->GetId())), 0U);
+    // Not re-requested: no in-flight entry was created for the consumed announcement.
+    BOOST_CHECK(!WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), announced_inv)));
+
+    // Authorization must also survive getdata scheduling. After SendMessages issues the
+    // GETDATA the inv is in-flight (and still announced); PeerConsumeObjectRequest returns true
+    // for either state, so this checks that a requested inv authorizes -- not the in-flight
+    // branch specifically.
+    const CInv requested_inv{MSG_SPORK, uint256S("02")};
+    ProcessInv(*m_node.peerman, *peer, requested_inv);
+    SetMockTime(GetTime<std::chrono::seconds>() + 61s);
+    m_node.peerman->SendMessages(peer.get());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), requested_inv)));
+    BOOST_CHECK(!WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), requested_inv)));
+
+    const CInv unsolicited_inv{MSG_SPORK, uint256S("03")};
+    BOOST_CHECK(!WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), unsolicited_inv)));
+
+    // A failed per-peer authorization check must not poison the global erased-object marker:
+    // a later legitimate announcement for the same hash must still be requested (GETDATA
+    // scheduled) and therefore authorize.
+    ProcessInv(*m_node.peerman, *peer, unsolicited_inv);
+    SetMockTime(GetTime<std::chrono::seconds>() + 61s);
+    m_node.peerman->SendMessages(peer.get());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(peer->GetId(), unsolicited_inv)));
+
+    m_node.peerman->FinalizeNode(*peer);
+    chainstate.ResetIbd();
+    SetMockTime(0s);
 }
 
 BOOST_AUTO_TEST_CASE(cnode_simple_test)

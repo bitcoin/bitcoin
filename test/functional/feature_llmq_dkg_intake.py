@@ -16,7 +16,7 @@ Adversarial P2P tests for DKG message-intake hardening:
 The node must not crash; the sending peer must be scored (Misbehaving).
 """
 
-from test_framework.messages import ser_uint256
+from test_framework.messages import ser_compact_size, ser_uint256
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import wait_until_helper
@@ -83,6 +83,21 @@ class DkgIntakeTest(DashTestFramework):
         # real in-progress quorum and reach the size/structural checks.
         return bytes([LLMQ_TEST]) + ser_uint256(int(self.quorum_hash, 16))
 
+    def qcontrib_payload(self, blob_count):
+        # CDKGContribution: llmqType, quorumHash, proTxHash, vvec, contributions, sig.
+        # LLMQ_TEST uses threshold=2/minSize=2 by default, so blob_count=1 is
+        # well-formed enough to deserialize but below the contribution lower bound.
+        r = self.quorum_hash_prefix()
+        r += ser_uint256(0)  # proTxHash
+        r += ser_compact_size(2) + b"\x00" * (2 * 48)  # BLSVerificationVector
+        r += b"\x00" * 48  # CBLSIESMultiRecipientBlobs::ephemeralPubKey
+        r += b"\x00" * 32  # CBLSIESMultiRecipientBlobs::ivSeed
+        r += ser_compact_size(blob_count)
+        for _ in range(blob_count):
+            r += ser_compact_size(32) + b"\x00" * 32
+        r += b"\x00" * 96  # sig
+        return r
+
     def add_verified_peer(self, node):
         peer = node.add_p2p_connection(P2PInterface())
         peer_id = get_p2p_id(node)
@@ -103,6 +118,7 @@ class DkgIntakeTest(DashTestFramework):
         self.test_unverified_sender_rejected(mn_node)
         self.test_oversized_rejected(mn_node)
         self.test_malformed_rejected(mn_node)
+        self.test_under_min_contribution_blobs_rejected(mn_node)
 
     def test_unverified_sender_rejected(self, node):
         self.log.info("Pushed DKG messages from a non-verified peer are rejected (Misbehaving 10 each)")
@@ -140,6 +156,16 @@ class DkgIntakeTest(DashTestFramework):
         payload = self.quorum_hash_prefix() + b"\x00\x00\x00\x00"
         with node.assert_debug_log(["malformed DKG message"]):
             peer.send_message(msg_dkg_raw(b"qcontrib", payload))
+            peer.sync_with_ping()
+        wait_for_banscore(node, peer_id, 100)
+        node.disconnect_p2ps()
+
+    def test_under_min_contribution_blobs_rejected(self, node):
+        self.log.info("QCONTRIB with fewer than minSize encrypted blobs is rejected (Misbehaving 100)")
+        peer, peer_id = self.add_verified_peer(node)
+        wait_for_banscore(node, peer_id, 0)
+        with node.assert_debug_log(["malformed DKG message"]):
+            peer.send_message(msg_dkg_raw(b"qcontrib", self.qcontrib_payload(blob_count=1)))
             peer.sync_with_ping()
         wait_for_banscore(node, peer_id, 100)
         node.disconnect_p2ps()

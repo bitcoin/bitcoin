@@ -34,7 +34,7 @@ public:
 
 public:
     bool hasQueue(const uint256& hash) const override;
-    CCoinJoinClientManager* getClient(const std::string& name) override;
+    bool doForClient(const std::string& name, const std::function<void(CCoinJoinClientManager&)>& func) override;
     MessageProcessingResult processMessage(CNode& peer, CChainState& chainstate, CConnman& connman, CTxMemPool& mempool,
                                            std::string_view msg_type, CDataStream& vRecv) override;
     std::optional<CCoinJoinQueue> getQueueFromHash(const uint256& hash) const override;
@@ -91,9 +91,9 @@ bool CJWalletManagerImpl::hasQueue(const uint256& hash) const
     return false;
 }
 
-CCoinJoinClientManager* CJWalletManagerImpl::getClient(const std::string& name)
+bool CJWalletManagerImpl::doForClient(const std::string& name, const std::function<void(CCoinJoinClientManager&)>& func)
 {
-    return walletman.Get(name);
+    return walletman.DoForClient(name, func);
 }
 
 MessageProcessingResult CJWalletManagerImpl::processMessage(CNode& pfrom, CChainState& chainstate, CConnman& connman,
@@ -140,24 +140,22 @@ void CJWalletManagerImpl::addWallet(const std::shared_ptr<wallet::CWallet>& wall
 
 void CJWalletManagerImpl::flushWallet(const std::string& name)
 {
-    walletman.Flush(name);
+    doForClient(name, [](CCoinJoinClientManager& clientman) {
+        clientman.resetPool();
+        clientman.stopMixing();
+    });
 }
 
 void CJWalletManagerImpl::removeWallet(const std::string& name)
 {
     walletman.Remove(name);
 }
-#endif // ENABLE_WALLET
 
 std::unique_ptr<CJWalletManager> CJWalletManager::make(ChainstateManager& chainman, CDeterministicMNManager& dmnman,
                                                        CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
                                                        const CMasternodeSync& mn_sync,
                                                        const llmq::CInstantSendManager& isman, bool relay_txes)
 {
-#ifdef ENABLE_WALLET
     return std::make_unique<CJWalletManagerImpl>(chainman, dmnman, mn_metaman, mempool, mn_sync, isman, relay_txes);
-#else
-    // Cannot be constructed if wallet support isn't built
-    return nullptr;
-#endif // ENABLE_WALLET
 }
+#endif // ENABLE_WALLET

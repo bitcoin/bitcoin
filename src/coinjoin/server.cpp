@@ -16,6 +16,7 @@
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <script/interpreter.h>
+#include <serialize.h>
 #include <shutdown.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -57,7 +58,7 @@ void CCoinJoinServer::ProcessMessage(CNode& peer, const std::string& msg_type, C
     } else if (msg_type == NetMsgType::DSVIN) {
         ProcessDSVIN(peer, vRecv);
     } else if (msg_type == NetMsgType::DSSIGNFINALTX) {
-        ProcessDSSIGNFINALTX(vRecv);
+        ProcessDSSIGNFINALTX(peer, vRecv);
     }
 }
 
@@ -235,10 +236,40 @@ void CCoinJoinServer::ProcessDSVIN(CNode& peer, CDataStream& vRecv)
     }
 }
 
-void CCoinJoinServer::ProcessDSSIGNFINALTX(CDataStream& vRecv)
+void CCoinJoinServer::ProcessDSSIGNFINALTX(CNode& peer, CDataStream& vRecv)
 {
+    // Only accept signatures while we are actually collecting them, and only
+    // from peers that are active participants in this session. Otherwise a
+    // stray or unauthenticated peer could abort the session for everyone.
+    if (nState != POOL_STATE_SIGNING) {
+        LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- wrong state, nState=%d, peer=%d\n",
+                 nState.load(), peer.GetId());
+        PushStatus(peer, STATUS_REJECTED, ERR_SESSION);
+        return;
+    }
+    {
+        LOCK(cs_coinjoin);
+        const bool is_participant = std::ranges::any_of(
+            vecEntries, [&peer](const auto& entry) { return entry.addr == peer.addr; });
+        if (!is_participant) {
+            LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- ignoring message from non-participant peer=%d\n",
+                     peer.GetId());
+            PushStatus(peer, STATUS_REJECTED, ERR_INVALID_INPUT);
+            return;
+        }
+    }
+
+    const size_t max_txins{CoinJoin::GetMaxPoolInputOutputCount()};
     std::vector<CTxIn> vecTxIn;
-    vRecv >> vecTxIn;
+    // Reject an over-cap count through this peer-local ERR_MAXIMUM path before a
+    // single CTxIn is decoded or allocated. A count above the generic MAX_SIZE cap
+    // is malformed and throws from ReadCompactSize, as it does for any other message.
+    if (!UnserializeVectorWithMaxSize(vRecv, vecTxIn, max_txins)) {
+        LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- too many inputs. max=%d, peer=%d\n",
+                 static_cast<int>(max_txins), peer.GetId());
+        PushStatus(peer, STATUS_REJECTED, ERR_MAXIMUM);
+        return;
+    }
 
     LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- vecTxIn.size() %s\n", vecTxIn.size());
 
@@ -592,16 +623,31 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
         return false;
     }
 
-    if (!CoinJoin::IsCollateralValid(m_chainman, m_isman, mempool, *entry.txCollateral)) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: collateral not valid!\n", __func__);
-        nMessageIDRet = ERR_INVALID_COLLATERAL;
+    if (entry.vecTxDSIn.size() > COINJOIN_ENTRY_MAX_SIZE || entry.vecTxOut.size() > COINJOIN_ENTRY_MAX_SIZE) {
+        LogPrint(BCLog::COINJOIN, /* Continued */
+                 "CCoinJoinServer::%s -- ERROR: too many inputs or outputs! inputs=%s/%s, outputs=%s/%s\n", __func__,
+                 entry.vecTxDSIn.size(), COINJOIN_ENTRY_MAX_SIZE, entry.vecTxOut.size(), COINJOIN_ENTRY_MAX_SIZE);
+        nMessageIDRet = ERR_MAXIMUM;
+
+        CTransactionRef txCollateralToConsume;
+        {
+            LOCK(cs_coinjoin);
+            const auto it = std::ranges::find_if(vecSessionCollaterals, [&entry](const auto& txCollateral) {
+                return *entry.txCollateral == *txCollateral;
+            });
+            if (it != vecSessionCollaterals.end()) {
+                txCollateralToConsume = *it;
+            }
+        }
+        if (txCollateralToConsume) {
+            ConsumeCollateral(txCollateralToConsume);
+        }
         return false;
     }
 
-    if (entry.vecTxDSIn.size() > COINJOIN_ENTRY_MAX_SIZE) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: too many inputs! %d/%d\n", __func__, entry.vecTxDSIn.size(), COINJOIN_ENTRY_MAX_SIZE);
-        nMessageIDRet = ERR_MAXIMUM;
-        ConsumeCollateral(entry.txCollateral);
+    if (!CoinJoin::IsCollateralValid(m_chainman, m_isman, mempool, *entry.txCollateral)) {
+        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: collateral not valid!\n", __func__);
+        nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
     }
 

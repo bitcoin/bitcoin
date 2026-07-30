@@ -373,6 +373,10 @@ void InitScriptExecutionCache();
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
+/** Check if a block has been mutated (with respect to its merkle root and,
+ *  for defence-in-depth, CVE-2012-2459 / 64-byte-transaction malleation). */
+bool IsBlockMutated(const CBlock& block);
+
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
 bool TestBlockValidity(BlockValidationState& state,
                        const chainlock::Chainlocks& chainlocks,

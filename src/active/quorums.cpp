@@ -152,7 +152,11 @@ MessageProcessingResult QuorumParticipant::ProcessContribQDATA(CNode& pfrom, CDa
         }
 
         std::vector<CBLSIESEncryptedObject<CBLSSecretKey>> vecEncrypted;
-        vStream >> vecEncrypted;
+        const size_t expected_contributions{static_cast<size_t>(std::ranges::count(quorum.qc->validMembers, true))};
+        if (!UnserializeVectorWithMaxSize(vStream, vecEncrypted, expected_contributions) ||
+            vecEncrypted.size() != expected_contributions) {
+            return MisbehavingError{100, "invalid encrypted contribution vector size"};
+        }
 
         std::vector<CBLSSecretKey> vecSecretKeys;
         vecSecretKeys.resize(vecEncrypted.size());

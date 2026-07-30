@@ -10,7 +10,9 @@
 #include <coinjoin/options.h>
 #include <coinjoin/util.h>
 #include <consensus/amount.h>
+#include <interfaces/coinjoin.h>
 #include <node/context.h>
+#include <util/system.h>
 #include <util/translation.h>
 #include <policy/settings.h>
 #include <validation.h>
@@ -25,6 +27,9 @@ BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(coinjoin_options_tests)
 {
+    gArgs.ForceSetArg("-enablecoinjoin", "0");
+    const auto loader{interfaces::MakeCoinJoinLoader(m_node)};
+
     BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetSessions(), DEFAULT_COINJOIN_SESSIONS);
     BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetRounds(), DEFAULT_COINJOIN_ROUNDS);
     BOOST_CHECK_EQUAL(CCoinJoinClientOptions::GetRandomRounds(), COINJOIN_RANDOM_ROUNDS);
@@ -221,13 +226,30 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
 {
-    auto& cj_man = *Assert(m_node.cj_walletman->getClient(""));
-    BOOST_CHECK_EQUAL(cj_man.IsMixing(), false);
-    BOOST_CHECK_EQUAL(cj_man.StartMixing(), true);
-    BOOST_CHECK_EQUAL(cj_man.IsMixing(), true);
-    BOOST_CHECK_EQUAL(cj_man.StartMixing(), false);
-    cj_man.StopMixing();
-    BOOST_CHECK_EQUAL(cj_man.IsMixing(), false);
+    BOOST_CHECK(m_node.cj_walletman->doForClient("", [](auto& cj_man) {
+        BOOST_CHECK_EQUAL(cj_man.isMixing(), false);
+        BOOST_CHECK_EQUAL(cj_man.startMixing(), true);
+        BOOST_CHECK_EQUAL(cj_man.isMixing(), true);
+        BOOST_CHECK_EQUAL(cj_man.startMixing(), false);
+        cj_man.stopMixing();
+        BOOST_CHECK_EQUAL(cj_man.isMixing(), false);
+    }));
+}
+
+// End-to-end check that NewKeyPool() stops mixing
+BOOST_FIXTURE_TEST_CASE(coinjoin_newkeypool_stops_mixing_tests, CTransactionBuilderTestSetup)
+{
+    BOOST_CHECK(m_node.cj_walletman->doForClient("", [](auto& cj_man) {
+        BOOST_REQUIRE(cj_man.startMixing());
+        BOOST_CHECK_EQUAL(cj_man.isMixing(), true);
+    }));
+    {
+        LOCK(wallet->cs_wallet);
+        BOOST_REQUIRE(wallet->GetLegacyScriptPubKeyMan()->NewKeyPool());
+    }
+    BOOST_CHECK(m_node.cj_walletman->doForClient("", [](auto& cj_man) {
+        BOOST_CHECK_EQUAL(cj_man.isMixing(), false);
+    }));
 }
 
 BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)

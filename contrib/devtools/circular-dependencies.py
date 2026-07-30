@@ -5,7 +5,7 @@
 
 import sys
 import re
-from multiprocess import Pool # type: ignore[import]
+import multiprocessing
 from typing import Dict, List, Set
 
 MAPPING = {
@@ -33,10 +33,32 @@ def module_name(path):
         return path[:-4]
     return None
 
-if __name__=="__main__":
-    files = dict()
-    deps: Dict[str, Set[str]] = dict()
+files = dict()
+deps: Dict[str, Set[str]] = dict()
 
+# Defined at module level (reading the global `deps`) so it pickles by reference
+# for multiprocessing.Pool; forked workers inherit the populated `deps`.
+def handle_module2(module):
+    # Build the transitive closure of dependencies of module
+    closure: Dict[str, List[str]] = dict()
+    for dep in deps[module]:
+        closure[dep] = []
+    while True:
+        old_size = len(closure)
+        old_closure_keys = sorted(closure.keys())
+        for src in old_closure_keys:
+            for dep in deps[src]:
+                if dep not in closure:
+                    closure[dep] = closure[src] + [src]
+        if len(closure) == old_size:
+            break
+    # If module is in its own transitive closure, it's a circular dependency; check if it is the shortest
+    if module in closure:
+        return [module] + closure[module]
+
+    return None
+
+if __name__=="__main__":
     RE = re.compile("^#include <(.*)>")
 
     def handle_module(arg):
@@ -46,27 +68,6 @@ if __name__=="__main__":
         else:
             files[arg] = module
             deps[module] = set()
-
-    def handle_module2(module):
-        # Build the transitive closure of dependencies of module
-        closure: Dict[str, List[str]] = dict()
-        for dep in deps[module]:
-            closure[dep] = []
-        while True:
-            old_size = len(closure)
-            old_closure_keys = sorted(closure.keys())
-            for src in old_closure_keys:
-                for dep in deps[src]:
-                    if dep not in closure:
-                        closure[dep] = closure[src] + [src]
-            if len(closure) == old_size:
-                break
-        # If module is in its own transitive closure, it's a circular dependency; check if it is the shortest
-        if module in closure:
-            return [module] + closure[module]
-
-        return None
-
 
     # Iterate over files, and create list of modules
     for arg in sys.argv[1:]:
@@ -101,8 +102,14 @@ if __name__=="__main__":
             if sorted_keys is None:
                 sorted_keys = sorted(deps.keys())
 
-            with Pool(8) as pool:
-                cycles = pool.map(handle_module2, sorted_keys)
+            # Use fork so workers inherit the populated `deps` global without
+            # having to pickle it for every task. fork is unavailable on
+            # Windows, so fall back to a serial map there.
+            if "fork" in multiprocessing.get_all_start_methods():
+                with multiprocessing.get_context("fork").Pool(8) as pool:
+                    cycles = pool.map(handle_module2, sorted_keys)
+            else:
+                cycles = list(map(handle_module2, sorted_keys))
 
             for cycle in cycles:
                 if cycle is not None and (shortest_cycles is None or len(cycle) < len(shortest_cycles)):

@@ -15,6 +15,7 @@
 #include <sync.h>
 #include <unordered_lru_cache.h>
 
+#include <functional>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
@@ -155,6 +156,15 @@ public:
     [[nodiscard]] virtual MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) = 0;
 };
 
+// Backpressure bounds for the pending (not-yet-verified) recovered sig queue. Verification of an
+// incoming recovered sig is deferred to a single worker thread doing batched BLS verification,
+// while ingestion happens on the network threads without any crypto cost. Without a bound, a peer
+// (or several) can enqueue faster than the queue drains, growing memory without limit. These caps
+// bound the queue; over-cap messages are dropped silently (no misbehaviour) since an honest peer
+// can legitimately relay recovered sigs faster than we drain them during a burst.
+static constexpr size_t MAX_PENDING_RECSIGS_PER_NODE{1000};
+static constexpr size_t MAX_PENDING_RECSIGS_TOTAL{10000};
+
 class CSigningManager
 {
 private:
@@ -165,6 +175,9 @@ private:
     mutable Mutex cs_pending;
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs_pending);
+    // Running total of entries across all of pendingRecoveredSigs, kept in sync with it so the
+    // MAX_PENDING_RECSIGS_TOTAL check doesn't need to rescan the map on every incoming message.
+    size_t pendingRecoveredSigsCount GUARDED_BY(cs_pending){0};
     Uint256HashMap<std::shared_ptr<const CRecoveredSig>> pendingReconstructedRecoveredSigs GUARDED_BY(cs_pending);
 
     FastRandomContext rnd GUARDED_BY(cs_pending);
@@ -203,6 +216,9 @@ public:
         size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
         std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CBLSPublicKey, StaticSaltedHasher>& ret_pubkeys)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
+    // Drop the pending (not-yet-verified) recovered sigs of any node matching the predicate, e.g.
+    // banned peers. Without this, a flooded peer's backlog would persist even after it is banned.
+    void RemoveNodesIf(const std::function<bool(NodeId)>& predicate) EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     [[nodiscard]] std::vector<CRecoveredSigsListener*> GetListeners() const EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
     // Returns true if recovered sigs should be send to listeners
     [[nodiscard]] bool ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)

@@ -172,8 +172,8 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CChainState& active_cha
     if (!m_mn_sync.IsBlockchainSynced()) return;
 
     if (!CheckDiskSpace(gArgs.GetDataDirNet())) {
-        ResetPool();
-        StopMixing();
+        resetPool();
+        stopMixing();
         WalletCJLogPrint(m_wallet, "CCoinJoinClientManager::ProcessMessage -- Not enough disk space, disabling CoinJoin.\n");
         return;
     }
@@ -250,18 +250,17 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CChainState& active_cha
     }
 }
 
-bool CCoinJoinClientManager::StartMixing() {
-    bool expected{false};
-    return fMixing.compare_exchange_strong(expected, true);
+bool CCoinJoinClientManager::startMixing() {
+    return m_wallet->StartMixing();
 }
 
-void CCoinJoinClientManager::StopMixing() {
-    fMixing = false;
+void CCoinJoinClientManager::stopMixing() {
+    m_wallet->StopMixing();
 }
 
-bool CCoinJoinClientManager::IsMixing() const
+bool CCoinJoinClientManager::isMixing() const
 {
-    return fMixing;
+    return m_wallet->IsMixing();
 }
 
 void CCoinJoinClientSession::ResetPool()
@@ -272,7 +271,7 @@ void CCoinJoinClientSession::ResetPool()
     WITH_LOCK(cs_coinjoin, SetNull());
 }
 
-void CCoinJoinClientManager::ResetPool()
+void CCoinJoinClientManager::resetPool()
 {
     nCachedLastSuccessBlock = 0;
     AssertLockNotHeld(cs_deqsessions);
@@ -354,7 +353,7 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
     }
 }
 
-std::vector<std::string> CCoinJoinClientManager::GetStatuses() const
+std::vector<std::string> CCoinJoinClientManager::getSessionStatuses() const
 {
     AssertLockNotHeld(cs_deqsessions);
 
@@ -368,7 +367,7 @@ std::vector<std::string> CCoinJoinClientManager::GetStatuses() const
     return ret;
 }
 
-std::string CCoinJoinClientManager::GetSessionDenoms()
+std::string CCoinJoinClientManager::getSessionDenoms() const
 {
     std::string strSessionDenoms;
 
@@ -441,7 +440,7 @@ void CCoinJoinClientManager::CheckTimeout()
 {
     AssertLockNotHeld(cs_deqsessions);
 
-    if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return;
+    if (!CCoinJoinClientOptions::IsEnabled() || !isMixing()) return;
 
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
@@ -719,7 +718,7 @@ bool CCoinJoinClientManager::WaitForAnotherBlock() const
 
 bool CCoinJoinClientManager::CheckAutomaticBackup()
 {
-    if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
+    if (!CCoinJoinClientOptions::IsEnabled() || !isMixing()) return false;
 
     // We don't need auto-backups for descriptor wallets
     if (!m_wallet->IsLegacy()) return true;
@@ -728,7 +727,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
     case 0:
         strAutoDenomResult = _("Automatic backups disabled") + Untranslated(", ") + _("no mixing available.");
         WalletCJLogPrint(m_wallet, "CCoinJoinClientManager::CheckAutomaticBackup -- %s\n", strAutoDenomResult.original);
-        StopMixing();
+        stopMixing();
         m_wallet->nKeysLeftSinceAutoBackup = 0; // no backup, no "keys since last backup"
         return false;
     case -1:
@@ -754,7 +753,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
                                        m_wallet->nKeysLeftSinceAutoBackup);
         WalletCJLogPrint(m_wallet, "CCoinJoinClientManager::CheckAutomaticBackup -- %s\n", strAutoDenomResult.original);
         // It's getting really dangerous, stop mixing
-        StopMixing();
+        stopMixing();
         return false;
     } else if (m_wallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING) {
         // Low number of keys left, but it's still more or less safe to continue
@@ -976,7 +975,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
 bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman,
                                                      const CTxMemPool& mempool, bool fDryRun)
 {
-    if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
+    if (!CCoinJoinClientOptions::IsEnabled() || !isMixing()) return false;
 
     if (!m_mn_sync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
@@ -1873,10 +1872,10 @@ void CCoinJoinClientSession::GetJsonInfo(UniValue& obj) const
     obj.pushKV("entries_count", GetEntriesCount());
 }
 
-void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
+UniValue CCoinJoinClientManager::getJsonInfo() const
 {
-    assert(obj.isObject());
-    obj.pushKV("running", IsMixing());
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("running", isMixing());
 
     UniValue arrSessions(UniValue::VARR);
     AssertLockNotHeld(cs_deqsessions);
@@ -1889,6 +1888,7 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
         }
     }
     obj.pushKV("sessions", arrSessions);
+    return obj;
 }
 
 CoinJoinWalletManager::CoinJoinWalletManager(ChainstateManager& chainman, CDeterministicMNManager& dmnman,
@@ -1934,16 +1934,3 @@ void CoinJoinWalletManager::Remove(const std::string& name) {
     m_wallet_manager_map.erase(name);
 }
 
-void CoinJoinWalletManager::Flush(const std::string& name)
-{
-    auto clientman = Assert(Get(name));
-    clientman->ResetPool();
-    clientman->StopMixing();
-}
-
-CCoinJoinClientManager* CoinJoinWalletManager::Get(const std::string& name) const
-{
-    LOCK(cs_wallet_manager_map);
-    auto it = m_wallet_manager_map.find(name);
-    return (it != m_wallet_manager_map.end()) ? it->second.get() : nullptr;
-}

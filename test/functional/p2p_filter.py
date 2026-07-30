@@ -16,9 +16,11 @@ from test_framework.messages import (
     msg_filteradd,
     msg_filterclear,
     msg_filterload,
+    msg_generic,
     msg_getdata,
     msg_mempool,
     msg_version,
+    ser_compact_size,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -33,6 +35,10 @@ from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
+
+# serialize.h MAX_SIZE: the largest count ReadCompactSize() accepts, so a declared
+# vector length of this value reaches the vData/data cap, not the compact-size guard.
+MAX_SIZE = 0x02000000
 
 
 class P2PBloomFilter(P2PInterface):
@@ -112,6 +118,11 @@ class FilterTest(BitcoinTestFramework):
             filter_peer.send_and_ping(msg_filterload(data=b'\xbb'*(MAX_BLOOM_FILTER_SIZE)))
         filter_peer.send_and_ping(msg_filterclear())
 
+        self.log.info('Check that a filterload declaring an oversized vData length with the bytes omitted is rejected before allocation')
+        # Without the cap this would fall into the outer catch (no Misbehaving) after a large allocation.
+        with self.nodes[0].assert_debug_log(['Misbehaving']):
+            filter_peer.send_and_ping(msg_generic(b'filterload', ser_compact_size(MAX_SIZE)))
+
         self.log.info('Check that filter with too many hash functions is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
             filter_peer.send_and_ping(msg_filterload(data=b'\xaa', nHashFuncs=MAX_BLOOM_HASH_FUNCS+1))
@@ -128,6 +139,10 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Check that too large data element to add to the filter is rejected')
         with self.nodes[0].assert_debug_log(['Misbehaving']):
             filter_peer.send_and_ping(msg_filteradd(data=b'\xcc'*(MAX_SCRIPT_ELEMENT_SIZE+1)))
+
+        self.log.info('Check that a filteradd declaring an oversized data length with the bytes omitted is rejected before allocation')
+        with self.nodes[0].assert_debug_log(['Misbehaving']):
+            filter_peer.send_and_ping(msg_generic(b'filteradd', ser_compact_size(MAX_SIZE)))
 
         filter_peer.send_and_ping(msg_filterclear())
 

@@ -9,11 +9,15 @@
 #include <evo/dmn_types.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
+#include <pubkey.h>
 
 #include <chainparams.h>
 #include <logging.h>
 #include <timedata.h>
 #include <util/string.h>
+
+static_assert(CGovernanceVote::COMPACT_SIG_SIZE == CPubKey::COMPACT_SIGNATURE_SIZE);
+static_assert(CGovernanceVote::BLS_SIG_SIZE == CBLSSignature::SerSize);
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {

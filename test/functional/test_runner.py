@@ -254,6 +254,7 @@ BASE_SCRIPTS = [
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'p2p_blocksonly.py',
+    'p2p_dstx.py',
     'rpc_setban.py --v1transport',
     'rpc_setban.py --v2transport',
     'mining_prioritisetransaction.py',
@@ -275,6 +276,7 @@ BASE_SCRIPTS = [
     'wallet_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'rpc_getblockfilter.py',
+    'rpc_getmerkleblocks.py',
     'rpc_getblockfrompeer.py',
     'rpc_invalidateblock.py',
     'feature_txindex.py',
@@ -326,6 +328,7 @@ BASE_SCRIPTS = [
     'p2p_leak.py',
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
+    'p2p_mutated_blocks.py', # NOTE: needs dash_hash to pass
     'p2p_connect_to_devnet.py',
     'feature_sporks.py',
     'rpc_getblockstats.py',
@@ -338,7 +341,6 @@ BASE_SCRIPTS = [
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
     'feature_governance_objects.py',
-    'p2p_governance_invs.py',
     'p2p_govsync_bloom.py',
     'rpc_uptime.py',
     'feature_discover.py',
@@ -926,8 +928,6 @@ class RPCCoverage():
         covered_cmds.add('voteraw')
         # TODO: implement functional tests for importelectrumwallet
         covered_cmds.add('importelectrumwallet')
-        # TODO: implement functional tests for getmerkleblocks
-        covered_cmds.add('getmerkleblocks')
 
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")

@@ -10,6 +10,11 @@
 
 #include <stdint.h>
 
+#include <limits>
+#include <stdexcept>
+#include <string_view>
+#include <vector>
+
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
@@ -303,6 +308,203 @@ BOOST_AUTO_TEST_CASE(class_methods)
         BOOST_CHECK_EQUAL(out.at(0), std::byte{'a'});
         BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
         BOOST_CHECK_EQUAL(out_3, std::byte{'c'});
+    }
+}
+
+namespace {
+// Element formatter that counts Unser invocations, so a test can prove the
+// bounded reader rejected an oversized wire count *before* touching any
+// element. Ser delegates to the default Serialize so wire compatibility is
+// preserved.
+struct CountingFormatter
+{
+    static inline size_t unser_calls = 0;
+    static void Reset() { unser_calls = 0; }
+
+    template<typename Stream, typename T>
+    void Ser(Stream& s, const T& t) { Serialize(s, t); }
+
+    template<typename Stream, typename T>
+    void Unser(Stream& s, T& t)
+    {
+        ++unser_calls;
+        Unserialize(s, t);
+    }
+};
+
+bool IsLimitExceededFailure(const std::ios_base::failure& e)
+{
+    return std::string_view{e.what()}.find("Vector length limit exceeded") != std::string_view::npos;
+}
+
+// Struct with a compile-time bounded vector member, so the compile-time
+// formatter can be exercised end-to-end via ordinary << / >> and READWRITE.
+struct LimitedVecFive
+{
+    std::vector<int> v;
+    SERIALIZE_METHODS(LimitedVecFive, obj) { READWRITE(LIMITED_VECTOR(obj.v, 5)); }
+};
+} // namespace
+
+BOOST_AUTO_TEST_CASE(unserialize_vector_with_max_size)
+{
+    // Within-limit round trip: an ordinary vector encoding decodes cleanly and
+    // the wire bytes are byte-identical to the unbounded writer's output, so
+    // this helper stays interchangeable with the standard vector Unserialize.
+    {
+        DataStream ss;
+        const std::vector<int> v{1, 2, 3};
+        ss << v;
+
+        DataStream ref;
+        ref << v;
+        BOOST_CHECK_EQUAL_COLLECTIONS(ss.begin(), ss.end(), ref.begin(), ref.end());
+
+        std::vector<int> out;
+        BOOST_CHECK(UnserializeVectorWithMaxSize(ss, out, /*max_size=*/8));
+        BOOST_CHECK(out == v);
+        BOOST_CHECK_EQUAL(ss.size(), 0U);
+    }
+
+    // Zero limit rejects any non-empty vector and accepts an empty one.
+    {
+        DataStream ss;
+        ss << std::vector<int>{};
+        std::vector<int> out{99};
+        BOOST_CHECK(UnserializeVectorWithMaxSize(ss, out, /*max_size=*/0));
+        BOOST_CHECK(out.empty());
+    }
+    {
+        DataStream ss;
+        ss << std::vector<int>{1};
+        std::vector<int> out;
+        BOOST_CHECK(!UnserializeVectorWithMaxSize(ss, out, /*max_size=*/0));
+        BOOST_CHECK(out.empty());
+    }
+
+    // Exact-limit boundary decodes; one-over boundary is rejected and no
+    // element decoding happens.
+    {
+        DataStream ss;
+        const std::vector<int> v{10, 20, 30, 40};
+        ss << v;
+        std::vector<int> out;
+        BOOST_CHECK(UnserializeVectorWithMaxSize(ss, out, /*max_size=*/4));
+        BOOST_CHECK(out == v);
+    }
+    {
+        DataStream ss;
+        const std::vector<int> v{10, 20, 30, 40, 50};
+        ss << v;
+        std::vector<int> out;
+        CountingFormatter::Reset();
+        BOOST_CHECK(!UnserializeVectorWithMaxSize<CountingFormatter>(ss, out, /*max_size=*/4));
+        BOOST_CHECK(out.empty());
+        BOOST_CHECK_EQUAL(CountingFormatter::unser_calls, 0U);
+    }
+
+    // Custom element formatter path: within-limit, verify the element formatter
+    // actually runs; over-limit, verify it does not.
+    {
+        DataStream ss;
+        ss << std::vector<int>{7, 8, 9};
+        std::vector<int> out;
+        CountingFormatter::Reset();
+        BOOST_CHECK(UnserializeVectorWithMaxSize<CountingFormatter>(ss, out, /*max_size=*/8));
+        BOOST_CHECK_EQUAL(CountingFormatter::unser_calls, 3U);
+        BOOST_CHECK((out == std::vector<int>{7, 8, 9}));
+    }
+
+    // A wire count at MAX_SIZE still hits the caller's own limit (8) first and
+    // returns false without decoding any element.
+    {
+        static_assert(MAX_SIZE < std::numeric_limits<uint32_t>::max(),
+                      "MAX_SIZE must fit in a 32-bit CompactSize prefix for this test");
+        DataStream ss;
+        ss << uint8_t{0xfe};
+        ss << static_cast<uint32_t>(MAX_SIZE);
+        std::vector<int> out;
+        CountingFormatter::Reset();
+        BOOST_CHECK(!UnserializeVectorWithMaxSize<CountingFormatter>(ss, out, /*max_size=*/8));
+        BOOST_CHECK(out.empty());
+        BOOST_CHECK_EQUAL(CountingFormatter::unser_calls, 0U);
+    }
+
+    // Counts above MAX_SIZE throw from ReadCompactSize before the caller's
+    // gate is consulted — these are malformed at the CompactSize level.
+    {
+        DataStream ss;
+        ss << uint8_t{0xfe};
+        ss << static_cast<uint32_t>(MAX_SIZE + 1);
+        std::vector<int> out;
+        BOOST_CHECK_THROW((void)UnserializeVectorWithMaxSize<CountingFormatter>(ss, out, /*max_size=*/8),
+                          std::ios_base::failure);
+    }
+    {
+        DataStream ss;
+        ss << uint8_t{0xff};
+        ss << uint64_t{0x100000000ULL + MAX_SIZE};
+        std::vector<int> out;
+        BOOST_CHECK_THROW((void)UnserializeVectorWithMaxSize<CountingFormatter>(ss, out, /*max_size=*/8),
+                          std::ios_base::failure);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(limited_vector_formatter_compile_time)
+{
+    // The compile-time formatter's wire format matches the ordinary vector
+    // encoding — a struct wrapping std::vector<int> under LIMITED_VECTOR must
+    // produce the same bytes as the raw vector.
+    {
+        DataStream ss_lim;
+        DataStream ss_ord;
+        LimitedVecFive obj{{1, 2, 3}};
+        ss_lim << obj;
+        ss_ord << obj.v;
+        BOOST_CHECK_EQUAL_COLLECTIONS(ss_lim.begin(), ss_lim.end(),
+                                      ss_ord.begin(), ss_ord.end());
+
+        LimitedVecFive round;
+        ss_lim >> round;
+        BOOST_CHECK(round.v == obj.v);
+    }
+
+    // At the exact limit: round-trips.
+    {
+        DataStream ss;
+        LimitedVecFive obj{{1, 2, 3, 4, 5}};
+        ss << obj;
+        LimitedVecFive round;
+        BOOST_REQUIRE_NO_THROW(ss >> round);
+        BOOST_CHECK(round.v == obj.v);
+    }
+
+    // Over the limit: rejected with the sentinel failure, before element decode.
+    {
+        DataStream ss;
+        ss << std::vector<int>{1, 2, 3, 4, 5, 6};
+        LimitedVecFive round;
+        BOOST_CHECK_EXCEPTION(ss >> round, std::ios_base::failure, IsLimitExceededFailure);
+        BOOST_CHECK(round.v.empty());
+    }
+
+    // Serialization stays unbounded: writing an over-limit vector through the
+    // formatter must still emit the ordinary wire format, so producers remain
+    // compatible with the standard reader. Reading it back through the
+    // unbounded std::vector path succeeds even though the LIMITED_VECTOR reader
+    // would reject it.
+    {
+        DataStream ss;
+        const std::vector<int> big{1, 2, 3, 4, 5, 6, 7};
+        ss << Using<LimitedVectorFormatter<5>>(big);
+
+        DataStream ref;
+        ref << big;
+        BOOST_CHECK_EQUAL_COLLECTIONS(ss.begin(), ss.end(), ref.begin(), ref.end());
+
+        std::vector<int> out;
+        BOOST_REQUIRE_NO_THROW(ss >> out);
+        BOOST_CHECK(out == big);
     }
 }
 

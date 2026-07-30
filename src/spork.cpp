@@ -137,7 +137,12 @@ MessageProcessingResult CSporkManager::ProcessMessage(CNode& peer, CConnman& con
 MessageProcessingResult CSporkManager::ProcessSpork(NodeId from, CDataStream& vRecv)
 {
     CSporkMessage spork;
-    vRecv >> spork;
+    try {
+        vRecv >> spork;
+    } catch (const std::ios_base::failure& e) {
+        // Attribute deserialization failures to the peer; the outer catch would otherwise silently drop.
+        return MisbehavingError{100, strprintf("malformed spork received. peer=%d error=%s", from, e.what())};
+    }
 
     uint256 hash = spork.GetHash();
 

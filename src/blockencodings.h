@@ -7,8 +7,13 @@
 
 #include <primitives/block.h>
 
+#include <functional>
 
 class CTxMemPool;
+class BlockValidationState;
+namespace Consensus {
+struct Params;
+};
 
 // Transaction compression schemes for compact block relay can be introduced by writing
 // an actual formatter here.
@@ -79,8 +84,6 @@ typedef enum ReadStatus_t
     READ_STATUS_OK,
     READ_STATUS_INVALID, // Invalid object, peer is sending bogus crap
     READ_STATUS_FAILED, // Failed to process object
-    READ_STATUS_CHECKBLOCK_FAILED, // Used only by FillBlock to indicate a
-                                   // failure in CheckBlock.
 } ReadStatus;
 
 class CBlockHeaderAndShortTxIDs {
@@ -129,6 +132,11 @@ protected:
     const CTxMemPool* pool;
 public:
     CBlockHeader header;
+
+    // Can be overriden for testing
+    using IsBlockMutatedFn = std::function<bool(const CBlock&)>;
+    IsBlockMutatedFn m_check_block_mutated_mock{nullptr};
+
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <hash, reference> form

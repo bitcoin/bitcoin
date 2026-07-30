@@ -118,7 +118,8 @@ public:
 
     SERIALIZE_METHODS(CSporkMessage, obj)
     {
-        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
+        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned,
+                  LIMITED_VECTOR(obj.vchSig, CPubKey::COMPACT_SIGNATURE_SIZE));
     }
 
     /**

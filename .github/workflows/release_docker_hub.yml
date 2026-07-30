@@ -33,7 +33,7 @@ jobs:
         echo "build_tag=${TAG#v}" >> $GITHUB_OUTPUT
 
     - name: Set suffix
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       id: suffix
       with:
         result-encoding: string

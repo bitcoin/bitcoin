@@ -8,7 +8,12 @@
 #include <streams.h>
 #include <util/strencodings.h>
 
+#include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
+#include <chainlock/handler.h>
+#include <llmq/context.h>
+#include <msg_result.h>
+#include <protocol.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -16,7 +21,7 @@ using chainlock::ChainLockSig;
 using namespace llmq;
 using namespace llmq::testutils;
 
-BOOST_FIXTURE_TEST_SUITE(llmq_chainlock_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(llmq_chainlock_tests)
 
 BOOST_AUTO_TEST_CASE(chainlock_construction_test)
 {
@@ -165,6 +170,67 @@ BOOST_AUTO_TEST_CASE(chainlock_malformed_data_test)
             // Expected for most truncation points
         }
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(stale_chainlocks_are_remembered_for_duplicate_suppression, TestingSetup)
+{
+    m_node.clhandler->CheckActiveState();
+
+    auto best_clsig = CreateChainLock(100, GetTestBlockHash(1));
+    BOOST_REQUIRE(m_node.chainlocks->UpdateBestChainlock(::SerializeHash(best_clsig), best_clsig, /*pindex=*/nullptr));
+
+    BOOST_CHECK_EQUAL(m_node.clhandler->SeenChainLockCacheSizeForTesting(), 0U);
+
+    for (uint32_t i = 0; i < 10; ++i) {
+        auto stale_clsig = CreateChainLock(100, GetTestBlockHash(1000 + i));
+        const auto hash = ::SerializeHash(stale_clsig);
+
+        [[maybe_unused]] const auto result =
+            m_node.clhandler->ProcessNewChainLock(/*from=*/0, stale_clsig, *m_node.llmq_ctx->qman, hash);
+
+        BOOST_CHECK(m_node.clhandler->AlreadyHave(CInv{MSG_CLSIG, hash}));
+        BOOST_CHECK_EQUAL(m_node.clhandler->SeenChainLockCacheSizeForTesting(), static_cast<size_t>(i) + 1U);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(seen_chainlock_cache_is_bounded, TestingSetup)
+{
+    m_node.clhandler->CheckActiveState();
+
+    const size_t max_size = m_node.clhandler->SeenChainLockCacheMaxSizeForTesting();
+    BOOST_REQUIRE_GT(max_size, 0U);
+
+    for (size_t i = 0; i < max_size + 1; ++i) {
+        auto clsig = CreateChainLock(static_cast<int32_t>(i), GetTestBlockHash(static_cast<uint32_t>(2000 + i)));
+        [[maybe_unused]] const auto result =
+            m_node.clhandler->ProcessNewChainLock(/*from=*/-1, clsig, *m_node.llmq_ctx->qman, ::SerializeHash(clsig));
+        BOOST_CHECK_LE(m_node.clhandler->SeenChainLockCacheSizeForTesting(), max_size);
+        if (i == 0) {
+            BOOST_CHECK_GT(m_node.clhandler->SeenChainLockCacheSizeForTesting(), 0U);
+        }
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(best_chainlock_is_already_have_after_seen_cache_eviction, TestingSetup)
+{
+    m_node.clhandler->CheckActiveState();
+
+    auto best_clsig = CreateChainLock(100, GetTestBlockHash(1));
+    const auto best_hash = ::SerializeHash(best_clsig);
+    BOOST_REQUIRE(m_node.chainlocks->UpdateBestChainlock(best_hash, best_clsig, /*pindex=*/nullptr));
+    BOOST_CHECK(m_node.clhandler->AlreadyHave(CInv{MSG_CLSIG, best_hash}));
+
+    const size_t max_size = m_node.clhandler->SeenChainLockCacheMaxSizeForTesting();
+    BOOST_REQUIRE_GT(max_size, 0U);
+
+    for (size_t i = 0; i < max_size + 1; ++i) {
+        auto clsig = CreateChainLock(static_cast<int32_t>(101 + i), GetTestBlockHash(static_cast<uint32_t>(3000 + i)));
+        [[maybe_unused]] const auto result =
+            m_node.clhandler->ProcessNewChainLock(/*from=*/-1, clsig, *m_node.llmq_ctx->qman, ::SerializeHash(clsig));
+        BOOST_CHECK_LE(m_node.clhandler->SeenChainLockCacheSizeForTesting(), max_size);
+    }
+
+    BOOST_CHECK(m_node.clhandler->AlreadyHave(CInv{MSG_CLSIG, best_hash}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
