@@ -40,11 +40,36 @@
 
 namespace mp {
 
-thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial-threadlocal)
-
 ThreadContext& CurrentThread()
 {
-    return g_thread_context;
+#ifdef __MINGW32__
+    // On MinGW only, deliberately leak a heap object instead of using a plain
+    // thread_local variable, because MinGW-w64's emutls implementation can
+    // free the storage backing thread_local variables before C++ destructors
+    // registered by __cxa_thread_atexit run at thread exit (pthread key
+    // destructor order is unspecified), so a nontrivial thread_local
+    // destructor can run on freed memory and corrupt the heap. Observed as
+    // intermittent STATUS_HEAP_CORRUPTION (0xC0000374) crashes in msvcrt
+    // builds. See the full explanation, gdb evidence, and mingw-w64 bug
+    // tracker links (bugs 527, 727, 445, 859, msys2 issue 2519) in the
+    // CurrentThread() declaration comment in proxy-io.h. The leaked object
+    // is held by a trivially-destructible thread_local pointer so no
+    // destructor is registered at thread exit at all.
+    //
+    // The leak is confined to MinGW because the number of IPC threads a
+    // process can create is unbounded, so leaking per-thread state on
+    // platforms with working thread_local destruction would be a real
+    // resource leak. TODO: a better long-term fix could explicitly destroy
+    // the context at the end of mp-managed thread routines (the
+    // EventLoop::loop thread, the EventLoop async thread, and
+    // ProxyServer<ThreadMap>::makeThread threads), so that even on MinGW the
+    // leak would only apply to externally-created client threads.
+    thread_local ThreadContext* context{new ThreadContext};
+    return *context;
+#else
+    thread_local ThreadContext context; // NOLINT(bitcoin-nontrivial-threadlocal)
+    return context;
+#endif
 }
 
 Stream MakeStream(EventLoop&loop, SocketId socket)
