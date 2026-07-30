@@ -46,7 +46,7 @@ enum class NetPermissionFlags : uint32_t {
     Implicit = (1U << 31),
     All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
 };
-static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
+constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {
     using t = std::underlying_type_t<NetPermissionFlags>;
     return static_cast<NetPermissionFlags>(static_cast<t>(a) | static_cast<t>(b));
