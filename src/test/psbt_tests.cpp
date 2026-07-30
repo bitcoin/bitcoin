@@ -216,4 +216,74 @@ BOOST_AUTO_TEST_CASE(merge_proprietary_fields)
     BOOST_CHECK(output_it->value == right_prop.value);
 }
 
+BOOST_AUTO_TEST_CASE(psbt_isnull)
+{
+    // PartiallySignedTransaction::IsNull()
+    CMutableTransaction mtx;
+    PartiallySignedTransaction psbt(mtx, /*version=*/2);
+    BOOST_CHECK(psbt.IsNull());
+
+    psbt.inputs.emplace_back(/*psbt_version=*/2, Txid::FromUint256(uint256::ZERO), /*prev_out=*/0);
+    BOOST_CHECK(!psbt.IsNull());
+    psbt.inputs.clear();
+
+    psbt.outputs.emplace_back(/*psbt_version=*/2, /*amount=*/0, CScript());
+    BOOST_CHECK(!psbt.IsNull());
+    psbt.outputs.clear();
+
+    psbt.unknown[{0x01}] = {0x02};
+    BOOST_CHECK(!psbt.IsNull());
+
+    // PSBTInput::IsNull()
+    PSBTInput psbtin(/*psbt_version=*/2, Txid::FromUint256(uint256::ZERO), /*prev_out=*/0);
+    BOOST_CHECK(psbtin.IsNull());
+
+    psbtin.non_witness_utxo = MakeTransactionRef(CMutableTransaction{});
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.non_witness_utxo.reset();
+
+    psbtin.witness_utxo = CTxOut(/*nValueIn=*/0, CScript());
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.witness_utxo.SetNull();
+
+    psbtin.partial_sigs[{CKeyID()}] = SigPair{CPubKey{}, std::vector<unsigned char>{}};
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.partial_sigs.clear();
+
+    psbtin.unknown[{0x01}] = {0x02};
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.unknown.clear();
+
+    psbtin.hd_keypaths[{CPubKey()}] = KeyOriginInfo{};
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.hd_keypaths.clear();
+
+    psbtin.redeem_script = CScript() << OP_TRUE;
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.redeem_script.clear();
+
+    psbtin.witness_script = CScript() << OP_TRUE;
+    BOOST_CHECK(!psbtin.IsNull());
+    psbtin.witness_script.clear();
+
+    // PSBTOutput::IsNull()
+    PSBTOutput psbtout(/*psbt_version=*/2, /*amount=*/0, CScript());
+    BOOST_CHECK(psbtout.IsNull());
+
+    psbtout.redeem_script = CScript() << OP_TRUE;
+    BOOST_CHECK(!psbtout.IsNull());
+    psbtout.redeem_script.clear();
+
+    psbtout.witness_script = CScript() << OP_TRUE;
+    BOOST_CHECK(!psbtout.IsNull());
+    psbtout.witness_script.clear();
+
+    psbtout.hd_keypaths[{CPubKey()}] = KeyOriginInfo{};
+    BOOST_CHECK(!psbtout.IsNull());
+    psbtout.hd_keypaths.clear();
+
+    psbtout.unknown[{0x01}] = {0x02};
+    BOOST_CHECK(!psbtout.IsNull());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
