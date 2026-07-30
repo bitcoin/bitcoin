@@ -25,7 +25,7 @@
 #include <string_view>
 
 // UTXO set snapshot magic bytes
-static constexpr std::array<uint8_t, 5> SNAPSHOT_MAGIC_BYTES = {'u', 't', 'x', 'o', 0xff};
+inline constexpr std::array<uint8_t, 5> SNAPSHOT_MAGIC_BYTES = {'u', 't', 'x', 'o', 0xff};
 
 class Chainstate;
 

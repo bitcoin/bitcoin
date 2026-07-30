@@ -12,10 +12,10 @@
 #include <primitives/block.h>
 
 /** Index marker for when no witness commitment is present in a coinbase transaction. */
-static constexpr int NO_WITNESS_COMMITMENT{-1};
+inline constexpr int NO_WITNESS_COMMITMENT{-1};
 
 /** Minimum size of a witness commitment structure. Defined in BIP 141. **/
-static constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
+inline constexpr size_t MINIMUM_WITNESS_COMMITMENT{38};
 
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.

@@ -32,7 +32,7 @@ static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
-static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
+inline constexpr bool DEFAULT_LOGLEVELALWAYS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;

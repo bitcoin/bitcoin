@@ -48,7 +48,7 @@ namespace sam {
  * The longest known message is ~1400 bytes, so this is high enough not to be triggered during
  * normal operation, yet low enough to avoid a malicious proxy from filling our memory.
  */
-static constexpr size_t MAX_MSG_SIZE{65536};
+inline constexpr size_t MAX_MSG_SIZE{65536};
 
 /**
  * I2P SAM session.

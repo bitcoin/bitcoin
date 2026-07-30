@@ -310,8 +310,8 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::FEATURE,
 })};
 
-static constexpr size_t MAX_FEATUREID_LENGTH{80};
-static constexpr size_t MAX_FEATUREDATA_LENGTH{512};
+inline constexpr size_t MAX_FEATUREID_LENGTH{80};
+inline constexpr size_t MAX_FEATUREDATA_LENGTH{512};
 
 namespace NetMsgFeature {
 //inline constexpr std::string_view FOO{"BIP-FOO"};

@@ -140,14 +140,14 @@ constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 //! Pre-calculated constants for input size estimation in *virtual size*
-static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
+inline constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
 class CCoinControl;
 
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
-static constexpr uint64_t KNOWN_WALLET_FLAGS =
+inline constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
     |   WALLET_FLAG_BLANK_WALLET
     |   WALLET_FLAG_KEY_ORIGIN_METADATA
@@ -156,7 +156,7 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_DESCRIPTORS
     |   WALLET_FLAG_EXTERNAL_SIGNER;
 
-static constexpr uint64_t MUTABLE_WALLET_FLAGS =
+inline constexpr uint64_t MUTABLE_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE;
 
 static const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{

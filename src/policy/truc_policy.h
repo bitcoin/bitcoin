@@ -17,21 +17,21 @@
 
 // This module enforces rules for BIP 431 TRUC transactions which help make
 // RBF abilities more robust. A transaction with version=3 is treated as TRUC.
-static constexpr decltype(CTransaction::version) TRUC_VERSION{3};
+inline constexpr decltype(CTransaction::version) TRUC_VERSION{3};
 
 // TRUC only allows 1 parent and 1 child when unconfirmed. This translates to a descendant set size
 // of 2 and ancestor set size of 2.
 /** Maximum number of transactions including an unconfirmed tx and its descendants. */
-static constexpr unsigned int TRUC_DESCENDANT_LIMIT{2};
+inline constexpr unsigned int TRUC_DESCENDANT_LIMIT{2};
 /** Maximum number of transactions including a TRUC tx and all its mempool ancestors. */
-static constexpr unsigned int TRUC_ANCESTOR_LIMIT{2};
+inline constexpr unsigned int TRUC_ANCESTOR_LIMIT{2};
 
 /** Maximum sigop-adjusted virtual size of all v3 transactions. */
-static constexpr int64_t TRUC_MAX_VSIZE{10000};
-static constexpr int64_t TRUC_MAX_WEIGHT{TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR};
+inline constexpr int64_t TRUC_MAX_VSIZE{10000};
+inline constexpr int64_t TRUC_MAX_WEIGHT{TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR};
 /** Maximum sigop-adjusted virtual size of a tx which spends from an unconfirmed TRUC transaction. */
-static constexpr int64_t TRUC_CHILD_MAX_VSIZE{1000};
-static constexpr int64_t TRUC_CHILD_MAX_WEIGHT{TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR};
+inline constexpr int64_t TRUC_CHILD_MAX_VSIZE{1000};
+inline constexpr int64_t TRUC_CHILD_MAX_WEIGHT{TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR};
 // These limits are within the default cluster limits.
 static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_CLUSTER_SIZE_LIMIT_KVB * 1000);
 

@@ -27,7 +27,7 @@ class BlockManager;
 struct NodeContext;
 } // namespace node
 
-static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
+inline constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
 /**
  * Get the difficulty of the net wrt to the given block index.

@@ -58,7 +58,7 @@ public:
 };
 
 //! Constant representing an unknown spkm creation time
-static constexpr int64_t UNKNOWN_TIME = std::numeric_limits<int64_t>::max();
+inline constexpr int64_t UNKNOWN_TIME = std::numeric_limits<int64_t>::max();
 
 //! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;

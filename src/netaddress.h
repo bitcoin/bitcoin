@@ -80,29 +80,29 @@ static const std::array<uint8_t, 6> INTERNAL_IN_IPV6_PREFIX{
 
 /// All CJDNS addresses start with 0xFC. See
 /// https://github.com/cjdelisle/cjdns/blob/master/doc/Whitepaper.md#pulling-it-all-together
-static constexpr uint8_t CJDNS_PREFIX{0xFC};
+inline constexpr uint8_t CJDNS_PREFIX{0xFC};
 
 /// Size of IPv4 address (in bytes).
-static constexpr size_t ADDR_IPV4_SIZE = 4;
+inline constexpr size_t ADDR_IPV4_SIZE = 4;
 
 /// Size of IPv6 address (in bytes).
-static constexpr size_t ADDR_IPV6_SIZE = 16;
+inline constexpr size_t ADDR_IPV6_SIZE = 16;
 
 /// Size of TORv3 address (in bytes). This is the length of just the address
 /// as used in BIP155, without the checksum and the version byte.
-static constexpr size_t ADDR_TORV3_SIZE = 32;
+inline constexpr size_t ADDR_TORV3_SIZE = 32;
 
 /// Size of I2P address (in bytes).
-static constexpr size_t ADDR_I2P_SIZE = 32;
+inline constexpr size_t ADDR_I2P_SIZE = 32;
 
 /// Size of CJDNS address (in bytes).
-static constexpr size_t ADDR_CJDNS_SIZE = 16;
+inline constexpr size_t ADDR_CJDNS_SIZE = 16;
 
 /// Size of "internal" (NET_INTERNAL) address (in bytes).
-static constexpr size_t ADDR_INTERNAL_SIZE = 10;
+inline constexpr size_t ADDR_INTERNAL_SIZE = 10;
 
 /// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
-static constexpr uint16_t I2P_SAM31_PORT{0};
+inline constexpr uint16_t I2P_SAM31_PORT{0};
 
 std::string OnionToString(std::span<const uint8_t> addr);
 

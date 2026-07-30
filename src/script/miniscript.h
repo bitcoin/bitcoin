@@ -268,7 +268,7 @@ constexpr bool IsTapscript(MiniscriptContext ms_ctx)
 namespace internal {
 
 //! The maximum size of a witness item for a Miniscript under Tapscript context. (A BIP340 signature with a sighash type byte.)
-static constexpr uint32_t MAX_TAPMINISCRIPT_STACK_ELEM_SIZE{65};
+inline constexpr uint32_t MAX_TAPMINISCRIPT_STACK_ELEM_SIZE{65};
 
 //! version + nLockTime
 constexpr uint32_t TX_OVERHEAD{4 + 4};

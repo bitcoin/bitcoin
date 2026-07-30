@@ -51,11 +51,11 @@ static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 /** How much linearization cost required for TxGraph clusters to have
  * "acceptable" quality, if they cannot be optimally linearized with less cost. */
-static constexpr uint64_t ACCEPTABLE_COST = 75'000;
+inline constexpr uint64_t ACCEPTABLE_COST = 75'000;
 
 /** How much work we ask TxGraph to do after a mempool change occurs (either
  * due to a changeset being applied, a new block being found, or a reorg). */
-static constexpr uint64_t POST_CHANGE_COST = 5 * ACCEPTABLE_COST;
+inline constexpr uint64_t POST_CHANGE_COST = 5 * ACCEPTABLE_COST;
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain

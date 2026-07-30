@@ -16,7 +16,7 @@ namespace interfaces {
 class Chain;
 }
 
-static constexpr bool DEFAULT_TXINDEX{false};
+inline constexpr bool DEFAULT_TXINDEX{false};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.

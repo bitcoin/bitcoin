@@ -35,7 +35,7 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 static const int MAX_PUBKEYS_PER_MULTISIG = 20;
 
 /** The limit of keys in OP_CHECKSIGADD-based scripts. It is due to the stack limit in BIP342. */
-static constexpr unsigned int MAX_PUBKEYS_PER_MULTI_A = 999;
+inline constexpr unsigned int MAX_PUBKEYS_PER_MULTI_A = 999;
 
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;
@@ -56,13 +56,13 @@ static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 // Tag for input annex. If there are at least two witness elements for a transaction input,
 // and the first byte of the last element is 0x50, this last element is called annex, and
 // has meanings independent of the script
-static constexpr unsigned int ANNEX_TAG = 0x50;
+inline constexpr unsigned int ANNEX_TAG = 0x50;
 
 // Validation weight per passing signature (Tapscript only, see BIP 342).
-static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
+inline constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
-static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
+inline constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)

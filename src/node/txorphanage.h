@@ -17,10 +17,10 @@
 
 namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. Helps limit the total amount of memory used by the orphanage. */
-static constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
+inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
 /** Default value for TxOrphanage::m_max_global_latency_score. Helps limit the maximum latency for operations like
  * EraseForBlock and LimitOrphans. */
-static constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
+inline constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
  * Since we cannot distinguish orphans from bad transactions with non-existent inputs, we heavily limit the amount of

@@ -15,7 +15,7 @@
 class ArgsManager;
 
 //! Reserved non-dbcache memory usage.
-static constexpr uint64_t DBCACHE_WARNING_RESERVED_RAM{2_GiB};
+inline constexpr uint64_t DBCACHE_WARNING_RESERVED_RAM{2_GiB};
 
 namespace node {
 uint64_t GetDefaultDBCache();
