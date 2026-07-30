@@ -313,7 +313,7 @@ struct RPCResult {
         NUM,
         BOOL,
         NONE,
-        ANY,        //!< Special type to disable type checks (for testing only)
+        ANY,        //!< Special type to disable type checks
         STR_AMOUNT, //!< Special string to represent a floating point amount
         STR_HEX,    //!< Special string with only hex chars
         OBJ_DYN,    //!< Special dictionary with keys that are not literals

@@ -125,24 +125,27 @@ static RPCMethod help()
     return RPCMethod{
         "help",
         "List all commands, or get help for a specified command.\n",
-                {
-                    {"command", RPCArg::Type::STR, RPCArg::DefaultHint{"all commands"}, "The command to get help on"},
-                },
-                {
-                    RPCResult{RPCResult::Type::STR, "", "The help text"},
-                    RPCResult{RPCResult::Type::ANY, "", ""},
-                },
-                RPCExamples{""},
+        {
+            {"command", RPCArg::Type::STR, RPCArg::DefaultHint{"all commands"}, "The command to get help on"},
+        },
+        {
+            RPCResult{RPCResult::Type::STR, "", "The help text"},
+            RPCResult{RPCResult::Type::ANY, "", "The command conversions. (Hidden in dump_all_command_conversions)", /*inner=*/{},
+                      RPCResultOptions{
+                          .print_elision = HelpElisionSkip{},
+                      }},
+        },
+        RPCExamples{""},
         [](const RPCMethod& self, const JSONRPCRequest& jsonRequest) -> UniValue
-{
-    auto command{self.MaybeArg<std::string_view>("command")};
-    if (command == "dump_all_command_conversions") {
-        // Used for testing only, undocumented
-        return tableRPC.dumpArgMap(jsonRequest);
-    }
+        {
+            auto command{self.MaybeArg<std::string_view>("command")};
+            if (command == "dump_all_command_conversions") {
+                // Used for testing only, undocumented
+                return tableRPC.dumpArgMap(jsonRequest);
+            }
 
-    return tableRPC.help(command.value_or(""), jsonRequest);
-},
+            return tableRPC.help(command.value_or(""), jsonRequest);
+        },
     };
 }
 
