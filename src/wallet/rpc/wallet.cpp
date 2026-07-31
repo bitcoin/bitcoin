@@ -14,6 +14,7 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/translation.h>
+#include <wallet/bip39.h>
 #include <wallet/context.h>
 #include <wallet/export.h>
 #include <wallet/receive.h>
@@ -850,9 +851,21 @@ RPCMethod addhdkey()
 {
     return RPCMethod{
         "addhdkey",
-        "Add a BIP 32 HD key to the wallet that can be used with 'createwalletdescriptor'\n",
+        "Add a BIP 32 HD key to the wallet for use with 'createwalletdescriptor'.\n"
+        "The key can be imported as an extended private key, derived from a BIP 39 mnemonic,\n"
+        "or generated randomly. BIP 39 mnemonics use the English wordlist, and BIP 39\n"
+        "passphrases are restricted to ASCII characters.\n"
+        "The mnemonic and BIP 39 passphrase are not stored in the wallet; only the derived\n"
+        "HD key is.\n"
+        "A mistyped passphrase derives a different valid HD key and cannot be detected.\n"
+        "This RPC does not create active descriptors or rescan the blockchain. To recover\n"
+        "transactions, create the required descriptors and then call 'rescanblockchain'.\n"
+        "Use 'bitcoin-cli -stdin -named addhdkey' to keep key material out of command-line\n"
+        "arguments and shell history.\n",
         {
-            {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"Automatically generated new key"}, "The BIP 32 extended private key to add. If none is provided, a randomly generated one will be added."},
+            {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"Automatically generated new key"}, "The BIP 32 extended private key to add. Mutually exclusive with \"mnemonic\". If neither is provided, a randomly generated key is added."},
+            {"mnemonic", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP 39 mnemonic of lowercase words from the English wordlist used to derive the HD key. Mutually exclusive with \"hdkey\"."},
+            {"bip39_passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The optional BIP 39 passphrase, restricted to ASCII characters. May only be used with \"mnemonic\". If omitted, an empty passphrase is used."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -861,7 +874,10 @@ RPCMethod addhdkey()
             },
         },
         RPCExamples{
-            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", "xprv")
+            HelpExampleCli("addhdkey", "xprv")
+            + HelpExampleCliNamed("addhdkey", {{"mnemonic", "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"}})
+            + HelpExampleRpc("addhdkey", "xprv")
+            + HelpExampleRpcNamed("addhdkey", {{"mnemonic", "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"}})
         },
         [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
@@ -872,10 +888,37 @@ RPCMethod addhdkey()
                 throw JSONRPCError(RPC_WALLET_ERROR, "addhdkey is not available for wallets without private keys");
             }
 
+            if (!request.params[0].isNull() && !request.params[1].isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both \"hdkey\" and \"mnemonic\"");
+            }
+            if (!request.params[2].isNull() && request.params[1].isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "\"bip39_passphrase\" may only be used with \"mnemonic\"");
+            }
+
             EnsureWalletIsUnlocked(*wallet);
 
             CExtKey hdkey;
-            if (request.params[0].isNull()) {
+            if (!request.params[1].isNull()) {
+                const std::string_view passphrase{
+                    request.params[2].isNull() ? std::string_view{} : request.params[2].get_str()};
+                auto decoded{bip39::DecodeMnemonic(request.params[1].get_str(), passphrase)};
+                if (!decoded) {
+                    switch (decoded.error()) {
+                    case bip39::Error::InvalidWordCount:
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP 39 mnemonic: the word count must be 12, 15, 18, 21, or 24");
+                    case bip39::Error::UnknownWord:
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP 39 mnemonic: contains a word not in the English wordlist (words must be lowercase)");
+                    case bip39::Error::InvalidChecksum:
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP 39 mnemonic checksum");
+                    case bip39::Error::InvalidPassphrase:
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "BIP 39 passphrase must contain only ASCII characters");
+                    case bip39::Error::InvalidSeed:
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not derive an HD key from the BIP 39 mnemonic");
+                    }
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Unknown BIP 39 decoding error");
+                }
+                hdkey = std::move(*decoded);
+            } else if (request.params[0].isNull()) {
                 CKey seed_key = GenerateRandomKey();
                 hdkey.SetSeed(seed_key);
             } else {
