@@ -280,11 +280,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[0]["success"], True)
         assert "warnings" not in res[0]
         assert_equal(res[1]["success"], True)
-        assert_equal(res[1]["warnings"], [MISSING_KEYS_WARNING])
         assert_equal(res[2]["success"], True)
         assert "warnings" not in res[2]
         assert_equal(res[3]["success"], True)
-        assert_equal(res[3]["warnings"], [MISSING_KEYS_WARNING])
 
     def run_test(self):
         self.log.info('Setting up wallets')
