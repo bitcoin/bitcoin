@@ -198,6 +198,15 @@ void Connection::disconnect()
     m_stream = nullptr;
 }
 
+void Connection::waitDrained()
+{
+    // Blocking the event loop thread here would deadlock: in-flight call
+    // bodies sync() back to the event loop to deliver their results, and
+    // server objects are destroyed on the event loop thread.
+    assert(std::this_thread::get_id() != m_loop->m_thread_id);
+    m_server_objects->wait();
+}
+
 CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
 {
     const Lock lock(m_loop->m_mutex);

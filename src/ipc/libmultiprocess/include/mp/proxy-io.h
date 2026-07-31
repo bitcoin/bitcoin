@@ -427,6 +427,72 @@ struct Waiter
     std::optional<kj::Function<void()>> m_fn MP_GUARDED_BY(m_mutex);
 };
 
+//! Counter tracking the number of live ProxyServer objects associated with a
+//! Connection, used to wait for a disconnected connection's server side to
+//! become quiescent (see Connection::waitDrained).
+//!
+//! Why counting live server objects is a valid "no server call body running"
+//! signal: a ProxyServer object is reference counted and is not destroyed
+//! until its outstanding calls finish. Cap'n Proto keeps the target capability
+//! alive for the duration of a call, and the mp.Context PassField overload and
+//! ProxyServer<Thread>::post() additionally pin it (self = thisCap()) until
+//! the call body running on a worker thread completes and its result is
+//! delivered. So "object destroyed" implies "its call bodies finished", and a
+//! connection whose live-object count reached zero after a disconnect has no
+//! server code running. This matters because disconnecting only cancels the
+//! KJ promise of an in-flight call; it does not interrupt a call body that
+//! was already dispatched to a worker thread (see Connection::disconnect).
+//!
+//! The counter is held via shared_ptr by the Connection and by every
+//! ProxyServer object created for the connection, because a ProxyServer
+//! object kept alive by an in-flight call can outlive the Connection (see
+//! ~ProxyServerBase), and its destructor must decrement state that is still
+//! valid.
+//!
+//! ProxyServer<Thread> and ProxyServer<ThreadMap> are separate
+//! specializations (not ProxyServerBase instances) and are intentionally not
+//! counted: every application method body runs on an interface ProxyServer,
+//! which is counted and stays alive for the duration of the body, so counting
+//! those is sufficient.
+struct ServerObjectTracker
+{
+    //! Called from the ProxyServerBase constructor (on the event loop thread).
+    void add()
+    {
+        const Lock lock(m_mutex);
+        m_count += 1;
+    }
+
+    //! Called from the ProxyServerBase destructor (on the event loop thread).
+    void remove()
+    {
+        {
+            const Lock lock(m_mutex);
+            assert(m_count > 0);
+            m_count -= 1;
+        }
+        m_cv.notify_all();
+    }
+
+    //! Return the current count. May be called from any thread.
+    size_t count() const
+    {
+        const Lock lock(m_mutex);
+        return m_count;
+    }
+
+    //! Block until no server objects remain.
+    void wait()
+    {
+        Lock lock(m_mutex);
+        m_cv.wait(lock.m_lock, [this]() MP_REQUIRES(m_mutex) { return m_count == 0; });
+    }
+
+    mutable Mutex m_mutex;
+    std::condition_variable m_cv;
+    size_t m_count MP_GUARDED_BY(m_mutex){0};
+};
+
 //! Object holding network & rpc state associated with either an incoming server
 //! connection, or an outgoing client connection. It must be created and destroyed
 //! on the event loop thread.
@@ -466,6 +532,26 @@ public:
     //! completion.
     void disconnect();
 
+    //! Block until no ProxyServer objects associated with this connection
+    //! remain, i.e. until no server call body is still executing (see
+    //! ServerObjectTracker). Meant to be called after disconnect(): before it,
+    //! new server objects can still be created and idle server objects are
+    //! not garbage collected, so the count would not drain. Must NOT be called
+    //! from the event loop thread: in-flight call bodies need the event loop
+    //! to deliver their results before their server objects are destroyed, so
+    //! blocking the loop here would deadlock.
+    //!
+    //! This lets shutdown code ensure no IPC call body is still executing (and
+    //! dereferencing application state that is about to be freed) after
+    //! incoming connections are disconnected. See Ipc::disconnectIncoming and
+    //! https://github.com/bitcoin/bitcoin/issues/35845.
+    void waitDrained();
+
+    //! Number of live ProxyServer objects associated with this connection.
+    //! After disconnect(), a nonzero count means server call bodies are still
+    //! executing on worker threads. May be called from any thread.
+    size_t pendingServerObjects() const { return m_server_objects->count(); }
+
     //! Register synchronous cleanup function to run on event loop thread (with
     //! access to capnp thread local variables) when disconnect() is called.
     //! any new i/o.
@@ -497,6 +583,17 @@ public:
     //! the stream is what makes the peer observe the disconnect: it reads EOF
     //! and fails its outstanding calls with DISCONNECTED errors.
     std::optional<::capnp::TwoPartyVatNetwork> m_network;
+
+    //! Tracker for live ProxyServer objects associated with this connection,
+    //! used by waitDrained(). Held via shared_ptr because ProxyServer objects
+    //! kept alive by in-flight calls can outlive the Connection (see
+    //! ServerObjectTracker and ~ProxyServerBase).
+    //!
+    //! Must be declared before m_rpc_system: constructing m_rpc_system runs
+    //! the make_client callback, which creates the bootstrap (Init) server
+    //! object, whose ProxyServerBase constructor registers itself with this
+    //! tracker.
+    std::shared_ptr<ServerObjectTracker> m_server_objects{std::make_shared<ServerObjectTracker>()};
 
     std::optional<::capnp::RpcSystem<::capnp::rpc::twoparty::VatId>> m_rpc_system;
 
@@ -621,8 +718,14 @@ ProxyClientBase<Interface, Impl>::~ProxyClientBase() noexcept
 
 template <typename Interface, typename Impl>
 ProxyServerBase<Interface, Impl>::ProxyServerBase(std::shared_ptr<Impl> impl, Connection& connection)
-    : m_impl(std::move(impl)), m_context(&connection)
+    : m_impl(std::move(impl)), m_context(&connection), m_server_objects(connection.m_server_objects)
 {
+    // Register this object with the connection's live-object tracker. This
+    // runs on the event loop thread, so it is ordered before any connection
+    // teardown (which also runs on the event loop thread): code that
+    // disconnects the connection and then calls Connection::waitDrained() is
+    // guaranteed to see this object.
+    m_server_objects->add();
     MP_LOG(*m_context.loop, Log::Debug) << "Creating " << CxxTypeName(*this) << " " << this;
     assert(m_impl);
 }
@@ -670,6 +773,15 @@ ProxyServerBase<Interface, Impl>::~ProxyServerBase()
     }
     assert(m_context.cleanup_fns.empty());
     MP_LOG(*m_context.loop, Log::Debug) << "Destroying " << CxxTypeName(*this) << " " << this;
+    // Deregister this object from the connection's live-object tracker,
+    // through the shared m_server_objects handle since m_context.connection
+    // may be dangling here (see comment above). Done at the end of the
+    // destructor so a zero count means destruction fully completed. Note that
+    // any m_impl destruction scheduled through addAsyncCleanup above is NOT
+    // covered by the tracker: it runs later on the async cleanup thread, so
+    // Connection::waitDrained() waits for server call bodies, not for
+    // m_impl destructors.
+    m_server_objects->remove();
 }
 
 //! If the capnp interface defined a special "destroy" method, as described the
