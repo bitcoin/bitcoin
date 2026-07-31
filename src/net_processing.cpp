@@ -825,6 +825,11 @@ private:
         if (!Assume(feature_data.size() <= MAX_FEATUREDATA_LENGTH)) return;
         MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
     }
+    /** Collect transactions to announce to a given peer into `invs`. If the node support reconciliation,
+     * add them to its reconciliation set instead. */
+    void AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
+                     std::vector<CTransactionRef> txs, std::vector<CInv>& invs)
+        EXCLUSIVE_LOCKS_REQUIRED(tx_relay.m_tx_inventory_mutex, !tx_relay.m_bloom_filter_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -5984,6 +5989,60 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     }
 }
 
+void PeerManagerImpl::AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
+                                  std::vector<CTransactionRef> txs, std::vector<CInv>& invs)
+{
+    LOCK(tx_relay.m_bloom_filter_mutex);
+
+    invs.reserve(std::min<size_t>(MAX_INV_SZ, invs.size() + txs.size()));
+    for (auto& tx : txs) {
+        // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
+        // depending on whether our peer supports wtxid-relay. Therefore, first
+        // construct the inv and then use its hash for the filter check.
+        const auto inv = peer.m_wtxid_relay ?
+                             CInv{MSG_WTX, tx->GetWitnessHash().ToUint256()} :
+                             CInv{MSG_TX, tx->GetHash().ToUint256()};
+        // Check if not in the filter already
+        if (tx_relay.m_tx_inventory_known_filter.contains(inv.hash)) {
+            continue;
+        }
+        if (tx_relay.m_bloom_filter && !tx_relay.m_bloom_filter->IsRelevantAndUpdate(*tx)) continue;
+
+        auto add_to_inv_vec = [&](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay.m_tx_inventory_mutex) {
+            invs.push_back(inv);
+            if (invs.size() == MAX_INV_SZ) {
+                MakeAndPushMessage(node, NetMsgType::INV, invs);
+                invs.clear();
+            }
+            tx_relay.m_tx_inventory_known_filter.insert(inv.hash);
+        };
+
+        // Send
+        // We don't reconcile while in IBD, so transactions added to a reconciliation
+        // set then would sit there unannounced, and mined ones would linger in it.
+        // Fan out until we are synced instead.
+        bool reconcile = m_txreconciliation && !m_chainman.IsInitialBlockDownload() &&
+                         m_txreconciliation->IsPeerRegistered(node.GetId());
+        if (reconcile) {
+            Assume(inv.IsMsgWtx());
+            // Try to add the transaction to the reconciliation set
+            const auto error = m_txreconciliation->AddToSet(node.GetId(), Wtxid::FromUint256(inv.hash));
+            if  (error.has_value()) {
+                // If adding fails, fanout instead
+                reconcile = false;
+                if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
+                    // If adding fails due to a collision, fanout the colliding transaction too
+                    Assume(m_txreconciliation->TryRemovingFromSet(node.GetId(), error.value().GetCollision()));
+                    add_to_inv_vec(CInv(MSG_WTX, error.value().GetCollision().ToUint256()));
+                }
+            }
+        }
+        if (!reconcile) {
+            add_to_inv_vec(inv);
+        }
+    }
+}
+
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
@@ -6525,54 +6584,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         return res;
                     }();
 
-                    LOCK(tx_relay->m_bloom_filter_mutex);
-                    vInv.reserve(std::min<size_t>(MAX_INV_SZ, vInv.size() + inv_tx.size()));
-                    for (auto& tx : inv_tx) {
-                        // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
-                        // depending on whether our peer supports wtxid-relay. Therefore, first
-                        // construct the inv and then use its hash for the filter check.
-                        const auto inv = peer.m_wtxid_relay ?
-                                             CInv{MSG_WTX, tx->GetWitnessHash().ToUint256()} :
-                                             CInv{MSG_TX, tx->GetHash().ToUint256()};
-                        // Check if not in the filter already
-                        if (tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
-                            continue;
-                        }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*tx)) continue;
-
-                        auto add_to_inv_vec = [&](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex) {
-                            vInv.push_back(inv);
-                            if (vInv.size() == MAX_INV_SZ) {
-                                MakeAndPushMessage(node, NetMsgType::INV, vInv);
-                                vInv.clear();
-                            }
-                            tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
-                        };
-
-                        // Send
-                        // We don't reconcile while in IBD, so transactions added to a reconciliation
-                        // set then would sit there unannounced, and mined ones would linger in it.
-                        // Fan out until we are synced instead.
-                        bool reconcile = m_txreconciliation && !m_chainman.IsInitialBlockDownload() &&
-                                         m_txreconciliation->IsPeerRegistered(node.GetId());
-                        if (reconcile) {
-                            Assume(inv.IsMsgWtx());
-                            // Try to add the transaction to the reconciliation set
-                            const auto error = m_txreconciliation->AddToSet(node.GetId(), Wtxid::FromUint256(inv.hash));
-                            if  (error.has_value()) {
-                                // If adding fails, fanout instead
-                                reconcile = false;
-                                if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
-                                    // If adding fails due to a collision, fanout the colliding transaction too
-                                    Assume(m_txreconciliation->TryRemovingFromSet(node.GetId(), error.value().GetCollision()));
-                                    add_to_inv_vec(CInv(MSG_WTX, error.value().GetCollision().ToUint256()));
-                                }
-                            }
-                        }
-                        if (!reconcile) {
-                            add_to_inv_vec(inv);
-                        }
-                    }
+                    AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), vInv);
                 }
         }
         if (!vInv.empty())
