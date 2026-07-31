@@ -8,6 +8,7 @@ target_sources(test_bitcoin
   PRIVATE
     init_test_fixture.cpp
     wallet_test_fixture.cpp
+    bip39_tests.cpp
     db_tests.cpp
     coinselector_tests.cpp
     coinselection_tests.cpp
