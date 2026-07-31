@@ -31,7 +31,7 @@ HOST_CFLAGS+=" -fno-ident"
 HOST_CXXFLAGS="$HOST_CFLAGS"
 
 # LDFLAGS
-HOST_LDFLAGS="-Wl,--no-insert-timestamp -Wl,--fatal-warnings"
+HOST_LDFLAGS="-Wl,--no-insert-timestamp"
 
 mkdir -p "$DISTSRC"
 (
@@ -55,6 +55,7 @@ mkdir -p "$DISTSRC"
           -DBUILD_UTIL=OFF \
           -DBUILD_WALLET_TOOL=OFF \
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
+          -DCMAKE_LINK_WARNING_AS_ERROR=ON \
           -DREDUCE_EXPORTS=ON \
           -DWITH_CCACHE=OFF \
           -Werror=dev
