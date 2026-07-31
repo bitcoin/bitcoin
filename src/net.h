@@ -82,7 +82,7 @@ inline constexpr unsigned int DEFAULT_MAX_PEER_CONNECTIONS{200};
 /** Default percentage of inbound connection slots that tx-relaying peers can use */
 inline constexpr int DEFAULT_FULL_RELAY_INBOUND_PCT{50};
 /** The default for -maxuploadtarget. 0 = Unlimited */
-static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
+inline const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 /** Default for blocks only*/
 inline constexpr bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */

@@ -159,7 +159,7 @@ inline constexpr uint64_t KNOWN_WALLET_FLAGS =
 inline constexpr uint64_t MUTABLE_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE;
 
-static const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
+inline const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
     {WALLET_FLAG_AVOID_REUSE, "avoid_reuse"},
     {WALLET_FLAG_BLANK_WALLET, "blank"},
     {WALLET_FLAG_KEY_ORIGIN_METADATA, "key_origin_metadata"},
@@ -169,7 +169,7 @@ static const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
     {WALLET_FLAG_EXTERNAL_SIGNER, "external_signer"}
 };
 
-static const std::map<std::string, WalletFlags> STRING_TO_WALLET_FLAG{
+inline const std::map<std::string, WalletFlags> STRING_TO_WALLET_FLAG{
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_AVOID_REUSE), WALLET_FLAG_AVOID_REUSE},
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_BLANK_WALLET), WALLET_FLAG_BLANK_WALLET},
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_KEY_ORIGIN_METADATA), WALLET_FLAG_KEY_ORIGIN_METADATA},

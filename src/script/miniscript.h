@@ -342,15 +342,15 @@ struct InputStack {
 };
 
 /** A stack consisting of a single zero-length element (interpreted as 0 by the script interpreter in numeric context). */
-static const auto ZERO = InputStack(std::vector<unsigned char>());
+inline const auto ZERO = InputStack(std::vector<unsigned char>());
 /** A stack consisting of a single malleable 32-byte 0x0000...0000 element (for dissatisfying hash challenges). */
-static const auto ZERO32 = InputStack(std::vector<unsigned char>(32, 0)).SetMalleable();
+inline const auto ZERO32 = InputStack(std::vector<unsigned char>(32, 0)).SetMalleable();
 /** A stack consisting of a single 0x01 element (interpreted as 1 by the script interpreted in numeric context). */
-static const auto ONE = InputStack(Vector((unsigned char)1));
+inline const auto ONE = InputStack(Vector((unsigned char)1));
 /** The empty stack. */
-static const auto EMPTY = InputStack();
+inline const auto EMPTY = InputStack();
 /** A stack representing the lack of any (dis)satisfactions. */
-static const auto INVALID = InputStack().SetAvailable(Availability::NO);
+inline const auto INVALID = InputStack().SetAvailable(Availability::NO);
 
 //! A pair of a satisfaction and a dissatisfaction InputStack.
 struct InputResult {
