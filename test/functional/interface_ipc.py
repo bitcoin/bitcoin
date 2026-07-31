@@ -179,6 +179,23 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_shutdown_with_client_connected_test(self):
+        """Test that the node shuts down while an IPC client is still
+        connected. Shutdown disconnects incoming IPC connections and waits for
+        in-flight calls, and connections left behind after that used to keep
+        the IPC event loop running, so the node logged "Shutdown done" but
+        never exited."""
+        node = self.nodes[0]
+        self.log.info("Running shutdown with IPC client connected test")
+
+        async def async_routine():
+            ctx, init = await make_capnp_init_ctx(self)
+            echo = init.makeEcho(ctx).result
+            assert_equal((await echo.echo(ctx, "hello")).result, "hello")
+            self.log.debug("Stop the node while the client is still connected")
+            node.stop_node()
+        asyncio.run(capnp.run(async_routine()))
+
     def run_test(self):
         self.run_echo_test()
         self.run_rpc_invalid_json_test()
@@ -186,6 +203,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         self.run_deprecated_mining_test()
         self.run_unclean_disconnect_test()
         self.run_thread_busy_test()
+        self.run_shutdown_with_client_connected_test()
 
 if __name__ == '__main__':
     IPCInterfaceTest(__file__).main()
