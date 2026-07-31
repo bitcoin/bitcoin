@@ -437,21 +437,34 @@ class Connection
 public:
     Connection(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream_)
         : m_loop(loop), m_stream(kj::mv(stream_)),
-          m_network(*m_stream, ::capnp::rpc::twoparty::Side::CLIENT, ::capnp::ReaderOptions()),
-          m_rpc_system(::capnp::makeRpcClient(m_network)) {}
+          m_network(std::in_place, *m_stream, ::capnp::rpc::twoparty::Side::CLIENT, ::capnp::ReaderOptions()),
+          m_rpc_system(::capnp::makeRpcClient(*m_network)) {}
     Connection(EventLoop& loop,
         kj::Own<kj::AsyncIoStream>&& stream_,
         const std::function<::capnp::Capability::Client(Connection&)>& make_client)
         : m_loop(loop), m_stream(kj::mv(stream_)),
-          m_network(*m_stream, ::capnp::rpc::twoparty::Side::SERVER, ::capnp::ReaderOptions()),
-          m_rpc_system(::capnp::makeRpcServer(m_network, make_client(*this))) {}
+          m_network(std::in_place, *m_stream, ::capnp::rpc::twoparty::Side::SERVER, ::capnp::ReaderOptions()),
+          m_rpc_system(::capnp::makeRpcServer(*m_network, make_client(*this))) {}
 
-    //! Run cleanup functions. Must be called from the event loop thread. First
-    //! calls synchronous cleanup functions while blocked (to free capnp
-    //! Capability::Client handles owned by ProxyClient objects), then schedules
-    //! asynchronous cleanup functions to run in a worker thread (to run
-    //! destructors of m_impl instances owned by ProxyServer objects).
+    //! Destroy the connection. Calls disconnect() if it has not been called
+    //! already. Must be called from the event loop thread.
     ~Connection();
+
+    //! Sever the connection without destroying this object: cancel any pending
+    //! onDisconnect handlers, cancel KJ promises for calls in progress, tear
+    //! down the RPC system (garbage collecting any server objects that are not
+    //! kept alive by in-flight calls), run synchronous cleanup functions
+    //! registered by client objects (releasing their capnp
+    //! Capability::Client handles), and release Thread capabilities so worker
+    //! threads are torn down. Safe to call more than once; the destructor
+    //! calls it automatically if it has not been called. Must be called from
+    //! the event loop thread.
+    //!
+    //! Note: disconnecting cancels the KJ promise of any call in progress, but
+    //! a C++ server method body that was already dispatched to a worker thread
+    //! (see ProxyServer<Thread>::post) is not interrupted by this and runs to
+    //! completion.
+    void disconnect();
 
     //! Register synchronous cleanup function to run on event loop thread (with
     //! access to capnp thread local variables) when disconnect() is called.
@@ -468,7 +481,7 @@ public:
         // handler fires, do not call the function f right away, instead add it
         // to the EventLoop TaskSet to avoid "Promise callback destroyed itself"
         // error in the typical case where f deletes this Connection object.
-        m_on_disconnect.add(m_network.onDisconnect().then(
+        m_on_disconnect->add(m_network->onDisconnect().then(
             [f = std::forward<F>(f), this]() mutable { m_loop->m_task_set->add(kj::evalLater(kj::mv(f))); }));
     }
 
@@ -478,8 +491,13 @@ public:
     //! TaskSet used to cancel the m_network.onDisconnect() handler for remote
     //! disconnections, if the connection is closed locally first by deleting
     //! this Connection object.
-    kj::TaskSet m_on_disconnect{m_error_handler};
-    ::capnp::TwoPartyVatNetwork m_network;
+    std::optional<kj::TaskSet> m_on_disconnect{std::in_place, m_error_handler};
+    //! Wrapped in std::optional so disconnect() can destroy it (and m_stream
+    //! below) to sever the transport while this object stays alive. Closing
+    //! the stream is what makes the peer observe the disconnect: it reads EOF
+    //! and fails its outstanding calls with DISCONNECTED errors.
+    std::optional<::capnp::TwoPartyVatNetwork> m_network;
+
     std::optional<::capnp::RpcSystem<::capnp::rpc::twoparty::VatId>> m_rpc_system;
 
     // ThreadMap interface client, used to create a remote server thread when an
@@ -506,6 +524,9 @@ public:
     //! will be empty if all ProxyClient are destroyed cleanly before the
     //! connection is destroyed.
     CleanupList m_sync_cleanup_fns;
+
+    //! Set once disconnect() has run. Only accessed on the event loop thread.
+    bool m_disconnected{false};
 };
 
 //! Vat id for server side of connection. Required argument to RpcSystem::bootStrap()
