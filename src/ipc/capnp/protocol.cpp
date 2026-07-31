@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <system_error>
 #include <thread>
+#include <vector>
 
 namespace ipc {
 namespace capnp {
@@ -101,16 +102,63 @@ public:
         };
         m_loop.emplace(m_exe_name, std::move(opts), &m_context);
         mp::ServeStream<messages::Init>(*m_loop, make_stream(), init);
-        m_parent_connection = &m_loop->m_incoming_connections.back();
+        m_parent_connection = &m_loop->incoming_connections().back();
         m_loop->loop();
         m_loop.reset();
     }
     void disconnectIncoming() override
     {
         if (!m_loop) return;
-        // Delete incoming connections, except the connection to a parent
+        // Disconnect incoming connections, except the connection to a parent
         // process (if there is one), since a parent process should be able to
         // monitor and control this process, even during shutdown.
+        //
+        // Disconnecting cancels the KJ promise of any call in progress, but a
+        // server method body that was already dispatched to a worker thread is
+        // NOT interrupted and runs to completion. So before destroying the
+        // connections and returning, wait for in-flight call bodies to finish
+        // (mp::Connection::waitDrained). Without this wait, a still-running
+        // body (e.g. Mining.checkBlock) could dereference node state that the
+        // caller (Shutdown) frees right after this function returns, causing
+        // https://github.com/bitcoin/bitcoin/issues/35845.
+        //
+        // The wait happens off the event loop thread, between two sync()
+        // calls: call bodies need the event loop to deliver their results, so
+        // blocking the loop until they finish would deadlock.
+        //
+        // Limitations, intentional to keep this narrow (see #35845 discussion):
+        // - Only server call *bodies* are drained. ProxyServer m_impl
+        //   destructors scheduled via EventLoop::addAsyncCleanup() run later
+        //   on the async cleanup thread and are not waited for. (One of
+        //   several reasons IPC object implementations should not have
+        //   nontrivial destructors.)
+        // - Only the removed connections are drained; the kept-open parent
+        //   connection is not (that would require pausing new calls on it).
+        // - New incoming connections can still be accepted while this runs;
+        //   preventing that requires an API to stop the listener, proposed in
+        //   https://github.com/bitcoin-core/libmultiprocess/pull/269.
+        std::vector<mp::Connection*> disconnected;
+        m_loop->sync([&] {
+            for (mp::Connection& connection : m_loop->incoming_connections()) {
+                if (&connection != m_parent_connection) {
+                    connection.disconnect();
+                    disconnected.push_back(&connection);
+                }
+            }
+        });
+        // After disconnect(), the remaining counted server objects are exactly
+        // the ones kept alive by in-flight calls (idle ones are garbage
+        // collected synchronously by the disconnect), so a nonzero count means
+        // the wait below will actually block. Log when that happens so a
+        // shutdown hang here is diagnosable.
+        size_t pending{0};
+        for (const mp::Connection* connection : disconnected) pending += connection->pendingServerObjects();
+        if (pending > 0) {
+            LogInfo("ipc: Waiting for %d server object(s) in use by in-flight IPC call(s) on %d connection(s) to be freed",
+                    pending, disconnected.size());
+        }
+        for (mp::Connection* connection : disconnected) connection->waitDrained();
+        if (pending > 0) LogInfo("ipc: Incoming IPC connections drained");
         m_loop->sync([&] {
             m_loop->m_incoming_connections.remove_if([this](mp::Connection& c) { return &c != m_parent_connection; });
         });
