@@ -454,26 +454,41 @@ struct Waiter
 //! on the event loop thread.
 //! In addition to Cap'n Proto state, it also holds lists of callbacks to run
 //! when the connection is closed.
+//!
+//! A Connection may be severed with disconnect() and then kept alive (rather
+//! than destroyed) so callers can wait for in-flight server calls to finish.
+//! Once disconnect() has run the object holds no transport, RPC system, or
+//! worker threads, so the only valid operations on it are destruction and
+//! calling disconnect() again (a no-op). Methods that perform I/O or make
+//! calls must not be used after disconnect().
 class Connection
 {
 public:
     Connection(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream_)
         : m_loop(loop), m_stream(kj::mv(stream_)),
-          m_network(*m_stream, ::capnp::rpc::twoparty::Side::CLIENT, ::capnp::ReaderOptions()),
-          m_rpc_system(::capnp::makeRpcClient(m_network)) {}
+          m_network(std::in_place, *m_stream, ::capnp::rpc::twoparty::Side::CLIENT, ::capnp::ReaderOptions()),
+          m_rpc_system(::capnp::makeRpcClient(*m_network)) {}
     Connection(EventLoop& loop,
         kj::Own<kj::AsyncIoStream>&& stream_,
         const std::function<::capnp::Capability::Client(Connection&)>& make_client)
         : m_loop(loop), m_stream(kj::mv(stream_)),
-          m_network(*m_stream, ::capnp::rpc::twoparty::Side::SERVER, ::capnp::ReaderOptions()),
-          m_rpc_system(::capnp::makeRpcServer(m_network, make_client(*this))) {}
+          m_network(std::in_place, *m_stream, ::capnp::rpc::twoparty::Side::SERVER, ::capnp::ReaderOptions()),
+          m_rpc_system(::capnp::makeRpcServer(*m_network, make_client(*this))) {}
 
-    //! Run cleanup functions. Must be called from the event loop thread. First
-    //! calls synchronous cleanup functions while blocked (to free capnp
-    //! Capability::Client handles owned by ProxyClient objects), then schedules
-    //! asynchronous cleanup functions to run in a worker thread (to run
-    //! destructors of m_impl instances owned by ProxyServer objects).
+    //! Destroy the connection. Calls disconnect() if it has not been called
+    //! already. Must be called from the event loop thread.
     ~Connection() noexcept(false);
+
+    //! Sever the connection without destroying this object: close the transport
+    //! so the peer observes the disconnect, and run the connection's cleanup
+    //! handlers. Idempotent, and called automatically by the destructor --
+    //! calling it directly is only needed to disconnect while keeping the object
+    //! alive (e.g. to wait for in-flight calls to drain afterward). Must be
+    //! called from the event loop thread.
+    //!
+    //! Cancels the KJ promise of any in-flight call, but a server method body
+    //! already dispatched to a worker thread runs to completion.
+    void disconnect();
 
     //! Register a synchronous cleanup function to run on the event loop thread
     //! (with access to capnp thread-local variables) when the connection is
@@ -492,14 +507,13 @@ public:
     template <typename F>
     void onDisconnect(F&& f)
     {
-        // m_network.onDisconnect() fires both on a remote disconnect and on a
-        // local disconnect (deleting the Connection resets m_rpc_system, which
-        // drops capnp's last reference to the network and fulfills the
-        // promise).  The m_alive weak_ptr tells the two apart -- it is expired
-        // only while the Connection is being deleted -- so f is skipped on
-        // local disconnects. This lets onDisconnect callbacks delete the
-        // Connection without a double deletion.
-        m_loop->m_task_set->add(m_network.onDisconnect().then(
+        // m_network->onDisconnect() fires both on a remote disconnect and on a
+        // local one (disconnecting resets m_rpc_system, which drops capnp's
+        // last reference to the network and fulfills the promise). The m_alive
+        // weak_ptr tells the two apart -- disconnect() expires it, so f is
+        // skipped on local disconnects. This lets onDisconnect callbacks
+        // delete the Connection without a double deletion.
+        m_loop->m_task_set->add(m_network->onDisconnect().then(
             [f = std::forward<F>(f), alive = std::weak_ptr<void>(m_alive)]() mutable {
                 if (!alive.expired()) f();
             }));
@@ -510,7 +524,11 @@ public:
     //! Liveness token checked by onDisconnect() callbacks (see there).
     //! Could be dropped if Connection lifetime were reference-counted (#336).
     std::shared_ptr<void> m_alive{std::make_shared<char>()};
-    ::capnp::TwoPartyVatNetwork m_network;
+    //! Wrapped in std::optional so disconnect() can tear it down (along with
+    //! the stream) to sever the transport while this object stays alive.
+    //! Closing the stream is what makes the peer observe the disconnect: it
+    //! reads EOF and fails its outstanding calls with DISCONNECTED errors.
+    std::optional<::capnp::TwoPartyVatNetwork> m_network;
     std::optional<::capnp::RpcSystem<::capnp::rpc::twoparty::VatId>> m_rpc_system;
 
     // ThreadMap interface client, used to create a remote server thread when an
