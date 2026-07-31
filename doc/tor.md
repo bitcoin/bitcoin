@@ -238,5 +238,5 @@ for normal IPv4/IPv6 communication, use:
 ## 4. Privacy recommendations
 
 See [doc/privacy.md](privacy.md) for privacy recommendations, including
-guidance on onion service port isolation and node identity across multiple
-networks.
+guidance on onion service port isolation, node identity across multiple
+networks, and private transaction broadcasting.

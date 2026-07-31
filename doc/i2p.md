@@ -170,4 +170,5 @@ if you are developing a downstream application that may be bundling I2P with Bit
 ## Privacy recommendations
 
 See [doc/privacy.md](privacy.md) for privacy recommendations, including
-guidance on node identity across multiple networks.
+guidance on node identity across multiple networks and private transaction
+broadcasting.

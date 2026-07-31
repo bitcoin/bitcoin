@@ -1,5 +1,47 @@
 # Privacy in Bitcoin Core
 
+## Transaction broadcasting privacy
+
+By default, when Bitcoin Core submits a transaction to the network it announces
+it to all connected peers. This allows any peer to correlate the transaction
+with the announcing node's IP address and identify it as the likely origin.
+
+### Private broadcast (`-privatebroadcast`)
+
+Transactions submitted via the `sendrawtransaction` RPC can be broadcast
+privately through a short-lived Tor or I2P connection, without putting them
+in the local mempool first. The transaction reaches the wider network only
+once a recipient relays it, which prevents linking the submission to the
+node's IP address.
+
+To enable:
+
+```
+-privatebroadcast=1
+```
+
+This option is disabled by default.
+
+**Prerequisites:** Tor (via `-proxy` or `-onion`) or I2P (via `-i2psam`) must
+be configured and reachable. See [doc/tor.md](tor.md) and [doc/i2p.md](i2p.md)
+for setup instructions. If neither network is reachable when a transaction is
+submitted, `sendrawtransaction` returns an error.
+
+**Scope:** Only `sendrawtransaction` is affected. Wallet RPCs (`sendtoaddress`,
+`send`, `sendmany`, `sendall`, etc.) broadcast transactions through the standard method
+regardless of this setting. Wallet-level private broadcast is not yet supported;
+see the [private broadcast tracking issue](https://github.com/bitcoin/bitcoin/issues/34476)
+for planned extensions.
+
+**Related RPCs:**
+
+- `getprivatebroadcastinfo` — returns transactions currently in the private
+  broadcast queue with per-peer send timestamps and acknowledgment times where available.
+- `abortprivatebroadcast <id>` — removes a transaction from the private
+  broadcast queue by txid or wtxid.
+
+Both RPCs are only available when `-privatebroadcast=1` is set.
+
 ## Network connectivity privacy
 
 ### Node identity across multiple networks
@@ -27,4 +69,4 @@ always have only one port open.
 - [doc/tor.md](tor.md) — Tor proxy setup, onion service creation and configuration
 - [doc/i2p.md](i2p.md) — I2P setup, configuration, and address types
 - [doc/cjdns.md](cjdns.md) — CJDNS setup (note: CJDNS encrypts traffic but
-  does not hide the sender from intermediate routers)
+  does not hide the sender or recipient from intermediate routers)
