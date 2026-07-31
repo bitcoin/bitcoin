@@ -826,10 +826,15 @@ private:
         MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
     }
     /** Collect transactions to announce to a given peer into `invs`. If the node support reconciliation,
-     * add them to its reconciliation set instead. */
+     * add them to its reconciliation set instead (but only if `from_post_reconciliation` is false). */
     void AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
-                     std::vector<CTransactionRef> txs, std::vector<CInv>& invs)
+                     std::vector<CTransactionRef> txs, bool from_post_reconciliation,
+                     std::vector<CInv>& invs)
         EXCLUSIVE_LOCKS_REQUIRED(tx_relay.m_tx_inventory_mutex, !tx_relay.m_bloom_filter_mutex);
+
+    /** Immediately announce transactions to a given peer via INV message(s). Used to send transaction after reconciliation */
+    void AnnounceReconciliationTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -5990,7 +5995,8 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
 }
 
 void PeerManagerImpl::AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
-                                  std::vector<CTransactionRef> txs, std::vector<CInv>& invs)
+                                  std::vector<CTransactionRef> txs, bool from_post_reconciliation,
+                                  std::vector<CInv>& invs)
 {
     LOCK(tx_relay.m_bloom_filter_mutex);
 
@@ -6021,7 +6027,7 @@ void PeerManagerImpl::AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& 
         // We don't reconcile while in IBD, so transactions added to a reconciliation
         // set then would sit there unannounced, and mined ones would linger in it.
         // Fan out until we are synced instead.
-        bool reconcile = m_txreconciliation && !m_chainman.IsInitialBlockDownload() &&
+        bool reconcile = !from_post_reconciliation && m_txreconciliation && !m_chainman.IsInitialBlockDownload() &&
                          m_txreconciliation->IsPeerRegistered(node.GetId());
         if (reconcile) {
             Assume(inv.IsMsgWtx());
@@ -6041,6 +6047,54 @@ void PeerManagerImpl::AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& 
             add_to_inv_vec(inv);
         }
     }
+}
+
+void PeerManagerImpl::AnnounceReconciliationTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+{
+    if (remote_missing_wtxids.empty()) return;
+    // We are announcing to a peer we just reconciled with, so it is still connected and it
+    // relays transactions.
+    PeerRef maybe_peer{GetPeerRef(node.GetId())};
+    Assume(maybe_peer);
+    Peer& peer{*maybe_peer};
+    auto tx_relay = peer.GetTxRelay();
+    Assume(tx_relay);
+
+    // Reconciliation is only negotiated with wtxid-relay peers, so we always
+    // identify and announce transactions by their wtxid here.
+    Assume(peer.m_wtxid_relay);
+
+    // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
+    // (sorted from higher priority to lowest, skipping low fee)
+    const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
+
+    std::vector<CInv> remote_missing_invs;
+    {
+        LOCK(tx_relay->m_tx_inventory_mutex);
+
+        auto inv_tx = [&]() {
+            std::vector<CTransactionRef> res;
+
+            LOCK(m_mempool.cs);
+            auto txiters = m_mempool.ExtractBestByMiningScoreWithTopology(remote_missing_wtxids, remote_missing_wtxids.size());
+            res.reserve(txiters.size());
+            for (auto txiter : txiters) {
+                if (txiter->GetFee() < filterrate.GetFee(txiter->GetTxSize())) {
+                    continue; // higher feerate CPFP txs may follow, so just skip, don't stop
+                }
+                res.push_back(txiter->GetSharedTx());
+            }
+            return res;
+        }();
+
+        // These transactions are the outcome of a reconciliation round, so they are fanned
+        // out instead of being added back to the reconciliation set.
+        AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), /*from_post_reconciliation=*/true,
+                    remote_missing_invs);
+    }
+
+    // Send any remaining (some candidates may have been filtered out)
+    if (!remote_missing_invs.empty()) MakeAndPushMessage(node, NetMsgType::INV, remote_missing_invs);
 }
 
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
@@ -6584,7 +6638,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         return res;
                     }();
 
-                    AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), vInv);
+                    AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), /*from_post_reconciliation=*/false, vInv);
                 }
         }
         if (!vInv.empty())
