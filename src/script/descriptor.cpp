@@ -1080,11 +1080,19 @@ public:
     // NOLINTNEXTLINE(misc-no-recursion)
     void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override
     {
-        for (const auto& p : m_pubkey_args) {
+        auto insert_pubs = [&pubkeys, &ext_pubs](const std::unique_ptr<PubkeyProvider>& p) {
             std::optional<CPubKey> pub = p->GetRootPubKey();
             if (pub) pubkeys.insert(*pub);
             std::optional<CExtPubKey> ext_pub = p->GetRootExtPubKey();
             if (ext_pub) ext_pubs.insert(*ext_pub);
+        };
+        for (const auto& p : m_pubkey_args) {
+            if (MuSigPubkeyProvider* musig = dynamic_cast<MuSigPubkeyProvider*>(p.get())) {
+                for (const auto& mp : musig->m_participants) {
+                    insert_pubs(mp);
+                }
+            }
+            insert_pubs(p);
         }
         for (const auto& arg : m_subdescriptor_args) {
             arg->GetPubKeys(pubkeys, ext_pubs);
