@@ -516,12 +516,14 @@ struct ServerObjectTracker
     void waitDrained()
     {
         Lock lock(m_mutex);
+        if (m_count != 0 && testing_hook_wait) testing_hook_wait();
         m_cv.wait(lock.m_lock, [this]() MP_REQUIRES(m_mutex) { return m_count == 0; });
     }
 
     mutable Mutex m_mutex;
     std::condition_variable m_cv;
     size_t m_count MP_GUARDED_BY(m_mutex){0};
+    std::function<void()> testing_hook_wait;
 };
 
 //! Object holding network & rpc state associated with either an incoming server
