@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-static const int CLIENT_VERSION =
+inline constexpr int CLIENT_VERSION =
                              10000 * CLIENT_VERSION_MAJOR
                          +     100 * CLIENT_VERSION_MINOR
                          +       1 * CLIENT_VERSION_BUILD;

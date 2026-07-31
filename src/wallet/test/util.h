@@ -25,7 +25,7 @@ class CWallet;
 class WalletDatabase;
 struct WalletContext;
 
-static const DatabaseFormat DATABASE_FORMATS[] = {
+inline constexpr DatabaseFormat DATABASE_FORMATS[] = {
        DatabaseFormat::SQLITE,
 };
 

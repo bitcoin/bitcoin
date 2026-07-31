@@ -11,9 +11,9 @@
 
 
 namespace wallet {
-const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
-const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
-const unsigned int WALLET_CRYPTO_IV_SIZE = 16;
+inline constexpr unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
+inline constexpr unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
+inline constexpr unsigned int WALLET_CRYPTO_IV_SIZE = 16;
 
 /**
  * Private key encryption is done based on a CMasterKey,

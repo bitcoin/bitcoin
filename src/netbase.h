@@ -25,9 +25,9 @@ extern int nConnectTimeout;
 extern bool fNameLookup;
 
 //! -timeout default
-static const int DEFAULT_CONNECT_TIMEOUT = 5000;
+inline constexpr int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
-static const int DEFAULT_NAME_LOOKUP = true;
+inline constexpr int DEFAULT_NAME_LOOKUP = true;
 
 /** Prefix for unix domain socket addresses (which are local filesystem paths) */
 const std::string ADDR_PREFIX_UNIX = "unix:";

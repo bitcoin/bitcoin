@@ -24,7 +24,7 @@
 constexpr uint16_t DEFAULT_TOR_SOCKS_PORT{9050};
 constexpr int DEFAULT_TOR_CONTROL_PORT = 9051;
 extern const std::string DEFAULT_TOR_CONTROL;
-static const bool DEFAULT_LISTEN_ONION = true;
+inline constexpr bool DEFAULT_LISTEN_ONION = true;
 
 /** Tor control reply code. Ref: https://spec.torproject.org/control-spec/replies.html */
 constexpr int TOR_REPLY_OK{250};

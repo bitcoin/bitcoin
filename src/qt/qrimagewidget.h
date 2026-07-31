@@ -9,7 +9,7 @@
 #include <QLabel>
 
 /* Maximum allowed URI length */
-static const int MAX_URI_LENGTH = 255;
+inline constexpr int MAX_URI_LENGTH = 255;
 
 /* Size of exported QR Code image */
 inline constexpr int QR_IMAGE_SIZE = 300;

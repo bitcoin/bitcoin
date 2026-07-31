@@ -17,12 +17,12 @@ inline constexpr auto MODEL_UPDATE_DELAY{250ms};
 inline constexpr auto SHUTDOWN_POLLING_DELAY{200ms};
 
 /* AskPassphraseDialog -- Maximum passphrase length */
-static const int MAX_PASSPHRASE_SIZE = 1024;
+inline constexpr int MAX_PASSPHRASE_SIZE = 1024;
 
 /* BitcoinGUI -- Size of icons in status bar */
-static const int STATUSBAR_ICONSIZE = 16;
+inline constexpr int STATUSBAR_ICONSIZE = 16;
 
-static const bool DEFAULT_SPLASHSCREEN = true;
+inline constexpr bool DEFAULT_SPLASHSCREEN = true;
 
 /* Invalid field background style */
 #define STYLE_INVALID "border: 3px solid #FF8080"
@@ -41,7 +41,7 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
  */
-static const int TOOLTIP_WRAP_THRESHOLD = 80;
+inline constexpr int TOOLTIP_WRAP_THRESHOLD = 80;
 
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36

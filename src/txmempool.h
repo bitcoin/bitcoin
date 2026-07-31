@@ -47,7 +47,7 @@ class ValidationSignals;
 struct bilingual_str;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
-static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
+inline constexpr uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 /** How much linearization cost required for TxGraph clusters to have
  * "acceptable" quality, if they cannot be optimally linearized with less cost. */
