@@ -5,6 +5,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/params.h>
+#include <deploymentstatus.h>
 #include <test/util/random.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -491,6 +492,21 @@ BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
         args.ForceSetArg("-vbparams", "testdummy:1199145601:1230767999:403200"); // January 1, 2008 - December 31, 2008, min act height 403200
         const auto chainParams = CreateChainParams(args, ChainType::REGTEST);
         check_computeblockversion(vbcache, chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testnet5_consensuscleanup_activation)
+{
+    for (const auto chain_type : {ChainType::TESTNET4, ChainType::TESTNET5}) {
+        BOOST_TEST_CONTEXT(ChainTypeToString(chain_type)) {
+            const auto chain_params{CreateChainParams(*m_node.args, chain_type)};
+            // Evaluate block 1 with the default deployment parameters.
+            CBlockIndex genesis{chain_params->GenesisBlock()};
+            VersionBitsCache cache;
+            BOOST_CHECK_EQUAL(DeploymentActiveAfter(&genesis, chain_params->GetConsensus(),
+                                                    Consensus::DEPLOYMENT_CONSENSUSCLEANUP, cache),
+                              chain_type == ChainType::TESTNET5);
+        }
     }
 }
 
