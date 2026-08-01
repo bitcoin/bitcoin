@@ -9,6 +9,7 @@
 #include <crypto/sha512.h>
 
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace wallet {
@@ -40,13 +41,13 @@ int CCrypter::BytesToKeySHA512AES(const std::span<const unsigned char> salt, con
 
 bool CCrypter::SetKeyFromPassphrase(const SecureString& key_data, const std::span<const unsigned char> salt, const unsigned int rounds, const unsigned int derivation_method)
 {
-    if (rounds < 1 || salt.size() != WALLET_CRYPTO_SALT_SIZE) {
+    if (!rounds || !std::in_range<int>(rounds) || salt.size() != WALLET_CRYPTO_SALT_SIZE) {
         return false;
     }
 
     int i = 0;
     if (derivation_method == 0) {
-        i = BytesToKeySHA512AES(salt, key_data, rounds, vchKey.data(), vchIV.data());
+        i = BytesToKeySHA512AES(salt, key_data, static_cast<int>(rounds), vchKey.data(), vchIV.data());
     }
 
     if (i != (int)WALLET_CRYPTO_KEY_SIZE)
