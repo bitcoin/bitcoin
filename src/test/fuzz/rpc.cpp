@@ -8,7 +8,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
-#include <rpc/client.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <span.h>
@@ -34,11 +33,10 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 #include <vector>
-enum class ChainType;
 
-using util::Join;
-using util::ToString;
+enum class ChainType;
 
 namespace {
 struct RPCFuzzTestingSetup : public TestingSetup {
@@ -46,16 +44,12 @@ struct RPCFuzzTestingSetup : public TestingSetup {
     {
     }
 
-    void CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
+    void CallRPC(const std::string& rpc_method, UniValue&& params)
     {
         JSONRPCRequest request;
         request.context = &m_node;
         request.strMethod = rpc_method;
-        try {
-            request.params = RPCConvertValues(rpc_method, arguments);
-        } catch (const std::runtime_error&) {
-            return;
-        }
+        request.params = std::move(params);
         tableRPC.execute(request);
     }
 
@@ -195,68 +189,74 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "waitfornewblock",
 };
 
-std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
+UniValue ConsumeBasicRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
 {
     const size_t max_string_length = 4096;
     const size_t max_base58_bytes_length{64};
-    std::string r;
+    UniValue r{};
     CallOneOf(
         fuzzed_data_provider,
         [&] {
+            // arbitrary JSON argument
+            if (!r.read(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length))) {
+                good_data = false;
+            }
+        },
+        [&] {
+            // null argument
+            r = UniValue{UniValue::VNULL};
+        },
+        [&] {
             // string argument
-            r = fuzzed_data_provider.ConsumeRandomLengthString(max_string_length);
+            r = UniValue{fuzzed_data_provider.ConsumeRandomLengthString(max_string_length)};
         },
         [&] {
             // base64 argument
-            r = EncodeBase64(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
+            r = UniValue{EncodeBase64(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length))};
         },
         [&] {
             // hex argument
-            r = HexStr(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
+            r = UniValue{HexStr(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length))};
         },
         [&] {
             // bool argument
-            r = fuzzed_data_provider.ConsumeBool() ? "true" : "false";
-        },
-        [&] {
-            // range argument
-            r = "[" + ToString(fuzzed_data_provider.ConsumeIntegral<int64_t>()) + "," + ToString(fuzzed_data_provider.ConsumeIntegral<int64_t>()) + "]";
+            r = UniValue{fuzzed_data_provider.ConsumeBool()};
         },
         [&] {
             // integral argument (int64_t)
-            r = ToString(fuzzed_data_provider.ConsumeIntegral<int64_t>());
+            r = UniValue{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
         },
         [&] {
             // integral argument (uint64_t)
-            r = ToString(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+            r = UniValue{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
         },
         [&] {
             // floating point argument
-            r = strprintf("%f", fuzzed_data_provider.ConsumeFloatingPoint<double>());
+            r = UniValue{fuzzed_data_provider.ConsumeFloatingPoint<double>()};
         },
         [&] {
             // tx destination argument
-            r = EncodeDestination(ConsumeTxDestination(fuzzed_data_provider));
+            r = UniValue{EncodeDestination(ConsumeTxDestination(fuzzed_data_provider))};
         },
         [&] {
             // uint160 argument
-            r = ConsumeUInt160(fuzzed_data_provider).ToString();
+            r = UniValue{ConsumeUInt160(fuzzed_data_provider).ToString()};
         },
         [&] {
             // uint256 argument
-            r = ConsumeUInt256(fuzzed_data_provider).ToString();
+            r = UniValue{ConsumeUInt256(fuzzed_data_provider).ToString()};
         },
         [&] {
             // base32 argument
-            r = EncodeBase32(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
+            r = UniValue{EncodeBase32(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length))};
         },
         [&] {
             // base58 argument
-            r = EncodeBase58(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
+            r = UniValue{EncodeBase58(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)))};
         },
         [&] {
             // base58 argument with checksum
-            r = EncodeBase58Check(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
+            r = UniValue{EncodeBase58Check(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)))};
         },
         [&] {
             // hex encoded block
@@ -267,7 +267,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
             }
             DataStream data_stream{};
             data_stream << TX_WITH_WITNESS(*opt_block);
-            r = HexStr(data_stream);
+            r = UniValue{HexStr(data_stream)};
         },
         [&] {
             // hex encoded block header
@@ -278,7 +278,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
             }
             DataStream data_stream{};
             data_stream << *opt_block_header;
-            r = HexStr(data_stream);
+            r = UniValue{HexStr(data_stream)};
         },
         [&] {
             // hex encoded tx
@@ -290,7 +290,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
             DataStream data_stream;
             auto allow_witness = (fuzzed_data_provider.ConsumeBool() ? TX_WITH_WITNESS : TX_NO_WITNESS);
             data_stream << allow_witness(*opt_tx);
-            r = HexStr(data_stream);
+            r = UniValue{HexStr(data_stream)};
         },
         [&] {
             // base64 encoded psbt
@@ -301,7 +301,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
             }
             DataStream data_stream{};
             data_stream << *opt_psbt;
-            r = EncodeBase64(data_stream);
+            r = UniValue{EncodeBase64(data_stream)};
         },
         [&] {
             // base58 encoded key
@@ -310,7 +310,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
                 good_data = false;
                 return;
             }
-            r = EncodeSecret(key);
+            r = UniValue{EncodeSecret(key)};
         },
         [&] {
             // hex encoded pubkey
@@ -319,24 +319,40 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
                 good_data = false;
                 return;
             }
-            r = HexStr(key.GetPubKey());
+            r = UniValue{HexStr(key.GetPubKey())};
         });
     return r;
 }
 
-std::string ConsumeArrayRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
-{
-    std::vector<std::string> scalar_arguments;
-    LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
-        scalar_arguments.push_back(ConsumeScalarRPCArgument(fuzzed_data_provider, good_data));
-    }
-    return "[\"" + Join(scalar_arguments, "\",\"") + "\"]";
-}
+constexpr int MAX_RPC_ARGUMENT_NESTING{9};
 
-std::string ConsumeRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
+// NOLINTBEGIN(misc-no-recursion)
+UniValue ConsumeRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data, int nesting_depth)
 {
-    return fuzzed_data_provider.ConsumeBool() ? ConsumeScalarRPCArgument(fuzzed_data_provider, good_data) : ConsumeArrayRPCArgument(fuzzed_data_provider, good_data);
+    if (nesting_depth == 0) {
+        return ConsumeBasicRPCArgument(fuzzed_data_provider, good_data);
+    }
+    UniValue argument{};
+    std::vector<std::function<void()>> mks{
+        [&] { argument = ConsumeBasicRPCArgument(fuzzed_data_provider, good_data); },
+        [&] {
+            argument = UniValue(UniValue::VARR);
+            LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
+                argument.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data, nesting_depth - 1));
+            }
+        },
+        [&] {
+            argument = UniValue(UniValue::VOBJ);
+            LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
+                argument.pushKV(fuzzed_data_provider.ConsumeRandomLengthString(128),
+                                ConsumeRPCArgument(fuzzed_data_provider, good_data, nesting_depth - 1));
+            }
+        },
+    };
+    PickValue(fuzzed_data_provider, mks)();
+    return argument;
 }
+// NOLINTEND(misc-no-recursion)
 
 RPCFuzzTestingSetup* InitializeRPCFuzzTestingSetup()
 {
@@ -382,9 +398,9 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
     if (!safe_for_fuzzing) {
         return;
     }
-    std::vector<std::string> arguments;
+    UniValue arguments(UniValue::VARR);
     LIMITED_WHILE (good_data && fuzzed_data_provider.ConsumeBool(), 100) {
-        arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data));
+        arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data, MAX_RPC_ARGUMENT_NESTING));
     }
     try {
         std::optional<test_only_CheckFailuresAreExceptionsNotAborts> maybe_mock{};
@@ -393,7 +409,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
             // intentional trigger_internal_bug
             maybe_mock.emplace();
         }
-        rpc_testing_setup->CallRPC(rpc_command, arguments);
+        rpc_testing_setup->CallRPC(rpc_command, std::move(arguments));
     } catch (const UniValue& json_rpc_error) {
         const std::string error_msg{json_rpc_error.find_value("message").get_str()};
         if (error_msg.starts_with("Internal bug detected")) {
