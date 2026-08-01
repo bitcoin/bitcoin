@@ -491,8 +491,11 @@ public:
 
         // Deployment of the Consensus Cleanup (BIP 54)
         consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].min_activation_height = 0; // No activation delay
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].threshold = 1512; // 75%
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].period = 2016;
 
         ApplyDeploymentOptions(opts.dep_opts);
 
