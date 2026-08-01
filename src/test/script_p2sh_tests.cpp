@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
     BOOST_CHECK(txToNonStd2_no_scriptSig_res.IsInvalid());
     BOOST_CHECK_EQUAL(txToNonStd2_no_scriptSig_res.GetRejectReason(), "bad-txns-nonstandard-inputs");
     BOOST_CHECK_EQUAL(txToNonStd2_no_scriptSig_res.GetDebugMessage(), "input 0 P2SH redeemscript missing");
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2_no_scriptSig), coins), 0U);
 
     // TxoutType::NONSTANDARD
     CMutableTransaction txToNonStd3;
