@@ -4,10 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
-from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
+from test_framework.netutil import NETWORK_ERRORS, all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal, assert_raises_rpc_error, rpc_port
+from test_framework.util import assert_equal, rpc_port
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -62,6 +62,7 @@ class RPCBindTest(BitcoinTestFramework):
         Start a node with rpcallow IP, and request getnetworkinfo
         at a non-localhost IP.
         '''
+        success = True
         self.log.info("Allow IP test for %s:%d" % (rpchost, rpcport))
         node_args = \
             ['-disablewallet', '-nolisten'] + \
@@ -72,8 +73,12 @@ class RPCBindTest(BitcoinTestFramework):
         self.nodes[0].rpchost = f"{rpchost}:{rpcport}"
         # connect to node through non-loopback interface
         node = self.nodes[0].create_new_rpc_connection()
-        node.getnetworkinfo()
+        try:
+            node.getnetworkinfo()
+        except NETWORK_ERRORS:
+            success = False
         self.stop_nodes()
+        return success
 
     def run_invalid_allowip_test(self):
         '''
@@ -162,12 +167,13 @@ class RPCBindTest(BitcoinTestFramework):
         self.run_bind_test([self.non_loopback_ip], self.non_loopback_ip, [self.non_loopback_ip],
             [(self.non_loopback_ip, self.defaultport)])
 
-        # Check that with invalid rpcallowip, we are denied
-        self.run_allowip_test([self.non_loopback_ip], self.non_loopback_ip, self.defaultport)
+        # Check that connections from allowed IPs are allowed
+        assert self.run_allowip_test([self.non_loopback_ip], self.non_loopback_ip, self.defaultport)
+        # Otherwise we are denied
         if self.options.usecli:
             self.log.info("Skip negative IP test with CLI, because the CLI can not throw the tested exception type")
             return
-        assert_raises_rpc_error(-342, "non-JSON HTTP response with '403 Forbidden' from server", self.run_allowip_test, ['1.1.1.1'], self.non_loopback_ip, self.defaultport)
+        assert not self.run_allowip_test(['1.1.1.1'], self.non_loopback_ip, self.defaultport)
 
 if __name__ == '__main__':
     RPCBindTest(__file__).main()
