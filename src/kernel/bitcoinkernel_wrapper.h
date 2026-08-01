@@ -46,6 +46,7 @@ enum class ChainType : btck_ChainType {
     MAINNET = btck_ChainType_MAINNET,
     TESTNET = btck_ChainType_TESTNET,
     TESTNET_4 = btck_ChainType_TESTNET_4,
+    TESTNET_5 = btck_ChainType_TESTNET_5,
     SIGNET = btck_ChainType_SIGNET,
     REGTEST = btck_ChainType_REGTEST
 };
