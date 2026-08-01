@@ -76,7 +76,7 @@ private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;
     bool fKeySet;
 
-    int BytesToKeySHA512AES(std::span<const unsigned char> salt, const SecureString& key_data, int count, unsigned char* key, unsigned char* iv) const;
+    int BytesToKeySHA512AES(std::span<const unsigned char> salt, const SecureString& key_data, unsigned int count, unsigned char* key, unsigned char* iv) const;
 
 public:
     bool SetKeyFromPassphrase(const SecureString& key_data, std::span<const unsigned char> salt, unsigned int rounds, unsigned int derivation_method);

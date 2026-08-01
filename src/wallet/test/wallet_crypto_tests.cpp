@@ -96,6 +96,13 @@ BOOST_AUTO_TEST_CASE(passphrase) {
     TestCrypter::TestPassphrase(vchSalt, SecureString(hash.begin(), hash.end()), rounds);
 }
 
+BOOST_AUTO_TEST_CASE(passphrase_zero_rounds) {
+    constexpr auto salt{"0000deadbeef0000"_hex_u8};
+    CCrypter crypt;
+    BOOST_CHECK(!crypt.SetKeyFromPassphrase("passphrase", salt, /*rounds=*/0, /*derivation_method=*/0));
+    BOOST_CHECK(crypt.SetKeyFromPassphrase("passphrase", salt, /*rounds=*/1, /*derivation_method=*/0));
+}
+
 BOOST_AUTO_TEST_CASE(encrypt) {
     constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
