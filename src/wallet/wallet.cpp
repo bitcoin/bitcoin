@@ -76,10 +76,12 @@
 #include <cassert>
 #include <condition_variable>
 #include <exception>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <variant>
 
 struct KeyOriginInfo;
@@ -566,36 +568,45 @@ static bool EncryptMasterKey(const SecureString& wallet_passphrase, const CKeyin
 {
     constexpr MillisecondsDouble target_time{100};
     CCrypter crypter;
+    CMasterKey updated_master_key{master_key};
 
     // Get the weighted average of iterations we can do in 100ms over 2 runs.
     for (int i = 0; i < 2; i++){
         auto start_time{NodeClock::now()};
-        crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod);
+        const bool key_set{crypter.SetKeyFromPassphrase(wallet_passphrase, updated_master_key.vchSalt, updated_master_key.nDeriveIterations, updated_master_key.nDerivationMethod)};
         auto elapsed_time{NodeClock::now() - start_time};
+        if (!key_set) {
+            return false;
+        }
 
         if (elapsed_time <= 0s) {
             // We are probably in a test with a mocked clock.
-            master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
+            updated_master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
             break;
         }
 
         // target_iterations : elapsed_iterations :: target_time : elapsed_time
-        unsigned int target_iterations = master_key.nDeriveIterations * target_time / elapsed_time;
-        // Get the weighted average with previous runs.
-        master_key.nDeriveIterations = (i * master_key.nDeriveIterations + target_iterations) / (i + 1);
+        const double target_iterations{updated_master_key.nDeriveIterations * target_time / elapsed_time};
+        if (target_iterations < 1 || target_iterations > std::numeric_limits<unsigned int>::max()) {
+            return false;
+        }
+        // Get the weighted average with previous runs. Use 64-bit math so the
+        // sum cannot wrap; the average of two unsigned int values fits in one.
+        updated_master_key.nDeriveIterations = (uint64_t{updated_master_key.nDeriveIterations} * i + static_cast<unsigned int>(target_iterations)) / (i + 1);
     }
 
-    if (master_key.nDeriveIterations < CMasterKey::DEFAULT_DERIVE_ITERATIONS) {
-        master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
+    if (updated_master_key.nDeriveIterations < CMasterKey::DEFAULT_DERIVE_ITERATIONS) {
+        updated_master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
     }
 
-    if (!crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod)) {
+    if (!crypter.SetKeyFromPassphrase(wallet_passphrase, updated_master_key.vchSalt, updated_master_key.nDeriveIterations, updated_master_key.nDerivationMethod)) {
         return false;
     }
-    if (!crypter.Encrypt(plain_master_key, master_key.vchCryptedKey)) {
+    if (!crypter.Encrypt(plain_master_key, updated_master_key.vchCryptedKey)) {
         return false;
     }
 
+    master_key = std::move(updated_master_key);
     return true;
 }
 
