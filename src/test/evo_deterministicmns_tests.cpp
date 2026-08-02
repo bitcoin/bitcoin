@@ -614,6 +614,129 @@ void FuncDIP3Protx(TestChainSetup& setup)
     const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
 }
 
+// ProUpServTx with an out-of-range or mismatched nType must be rejected before
+// mempool acceptance. Historically IsTriviallyValid / CheckProUpServTx ignored nType while
+// BuildNewListFromBlock rejected it, so a single relayed tx stalled CreateNewBlock/getblocktemplate.
+void FuncProUpServInvalidNType(TestChainSetup& setup)
+{
+    auto& chainman = *Assert(setup.m_node.chainman.get());
+    auto& dmnman = *Assert(setup.m_node.dmnman);
+    auto tip_index = [&] { return WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()); };
+
+    auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
+    const CScript coinbase_pk = GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey());
+
+    CKey ownerKey;
+    CBLSSecretKey operatorKey;
+    auto tx_reg = CreateProRegTx(chainman.ActiveChain(), *(setup.m_node.mempool), utxos, /*port=*/1,
+                                 GenerateRandomAddress(), setup.coinbaseKey, ownerKey, operatorKey);
+    const uint256 proTxHash = tx_reg.GetHash();
+    setup.CreateAndProcessBlock({tx_reg}, coinbase_pk);
+    dmnman.UpdatedBlockTip(tip_index());
+    BOOST_REQUIRE(dmnman.GetListAtChainTip().HasMN(proTxHash));
+    BOOST_REQUIRE(dmnman.GetListAtChainTip().GetMN(proTxHash)->nType == MnType::Regular);
+
+    auto make_proupserv = [&](MnType nType) {
+        CProUpServTx proTx;
+        proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
+        proTx.nType = nType;
+        proTx.netInfo = NetInfoInterface::MakeNetInfo(proTx.nVersion);
+        proTx.proTxHash = proTxHash;
+        BOOST_REQUIRE_EQUAL(proTx.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:42"), NetInfoStatus::Success);
+        if (nType == MnType::Evo) {
+            // Platform fields required by CheckProUpServTx when nType claims Evo.
+            proTx.platformNodeID.SetHex("00112233445566778899aabbccddeeff00112233");
+            proTx.platformP2PPort = 20001;
+            proTx.platformHTTPPort = 20002;
+        }
+
+        CMutableTransaction tx;
+        tx.nVersion = 3;
+        tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
+        FundTransaction(chainman.ActiveChain(), tx, utxos, GetScriptForDestination(PKHash(setup.coinbaseKey.GetPubKey())),
+                        1 * COIN, setup.coinbaseKey);
+        // FundTransaction constructs a zero-fee tx; leave a small fee so ProcessTransaction
+        // reaches special-tx validation instead of failing on min-relay fee first.
+        BOOST_REQUIRE(!tx.vout.empty());
+        BOOST_REQUIRE(tx.vout[0].nValue > 10000);
+        tx.vout[0].nValue -= 10000;
+        proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
+        proTx.sig = operatorKey.Sign(::SerializeHash(proTx), bls::bls_legacy_scheme);
+        SetTxPayload(tx, proTx);
+        SignTransaction(*(setup.m_node.mempool), tx, setup.coinbaseKey);
+        return tx;
+    };
+
+    // Case 1: out-of-range nType. Must fail trivial validation and never enter the mempool.
+    {
+        auto tx = make_proupserv(static_cast<MnType>(42));
+        auto opt_payload = GetTxPayload<CProUpServTx>(tx, /*assert_type=*/false);
+        BOOST_REQUIRE(opt_payload.has_value());
+
+        TxValidationState trivial_state;
+        BOOST_CHECK(!opt_payload->IsTriviallyValid(tip_index(), chainman, trivial_state));
+        BOOST_CHECK_EQUAL(trivial_state.GetRejectReason(), "bad-protx-type");
+
+        TxValidationState check_state;
+        {
+            LOCK(cs_main);
+            BOOST_CHECK(!CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman, check_state, /*check_sigs=*/true));
+        }
+        BOOST_CHECK_EQUAL(check_state.GetRejectReason(), "bad-protx-type");
+
+        {
+            LOCK(cs_main);
+            const MempoolAcceptResult result = chainman.ProcessTransaction(MakeTransactionRef(tx));
+            BOOST_CHECK(result.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+            BOOST_CHECK_EQUAL(result.m_state.GetRejectReason(), "bad-protx-type");
+        }
+    }
+
+    // Case 2: valid-range but mismatched nType (claim Evo for a Regular MN). Must fail contextual checks.
+    {
+        auto tx = make_proupserv(MnType::Evo);
+        auto opt_payload = GetTxPayload<CProUpServTx>(tx, /*assert_type=*/false);
+        BOOST_REQUIRE(opt_payload.has_value());
+
+        // Trivial validation accepts Evo as a valid type; contextual validation must still reject.
+        TxValidationState trivial_state;
+        BOOST_CHECK(opt_payload->IsTriviallyValid(tip_index(), chainman, trivial_state));
+
+        TxValidationState check_state;
+        {
+            LOCK(cs_main);
+            BOOST_CHECK(!CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman, check_state, /*check_sigs=*/true));
+        }
+        BOOST_CHECK_EQUAL(check_state.GetRejectReason(), "bad-protx-type-mismatch");
+        BOOST_CHECK(check_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+
+        {
+            LOCK(cs_main);
+            const MempoolAcceptResult result = chainman.ProcessTransaction(MakeTransactionRef(tx));
+            BOOST_CHECK(result.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+            BOOST_CHECK_EQUAL(result.m_state.GetRejectReason(), "bad-protx-type-mismatch");
+            BOOST_CHECK(result.m_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+        }
+    }
+
+    // Case 3: the matching nType is still accepted, i.e. the new checks reject nothing legitimate.
+    {
+        auto tx = make_proupserv(MnType::Regular);
+        TxValidationState check_state;
+        {
+            LOCK(cs_main);
+            BOOST_CHECK_MESSAGE(CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman, check_state,
+                                                 /*check_sigs=*/true),
+                                "unexpected rejection: " << check_state.GetRejectReason());
+        }
+
+        LOCK(cs_main);
+        const MempoolAcceptResult result = chainman.ProcessTransaction(MakeTransactionRef(tx));
+        BOOST_CHECK_MESSAGE(result.m_result_type == MempoolAcceptResult::ResultType::VALID,
+                            "unexpected rejection: " << result.m_state.GetRejectReason());
+    }
+}
+
 void FuncTestMempoolReorg(TestChainSetup& setup)
 {
     auto& chainman = *Assert(setup.m_node.chainman.get());
@@ -1085,6 +1208,14 @@ BOOST_AUTO_TEST_CASE(dip3_protx_basic)
 {
     TestChainV19Setup setup;
     FuncDIP3Protx(setup);
+}
+
+// Requires BasicBLS so ProUpServTx serialises nType. Pre-fix this test fails because
+// IsTriviallyValid / CheckProUpServTx accept out-of-range and mismatched nType.
+BOOST_AUTO_TEST_CASE(proupserv_invalid_ntype_basic)
+{
+    TestChainV19Setup setup;
+    FuncProUpServInvalidNType(setup);
 }
 
 BOOST_AUTO_TEST_CASE(test_mempool_reorg_legacy)

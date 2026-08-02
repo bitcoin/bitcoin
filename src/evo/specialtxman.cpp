@@ -315,6 +315,9 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
             if (!opt_proTx) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
+            if (!IsValidMnType(opt_proTx->nType)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
+            }
 
             for (const auto& entry : opt_proTx->netInfo->GetEntries()) {
                 if (const auto service_opt{entry.GetAddrPort()}) {
@@ -338,9 +341,6 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
             }
             if (opt_proTx->nType != dmn->nType) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type-mismatch");
-            }
-            if (!IsValidMnType(opt_proTx->nType)) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-type");
             }
 
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
@@ -1084,6 +1084,14 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
     auto dmn = mnList.GetMN(opt_ptx->proTxHash);
     if (!dmn) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
+    }
+
+    // Mirror BuildNewListFromBlock: nType must match the registered MN. Without this check a
+    // mempool-accepted ProUpServTx can make CreateNewBlock fail. An out-of-range nType is already
+    // rejected by IsTriviallyValid, and dmn->nType is always in range, so no separate
+    // IsValidMnType check is reachable here.
+    if (opt_ptx->nType != dmn->nType) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type-mismatch");
     }
 
     if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {

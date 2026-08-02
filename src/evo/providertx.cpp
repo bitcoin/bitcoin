@@ -171,6 +171,9 @@ bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev
     if (nVersion < ProTxVersion::BasicBLS && nType == MnType::Evo) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-evo-version");
     }
+    if (!IsValidMnType(nType)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
+    }
     if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
