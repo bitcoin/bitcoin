@@ -2825,6 +2825,13 @@ bool Chainstate::FlushStateToDisk(
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
                 m_last_flushed_block = m_blockman.LookupBlockIndex(CoinsTip().GetBestBlock());
                 full_flush_completed = true;
+                if ((fCacheLarge || fCacheCritical) && !m_undersized_cache_warned &&
+                    !m_chainman.IsInitialBlockDownload() && !GetRole().historical) {
+                    m_undersized_cache_warned = true;
+                    LogWarning("The in-memory UTXO cache was emptied because it reached its size limit (%d MiB). "
+                               "If this happens regularly, consider raising -dbcache to keep more of the UTXO set in memory.",
+                               m_coinstip_cache_size_bytes >> 20);
+                }
                 TRACEPOINT(utxocache, flush,
                     int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
                     (uint32_t)mode,

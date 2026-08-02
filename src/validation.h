@@ -895,6 +895,10 @@ protected:
     NodeClock::time_point m_next_write{NodeClock::time_point::max()};
     const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
 
+    //! Whether a warning about the coins cache being emptied due to size
+    //! pressure outside of initial block download has already been logged.
+    bool m_undersized_cache_warned GUARDED_BY(::cs_main){false};
+
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
      * that it can be examined for issue diagnosis.
