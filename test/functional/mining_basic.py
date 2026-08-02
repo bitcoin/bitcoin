@@ -14,6 +14,7 @@ import copy
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    create_block,
     create_coinbase,
     get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
@@ -251,6 +252,41 @@ class MiningTest(BitcoinTestFramework):
         bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
         bad_block.solve()
         node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+
+    def test_murch_zawy_mintime(self):
+        self.log.info("Test that GetMinimumTime accounts for the Murch-Zawy rule (BIP54)")
+        node = self.nodes[0]
+
+        self.log.info("Mine the first block of a retarget period two hours in the future")
+        blockchain_info = node.getblockchaininfo()
+        n = DIFFICULTY_ADJUSTMENT_INTERVAL - blockchain_info['blocks'] % DIFFICULTY_ADJUSTMENT_INTERVAL - 1
+        t = blockchain_info['time']
+        for _ in range(n):
+            t += 600
+            node.setmocktime(t)
+            self.generate(self.wallet, 1, sync_fun=self.no_op)
+        node.setmocktime(t + MAX_FUTURE_BLOCK_TIME)
+        self.generate(self.wallet, 1, sync_fun=self.no_op)
+        first_block_time = node.getblock(node.getbestblockhash())['time']
+        assert_equal(first_block_time, t + MAX_FUTURE_BLOCK_TIME)
+
+        self.log.info("Mine to the end of the period with timestamps held back")
+        node.setmocktime(t)
+        self.generate(self.wallet, DIFFICULTY_ADJUSTMENT_INTERVAL - 2, sync_fun=self.no_op)
+        assert_greater_than(first_block_time, node.getblock(node.getbestblockhash())['time'])
+
+        self.log.info("The template for the last block of the period is adjusted to its first block's time")
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(tmpl['mintime'], first_block_time)
+        assert_equal(tmpl['curtime'], first_block_time)
+
+        block = create_block(tmpl=tmpl)
+        block.solve()
+        node.submitheader(hexdata=CBlockHeader(block).serialize().hex())
+
+        self.log.info("The node mines a valid block at the end of the period despite its early wall clock")
+        self.generate(self.wallet, 1, sync_fun=self.no_op)
+        assert_equal(node.getblock(node.getbestblockhash())['time'], first_block_time)
 
     def test_pruning(self):
         self.log.info("Test that submitblock stores previously pruned block")
@@ -528,6 +564,7 @@ class MiningTest(BitcoinTestFramework):
         self.test_blockmintxfee_parameter()
         self.test_block_max_weight()
         self.test_timewarp()
+        self.test_murch_zawy_mintime()
         self.test_pruning()
         self.test_height_in_locktime()
 

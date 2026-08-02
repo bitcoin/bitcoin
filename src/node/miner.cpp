@@ -64,6 +64,13 @@ int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_a
     if (height % difficulty_adjustment_interval == 0) {
         min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
     }
+    // Account for the BIP54 Murch-Zawy rule on all networks: the last block of
+    // a difficulty adjustment period may not be earlier than its first block.
+    if (height % difficulty_adjustment_interval == difficulty_adjustment_interval - 1) {
+        const int first_height{height - static_cast<int>(difficulty_adjustment_interval) + 1};
+        const CBlockIndex* first_block{Assert(pindexPrev->GetAncestor(first_height))};
+        min_time = std::max<int64_t>(min_time, first_block->GetBlockTime());
+    }
     return min_time;
 }
 
