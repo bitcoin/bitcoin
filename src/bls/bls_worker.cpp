@@ -682,6 +682,13 @@ CBLSPublicKey CBLSWorker::BuildPubKeyShare(const BLSVerificationVectorPtr& vvec,
 void CBLSWorker::AsyncVerifyContributionShares(const CBLSId& forId, Span<BLSVerificationVectorPtr> vvecs, Span<CBLSSecretKey> skShares,
                                                bool parallel, bool aggregated, std::function<void(const std::vector<bool>&)> doneCallback)
 {
+    // Empty input never schedules any work, so doneCallback would never fire and the
+    // future-based wrappers would throw broken_promise. Mirror the empty-input
+    // short-circuit in AsyncBuildQuorumVerificationVector / AsyncAggregateHelper.
+    if (vvecs.empty()) {
+        doneCallback(std::vector<bool>{});
+        return;
+    }
     if (!forId.IsValid() || !VerifyVerificationVectors(vvecs)) {
         std::vector<bool> result;
         result.assign(vvecs.size(), false);
@@ -689,7 +696,7 @@ void CBLSWorker::AsyncVerifyContributionShares(const CBLSId& forId, Span<BLSVeri
         return;
     }
 
-    auto verifier = std::make_shared<ContributionVerifier>(forId, vvecs, skShares, 8, parallel, aggregated, workerPool, std::move(doneCallback));
+    auto verifier = std::make_shared<ContributionVerifier>(forId, vvecs, skShares, CONTRIBUTION_VERIFY_BATCH_SIZE, parallel, aggregated, workerPool, std::move(doneCallback));
     verifier->Start();
 }
 
