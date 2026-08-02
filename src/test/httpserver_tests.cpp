@@ -788,4 +788,49 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     server.StopListening();
 }
 
+BOOST_AUTO_TEST_CASE(http_server_rejects_disallowed_client_before_read)
+{
+    // DynSock reports accepted connections as coming from 5.5.5.5.
+    gArgs.ForceSetArg("-rpcallowip", "4.4.4.4");
+
+    std::atomic_bool request_dispatched{false};
+    HTTPServer server{[&request_dispatched](std::unique_ptr<HTTPRequest>&&) {
+        request_dispatched = true;
+    }};
+    BOOST_REQUIRE(server.InitHTTPAllowList());
+
+    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    server.StartSocketsThreads();
+
+    // Queue a complete request; the server should never read from it.
+    std::shared_ptr<DynSock::Pipes> client_pipes{
+        ConnectClient(std::as_bytes(std::span(full_request)))};
+
+    // Wait for the socket to close with an EOF (bytes_read == 0)
+    // 'bytes_read > 0' means the server replied to the prohibited client
+    // 'bytes_read < 0' is an error, expected until the connection is fully processed by the I/O loop
+    ssize_t bytes_read{};
+    char buf[0x10000]{};
+    for (int attempts{0}; attempts != 1'000; ++attempts) {
+        bytes_read = client_pipes->send.GetBytes(&buf, sizeof(buf), MSG_PEEK);
+        if (bytes_read >= 0) break;
+        std::this_thread::sleep_for(10ms);
+    }
+
+    BOOST_CHECK_EQUAL(bytes_read, 0);
+    BOOST_CHECK(!request_dispatched);
+    BOOST_CHECK_EQUAL(server.GetConnectionsCount(), 0);
+
+    server.InterruptNet();
+    server.JoinSocketsThreads();
+    server.StopListening();
+
+    // 'recv' buffer still holds the client's request untouched which
+    // proves the server never called Recv()
+    const ssize_t recv_bytes{client_pipes->recv.GetBytes(&buf, sizeof(buf))};
+    BOOST_REQUIRE_EQUAL(recv_bytes, static_cast<ssize_t>(full_request.size()));
+    BOOST_CHECK_EQUAL(std::string_view(buf, recv_bytes), full_request);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
