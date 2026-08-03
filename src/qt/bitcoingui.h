@@ -167,6 +167,7 @@ private:
     QAction* m_mask_values_action{nullptr};
     QAction* m_migrate_wallet_action{nullptr};
     QMenu* m_migrate_wallet_menu{nullptr};
+    QAction* m_export_watchonly_action{nullptr};
 #ifdef ENABLE_WALLET
     QLabel *m_wallet_selector_label = nullptr;
     QComboBox* m_wallet_selector = nullptr;
