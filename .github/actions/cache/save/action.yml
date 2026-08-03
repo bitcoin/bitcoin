@@ -11,6 +11,7 @@ runs:
       shell: bash
       run: |
         echo "depends sources direct cache hit to primary key: ${{ env.depends-sources-cache-hit }}"
+        echo "sdk sources direct cache hit to primary key: ${{ env.sdk-sources-cache-hit }}"
         echo "depends built direct cache hit to primary key: ${{ env.depends-built-cache-hit }}"
         echo "previous releases direct cache hit to primary key: ${{ env.previous-releases-cache-hit }}"
 
@@ -28,6 +29,14 @@ runs:
       with:
         path: ${{ env.SOURCES_PATH }}
         key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+        provider: ${{ inputs.provider }}
+
+    - name: Save SDK sources cache
+      uses: ./.github/actions/cache/save/internal
+      if: ${{ (env.SDK_SOURCES_CACHE_ENABLED == 'true') && (github.ref_name == github.event.repository.default_branch) && (env.sdk-sources-cache-hit != 'true') }}
+      with:
+        path: ${{ env.SDK_SOURCES_PATH }}
+        key: depends-sdk-sources-${{ env.CONTAINER_NAME }}-${{ env.SDK_SOURCES_HASH }}
         provider: ${{ inputs.provider }}
 
     - name: Save built depends cache
