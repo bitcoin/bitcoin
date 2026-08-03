@@ -9,9 +9,10 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <interfaces/mining.h>
 #include <key_io.h>
+#include <node/block_template_manager.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -131,9 +132,9 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
                                      const node::BlockCreateOptions& assembler_options)
 {
-    auto mining = interfaces::MakeMining(node);
-    auto block_template = mining->createNewBlock(assembler_options, /*cooldown=*/false);
-    auto block = std::make_shared<CBlock>(Assert(block_template)->getBlock());
+    auto& block_template_manager = *Assert(node.block_template_manager);
+    auto block_template = block_template_manager.CreateNewTemplate(assembler_options);
+    auto block = std::make_shared<CBlock>(Assert(block_template)->block);
 
     LOCK(cs_main);
     block->nTime = Assert(node.chainman)->ActiveChain().Tip()->GetMedianTimePast() + 1;

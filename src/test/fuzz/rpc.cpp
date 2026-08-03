@@ -79,6 +79,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "enumeratesigners",
     "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
     "exportasmap",          // avoid writing to disk
+    "generateblock",        // avoid chain state changes and disk writes (mines and submits a block)
     "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
@@ -88,6 +89,9 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "savemempool",          // disabled as a precautionary measure: may take a file path argument in the future
     "setban",               // avoid DNS lookups
     "stop",                 // avoid shutdown state
+    "waitforblock",         // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
+    "waitforblockheight",   // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
+    "waitfornewblock",      // avoid blocking forever (tip never changes during fuzzing; no timeout by default)
 };
 
 // RPC commands which are safe for fuzzing.
@@ -113,7 +117,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "estimatesmartfee",
     "finalizepsbt",
     "generate",
-    "generateblock",
     "getaddednodeinfo",
     "getaddrmaninfo",
     "getbestblockhash",
@@ -190,9 +193,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "verifychain",
     "verifymessage",
     "verifytxoutproof",
-    "waitforblock",
-    "waitforblockheight",
-    "waitfornewblock",
 };
 
 std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)
