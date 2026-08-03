@@ -4,6 +4,7 @@
              ((gnu packages installers) #:select (nsis-x86_64))
              (gnu packages ninja)
              (gnu packages pkg-config)
+             ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-xyz) #:select (python-lief)))
 
 (packages->manifest
@@ -12,6 +13,8 @@
         xz
         ;; Build tools
         ninja
+        ;; Packaging scripts
+        python-minimal ;; (3.11)
         ;; Tests
         python-lief)
   (let ((target (getenv "HOST")))
