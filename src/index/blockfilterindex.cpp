@@ -23,6 +23,7 @@
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/syserror.h>
+#include <util/time.h>
 
 #include <cerrno>
 #include <exception>
@@ -249,10 +250,42 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
+    const auto time_start{SteadyClock::now()};
     BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
+    const auto time_filter{SteadyClock::now()};
     const uint256& header = filter.ComputeHeader(m_last_header);
+    const auto time_header{SteadyClock::now()};
     bool res = Write(filter, block.height, header);
+    const auto time_write{SteadyClock::now()};
     if (res) m_last_header = header; // update last header
+
+    const uint32_t n_elements{filter.GetFilter().GetN()};
+
+    ++m_num_blocks_total;
+    m_time_construct += time_filter - time_start;
+    m_time_header += time_header - time_filter;
+    m_time_write += time_write - time_header;
+    m_time_total += time_write - time_start;
+    LogDebug(BCLog::BENCH, "    - Construct: %.2fms (%.4fms/elem, %u elements) [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_filter - time_start),
+             n_elements == 0 ? 0 : Ticks<MillisecondsDouble>(time_filter - time_start) / n_elements,
+             n_elements,
+             Ticks<SecondsDouble>(m_time_construct),
+             Ticks<MillisecondsDouble>(m_time_construct) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "    - Header: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_header - time_filter),
+             Ticks<SecondsDouble>(m_time_header),
+             Ticks<MillisecondsDouble>(m_time_header) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "    - Write: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_write - time_header),
+             Ticks<SecondsDouble>(m_time_write),
+             Ticks<MillisecondsDouble>(m_time_write) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "  - Filter (%s): %.2fms [%.2fs (%.2fms/blk)] [height=%d]\n",
+             BlockFilterTypeName(m_filter_type),
+             Ticks<MillisecondsDouble>(time_write - time_start),
+             Ticks<SecondsDouble>(m_time_total),
+             Ticks<MillisecondsDouble>(m_time_total) / m_num_blocks_total,
+             block.height);
     return res;
 }
 

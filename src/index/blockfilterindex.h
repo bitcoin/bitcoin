@@ -12,6 +12,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/hasher.h>
+#include <util/time.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -55,6 +56,13 @@ private:
 
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
+
+    // Cumulative timing for bench logging in CustomAppend.
+    SteadyClock::duration m_time_construct{};
+    SteadyClock::duration m_time_header{};
+    SteadyClock::duration m_time_write{};
+    SteadyClock::duration m_time_total{};
+    int64_t m_num_blocks_total{0};
 
     bool AllowPrune() const override { return true; }
 
