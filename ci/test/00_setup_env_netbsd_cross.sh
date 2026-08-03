@@ -10,7 +10,7 @@ export CONTAINER_NAME=ci_netbsd_cross
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
 export APT_LLVM_V="22"
 export HOST=x86_64-unknown-netbsd
-export NETBSD_VERSION=11.0_RC6
+export NETBSD_VERSION=11.0
 export NETBSD_SDK_BASENAME="netbsd-${HOST}-${NETBSD_VERSION}"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld-${APT_LLVM_V}"
 export SYSROOT="--sysroot=${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}"
