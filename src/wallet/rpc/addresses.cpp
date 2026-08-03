@@ -643,7 +643,7 @@ RPCMethod listlabels()
             "\nList labels that have sending addresses\n"
             + HelpExampleCli("listlabels", "send") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listlabels", "receive")
+            + HelpExampleRpc("listlabels", R"("receive")")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
