@@ -17,7 +17,7 @@
 
 // This module enforces rules for BIP 431 TRUC transactions which help make
 // RBF abilities more robust. A transaction with version=3 is treated as TRUC.
-inline constexpr decltype(CTransaction::version) TRUC_VERSION{3};
+inline constexpr uint32_t TRUC_VERSION{3};
 
 // TRUC only allows 1 parent and 1 child when unconfirmed. This translates to a descendant set size
 // of 2 and ancestor set size of 2.
