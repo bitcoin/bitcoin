@@ -222,7 +222,7 @@ static void OrphanageEraseAll(benchmark::Bench& bench, bool block_or_disconnect)
 
             // Note that we shouldn't be able to hit the weight limit with these small transactions.
             const int64_t weight_limit{std::min<int64_t>(weight_left_for_peer, MAX_STANDARD_TX_WEIGHT)};
-            auto ptx = MakeTransactionSpendingUpTo(block_tx->vin, /*start_input=*/start_input, /*num_inputs=*/INPUTS_PER_TX, /*weight_limit=*/weight_limit);
+            auto ptx = MakeTransactionSpendingUpTo(block_tx->GetInputs(), /*start_input=*/start_input, /*num_inputs=*/INPUTS_PER_TX, /*weight_limit=*/weight_limit);
 
             assert(GetTransactionWeight(*ptx) <= MAX_STANDARD_TX_WEIGHT);
             assert(!orphanage->HaveTx(ptx->GetWitnessHash()));

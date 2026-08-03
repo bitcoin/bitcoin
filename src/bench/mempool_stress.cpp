@@ -70,14 +70,14 @@ static std::vector<CTransactionRef> CreateCoinCluster(FastRandomContext& det_ran
             // biased towards taking min_ancestors parents, but maybe more
             size_t n_to_take = det_rand.randrange(2) == 0 ?
                                min_ancestors :
-                               min_ancestors + det_rand.randrange(coin.ref->vout.size() - coin.vin_left);
+                               min_ancestors + det_rand.randrange(coin.ref->GetOutputs().size() - coin.vin_left);
             for (size_t i = 0; i < n_to_take; ++i) {
                 tx.vin.emplace_back();
                 tx.vin.back().prevout = COutPoint(hash, coin.vin_left++);
                 tx.vin.back().scriptSig = CScript() << coin.tx_count;
                 tx.vin.back().scriptWitness.stack.push_back(CScriptNum(coin.tx_count).getvch());
             }
-            if (coin.vin_left == coin.ref->vin.size()) {
+            if (coin.vin_left == coin.ref->GetInputs().size()) {
                 coin = available_coins.back();
                 available_coins.pop_back();
             }

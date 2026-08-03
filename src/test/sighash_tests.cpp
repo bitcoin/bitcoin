@@ -26,7 +26,7 @@
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    if (nIn >= txTo.vin.size())
+    if (nIn >= txTo.GetInputs().size())
     {
         return uint256::ONE;
     }

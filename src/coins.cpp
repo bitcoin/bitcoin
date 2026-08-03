@@ -133,11 +133,11 @@ void CCoinsViewCache::EmplaceCoinInternalDANGER(const COutPoint& outpoint, Coin&
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
     const Txid& txid = tx.GetHash();
-    for (size_t i = 0; i < tx.vout.size(); ++i) {
+    for (size_t i = 0; i < tx.GetOutputs().size(); ++i) {
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+        cache.AddCoin(COutPoint(txid, i), Coin(tx.GetOutputs()[i], nHeight, fCoinbase), overwrite);
     }
 }
 
@@ -322,8 +322,8 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            if (!HaveCoin(tx.vin[i].prevout)) {
+        for (unsigned int i = 0; i < tx.GetInputs().size(); i++) {
+            if (!HaveCoin(tx.GetInputs()[i].prevout)) {
                 return false;
             }
         }
@@ -386,7 +386,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
         std::unordered_set<Txid, SaltedCoinsCacheHasher> earlier_txids;
         earlier_txids.reserve(block.vtx.size());
         for (const auto& tx : block.vtx | std::views::drop(1)) {
-            for (const auto& input : tx->vin) {
+            for (const auto& input : tx->GetInputs()) {
                 if (!earlier_txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
             }
             earlier_txids.emplace(tx->GetHash());

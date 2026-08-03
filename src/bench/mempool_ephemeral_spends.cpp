@@ -73,7 +73,7 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     const CTransactionRef tx2_r{MakeTransactionRef(tx2)};
 
     AddTx(tx1_r, pool);
-    assert(tx2_r->vin.back().prevout == COutPoint(parent_txid, tx1_r->vout.size() - 1));
+    assert(tx2_r->GetInputs().back().prevout == COutPoint(parent_txid, tx1_r->GetOutputs().size() - 1));
 
     uint32_t iteration{0};
 
