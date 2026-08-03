@@ -159,7 +159,7 @@ static void ValidateCheckInputsForAllFlags(const CTransaction &tx, script_verify
             // was invalid, or we didn't add to cache.
             std::vector<CScriptCheck> scriptchecks;
             BOOST_CHECK(CheckInputScripts(tx, state, &active_coins_tip, test_flags, true, add_to_cache, txdata, validation_cache, &scriptchecks));
-            BOOST_CHECK_EQUAL(scriptchecks.size(), tx.vin.size());
+            BOOST_CHECK_EQUAL(scriptchecks.size(), tx.GetInputs().size());
         }
     }
 }
