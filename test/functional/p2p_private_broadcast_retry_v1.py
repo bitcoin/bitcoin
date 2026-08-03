@@ -77,7 +77,7 @@ class P2PPrivateBroadcastRetryV1(BitcoinTestFramework):
         self.ipv4_via_tor_proxy_conn_versions.append(v2or1)
 
     def setup_nodes(self):
-        def destinations_factory_all_proxy(requested_to_addr, requested_to_port):
+        def destinations_factory_all_proxy(requested_to_addr, requested_to_port, _proxy_client):
             """
             Instruct the SOCKS5 proxy to redirect all connections to newly created P2PInterface
             objects that claim support for P2P_V2.
@@ -102,7 +102,7 @@ class P2PPrivateBroadcastRetryV1(BitcoinTestFramework):
         self.ipv4_via_tor_proxy_addr_port = None # Remember the first IPv4 address connected to via the Tor proxy.
         self.ipv4_via_tor_proxy_conn_versions = [] # Transport versions tried on that address.
 
-        def destinations_factory_tor_proxy(requested_to_addr, requested_to_port):
+        def destinations_factory_tor_proxy(requested_to_addr, requested_to_port, _proxy_client):
             """
             Instruct the SOCKS5 proxy to redirect all connections to newly created P2PInterface,
             except the first connection to an IPv4 address and all subsequent connections to that
