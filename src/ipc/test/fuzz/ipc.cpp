@@ -30,7 +30,7 @@ public:
     {
         std::promise<std::unique_ptr<mp::ProxyClient<test::fuzz::messages::IpcFuzzInterface>>> client_promise;
         auto client_future{client_promise.get_future()};
-        m_loop_thread = std::thread([&client_promise] {
+        m_loop_thread = std::thread([&client_promise, impl = m_impl] {
             mp::EventLoop loop("ipc-fuzz", [](mp::LogMessage message) {
                 if (message.level == mp::Log::Raise) throw std::runtime_error(message.message);
             });
@@ -40,8 +40,7 @@ public:
                 loop,
                 kj::mv(pipe.ends[0]),
                 [&](mp::Connection& connection) {
-                    auto server_proxy = kj::heap<mp::ProxyServer<test::fuzz::messages::IpcFuzzInterface>>(
-                        std::make_shared<IpcFuzzImplementation>(), connection);
+                    auto server_proxy = kj::heap<mp::ProxyServer<test::fuzz::messages::IpcFuzzInterface>>(impl, connection);
                     return capnp::Capability::Client(kj::mv(server_proxy));
                 });
             server_connection->onDisconnect([&] { server_connection.reset(); });
@@ -66,6 +65,7 @@ public:
         if (m_loop_thread.joinable()) m_loop_thread.join();
     }
 
+    std::shared_ptr<IpcFuzzImplementation> m_impl{std::make_shared<IpcFuzzImplementation>()};
     std::unique_ptr<mp::ProxyClient<test::fuzz::messages::IpcFuzzInterface>> m_client;
 
 private:
@@ -100,34 +100,41 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
                 static constexpr int MAX_ADD{1'000'000};
                 const int a = fuzzed_data_provider.ConsumeIntegralInRange<int>(MIN_ADD, MAX_ADD);
                 const int b = fuzzed_data_provider.ConsumeIntegralInRange<int>(MIN_ADD, MAX_ADD);
+                ipc.m_impl->m_expected_a = a;
+                ipc.m_impl->m_expected_b = b;
                 assert(ipc.m_client->add(a, b) == a + b);
             },
             [&] {
                 COutPoint outpoint{Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)),
                                    fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
                 COutPoint expected{outpoint.hash, outpoint.n ^ 0xFFFFFFFFu};
+                ipc.m_impl->m_expected_outpoint = outpoint;
                 assert(ipc.m_client->passOutPoint(outpoint) == expected);
             },
             [&] {
                 std::vector<uint8_t> value = ConsumeRandomLengthByteVector<uint8_t>(fuzzed_data_provider, 512);
                 std::vector<uint8_t> expected{value.rbegin(), value.rend()};
+                ipc.m_impl->m_expected_vector = value;
                 assert(ipc.m_client->passVectorUint8(value) == expected);
             },
             [&] {
                 CScript script{ConsumeScript(fuzzed_data_provider)};
                 CScript expected{script};
                 expected << OP_NOP;
+                ipc.m_impl->m_expected_script = script;
                 assert(ipc.m_client->passScript(script) == expected);
             },
             [&] {
                 UniValue value;
                 if (!value.read(fuzzed_data_provider.ConsumeRandomLengthString(512))) return;
+                ipc.m_impl->m_expected_univalue = value.write();
                 assert(ipc.m_client->passUniValue(value).write() == value.write());
             },
             [&] {
                 const CMutableTransaction mutable_tx = ConsumeTransaction(fuzzed_data_provider, std::nullopt);
                 if (mutable_tx.vin.empty()) return;
                 const CTransactionRef tx = MakeTransactionRef(mutable_tx);
+                ipc.m_impl->m_expected_transaction = tx;
                 assert(*ipc.m_client->passTransaction(tx) == *tx);
             });
     }
