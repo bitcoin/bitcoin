@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(MempoolUnbroadcastMemoryUsage)
 
     auto usage_before{pool.DynamicMemoryUsage()};
     pool.AddUnbroadcastTx(txid);
-    BOOST_CHECK_EQUAL(pool.DynamicMemoryUsage(), usage_before); // TODO: Include the retained set node in reported usage
+    BOOST_CHECK_GT(pool.DynamicMemoryUsage(), usage_before);
 
     pool.RemoveUnbroadcastTx(txid);
     BOOST_CHECK_EQUAL(pool.DynamicMemoryUsage(), usage_before);
