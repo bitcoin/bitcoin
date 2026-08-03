@@ -242,7 +242,7 @@ void SerializeTransaction(const TxType& tx, Stream& s, const TransactionSerParam
 {
     const bool fAllowWitness = params.allow_witness;
 
-    s << tx.version;
+    s << tx.GetVersion();
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -257,14 +257,14 @@ void SerializeTransaction(const TxType& tx, Stream& s, const TransactionSerParam
         s << vinDummy;
         s << flags;
     }
-    s << tx.vin;
-    s << tx.vout;
+    s << tx.GetInputs();
+    s << tx.GetOutputs();
     if (flags & 1) {
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s << tx.vin[i].scriptWitness.stack;
+        for (size_t i = 0; i < tx.GetInputs().size(); i++) {
+            s << tx.GetInputs()[i].scriptWitness.stack;
         }
     }
-    s << tx.nLockTime;
+    s << tx.GetLockTime();
 }
 
 template<typename TxType>
