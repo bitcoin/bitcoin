@@ -24,4 +24,13 @@
 #  error No known always_inline attribute for this platform.
 #endif
 
+#if defined(__clang__)
+#  if __has_attribute(annotate)
+#    define USE_OBSERVER(X) [[clang::annotate("observer:" #X)]]
+#  endif
+#endif
+#ifndef USE_OBSERVER
+#  define USE_OBSERVER(X)
+#endif
+
 #endif // BITCOIN_ATTRIBUTES_H
