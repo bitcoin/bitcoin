@@ -288,10 +288,10 @@ public:
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
-    const uint32_t version;
-    const uint32_t nLockTime;
+    USE_OBSERVER(GetInputs) const std::vector<CTxIn> vin;
+    USE_OBSERVER(GetOutputs) const std::vector<CTxOut> vout;
+    USE_OBSERVER(GetVersion) const uint32_t version;
+    USE_OBSERVER(GetLockTime) const uint32_t nLockTime;
 
 private:
     /** Memory only. */
