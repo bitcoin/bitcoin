@@ -74,8 +74,8 @@ static void InitTaprootScript()
  */
 static CTxIn GetSpendingScript(const CTransaction& tx, uint32_t vout_index)
 {
-    Assert(vout_index < tx.vout.size());
-    const CTxOut& output = tx.vout[vout_index];
+    Assert(vout_index < tx.GetOutputs().size());
+    const CTxOut& output = tx.GetOutputs()[vout_index];
 
     CTxIn res{COutPoint(tx.GetHash(), vout_index)};
     if (output.scriptPubKey == P2WSH_OP_TRUE) {
@@ -98,8 +98,8 @@ static CTxIn GetSpendingScript(const CTransaction& tx, uint32_t vout_index)
  */
 static void MaybeAddSpendCandidate(std::vector<CTxIn>& pool, const CTransaction& tx, uint32_t vout_index)
 {
-    Assert(vout_index < tx.vout.size());
-    if (tx.vout[vout_index].scriptPubKey.IsUnspendable()) return;
+    Assert(vout_index < tx.GetOutputs().size());
+    if (tx.GetOutputs()[vout_index].scriptPubKey.IsUnspendable()) return;
     pool.push_back(GetSpendingScript(tx, vout_index));
 }
 
@@ -121,7 +121,7 @@ static void LoadCurrentBlock(Chainstate& chainstate, CBlockIndex* current_block)
 
     // Iterate all transaction outputs.
     for (const auto& tx : g_blocks[current_block->nHeight]->vtx) {
-        for (uint32_t vout_index{0}; vout_index < tx->vout.size(); ++vout_index) {
+        for (uint32_t vout_index{0}; vout_index < tx->GetOutputs().size(); ++vout_index) {
             MaybeAddSpendCandidate(g_spend_candidate_txins, *tx, vout_index);
         }
     }
@@ -370,7 +370,7 @@ CTransactionRef ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
     if (!coinbase) {
         // Create spending scripts for CTxOuts so they can be spent in later
         // transactions. Do it here as the transaction hash is definitive.
-        for (uint32_t i{0}; i < res->vout.size(); ++i) {
+        for (uint32_t i{0}; i < res->GetOutputs().size(); ++i) {
             MaybeAddSpendCandidate(additional_txins, *res, i);
         }
     }
