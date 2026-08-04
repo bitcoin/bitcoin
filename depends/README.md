@@ -160,13 +160,22 @@ proceeding with a cross-compile. Under the depends directory, create a
 subdirectory named `SDKs`. Then, place the extracted SDK under this new directory.
 For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
 
-#### For Windows cross compilation using MSVCRT
+#### For Windows cross compilation
+
+Using MSVCRT:
 
     apt install g++-mingw-w64-x86-64-posix
 
-#### For Windows cross compilation using UCRT
+Using UCRT:
 
     apt install g++-mingw-w64-ucrt64
+
+Some Ubuntu or Debian versions may not offer a working package. In this case,
+you may install `nix-bin` and use the Nix shell from the repository root:
+
+    apt install nix-bin
+    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32 nix-shell contrib/devtools/shell-win64-cross.nix  # MSVCRT
+    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32ucrt nix-shell contrib/devtools/shell-win64-cross.nix  # UCRT
 
 #### For linux (including i386, ARM) cross compilation
 
