@@ -1413,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(outbound_message_limits)
     auto queued{0U};
     for (auto& [msg, reject] : std::array{
              std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
-             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), false}, // TODO: Reject payloads above the protocol limit
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), true},
              std::pair{max_payload_msg.Copy(), false}}) {
         test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
         try {
