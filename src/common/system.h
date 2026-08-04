@@ -10,7 +10,7 @@
 
 #include <util/time.h>
 
-#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 
