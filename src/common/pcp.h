@@ -6,9 +6,15 @@
 #define BITCOIN_COMMON_PCP_H
 
 #include <netaddress.h>
-#include <util/threadinterrupt.h>
+#include <util/time.h>
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <string>
 #include <variant>
+
+class CThreadInterrupt;
 
 // RFC6886 NAT-PMP and RFC6887 Port Control Protocol (PCP) implementation.
 // NAT-PMP and PCP use network byte order (big-endian).
