@@ -1508,6 +1508,32 @@ void DescriptorScriptPubKeyMan::Load()
     m_storage.TopUpCallback(new_spks, this);
 }
 
+Key DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayments(const CScript& scriptPubKey) const
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType whichType = Solver(scriptPubKey, solutions);
+    if (whichType != TxoutType::WITNESS_V1_TAPROOT &&
+        whichType != TxoutType::WITNESS_V0_KEYHASH &&
+        whichType != TxoutType::SCRIPTHASH &&
+        whichType != TxoutType::PUBKEYHASH) return {};
+    std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(scriptPubKey, true);
+    if (!coin_keys || coin_keys->keys.size() != 1) return {};
+    const auto& [_, key] = *coin_keys->keys.begin();
+
+    if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+        auto pubKeyFromScriptPubKey = XOnlyPubKey(solutions[0]);
+        // this means it is a "rawtr" output
+        if (XOnlyPubKey(key.GetPubKey()) == pubKeyFromScriptPubKey) {
+            return key.ComputeKeyPair(nullptr);
+        }
+        // Otherwise, tweak with the merkle root
+        TaprootSpendData spenddata;
+        coin_keys->GetTaprootSpendData(pubKeyFromScriptPubKey, spenddata);
+        return key.ComputeKeyPair(&spenddata.merkle_root);
+    }
+    return key;
+}
+
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);

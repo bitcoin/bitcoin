@@ -174,6 +174,10 @@ struct CoinSelectionParams {
     uint32_t m_version{CTransaction::CURRENT_VERSION};
     /** The maximum weight for this transaction. */
     std::optional<int> m_max_tx_weight{std::nullopt};
+    /** When true, coin selection must include at least one BIP352-eligible input
+     *  so shared secret derivation succeeds.
+     */
+    bool m_silent_payments{false};
 
     CoinSelectionParams(FastRandomContext& rng_fast, int change_output_size, int change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,

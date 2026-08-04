@@ -127,6 +127,67 @@ struct PayToAnchor : public WitnessUnknown
     };
 };
 
+struct V0SilentPaymentsDestination
+{
+private:
+    CPubKey m_scan_pubkey;
+    CPubKey m_spend_pubkey;
+
+public:
+    /** Throws std::invalid_argument if either key is not a fully valid Public Key. */
+    V0SilentPaymentsDestination(const CPubKey& scan_pubkey, const CPubKey& spend_pubkey);
+
+    const CPubKey& GetScanPubKey() const { return m_scan_pubkey; }
+    const CPubKey& GetSpendPubKey() const { return m_spend_pubkey; }
+
+    friend bool operator==(const V0SilentPaymentsDestination& a, const V0SilentPaymentsDestination& b) {
+        return (a.m_scan_pubkey == b.m_scan_pubkey) && (a.m_spend_pubkey == b.m_spend_pubkey);
+    }
+
+    friend bool operator<(const V0SilentPaymentsDestination& a, const V0SilentPaymentsDestination& b) {
+        if (a.m_scan_pubkey < b.m_scan_pubkey) return true;
+        if (a.m_scan_pubkey > b.m_scan_pubkey) return false;
+        if (a.m_spend_pubkey < b.m_spend_pubkey) return true;
+        return false;
+    }
+};
+
+struct UnknownSilentPaymentsDestination : public V0SilentPaymentsDestination
+{
+private:
+    unsigned int m_version;
+    std::vector<unsigned char> m_extra_data;
+
+public:
+    UnknownSilentPaymentsDestination(
+        unsigned int version,
+        const CPubKey& scan_pubkey,
+        const CPubKey& spend_pubkey,
+        std::vector<unsigned char> extra_data
+    ) : V0SilentPaymentsDestination(scan_pubkey, spend_pubkey),
+        m_version(version), m_extra_data(std::move(extra_data)) {
+        // Version 0 address must be created as a V0SilentPaymentsDestination
+        // Only v1 through v30 are supported
+        Assert(version > 0 && version < 31);
+    }
+
+    unsigned int GetVersion() const { return m_version; }
+    const std::vector<unsigned char>& GetExtraData() const LIFETIMEBOUND { return m_extra_data; }
+
+    friend bool operator==(const UnknownSilentPaymentsDestination& a, const UnknownSilentPaymentsDestination& b) {
+        return a.m_version == b.m_version &&
+               static_cast<const V0SilentPaymentsDestination&>(a) == static_cast<const V0SilentPaymentsDestination&>(b) &&
+               a.m_extra_data == b.m_extra_data;
+    }
+
+    friend bool operator<(const UnknownSilentPaymentsDestination& a, const UnknownSilentPaymentsDestination& b) {
+        if (a.m_version != b.m_version) return a.m_version < b.m_version;
+        if (static_cast<const V0SilentPaymentsDestination&>(a) < static_cast<const V0SilentPaymentsDestination&>(b)) return true;
+        if (static_cast<const V0SilentPaymentsDestination&>(b) < static_cast<const V0SilentPaymentsDestination&>(a)) return false;
+        return a.m_extra_data < b.m_extra_data;
+    }
+};
+
 /**
  * A txout script categorized into standard templates.
  *  * CNoDestination: Optionally a script, no corresponding address.
@@ -137,10 +198,12 @@ struct PayToAnchor : public WitnessUnknown
  *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH address)
  *  * WitnessV1Taproot: TxoutType::WITNESS_V1_TAPROOT destination (P2TR address)
  *  * PayToAnchor: TxoutType::ANCHOR destination (P2A address)
+ *  * V0SilentPaymentsDestination: No corresponding script (SP v0 address)
+ *  * UnknownSilentPaymentsDestination: No corresponding script (SP v1-v30 address)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, V0SilentPaymentsDestination, UnknownSilentPaymentsDestination, WitnessUnknown>;
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -163,5 +226,10 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * script for CNoDestination.
  */
 CScript GetScriptForDestination(const CTxDestination& dest);
+
+/**
+ * Check if desitnation is a silent payments destination
+ */
+bool IsSilentPaymentsDestination(const CTxDestination& dest);
 
 #endif // BITCOIN_ADDRESSTYPE_H

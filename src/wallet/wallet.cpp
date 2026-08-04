@@ -2294,7 +2294,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
+        if (std::get_if<WitnessV1Taproot>(&recipient.dest) || std::get_if<V0SilentPaymentsDestination>(&recipient.dest)) {
             any_tr = true;
         } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
@@ -2343,7 +2343,8 @@ void CWallet::CommitTransaction(
     std::optional<std::string> comment,
     std::optional<std::string> comment_to,
     const std::vector<std::string>& messages,
-    const std::vector<std::string>& payment_requests
+    const std::vector<std::string>& payment_requests,
+    const std::vector<V0SilentPaymentsDestination>& sp_recipients
 )
 {
     LOCK(cs_wallet);
@@ -2357,8 +2358,20 @@ void CWallet::CommitTransaction(
         if (comment_to) wtx.m_comment_to = comment_to;
         if (!messages.empty()) wtx.m_messages = messages;
         if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
+        if (!sp_recipients.empty()) {
+            wtx.m_is_sp_tx = true;
+            wtx.m_sprecipients = sp_recipients;
+        }
         return true;
     });
+
+    if (wtx && !wtx->m_sprecipients.empty()) {
+        WalletBatch batch(GetDatabase());
+        if (!batch.WriteSpRecipients(wtx->GetHash(), wtx->m_sprecipients)) {
+            WalletLogPrintf("CommitTransaction(): Failed to write SP recipients for tx %s\n",
+                wtx->GetHash().ToString());
+        }
+    }
 
     // wtx can only be null if the db write failed.
     if (!wtx) {
@@ -2754,6 +2767,14 @@ void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
 {
     AssertLockHeld(cs_wallet);
     m_locked_coins.emplace(coin, persistent);
+}
+
+void CWallet::LoadSpRecipients(const Txid& txid, std::vector<V0SilentPaymentsDestination> recipients)
+{
+    AssertLockHeld(cs_wallet);
+    auto it = mapWallet.find(txid);
+    if (it == mapWallet.end()) return;
+    it->second.m_sprecipients = std::move(recipients);
 }
 
 bool CWallet::LockCoin(const COutPoint& output, bool persist)

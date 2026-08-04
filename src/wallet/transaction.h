@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_TRANSACTION_H
 #define BITCOIN_WALLET_TRANSACTION_H
 
+#include <addresstype.h>
 #include <attributes.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
@@ -184,6 +185,38 @@ public:
     }
 };
 
+template<typename T>
+struct SpRecipientsProxy {
+    T& m_recipients;
+
+    template<typename Stream>
+    void Serialize(Stream& s) const {
+        WriteCompactSize(s, m_recipients.size());
+        for (const auto& dest : m_recipients) {
+            s << dest.GetScanPubKey() << dest.GetSpendPubKey();
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        if (s.empty()) return;
+        m_recipients.clear();
+        uint64_t n{ReadCompactSize(s)};
+        m_recipients.reserve(n);
+        for (uint64_t i = 0; i < n; ++i) {
+            CPubKey scan_key, spend_key;
+            s >> scan_key >> spend_key;
+            m_recipients.emplace_back(scan_key, spend_key);
+        }
+    }
+};
+
+inline SpRecipientsProxy<const std::vector<V0SilentPaymentsDestination>>
+SerializeSpRecipients(const std::vector<V0SilentPaymentsDestination>& recipients) { return {recipients}; }
+
+inline SpRecipientsProxy<std::vector<V0SilentPaymentsDestination>>
+DeserializeSpRecipients(std::vector<V0SilentPaymentsDestination>& recipients) { return {recipients}; }
+
 /**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
@@ -205,6 +238,8 @@ public:
     std::vector<std::string> m_messages;
     // BIP 70 Payment Request (deprecated, field kept to preserve metadata from old wallets)
     std::vector<std::string> m_payment_requests;
+    std::vector<V0SilentPaymentsDestination> m_sprecipients; //!< original SP recipients used for RBF output recomputation
+    bool m_is_sp_tx{false}; //!< true if this tx sends to at least one silent payments address
     unsigned int nTimeReceived; //!< time received by this node
     /**
      * Stable timestamp that never changes, and reflects the order a transaction
@@ -246,7 +281,11 @@ public:
         fChangeCached = false;
         nChangeCached = 0;
         nOrderPos = -1;
+        m_sprecipients.clear();
+        m_is_sp_tx = false;
     }
+
+    bool IsSilentPaymentsTx() const { return m_is_sp_tx; }
 
     CTransactionRef tx;
     TxState m_state;
@@ -276,6 +315,7 @@ public:
         string_values["fromaccount"] = "";
         if (nOrderPos != -1) string_values["n"] = util::ToString(nOrderPos);
         if (nTimeSmart) string_values["timesmart"] = strprintf("%u", nTimeSmart);
+        if (m_is_sp_tx) string_values["sp"] = "1";
 
         std::vector<std::pair<std::string, std::string>> msgs_reqs;
         msgs_reqs.reserve(m_messages.size() + m_payment_requests.size());
@@ -314,6 +354,9 @@ public:
 
         string_values.erase("fromaccount");
         string_values.erase("spent");
+        m_is_sp_tx = string_values.contains("sp");
+        string_values.erase("sp");
+
         for (const auto& [key, value] : string_values) {
             if (key == "n") nOrderPos = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);

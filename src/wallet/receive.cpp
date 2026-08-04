@@ -71,6 +71,17 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
     return false;
 }
 
+bool DestinationIsChange(const CWallet& wallet, const CTxDestination& dest)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    if (wallet.IsMine(GetScriptForDestination(dest))) {
+        if (!wallet.FindAddressBookEntry(dest)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
 {
     return ScriptIsChange(wallet, txout.scriptPubKey);

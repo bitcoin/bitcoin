@@ -166,6 +166,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "reconsiderblock",
     "rpc.discover",
     "scanblocks",
+    "scantxforsilentpayments",
     "scantxoutset",
     "sendmsgtopeer", // when no peers are connected, no p2p message is sent
     "sendrawtransaction",

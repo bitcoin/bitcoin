@@ -289,7 +289,7 @@ public:
         CAmount& new_fee,
         CMutableTransaction& mtx) override
     {
-        std::vector<CTxOut> outputs; // just an empty list of new recipients for now
+        std::vector<std::pair<CTxDestination, CAmount>> outputs; // just an empty list of new recipients for now
         return feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx, /* require_mine= */ true, outputs) == feebumper::Result::OK;
     }
     bool signBumpTransaction(CMutableTransaction& mtx) override { return feebumper::SignTransaction(*m_wallet.get(), mtx); }
