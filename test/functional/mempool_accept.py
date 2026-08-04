@@ -359,6 +359,23 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             maxfeerate=0
         )
 
+        self.log.info('Some nonstandard Taproot spends')
+        # The reference tx spends a P2TR output through the script path, so its
+        # witness stack is [script, control_block].
+        tx = tx_from_hex(raw_tx_reference)
+        # Tapscript stack element size over 80 bytes is nonstandard
+        tx.wit.vtxinwit[0].scriptWitness.stack.insert(0, b'\xff' * 81)
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
+            rawtxs=[tx.serialize().hex()],
+        )
+        tx = tx_from_hex(raw_tx_reference)
+        tx.wit.vtxinwit[0].scriptWitness.stack[-1] = b''  # An empty control block is also invalid by consensus
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
+            rawtxs=[tx.serialize().hex()],
+        )
+
         self.log.info("A transaction with several OP_RETURN outputs.")
         tx = tx_from_hex(raw_tx_reference)
         op_return_count = 42
