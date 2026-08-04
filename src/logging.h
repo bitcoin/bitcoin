@@ -16,6 +16,7 @@
 #include <util/string.h>
 #include <util/time.h>
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -24,7 +25,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -62,6 +62,8 @@ struct LogCategory {
 
 namespace BCLog {
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
+    //! Log messages at Info level and above can't be disabled.
+    constexpr size_t NUM_CONFIGURABLE_LEVELS{static_cast<size_t>(Level::Info)};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1_MiB}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
     constexpr auto RATELIMIT_WINDOW{1h}; // time window after which log ratelimit stats are reset
@@ -142,15 +144,11 @@ namespace BCLog {
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
 
-        //! Category-specific log level. Overrides `m_log_level`.
-        std::unordered_map<LogFlags, Level> m_category_log_levels GUARDED_BY(m_cs);
-
-        //! If there is no category-specific log level, all logs with a severity
-        //! level lower than `m_log_level` will be ignored.
-        std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
-
-        /** Log categories bitfield. */
-        std::atomic<CategoryMask> m_categories{BCLog::NONE};
+        //! Per-level log category bitmasks. m_levels[i] holds a mask of log categories
+        //! whose verbosity threshold is <= Level(i), so that ShouldLog(cat, Level(i))
+        //! is true iff (m_levels[i] & cat) != 0. Invariant: if m_levels[i] has a
+        //! category bit set, all m_levels[j] with j > i also have that bit set.
+        std::array<std::atomic<CategoryMask>, NUM_CONFIGURABLE_LEVELS> m_levels{BCLog::NONE, BCLog::NONE};
 
         std::string Format(const util::log::Entry& entry) const;
 
@@ -229,36 +227,18 @@ namespace BCLog {
 
         void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            return m_category_log_levels;
-        }
-        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            m_category_log_levels = levels;
-        }
-        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            m_category_log_levels[category] = level;
-        }
-        bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        //! Set the log level threshold for a specific category (or ALL categories if
+        //! flag == BCLog::ALL).
+        void SetCategoryLogLevel(CategoryMask category, Level level);
+        //! Returns true if a message at the given category and level would be logged.
+        bool WillLogCategoryLevel(LogFlags category, Level level) const;
 
-        Level LogLevel() const { return m_log_level.load(); }
-        void SetLogLevel(Level level) { m_log_level = level; }
-        bool SetLogLevel(std::string_view level);
-
-        CategoryMask GetCategoryMask() const { return m_categories.load(); }
-
-        void EnableCategory(LogFlags flag);
-        bool EnableCategory(std::string_view str);
-        void DisableCategory(LogFlags flag);
-        bool DisableCategory(std::string_view str);
-
-        bool WillLogCategory(LogFlags category) const;
-        bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        //! Snapshot type for the per-level category bitmask array (non-atomic, for save/restore).
+        using LogLevels = std::array<CategoryMask, NUM_CONFIGURABLE_LEVELS>;
+        //! Returns a snapshot of the current per-level category bitmasks.
+        LogLevels GetLogLevels() const;
+        //! Restores the per-level category bitmasks from a previous GetLogLevels() snapshot.
+        void SetLogLevels(const LogLevels& levels);
 
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
@@ -271,10 +251,10 @@ namespace BCLog {
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;
 
+        //! Returns the log level corresponding to a string, or nullopt if unrecognized.
+        static std::optional<BCLog::Level> GetLogLevel(std::string_view str);
         //! Returns the string representation of a log level.
         static std::string LogLevelToStr(BCLog::Level level);
-
-        bool DefaultShrinkDebugFile() const;
 
         //! Return log flag if str parses as a log category.
         static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
