@@ -65,6 +65,11 @@ public:
         return tx;
     }
 
+    // These methods intentionally do nothing. Calling them through raw capnp
+    // requests exercises deserialization of arbitrary payloads.
+    void consumeTransaction(CTransactionRef) {}
+    void consumeUniValue(UniValue) {}
+
     // Enables libmultiprocess to exchange the thread capabilities used for callbacks.
     void initThreadMap() {}
 
