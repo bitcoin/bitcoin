@@ -12,6 +12,9 @@ export APT_LLVM_V="22"
 export HOST=x86_64-unknown-openbsd
 export OPENBSD_VERSION=7.9
 export OPENBSD_SDK_BASENAME="openbsd-${HOST}-${OPENBSD_VERSION}"
+export OPENBSD_SDK_SHA256SUMS="\
+923d2e03f06408d50d4848334398c6d04b5514dcac7917badfc178a0eef248de  base79.tgz\n\
+21a67af20aebcabf85b09f4206fc95b4cae0a35d42b154b976f0159f457724f9  comp79.tgz"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld-${APT_LLVM_V}"
 export SYSROOT="--sysroot=${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}"
 export DEP_OPTS="NO_QT=1 build_CC=clang build_CXX=clang++ \
