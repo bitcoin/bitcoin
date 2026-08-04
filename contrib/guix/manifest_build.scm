@@ -8,7 +8,6 @@
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
              (gnu packages mingw)
-             ((gnu packages python) #:select (python-minimal))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system trivial)
              (guix download)
@@ -272,8 +271,6 @@ chain for " target " development."))
         ;; Build tools
         cmake-minimal
         gnu-make
-        ;; Scripting
-        python-minimal ;; (3.11)
         ;; Git
         git-minimal)
   (let ((target (getenv "HOST")))
