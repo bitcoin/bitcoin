@@ -68,16 +68,16 @@ namespace http_bitcoin {
 using util::LineReader;
 
 //! Shortest valid request line, used by libevent in evhttp_parse_request_line()
-constexpr size_t MIN_REQUEST_LINE_LENGTH = std::string_view("GET / HTTP/1.0").size();
+inline constexpr size_t MIN_REQUEST_LINE_LENGTH = std::string_view("GET / HTTP/1.0").size();
 
 //! Maximum size of each headers line in an HTTP request,
 //! also the maximum size of all headers total.
 //! See https://github.com/bitcoin/bitcoin/pull/6859
 //! And libevent http.c evhttp_parse_headers_()
-constexpr size_t MAX_HEADERS_SIZE{8192};
+inline constexpr size_t MAX_HEADERS_SIZE{8192};
 
 //! Maximum size of an HTTP request body
-constexpr uint64_t MAX_BODY_SIZE{32_MiB};
+inline constexpr uint64_t MAX_BODY_SIZE{32_MiB};
 
 //! Thrown when a request body exceeds MAX_BODY_SIZE (or *will* exceed, in chunked transfer)
 //! so the server can reply with more specific code 413 (content too large) vs general 400 (bad request)

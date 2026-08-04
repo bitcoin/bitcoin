@@ -119,7 +119,7 @@ inline constexpr CAmount DEFAULT_CONSOLIDATE_FEERATE{10000}; // 10 sat/vbyte
  */
 inline constexpr CAmount DEFAULT_MAX_AVOIDPARTIALSPEND_FEE = 0;
 //! discourage APS fee higher than this amount
-constexpr CAmount HIGH_APS_FEE{COIN / 10000};
+inline constexpr CAmount HIGH_APS_FEE{COIN / 10000};
 //! minimum recommended increment for replacement txs
 inline constexpr CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
 //! Default for -spendzeroconfchange
@@ -134,18 +134,18 @@ inline constexpr bool DEFAULT_WALLETBROADCAST = true;
 inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
 //! -maxtxfee default
-constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
+inline constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
-constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
+inline constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
-constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
+inline constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 //! Pre-calculated constants for input size estimation in *virtual size*
 inline constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
 class CCoinControl;
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
+inline constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
 
 inline constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE

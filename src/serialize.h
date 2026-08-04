@@ -49,7 +49,7 @@ inline constexpr unsigned int MAX_VECTOR_ALLOCATE = 5000000;
  * is likely the only way to do so.
  */
 struct deserialize_type {};
-constexpr deserialize_type deserialize {};
+inline constexpr deserialize_type deserialize {};
 
 /*
  * Lowest-level serialization and conversion.
