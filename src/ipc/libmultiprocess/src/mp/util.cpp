@@ -406,9 +406,12 @@ std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std
     return {pid, fds[1]};
 #else
     // Create windows pipe to send socket over to child process.
+    // FILE_FLAG_OVERLAPPED lets ConnectNamedPipe be used with
+    // WaitForMultipleObjects so the parent detects child death instead of
+    // blocking forever if the child exits without opening the pipe.
     static std::atomic<int> counter{1};
     std::string pipe_path{R"(\\.\pipe\mp-)" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(counter.fetch_add(1))};
-    HANDLE pipe{CreateNamedPipeA(pipe_path.c_str(), PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_WAIT, /*nMaxInstances=*/1, /*nOutBufferSize=*/0, /*nInBufferSize=*/0, /*nDefaultTimeOut=*/0, /*lpSecurityAttributes=*/nullptr)};
+    HANDLE pipe{CreateNamedPipeA(pipe_path.c_str(), PIPE_ACCESS_OUTBOUND | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_WAIT, /*nMaxInstances=*/1, /*nOutBufferSize=*/0, /*nInBufferSize=*/0, /*nDefaultTimeOut=*/0, /*lpSecurityAttributes=*/nullptr)};
     KJ_WIN32(pipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed");
 
     // TODO: Would be good to add more exception safety here. Resources (pipe,
@@ -423,8 +426,37 @@ std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std
     KJ_WIN32(CreateProcessA(/*lpApplicationName=*/nullptr, const_cast<char*>(cmd.c_str()), /*lpProcessAttributes=*/nullptr, /*lpThreadAttributes=*/nullptr, /*bInheritHandles=*/FALSE, /*dwCreationFlags=*/0, /*lpEnvironment=*/nullptr, /*lpCurrentDirectory=*/nullptr, &si, &pi), "CreateProcess failed");
     KJ_WIN32(CloseHandle(pi.hThread), "CloseHandle(hThread)");
 
-    // Send socket to the child via the pipe
-    KJ_WIN32(ConnectNamedPipe(pipe, nullptr) || GetLastError() == ERROR_PIPE_CONNECTED, "ConnectNamedPipe failed");
+    // Wait for child to connect to the pipe. WaitForMultipleObjects on both
+    // the connect event and the child process handle lets us fail cleanly if
+    // the child exits without opening the pipe.
+    HANDLE event{CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/TRUE, /*bInitialState=*/FALSE, /*lpName=*/nullptr)};
+    KJ_WIN32(event != nullptr, "CreateEvent failed");
+    OVERLAPPED ov{};
+    ov.hEvent = event;
+    if (!ConnectNamedPipe(pipe, &ov)) {
+        DWORD err{GetLastError()};
+        if (err == ERROR_IO_PENDING) {
+            HANDLE objects[2]{event, pi.hProcess};
+            DWORD result{WaitForMultipleObjects(2, objects, /*bWaitAll=*/FALSE, /*dwMilliseconds=*/INFINITE)};
+            KJ_WIN32(result != WAIT_FAILED, "WaitForMultipleObjects failed");
+            if (result != WAIT_OBJECT_0) {
+                CloseHandle(event);
+                CloseHandle(pipe);
+                KJ_FAIL_REQUIRE("child process exited before connecting to named pipe");
+            }
+            DWORD unused;
+            KJ_WIN32(GetOverlappedResult(pipe, &ov, &unused, /*bWait=*/FALSE), "ConnectNamedPipe failed");
+        } else if (err != ERROR_PIPE_CONNECTED) {
+            CloseHandle(event);
+            KJ_FAIL_WIN32("ConnectNamedPipe", err);
+        }
+    }
+    KJ_WIN32(CloseHandle(event), "CloseHandle(event)");
+
+    // Send socket to child. Use overlapped I/O since pipe is FILE_FLAG_OVERLAPPED.
+    OVERLAPPED write_ov{};
+    write_ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    KJ_WIN32(write_ov.hEvent != nullptr, "CreateEvent failed");
     // Duplicate socket for the child using its PID.
     WSAPROTOCOL_INFO info{};
     KJ_WINSOCK(WSADuplicateSocket(fds[0], pi.dwProcessId, &info), "WSADuplicateSocket failed");
@@ -433,8 +465,14 @@ std::tuple<ProcessId, SocketId> SpawnProcess(const std::function<std::vector<std
     // sees a disconnection when the child exits, resulting in hangs reading or
     // writing to fds[1].
     CloseSocket(fds[0]);
+    if (!WriteFile(pipe, &info, sizeof(info), nullptr, &write_ov)) {
+        DWORD write_err{GetLastError()};
+        if (write_err != ERROR_IO_PENDING) KJ_FAIL_WIN32("WriteFile(pipe)", write_err);
+    }
     DWORD wr;
-    KJ_WIN32(WriteFile(pipe, &info, sizeof(info), &wr, nullptr) && wr == sizeof(info), "WriteFile(pipe) failed");
+    KJ_WIN32(GetOverlappedResult(pipe, &write_ov, &wr, /*bWait=*/TRUE), "WriteFile(pipe) failed");
+    KJ_REQUIRE(wr == sizeof(info), "WriteFile(pipe): short write");
+    KJ_WIN32(CloseHandle(write_ov.hEvent), "CloseHandle(write_event)");
     KJ_WIN32(CloseHandle(pipe), "CloseHandle(pipe)");
 
     return {pi.hProcess, fds[1]};
