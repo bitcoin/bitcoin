@@ -3,17 +3,22 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     msg_version,
-    msg_filterload
+    msg_filterload,
+    msg_mempool,
 )
 from test_framework.p2p import (
     P2PInterface,
+    P2PTxInvStore,
     P2P_SERVICES,
     P2P_SUBVERSION,
     P2P_VERSION,
 )
+from test_framework.wallet import MiniWallet
 
 
 class P2PConnectionLimits(BitcoinTestFramework):
@@ -74,6 +79,24 @@ class P2PConnectionLimits(BitcoinTestFramework):
         with node.assert_debug_log(['connection dropped after filterload message'], timeout=2):
             peer1.send_without_ping(msg_filterload(data=b'\xbb'*(100)))
         self.wait_until(lambda: len(node.getpeerinfo()) == 1)
+
+        self.log.info('Check BIP35 requests do not enable ongoing transaction relay')
+        self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters', '-inboundrelaypercent=100'])
+        node.setmocktime(int(time.time()))
+        wallet = MiniWallet(node)
+        # Complete the requested snapshot before creating the transaction tested for ongoing relay.
+        snapshot_tx = wallet.send_self_transfer(from_node=node)
+        bip35_peer = self.add_relay_disabled_peer(P2PTxInvStore())
+        bip35_peer.send_and_ping(msg_mempool())
+        node.bumpmocktime(60)
+        bip35_peer.wait_for_broadcast([snapshot_tx['wtxid']])
+
+        relay_peer = node.add_p2p_connection(P2PTxInvStore())
+        tx = wallet.send_self_transfer(from_node=node)
+        node.bumpmocktime(60)
+        relay_peer.wait_for_broadcast([tx['wtxid']])
+        bip35_peer.sync_with_ping()
+        assert int(tx['wtxid'], 16) not in bip35_peer.get_invs()
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
