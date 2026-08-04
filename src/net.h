@@ -883,8 +883,10 @@ public:
     /** Whether this peer provides all services that we want. Used for eviction decisions */
     std::atomic_bool m_has_all_wanted_services{false};
 
-    /** Whether we should relay transactions to this peer. This only changes
-     * from false to true. It will never change back to false. */
+    /** When inbound, whether this peer consumes transaction-relay capacity, is
+     * eligible for transaction-relay eviction, and forgoes the block-relay-only
+     * eviction protection. Set by VERSION `fRelay`, bloom filter messages, or
+     * BIP35 `mempool` requests, and never reset. */
     std::atomic_bool m_relays_txs{false};
 
     /** Whether this peer has loaded a bloom filter. Used only in inbound

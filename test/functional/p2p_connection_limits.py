@@ -102,9 +102,9 @@ class P2PConnectionLimits(BitcoinTestFramework):
         # NODE_BLOOM permits BIP35, while zero capacity makes any counted requester exceed the limit.
         self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters', '-inboundrelaypercent=0'])
         peer1 = self.add_relay_disabled_peer(P2PInterface())
-        with node.assert_debug_log(['received: mempool'], timeout=2):
+        with node.assert_debug_log(['connection dropped after mempool message'], timeout=2):
             peer1.send_without_ping(msg_mempool())
-            peer1.sync_with_ping()  # TODO: Account BIP35 service against inbound tx-relay capacity
+            peer1.wait_for_disconnect()
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
