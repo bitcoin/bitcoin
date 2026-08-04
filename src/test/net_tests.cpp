@@ -22,6 +22,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
@@ -29,11 +30,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <ios>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 using namespace std::literals;
 using namespace util::hex_literals;
@@ -1417,7 +1420,43 @@ public:
     }
 };
 
+const std::string MAX_MESSAGE_TYPE(CMessageHeader::MESSAGE_TYPE_SIZE, 'x');
+
+CSerializedNetMsg MakeNetMessage(std::string type, size_t payload_size)
+{
+    auto msg{NetMsg::Make(std::move(type))};
+    msg.data.resize(payload_size);
+    return msg;
+}
+
 } // namespace
+
+BOOST_AUTO_TEST_CASE(outbound_message_limits)
+{
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+    CNode node{/*id=*/0, /*sock=*/nullptr, /*addrIn=*/CAddress{}, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, /*addrBindIn=*/CAddress{}, /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+    auto max_type_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1)};
+    // The pending type-limit message keeps messages passed through PushMessage() in the queue
+    BOOST_REQUIRE(node.m_transport->SetMessageToSend(max_type_msg));
+
+    auto queued{0U};
+    for (auto& [msg, reject] : std::array{
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE + 'x', /*payload_size=*/1), false}, // TODO: Reject types longer than the wire field
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), false}, // TODO: Reject payloads that peers cannot receive
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH), false}}) {
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
+        try {
+            connman.PushMessage(&node, std::move(msg));
+        } catch (const NonFatalCheckError&) {
+            BOOST_CHECK(reject);
+        }
+        queued += !reject;
+        LOCK(node.cs_vSend);
+        BOOST_CHECK_EQUAL(node.vSendMsg.size(), queued);
+    }
+    connman.FlushSendBuffer(node);
+    BOOST_CHECK(connman.ReceiveMsgFrom(node, MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)));
+}
 
 BOOST_AUTO_TEST_CASE(v2transport_test)
 {
@@ -1650,6 +1689,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(uint8_t(m_rng.randrange(256 - BIP324_SHORTIDS_IMPLEMENTED) + BIP324_SHORTIDS_IMPLEMENTED), {}); // unknown short id
         tester.SendMessage(uint8_t(2), msg_data_1); // "block" short id
         tester.AddMessage("blocktxn", msg_data_2); // schedule blocktxn to be sent to us
+        tester.AddMessage(MAX_MESSAGE_TYPE, msg_data_2); // maximum long-encoded type with 4M payload
         ret = tester.Interact();
         BOOST_REQUIRE(ret);
         BOOST_REQUIRE(ret->size() == 2);
@@ -1658,6 +1698,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK((*ret)[1]->m_type == "block");
         BOOST_CHECK(std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_1)));
         tester.ReceiveMessage(uint8_t(3), msg_data_2); // "blocktxn" short id
+        tester.ReceiveMessage(MAX_MESSAGE_TYPE, msg_data_2);
     }
 
     // Send correct network's V1 header
