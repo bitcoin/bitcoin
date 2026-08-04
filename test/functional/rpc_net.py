@@ -450,10 +450,15 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that empty msg is allowed")
         node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FF")
 
-        self.log.debug("Test that oversized messages are allowed, but get us disconnected")
-        zero_byte_string = b'\x00' * 4000001
-        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg=zero_byte_string.hex())
-        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)
+        self.log.debug("Test that a msg at the size limit is relayed without disconnecting")
+        max_msg_len = test_framework.messages.MAX_PROTOCOL_MESSAGE_LENGTH
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"received: unknown ({max_msg_len} bytes)"], timeout=10):
+            node.sendmsgtopeer(peer_id=0, msg_type="unknown", msg="00" * max_msg_len)
+        assert_equal(len(node.getpeerinfo()), 1)
+
+        self.log.debug("Test oversized message handling")
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="00" * (max_msg_len + 1))
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)  # TODO: Oversized payloads should be rejected before being sent
 
     def test_getaddrmaninfo(self):
         self.log.info("Test getaddrmaninfo")
