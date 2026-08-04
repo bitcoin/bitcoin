@@ -20,6 +20,8 @@ interface IpcFuzzInterface $Proxy.wrap("IpcFuzzImplementation") {
     passTransaction @5 (arg :Data) -> (result :Data);
     initThreadMap @6 (threadMap :Proxy.ThreadMap) -> (threadMap :Proxy.ThreadMap);
     callCallback @7 (context :Proxy.Context, callback :IpcFuzzCallback, arg :Int32) -> (result :Int32);
+    consumeTransaction @8 (arg :Data) -> ();
+    consumeUniValue @9 (arg :Text) -> ();
 }
 
 interface IpcFuzzCallback $Proxy.wrap("IpcFuzzCallback") {

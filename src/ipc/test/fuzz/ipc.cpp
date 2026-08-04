@@ -2,24 +2,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <primitives/transaction.h>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
+#include <ipc/test/fuzz/ipc_fuzz.capnp.h>
+#include <ipc/test/fuzz/ipc_fuzz.capnp.proxy.h>
+#include <ipc/test/fuzz/ipc_fuzz.h>
 #include <ipc/util.h>
 #include <kj/memory.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy.h>
+#include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <ipc/test/fuzz/ipc_fuzz.capnp.h>
-#include <ipc/test/fuzz/ipc_fuzz.capnp.proxy.h>
-#include <ipc/test/fuzz/ipc_fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 
+#include <exception>
 #include <future>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <thread>
 
 namespace {
@@ -77,6 +80,63 @@ public:
         m_client = client_future.get();
         // Exchange thread maps so the server can invoke callbacks on the fuzzing thread.
         m_client->initThreadMap();
+    }
+
+    // Bypass ProxyClient serialization to send arbitrary data directly to the server.
+    void sendTransactionPayload(std::vector<uint8_t> payload)
+    {
+        std::promise<void> done;
+        auto future{done.get_future()};
+
+        m_client->m_context.loop->sync([&] {
+            auto request{m_client->m_client.consumeTransactionRequest()};
+            request.setArg(kj::arrayPtr(payload.data(), payload.size()));
+
+            m_client->m_context.loop->m_task_set->add(request.send().then(
+                [&](auto&&) {
+                    done.set_value();
+                },
+                [&](kj::Exception&& exception) {
+                    // Arbitrary transaction bytes may fail deserialization.
+                    if (exception.getType() == kj::Exception::Type::FAILED) {
+                        done.set_value();
+                        return;
+                    }
+                    done.set_exception(std::make_exception_ptr(
+                        std::runtime_error{exception.getDescription().cStr()}));
+                }));
+        });
+
+        future.get();
+    }
+
+    // Bypass ProxyClient serialization to send arbitrary text directly to the server.
+    void sendUniValuePayload(std::string payload)
+    {
+        std::promise<void> done;
+        auto future{done.get_future()};
+
+        m_client->m_context.loop->sync([&] {
+            auto request{m_client->m_client.consumeUniValueRequest()};
+            request.setArg(kj::StringPtr{payload.data(), payload.size()});
+
+            m_client->m_context.loop->m_task_set->add(request.send().then(
+                [&](auto&&) {
+                    done.set_value();
+                },
+                [&](kj::Exception&& exception) {
+                    // Invalid JSON is rejected by the IPC UniValue deserializer.
+                    if (exception.getType() == kj::Exception::Type::FAILED &&
+                        std::string_view{exception.getDescription().cStr()}.ends_with("std::exception: invalid JSON received over IPC")) {
+                        done.set_value();
+                        return;
+                    }
+                    done.set_exception(std::make_exception_ptr(
+                        std::runtime_error{exception.getDescription().cStr()}));
+                }));
+        });
+
+        future.get();
     }
 
     ~IpcFuzzSetup()
@@ -166,6 +226,16 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
 
                 FuzzCallback callback{arg, result};
                 assert(ipc.m_client->callCallback(callback, arg) == result);
+            },
+            [&] {
+                // Bypass normal serialization to exercise malformed transaction requests.
+                ipc.sendTransactionPayload(
+                    ConsumeRandomLengthByteVector<uint8_t>(fuzzed_data_provider, 512));
+            },
+            [&] {
+                // Bypass normal serialization to exercise malformed JSON requests.
+                ipc.sendUniValuePayload(
+                    fuzzed_data_provider.ConsumeRandomLengthString(512));
             });
     }
 }
