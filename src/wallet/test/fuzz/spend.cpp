@@ -72,6 +72,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
         auto txid{tx.GetHash()};
         auto ret{fuzzed_wallet.wallet->mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0}))};
         assert(ret.second);
+        fuzzed_wallet.wallet->RefreshTXOsFromTx(ret.first->second);
     }
 
     std::vector<CRecipient> recipients;
