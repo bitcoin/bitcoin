@@ -212,6 +212,13 @@ touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 ```
 
+To start the node:
+
+```shell
+./build/bin/bitcoind           # Runs in the foreground.
+./build/bin/bitcoind -daemon   # Runs in the background.
+```
+
 If you do not need to run on the main network, you can use a test network instead, which
 requires far less time and disk space:
 
@@ -229,7 +236,6 @@ tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
 ## Other commands:
 
 ```shell
-./build/bin/bitcoind -daemon      # Starts the bitcoin daemon.
 ./build/bin/bitcoin-cli --help    # Outputs a list of command-line options.
 ./build/bin/bitcoin-cli help      # Outputs a list of RPC commands when the daemon is running.
 ./build/bin/bitcoin-qt -server # Starts the bitcoin-qt server mode, allows bitcoin-cli control
