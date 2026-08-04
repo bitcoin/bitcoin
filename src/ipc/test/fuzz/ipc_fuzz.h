@@ -14,6 +14,13 @@
 #include <string>
 #include <vector>
 
+class IpcFuzzCallback
+{
+public:
+    virtual ~IpcFuzzCallback() = default;
+    virtual int call(int arg) = 0;
+};
+
 class IpcFuzzImplementation
 {
 public:
@@ -58,6 +65,18 @@ public:
         return tx;
     }
 
+    // Enables libmultiprocess to exchange the thread capabilities used for callbacks.
+    void initThreadMap() {}
+
+    // Invoke the client callback and verify its argument and return value on the server.
+    int callCallback(IpcFuzzCallback& callback, int arg)
+    {
+        assert(arg == m_expected_callback_arg);
+        const int result{callback.call(arg)};
+        assert(result == m_expected_callback_result);
+        return result;
+    }
+
     // Calls are synchronous, so expected values are not modified while the
     // server is checking them.
     int m_expected_a{0};
@@ -67,6 +86,8 @@ public:
     CScript m_expected_script;
     std::string m_expected_univalue;
     CTransactionRef m_expected_transaction;
+    int m_expected_callback_arg{0};
+    int m_expected_callback_result{0};
 };
 
 #endif // BITCOIN_IPC_TEST_FUZZ_IPC_FUZZ_H

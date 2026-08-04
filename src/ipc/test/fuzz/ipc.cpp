@@ -23,6 +23,24 @@
 #include <thread>
 
 namespace {
+// Callback invoked by the server to exercise IPC communication in the
+// server to client direction.
+class FuzzCallback final : public IpcFuzzCallback
+{
+public:
+    FuzzCallback(int expected_arg, int result) : m_expected_arg{expected_arg}, m_result{result} {}
+
+    int call(int arg) override
+    {
+        assert(arg == m_expected_arg);
+        return m_result;
+    }
+
+private:
+    const int m_expected_arg;
+    const int m_result;
+};
+
 class IpcFuzzSetup
 {
 public:
@@ -57,6 +75,8 @@ public:
             loop.loop();
         });
         m_client = client_future.get();
+        // Exchange thread maps so the server can invoke callbacks on the fuzzing thread.
+        m_client->initThreadMap();
     }
 
     ~IpcFuzzSetup()
@@ -136,6 +156,16 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
                 const CTransactionRef tx = MakeTransactionRef(mutable_tx);
                 ipc.m_impl->m_expected_transaction = tx;
                 assert(*ipc.m_client->passTransaction(tx) == *tx);
+            },
+            [&] {
+                const int arg = fuzzed_data_provider.ConsumeIntegral<int>();
+                const int result = fuzzed_data_provider.ConsumeIntegral<int>();
+
+                ipc.m_impl->m_expected_callback_arg = arg;
+                ipc.m_impl->m_expected_callback_result = result;
+
+                FuzzCallback callback{arg, result};
+                assert(ipc.m_client->callCallback(callback, arg) == result);
             });
     }
 }
