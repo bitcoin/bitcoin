@@ -19,6 +19,7 @@
 #include <bitset>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -163,6 +164,11 @@ struct CachableAmount
     }
 };
 
+enum class WalletTxInputOwnership {
+    NONE,
+    PARTIAL,
+    ALL,
+};
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
@@ -218,6 +224,10 @@ public:
     unsigned int nTimeSmart;
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
+    // Cached value for whether none, some, or all inputs belong to the wallet
+    mutable std::optional<WalletTxInputOwnership> m_cached_input_ownership{std::nullopt};
+    // Cached value for whether every non-wallet input is known to spend a zero-value output
+    mutable std::optional<bool> m_cached_foreign_inputs_zero_value{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -350,6 +360,8 @@ public:
         fChangeCached = false;
         m_is_cache_empty = true;
         m_cached_from_me = std::nullopt;
+        m_cached_input_ownership = std::nullopt;
+        m_cached_foreign_inputs_zero_value = std::nullopt;
     }
 
     /** True if only scriptSigs are different */

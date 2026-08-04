@@ -1146,6 +1146,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
     // Cache the outputs that belong to the wallet
     RefreshTXOsFromTx(wtx);
+    if (fInsertedNew) {
+        MarkOutputsDirty(wtx.tx);
+    }
 
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(hash, fInsertedNew ? CT_NEW : CT_UPDATED);
@@ -1212,6 +1215,9 @@ bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
 
     // Make sure the tx outputs are known by the wallet
     RefreshTXOsFromTx(wtx);
+    if (ins.second) {
+        MarkOutputsDirty(wtx.tx);
+    }
     return true;
 }
 
@@ -1310,6 +1316,19 @@ void CWallet::MarkInputsDirty(const CTransactionRef& tx)
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
             it->second.MarkDirty();
+        }
+    }
+}
+
+void CWallet::MarkOutputsDirty(const CTransactionRef& tx)
+{
+    const Txid& txid{tx->GetHash()};
+    for (uint32_t i{0}; i < tx->vout.size(); ++i) {
+        const auto range{mapTxSpends.equal_range(COutPoint{txid, i})};
+        for (auto it{range.first}; it != range.second; ++it) {
+            if (auto wit{mapWallet.find(it->second)}; wit != mapWallet.end()) {
+                wit->second.MarkDirty();
+            }
         }
     }
 }
