@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <compare>
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -62,7 +63,12 @@ public:
      * @note Does NOT match the ordering on the corresponding \ref
      *       base_uint::CompareTo, which starts comparing from the end.
      */
-    constexpr int Compare(const base_blob& other) const { return std::memcmp(m_data.data(), other.m_data.data(), WIDTH); }
+    constexpr int Compare(const base_blob& other) const {
+        auto cmp = m_data <=> other.m_data;
+        if (cmp < 0) return -1;
+        if (cmp > 0) return 1;
+        return 0;
+    }
 
     friend constexpr bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }

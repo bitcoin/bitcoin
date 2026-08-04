@@ -184,13 +184,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         return migrate_info, wallet
 
     def test_basic(self):
-        # Remove the deprecated response fields that'd be present in the RPC responses
-        # sent by the old node(s).
-        def remove_deprecated_keys(list):
+        # Update listtransctions' output from old nodes to be compatible
+        def listtransactions_compatibility(list):
             deprecated_keys = {"bip125-replaceable"}
             for obj in list:
                 for key in deprecated_keys:
                     obj.pop(key)
+                obj["alternate_wtxids"] = []
             return list
 
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
@@ -248,7 +248,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         basic1_migrate, basic1 = self.migrate_and_get_rpc("basic1")
         assert_equal(basic1.getbalance(), bal)
-        self.assert_list_txs_equal(basic1.listtransactions(), remove_deprecated_keys(txs))
+        self.assert_list_txs_equal(basic1.listtransactions(), listtransactions_compatibility(txs))
 
         self.log.info("Test backup file can be successfully restored")
         self.old_node.restorewallet("basic1_restored", basic1_migrate['backup_path'])
@@ -256,7 +256,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         basic1_restored_wi = basic1_restored.getwalletinfo()
         assert_equal(basic1_restored_wi['balance'], bal)
         assert_equal(basic1_restored.listaddressgroupings(), addr_gps)
-        self.assert_list_txs_equal(remove_deprecated_keys(basic1_restored.listtransactions()), txs)
+        self.assert_list_txs_equal(listtransactions_compatibility(basic1_restored.listtransactions()), txs)
 
         # restart master node and verify that everything is still there
         self.restart_node(0)
@@ -286,7 +286,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Now migrate and test that we still have the same balance/transactions
         _, basic2 = self.migrate_and_get_rpc("basic2")
         assert_equal(basic2.getbalance(), basic2_balance)
-        self.assert_list_txs_equal(basic2.listtransactions(), remove_deprecated_keys(basic2_txs))
+        self.assert_list_txs_equal(basic2.listtransactions(), listtransactions_compatibility(basic2_txs))
 
         # Now test migration on a descriptor wallet
         self.log.info("Test \"nothing to migrate\" when the user tries to migrate a loaded wallet with no legacy data")
