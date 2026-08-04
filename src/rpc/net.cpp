@@ -1079,7 +1079,7 @@ static RPCMethod sendmsgtopeer()
         {
             {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to send the message to."},
             {"msg_type", RPCArg::Type::STR, RPCArg::Optional::NO, strprintf("The message type (maximum length %i)", CMessageHeader::MESSAGE_TYPE_SIZE)},
-            {"msg", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized message body to send, in hex, without a message header"},
+            {"msg", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, strprintf("The serialized message body to send, in hex, without a message header (maximum %u bytes)", MAX_PROTOCOL_MESSAGE_LENGTH)},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{
@@ -1093,6 +1093,9 @@ static RPCMethod sendmsgtopeer()
             auto msg{TryParseHex<unsigned char>(self.Arg<std::string_view>("msg"))};
             if (!msg.has_value()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Error parsing input for msg");
+            }
+            if (msg->size() > MAX_PROTOCOL_MESSAGE_LENGTH) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error: msg too large, max size is %u bytes", MAX_PROTOCOL_MESSAGE_LENGTH));
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
