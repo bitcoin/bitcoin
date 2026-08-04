@@ -1017,7 +1017,7 @@ static RPCMethod gettxspendingprevout()
                 return o;
             };
 
-            UniValue result{UniValue::VARR};
+            std::vector<UniValue> results(output_params.size());
 
             // Search the mempool first
             {
@@ -1035,19 +1035,13 @@ static RPCMethod gettxspendingprevout()
                         continue;
                     }
 
-                    result.push_back(make_output(*it, spending_tx));
+                    results[it->request_index] = make_output(*it, spending_tx);
                     it = prevouts_to_process.erase(it);
                 }
             }
 
-            // Return early if all requests have been handled by the mempool search
-            if (prevouts_to_process.empty()) {
-                return result;
-            }
-
-            // At this point the request was not limited to the mempool and some outpoints remain
-            // unresolved. We now rely on the index to determine whether they were spent or not.
-            if (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain()) {
+            // mempool_only requests resolve every outpoint above, so only other requests reach the index.
+            if (!prevouts_to_process.empty() && (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain())) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Mempool lacks a relevant spend, and txospenderindex is unavailable.");
             }
 
@@ -1060,13 +1054,16 @@ static RPCMethod gettxspendingprevout()
                 if (const auto& spender_opt{spender.value()}) {
                     UniValue o{make_output(prevout, spender_opt->tx.get())};
                     o.pushKV("blockhash", spender_opt->block_hash.GetHex());
-                    result.push_back(std::move(o));
+                    results[prevout.request_index] = std::move(o);
                 } else {
                     // Only return the input outpoint itself, which indicates it is unspent.
-                    result.push_back(make_output(prevout));
+                    results[prevout.request_index] = make_output(prevout);
                 }
             }
 
+            UniValue result{UniValue::VARR};
+            result.reserve(results.size());
+            for (auto& output : results) result.push_back(std::move(output));
             return result;
         },
     };
