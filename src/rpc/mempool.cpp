@@ -1020,32 +1020,32 @@ static RPCMethod gettxspendingprevout()
             std::vector<UniValue> results(output_params.size());
 
             // Search the mempool first
+            std::vector<Entry> unresolved;
+            unresolved.reserve(prevouts_to_process.size());
             {
                 const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
                 LOCK(mempool.cs);
 
                 // Make the result if the spending tx appears in the mempool or this is a mempool_only request
-                for (auto it = prevouts_to_process.begin(); it != prevouts_to_process.end(); ) {
-                    const CTransaction* spending_tx{mempool.GetConflictTx(it->outpoint)};
+                for (const auto& prevout : prevouts_to_process) {
+                    const auto* spending_tx{mempool.GetConflictTx(prevout.outpoint)};
 
                     // If the outpoint is not spent in the mempool and this is not a mempool-only
                     // request, we cannot answer it yet.
                     if (!spending_tx && !mempool_only) {
-                        ++it;
-                        continue;
+                        unresolved.push_back(prevout);
+                    } else {
+                        results[prevout.request_index] = make_output(prevout, spending_tx);
                     }
-
-                    results[it->request_index] = make_output(*it, spending_tx);
-                    it = prevouts_to_process.erase(it);
                 }
             }
 
             // mempool_only requests resolve every outpoint above, so only other requests reach the index.
-            if (!prevouts_to_process.empty() && (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain())) {
+            if (!unresolved.empty() && (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain())) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Mempool lacks a relevant spend, and txospenderindex is unavailable.");
             }
 
-            for (const auto& prevout : prevouts_to_process) {
+            for (const auto& prevout : unresolved) {
                 const auto spender{g_txospenderindex->FindSpender(prevout.outpoint)};
                 if (!spender) {
                     throw JSONRPCError(RPC_MISC_ERROR, spender.error());
