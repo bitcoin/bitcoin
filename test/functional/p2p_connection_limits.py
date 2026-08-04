@@ -94,7 +94,7 @@ class P2PConnectionLimits(BitcoinTestFramework):
         peer1.send_and_ping(msg_mempool())
         node.setmocktime(int(time.time()) + 60)  # jump past the inv trickle interval
         peer1.sync_with_ping()
-        assert peer1.get_invs()  # TODO: Ignore BIP35 requests while transaction relay is disabled
+        assert not peer1.get_invs()
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
