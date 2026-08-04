@@ -33,6 +33,7 @@ class BindExtraTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_posix()
+        self.skip_if_no_lsof_on_nonlinux()
 
     def setup_network(self):
         loopback_ipv4 = addr_to_hex("127.0.0.1")
