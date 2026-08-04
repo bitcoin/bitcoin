@@ -1409,7 +1409,7 @@ BOOST_AUTO_TEST_CASE(outbound_message_limits)
     // The pending type-limit message keeps messages passed through PushMessage() in the queue
     auto queued{0U};
     for (auto& [msg, reject] : std::array{
-             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), false}, // TODO: Reject types longer than the wire field
+             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
              std::pair{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1), false}}) {
         test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
         try {
