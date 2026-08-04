@@ -105,11 +105,11 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
 //! -fallbackfee default
 inline constexpr CAmount DEFAULT_FALLBACK_FEE = 0;
 //! -discardfee default
-inline constexpr CAmount DEFAULT_DISCARD_FEE = 10000;
+inline constexpr CAmount DEFAULT_DISCARD_FEE{10'000};
 //! -mintxfee default
 inline constexpr CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
 //! -consolidatefeerate default
-inline constexpr CAmount DEFAULT_CONSOLIDATE_FEERATE{10000}; // 10 sat/vbyte
+inline constexpr CAmount DEFAULT_CONSOLIDATE_FEERATE{10'000}; // 10 sat/vbyte
 /**
  * maximum fee increase allowed to do partial spend avoidance, even for nodes with this feature disabled by default
  *

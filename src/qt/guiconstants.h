@@ -55,7 +55,7 @@ inline constexpr int TOOLTIP_WRAP_THRESHOLD = 80;
 #define QAPP_APP_NAME_REGTEST "Bitcoin-Qt-regtest"
 
 /* One gigabyte (GB) in bytes */
-inline constexpr uint64_t GB_BYTES{1000000000};
+inline constexpr uint64_t GB_BYTES{1'000'000'000};
 
 // Default prune target displayed in GUI.
 inline constexpr int DEFAULT_PRUNE_TARGET_GB{2};

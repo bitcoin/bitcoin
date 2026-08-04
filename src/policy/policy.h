@@ -35,7 +35,7 @@ inline constexpr unsigned int MINIMUM_BLOCK_RESERVED_WEIGHT{2000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 inline constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1};
 /** The maximum weight for transactions we're willing to relay/mine */
-inline constexpr int32_t MAX_STANDARD_TX_WEIGHT{400000};
+inline constexpr int32_t MAX_STANDARD_TX_WEIGHT{400'000};
 /** The minimum non-witness size for transactions we're willing to relay/mine: one larger than 64  */
 inline constexpr unsigned int MIN_STANDARD_TX_NONWITNESS_SIZE{65};
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
@@ -87,7 +87,7 @@ inline constexpr unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WIT
  * ancestor and is no larger than this. Not really any reason to make this
  * configurable as it doesn't materially change DoS parameters.
  */
-inline constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10000};
+inline constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10'000};
 
 /**
  * Maximum number of ephemeral dust outputs allowed.

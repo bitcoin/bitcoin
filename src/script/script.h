@@ -38,14 +38,14 @@ inline constexpr int MAX_PUBKEYS_PER_MULTISIG = 20;
 inline constexpr unsigned int MAX_PUBKEYS_PER_MULTI_A = 999;
 
 // Maximum script length in bytes
-inline constexpr int MAX_SCRIPT_SIZE = 10000;
+inline constexpr int MAX_SCRIPT_SIZE{10'000};
 
 // Maximum number of values on script interpreter stack
 inline constexpr int MAX_STACK_SIZE = 1000;
 
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
-inline constexpr unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+inline constexpr unsigned int LOCKTIME_THRESHOLD{500'000'000}; // Tue Nov  5 00:53:20 1985 UTC
 
 // Maximum nLockTime. Since a lock time indicates the last invalid timestamp, a
 // transaction with this lock time will never be valid unless lock time

@@ -35,7 +35,7 @@
 inline constexpr uint64_t MAX_SIZE = 0x02000000;
 
 /** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
-inline constexpr unsigned int MAX_VECTOR_ALLOCATE = 5000000;
+inline constexpr unsigned int MAX_VECTOR_ALLOCATE{5'000'000};
 
 /**
  * Dummy data type to identify deserializing constructors.

@@ -10,11 +10,11 @@
 #include <cstdlib>
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
-inline constexpr unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
+inline constexpr unsigned int MAX_BLOCK_SERIALIZED_SIZE{4'000'000};
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
-inline constexpr unsigned int MAX_BLOCK_WEIGHT = 4000000;
+inline constexpr unsigned int MAX_BLOCK_WEIGHT{4'000'000};
 /** The maximum allowed number of signature check operations in a block (network rule) */
-inline constexpr int64_t MAX_BLOCK_SIGOPS_COST = 80000;
+inline constexpr int64_t MAX_BLOCK_SIGOPS_COST{80'000};
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 inline constexpr int COINBASE_MATURITY = 100;
 

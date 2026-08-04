@@ -27,7 +27,7 @@ inline constexpr unsigned int TRUC_DESCENDANT_LIMIT{2};
 inline constexpr unsigned int TRUC_ANCESTOR_LIMIT{2};
 
 /** Maximum sigop-adjusted virtual size of all v3 transactions. */
-inline constexpr int64_t TRUC_MAX_VSIZE{10000};
+inline constexpr int64_t TRUC_MAX_VSIZE{10'000};
 inline constexpr int64_t TRUC_MAX_WEIGHT{TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR};
 /** Maximum sigop-adjusted virtual size of a tx which spends from an unconfirmed TRUC transaction. */
 inline constexpr int64_t TRUC_CHILD_MAX_VSIZE{1000};
