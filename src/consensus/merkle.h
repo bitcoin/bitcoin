@@ -5,10 +5,12 @@
 #ifndef BITCOIN_CONSENSUS_MERKLE_H
 #define BITCOIN_CONSENSUS_MERKLE_H
 
+#include <uint256.h>
+
+#include <cstdint>
 #include <vector>
 
-#include <primitives/block.h>
-#include <uint256.h>
+class CBlock;
 
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
 

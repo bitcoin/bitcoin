@@ -234,7 +234,7 @@ fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU='/src/((bench|common|crypto|index|kernel|primitives|script|univalue/(lib|test)|util|zmq)/.*|node/(blockstorage|interfaces|miner|mining_args|utxo_snapshot)|rpc/mining|clientversion|core_io|signet|init)\.cpp'
+  FILES_WITH_ENFORCED_IWYU='/src/((bench|common|consensus|crypto|index|kernel|primitives|script|univalue/(lib|test)|util|zmq)/.*|node/(blockstorage|interfaces|miner|mining_args|utxo_snapshot)|rpc/mining|clientversion|core_io|signet|init)\.cpp'
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
@@ -248,6 +248,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
              -Xiwyu --max_line_length=160 \
              -Xiwyu --check_also='*/common/types\.h' \
+             -Xiwyu --check_also='*/consensus/*\.h' \
              -Xiwyu --check_also='*/primitives/transaction_identifier\.h' \
              2>&1 || true
     } | tee /tmp/iwyu_ci.out

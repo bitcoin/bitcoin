@@ -3,8 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+
+#include <crypto/sha256.h>
 #include <hash.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <util/check.h>
+
+#include <cstddef>
+#include <memory>
+#include <utility>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
