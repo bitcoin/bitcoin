@@ -18,6 +18,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 //! Set the thread's name at the process level. Does not affect the
 //! internal name.
 static void SetThreadName(const char* name)
@@ -29,6 +33,11 @@ static void SetThreadName(const char* name)
     pthread_set_name_np(pthread_self(), name);
 #elif defined(__APPLE__)
     pthread_setname_np(name);
+#elif defined(WIN32)
+    // Thread names are ASCII-only, so widening each character is sufficient as
+    // a conversion to UTF-16.
+    const std::wstring wname{name, name + std::strlen(name)};
+    ::SetThreadDescription(::GetCurrentThread(), wname.c_str());
 #else
     // Prevent warnings for unused parameters...
     (void)name;
