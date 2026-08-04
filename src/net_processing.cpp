@@ -804,7 +804,7 @@ private:
         m_connman.PushMessage(&node, NetMsg::Make(std::move(msg_type), std::forward<Args>(args)...));
     }
     template <typename... Args>
-    void MakeAndPushFeature(CNode& node, std::string_view feature_id, Args&&... args) const
+    [[maybe_unused]] void MakeAndPushFeature(CNode& node, std::string_view feature_id, Args&&... args) const
     {
         if (!Assume(feature_id.size() >= 4 && feature_id.size() <= MAX_FEATUREID_LENGTH)) return;
         std::vector<unsigned char> feature_data;
