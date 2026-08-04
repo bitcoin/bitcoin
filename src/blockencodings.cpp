@@ -115,6 +115,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
 
     enum class TxSource : uint8_t { NONE, MEMPOOL, EXTRA, COLLIDED };
     std::vector<TxSource> tx_source(txn_available.size(), TxSource::NONE);
+    size_t available_count = 0;
     {
     LOCK(pool->cs);
     for (const auto& [wtxid, txit] : pool->txns_randomized) {
@@ -124,20 +125,20 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             if (tx_source[idit->second] == TxSource::NONE) {
                 txn_available[idit->second] = txit->GetSharedTx();
                 tx_source[idit->second] = TxSource::MEMPOOL;
-                mempool_count++;
+                ++available_count;
             } else if (tx_source[idit->second] != TxSource::COLLIDED) {
                 // If we find two mempool txn that match the short id, just request it.
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
                 txn_available[idit->second].reset();
-                mempool_count--;
+                --available_count;
                 tx_source[idit->second] = TxSource::COLLIDED;
             }
         }
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
         // the performance win of an early exit here is too good to pass up and worth
         // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (available_count == shorttxids.size())
             break;
     }
     }
@@ -149,8 +150,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             if (tx_source[idit->second] == TxSource::NONE) {
                 txn_available[idit->second] = extra_txn[i].second;
                 tx_source[idit->second] = TxSource::EXTRA;
-                mempool_count++;
-                extra_count++;
+                ++available_count;
             } else if (tx_source[idit->second] != TxSource::COLLIDED &&
                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                 // If we find two mempool/extra txn that match the short id, just
@@ -160,16 +160,31 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
                 txn_available[idit->second].reset();
-                mempool_count--;
-                extra_count -= (tx_source[idit->second] == TxSource::EXTRA);
+                --available_count;
                 tx_source[idit->second] = TxSource::COLLIDED;
             }
         }
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
         // the performance win of an early exit here is too good to pass up and worth
         // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (available_count == shorttxids.size())
             break;
+    }
+
+    if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
+        Assume(txn_available.size() == tx_source.size());
+        for (size_t i = 0; i < txn_available.size(); i++) {
+            switch (tx_source[i]) {
+                case TxSource::MEMPOOL:
+                    ++mempool_count;
+                    break;
+                case TxSource::EXTRA:
+                    ++extra_count;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     LogDebug(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
