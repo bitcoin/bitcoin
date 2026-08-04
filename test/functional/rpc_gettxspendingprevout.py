@@ -215,7 +215,6 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         self.log.info("Check mixed mempool and index result order")
         tx4 = create_tx(utxos_to_spend=[txH["new_utxos"][0]], num_outputs=1)
         result = node0.gettxspendingprevout([prevout(txid_reorg_cancel_utxo, vout=0), prevout(txidH, vout=0)])
-        result.reverse()  # TODO: Return results in request order
         assert_equal(result, [
             spent_out(txid_reorg_cancel_utxo, vout=0, spending_tx_id=tx3["txid"]) | {"blockhash": blockhash},
             spent_out(txidH, vout=0, spending_tx_id=tx4["txid"]),
