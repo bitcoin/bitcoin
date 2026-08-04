@@ -23,7 +23,9 @@
 #include <utility>
 #include <vector>
 
-#ifndef WIN32
+#ifdef WIN32
+#include <atomic>
+#else
 #include <csignal>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -35,7 +37,38 @@ namespace {
 
 constexpr auto FAILURE_TIMEOUT = std::chrono::seconds{30};
 
-#ifndef WIN32
+#ifdef WIN32
+KJ_TEST("SpawnProcess does not hang if child never connects to named pipe")
+{
+    // Without FILE_FLAG_OVERLAPPED on the named pipe, ConnectNamedPipe blocks
+    // forever if the child exits without opening the pipe. Verify SpawnProcess
+    // detects child exit and throws instead of hanging.
+    //
+    // Run in a detached thread so the test suite times out and reports a failure
+    // instead of hanging indefinitely if the bug is reintroduced.
+    std::atomic<bool> done{false};
+    std::thread t([&done] {
+        try {
+            auto [process, socket]{SpawnProcess([](std::string) -> std::vector<std::string> {
+                // A child that exits immediately without opening the named pipe.
+                return {"cmd.exe", "/c", "exit 0"};
+            })};
+            CloseHandle(process);
+            CloseSocket(socket);
+        } catch (...) {
+            // Throwing is the expected outcome; blocking forever is not.
+        }
+        done.store(true, std::memory_order_relaxed);
+    });
+    t.detach();
+
+    const auto deadline{std::chrono::steady_clock::now() + FAILURE_TIMEOUT};
+    while (!done.load(std::memory_order_relaxed) && std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    }
+    KJ_EXPECT(done.load(std::memory_order_relaxed), "SpawnProcess hung waiting for child that never connected");
+}
+#else
 
 // Poll for child process exit using waitpid(..., WNOHANG) until the child exits
 // or timeout expires. Returns true if the child exited and status_out was set.
