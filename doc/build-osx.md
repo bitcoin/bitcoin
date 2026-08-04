@@ -193,7 +193,8 @@ supporting subcommands like `bitcoin node`, `bitcoin gui`, `bitcoin rpc`, and
 others that can be listed with `bitcoin help`.
 
 The first time you run `bitcoind` or `bitcoin-qt`, it will start downloading the blockchain.
-This process could take many hours, or even days on slower than average systems.
+This process could take many hours, or even days on slower than average systems, and will
+download and store several hundred gigabytes of data.
 
 By default, blockchain and wallet data files will be stored in:
 
@@ -209,6 +210,14 @@ mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
 touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
 chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+```
+
+If you do not need to run on the main network, you can use a test network instead, which
+requires far less time and disk space:
+
+```shell
+./build/bin/bitcoind -signet   # Public test network.
+./build/bin/bitcoind -regtest  # Private local network, requires no download.
 ```
 
 You can monitor the download process by looking at the debug.log file:
