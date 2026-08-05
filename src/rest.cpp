@@ -28,6 +28,7 @@
 #include <undo.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -167,6 +168,28 @@ static std::string AvailableDataFormatsString()
         return formats.substr(0, formats.length() - 2);
 
     return formats;
+}
+
+util::Expected<bool, std::string> RESTParseBoolParam(HTTPRequest* req, const std::string_view& param_name, bool default_val)
+{
+    std::optional<std::string> param_val{std::nullopt};
+    try {
+        param_val = req->GetQueryParameter(param_name);
+    } catch (const std::runtime_error& e) {
+        return util::Unexpected{e.what()};
+    }
+
+    if (param_val.has_value()) {
+        if (param_val == "true") {
+            return true;
+        } else if (param_val == "false") {
+            return false;
+        } else {
+            return util::Unexpected{strprintf("The \"%s\" query parameter must be either \"true\" or \"false\".", param_name)};
+        }
+    } else {
+        return default_val;
+    }
 }
 
 static bool CheckWarmup(HTTPRequest* req)
@@ -798,26 +821,21 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     case RESTResponseFormat::JSON: {
         std::string str_json;
         if (param == "contents") {
-            std::string raw_verbose;
-            try {
-                raw_verbose = req->GetQueryParameter("verbose").value_or("true");
-            } catch (const std::runtime_error& e) {
-                return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+            bool verbose, mempool_sequence;
+            const auto verbose_parse = RESTParseBoolParam(req, "verbose", /*default_val=*/true);
+            if (verbose_parse.has_value()) {
+                verbose = verbose_parse.value();
+            } else {
+                return RESTERR(req, HTTP_BAD_REQUEST, verbose_parse.error());
             }
-            if (raw_verbose != "true" && raw_verbose != "false") {
-                return RESTERR(req, HTTP_BAD_REQUEST, "The \"verbose\" query parameter must be either \"true\" or \"false\".");
+
+            const auto mempool_sequence_parse = RESTParseBoolParam(req, "mempool_sequence", /*default_val=*/false);
+            if (mempool_sequence_parse.has_value()) {
+                mempool_sequence = mempool_sequence_parse.value();
+            } else {
+                return RESTERR(req, HTTP_BAD_REQUEST, mempool_sequence_parse.error());
             }
-            std::string raw_mempool_sequence;
-            try {
-                raw_mempool_sequence = req->GetQueryParameter("mempool_sequence").value_or("false");
-            } catch (const std::runtime_error& e) {
-                return RESTERR(req, HTTP_BAD_REQUEST, e.what());
-            }
-            if (raw_mempool_sequence != "true" && raw_mempool_sequence != "false") {
-                return RESTERR(req, HTTP_BAD_REQUEST, "The \"mempool_sequence\" query parameter must be either \"true\" or \"false\".");
-            }
-            const bool verbose{raw_verbose == "true"};
-            const bool mempool_sequence{raw_mempool_sequence == "true"};
+
             if (verbose && mempool_sequence) {
                 return RESTERR(req, HTTP_BAD_REQUEST, "Verbose results cannot contain mempool sequence values. (hint: set \"verbose=false\")");
             }
