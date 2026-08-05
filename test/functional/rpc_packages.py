@@ -16,10 +16,12 @@ from test_framework.messages import (
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
+from test_framework.script_util import build_malleated_tx_package
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
@@ -83,6 +85,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             "txid": res["txid"], "wtxid": res["wtxid"]} for res in self.independent_txns_testres]
 
         self.test_submitpackage_with_ancestors()
+        self.test_submitpackage_other_wtxid()
         self.test_independent(coin)
         self.test_chain()
         self.test_multiple_children()
@@ -92,6 +95,34 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.test_submitpackage()
         self.test_maxfeerate_submitpackage()
         self.test_maxburn_submitpackage()
+
+    def test_submitpackage_other_wtxid(self):
+        self.log.info("Test that submitpackage reports other-wtxid for a same-txid-different-witness tx already in the mempool")
+        node = self.nodes[0]
+
+        parent = self.wallet.create_self_transfer()["tx"]
+        parent_amount = parent.vout[0].nValue - 10000
+        child_amount = parent_amount - 10000
+        parent, child_one, child_two = build_malleated_tx_package(
+            parent=parent,
+            rebalance_parent_output_amount=parent_amount,
+            child_amount=child_amount,
+        )
+
+        self.wallet.sendrawtransaction(from_node=node, tx_hex=parent.serialize().hex())
+
+        assert_equal(child_one.txid_hex, child_two.txid_hex)
+        assert_not_equal(child_one.wtxid_hex, child_two.wtxid_hex)
+
+        self.log.info("Submit child_one to the mempool directly")
+        node.sendrawtransaction(child_one.serialize().hex())
+
+        self.log.info("Submit child_two via submitpackage; it should be reported as other-wtxid, not an error")
+        submitres = node.submitpackage([child_two.serialize().hex()])
+        result = submitres["tx-results"][child_two.wtxid_hex]
+        assert_equal(result, {"txid": child_two.txid_hex, "other-wtxid": child_one.wtxid_hex})
+
+        self.generate(node, 1)  # clean up mempool for subsequent tests
 
     def test_independent(self, coin):
         self.log.info("Test multiple independent transactions in a package")
