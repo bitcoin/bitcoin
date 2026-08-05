@@ -232,6 +232,11 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
                 net_msg->data = ConsumeRandomLengthByteVector(fuzzed_data_provider, MAX_PROTOCOL_MESSAGE_LENGTH);
             }
             connman.FlushSendBuffer(p2p_node);
+
+            // ConsumeTransaction() can produce messages larger than the
+            // maximum payload accepted by the P2P transport.
+            if (net_msg->data.size() > MAX_PROTOCOL_MESSAGE_LENGTH) continue;
+
             (void)connman.ReceiveMsgFrom(p2p_node, std::move(*net_msg));
 
             bool more_work{true};
