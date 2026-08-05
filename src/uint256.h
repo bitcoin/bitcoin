@@ -59,6 +59,8 @@ public:
         std::fill(m_data.begin(), m_data.end(), 0);
     }
 
+    constexpr bool operator==(const base_blob&) const = default;
+
     /** Lexicographic ordering
      * @note Does NOT match the ordering on the corresponding \ref
      *       base_uint::CompareTo, which starts comparing from the end.
@@ -70,7 +72,6 @@ public:
         return 0;
     }
 
-    friend constexpr bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
 
     /** @name Hex representation
