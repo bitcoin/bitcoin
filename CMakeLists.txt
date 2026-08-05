@@ -502,6 +502,7 @@ else()
   try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wunused-template" TARGET warn_interface SKIP_LINK)
 
   # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   # unknown options if any other warning is produced. Test the -Wfoo case, and

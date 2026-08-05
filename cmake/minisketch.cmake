@@ -36,6 +36,12 @@ if(MSVC)
     /wd4244
     /wd4267
   )
+else()
+  # This exemption can be removed once the minisketch subtree
+  # includes https://github.com/bitcoin-core/minisketch/pull/102.
+  try_append_cxx_flags("-Wunused-template" TARGET nowarn_minisketch_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-unused-template"
+  )
 endif()
 
 add_library(minisketch STATIC EXCLUDE_FROM_ALL
