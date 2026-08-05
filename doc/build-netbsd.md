@@ -15,22 +15,6 @@ The example commands below use `pkgin`.
 pkgin install git cmake boost
 ```
 
-NetBSD currently ships with an older version of `gcc` than is needed to build. You should upgrade your `gcc` and then pass this new version to the CMake configuration.
-
-For example, grab `gcc12`:
-```
-pkgin install gcc12
-```
-
-Then, when configuring, pass the following:
-```bash
-cmake -B build
-    ...
-    -DCMAKE_C_COMPILER="/usr/pkg/gcc12/bin/gcc" \
-    -DCMAKE_CXX_COMPILER="/usr/pkg/gcc12/bin/g++" \
-    ...
-```
-
 SQLite is required for the wallet:
 
 ```bash
