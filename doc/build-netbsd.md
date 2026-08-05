@@ -68,7 +68,7 @@ Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` 
 
 Bitcoin Core can provide notifications via ZeroMQ. To compile ZMQ support, install the following dependency and pass `-DWITH_ZMQ=ON` when configuring.
 ```bash
-pkgin install zeromq pkg-config
+pkgin install zeromq pkgconf
 ```
 
 #### Test Suite Dependencies
