@@ -1,6 +1,6 @@
-Bitcoin Core version 29.4 is now available from:
+Bitcoin Core version 29.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.4/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.x/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -37,71 +37,18 @@ unsupported systems.
 Notable changes
 ===============
 
-This release fixes an issue where the chainstate database would repeatedly
-rewrite large portions of itself, causing excessive disk reads and writes
-during normal operation.
+### P2P
 
-### Validation
-
-- #35209 validation: correct lifetime of precomputed tx data
-- #35465 coins: compact chainstate regularly
-
-### Leveldb
-
-- #61(bitcoin-core/leveldb): Disable seek compaction
-
-### Net
-
-- #34093 netif: fix compilation warning in QueryDefaultGatewayImpl()
-
-### Wallet
-
-- #35228 wallet: use outpoint when estimating input size
-
-### Build
-
-- #34228 depends: Unset SOURCE_DATE_EPOCH in gen_id script
-- #34848 cmake: Migrate away from deprecated SQLite3 target
-
-### Test
-
-- #34918 fuzz: [refactor] Remove unused g_setup pointers
-
-### Doc
-
-- #34510 doc: fix broken bpftrace installation link
-- #34561 wallet: rpc: manpage: fix example missing `fee_rate` argument
-- #34671 doc: Update Guix install for Debian/Ubuntu
-- #35283 doc: mention -DWITH_ZMQ=ON in BSD build guides
-
-### CI
-
-- #35202 ci: restore sockets in i686, no IPC job
-- #35378 ci: switch runners from cirrus to warpbuild
-- #35408 ci: 35378 followups
-
-### Misc
-
-- #35175 multi_index: fix compilation failure with boost >= 1.91
+- #35691 chainparams: delete my DNS seed
+- #35766 p2p: Assume v2transport for addresses from seeds
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- andrewtoth
-- Cory Fields
-- Daniel Pfeifer
-- darosior
-- fanquake
-- Hennadii Stepanov
-- jayvaliya
-- junbyjun1238
-- Lőrinc
-- MarcoFalke
-- SomberNight
-- ToRyVand
-- willcl-ark
+- Martin Zumsande
+- sipa
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
