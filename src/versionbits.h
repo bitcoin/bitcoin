@@ -21,8 +21,8 @@ static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
 static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
-/** Total bits available for versionbits */
-static const int32_t VERSIONBITS_NUM_BITS = 29;
+/** Total bits available for versionbits (BIP 323) */
+static const int32_t VERSIONBITS_NUM_BITS = 5;
 
 /** Opaque type for BIP9 state. See versionbits_impl.h for details. */
 enum class ThresholdState : uint8_t;
@@ -72,7 +72,8 @@ struct BIP9GBTStatus {
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache
- *  per-period state for every one of them. */
+ *  per-period state for every one we implement and warning state for each
+ *  BIP 323 allowed bit. */
 class VersionBitsCache
 {
 private:
