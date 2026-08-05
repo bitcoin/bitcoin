@@ -132,8 +132,8 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         txids = {tx['txid'] for tx in w.listtransactions('*', 1000)}
         assert tx_expand['txid'] in txids, \
             "tx_expand must always be found (it was within the initial pool)"
-        assert tx_lookahead['txid'] not in txids, \
-            "tx_lookahead is missed without fix: pool-expanding tx appears after it in vtx order"
+        assert tx_lookahead['txid'] in txids, \
+            "tx_lookahead must be found after fix: block is re-processed when pool expands mid-block"
 
         # -----------------------------------------------------------------------
         # Part 2: ScanForWalletTransactions via importdescriptors (timestamp=0)
@@ -153,8 +153,8 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         txids_rescan = {tx['txid'] for tx in w_rescan.listtransactions('*', 1000)}
         assert tx_expand['txid'] in txids_rescan, \
             "tx_expand must be found after full rescan"
-        assert tx_lookahead['txid'] not in txids_rescan, \
-            "tx_lookahead is missed without fix: pool-expanding tx appears after it in vtx order"
+        assert tx_lookahead['txid'] in txids_rescan, \
+            "tx_lookahead must be found after fix: block re-processed when pool expands mid-block"
 
         # -----------------------------------------------------------------------
         # Part 3: verify that a second rescanblockchain recovers tx_lookahead.
@@ -172,6 +172,101 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         assert tx_lookahead['txid'] in txids_after_second_scan, \
             "tx_lookahead must be recovered on a second rescan (pool was already extended)"
         assert tx_expand['txid'] in txids_after_second_scan
+
+        # -----------------------------------------------------------------------
+        # Part 4: cascading pool expansions — two levels in one block.
+        #
+        # This validates that the re-process loop handles multiple successive
+        # TopUp events within a single block, and that the pass cap provides a
+        # bounded safety net against adversarially crafted blocks.
+        #
+        # Setup (pool starts at [0, end_range]):
+        #   addr_expand_1  (key end_range)              triggers TopUp → pool doubles
+        #   addr_expand_2  (key end_range + KEYPOOL_SIZE) triggers TopUp → pool doubles again
+        #   addr_lookahead_1 (key end_range + 1)        visible only after first TopUp
+        #   addr_lookahead_2 (key end_range + KEYPOOL_SIZE + 1) visible only after second TopUp
+        #
+        # vtx order: [lookahead_2, lookahead_1, expand_1, expand_2]
+        #   Pass 1: lookahead_2 and lookahead_1 missed; expand_1 and expand_2 found;
+        #           pool expands twice during this single pass.
+        #   Pass 2: both lookaheads now in pool → found.
+        # -----------------------------------------------------------------------
+        self.log.info("Part 4: cascading pool expansions — two TopUp levels in one block")
+        node.createwallet(wallet_name='w_cascade', disable_private_keys=True, blank=True)
+        w_cascade = node.get_wallet_rpc('w_cascade')
+
+        # Import the same descriptor into a blank wallet so pool starts at [0, end_range].
+        # Use timestamp=now so the rescan only covers blocks from this point forward;
+        # mine the cascade block after import.
+        w_cascade.importdescriptors([{
+            "desc": recv_desc['desc'],
+            "timestamp": "now",
+        }])
+
+        _, cascade_end = w_cascade.listdescriptors()['descriptors'][0]['range']
+
+        i_e1 = cascade_end
+        i_e2 = cascade_end + KEYPOOL_SIZE
+        i_l1 = cascade_end + 1
+        i_l2 = cascade_end + KEYPOOL_SIZE + 1
+        addr_expand_1    = w_cascade.deriveaddresses(recv_desc['desc'], [i_e1, i_e1])[0]
+        addr_expand_2    = w_cascade.deriveaddresses(recv_desc['desc'], [i_e2, i_e2])[0]
+        addr_lookahead_1 = w_cascade.deriveaddresses(recv_desc['desc'], [i_l1, i_l1])[0]
+        addr_lookahead_2 = w_cascade.deriveaddresses(recv_desc['desc'], [i_l2, i_l2])[0]
+
+        self.log.info(f"Cascade pool:      [0, {cascade_end}]")
+        self.log.info(f"addr_expand_1      (index {cascade_end}):                  {addr_expand_1}")
+        self.log.info(f"addr_expand_2      (index {cascade_end + KEYPOOL_SIZE}):   {addr_expand_2}")
+        self.log.info(f"addr_lookahead_1   (index {cascade_end + 1}):              {addr_lookahead_1}")
+        self.log.info(f"addr_lookahead_2   (index {cascade_end + KEYPOOL_SIZE + 1}): {addr_lookahead_2}")
+
+        node.unloadwallet('w_cascade')
+
+        tx_c_lookahead_2 = funding_wallet.send_to(
+            from_node=node,
+            scriptPubKey=address_to_scriptpubkey(addr_lookahead_2),
+            amount=10_000,
+        )
+        tx_c_lookahead_1 = funding_wallet.send_to(
+            from_node=node,
+            scriptPubKey=address_to_scriptpubkey(addr_lookahead_1),
+            amount=10_000,
+        )
+        tx_c_expand_1 = funding_wallet.send_to(
+            from_node=node,
+            scriptPubKey=address_to_scriptpubkey(addr_expand_1),
+            amount=10_000,
+        )
+        tx_c_expand_2 = funding_wallet.send_to(
+            from_node=node,
+            scriptPubKey=address_to_scriptpubkey(addr_expand_2),
+            amount=10_000,
+        )
+
+        # Mine with both lookaheads before both expanders.
+        # expand_1 fires TopUp (pool level 1); expand_2 is then in pool and fires
+        # TopUp again (pool level 2). Both lookaheads are only coverable after
+        # the second expansion — requiring at least two scan passes.
+        self.generateblock(node, output="raw(51)", transactions=[
+            tx_c_lookahead_2['txid'],
+            tx_c_lookahead_1['txid'],
+            tx_c_expand_1['txid'],
+            tx_c_expand_2['txid'],
+        ])
+
+        node.loadwallet('w_cascade')
+        w_cascade = node.get_wallet_rpc('w_cascade')
+        node.syncwithvalidationinterfacequeue()
+
+        txids_cascade = {tx['txid'] for tx in w_cascade.listtransactions('*', 1000)}
+        assert tx_c_expand_1['txid'] in txids_cascade, \
+            "expand_1 must be found (it was within the initial pool)"
+        assert tx_c_expand_2['txid'] in txids_cascade, \
+            "expand_2 must be found (it enters pool after expand_1 fires TopUp)"
+        assert tx_c_lookahead_1['txid'] in txids_cascade, \
+            "lookahead_1 must be found after fix: visible after first TopUp"
+        assert tx_c_lookahead_2['txid'] in txids_cascade, \
+            "lookahead_2 must be found after fix: visible after second TopUp"
 
 
 if __name__ == '__main__':
