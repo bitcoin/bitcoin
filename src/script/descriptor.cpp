@@ -2043,6 +2043,10 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             error = "Too many ')' in musig() expression";
             return {};
         }
+        if (split.size() == 2 && !split.at(1).empty() && !Const("/", split.at(1), /*skip=*/false)) {
+            error = "Unexpected characters after musig() expression";
+            return {};
+        }
         std::span<const char> expr(split.at(0).begin(), split.at(0).end());
         if (!Func("musig", expr)) {
             error = "Invalid musig() expression";
