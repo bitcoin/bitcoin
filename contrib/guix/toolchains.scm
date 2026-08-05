@@ -23,6 +23,16 @@ FILE-NAME found in ./patches relative to the current file."
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
 
+;; Return a string of ` -ffile-prefix-map=OLD=/usr' flags.
+(define-syntax-rule (guix-store-prefix-map-flags)
+  '(begin
+     (use-modules (ice-9 popen) (ice-9 rdelim))
+     (let* ((port (open-input-pipe
+                    "find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n ' -ffile-prefix-map={}=/usr' \\;"))
+            (mapping (read-line port)))
+       (close-pipe port)
+       mapping)))
+
 (define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
 (define (base-binutils target)
