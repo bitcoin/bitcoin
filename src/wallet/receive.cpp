@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <util/check.h>
@@ -292,6 +293,45 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse,
         }
     }
     return ret;
+}
+
+CAmount GetWalletUTXOSetBalance(const CWallet& wallet)
+{
+    // Collect unique scriptPubKeys owned by the wallet.
+    std::set<CScript> output_scripts;
+    {
+        LOCK(wallet.cs_wallet);
+        for (const auto spkm : wallet.GetAllScriptPubKeyMans()) {
+            for (const auto& script : spkm->GetScriptPubKeys()) {
+                output_scripts.emplace(script);
+            }
+        }
+    }
+
+    // Query chainstate for coins matching these scripts.
+    std::map<COutPoint, Coin> coins;
+    if (!output_scripts.empty()) {
+        wallet.chain().findCoinsByScript(output_scripts, coins);
+    }
+
+    const auto current_height = wallet.chain().getHeight();
+
+    auto TallyCoins = [&](const std::map<COutPoint, Coin>& coins_map) -> CAmount {
+        CAmount balance_out = 0;
+        for (const auto& it : coins_map) {
+            const Coin& coin = it.second;
+
+            // Skip immature coinbase outputs.
+            if (coin.IsCoinBase() && coin.nHeight + COINBASE_MATURITY > current_height) {
+                continue;
+            }
+
+            balance_out += coin.out.nValue;
+        }
+        return balance_out;
+    };
+
+    return TallyCoins(coins);
 }
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
