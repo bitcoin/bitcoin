@@ -12,7 +12,7 @@ Install the required dependencies the usual way you [install software on NetBSD]
 The example commands below use `pkgin`.
 
 ```bash
-pkgin install git cmake pkg-config boost libevent
+pkgin install git cmake pkgconf boost libevent
 ```
 
 SQLite is required for the wallet:
