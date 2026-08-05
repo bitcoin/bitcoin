@@ -27,9 +27,9 @@ check_cxx_source_compiles_with_flags("
   CXXFLAGS ${CLMUL_CXXFLAGS}
 )
 
-add_library(minisketch_common INTERFACE)
+add_library(nowarn_minisketch_interface INTERFACE)
 if(MSVC)
-  target_compile_options(minisketch_common INTERFACE
+  target_compile_options(nowarn_minisketch_interface INTERFACE
     /wd4060
     /wd4065
     /wd4146
@@ -64,7 +64,7 @@ target_include_directories(minisketch
 target_link_libraries(minisketch
   PRIVATE
     core_interface
-    minisketch_common
+    nowarn_minisketch_interface
 )
 
 set_target_properties(minisketch PROPERTIES
