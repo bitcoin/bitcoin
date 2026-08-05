@@ -59,6 +59,10 @@ constexpr unsigned int FLTR_FILE_CHUNK_SIZE{1_MiB};
  *  is big enough for a 2,000,000 length block chain, which
  *  we should be enough until ~2047. */
 constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
+/** A lookup for a block that is at most this many blocks ahead of the index's last
+ *  processed block may be racing with the validation-interface BlockConnected callback
+ *  that writes the filter, rather than reflecting a real indexing/DB issue. */
+constexpr int CF_MAX_BLOCKS_AHEAD_RACE_WAIT{2};
 
 namespace {
 
@@ -463,6 +467,11 @@ bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex
         hashes_out.push_back(entry.hash);
     }
     return true;
+}
+
+bool BlockFilterIndex::IsRacing(const CBlockIndex* target) const
+{
+    return BaseIndex::IsRacing(target, CF_MAX_BLOCKS_AHEAD_RACE_WAIT);
 }
 
 BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type)

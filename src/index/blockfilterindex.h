@@ -103,6 +103,11 @@ public:
     /** Get a range of filter hashes between two heights on a chain. */
     bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
                                std::vector<uint256>& hashes_out) const;
+
+    /// A lookup miss for `target` may be racing with the validation-interface
+    /// BlockConnected callback that writes the filter, rather than reflecting a
+    /// real indexing/DB issue. Cheap, non-blocking check -- see BaseIndex::IsRacing.
+    bool IsRacing(const CBlockIndex* target) const;
 };
 
 /**
