@@ -12,6 +12,7 @@ from test_framework.blocktools import (
     MAX_STANDARD_TX_WEIGHT,
 )
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import hardened
 from test_framework.key import H_POINT
 from test_framework.messages import (
     COutPoint,
@@ -38,6 +39,8 @@ from test_framework.psbt import (
     PSBT_IN_MUSIG2_PUB_NONCE,
     PSBT_IN_NON_WITNESS_UTXO,
     PSBT_IN_PROPRIETARY,
+    PSBT_IN_TAP_BIP32_DERIVATION,
+    PSBT_IN_TAP_INTERNAL_KEY,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
@@ -45,8 +48,8 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
-from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
+from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
+from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -54,6 +57,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises,
     assert_raises_rpc_error,
     find_vout_for_address,
     wallet_importprivkey,
@@ -299,6 +303,27 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(out_participant_pks["aggregate_pubkey"], out_fake_agg_pubkey.hex())
         assert "participant_pubkeys" in out_participant_pks
         assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
+
+    def test_musig2_untrusted_derivation(self):
+        self.log.info("Test MuSig2 aggregate derivation from untrusted PSBT fields")
+        node = self.nodes[0]
+
+        script_pubkey = bytes.fromhex(H_POINT)
+        _, aggregate_pubkey = generate_keypair()
+        _, participant_pubkey = generate_keypair()
+
+        # Both have a matching aggregate fingerprint but cannot derive the script pubkey: 0 derives a different key, hardened(0) cannot be derived at all
+        for index in [0, hardened(0)]:
+            psbt = self.create_psbt(inputs={
+                PSBT_IN_WITNESS_UTXO: CTxOut(nValue=1, scriptPubKey=output_key_to_p2tr_script(script_pubkey)).serialize(),
+                bytes([PSBT_IN_TAP_BIP32_DERIVATION]) + script_pubkey: ser_compact_size(0) + hash160(aggregate_pubkey)[:4] + index.to_bytes(4, "little"),
+                PSBT_IN_TAP_INTERNAL_KEY: script_pubkey,
+                bytes([PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS]) + aggregate_pubkey: [participant_pubkey],
+            }).to_base64()
+            assert_raises(Exception, node.analyzepsbt, psbt)  # TODO: Unexpected derivation metadata should not abort the node
+            self.start_node(0)
+            assert_raises(Exception, node.finalizepsbt, psbt)  # TODO: Unexpected derivation metadata should not abort the node
+            self.start_node(0)
 
     def test_combinepsbt_preserves_proprietary_fields(self):
         self.log.info("Test that combining PSBTs preserves proprietary fields")
@@ -1463,6 +1488,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_psbt_roundtrip()
         self.test_psbt_version()
         self.test_psbt_with_invalid_signature()
+        self.test_musig2_untrusted_derivation()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
