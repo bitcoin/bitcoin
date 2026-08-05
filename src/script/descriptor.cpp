@@ -238,6 +238,10 @@ public:
     {
         return m_provider->GetRootExtPubKey();
     }
+    std::optional<KeyOriginInfo> GetOriginInfo() const override
+    {
+        return m_origin;
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
@@ -2857,6 +2861,13 @@ bool PubkeyProvider::HavePrivateKeys(const SigningProvider& arg) const
     FlatSigningProvider tmp_provider;
     GetPrivKey(/*pos=*/0, arg, tmp_provider);
     return !tmp_provider.keys.empty();
+}
+
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error)
+{
+    uint32_t key_exp_index{0};
+    const std::span<const char> expression{key_expression};
+    return ParsePubkey(key_exp_index, expression, ParseScriptContext::P2TR, out, error);
 }
 
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */

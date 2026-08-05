@@ -7,6 +7,7 @@
 
 #include <outputtype.h>
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <uint256.h>
 
 #include <cstddef>
@@ -149,6 +150,9 @@ public:
     /** Return the extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 
+    /** Return explicitly provided key origin information, if any. */
+    virtual std::optional<KeyOriginInfo> GetOriginInfo() const { return std::nullopt; }
+
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 
@@ -161,6 +165,13 @@ public:
     /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
     virtual bool CanSelfExpand() const = 0;
 };
+
+/** Parse a key expression using P2TR key rules.
+ *
+ * Any private keys in the expression are added to `out`.
+ * If parsing fails, `error` is set and an empty vector is returned.
+ */
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error);
 
 /** \brief Interface for parsed descriptor objects.
  *
