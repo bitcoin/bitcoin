@@ -28,6 +28,6 @@ enum class RESTResponseFormat {
  */
 RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq);
 
-util::Expected<bool, std::string> RESTParseBoolParam(http_bitcoin::HTTPRequest* req, const std::string_view& param_name, bool default_val);
+util::Expected<bool, std::string> RESTParseBoolParam(http_bitcoin::HTTPRequest* req, std::string_view param_name, bool default_val);
 
 #endif // BITCOIN_REST_H
