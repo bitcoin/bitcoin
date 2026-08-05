@@ -26,7 +26,7 @@ To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
 ```bash
-pkgin install capnproto
+pkgin install capnproto pkgconf
 ```
 
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
