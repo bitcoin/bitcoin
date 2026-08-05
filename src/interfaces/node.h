@@ -11,35 +11,30 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <support/allocators/secure.h>
+#include <primitives/transaction.h>
+#include <uint256.h>
 #include <util/log.h>
 #include <util/translation.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
 
-class BanMan;
 class CFeeRate;
-class CNodeStats;
 class Coin;
 class UniValue;
-class Proxy;
 enum class SynchronizationState;
 struct CNodeStateStats;
-struct bilingual_str;
 namespace node {
 enum class TransactionError;
 struct NodeContext;
 } // namespace node
-namespace wallet {
-class CCoinControl;
-} // namespace wallet
 
 namespace interfaces {
 class Handler;

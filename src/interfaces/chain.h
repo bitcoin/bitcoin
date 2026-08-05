@@ -7,10 +7,11 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
+#include <consensus/amount.h>
 #include <kernel/chain.h> // IWYU pragma: export
-#include <node/types.h>
 #include <primitives/transaction.h>
 #include <util/result.h>
+#include <util/time.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -21,9 +22,7 @@
 #include <string>
 #include <vector>
 
-class ArgsManager;
 class CBlock;
-class CBlockUndo;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
@@ -39,12 +38,11 @@ struct ChainstateRole;
 } // namespace kernel
 namespace node {
 struct NodeContext;
+enum class TxBroadcast : uint8_t;
 } // namespace node
 
 namespace interfaces {
-
 class Handler;
-class Wallet;
 
 //! Helper for findBlock to selectively return pieces of block data. If block is
 //! found, data will be returned by setting specified output variables. If block
