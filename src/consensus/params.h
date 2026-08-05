@@ -11,6 +11,7 @@
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <vector>

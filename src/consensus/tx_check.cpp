@@ -5,8 +5,16 @@
 #include <consensus/tx_check.h>
 
 #include <consensus/amount.h>
-#include <primitives/transaction.h>
+#include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <serialize.h>
+
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
 {
