@@ -7,7 +7,6 @@
 
 #include <attributes.h>
 #include <uint256.h>
-#include <util/types.h>
 
 #include <compare>
 #include <cstddef>
@@ -28,22 +27,12 @@ class transaction_identifier
     // Note: Use FromUint256 externally instead.
     transaction_identifier(const uint256& wrapped) : m_wrapped{wrapped} {}
 
-    constexpr int Compare(const transaction_identifier<has_witness>& other) const { return m_wrapped.Compare(other.m_wrapped); }
-    template <typename Other>
-    constexpr int Compare(const Other& other) const
-    {
-        static_assert(ALWAYS_FALSE<Other>, "Forbidden comparison type");
-        return 0;
-    }
-
 public:
     transaction_identifier() : m_wrapped{} {}
     consteval explicit transaction_identifier(std::string_view hex_str) : m_wrapped{uint256{hex_str}} {}
 
-    template <typename Other>
-    bool operator==(const Other& other) const { return Compare(other) == 0; }
-    template <typename Other>
-    std::strong_ordering operator<=>(const Other& other) const { return Compare(other) <=> 0; }
+    constexpr bool operator==(const transaction_identifier&) const = default;
+    constexpr auto operator<=>(const transaction_identifier&) const = default;
 
     const uint256& ToUint256() const LIFETIMEBOUND { return m_wrapped; }
     static transaction_identifier FromUint256(const uint256& id) { return {id}; }
