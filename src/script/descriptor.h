@@ -7,6 +7,7 @@
 
 #include <outputtype.h>
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <uint256.h>
 #include <util/expected.h>
 
@@ -146,6 +147,11 @@ public:
     /** Return the extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 
+    /** Return explicitly provided key origin information, if any. For musig(), this
+     * does not include its participants' origins.
+     */
+    virtual std::optional<KeyOriginInfo> GetOriginInfo() const { return std::nullopt; }
+
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 
@@ -161,6 +167,16 @@ public:
 protected:
     static bool DetermineApostropheUse(StringType type, bool normalized, bool public_apostrophe);
 };
+
+/** Parse a key expression using P2TR key rules
+ *  - compressed, x-only, extended and musig() key expressions are accepted
+ *  - uncompressed keys are rejected
+ *  - WIF private keys are serialized as x-only
+ *
+ *  Any private keys in the expression are added to `out`.
+ *  If parsing fails, `error` is set and an empty vector is returned.
+ */
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error);
 
 /** \brief Interface for parsed descriptor objects.
  *
