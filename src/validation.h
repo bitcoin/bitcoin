@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <optional>
@@ -1140,7 +1141,7 @@ public:
         for (auto& cs : m_chainstates) {
             if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->TargetBlockHash()) return *cs;
         }
-        abort();
+        std::abort();
     }
 
     //! Return historical chainstate targeting a specific block, if any.
@@ -1160,7 +1161,7 @@ public:
         for (auto* cs : {&CurrentChainstate(), HistoricalChainstate()}) {
             if (cs && cs->m_assumeutxo == Assumeutxo::VALIDATED) return *cs;
         }
-        abort();
+        std::abort();
     }
 
     //! Remove a chainstate.
