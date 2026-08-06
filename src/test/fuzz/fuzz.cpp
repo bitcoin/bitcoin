@@ -90,6 +90,12 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
     return std::string{g_fuzz_target};
 }};
 
+// Whether or not these return depends on the build config.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#endif
+
 static void initialize()
 {
     CheckGlobals check{};
@@ -167,6 +173,17 @@ static void initialize()
     ResetCoverageCounters();
 }
 
+// This function is used by libFuzzer
+extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
+{
+    SetArgs(*argc, *argv);
+    initialize();
+    return 0;
+}
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 static bool read_stdin(std::vector<uint8_t>& data)
 {
@@ -212,14 +229,6 @@ static fs::path g_input_path;
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     test_one_input({data, size});
-    return 0;
-}
-
-// This function is used by libFuzzer
-extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
-{
-    SetArgs(*argc, *argv);
-    initialize();
     return 0;
 }
 
