@@ -46,6 +46,7 @@
 #endif // ENABLE_WALLET
 
 #include <chrono>
+#include <cstdlib>
 #include <memory>
 
 #include <QApplication>
@@ -436,7 +437,7 @@ void BitcoinApplication::handleRunawayException(const QString &message)
         nullptr, tr("Runaway exception"),
         tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(CLIENT_NAME) +
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, CLIENT_BUGREPORT));
-    ::exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 }
 
 void BitcoinApplication::handleNonFatalException(const QString& message)
