@@ -720,7 +720,7 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
     // Either mixing is not allowed and we couldn't find a solution from any single OutputType, or mixing was allowed and we still couldn't
     // find a solution using all available coins
     return util::Error();
-};
+}
 
 util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
 {

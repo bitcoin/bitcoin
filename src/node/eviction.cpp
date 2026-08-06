@@ -70,7 +70,7 @@ struct CompareNodeNetworkTime {
         if (m_is_local && a.m_is_local != b.m_is_local) return b.m_is_local;
         if ((a.m_network == m_network) != (b.m_network == m_network)) return b.m_network == m_network;
         return a.m_connected > b.m_connected;
-    };
+    }
 };
 
 //! Sort an array by the specified comparator, then erase the last K elements where predicate is true.

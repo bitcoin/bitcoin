@@ -446,11 +446,11 @@ int AddressTableModel::lookupAddress(const QString &address) const
     }
 }
 
-OutputType AddressTableModel::GetDefaultAddressType() const { return walletModel->wallet().getDefaultAddressType(); };
+OutputType AddressTableModel::GetDefaultAddressType() const { return walletModel->wallet().getDefaultAddressType(); }
 
 void AddressTableModel::emitDataChanged(int idx)
 {
     Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
 }
 
-QString AddressTableModel::GetWalletDisplayName() const { return walletModel->getDisplayName(); };
+QString AddressTableModel::GetWalletDisplayName() const { return walletModel->getDisplayName(); }

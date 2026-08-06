@@ -912,7 +912,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
 
     // The log was successful, terminate now.
     std::terminate();
-};
+}
 
 bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
 {
@@ -1490,7 +1490,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
         }
     }
     return {status, error};
-};
+}
 
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {

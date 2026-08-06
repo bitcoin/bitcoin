@@ -77,7 +77,7 @@ public:
         m_loop_ref.reset();
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
-    };
+    }
     std::unique_ptr<interfaces::Init> connect(mp::Stream stream) override
     {
         startLoop();

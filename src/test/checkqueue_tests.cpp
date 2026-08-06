@@ -60,7 +60,7 @@ struct FakeCheckCheckCompletion {
 struct FixedCheck
 {
     std::optional<int> m_result;
-    FixedCheck(std::optional<int> result) : m_result(result){};
+    FixedCheck(std::optional<int> result) : m_result(result){}
     std::optional<int> operator()() const { return m_result; }
 };
 
@@ -68,7 +68,7 @@ struct UniqueCheck {
     static Mutex m;
     static std::unordered_multiset<size_t> results GUARDED_BY(m);
     size_t check_id;
-    UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
+    UniqueCheck(size_t check_id_in) : check_id(check_id_in){}
     std::optional<int> operator()()
     {
         LOCK(m);
@@ -92,15 +92,15 @@ struct MemoryCheck {
         // Really, copy constructor should be deletable, but CCheckQueue breaks
         // if it is deleted because of internal push_back.
         fake_allocated_memory.fetch_add(b, std::memory_order_relaxed);
-    };
+    }
     MemoryCheck(bool b_) : b(b_)
     {
         fake_allocated_memory.fetch_add(b, std::memory_order_relaxed);
-    };
+    }
     ~MemoryCheck()
     {
         fake_allocated_memory.fetch_sub(b, std::memory_order_relaxed);
-    };
+    }
 };
 
 struct FrozenCleanupCheck {

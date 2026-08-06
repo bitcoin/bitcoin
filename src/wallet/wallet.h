@@ -516,7 +516,7 @@ public:
 
     std::set<Txid> GetTxConflicts(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    const std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; };
+    const std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; }
     std::optional<WalletTXO> GetTXO(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Cache outputs that belong to the wallet from a single transaction */
@@ -902,21 +902,21 @@ public:
     {
         std::string name{GetName()};
         return name.empty() ? "default wallet" : name;
-    };
+    }
 
     /** Return wallet name for display, like LogName() but translates "default wallet" string. */
     std::string DisplayName() const
     {
         std::string name{GetName()};
         return name.empty() ? _("default wallet") : name;
-    };
+    }
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
     {
         LogInfo("[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
-    };
+    }
 
     void LogStats() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
@@ -924,7 +924,7 @@ public:
         WalletLogPrintf("setKeyPool.size() = %u\n",      GetKeyPoolSize());
         WalletLogPrintf("mapWallet.size() = %u\n",       mapWallet.size());
         WalletLogPrintf("m_address_book.size() = %u\n",  m_address_book.size());
-    };
+    }
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
@@ -966,7 +966,7 @@ public:
         AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed_height;
-    };
+    }
     uint256 GetLastBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
@@ -1083,7 +1083,6 @@ public:
  * their transactions. Actual rebroadcast schedule is managed by the wallets themselves.
  */
 void MaybeResendWalletTxs(WalletContext& context);
-
 
 //! Add wallet name to persistent configuration so it will be loaded on startup.
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
