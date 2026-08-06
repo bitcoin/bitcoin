@@ -23,7 +23,7 @@ private:
 
 public:
     std::optional<BlockValidationState> m_state;
-    explicit BlockValidationStateCatcher(const uint256& hash) : m_hash(hash) {};
+    explicit BlockValidationStateCatcher(const uint256& hash) : m_hash(hash) {}
 
 protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
