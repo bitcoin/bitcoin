@@ -1364,7 +1364,7 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         range.second = 0;
     }
     std::vector<CScript> ret;
-    for (int i = range.first; i <= range.second; ++i) {
+    for (int64_t i = range.first; i <= range.second; ++i) {
         for (const auto& desc : descs) {
             std::vector<CScript> scripts;
             if (!desc->Expand(i, provider, scripts, provider)) {
