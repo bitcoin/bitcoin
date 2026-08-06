@@ -67,7 +67,6 @@ std::shared_ptr<CWallet> TestCreateWallet(WalletContext& context)
     options.create_flags = WALLET_FLAG_DESCRIPTORS;
     DatabaseStatus status;
     bilingual_str error;
-    std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
     return TestCreateWallet(std::move(database), context, options.create_flags);
 }
@@ -91,7 +90,6 @@ std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
     options.require_existing = true;
     DatabaseStatus status;
     bilingual_str error;
-    std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
     return TestLoadWallet(std::move(database), context);
 }
