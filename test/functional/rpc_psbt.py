@@ -57,7 +57,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    assert_raises,
     assert_raises_rpc_error,
     find_vout_for_address,
     wallet_importprivkey,
@@ -320,10 +319,8 @@ class PSBTTest(BitcoinTestFramework):
                 PSBT_IN_TAP_INTERNAL_KEY: script_pubkey,
                 bytes([PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS]) + aggregate_pubkey: [participant_pubkey],
             }).to_base64()
-            assert_raises(Exception, node.analyzepsbt, psbt)  # TODO: Unexpected derivation metadata should not abort the node
-            self.start_node(0)
-            assert_raises(Exception, node.finalizepsbt, psbt)  # TODO: Unexpected derivation metadata should not abort the node
-            self.start_node(0)
+            assert_equal(node.analyzepsbt(psbt)["inputs"][0]["is_final"], False)
+            assert_equal(node.finalizepsbt(psbt)["complete"], False)
 
     def test_combinepsbt_preserves_proprietary_fields(self):
         self.log.info("Test that combining PSBTs preserves proprietary fields")
