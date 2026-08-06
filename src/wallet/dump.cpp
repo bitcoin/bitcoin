@@ -51,7 +51,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
     struct DumpWalletError {
         bilingual_str message;
     };
-    auto throw_error = [](bilingual_str message) {
+    auto throw_error = [] [[noreturn]] (bilingual_str message) {
         throw DumpWalletError{std::move(message)};
     };
     auto throw_write_error = [&] {

@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
                 return CeilDiv(len, 2U); // Only let through half per call
             }
         private:
-            SlowSocket& operator=(Sock&&) override {
+            [[noreturn]] SlowSocket& operator=(Sock&&) override {
                 AssertUnreachable(); // Move of Sock into SlowSocket not allowed.
             }
         };
@@ -1032,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     {
     public:
         explicit ErrorSock(std::shared_ptr<Pipes> pipes) : DynSock{std::move(pipes)} {}
-        DynSock& operator=(Sock&&) override { AssertUnreachable(); }
+        [[noreturn]] DynSock& operator=(Sock&&) override { AssertUnreachable(); }
 
         ssize_t Send(const void* buf, size_t len, int flags) const override
         {
