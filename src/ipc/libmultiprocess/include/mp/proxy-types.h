@@ -627,7 +627,7 @@ template <typename Accessor, typename... Args>
 auto PassField(Priority<2>, Args&&... args) -> decltype(CustomPassField<Accessor>(std::forward<Args>(args)...))
 {
     return CustomPassField<Accessor>(std::forward<Args>(args)...);
-};
+}
 
 template <int argc, typename Accessor, typename Parent>
 struct ServerField : Parent
