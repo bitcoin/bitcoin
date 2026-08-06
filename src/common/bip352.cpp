@@ -518,4 +518,4 @@ std::optional<std::vector<SilentPaymentsOutput>> SilentPaymentsReceiver::Scan(
     }
     return outputs;
 }
-}; // namespace bip352
+} // namespace bip352

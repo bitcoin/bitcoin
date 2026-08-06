@@ -570,7 +570,7 @@ public:
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
         if (exists(txid)) m_unbroadcast_txids.insert(txid);
-    };
+    }
 
     bool CheckPolicyLimits(const CTransactionRef& tx);
 

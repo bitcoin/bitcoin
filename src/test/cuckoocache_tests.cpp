@@ -30,7 +30,7 @@
  *  using BOOST_CHECK_CLOSE to fail.
  *
  */
-BOOST_FIXTURE_TEST_SUITE(cuckoocache_tests, BasicTestingSetup);
+BOOST_FIXTURE_TEST_SUITE(cuckoocache_tests, BasicTestingSetup)
 
 /* Test that no values not inserted into the cache are read out of it.
  *
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
     for (int x = 0; x < 100000; ++x) {
         BOOST_CHECK(!cc.contains(m_rng.rand256(), false));
     }
-};
+}
 
 struct HitRateTest : BasicTestingSetup {
 /** This helper returns the hit rate when bytes*load worth of entries are
@@ -372,4 +372,4 @@ BOOST_FIXTURE_TEST_CASE(cuckoocache_generations, GenerationsTest)
     test_cache_generations<CuckooCache::cache<uint256, SignatureCacheHasher>>();
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()

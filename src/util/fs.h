@@ -225,7 +225,7 @@ namespace fsbridge {
         void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
     };
-};
+}
 
 // Disallow path operator<< formatting in tinyformat to avoid locale-dependent
 // encoding on windows.
