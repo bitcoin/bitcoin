@@ -549,6 +549,12 @@ public:
     {
         return TxidView{btck_transaction_out_point_get_txid(impl())};
     }
+
+    template <typename Other>
+    bool operator==(const OutPointApi<Other>& other) const
+    {
+        return btck_transaction_out_point_equals(impl(), static_cast<const Other&>(other).get()) != 0;
+    }
 };
 
 class OutPointView : public View<btck_TransactionOutPoint>, public OutPointApi<OutPointView>

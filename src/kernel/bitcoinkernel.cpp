@@ -771,6 +771,11 @@ const btck_Txid* btck_transaction_out_point_get_txid(const btck_TransactionOutPo
     return btck_Txid::ref(&btck_TransactionOutPoint::get(out_point).hash);
 }
 
+int btck_transaction_out_point_equals(const btck_TransactionOutPoint* out_point1, const btck_TransactionOutPoint* out_point2)
+{
+    return btck_TransactionOutPoint::get(out_point1) == btck_TransactionOutPoint::get(out_point2) ? 1 : 0;
+}
+
 void btck_transaction_out_point_destroy(btck_TransactionOutPoint* out_point)
 {
     delete out_point;

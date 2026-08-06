@@ -1830,6 +1830,17 @@ BITCOINKERNEL_API const btck_Txid* btck_transaction_out_point_get_txid(
     const btck_TransactionOutPoint* transaction_out_point) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Check if two transaction out points are equal.
+ *
+ * @param[in] transaction_out_point1 Non-null.
+ * @param[in] transaction_out_point2 Non-null.
+ * @return                           0 if the transaction out points are not equal.
+ */
+BITCOINKERNEL_API int btck_transaction_out_point_equals(
+    const btck_TransactionOutPoint* transaction_out_point1,
+    const btck_TransactionOutPoint* transaction_out_point2) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * Destroy the transaction out point.
  */
 BITCOINKERNEL_API void btck_transaction_out_point_destroy(btck_TransactionOutPoint* transaction_out_point);
