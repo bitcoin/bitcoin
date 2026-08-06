@@ -4352,15 +4352,6 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         for (CInv& inv : vInv) {
             if (interruptMsgProc) return;
 
-            // Ignore INVs that don't match wtxidrelay setting.
-            // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
-            // This is fine as no INV messages are involved in that process.
-            if (peer.m_wtxid_relay) {
-                if (inv.IsMsgTx()) continue;
-            } else {
-                if (inv.IsMsgWtx()) continue;
-            }
-
             if (inv.IsMsgBlk()) {
                 const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
                 LogDebug(BCLog::NET, "got inv: %s %s peer=%d", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
@@ -4381,7 +4372,17 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                     pfrom.fDisconnect = true;
                     return;
                 }
-                // MSG_WITNESS_TX is treated as a txid, despite only being specified for getdata.
+
+                // Ignore INVs that don't match wtxidrelay setting.
+                // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
+                // This is fine as no INV messages are involved in that process.
+                if (peer.m_wtxid_relay) {
+                    if (!inv.IsMsgWtx()) continue;
+                } else {
+                    // Allows MSG_WITNESS_TX entries (in violation of
+                    // BIP 144) for compatibility with neutrino
+                    if (inv.IsMsgWtx()) continue;
+                }
                 auto& seen_hashes{inv.IsMsgWtx() ? seen_wtxids : seen_txids};
                 if (!seen_hashes.insert(inv.hash).second) continue;
                 const GenTxid gtxid = ToGenTxid(inv);
