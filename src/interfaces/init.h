@@ -41,7 +41,7 @@ public:
     virtual Ipc* ipc() { return nullptr; }
     virtual bool canListenIpc() { return false; }
     virtual const char* exeName() { return nullptr; }
-    virtual void makeMiningOld2() { throw std::runtime_error("Old mining interface (@2) not supported. Please update your client!"); }
+    [[noreturn]] virtual void makeMiningOld2() { throw std::runtime_error("Old mining interface (@2) not supported. Please update your client!"); }
 };
 
 //! Return implementation of Init interface for the node process. If the argv
