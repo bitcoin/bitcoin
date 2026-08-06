@@ -332,7 +332,7 @@ public:
     }
 
     const Txid& GetHash() const LIFETIMEBOUND { return hash; }
-    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return m_witness_hash; };
+    const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return m_witness_hash; }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;

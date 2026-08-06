@@ -38,7 +38,7 @@ public:
         std::string json{value.write()};
         BOOST_CHECK_EQUAL(json, m_json);
         return json == m_json;
-    };
+    }
 
 private:
     const std::string m_json;

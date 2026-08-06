@@ -27,7 +27,7 @@ CKey ParseHexToCKey(std::string_view hex) {
     std::vector<unsigned char> hex_data = ParseHex(hex);
     output.Set(hex_data.begin(), hex_data.end(), true);
     return output;
-};
+}
 
 BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
 {

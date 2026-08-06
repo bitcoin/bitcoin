@@ -47,7 +47,7 @@ public:
     bool reserve(bool with_passphrase = false);
     bool isReserved() const;
 
-    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); };
+    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); }
 
     void setNow(NowFn now) { m_now = std::move(now); }
 
