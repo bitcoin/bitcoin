@@ -197,7 +197,7 @@ static bool read_file(fs::path p, std::vector<uint8_t>& data)
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
 static fs::path g_input_path;
-void signal_handler(int signal)
+[[noreturn]] void signal_handler(int signal)
 {
     if (signal == SIGABRT) {
         std::cerr << "Error processing input " << g_input_path << std::endl;

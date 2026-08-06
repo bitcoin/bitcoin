@@ -745,7 +745,7 @@ public:
     err_wr_pipe_(err_wr_pipe)
   {}
 
-  void execute_child();
+  [[noreturn]] void execute_child();
 
 private:
   // Lets call it parent even though
