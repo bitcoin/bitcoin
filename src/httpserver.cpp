@@ -1016,6 +1016,11 @@ void HTTPServer::ThreadSocketHandler()
 
 void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
 {
+    // If we are already handling a request from
+    // this client, do nothing. We'll check again on the next I/O
+    // loop iteration.
+    if (client->m_req_busy) return;
+
     if (!client->m_req) {
         client->m_req = std::make_unique<HTTPRequest>(client);
     }
@@ -1048,12 +1053,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
         return;
     }
 
-    // If we are already handling a request from
-    // this client, do nothing. We'll check again on the next I/O
-    // loop iteration.
-    if (client->m_req_busy) return;
-
-    // Otherwise, if the request is ready, hand it to a worker.
+    // If the request is ready, hand it to a worker.
     if (client->m_req->GetState() == HTTPRequest::State::Complete) {
         LogDebug(
             BCLog::HTTP,
