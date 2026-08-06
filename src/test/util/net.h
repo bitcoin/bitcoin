@@ -200,7 +200,7 @@ public:
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
 private:
-    ZeroSock& operator=(Sock&& other) override;
+    [[noreturn]] ZeroSock& operator=(Sock&& other) override;
 };
 
 /**
@@ -225,7 +225,7 @@ public:
     }
 
 private:
-    StaticContentsSock& operator=(Sock&& other) override;
+    [[noreturn]] StaticContentsSock& operator=(Sock&& other) override;
 
     const std::string m_contents;
     mutable size_t m_consumed{0};
@@ -341,7 +341,7 @@ public:
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
 private:
-    DynSock& operator=(Sock&&) override;
+    [[noreturn]] DynSock& operator=(Sock&&) override;
 
     std::shared_ptr<Pipes> m_pipes;
     Queue* const m_accept_sockets;
