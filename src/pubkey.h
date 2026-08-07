@@ -19,12 +19,20 @@
 const unsigned int BIP32_EXTKEY_SIZE = 74;
 const unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
+using KeyFingerprint = std::array<unsigned char, 4>;
+
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID : public uint160
 {
 public:
     CKeyID() : uint160() {}
     explicit CKeyID(const uint160& in) : uint160(in) {}
+    KeyFingerprint fingerprint() const
+    {
+        KeyFingerprint ret;
+        std::copy_n(begin(), ret.size(), ret.begin());
+        return ret;
+    }
 };
 
 /** An encapsulated public key. */
@@ -334,7 +342,7 @@ public:
 struct CExtPubKey {
     unsigned char version[4];
     unsigned char nDepth;
-    unsigned char vchFingerprint[4];
+    KeyFingerprint fingerprint;
     unsigned int nChild;
     ChainCode chaincode;
     CPubKey pubkey;
@@ -342,7 +350,7 @@ struct CExtPubKey {
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
         return a.nDepth == b.nDepth &&
-            memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
+            a.fingerprint == b.fingerprint &&
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.pubkey == b.pubkey;
@@ -356,6 +364,11 @@ struct CExtPubKey {
             return false;
         }
         return a.chaincode < b.chaincode;
+    }
+
+    KeyFingerprint id_key_fingerprint() const
+    {
+        return pubkey.GetID().fingerprint();
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;

@@ -253,8 +253,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v\0wtf.b32.i2p"s));
 
     // I2P, valid but unsupported (56 Base32 characters)
-    // See "Encrypted LS with Base 32 Addresses" in
-    // https://geti2p.net/spec/encryptedleaseset.txt
+    // See https://i2p.net/en/docs/specs/b32encrypted
     BOOST_CHECK(
         !addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.b32.i2p"));
 

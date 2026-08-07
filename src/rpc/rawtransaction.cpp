@@ -216,6 +216,7 @@ static RPCMethod getrawtransaction()
     const std::vector<RPCResult> verbosity_1_block{
         {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
         {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
+        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Sigop-adjusted virtual size in bytes, present for mempool transactions."},
         {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
         {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
         {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
@@ -333,6 +334,15 @@ static RPCMethod getrawtransaction()
         LOCK(cs_main);
         blockindex = chainman.m_blockman.LookupBlockIndex(hash_block); // May be nullptr for mempool transactions
     }
+
+    // Add sigop-adjusted virtual size if the transaction exists in the mempool.
+    if (blockindex == nullptr && hash_block.IsNull() && node.mempool) {
+        auto info = node.mempool->info(tx->GetHash());
+        if (info.tx) {
+            result.pushKV("vsize_adjusted", info.vsize);
+        }
+    }
+
     if (verbosity == 1) {
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
@@ -1116,7 +1126,7 @@ static RPCMethod decodepsbt()
 
             UniValue keypath(UniValue::VOBJ);
             keypath.pushKV("xpub", EncodeBase58Check(ser_xpub));
-            keypath.pushKV("master_fingerprint", HexStr(std::span<unsigned char>(xpub_pair.first.fingerprint, xpub_pair.first.fingerprint + 4)));
+            keypath.pushKV("master_fingerprint", HexStr(xpub_pair.first.fingerprint));
             keypath.pushKV("path", WriteHDKeypath(xpub_pair.first.path));
             global_xpubs.push_back(std::move(keypath));
         }
@@ -1237,7 +1247,7 @@ static RPCMethod decodepsbt()
                 UniValue keypath(UniValue::VOBJ);
                 keypath.pushKV("pubkey", HexStr(entry.first));
 
-                keypath.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(entry.second.fingerprint)));
+                keypath.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(entry.second.fingerprint.data())));
                 keypath.pushKV("path", WriteHDKeypath(entry.second.path));
                 keypaths.push_back(std::move(keypath));
             }
@@ -1354,7 +1364,7 @@ static RPCMethod decodepsbt()
                 const auto& [leaf_hashes, origin] = leaf_origin;
                 UniValue path_obj(UniValue::VOBJ);
                 path_obj.pushKV("pubkey", HexStr(xonly));
-                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint)));
+                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint.data())));
                 path_obj.pushKV("path", WriteHDKeypath(origin.path));
                 UniValue leaf_hashes_arr(UniValue::VARR);
                 for (const auto& leaf_hash : leaf_hashes) {
@@ -1473,7 +1483,7 @@ static RPCMethod decodepsbt()
             for (auto entry : output.hd_keypaths) {
                 UniValue keypath(UniValue::VOBJ);
                 keypath.pushKV("pubkey", HexStr(entry.first));
-                keypath.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(entry.second.fingerprint)));
+                keypath.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(entry.second.fingerprint.data())));
                 keypath.pushKV("path", WriteHDKeypath(entry.second.path));
                 keypaths.push_back(std::move(keypath));
             }
@@ -1513,7 +1523,7 @@ static RPCMethod decodepsbt()
                 const auto& [leaf_hashes, origin] = leaf_origin;
                 UniValue path_obj(UniValue::VOBJ);
                 path_obj.pushKV("pubkey", HexStr(xonly));
-                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint)));
+                path_obj.pushKV("master_fingerprint", strprintf("%08x", ReadBE32(origin.fingerprint.data())));
                 path_obj.pushKV("path", WriteHDKeypath(origin.path));
                 UniValue leaf_hashes_arr(UniValue::VARR);
                 for (const auto& leaf_hash : leaf_hashes) {
@@ -2123,10 +2133,12 @@ RPCMethod descriptorprocesspsbt()
         sighash_type,
         finalize);
 
-    // Check whether or not all of the inputs are now signed
+    // Check whether or not all of the inputs are now correctly signed
     bool complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    const std::optional<PrecomputedTransactionData> txdata_opt{PrecomputePSBTData(psbtx)};
+    const PrecomputedTransactionData txdata{*CHECK_NONFATAL(txdata_opt)};
+    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+        complete = complete && PSBTInputSignedAndVerified(psbtx, i, &txdata);
     }
 
     DataStream ssTx{};

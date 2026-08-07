@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.22)
 set(input_variables
   PROJECT_SOURCE_DIR
   COPYRIGHT_HOLDERS
-  LCONVERT_EXECUTABLE
   LUPDATE_EXECUTABLE
   XGETTEXT_EXECUTABLE
 )
@@ -103,28 +102,13 @@ extract_strings("${PROJECT_SOURCE_DIR}/src/qt/bitcoinstrings.cpp"
 execute_process(
   COMMAND ${LUPDATE_EXECUTABLE}
     -no-obsolete
+    -sort-messages
     -I ${PROJECT_SOURCE_DIR}/src
-    -locations relative
+    -locations none
+    -target-language en
     ${ui_files}
     ${qt_translatable_sources}
     ${PROJECT_SOURCE_DIR}/src/qt/bitcoinstrings.cpp
     -ts ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.ts
   COMMAND_ERROR_IS_FATAL ANY
 )
-
-execute_process(
-  COMMAND ${LCONVERT_EXECUTABLE}
-    -drop-translations
-    -o ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf
-    -i ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.ts
-  COMMAND_ERROR_IS_FATAL ANY
-)
-
-file(READ "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" bitcoin_en)
-string(REPLACE "source-language=\"en\" target-language=\"en\""
-  "source-language=\"en\"" bitcoin_en "${bitcoin_en}"
-)
-string(REGEX REPLACE " *<target xml:space=\"preserve\"></target>\n"
-  "" bitcoin_en "${bitcoin_en}"
-)
-file(WRITE "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" "${bitcoin_en}")

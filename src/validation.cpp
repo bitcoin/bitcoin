@@ -995,8 +995,6 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     const Txid& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
-    CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-
     CTxMemPool::setEntries all_conflicts;
 
     // Calculate all conflicting entries and enforce Rule #5.
@@ -6268,7 +6266,7 @@ bool ChainstateManager::DeleteChainstate(Chainstate& chainstate)
     }
     std::unique_ptr<Chainstate> prev_chainstate{Assert(RemoveChainstate(chainstate))};
     Chainstate& curr_chainstate{CurrentChainstate()};
-    assert(prev_chainstate->m_mempool->size() == 0);
+    assert(!prev_chainstate->m_mempool || prev_chainstate->m_mempool->size() == 0);
     assert(!curr_chainstate.m_mempool);
     std::swap(curr_chainstate.m_mempool, prev_chainstate->m_mempool);
     return true;

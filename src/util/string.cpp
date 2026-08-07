@@ -17,42 +17,41 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
     in_out = std::regex_replace(in_out, std::regex(search), substitute);
 }
 
-LineReader::LineReader(std::span<const std::byte> buffer, size_t max_line_length)
-    : start(buffer.begin()), end(buffer.end()), max_line_length(max_line_length), it(buffer.begin()) {}
+LineReader::LineReader(std::string_view str, size_t max_line_length)
+    : m_str{str}, m_max_line_length{max_line_length}, m_it{str.begin()} {}
 
 std::optional<std::string_view> LineReader::ReadLine()
 {
-    if (it == end) {
+    if (m_it == m_str.end()) {
         return std::nullopt;
     }
 
-    auto line_start = it;
-    size_t count = 0;
-    while (it != end) {
+    const auto line_start = m_it;
+    while (m_it != m_str.end()) {
         // Read a character from the incoming buffer and increment the iterator
-        auto c = static_cast<char>(*it);
-        ++it;
-        ++count;
+        const bool new_line{*m_it == '\n'};
+        ++m_it;
         // If the character we just consumed was \n, the line is terminated.
         // The \n itself does not count against max_line_length.
-        if (c == '\n') {
-            const std::string_view untrimmed_line(reinterpret_cast<const char*>(std::to_address(line_start)), count);
-            std::string_view line = RemoveSuffixView(untrimmed_line, "\n");
-            return RemoveSuffixView(line, "\r");
+        if (new_line) {
+            std::string_view line{line_start, m_it - 1};
+            if (!line.empty() && line.back() == '\r')
+                line.remove_suffix(1);
+            return line;
         }
         // If the character we just consumed gives us a line length greater
         // than max_line_length, and we are not at the end of the line (or buffer) yet,
         // that means the line we are currently reading is too long, and we throw.
-        if (count > max_line_length) {
+        if (static_cast<size_t>(std::distance(line_start, m_it)) > m_max_line_length) {
             // Reset iterator
-            it = line_start;
+            m_it = line_start;
             throw std::runtime_error("max_line_length exceeded by LineReader");
         }
     }
     // End of buffer reached without finding a \n or exceeding max_line_length.
     // Reset the iterator so the rest of the buffer can be read granularly
     // with ReadLength() and return null to indicate a line was not found.
-    it = line_start;
+    m_it = line_start;
     return std::nullopt;
 }
 
@@ -61,18 +60,18 @@ std::string_view LineReader::ReadLength(size_t len)
 {
     if (len == 0) return {};
     if (Remaining() < len) throw std::runtime_error("Not enough data in buffer");
-    std::string_view out(reinterpret_cast<const char*>(std::to_address(it)), len);
-    it += len;
+    std::string_view out(std::to_address(m_it), len);
+    m_it += len;
     return out;
 }
 
 size_t LineReader::Remaining() const
 {
-    return std::distance(it, end);
+    return std::distance(m_it, m_str.end());
 }
 
 size_t LineReader::Consumed() const
 {
-    return std::distance(start, it);
+    return std::distance(m_str.begin(), m_it);
 }
 } // namespace util

@@ -372,7 +372,6 @@ static void run_scratch_tests(void) {
     size_t checkpoint;
     size_t checkpoint_2;
     secp256k1_scratch_space *scratch;
-    secp256k1_scratch_space local_scratch;
 
     /* Test public API */
     scratch = secp256k1_scratch_space_create(CTX, 1000);
@@ -412,16 +411,7 @@ static void run_scratch_tests(void) {
     CHECK_ERROR_VOID(CTX, secp256k1_scratch_apply_checkpoint(&CTX->error_callback, scratch, checkpoint_2)); /* checkpoint_2 is after checkpoint */
     CHECK_ERROR_VOID(CTX, secp256k1_scratch_apply_checkpoint(&CTX->error_callback, scratch, (size_t) -1)); /* this is just wildly invalid */
 
-    /* try to use badly initialized scratch space */
-    secp256k1_scratch_space_destroy(CTX, scratch);
-    memset(&local_scratch, 0, sizeof(local_scratch));
-    scratch = &local_scratch;
-    CHECK_ERROR(CTX, secp256k1_scratch_max_allocation(&CTX->error_callback, scratch, 0));
-    CHECK_ERROR(CTX, secp256k1_scratch_alloc(&CTX->error_callback, scratch, 500));
-    CHECK_ERROR_VOID(CTX, secp256k1_scratch_space_destroy(CTX, scratch));
-
     /* Test that large integers do not wrap around in a bad way */
-    scratch = secp256k1_scratch_space_create(CTX, 1000);
     /* Try max allocation with a large number of objects. Only makes sense if
      * ALIGNMENT is greater than 1 because otherwise the objects take no extra
      * space. */
@@ -434,6 +424,21 @@ static void run_scratch_tests(void) {
 
     /* cleanup */
     secp256k1_scratch_space_destroy(CTX, NULL); /* no-op */
+}
+
+/* try to use badly initialized scratch space */
+static void run_invalid_scratch_space_tests(void) {
+    secp256k1_scratch_space* scratch = checked_malloc(&CTX->error_callback, sizeof(*scratch));
+    size_t magic_size = sizeof(scratch->magic);
+    memset(scratch, 0, sizeof(*scratch));
+    /* catch accesses beyond the magic */
+    SECP256K1_CHECKMEM_UNDEFINE((unsigned char*)scratch + magic_size, sizeof(*scratch) - magic_size);
+
+    CHECK_ERROR(CTX, secp256k1_scratch_max_allocation(&CTX->error_callback, scratch, 0));
+    CHECK_ERROR(CTX, secp256k1_scratch_alloc(&CTX->error_callback, scratch, 500));
+    CHECK_ERROR_VOID(CTX, secp256k1_scratch_space_destroy(CTX, scratch));
+
+    free(scratch);
 }
 
 /* A compression function that does nothing */
@@ -3057,6 +3062,18 @@ static int fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe bn = *b;
     secp256k1_fe_normalize_weak(&an);
     return secp256k1_fe_equal(&an, &bn);
+}
+
+static void run_fe_equal_magnitude_boundaries(void) {
+    int i;
+    secp256k1_fe a, b;
+    for (i = 0; i < 100 * COUNT; ++i) {
+        testutil_random_fe(&a);
+        b = a;
+        testutil_random_fe_magnitude(&a, 1);
+        testutil_random_fe_magnitude(&b, 30);
+        CHECK(secp256k1_fe_equal(&a, &b));
+    }
 }
 
 static void run_field_convert(void) {
@@ -7710,6 +7727,10 @@ static void run_ecdsa_wycheproof(void) {
 # include "modules/ellswift/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+# include "modules/silentpayments/tests_impl.h"
+#endif
+
 static void run_secp256k1_memczero_test(void) {
     unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
     unsigned char buf2[sizeof(buf1)];
@@ -7935,6 +7956,7 @@ static const struct tf_test_entry tests_general[] = {
     CASE(all_static_context_tests),
     CASE(deprecated_context_flags_test),
     CASE(scratch_tests),
+    CASE(invalid_scratch_space_tests),
     CASE(plug_sha256_compression_tests),
     CASE(sha256_multi_block_compression_tests),
 };
@@ -7964,6 +7986,7 @@ static const struct tf_test_entry tests_scalar[] = {
 static const struct tf_test_entry tests_field[] = {
     CASE(field_half),
     CASE(field_misc),
+    CASE(fe_equal_magnitude_boundaries),
     CASE(field_convert),
     CASE(field_be32_overflow),
     CASE(fe_mul),
@@ -8048,6 +8071,9 @@ static const struct tf_test_module registry_modules[] = {
 #endif
 #ifdef ENABLE_MODULE_ELLSWIFT
     MAKE_TEST_MODULE(ellswift),
+#endif
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+    MAKE_TEST_MODULE(silentpayments),
 #endif
     MAKE_TEST_MODULE(utils),
 };

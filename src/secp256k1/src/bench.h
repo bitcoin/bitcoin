@@ -71,7 +71,7 @@ static void print_number(const int64_t x) {
         buffer[--ptr] = '-';
         g++;
     }
-    printf("%5.*s", g, &buffer[ptr]); /* Prints integer part */
+    printf("%8.*s", g, &buffer[ptr]); /* Prints integer part */
     printf("%-*s", FP_EXP, &buffer[ptr + g]); /* Prints fractional part */
 }
 
@@ -100,7 +100,7 @@ static void run_benchmark(char *name, void (*benchmark)(void*, int), void (*setu
         sum += total;
     }
     /* ',' is used as a column delimiter */
-    printf("%-30s, ", name);
+    printf("%-40s, ", name);
     print_number(min * FP_MULT / iter);
     printf("   , ");
     print_number(((sum * FP_MULT) / count) / iter);
@@ -167,7 +167,7 @@ static void print_output_table_header_row(void) {
     char* min_str = "    Min(us)    "; /* center alignment */
     char* avg_str = "    Avg(us)    ";
     char* max_str = "    Max(us)    ";
-    printf("%-30s,%-15s,%-15s,%-15s\n", bench_str, min_str, avg_str, max_str);
+    printf("%-40s,%-18s,%-18s,%-18s\n", bench_str, min_str, avg_str, max_str);
     printf("\n");
 }
 

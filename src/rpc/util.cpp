@@ -616,14 +616,16 @@ std::string RPCResults::ToDescriptionString() const
 {
     std::string result;
     for (const auto& r : m_results) {
-        if (r.m_type == RPCResult::Type::ANY) continue; // for testing only
+        Sections sections;
+        r.ToSections(sections);
+        // A result can be empty via HelpElisionSkip
+        if (sections.m_sections.empty()) continue;
+
         if (r.m_cond.empty()) {
             result += "\nResult:\n";
         } else {
             result += "\nResult (" + r.m_cond + "):\n";
         }
-        Sections sections;
-        r.ToSections(sections);
         result += sections.ToString();
     }
     return result;
@@ -1034,7 +1036,8 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
 
     switch (m_type) {
     case Type::ANY: {
-        NONFATAL_UNREACHABLE(); // Only for testing
+        sections.PushSection({indent + maybe_key + "xxx" + maybe_separator, Description("any")});
+        return;
     }
     case Type::NONE: {
         sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
@@ -1361,7 +1364,7 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         range.second = 0;
     }
     std::vector<CScript> ret;
-    for (int i = range.first; i <= range.second; ++i) {
+    for (int64_t i = range.first; i <= range.second; ++i) {
         for (const auto& desc : descs) {
             std::vector<CScript> scripts;
             if (!desc->Expand(i, provider, scripts, provider)) {

@@ -112,6 +112,7 @@ class TestNode():
         v2transport=False,
         uses_wallet=False,
         ipcbind=False,
+        use_gui=False,
     ):
         self.index = i
         self.datadir_path = datadir_path
@@ -125,6 +126,7 @@ class TestNode():
         self.binaries = binaries
         self.coverage_dir = coverage_dir
         self.cwd = cwd
+        self.use_gui = use_gui
         self.has_explicit_bind = False
         if extra_conf is not None:
             append_config(self.datadir_path, extra_conf)
@@ -138,7 +140,7 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = self.binaries.node_argv(need_ipc=ipcbind) + [
+        self.args = self.binaries.node_argv(need_ipc=ipcbind, use_gui=use_gui) + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
@@ -278,6 +280,25 @@ class TestNode():
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
+        if self.use_gui:
+            subp_env.setdefault("QT_QPA_PLATFORM", "minimal")
+            if platform.system() == "Darwin":
+                # QMacStyle assumes a Cocoa platform window, which the minimal platform
+                # does not provide. In particular, painting a QGroupBox can make Qt call
+                # addSubview: on an invalid native object (QTBUG-49686).
+                subp_env.setdefault("QT_STYLE_OVERRIDE", "fusion")
+            subp_env.setdefault("LC_ALL", "nl_NL.UTF-8") # Set language to try to trigger translation bugs
+            if sys.platform.startswith("linux") and "XDG_RUNTIME_DIR" not in subp_env:
+                # Qt prints warnings to stderr when XDG_RUNTIME_DIR is unset or has wrong
+                # permissions (e.g. in CI environments without a desktop session), which
+                # would cause tests to fail due to unexpected stderr output. The two
+                # warnings are:
+                #   "QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'"
+                #   "QStandardPaths: wrong permissions on runtime directory /path, 0755 instead of 0700"
+                # Use a dedicated subdirectory with the required 0700 permissions.
+                xdg_runtime_dir = self.datadir_path / "xdg_runtime"
+                xdg_runtime_dir.mkdir(mode=0o700, exist_ok=True)
+                subp_env["XDG_RUNTIME_DIR"] = str(xdg_runtime_dir)
         if env is not None:
             subp_env.update(env)
 
@@ -946,6 +967,13 @@ class TestNodeCLI():
             if match:
                 code, message = match.groups()
                 raise JSONRPCException(dict(code=int(code), message=message))
+            match = re.match(r'error: Server response: (.*)\n?$', cli_stderr)
+            if match:
+                message = match.group(1)
+                raise JSONRPCException(dict(
+                    code=-342,
+                    message=f"non-JSON HTTP response with '503 Service Unavailable' from server: {message}",
+                ), http_status=503)
             # Ignore cli_stdout, raise with cli_stderr
             raise subprocess.CalledProcessError(returncode, p_args, output=cli_stderr)
         try:

@@ -306,7 +306,7 @@ if __name__ == '__main__':
     for filename in sys.argv[1:]:
         binary = lief.parse(filename)
 
-        etype = binary.format
+        etype = binary.format # type: ignore[union-attr]
 
         failed: list[str] = []
         for (name, func) in CHECKS[etype]:

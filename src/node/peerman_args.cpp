@@ -24,6 +24,10 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
 
     if (auto value{argsman.GetBoolArg("-blocksonly")}) options.ignore_incoming_txs = *value;
 
+    if (auto value{argsman.GetIntArg("-txsendrate")}) {
+        options.tx_send_rate = uint32_t(std::clamp<int64_t>(*value, 1, 1000));
+    }
+
     if (auto value{argsman.GetBoolArg("-privatebroadcast")}) options.private_broadcast = *value;
 }
 

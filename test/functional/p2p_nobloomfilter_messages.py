@@ -11,7 +11,7 @@ Test that, when bloom filters are not enabled, peers are disconnected if:
 4. They send a p2p filterclear message
 """
 
-from test_framework.messages import msg_mempool, msg_filteradd, msg_filterload, msg_filterclear
+from test_framework.messages import msg_mempool, msg_filteradd, msg_filterload, msg_filterclear, CInv, MSG_FILTERED_BLOCK, msg_getdata
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -42,6 +42,10 @@ class P2PNoBloomFilterMessages(BitcoinTestFramework):
 
         self.log.info("Test that peer is disconnected if it sends a filterclear message")
         self.test_message_causes_disconnect(msg_filterclear())
+
+        self.log.info("Test that peer is disconnected if it requests a filtered block")
+        with self.nodes[0].assert_debug_log(['filtered block request received when NODE_BLOOM service disabled']):
+            self.test_message_causes_disconnect(msg_getdata([CInv(MSG_FILTERED_BLOCK, int(self.nodes[0].getbestblockhash(), 16))]))
 
 
 if __name__ == '__main__':

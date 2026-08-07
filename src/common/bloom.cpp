@@ -16,8 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <limits>
+#include <compare>
 #include <vector>
 
 static constexpr double LN2SQUARED = 0.4804530139182014246671025263266649717305529515945455;

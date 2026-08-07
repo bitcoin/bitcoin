@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <key.h>
+#include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
 #include <script/sign.h>
 #include <wallet/db.h>
@@ -79,6 +80,7 @@ extern const std::string POOL;
 extern const std::string PURPOSE;
 extern const std::string SETTINGS;
 extern const std::string TX;
+extern const std::string WTX_VARIANT;
 extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
@@ -100,9 +102,9 @@ public:
     int64_t m_next_external_index{0}; // Next index in the keypool to be used. Memory only.
     int64_t m_next_internal_index{0}; // Next index in the keypool to be used. Memory only.
 
-    static const int VERSION_HD_BASE        = 1;
-    static const int VERSION_HD_CHAIN_SPLIT = 2;
-    static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
+    static constexpr int VERSION_HD_BASE{1};
+    static constexpr int VERSION_HD_CHAIN_SPLIT{2};
+    static constexpr int CURRENT_VERSION{VERSION_HD_CHAIN_SPLIT};
     int nVersion;
 
     CHDChain() { SetNull(); }
@@ -136,10 +138,10 @@ public:
 class CKeyMetadata
 {
 public:
-    static const int VERSION_BASIC=1;
-    static const int VERSION_WITH_HDDATA=10;
-    static const int VERSION_WITH_KEY_ORIGIN = 12;
-    static const int CURRENT_VERSION=VERSION_WITH_KEY_ORIGIN;
+    static constexpr int VERSION_BASIC{1};
+    static constexpr int VERSION_WITH_HDDATA{10};
+    static constexpr int VERSION_WITH_KEY_ORIGIN{12};
+    static constexpr int CURRENT_VERSION{VERSION_WITH_KEY_ORIGIN};
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath. Still used to determine whether a key is a seed. Also kept for backwards compatibility
@@ -230,6 +232,7 @@ public:
 
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(Txid hash);
+    bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);

@@ -917,13 +917,11 @@ public:
         return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
     {
         if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        std::string reason;
-        std::string debug;
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, reason, debug);
+        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -1026,13 +1024,7 @@ public:
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
     {
-        auto block = std::make_shared<const CBlock>(block_in);
-        bool new_block;
-        const bool accepted = SubmitBlock(chainman(), block, &new_block, reason, debug);
-        // ProcessNewBlock() can accept and store a block before it is checked
-        // for validity. Treat duplicates as errors for mining clients, and only
-        // return success when validation completed without setting a reason.
-        return accepted && new_block && reason.empty();
+        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override

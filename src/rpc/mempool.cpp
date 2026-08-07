@@ -306,7 +306,11 @@ static RPCMethod testmempoolaccept()
                     {RPCResult::Type::STR, "package-error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
                     {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                        "If not present, the tx was not fully validated due to a failure in another tx in the list."},
-                    {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
+                    {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141 (only present when 'allowed' is true)."},
+                    {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+                                                                "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+                    {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141.\n"
+                                                                       "This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)."},
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
@@ -397,7 +401,9 @@ static RPCMethod testmempoolaccept()
                         // Only return the fee and vsize if the transaction would pass ATMP.
                         // These can be used to calculate the feerate.
                         result_inner.pushKV("allowed", true);
+                        result_inner.pushKV("vsize_adjusted", virtual_size);
                         result_inner.pushKV("vsize", virtual_size);
+                        result_inner.pushKV("vsize_bip141", GetVirtualTransactionSize(*tx));
                         UniValue fees(UniValue::VOBJ);
                         fees.pushKV("base", ValueFromAmount(fee));
                         fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
@@ -446,7 +452,11 @@ static std::vector<RPCResult> ClusterDescription()
 static std::vector<RPCResult> MempoolEntryDescription()
 {
     std::vector<RPCResult> list = {
-        RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+        "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+        {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141.\n"
+        "This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)."},
+        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141 (only present when 'allowed' is true)."},
         RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
         RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
@@ -530,7 +540,9 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     auto [ancestor_count, ancestor_size, ancestor_fees] = pool.CalculateAncestorData(e);
     auto [descendant_count, descendant_size, descendant_fees] = pool.CalculateDescendantData(e);
 
+    info.pushKV("vsize_adjusted", e.GetTxSize());
     info.pushKV("vsize", e.GetTxSize());
+    info.pushKV("vsize_bip141", GetVirtualTransactionSize(e.GetTx()));
     info.pushKV("weight", e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", e.GetHeight());
@@ -1232,7 +1244,8 @@ static std::vector<RPCResult> OrphanDescription()
         RPCResult{RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
         RPCResult{RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
         RPCResult{RPCResult::Type::NUM, "bytes", "The serialized transaction size in bytes"},
-        RPCResult{RPCResult::Type::NUM, "vsize", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "vsize", "(DEPRECATED) use vsize_bip141 instead. The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "vsize_bip141", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
         RPCResult{RPCResult::Type::NUM, "weight", "The transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::ARR, "from", "",
         {
@@ -1248,6 +1261,7 @@ static UniValue OrphanToJSON(const node::TxOrphanage::OrphanInfo& orphan)
     o.pushKV("wtxid", orphan.tx->GetWitnessHash().ToString());
     o.pushKV("bytes", orphan.tx->ComputeTotalSize());
     o.pushKV("vsize", GetVirtualTransactionSize(*orphan.tx));
+    o.pushKV("vsize_bip141", GetVirtualTransactionSize(*orphan.tx));
     o.pushKV("weight", GetTransactionWeight(*orphan.tx));
     UniValue from(UniValue::VARR);
     for (const auto fromPeer: orphan.announcers) {
@@ -1361,7 +1375,10 @@ static RPCMethod submitpackage()
                     {RPCResult::Type::OBJ, "wtxid", "transaction wtxid", {
                         {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                         {RPCResult::Type::STR_HEX, "other-wtxid", /*optional=*/true, "The wtxid of a different transaction with the same txid but different witness found in the mempool. This means the submitted transaction was ignored."},
-                        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Sigops-adjusted virtual transaction size."},
+                        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141."},
+                        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+                                                                    "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
+                        {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141."},
                         {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees", {
                             {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
                             {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/true, "if the transaction was not already in the mempool, the effective feerate in " + CURRENCY_UNIT + " per KvB. For example, the package feerate and/or feerate with modified fees from prioritisetransaction."},
@@ -1509,7 +1526,9 @@ static RPCMethod submitpackage()
                     break;
                 case MempoolAcceptResult::ResultType::VALID:
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
+                    result_inner.pushKV("vsize_adjusted", it->second.m_vsize.value());
                     result_inner.pushKV("vsize", it->second.m_vsize.value());
+                    result_inner.pushKV("vsize_bip141", GetVirtualTransactionSize(*tx));
                     UniValue fees(UniValue::VOBJ);
                     fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
                     if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {

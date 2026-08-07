@@ -28,6 +28,7 @@ TEST_FRAMEWORK_MODULES = [
     "crypto.poly1305",
     "crypto.ripemd160",
     "crypto.secp256k1",
+    "crypto.siphash",
     "script",
     "script_util",
     "segwit_addr",

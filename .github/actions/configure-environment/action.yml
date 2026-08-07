@@ -7,7 +7,9 @@ runs:
       shell: bash
       run: |
         echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
-        echo "BASE_BUILD_DIR=${{ runner.temp }}/build" >> "$GITHUB_ENV"
+        # Space and non-ASCII symbols mimic BASE_SCRATCH_DIR in ci/test/00_setup_env.sh,
+        # to test word-splitting and UTF-8 path handling on CI.
+        echo "BASE_BUILD_DIR=${{ runner.temp }}/build_ ₿🧪_" >> "$GITHUB_ENV"
         echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> $GITHUB_ENV
         echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> "$GITHUB_ENV"
         echo "BASE_CACHE=${{ runner.temp }}/depends/built" >> $GITHUB_ENV

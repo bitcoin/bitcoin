@@ -295,6 +295,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
         assert_raises_rpc_error(-8, "Unknown named parameter foo", self.nodes[2].fundrawtransaction, rawtx, foo='bar')
+        assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type object", self.nodes[2].fundrawtransaction, rawtx, True)
 
         # reserveChangeKey was deprecated and is now removed
         assert_raises_rpc_error(-8, "Unknown named parameter reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, reserveChangeKey=True))
@@ -762,8 +763,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         }]
         wwatch.importdescriptors(desc_import)
 
-        # Backward compatibility test (2nd params is includeWatching)
-        result = wwatch.fundrawtransaction(rawtx, True)
+        result = wwatch.fundrawtransaction(rawtx)
         res_dec = self.nodes[0].decoderawtransaction(result["hex"])
         assert_equal(len(res_dec["vin"]), 1)
         assert_equal(res_dec["vin"][0]["txid"], self.watchonly_utxo['txid'])

@@ -16,6 +16,13 @@ static SECP256K1_INLINE int secp256k1_xonly_pubkey_load(const secp256k1_context*
 }
 
 static SECP256K1_INLINE void secp256k1_xonly_pubkey_save(secp256k1_xonly_pubkey *pubkey, secp256k1_ge *ge) {
+#ifdef VERIFY
+    /* ensure that the group element's Y coordinate is even, as per definition of x-only public keys */
+    secp256k1_fe y = ge->y;
+    secp256k1_fe_normalize_var(&y);
+    VERIFY_CHECK(!secp256k1_fe_is_odd(&y));
+#endif
+
     secp256k1_pubkey_save((secp256k1_pubkey *) pubkey, ge);
 }
 

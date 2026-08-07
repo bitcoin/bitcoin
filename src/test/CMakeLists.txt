@@ -149,6 +149,7 @@ target_json_data_sources(test_bitcoin
   data/key_io_valid.json
   data/script_tests.json
   data/sighash.json
+  data/siphash.json
   data/tx_invalid.json
   data/tx_valid.json
 )
@@ -169,14 +170,6 @@ target_link_libraries(test_bitcoin
   Boost::headers
   $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
-
-if(ENABLE_WALLET)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test wallet)
-endif()
-
-if(ENABLE_IPC)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/src/ipc/test ipc)
-endif()
 
 function(add_boost_test source_file)
   if(NOT EXISTS ${source_file})
@@ -199,7 +192,6 @@ function(add_boost_test source_file)
       SKIP_REGULAR_EXPRESSION
         "no test cases matching filter"
         "skipping script_assets_test"
-        "skipping total_ram"
     )
   endforeach()
 endfunction()
@@ -215,6 +207,14 @@ function(add_all_test_targets)
     add_boost_test(${test_source})
   endforeach()
 endfunction()
+
+if(ENABLE_WALLET)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test wallet)
+endif()
+
+if(ENABLE_IPC)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/ipc/test ipc)
+endif()
 
 add_all_test_targets()
 

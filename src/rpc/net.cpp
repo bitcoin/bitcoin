@@ -47,6 +47,7 @@
 
 using node::NodeContext;
 using util::Join;
+using util::TrimStringView;
 
 const std::vector<std::string> CONNECTION_TYPE_DOC{
         "outbound-full-relay (default automatic connections)",
@@ -348,6 +349,11 @@ static RPCMethod addnode()
     CConnman& connman = EnsureConnman(node);
 
     const auto node_arg{self.Arg<std::string_view>("node")};
+    if (TrimStringView(node_arg).empty()) {
+        // Such a node would never resolve, but would be retried indefinitely.
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Node address cannot be empty");
+    }
+
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 
@@ -659,6 +665,16 @@ static RPCMethod getnetworkinfo()
                         }},
                         {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
                         {RPCResult::Type::NUM, "timeoffset", "the time offset"},
+                        {RPCResult::Type::NUM, "tx_send_rate", "configured target for maximum number of transactions per second to send to inbound peers"},
+                        {RPCResult::Type::OBJ_DYN, "inv_buckets", "", {
+                          {RPCResult::Type::OBJ, "inbound/outbound", "connection direction",
+                            {
+                                {RPCResult::Type::NUM, "backlog", "number of queued txs to announce"},
+                                {RPCResult::Type::NUM, "count_tok", "tokens available to be consumed per-transaction"},
+                                {RPCResult::Type::NUM, "size_tok", "tokens available to be consumed per-byte"},
+                            }
+                          }
+                        }},
                         {RPCResult::Type::NUM, "connections", "the total number of connections"},
                         {RPCResult::Type::NUM, "connections_in", "the number of inbound connections"},
                         {RPCResult::Type::NUM, "connections_out", "the number of outbound connections"},
@@ -716,6 +732,18 @@ static RPCMethod getnetworkinfo()
         auto peerman_info{node.peerman->GetInfo()};
         obj.pushKV("localrelay", !peerman_info.ignores_incoming_txs);
         obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(peerman_info.median_outbound_time_offset));
+        obj.pushKV("tx_send_rate", peerman_info.tx_send_rate);
+        auto buckjson = [&](const auto& buckinfo) {
+            UniValue b{UniValue::VOBJ};
+            b.pushKV("backlog", buckinfo.backlog_count);
+            b.pushKV("count_tok", buckinfo.count_bucket);
+            b.pushKV("size_tok", buckinfo.size_bucket);
+            return b;
+        };
+        UniValue invbuckets{UniValue::VOBJ};
+        invbuckets.pushKV("inbound", buckjson(peerman_info.inbound_bucket));
+        invbuckets.pushKV("outbound", buckjson(peerman_info.outbound_bucket));
+        obj.pushKV("inv_buckets", invbuckets);
     }
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());

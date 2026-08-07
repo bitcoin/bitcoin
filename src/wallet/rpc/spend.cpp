@@ -347,13 +347,15 @@ RPCMethod sendmany()
                     {"dummy", RPCArg::Type::STR, RPCArg::Default{"\"\""}, "Must be set to \"\" for backwards compatibility.",
                      RPCArgOptions{
                          .oneline_description = "\"\"",
+                         .placeholder = true,
                      }},
                     {"amounts", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::NO, "The addresses and amounts",
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
                         },
                     },
-                    {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ignored dummy value"},
+                    {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ignored dummy value",
+                        RPCArgOptions{.placeholder = true}},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses.\n"
                                        "The fee will be equally deducted from the amount of each selected address.\n"
@@ -484,10 +486,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
     std::optional<unsigned int> change_position;
     bool lockUnspents = false;
     if (!options.isNull()) {
-        if (options.type() == UniValue::VBOOL) {
-            // backward compatibility bool only fallback, does nothing
-        } else {
-            RPCTypeCheckObj(options,
+        RPCTypeCheckObj(options,
                 {
                     {"add_inputs", UniValueType(UniValue::VBOOL)},
                     {"include_unsafe", UniValueType(UniValue::VBOOL)},
@@ -519,83 +518,82 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 },
                 true, true);
 
-            if (options.exists("add_inputs")) {
-                coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
-            }
-
-            if (options.exists("changeAddress") || options.exists("change_address")) {
-                const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
-                CTxDestination dest = DecodeDestination(change_address_str);
-
-                if (!IsValidDestination(dest)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
-                }
-
-                coinControl.destChange = dest;
-            }
-
-            if (options.exists("changePosition") || options.exists("change_position")) {
-                int pos = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
-                if (pos < 0 || (unsigned int)pos > recipients.size()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
-                }
-                change_position = (unsigned int)pos;
-            }
-
-            if (options.exists("change_type")) {
-                if (options.exists("changeAddress") || options.exists("change_address")) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
-                }
-                if (std::optional<OutputType> parsed = ParseOutputType(options["change_type"].get_str())) {
-                    coinControl.m_change_type.emplace(parsed.value());
-                } else {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
-                }
-            }
-
-            if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
-                lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
-            }
-
-            if (options.exists("include_unsafe")) {
-                coinControl.m_include_unsafe_inputs = options["include_unsafe"].get_bool();
-            }
-
-            if (options.exists("feeRate")) {
-                if (options.exists("fee_rate")) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both fee_rate (" + CURRENCY_ATOM + "/vB) and feeRate (" + CURRENCY_UNIT + "/kvB)");
-                }
-                if (options.exists("conf_target")) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
-                }
-                if (options.exists("estimate_mode")) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
-                }
-                coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
-                coinControl.fOverrideFeeRate = true;
-            }
-
-            if (options.exists("replaceable")) {
-                coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
-            }
-
-            if (options.exists("minconf")) {
-                coinControl.m_min_depth = options["minconf"].getInt<int>();
-
-                if (coinControl.m_min_depth < 0) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
-                }
-            }
-
-            if (options.exists("maxconf")) {
-                coinControl.m_max_depth = options["maxconf"].getInt<int>();
-
-                if (coinControl.m_max_depth < coinControl.m_min_depth) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconf can't be lower than minconf: %d < %d", coinControl.m_max_depth, coinControl.m_min_depth));
-                }
-            }
-            SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
+        if (options.exists("add_inputs")) {
+            coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
         }
+
+        if (options.exists("changeAddress") || options.exists("change_address")) {
+            const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
+            CTxDestination dest = DecodeDestination(change_address_str);
+
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
+            }
+
+            coinControl.destChange = dest;
+        }
+
+        if (options.exists("changePosition") || options.exists("change_position")) {
+            int pos = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
+            if (pos < 0 || (unsigned int)pos > recipients.size()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
+            }
+            change_position = (unsigned int)pos;
+        }
+
+        if (options.exists("change_type")) {
+            if (options.exists("changeAddress") || options.exists("change_address")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
+            }
+            if (std::optional<OutputType> parsed = ParseOutputType(options["change_type"].get_str())) {
+                coinControl.m_change_type.emplace(parsed.value());
+            } else {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
+            }
+        }
+
+        if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
+            lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
+        }
+
+        if (options.exists("include_unsafe")) {
+            coinControl.m_include_unsafe_inputs = options["include_unsafe"].get_bool();
+        }
+
+        if (options.exists("feeRate")) {
+            if (options.exists("fee_rate")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both fee_rate (" + CURRENCY_ATOM + "/vB) and feeRate (" + CURRENCY_UNIT + "/kvB)");
+            }
+            if (options.exists("conf_target")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
+            }
+            if (options.exists("estimate_mode")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+            }
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.fOverrideFeeRate = true;
+        }
+
+        if (options.exists("replaceable")) {
+            coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
+        }
+
+        if (options.exists("minconf")) {
+            coinControl.m_min_depth = options["minconf"].getInt<int>();
+
+            if (coinControl.m_min_depth < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
+            }
+        }
+
+        if (options.exists("maxconf")) {
+            coinControl.m_max_depth = options["maxconf"].getInt<int>();
+
+            if (coinControl.m_max_depth < coinControl.m_min_depth) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconf can't be lower than minconf: %d < %d", coinControl.m_max_depth, coinControl.m_min_depth));
+            }
+        }
+        SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
     }
 
     if (options.exists("solving_data")) {
@@ -772,7 +770,6 @@ RPCMethod fundrawtransaction()
                         },
                         FundTxDoc()),
                         RPCArgOptions{
-                            .skip_type_check = true,
                             .oneline_description = "options",
                         }},
                     {"iswitness", RPCArg::Type::BOOL, RPCArg::DefaultHint{"depends on heuristic tests"}, "Whether the transaction hex is a serialized witness transaction.\n"
@@ -1478,17 +1475,17 @@ RPCMethod sendall()
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not available. UTXO (%s:%d) was already spent.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     const CWalletTx* tx{pwallet->GetWalletTx(input.prevout.hash)};
-                    if (!tx || input.prevout.n >= tx->tx->vout.size() || !pwallet->IsMine(tx->tx->vout[input.prevout.n])) {
+                    if (!tx || input.prevout.n >= tx->GetTx()->vout.size() || !pwallet->IsMine(tx->GetTx()->vout[input.prevout.n])) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not found. UTXO (%s:%d) is not part of wallet.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     if (pwallet->GetTxDepthInMainChain(*tx) == 0) {
-                        if (tx->tx->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
+                        if (tx->GetTx()->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
                             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Can't spend unconfirmed version 3 pre-selected input with a version %d tx", coin_control.m_version));
-                        } else if (coin_control.m_version == TRUC_VERSION && tx->tx->version != TRUC_VERSION) {
-                            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Can't spend unconfirmed version %d pre-selected input with a version 3 tx", tx->tx->version));
+                        } else if (coin_control.m_version == TRUC_VERSION && tx->GetTx()->version != TRUC_VERSION) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Can't spend unconfirmed version %d pre-selected input with a version 3 tx", tx->GetTx()->version));
                         }
                     }
-                    total_input_value += tx->tx->vout[input.prevout.n].nValue;
+                    total_input_value += tx->GetTx()->vout[input.prevout.n].nValue;
                 }
             } else {
                 CoinFilterParams coins_params;

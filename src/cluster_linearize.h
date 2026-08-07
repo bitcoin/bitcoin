@@ -954,11 +954,16 @@ private:
         Assume(m_chunk_idxs[bottom_idx]);
         auto& top_chunk_info = m_set_info[top_idx];
         auto& bottom_chunk_info = m_set_info[bottom_idx];
-        // Count the number of dependencies between bottom_chunk and top_chunk.
+        // Count the number of dependencies between bottom_chunk and top_chunk, remembering the
+        // per-transaction counts so the picking loop below does not need to recompute the
+        // intersections.
         unsigned num_deps{0};
+        std::array<SetIdx, SetType::Size()> counts;
         for (auto tx_idx : top_chunk_info.transactions) {
             auto& tx_data = m_tx_data[tx_idx];
-            num_deps += (tx_data.children & bottom_chunk_info.transactions).Count();
+            auto count = (tx_data.children & bottom_chunk_info.transactions).Count();
+            counts[tx_idx] = count;
+            num_deps += count;
         }
         m_cost.MergeChunksMid(/*num_txns=*/top_chunk_info.transactions.Count());
         Assume(num_deps > 0);
@@ -967,10 +972,10 @@ private:
         unsigned num_steps = 0;
         for (auto tx_idx : top_chunk_info.transactions) {
             ++num_steps;
-            auto& tx_data = m_tx_data[tx_idx];
-            auto intersect = tx_data.children & bottom_chunk_info.transactions;
-            auto count = intersect.Count();
+            auto count = counts[tx_idx];
             if (pick < count) {
+                auto& tx_data = m_tx_data[tx_idx];
+                auto intersect = tx_data.children & bottom_chunk_info.transactions;
                 for (auto child_idx : intersect) {
                     if (pick == 0) {
                         m_cost.MergeChunksEnd(/*num_steps=*/num_steps);
@@ -1183,6 +1188,7 @@ public:
         m_tx_data.resize(depgraph.PositionRange());
         m_set_info.resize(num_transactions);
         m_reachable.resize(num_transactions);
+        m_suboptimal_chunks.reserve(num_transactions);
         size_t num_chunks = 0;
         size_t num_deps = 0;
         for (auto tx_idx : m_transaction_idxs) {
@@ -1471,16 +1477,22 @@ public:
         /** A heap with all chunks (by set index) that can currently be included, sorted by
          *  chunk feerate (high to low), chunk size (small to large), and by least maximum element
          *  according to the fallback order (which is the second pair element). */
-        std::vector<std::pair<SetIdx, TxIdx>> ready_chunks;
+        std::array<std::pair<SetIdx, TxIdx>, SetType::Size()> ready_chunks;
+        /** The number of entries of ready_chunks in use. */
+        unsigned num_ready_chunks{0};
         /** For every chunk, indexed by SetIdx, the number of unmet dependencies the chunk has on
          *  other chunks (not including dependencies within the chunk itself). */
-        std::vector<TxIdx> chunk_deps(m_set_info.size(), 0);
+        std::array<TxIdx, SetType::Size()> chunk_deps;
+        std::fill_n(chunk_deps.begin(), m_set_info.size(), TxIdx{0});
         /** For every transaction, indexed by TxIdx, the number of unmet dependencies the
          *  transaction has. */
-        std::vector<TxIdx> tx_deps(m_tx_data.size(), 0);
+        std::array<TxIdx, SetType::Size()> tx_deps;
+        std::fill_n(tx_deps.begin(), m_tx_data.size(), TxIdx{0});
         /** A heap with all transactions within the current chunk that can be included, sorted by
          *  tx feerate (high to low), tx size (small to large), and fallback order. */
-        std::vector<TxIdx> ready_tx;
+        std::array<TxIdx, SetType::Size()> ready_tx;
+        /** The number of entries of ready_tx in use. */
+        unsigned num_ready_tx{0};
         // Populate chunk_deps and tx_deps.
         unsigned num_deps{0};
         for (TxIdx chl_idx : m_transaction_idxs) {
@@ -1549,31 +1561,31 @@ public:
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
         for (SetIdx chunk_idx : m_chunk_idxs) {
             if (chunk_deps[chunk_idx] == 0) {
-                ready_chunks.emplace_back(chunk_idx, max_fallback_fn(chunk_idx));
+                ready_chunks[num_ready_chunks++] = {chunk_idx, max_fallback_fn(chunk_idx)};
             }
         }
-        std::make_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
+        std::make_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
         // Pop chunks off the heap.
-        while (!ready_chunks.empty()) {
+        while (num_ready_chunks > 0) {
             auto [chunk_idx, _rnd] = ready_chunks.front();
-            std::pop_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
-            ready_chunks.pop_back();
+            std::pop_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
+            --num_ready_chunks;
             Assume(chunk_deps[chunk_idx] == 0);
             const auto& chunk_txn = m_set_info[chunk_idx].transactions;
             // Build heap of all includable transactions in chunk.
-            Assume(ready_tx.empty());
+            Assume(num_ready_tx == 0);
             for (TxIdx tx_idx : chunk_txn) {
-                if (tx_deps[tx_idx] == 0) ready_tx.push_back(tx_idx);
+                if (tx_deps[tx_idx] == 0) ready_tx[num_ready_tx++] = tx_idx;
             }
-            Assume(!ready_tx.empty());
-            std::make_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
+            Assume(num_ready_tx > 0);
+            std::make_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
             // Pick transactions from the ready heap, append them to linearization, and decrement
             // dependency counts.
-            while (!ready_tx.empty()) {
+            while (num_ready_tx > 0) {
                 // Pop an element from the tx_ready heap.
                 auto tx_idx = ready_tx.front();
-                std::pop_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
-                ready_tx.pop_back();
+                std::pop_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
+                --num_ready_tx;
                 // Append to linearization.
                 ret.push_back(tx_idx);
                 // Decrement dependency counts.
@@ -1584,16 +1596,16 @@ public:
                     Assume(tx_deps[chl_idx] > 0);
                     if (--tx_deps[chl_idx] == 0 && chunk_txn[chl_idx]) {
                         // Child tx has no dependencies left, and is in this chunk. Add it to the tx heap.
-                        ready_tx.push_back(chl_idx);
-                        std::push_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
+                        ready_tx[num_ready_tx++] = chl_idx;
+                        std::push_heap(ready_tx.begin(), ready_tx.begin() + num_ready_tx, tx_cmp_fn);
                     }
                     // Decrement chunk dependency count if this is out-of-chunk dependency.
                     if (chl_data.chunk_idx != chunk_idx) {
                         Assume(chunk_deps[chl_data.chunk_idx] > 0);
                         if (--chunk_deps[chl_data.chunk_idx] == 0) {
                             // Child chunk has no dependencies left. Add it to the chunk heap.
-                            ready_chunks.emplace_back(chl_data.chunk_idx, max_fallback_fn(chl_data.chunk_idx));
-                            std::push_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
+                            ready_chunks[num_ready_chunks++] = {chl_data.chunk_idx, max_fallback_fn(chl_data.chunk_idx)};
+                            std::push_heap(ready_chunks.begin(), ready_chunks.begin() + num_ready_chunks, chunk_cmp_fn);
                         }
                     }
                 }

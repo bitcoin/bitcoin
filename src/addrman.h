@@ -16,7 +16,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -73,10 +72,7 @@ struct AddressPosition {
     const int bucket;
     const int position;
 
-    bool operator==(AddressPosition other) {
-        return std::tie(tried, multiplicity, bucket, position) ==
-               std::tie(other.tried, other.multiplicity, other.bucket, other.position);
-    }
+    bool operator==(const AddressPosition&) const = default;
     explicit AddressPosition(bool tried_in, int multiplicity_in, int bucket_in, int position_in)
         : tried{tried_in}, multiplicity{multiplicity_in}, bucket{bucket_in}, position{position_in} {}
 };

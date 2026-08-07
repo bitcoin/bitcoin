@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <compressor.h>
 #include <core_memusage.h>
+#include <crypto/siphash.h>
 #include <memusage.h>
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
@@ -18,7 +19,6 @@
 #include <util/check.h>
 #include <util/log.h>
 #include <util/overflow.h>
-#include <util/hasher.h>
 
 #include <cassert>
 #include <cstdint>
@@ -220,6 +220,43 @@ public:
 };
 
 /**
+ * SipHash-1-3-UJ based hasher for the coins cache and related coins containers.
+ *
+ * Retained entries identify real transaction outputs, so their keys contain computed txids.
+ * Missing-input lookups may contain arbitrary claimed prevouts, but FetchCoin() immediately
+ * erases their temporary entries when the backend lookup fails, so non-hash keys cannot
+ * accumulate.
+ *
+ * The assumeutxo loader assumes snapshot txids are valid while loading and verifies the
+ * complete snapshot's content hash before activation.
+ *
+ * Hash values are process-local and must not be persisted, serialized, or compared across
+ * processes.
+ *
+ * Having the hash noexcept lets libstdc++ recalculate it during rehash instead of storing it in
+ * each node.
+ */
+class SaltedCoinsCacheHasher
+{
+    const SipHasher13UJ m_hasher;
+
+public:
+    SaltedCoinsCacheHasher(bool deterministic = false);
+
+    /** Hash a transaction ID, itself a cryptographic hash, as one jumbo block. */
+    size_t operator()(const Txid& id) const noexcept
+    {
+        return m_hasher.Hash(id.ToUint256());
+    }
+
+    /** Hash an outpoint as its txid jumbo block followed by the zero-extended index as one normal block. */
+    size_t operator()(const COutPoint& id) const noexcept
+    {
+        return m_hasher.Hash(id.hash.ToUint256(), uint64_t{id.n});
+    }
+};
+
+/**
  * PoolAllocator's MAX_BLOCK_SIZE_BYTES parameter here uses sizeof the data, and adds the size
  * of 4 pointers. We do not know the exact node size used in the std::unordered_node implementation
  * because it is implementation defined. Most implementations have an overhead of 1 or 2 pointers,
@@ -229,7 +266,7 @@ public:
  */
 using CCoinsMap = std::unordered_map<COutPoint,
                                      CCoinsCacheEntry,
-                                     SaltedOutpointHasher,
+                                     SaltedCoinsCacheHasher,
                                      std::equal_to<COutPoint>,
                                      PoolAllocator<CoinsCachePair,
                                                    sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
@@ -401,6 +438,19 @@ class CCoinsViewCache : public CCoinsViewBacked
 private:
     const bool m_deterministic;
 
+    //! Force a reallocation of the cache map. This is required when downsizing
+    //! the cache because the map's allocator may be hanging onto a lot of
+    //! memory despite having called .clear().
+    //!
+    //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
+    void ReallocateCache();
+
+    /**
+     * @note this is marked const, but may actually append to `cacheCoins`, increasing
+     * memory usage.
+     */
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
@@ -518,13 +568,6 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
-    //! Force a reallocation of the cache map. This is required when downsizing
-    //! the cache because the map's allocator may be hanging onto a lot of
-    //! memory despite having called .clear().
-    //!
-    //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
-    void ReallocateCache();
-
     //! Run an internal sanity check on the cache data structure. */
     void SanityCheck() const;
 
@@ -546,13 +589,6 @@ public:
 
     //! Create a scoped guard that will call `Reset()` on this cache when it goes out of scope.
     [[nodiscard]] ResetGuard CreateResetGuard() noexcept { return ResetGuard{*this}; }
-
-private:
-    /**
-     * @note this is marked const, but may actually append to `cacheCoins`, increasing
-     * memory usage.
-     */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 };
 
 /**

@@ -4,20 +4,20 @@ It is possible to run Bitcoin Core as an
 [I2P (Invisible Internet Project)](https://en.wikipedia.org/wiki/I2P)
 service and connect to such services.
 
-This [glossary](https://geti2p.net/en/about/glossary) may be useful to get
+This [glossary](https://i2p.net/en/docs/overview/glossary) may be useful to get
 started with I2P terminology.
 
 ## Run Bitcoin Core with an I2P router (proxy)
 
-A running I2P router (proxy) is required with the [SAM](https://geti2p.net/en/docs/api/samv3)
+A running I2P router (proxy) is required with the [SAM](https://i2p.net/en/docs/api/samv3)
 application bridge enabled. The following routers are recommended for use with Bitcoin Core:
 
-- [i2prouter (I2P Router)](https://geti2p.net), the official implementation in
+- [i2prouter (I2P Router)](https://i2p.net), the official implementation in
   Java. The SAM bridge is not enabled by default; it must be started manually,
   or configured to start automatically, in the Clients page in the
   router console (`http://127.0.0.1:7657/configclients`) or in the `clients.config` file.
 - [i2pd (I2P Daemon)](https://github.com/PurpleI2P/i2pd)
-  ([documentation](https://i2pd.readthedocs.io/en/latest)), a lighter
+  ([documentation](https://docs.i2pd.website/en/latest)), a lighter
   alternative in C++. It enables the SAM bridge by default.
 
 Note the IP address and port the SAM proxy is listening to; usually, it is
@@ -113,7 +113,7 @@ You can use the `getnodeaddresses` RPC to fetch a number of I2P peers known to y
 
 ## Compatibility
 
-Bitcoin Core uses the [SAM v3.1](https://geti2p.net/en/docs/api/samv3) protocol
+Bitcoin Core uses the [SAM v3.1](https://i2p.net/en/docs/api/samv3) protocol
 to connect to the I2P network. Any I2P router that supports it can be used.
 
 ## Ports in I2P and Bitcoin Core
@@ -158,13 +158,13 @@ Similar bandwidth configuration options for the Java I2P router can be found in
 `http://127.0.0.1:7657/config` under the "Bandwidth" tab.
 
 Before doing this, please see the "Participating Traffic Considerations" section
-in [Embedding I2P in your Application](https://geti2p.net/en/docs/applications/embedding).
+in [Embedding I2P in your Application](https://i2p.net/en/docs/applications/embedding).
 
 In most cases, the default router settings should work fine.
 
 ## Bundling I2P in a Bitcoin application
 
-Please see the "General Guidance for Developers" section in https://geti2p.net/en/docs/api/samv3
+Please see the "General Guidance for Developers" section in https://i2p.net/en/docs/api/samv3
 if you are developing a downstream application that may be bundling I2P with Bitcoin.
 
 ## Privacy recommendations

@@ -216,6 +216,11 @@ public:
     }
 
     /**
+     * Parse the user's -rpcallowip settings and populate m_allow_subnets
+     */
+    bool InitHTTPAllowList();
+
+    /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
      * @param[in] to Where to bind.
      * @returns {} or the reason for failure.
@@ -377,6 +382,16 @@ private:
     std::chrono::seconds m_rpcservertimeout{DEFAULT_HTTP_SERVER_TIMEOUT};
 
     /**
+     * List of subnets to allow HTTP connections from
+     */
+    std::vector<CSubNet> m_allow_subnets;
+
+    /**
+     * Check an incoming connection's source IP against the allow list
+     */
+    bool ClientAllowed(const CNetAddr& netaddr) const;
+
+    /**
      * Accept a connection.
      * @param[in] listen_sock Socket on which to accept the connection.
      * @param[out] addr Address of the peer that was accepted.
@@ -461,7 +476,7 @@ public:
      * we copy data from the socket buffer to the client object
      * and attempt to read HTTP requests from here.
      */
-    std::vector<std::byte> m_recv_buffer{};
+    std::string m_recv_buffer{};
 
     //! Requests from a client must be processed in the order in which
     //! they were received, blocking on a per-client basis. We won't

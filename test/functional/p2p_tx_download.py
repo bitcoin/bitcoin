@@ -16,6 +16,7 @@ from test_framework.messages import (
     CInv,
     MSG_TX,
     MSG_TYPE_MASK,
+    MSG_WITNESS_TX,
     MSG_WTX,
     msg_inv,
     msg_notfound,
@@ -324,6 +325,72 @@ class TxDownloadTest(BitcoinTestFramework):
         peer.wait_until(lambda: peer.tx_getdata_count == MAX_PEER_TX_ANNOUNCEMENTS)
         peer.sync_with_ping()
 
+    def test_duplicate_tx_inv(self):
+        self.log.info('Check that duplicate transaction identifiers in one inv message are processed once')
+        node = self.nodes[0]
+        node.logging(include=['net'])
+
+        def send_invs_and_read_log(peer, invs):
+            log_start = node.debug_log_size(encoding='utf-8')
+            peer.send_and_ping(msg_inv(invs))
+            with open(node.debug_log_path, encoding='utf-8', errors='replace') as debug_log:
+                debug_log.seek(log_start)
+                return debug_log.read()
+
+        for wtxidrelay, inv_type, inv_name, mismatched_type, mismatched_name, hash_a, hash_b in [
+            (False, MSG_TX, 'tx', MSG_WTX, 'wtx', 0xaabbcc, 0xddeeff),
+            (True, MSG_WTX, 'wtx', MSG_TX, 'tx', 0x112233, 0x445566),
+        ]:
+            peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=wtxidrelay))
+            inv_a_log = f"got inv: {inv_name} {hash_a:064x}"
+            inv_b_log = f"got inv: {inv_name} {hash_b:064x}"
+            mismatched_inv_log = f"got inv: {mismatched_name} {hash_a:064x}"
+
+            log = send_invs_and_read_log(peer, [
+                CInv(t=mismatched_type, h=hash_a),
+                CInv(t=inv_type, h=hash_a),
+                CInv(t=inv_type, h=hash_b),
+                CInv(t=inv_type, h=hash_a),
+                CInv(t=inv_type, h=hash_b),
+            ])
+            assert_equal(log.count(inv_a_log), 1)
+            assert_equal(log.count(inv_b_log), 1)
+            assert_equal(log.count(mismatched_inv_log), 0)
+
+            # The duplicate filter is scoped to a single INV message.
+            log = send_invs_and_read_log(peer, [
+                CInv(t=inv_type, h=hash_a),
+                CInv(t=inv_type, h=hash_a),
+            ])
+            assert_equal(log.count(inv_a_log), 1)
+            assert_equal(log.count(inv_b_log), 0)
+
+        self.log.info('Check that MSG_TX and MSG_WITNESS_TX are deduplicated as txids')
+        peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=False))
+        for first_type, first_name, second_type, second_name, hash_a in [
+            (MSG_TX, 'tx', MSG_WITNESS_TX, 'witness-tx', 0x667788),
+            (MSG_WITNESS_TX, 'witness-tx', MSG_TX, 'tx', 0x778899),
+        ]:
+            log = send_invs_and_read_log(peer, [
+                CInv(t=first_type, h=hash_a),
+                CInv(t=second_type, h=hash_a),
+            ])
+            assert_equal(log.count(f"got inv: {first_name} {hash_a:064x}"), 1)
+            assert_equal(log.count(f"got inv: {second_name} {hash_a:064x}"), 0)
+
+        self.log.info('Check that txids and wtxids are deduplicated separately')
+        peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=True))
+        for first_type, second_type, hash_a in [
+            (MSG_WITNESS_TX, MSG_WTX, 0x8899aa),
+            (MSG_WTX, MSG_WITNESS_TX, 0x99aabb),
+        ]:
+            log = send_invs_and_read_log(peer, [
+                CInv(t=first_type, h=hash_a),
+                CInv(t=second_type, h=hash_a),
+            ])
+            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 1)
+            assert_equal(log.count(f"got inv: wtx {hash_a:064x}"), 1)
+
     def test_spurious_notfound(self):
         self.log.info('Check that spurious notfound is ignored')
         self.nodes[0].p2ps[0].send_without_ping(msg_notfound(vec=[CInv(MSG_TX, 1)]))
@@ -395,6 +462,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_txid_inv_delay()
         self.test_txid_inv_delay(True)
         self.test_large_inv_batch()
+        self.test_duplicate_tx_inv()
         self.test_spurious_notfound()
 
         # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when

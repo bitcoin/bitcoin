@@ -15,6 +15,7 @@
 #include <compat/compat.h>
 #include <core_io.h>
 #include <streams.h>
+#include <univalue.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -36,7 +37,7 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     argsman.AddCommand("grind", "Perform proof of work on hex header string");
-    argsman.AddCommand("netmagic", "Get the network magic bytes of the selected chain");
+    argsman.AddCommand("getchainparams", "Get hardcoded parameters for the selected chain");
 
     SetupChainParamsBaseOptions(argsman);
 }
@@ -151,14 +152,60 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
     return EXIT_SUCCESS;
 }
 
-static int NetMagic(const std::vector<std::string>& args, std::string& strPrint)
+static int GetChainParams(const std::vector<std::string>& args, std::string& strPrint)
 {
     if (!args.empty()) {
-        strPrint = "netmagic does not take arguments";
+        strPrint = "getchainparams does not take arguments";
         return EXIT_FAILURE;
     }
 
-    strPrint = HexStr(Params().MessageStart());
+    const auto& params = Params();
+    const auto& consensus = params.GetConsensus();
+
+    UniValue result{UniValue::VOBJ};
+    result.pushKV("chain", params.GetChainTypeString());
+    result.pushKV("test_chain", params.IsTestChain());
+    result.pushKV("genesis", HexStr(consensus.hashGenesisBlock));
+    result.pushKV("subsidy_halving_interval", consensus.nSubsidyHalvingInterval);
+
+    if (consensus.signet_blocks) {
+        UniValue signet{UniValue::VOBJ};
+        signet.pushKV("challenge", HexStr(consensus.signet_challenge));
+        result.pushKV("signet", signet);
+    }
+
+    {
+        UniValue pow{UniValue::VOBJ};
+        pow.pushKV("limit", consensus.powLimit.ToString());
+        if (!consensus.fPowNoRetargeting) {
+            pow.pushKV("target_spacing", TicksSeconds(consensus.PowTargetSpacing()));
+            pow.pushKV("difficulty_retarget_interval", consensus.DifficultyAdjustmentInterval());
+            std::string mindiff_blocks = (consensus.fPowAllowMinDifficultyBlocks ?
+                  (consensus.enforce_BIP94 ? "bip94" : "yes") : "no");
+            pow.pushKV("mindiff_blocks", mindiff_blocks);
+        }
+        result.pushKV("pow", pow);
+    }
+
+    {
+        UniValue net{UniValue::VOBJ};
+        net.pushKV("default_port", params.GetDefaultPort());
+        net.pushKV("magic", HexStr(params.MessageStart()));
+        UniValue dns{UniValue::VARR};
+        for (const auto& seed : params.DNSSeeds()) {
+            dns.push_back(seed);
+        }
+        net.pushKV("dns_seeds", dns);
+        result.pushKV("net", net);
+    }
+
+    {
+        UniValue addr{UniValue::VOBJ};
+        addr.pushKV("bech32_hrp", params.Bech32HRP());
+        result.pushKV("addresses", addr);
+    }
+
+    strPrint = result.write(/*prettyIndent=*/2);
     return EXIT_SUCCESS;
 }
 
@@ -191,8 +238,8 @@ MAIN_FUNCTION
     try {
         if (cmd->command == "grind") {
             ret = Grind(cmd->args, strPrint);
-        } else if (cmd->command == "netmagic") {
-            ret = NetMagic(cmd->args, strPrint);
+        } else if (cmd->command == "getchainparams") {
+            ret = GetChainParams(cmd->args, strPrint);
         } else {
             assert(false); // unknown command should be caught earlier
         }

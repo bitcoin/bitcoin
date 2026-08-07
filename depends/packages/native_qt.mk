@@ -94,6 +94,7 @@ $(package)_config_env += OBJCXX="$$(build_CXX)"
 endif
 
 $(package)_cmake_opts := -DCMAKE_EXE_LINKER_FLAGS="$$(build_LDFLAGS)"
+$(package)_cmake_opts += -DCMAKE_AR="$$(build_AR)"
 ifneq ($(V),)
 $(package)_cmake_opts += --log-level=STATUS
 endif

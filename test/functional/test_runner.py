@@ -153,6 +153,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'wallet_deprecated_rbf.py',
     'p2p_invalid_messages.py',
+    'rpc_echo_payload.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py --v1transport',
     'p2p_timeouts.py --v2transport',
@@ -275,6 +276,7 @@ BASE_SCRIPTS = [
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py --v1transport',
     'p2p_leak_tx.py --v2transport',
+    'p2p_tx_relay_rate_limit.py',
     'p2p_eviction.py',
     'p2p_outbound_eviction.py',
     'p2p_ibd_stalling.py --v1transport',
@@ -356,6 +358,7 @@ BASE_SCRIPTS = [
     'rpc_scanblocks.py',
     'tool_bitcoin.py',
     'p2p_sendtxrcncl.py',
+    'p2p_connection_limits.py',
     'rpc_scantxoutset.py',
     'feature_torcontrol.py',
     'feature_unsupported_utxo_db.py',
@@ -363,6 +366,7 @@ BASE_SCRIPTS = [
     'feature_logging.py',
     'interface_ipc.py',
     'interface_ipc_mining.py',
+    'interface_gui.py',
     'feature_anchors.py',
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
@@ -395,6 +399,7 @@ BASE_SCRIPTS = [
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     'p2p_seednode.py',
+    'rpc_openrpc.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]

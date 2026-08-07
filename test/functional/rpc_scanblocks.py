@@ -134,6 +134,9 @@ class ScanblocksTest(BitcoinTestFramework):
         # test invalid command
         assert_raises_rpc_error(-8, "Invalid action 'foobar'", node.scanblocks, "foobar")
 
+        # test that null scanobjects is rejected for start
+        assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", node.scanblocks, "start", None)
+
 
 if __name__ == '__main__':
     ScanblocksTest(__file__).main()

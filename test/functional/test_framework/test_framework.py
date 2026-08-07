@@ -1027,6 +1027,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
 
+    def skip_if_no_lsof_on_nonlinux(self):
+        """Skip the running test if the lsof utility is not available on non-Linux platforms."""
+        if sys.platform != "linux" and shutil.which("lsof") is None:
+            raise SkipTest("lsof not available")
+
     def skip_if_platform_not_posix(self):
         """Skip the running test if we are not on a POSIX platform"""
         if os.name != 'posix':
@@ -1077,6 +1082,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if ipc is not compiled."""
         if not self.is_ipc_compiled():
             raise SkipTest("ipc has not been compiled.")
+
+    def skip_if_no_gui(self):
+        """Skip the running test if the GUI has not been compiled."""
+        if not self.is_gui_compiled():
+            raise SkipTest("GUI has not been compiled.")
 
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
@@ -1159,6 +1169,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_ipc_compiled(self):
         """Checks whether ipc was compiled."""
         return self.config["components"].getboolean("ENABLE_IPC")
+
+    def is_gui_compiled(self):
+        """Checks whether the GUI was compiled."""
+        return self.config["components"].getboolean("BUILD_GUI", fallback=False)
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()

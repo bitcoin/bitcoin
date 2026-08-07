@@ -366,6 +366,14 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags);
 constexpr ServiceFlags SeedsServiceFlags() { return ServiceFlags(NODE_NETWORK | NODE_WITNESS); }
 
 /**
+ * Service flags we assume for addresses obtained from the DNS seeds and the
+ * fixed seeds, which don't come with service flags attached.
+ * BIP324 support can be safely assumed because the vast majority of listening nodes signals NODE_P2P_V2, and if the
+ * assumption is wrong for a given peer we simply reconnect using v1 transport.
+ */
+constexpr ServiceFlags SeedsAssumedServiceFlags() { return ServiceFlags(SeedsServiceFlags() | NODE_P2P_V2); }
+
+/**
  * Checks if a peer with the given service flags may be capable of having a
  * robust address-storage DB.
  */

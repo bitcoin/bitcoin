@@ -1369,6 +1369,7 @@ void doNotOptimizeAway(T const& val) {
 } // namespace ankerl
 
 #if defined(ANKERL_NANOBENCH_IMPLEMENT)
+// NOLINTBEGIN(misc-definitions-in-headers)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // implementation part - only visible in .cpp
@@ -3563,5 +3564,6 @@ std::ostream& operator<<(std::ostream& os, std::vector<ankerl::nanobench::BigO> 
 } // namespace nanobench
 } // namespace ankerl
 
+// NOLINTEND(misc-definitions-in-headers)
 #endif // ANKERL_NANOBENCH_IMPLEMENT
 #endif // ANKERL_NANOBENCH_H_INCLUDED

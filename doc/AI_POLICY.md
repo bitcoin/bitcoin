@@ -23,6 +23,7 @@ This includes the pull request body and responses to questions.
 This project requires a human author in the loop who understands the work produced by AI.
 **Pull requests should not be opened or driven by autonomous agents**.
 A human author must choose the work, understand the change, and be responsible for the contribution.
+Do not include agents as authors or co-authors of your commits for these reasons.
 Pull requests that appear in violation of this can be closed without notice.
 
 If you wish to include context from an interaction with AI in your comments, it must be disclosed as such.

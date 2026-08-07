@@ -406,7 +406,7 @@ public:
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
-            blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
+            blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).GetTx());
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
 
@@ -489,7 +489,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
     // Lock outputs so they are not spent in follow-up transactions
-    for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i}, /*persist=*/false);
+    for (uint32_t i = 0; i < wtx.GetTx()->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i}, /*persist=*/false);
     for (const auto& [type, size] : expected_coins_sizes) BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
 }
 

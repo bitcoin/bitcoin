@@ -1,0 +1,123 @@
+commit 2e8a6ccb414ca79636392604893c79c3b0d00dc4
+Author: MarcoFalke <*~=`'#}+{/-|&$^_@721217.xyz>
+Date:   Sat Jul 4 09:11:11 2026 +0200
+
+    Add missing <new> includes for std::nothrow
+    
+    Without the <new> include, compilation may fail:
+    
+    ```
+    src/polling_util.hpp:28:30: error: no member named 'nothrow' in namespace 'std'
+       28 |             _buf = new (std::nothrow) T[nitems_];
+          |                              ^~~~~~~
+    ```
+
+diff --git a/src/norm_engine.cpp b/src/norm_engine.cpp
+index 1e3ae179..02483f0b 100644
+--- a/src/norm_engine.cpp
++++ b/src/norm_engine.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "precompiled.hpp"
+ 
++#include <new>
+ #include "platform.hpp"
+ 
+ #if defined ZMQ_HAVE_NORM
+diff --git a/src/polling_util.hpp b/src/polling_util.hpp
+index 13a4911f..3536be9a 100644
+--- a/src/polling_util.hpp
++++ b/src/polling_util.hpp
+@@ -4,6 +4,7 @@
+ #define __ZMQ_SOCKET_POLLING_UTIL_HPP_INCLUDED__
+ 
+ #include <stdlib.h>
++#include <new>
+ #include <vector>
+ 
+ #if defined ZMQ_HAVE_WINDOWS
+diff --git a/src/proxy.cpp b/src/proxy.cpp
+index 78d6ba61..85e4db4a 100644
+--- a/src/proxy.cpp
++++ b/src/proxy.cpp
+@@ -3,6 +3,7 @@
+ #include "precompiled.hpp"
+ 
+ #include <stddef.h>
++#include <new>
+ #include "poller.hpp"
+ #include "proxy.hpp"
+ #include "likely.hpp"
+diff --git a/src/reaper.cpp b/src/reaper.cpp
+index 4361a7e9..1484a926 100644
+--- a/src/reaper.cpp
++++ b/src/reaper.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include "precompiled.hpp"
+ #include "macros.hpp"
++#include <new>
+ #include "reaper.hpp"
+ #include "socket_base.hpp"
+ #include "err.hpp"
+diff --git a/src/session_base.cpp b/src/session_base.cpp
+index 5a81b076..618443d5 100644
+--- a/src/session_base.cpp
++++ b/src/session_base.cpp
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: MPL-2.0 */
+ 
+ #include "precompiled.hpp"
++#include <new>
+ #include "macros.hpp"
+ #include "session_base.hpp"
+ #include "i_engine.hpp"
+diff --git a/src/socket_poller.cpp b/src/socket_poller.cpp
+index b5c330e8..3feb452e 100644
+--- a/src/socket_poller.cpp
++++ b/src/socket_poller.cpp
+@@ -7,6 +7,7 @@
+ #include "macros.hpp"
+ 
+ #include <limits.h>
++#include <new>
+ 
+ static bool is_thread_safe (const zmq::socket_base_t &socket_)
+ {
+diff --git a/src/stream_connecter_base.cpp b/src/stream_connecter_base.cpp
+index 8dd9a6d6..6b733b4d 100644
+--- a/src/stream_connecter_base.cpp
++++ b/src/stream_connecter_base.cpp
+@@ -15,6 +15,7 @@
+ #endif
+ 
+ #include <limits>
++#include <new>
+ 
+ zmq::stream_connecter_base_t::stream_connecter_base_t (
+   zmq::io_thread_t *io_thread_,
+diff --git a/src/stream_listener_base.cpp b/src/stream_listener_base.cpp
+index 350093ad..b4e02027 100644
+--- a/src/stream_listener_base.cpp
++++ b/src/stream_listener_base.cpp
+@@ -13,6 +13,8 @@
+ #include <winsock2.h>
+ #endif
+ 
++#include <new>
++
+ zmq::stream_listener_base_t::stream_listener_base_t (
+   zmq::io_thread_t *io_thread_,
+   zmq::socket_base_t *socket_,
+diff --git a/src/ws_engine.cpp b/src/ws_engine.cpp
+index 9eec0d92..55590cdc 100644
+--- a/src/ws_engine.cpp
++++ b/src/ws_engine.cpp
+@@ -26,6 +26,7 @@
+ #endif
+ 
+ #include <cstring>
++#include <new>
+ 
+ #include "compat.hpp"
+ #include "tcp.hpp"

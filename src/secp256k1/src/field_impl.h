@@ -27,7 +27,7 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp
     SECP256K1_FE_VERIFY(a);
     SECP256K1_FE_VERIFY(b);
     SECP256K1_FE_VERIFY_MAGNITUDE(a, 1);
-    SECP256K1_FE_VERIFY_MAGNITUDE(b, 31);
+    SECP256K1_FE_VERIFY_MAGNITUDE(b, 30);
 
     secp256k1_fe_negate(&na, a, 1);
     secp256k1_fe_add(&na, b);

@@ -10,7 +10,6 @@
 #include <txdb.h>
 #include <uint256.h>
 #include <util/byte_units.h>
-#include <util/hasher.h>
 #include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
@@ -57,7 +56,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
     CCoinsViewCache cache{&view};
     cache.SetBestBlock(uint256::ONE);
 
-    std::unordered_set<Txid, SaltedTxidHasher> txids{};
+    std::unordered_set<Txid, SaltedCoinsCacheHasher> txids{};
     txids.reserve(block.vtx.size() - 1);
     for (const auto& tx : block.vtx | std::views::drop(1)) {
         for (const auto& in : tx->vin) {
@@ -75,7 +74,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
 void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
 {
     uint32_t counter{0};
-    std::unordered_set<Txid, SaltedTxidHasher> txids{};
+    std::unordered_set<Txid, SaltedCoinsCacheHasher> txids{};
     txids.reserve(block.vtx.size() - 1);
 
     for (const auto& tx : block.vtx) {
@@ -225,7 +224,7 @@ BOOST_AUTO_TEST_CASE(fetch_out_of_order_input_uses_normal_lookup)
     PopulateView(block, main_cache);
 
     std::vector<COutPoint> fetched_inputs;
-    std::unordered_set<Txid, SaltedTxidHasher> txids;
+    std::unordered_set<Txid, SaltedCoinsCacheHasher> txids;
     txids.reserve(block.vtx.size() - 1);
     for (const auto& tx : block.vtx | std::views::drop(1)) {
         for (const auto& input : tx->vin) {

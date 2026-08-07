@@ -265,14 +265,14 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
-struct LineReader {
-    const std::span<const std::byte>::iterator start;
-    const std::span<const std::byte>::iterator end;
-    const size_t max_line_length;
-    std::span<const std::byte>::iterator it;
+class LineReader
+{
+    const std::string_view m_str;
+    const size_t m_max_line_length;
+    std::string_view::iterator m_it;
 
-    explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length);
-    explicit LineReader(std::string_view str, size_t max_line_length) : LineReader{std::as_bytes(std::span{str}), max_line_length} {}
+public:
+    explicit LineReader(std::string_view str, size_t max_line_length);
 
     /**
      * Returns a string from current iterator position up to (but not including) next \n

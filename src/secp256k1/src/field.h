@@ -166,7 +166,7 @@ static int secp256k1_fe_is_odd(const secp256k1_fe *a);
 /** Determine whether two field elements are equal.
  *
  * On input, a and b must be valid field elements with magnitudes not exceeding
- * 1 and 31, respectively.
+ * 1 and 30, respectively.
  * Returns a = b (mod p).
  */
 static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b);

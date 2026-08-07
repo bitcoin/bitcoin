@@ -2408,7 +2408,8 @@ static RPCMethod scantxoutset()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
         }
 
-        if (request.params.size() < 2) {
+        const UniValue* scanobjects = self.MaybeArg<UniValue>("scanobjects");
+        if (!scanobjects) {
             throw JSONRPCError(RPC_MISC_ERROR, "scanobjects argument is required for the start action");
         }
 
@@ -2417,7 +2418,7 @@ static RPCMethod scantxoutset()
         CAmount total_in = 0;
 
         // loop through the scan objects
-        for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
+        for (const UniValue& scanobject : scanobjects->get_array().getValues()) {
             FlatSigningProvider provider;
             auto scripts = EvalDescriptorStringOrObject(scanobject, provider);
             for (CScript& script : scripts) {
@@ -2604,6 +2605,10 @@ static RPCMethod scanblocks()
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
         }
+        const UniValue* scanobjects = self.MaybeArg<UniValue>("scanobjects");
+        if (!scanobjects) {
+            throw JSONRPCError(RPC_MISC_ERROR, "scanobjects argument is required for the start action");
+        }
         auto filtertype_name{self.Arg<std::string_view>("filtertype")};
 
         BlockFilterType filtertype;
@@ -2648,7 +2653,7 @@ static RPCMethod scanblocks()
 
         // loop through the scan objects, add scripts to the needle_set
         GCSFilter::ElementSet needle_set;
-        for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
+        for (const UniValue& scanobject : scanobjects->get_array().getValues()) {
             FlatSigningProvider provider;
             std::vector<CScript> scripts = EvalDescriptorStringOrObject(scanobject, provider);
             for (const CScript& script : scripts) {

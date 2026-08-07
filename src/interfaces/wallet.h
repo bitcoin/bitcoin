@@ -302,6 +302,9 @@ public:
 
     //! Return pointer to internal wallet class, useful for testing.
     virtual wallet::CWallet* wallet() { return nullptr; }
+
+    //! Export a watchonly wallet file. See CWallet::ExportWatchOnlyWallet
+    virtual util::Result<std::string> exportWatchOnlyWallet(const fs::path& destination) = 0;
 };
 
 //! Wallet chain client that in addition to having chain client methods for
@@ -323,7 +326,7 @@ public:
     virtual util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) = 0;
 
     //! Migrate a wallet
-    virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
+    virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase, bool load_wallet) = 0;
 
     //! Returns true if wallet stores encryption keys
     virtual bool isEncrypted(const std::string& wallet_name) = 0;
