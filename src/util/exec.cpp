@@ -38,7 +38,13 @@ int ExecVp(const char* file, char* const argv[])
     new_argv.reserve(escaped_args.size() + 1);
     for (const auto& s : escaped_args) new_argv.push_back(s.c_str());
     new_argv.push_back(nullptr);
-    return _wexecvp(converter.from_bytes(file).c_str(), new_argv.data());
+    // Use _P_WAIT so the parent blocks until the child exits and can then
+    // forward its exit code. Plain _wexecvp (like all Windows _exec* variants)
+    // spawns the child and immediately exits the parent with code 0, so the
+    // original caller never sees the child's exit code and cannot wait for it.
+    intptr_t result{_wspawnvp(_P_WAIT, converter.from_bytes(file).c_str(), new_argv.data())};
+    if (result == -1) return -1;
+    _exit(static_cast<int>(result)); // exit with child's code; never returns
 #endif
 }
 

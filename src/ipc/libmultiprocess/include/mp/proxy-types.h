@@ -691,9 +691,9 @@ void serverDestroy(Server& server)
 template <typename ProxyClient, typename GetRequest, typename... FieldObjs>
 void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, FieldObjs&&... fields)
 {
-    if (!g_thread_context.waiter) {
-        assert(g_thread_context.thread_name.empty());
-        g_thread_context.thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
+    if (!CurrentThread().waiter) {
+        assert(CurrentThread().thread_name.empty());
+        CurrentThread().thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
         // If next assert triggers, it means clientInvoke is being called from
         // the capnp event loop thread. This can happen when a ProxyServer
         // method implementation that runs synchronously on the event loop
@@ -702,13 +702,13 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
         // run asynchronously off the event loop thread. This is easy to fix by
         // just adding a 'context :Proxy.Context' argument to the capnp method
         // declaration so the server method runs in a dedicated thread.
-        assert(!g_thread_context.loop_thread);
-        g_thread_context.waiter = std::make_unique<Waiter>();
+        assert(!CurrentThread().loop_thread);
+        CurrentThread().waiter = std::make_unique<Waiter>();
         MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Info)
-            << "{" << g_thread_context.thread_name
+            << "{" << CurrentThread().thread_name
             << "} IPC client first request from current thread, constructing waiter";
     }
-    ThreadContext& thread_context{g_thread_context};
+    ThreadContext& thread_context{CurrentThread()};
     std::optional<ClientInvokeContext> invoke_context; // Must outlive waiter->wait() call below
     std::exception_ptr exception;
     std::string kj_exception;

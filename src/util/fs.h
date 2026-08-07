@@ -17,6 +17,7 @@
 #include <ios>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -96,6 +97,10 @@ static inline path absolute(const path& p)
 static inline bool exists(const path& p)
 {
     return std::filesystem::exists(p);
+}
+static inline bool exists(const path& p, std::error_code& ec)
+{
+    return std::filesystem::exists(p, ec);
 }
 static inline bool exists(const std::filesystem::file_status& s)
 {

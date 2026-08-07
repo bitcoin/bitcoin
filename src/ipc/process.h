@@ -16,9 +16,6 @@ class Protocol;
 
 //! IPC process interface for spawning bitcoin processes and serving requests
 //! in processes that have been spawned.
-//!
-//! There will be different implementations of this interface depending on the
-//! platform (e.g. unix, windows).
 class Process
 {
 public:

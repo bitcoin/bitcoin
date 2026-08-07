@@ -9,10 +9,10 @@
 
 namespace mp {
 template <typename LocalType, typename Value>
+    requires std::is_enum_v<Value>
 LocalType BuildPrimitive(InvokeContext& invoke_context,
     const Value& value,
-    TypeList<LocalType>,
-    typename std::enable_if<std::is_enum<Value>::value>::type* enable = nullptr)
+    TypeList<LocalType>)
 {
     using E = std::make_unsigned_t<std::underlying_type_t<Value>>;
     using T = std::make_unsigned_t<LocalType>;
@@ -21,10 +21,10 @@ LocalType BuildPrimitive(InvokeContext& invoke_context,
 }
 
 template <typename LocalType, typename Value>
+    requires std::is_integral_v<Value>
 LocalType BuildPrimitive(InvokeContext& invoke_context,
     const Value& value,
-    TypeList<LocalType>,
-    typename std::enable_if<std::is_integral<Value>::value, int>::type* enable = nullptr)
+    TypeList<LocalType>)
 {
     static_assert(
         std::numeric_limits<LocalType>::lowest() <= std::numeric_limits<Value>::lowest(), "mismatched integral types");
@@ -34,10 +34,10 @@ LocalType BuildPrimitive(InvokeContext& invoke_context,
 }
 
 template <typename LocalType, typename Value>
+    requires std::is_floating_point_v<Value>
 LocalType BuildPrimitive(InvokeContext& invoke_context,
     const Value& value,
-    TypeList<LocalType>,
-    typename std::enable_if<std::is_floating_point<Value>::value>::type* enable = nullptr)
+    TypeList<LocalType>)
 {
     static_assert(std::is_same<Value, LocalType>::value,
         "mismatched floating point types. please fix message.capnp type declaration to match wrapped interface");
@@ -45,12 +45,12 @@ LocalType BuildPrimitive(InvokeContext& invoke_context,
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires std::is_enum_v<LocalType>
 decltype(auto) CustomReadField(TypeList<LocalType>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename std::enable_if<std::is_enum<LocalType>::value>::type* enable = nullptr)
+    ReadDest&& read_dest)
 {
     // Disable clang-tidy out-of-range enum value check which triggers when
     // using an enum type that does not have a 0 value. The check correctly
@@ -62,12 +62,12 @@ decltype(auto) CustomReadField(TypeList<LocalType>,
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires std::is_integral_v<LocalType>
 decltype(auto) CustomReadField(TypeList<LocalType>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename std::enable_if<std::is_integral<LocalType>::value>::type* enable = nullptr)
+    ReadDest&& read_dest)
 {
     auto value = input.get();
     if (value < std::numeric_limits<LocalType>::min() || value > std::numeric_limits<LocalType>::max()) {
@@ -77,12 +77,12 @@ decltype(auto) CustomReadField(TypeList<LocalType>,
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires std::is_floating_point_v<LocalType>
 decltype(auto) CustomReadField(TypeList<LocalType>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename std::enable_if<std::is_floating_point<LocalType>::value>::type* enable = nullptr)
+    ReadDest&& read_dest)
 {
     auto value = input.get();
     static_assert(std::is_same<LocalType, decltype(value)>::value, "floating point type mismatch");

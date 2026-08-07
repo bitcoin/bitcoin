@@ -462,7 +462,7 @@ KJ_TEST("Make simultaneous IPC calls on single remote thread")
     // that will be used for the test.
     setup.server->m_impl->m_fn = [&] {};
     foo->callFnAsync();
-    ThreadContext& tc{g_thread_context};
+    ThreadContext& tc{CurrentThread()};
     Thread::Client *callback_thread, *request_thread;
     foo->m_context.loop->sync([&] {
         Lock lock(tc.waiter->m_mutex);
@@ -516,7 +516,7 @@ KJ_TEST("Call async IPC method dispatched to pool thread")
     foo->initThreadMap();
     setup.server->m_impl->m_int_fn = [](int n) { return n * 2; };
 
-    ThreadContext& tc{g_thread_context};
+    ThreadContext& tc{CurrentThread()};
     std::atomic<size_t> running{3};
     std::promise<void> pool_ready;
     foo->m_context.loop->sync([&] {
