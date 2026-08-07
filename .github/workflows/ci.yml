@@ -403,6 +403,11 @@ jobs:
 
       - *IMPORT_VS_ENV
 
+      - name: Check imported DLLs
+        env:
+          CRT: ${{ matrix.crt }}
+        run: py -3 .github/ci-windows-cross.py check_imports
+
       - name: Check executable manifests
         run: py -3 .github/ci-windows-cross.py check_manifests
 
