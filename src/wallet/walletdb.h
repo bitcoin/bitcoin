@@ -230,7 +230,8 @@ public:
     bool WritePurpose(const std::string& strAddress, const std::string& purpose);
     bool ErasePurpose(const std::string& strAddress);
 
-    bool WriteTx(const CWalletTx& wtx);
+    // Write a CWalletTx and all variant witness txs (single tx record and multiple wtxvariant records)
+    bool WriteFullTx(const CWalletTx& wtx);
     bool EraseTx(Txid hash);
     // Write a single witness variant of CWalletTx (single wtxvariant record)
     bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);

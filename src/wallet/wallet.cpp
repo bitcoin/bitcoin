@@ -1081,7 +1081,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
 
-        if (!batch.WriteTx(wtx)) {
+        if (!batch.WriteFullTx(wtx)) {
             return nullptr;
         }
     }
@@ -4042,7 +4042,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
-                watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
+                watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
