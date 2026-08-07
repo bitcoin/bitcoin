@@ -27,7 +27,8 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
     auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
         CoinStatsIndex index{interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB};
         BOOST_REQUIRE(index.Init());
-        index.Sync();
+        BOOST_CHECK(index.StartBackgroundSync());
+        index.WaitForBackgroundSync();
         if (do_flush) {
             chainstate.ForceFlushStateToDisk();
             m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
@@ -37,6 +38,13 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
         // Reload index to see which block data was actually committed.
         BOOST_REQUIRE(index.Init());
         BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, expected_commit_height);
+        // Drain any pending scheduler callbacks from Init so they run while index is
+        // alive. Without this, callbacks enqueued by connect() during Init could fire
+        // after the stack frame unwinds and index is freed.
+        // TODO: The handler destructor (NotificationsHandlerImpl::disconnect) should
+        // ensure any in-flight scheduler callback from RegisterSynced completes
+        // before returning, so the callback cannot access m_index after it is freed.
+        m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
         index.Stop();
     };
 

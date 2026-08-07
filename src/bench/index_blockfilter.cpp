@@ -14,6 +14,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
@@ -48,7 +49,9 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
                                       /*n_cache_size=*/0, /*f_memory=*/false, /*f_wipe=*/true);
         assert(filter_index.Init());
         assert(!filter_index.BlockUntilSyncedToCurrentChain());
-        filter_index.Sync();
+        IndexTester{filter_index}.Sync();
+        filter_index.Interrupt();
+        filter_index.Stop();
 
         IndexSummary summary = filter_index.GetSummary();
         assert(summary.synced);
