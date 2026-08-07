@@ -64,8 +64,8 @@ public:
     NonFatalCheckError(std::string_view msg, const std::source_location& loc);
 };
 
-/** Internal helper */
-void assertion_fail(const std::source_location& loc, std::string_view assertion);
+/// Internal helper. The noreturn enables optimizers to discard invalid paths.
+[[noreturn]] void assertion_fail(const std::source_location& loc, std::string_view assertion);
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
