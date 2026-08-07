@@ -492,6 +492,22 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Export Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export a watch-only version of the current wallet that can be restored onto another node.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export watch-only wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -662,6 +678,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Save Watch-only Wallet Export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Send coins to a Bitcoin address</translation>
     </message>
@@ -717,6 +737,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation>Tabs toolbar</translation>
+    </message>
+    <message>
+        <source>The wallet has been exported to </source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -1236,6 +1260,14 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>If the node is pruned and the wallet was created before the pruned height, the migration process may fail trying to load the migrated wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load wallet after migration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1293,6 +1325,10 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>The wallet &apos;%1&apos; was migrated successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The wallet was not loaded after migration. You can open it from the &quot;File &gt; Open wallet&quot; menu.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1551,7 +1587,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Wallets should be loaded at startup and kept active while pruning is enabled so they stay synchronized before old block data is deleted; wallets that fall behind pruned data may require a reindex. Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3231,10 +3267,6 @@ For more information on using this console, type %6.
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Enable Replace-By-Fee</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
@@ -3278,10 +3310,6 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3424,11 +3452,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>With Replace-By-Fee (BIP-125) you can increase a transaction&apos;s fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <source>You can increase the fee later.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4300,6 +4324,11 @@ Go to File &gt; Open Wallet to load a wallet.
     <name>bitcoin-core</name>
     <message>
         <source>
+Consider modifying %s (%s) or %s (%s).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
 Unable to cleanup failed migration</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4329,11 +4358,15 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>-walletrbf is deprecated and will be fully removed in the next release.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>A %zu MiB dbcache may be too large for a system memory of only %zu MiB.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details: </source>
+        <source>A fatal internal error occurred, see %s for details: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4406,10 +4439,6 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Could not read embedded asmap data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not top up scriptPubKeys</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4533,7 +4562,15 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Error: Could not add tx %s to watchonly wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Could not create file &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4573,7 +4610,19 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Error: Export destination &apos;%s&apos; already exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Export destination cannot be empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet. %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4657,6 +4706,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Error: Unable to write the exported wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Error: Unable to write watchonly wallet best block locator record</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4665,7 +4718,19 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Error: Wallet has no descriptors to export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: cannot commit db transaction for watchonly wallet export</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for new watchonly wallet %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4738,7 +4803,7 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5046,18 +5111,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Specified -walletdir &quot;%s&quot; does not exist</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5099,6 +5152,14 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>The %s path uses exFAT, which is known to have intermittent corruption problems on macOS. Move this directory to a different filesystem to avoid data loss.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The -testactivationheight option may not be used on mainnet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The -vbparams option may not be used on mainnet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5246,6 +5307,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Unable to write descriptor cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5322,10 +5387,6 @@ Please try running the latest software version.
     </message>
     <message>
         <source>Wallet file creation failed: %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
