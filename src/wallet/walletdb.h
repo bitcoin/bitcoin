@@ -232,7 +232,10 @@ public:
 
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(Txid hash);
+    // Write a single witness variant of CWalletTx (single wtxvariant record)
     bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);
+    // Write only the canonical witness tx and all of the tx metadata (single tx record)
+    bool WriteTxMetadata(const CWalletTx& wtx);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);

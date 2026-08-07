@@ -934,7 +934,7 @@ DBErrors CWallet::ReorderTransactions()
             nOrderPos = nOrderPosNext++;
             nOrderPosOffsets.push_back(nOrderPos);
 
-            if (!batch.WriteTx(*pwtx))
+            if (!batch.WriteTxMetadata(*pwtx))
                 return DBErrors::LOAD_FAIL;
         }
         else
@@ -952,7 +952,7 @@ DBErrors CWallet::ReorderTransactions()
                 continue;
 
             // Since we're changing the order, write it back
-            if (!batch.WriteTx(*pwtx))
+            if (!batch.WriteTxMetadata(*pwtx))
                 return DBErrors::LOAD_FAIL;
         }
     }
@@ -1004,7 +1004,7 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     WalletBatch batch(GetDatabase());
 
     bool success = true;
-    if (!batch.WriteTx(wtx)) {
+    if (!batch.WriteTxMetadata(wtx)) {
         WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
         success = false;
     }
@@ -1099,7 +1099,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             desc_tx->m_state = inactive_state;
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
-            batch.WriteTx(*desc_tx);
+            batch.WriteTxMetadata(*desc_tx);
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1387,7 +1387,7 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTx(wtx);
+            if (batch) batch->WriteTxMetadata(wtx);
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -4051,7 +4051,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
-        local_wallet_batch.WriteTx(*wtx);
+        local_wallet_batch.WriteTxMetadata(*wtx);
     }
 
     // Do the removes
