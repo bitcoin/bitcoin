@@ -76,4 +76,10 @@ public:
     void operator-=(std::chrono::seconds d) { set(m_t -= d); }
 };
 
+inline FakeNodeClock& GetFakeNodeClock()
+{
+    static FakeNodeClock g_fake_node_clock{0s};
+    return g_fake_node_clock;
+}
+
 #endif // BITCOIN_TEST_UTIL_TIME_H

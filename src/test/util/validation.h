@@ -5,12 +5,18 @@
 #ifndef BITCOIN_TEST_UTIL_VALIDATION_H
 #define BITCOIN_TEST_UTIL_VALIDATION_H
 
+#include <consensus/amount.h>
+#include <primitives/transaction.h>
 #include <validation.h>
+
+#include <utility>
+#include <vector>
 
 namespace node {
 class BlockManager;
 }
 class CValidationInterface;
+struct TestingSetup;
 
 struct TestBlockManager : public node::BlockManager {
     /** Test-only method to clear internal state for fuzzing */
@@ -40,5 +46,7 @@ public:
         const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* pindex);
 };
+
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup);
 
 #endif // BITCOIN_TEST_UTIL_VALIDATION_H
