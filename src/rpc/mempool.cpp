@@ -452,11 +452,11 @@ static std::vector<RPCResult> ClusterDescription()
 static std::vector<RPCResult> MempoolEntryDescription()
 {
     std::vector<RPCResult> list = {
-        {RPCResult::Type::NUM, "vsize", /*optional=*/true, "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
+        {RPCResult::Type::NUM, "vsize", "(DEPRECATED) Was previously erroneously described as the BIP 141 vsize, but is actually sigops-adjusted vsize.\n"
         "Use vsize_bip141 to actually get that behavior or switch to the explicit vsize_adjusted for retained behavior."},
-        {RPCResult::Type::NUM, "vsize_bip141", /*optional=*/true, "Virtual transaction size as defined in BIP 141.\n"
-        "This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)."},
-        {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141 (only present when 'allowed' is true)."},
+        {RPCResult::Type::NUM, "vsize_bip141", "Virtual transaction size as defined in BIP 141.\n"
+        "This is different from actual serialized size for witness transactions as witness data is discounted."},
+        {RPCResult::Type::NUM, "vsize_adjusted", "Maximum of sigop-adjusted size (-bytespersigop) and virtual transaction size as defined in BIP 141."},
         RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
         RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
         RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
