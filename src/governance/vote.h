@@ -144,6 +144,15 @@ public:
     bool CheckSignature(const CKeyID& keyID) const;
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
+    /**
+     * Validation for a vote whose parent object is unknown, so the exact key
+     * requirement cannot be derived yet. Only a funding vote can ever be
+     * voting-key-signed (PROPOSAL + VOTE_SIGNAL_FUNDING -- see onlyVotingKeyAllowed
+     * in CGovernanceObject::ProcessVote); every other signal requires the operator
+     * key for every object type, and a funding vote on a non-proposal will be
+     * re-checked against the operator-key requirement when its parent arrives.
+     */
+    bool IsValidForUnknownParent(const CDeterministicMNList& tip_mn_list) const;
 
     /** The memoised verdict for this key, or nullopt if the next CheckSignature
      *  with it would have to run the cryptography. */
