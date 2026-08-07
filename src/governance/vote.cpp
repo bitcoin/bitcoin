@@ -19,6 +19,42 @@
 static_assert(CGovernanceVote::COMPACT_SIG_SIZE == CPubKey::COMPACT_SIGNATURE_SIZE);
 static_assert(CGovernanceVote::BLS_SIG_SIZE == CBLSSignature::SerSize);
 
+namespace {
+//! Hash the inputs that determine the verification result. Dropping any of them
+//! breaks the memo; see CGovernanceVote::SignatureMemo.
+uint256 SignatureCacheKey(const CKeyID& key, const uint256& sigHash, const std::vector<unsigned char>& vchSig)
+{
+    HashWriter ss{};
+    ss << key << sigHash << vchSig;
+    return ss.GetHash();
+}
+
+//! The BLS verdict is always computed with VerifyInsecure(..., /*specificLegacyScheme=*/false),
+//! so the key must be fingerprinted under that same scheme. Serializing via operator<< would
+//! instead use the mutable bls_legacy_scheme global, and a legacy encoding of P can equal the
+//! basic encoding of -P. Across an activation or a reorg that flips the global, a verdict cached
+//! for one key could then be served for the other.
+uint256 SignatureCacheKey(const CBLSPublicKey& key, const uint256& sigHash,
+                          const std::vector<unsigned char>& vchSig)
+{
+    HashWriter ss{};
+    const auto key_bytes = key.ToBytes(/*specificLegacyScheme=*/false);
+    ss.write(MakeByteSpan(key_bytes));
+    ss << sigHash << vchSig;
+    return ss.GetHash();
+}
+} // namespace
+
+std::optional<bool> CGovernanceVote::GetMemoisedVerdict(const CKeyID& keyID) const
+{
+    return m_sig_memo.Lookup(SignatureCacheKey(keyID, GetSignatureHash(), vchSig));
+}
+
+std::optional<bool> CGovernanceVote::GetMemoisedVerdict(const CBLSPublicKey& pubKey) const
+{
+    return m_sig_memo.Lookup(SignatureCacheKey(pubKey, GetSignatureHash(), vchSig));
+}
+
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
@@ -127,33 +163,49 @@ uint256 CGovernanceVote::GetHash() const
 
 bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
+    const uint256 sigHash{GetSignatureHash()};
+    const uint256 fingerprint{SignatureCacheKey(keyID, sigHash, vchSig)};
+    if (const auto memoised{m_sig_memo.Lookup(fingerprint)}) {
+        return *memoised;
+    }
+
     std::string strError;
+    bool valid{false};
 
     // Harden Spork6 so that it is active on testnet and no other networks
     if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        if (!CHashSigner::VerifyHash(GetSignatureHash(), keyID, vchSig, strError)) {
+        valid = CHashSigner::VerifyHash(sigHash, keyID, vchSig, strError);
+        if (!valid) {
             LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyHash() failed, error: %s\n", strError);
-            return false;
         }
     } else {
-        if (!CMessageSigner::VerifyMessage(keyID, vchSig, GetSignatureString(), strError)) {
+        valid = CMessageSigner::VerifyMessage(keyID, vchSig, GetSignatureString(), strError);
+        if (!valid) {
             LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
-            return false;
         }
     }
 
-    return true;
+    m_sig_memo.Store(fingerprint, valid);
+    return valid;
 }
 
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
+    const uint256 sigHash{GetSignatureHash()};
+    const uint256 fingerprint{SignatureCacheKey(pubKey, sigHash, vchSig)};
+    if (const auto memoised{m_sig_memo.Lookup(fingerprint)}) {
+        return *memoised;
+    }
+
     CBLSSignature sig;
     sig.SetBytes(vchSig, false);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), false)) {
+    const bool valid{sig.VerifyInsecure(pubKey, sigHash, false)};
+    if (!valid) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
-        return false;
     }
-    return true;
+
+    m_sig_memo.Store(fingerprint, valid);
+    return valid;
 }
 
 bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const

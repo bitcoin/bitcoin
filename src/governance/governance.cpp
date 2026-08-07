@@ -656,17 +656,20 @@ std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, 
 
     const auto& govobj = *Assert(it->second);
     LOCK(govobj.cs);
-    const auto& fileVotes = govobj.GetVoteFile();
-    for (const auto& vote : fileVotes.GetVotes()) {
+    // Visit the stored votes in place: CheckSignature memoises its verdict on
+    // the vote instance, and a GetVotes() copy would discard that memo, so every
+    // walk would pay a fresh ECDSA recovery or BLS pairing per vote.
+    invs.reserve(govobj.GetVoteFile().GetVoteCount());
+    govobj.GetVoteFile().ForEachVote([&](const CGovernanceVote& vote) {
         uint256 nVoteHash = vote.GetHash();
 
         bool onlyVotingKeyAllowed = govobj.GetObjectType() == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
         if (filter.contains(nVoteHash) || !vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
-            continue;
+            return;
         }
         invs.emplace_back(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash);
-    }
+    });
 
     return invs;
 }
