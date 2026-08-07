@@ -17,7 +17,6 @@
 #include <uint256.h>
 
 #include <string>
-#include <vector>
 
 /** A BIP32 chain code. Cleansed on destruction. */
 class ChainCode : public base_blob<256> {
