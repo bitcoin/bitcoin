@@ -22,7 +22,7 @@ Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYI
 information or see https://opensource.org/license/MIT.
 
 Development Process
--------------------
+--------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
