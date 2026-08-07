@@ -118,6 +118,11 @@ bool WalletBatch::WriteWtxVariant(const Txid& txid, const CTransactionRef& tx)
     return WriteIC(std::make_pair(DBKeys::WTX_VARIANT, std::make_pair(txid, tx->GetWitnessHash())), TX_WITH_WITNESS(tx));
 }
 
+bool WalletBatch::WriteTxMetadata(const CWalletTx& wtx)
+{
+    return WriteIC(std::make_pair(DBKeys::TX, wtx.GetHash()), wtx);
+}
+
 bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
 {
     return WriteIC(std::make_pair(DBKeys::KEYMETA, pubkey), meta, overwrite);
