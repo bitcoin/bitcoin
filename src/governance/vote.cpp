@@ -201,7 +201,7 @@ bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
     sig.SetBytes(vchSig, false);
     const bool valid{sig.VerifyInsecure(pubKey, sigHash, false)};
     if (!valid) {
-        LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
     }
 
     m_sig_memo.Store(fingerprint, valid);

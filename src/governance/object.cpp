@@ -90,7 +90,7 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     if (eSignal < VOTE_SIGNAL_NONE || eSignal >= VOTE_SIGNAL_UNKNOWN) {
         std::string msg{strprintf("CGovernanceObject::%s -- Unsupported vote signal: %s", __func__,
             CGovernanceVoting::ConvertSignalToString(vote.GetSignal()))};
-        LogPrintf("%s\n", msg);
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
@@ -145,7 +145,7 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
         std::string msg{strprintf("CGovernanceObject::%s -- Invalid vote, MN outpoint = %s, governance object hash = %s, "
                                   "vote hash = %s",
             __func__, vote.GetMasternodeOutpoint().ToStringShort(), GetHash().ToString(), vote.GetHash().ToString())};
-        LogPrintf("%s\n", msg);
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
