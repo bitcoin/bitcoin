@@ -10,8 +10,10 @@
 
 #include <stdint.h>
 
+#include <ios>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -181,6 +183,52 @@ BOOST_AUTO_TEST_CASE(vector_bool)
 
     BOOST_CHECK(vec1 == std::vector<uint8_t>(vec2.begin(), vec2.end()));
     BOOST_CHECK(SerializeHash(vec1) == SerializeHash(vec2));
+}
+
+
+//! The message the bound throws. Matching it exactly keeps these tests from passing on an
+//! unrelated short read, which is the very failure mode the bound replaces.
+static constexpr std::string_view BOUND_REJECTION{"declared size exceeds remaining bytes"};
+
+/**
+ * DYNBITSET must not allocate from an attacker-declared CompactSize when the remaining stream
+ * is far too small to hold the claimed bit payload. A handful of bytes claiming ~1e6 bits is
+ * the amplification primitive: ReadCompactSize permits up to 33,554,432, which would resize a
+ * std::vector<bool> to ~4 MiB and allocate another ~4 MiB byte buffer before the short read
+ * throws. The claim below is deliberately modest so the pre-fix path also stays safe on CI.
+ */
+BOOST_AUTO_TEST_CASE(dynbitset_rejects_oversized_declared_length)
+{
+    constexpr uint64_t kClaimedBits = 1'000'000;
+
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(s, kClaimedBits);
+    // No bit payload follows, so the remaining size is zero.
+
+    std::vector<bool> bits;
+    BOOST_CHECK_EXCEPTION(s >> DYNBITSET(bits), std::ios_base::failure,
+                          HasReason(std::string{BOUND_REJECTION}));
+    // Rejection has to precede the resize, so the destination must still hold its exact
+    // pre-deserialization state. Merely falling short of the declared size would also be
+    // satisfied by an allocation that happened and was then abandoned.
+    BOOST_CHECK(bits.empty());
+}
+
+/** The largest bit count accepted by ReadCompactSize must still round-trip unchanged. */
+BOOST_AUTO_TEST_CASE(dynbitset_accepts_maximum_size)
+{
+    constexpr size_t kSize = MAX_SIZE;
+    std::vector<bool> original(kSize, false);
+    for (size_t i = 0; i < kSize; i += 3) {
+        original[i] = true;
+    }
+
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    s << DYNBITSET(original);
+
+    std::vector<bool> decoded;
+    s >> DYNBITSET(decoded);
+    BOOST_CHECK(decoded == original);
 }
 
 BOOST_AUTO_TEST_CASE(noncanonical)
