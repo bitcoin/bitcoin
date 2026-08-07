@@ -1080,11 +1080,20 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+
+        if (!batch.WriteTx(wtx)) {
+            return nullptr;
+        }
     }
 
     if (!fInsertedNew)
     {
-        fUpdated |= wtx.Update(tx, state);
+        try {
+            fUpdated |= wtx.Update(tx, state, batch, fUpdated);
+        } catch (const std::ios_base::failure& e) {
+            WalletLogPrintf("Error: Unable to write tx update, %s", e.what());
+            return nullptr;
+        }
     }
 
     // Mark inactive coinbase transactions and their descendants as abandoned
@@ -1120,11 +1129,6 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         status = fInsertedNew ? (fUpdated ? "new, update" : "new") : "update";
     }
     WalletLogPrintf("AddToWallet %s %s %s", hash.ToString(), status, TxStateString(state));
-
-    // Write to disk
-    if (fInsertedNew || fUpdated)
-        if (!batch.WriteTx(wtx))
-            return nullptr;
 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
