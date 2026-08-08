@@ -4047,8 +4047,11 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             }
         }
         if (!is_mine) {
-            // Both not ours and not in the watchonly wallet
-            return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
+            // Transaction belongs to no migrated wallet — likely a BDB log file cross-contamination
+            // artifact from manual wallet.dat swaps. Warn and drop it rather than aborting migration.
+            WalletLogPrintf("Warning: Transaction %s in wallet cannot be identified to belong to migrated wallets; dropping it\n", wtx->GetHash().GetHex());
+            txids_to_delete.push_back(wtx->GetHash());
+            continue;
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
         local_wallet_batch.WriteTx(*wtx);

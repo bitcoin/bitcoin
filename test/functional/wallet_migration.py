@@ -1720,6 +1720,67 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         self.clear_default_wallet(backup_path)
 
+    def test_unidentified_tx(self):
+        """Test migratewallet behaviour when a wallet contains a transaction it doesn't own.
+
+        Simulates BDB log file cross-contamination (issue #35626): a tx is present in
+        mapWallet but belongs to no migrated wallet.  Before the fix this caused
+        migratewallet to abort; after the fix it warns and drops the tx.
+        """
+        self.log.info("Test migration with unidentified (cross-contaminated) transaction")
+        wallet_name = "unidentified_tx"
+        wallet = self.create_legacy_wallet(wallet_name)
+        master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
+
+        # Import a master wallet address as watchonly — this is the mechanism by which
+        # the wallet records a transaction it doesn't own keys for.
+        foreign_addr = master_wallet.getnewaddress()
+        wallet.importaddress(foreign_addr)
+
+        # Fund the watched address so the legacy wallet picks up the transaction.
+        txid = master_wallet.sendtoaddress(foreign_addr, 1.0)
+        self.generate(self.master_node, 1)
+
+        # Confirm the tx appears in the legacy wallet (as watchonly receive).
+        lt = wallet.listtransactions("*", 100, 0, True)  # include_watchonly=True
+        assert any(tx["txid"] == txid for tx in lt)
+
+        wallet.unloadwallet()
+
+        # Erase all importaddress-written records from the BDB file except the tx
+        # record itself. This simulates BDB log file cross-contamination: the tx
+        # data was written into the wallet via log replay, but without the
+        # corresponding key/script material or address book entries. After erasure
+        # the wallet has the tx record but nothing that would let migration identify
+        # or transfer it.
+        wallet_dat = self.old_node.wallets_path / wallet_name / "wallet.dat"
+        addr_bytes = foreign_addr.encode()
+        addr_encoded = bytes([len(addr_bytes)]) + addr_bytes  # compact_size prefix + address
+        self.erase_bdb_record(wallet_dat, b"watchs")
+        self.erase_bdb_record(wallet_dat, b"watchmeta")
+        self.erase_bdb_record(wallet_dat, b"purpose" + addr_encoded)
+        self.erase_bdb_record(wallet_dat, b"name" + addr_encoded)
+
+        # Copy to master node for migration.
+        master_wallet_path = self.master_node.wallets_path / wallet_name
+        os.makedirs(master_wallet_path, exist_ok=True)
+        shutil.copyfile(wallet_dat, master_wallet_path / "wallet.dat")
+
+        # Migration must succeed (not abort) and log a warning for the dropped tx.
+        with self.master_node.assert_debug_log(
+            expected_msgs=["cannot be identified to belong to migrated wallets; dropping it"],
+        ):
+            self.master_node.migratewallet(wallet_name)
+
+        migrated = self.master_node.get_wallet_rpc(wallet_name)
+        assert_equal(migrated.getwalletinfo()["descriptors"], True)
+
+        # The unidentified transaction must have been removed from the migrated wallet.
+        txids_after = {tx["txid"] for tx in migrated.listtransactions("*", 100)}
+        assert txid not in txids_after
+
+        migrated.unloadwallet()
+
     @staticmethod
     def erase_bdb_record(wallet_dat_path, key):
         data = bytearray(wallet_dat_path.read_bytes())
@@ -1799,6 +1860,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_no_load_reports_auxiliary_wallet_names()
         self.test_solvable_no_privs()
         self.test_loading_failure_after_migration()
+        self.test_unidentified_tx()
         self.test_missing_bestblock()
 
         # Note: After this test the first 250 blocks of 'master_node' are pruned
