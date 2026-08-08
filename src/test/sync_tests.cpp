@@ -7,6 +7,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 
@@ -137,6 +138,53 @@ BOOST_AUTO_TEST_CASE(inconsistent_lock_order_detected)
 #ifdef DEBUG_LOCKORDER
     g_debug_lockorder_abort = prev;
 #endif // DEBUG_LOCKORDER
+}
+
+BOOST_AUTO_TEST_CASE(shared_mutex)
+{
+    struct {
+        SharedMutex mutex;
+        int value GUARDED_BY(mutex){0};
+    } shared;
+
+    AssertLockNotHeld(shared.mutex);
+    WITH_LOCK(shared.mutex, AssertLockHeld(shared.mutex); shared.value = 1); // Exclusive lock permits guarded writes
+    {
+        READ_LOCK(shared.mutex); // Shared lock permits the guarded read below
+#ifdef DEBUG_LOCKORDER
+        BOOST_CHECK(!LockStackEmpty());
+#endif
+        BOOST_CHECK_EQUAL(shared.value, 1);
+    }
+    AssertLockNotHeld(shared.mutex);
+    BOOST_CHECK(LockStackEmpty());
+}
+
+BOOST_AUTO_TEST_CASE(shared_lock_outlives_outer_lock)
+{
+#ifdef DEBUG_LOCKORDER
+    const bool prev{g_debug_lockorder_abort};
+    g_debug_lockorder_abort = false;
+#endif
+
+    {
+        Mutex outer_mutex;
+        auto outer_lock{std::make_unique<UniqueLock<Mutex>>(LOCK_ARGS(outer_mutex))};
+        SharedMutex shared_mutex;
+        SharedLock shared_lock{LOCK_ARGS(shared_mutex)};
+        outer_lock.reset();
+        const auto relock{[&] { LOCK(outer_mutex); }};
+#ifdef DEBUG_LOCKORDER
+        BOOST_CHECK_EXCEPTION(relock(), std::logic_error, HasReason("potential deadlock detected"));
+#else
+        BOOST_CHECK_NO_THROW(relock());
+#endif
+    }
+    BOOST_CHECK(LockStackEmpty());
+
+#ifdef DEBUG_LOCKORDER
+    g_debug_lockorder_abort = prev;
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()

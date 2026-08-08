@@ -72,10 +72,11 @@ CCoinsViewDB::~CCoinsViewDB()
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
+    AssertLockHeld(::cs_main);
     // We can't do this operation with an in-memory DB since we'll lose all the coins upon
     // reset.
     if (!m_db_params.memory_only) {
-        LOCK(m_db_mutex);
+        LOCK(m_db_mutex); // Wait for cursors and compaction
         // Have to do a reset first to get the original `m_db` state to release its
         // filesystem lock.
         m_db.reset();
@@ -202,8 +203,7 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
     m_compaction = std::async(std::launch::async, [this] {
         try {
             util::ThreadRename("utxocompact");
-            LOCK(m_db_mutex);
-
+            SharedLock db_lock{LOCK_ARGS(m_db_mutex)}; // Coexists with cursors and protects m_db lifetime
             LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
             m_db->CompactFull();
             LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
@@ -220,9 +220,9 @@ class CCoinsViewDBCursor: public CCoinsViewCursor
 public:
     // Prefer using CCoinsViewDB::Cursor() since we want to perform some
     // cache warmup on instantiation.
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256& in_block_hash):
-        CCoinsViewCursor(in_block_hash), pcursor(pcursorIn) {}
-    ~CCoinsViewDBCursor() = default;
+    CCoinsViewDBCursor(CDBIterator* cursor, const uint256& block_hash, SharedLock db_lock)
+        : CCoinsViewCursor{block_hash}, m_db_lock{std::move(db_lock)}, pcursor{cursor} {}
+    ~CCoinsViewDBCursor() override { pcursor.reset(); } // Destroy iterator before releasing m_db_lock
 
     bool GetKey(COutPoint &key) const override;
     bool GetValue(Coin &coin) const override;
@@ -231,6 +231,7 @@ public:
     void Next() override;
 
 private:
+    SharedLock m_db_lock;
     std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
@@ -239,8 +240,9 @@ private:
 
 std::unique_ptr<CCoinsViewCursor> CCoinsViewDB::Cursor() const
 {
+    SharedLock db_lock{LOCK_ARGS(m_db_mutex)};
     auto i = std::make_unique<CCoinsViewDBCursor>(
-        const_cast<CDBWrapper&>(*m_db).NewIterator(), GetBestBlock());
+        const_cast<CDBWrapper&>(*m_db).NewIterator(), GetBestBlock(), std::move(db_lock));
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
