@@ -104,6 +104,7 @@ class Socks5Configuration():
         # and it decides where the connection is redirected to. It is passed:
         # - the address the client requested to connect to
         # - the port the client requested to connect to
+        # - the client's socket address as seen by the proxy, formatted as host:port
         # It is supposed to return an object like:
         # {
         #     "actual_to_addr": "127.0.0.1"
@@ -140,8 +141,9 @@ class Socks5Connection():
         """Handle socks5 request according to RFC1928."""
         log_exception_prefix = "Socks5Connection.handle(): "
         try:
+            proxy_client = format_sock(self.conn, local=False)
             log_exception_prefix = ("Socks5Connection.handle("
-                                    f"client={format_sock(self.conn, local=False)}, "
+                                    f"client={proxy_client}, "
                                     f"proxy={format_sock(self.conn, local=True)}): ")
 
             # Verify socks version
@@ -193,7 +195,9 @@ class Socks5Connection():
             port_hi,port_lo = recvall(self.conn, 2)
             port = (port_hi << 8) | port_lo
 
-            # Send dummy response
+            # Reply SUCCESS before calling destinations_factory, so the client can finish
+            # establishing the connection and register the peer; factories that consult
+            # getpeerinfo depend on that order.
             self.conn.sendall(bytearray([0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
 
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
@@ -205,7 +209,7 @@ class Socks5Connection():
 
             if self.serv.is_running():
                 if self.serv.conf.destinations_factory is not None:
-                    dest = self.serv.conf.destinations_factory(requested_to_addr, port)
+                    dest = self.serv.conf.destinations_factory(requested_to_addr, port, proxy_client)
                     if dest is not None:
                         logger.debug(f"Serving connection to {requested_to}, will redirect it to "
                                     f"{dest['actual_to_addr']}:{dest['actual_to_port']} instead")
