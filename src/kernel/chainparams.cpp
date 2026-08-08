@@ -136,6 +136,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
 
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
         ApplyDeploymentOptions(opts.dep_opts);
 
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000001128750f82f4c366153a3a030"};
@@ -260,6 +265,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
 
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
         ApplyDeploymentOptions(opts.dep_opts);
 
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000017dde1c649f3708d14b6"};
@@ -361,6 +371,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
 
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
         ApplyDeploymentOptions(opts.dep_opts);
 
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000009a0fe15d0177d086304"};
@@ -438,6 +453,112 @@ public:
 };
 
 /**
+ * Testnet (v5): public test network which is reset from time to time.
+ *
+ * Testnet 5 is specified in BIP95. Relative to Testnet 4 it removes the 20-minute
+ * minimum-difficulty exception, raises the minimum difficulty, and is intended to
+ * enforce the BIP54 consensus cleanup rules from block 1.
+ */
+class CTestNet5Params : public CChainParams {
+public:
+    CTestNet5Params(const TestNetOptions& opts) {
+        m_chain_type = ChainType::TESTNET5;
+        consensus.signet_blocks = false;
+        consensus.signet_challenge.clear();
+        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.BIP34Height = 1;
+        consensus.BIP34Hash = uint256{};
+        consensus.BIP65Height = 1;
+        consensus.BIP66Height = 1;
+        consensus.CSVHeight = 1;
+        consensus.SegwitHeight = 1;
+        consensus.MinBIP9WarningHeight = 0;
+        // Testnet 5 has a raised minimum difficulty of ~1,000,000, i.e. nBits 0x1a0fffff.
+        consensus.powLimit = uint256{"0000000000000fffff0000000000000000000000000000000000000000000000"};
+        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        consensus.nPowTargetSpacing = 10 * 60;
+        // Testnet 5 has no minimum-difficulty exception.
+        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.enforce_BIP94 = false;
+        consensus.fPowNoRetargeting = false;
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75%
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].min_activation_height = 0; // No activation delay
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].threshold = 1512; // 75%
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].period = 2016;
+
+        ApplyDeploymentOptions(opts.dep_opts);
+
+        consensus.nMinimumChainWork = uint256{};
+        consensus.defaultAssumeValid = uint256{};
+
+        pchMessageStart[0] = 0x46; // 'F'
+        pchMessageStart[1] = 0x49; // 'I'
+        pchMessageStart[2] = 0x56; // 'V'
+        pchMessageStart[3] = 0x45; // 'E'
+        nDefaultPort = 18335;
+        nPruneAfterHeight = 1000;
+        m_assumed_blockchain_size = 0;
+        m_assumed_chain_state_size = 0;
+
+        // TODO: the genesis block has not been mined yet. Everything only known
+        // once it is mined is zeroed out and marked below, so the header does not
+        // satisfy its own nBits and the node cannot run on testnet5 yet.
+        const char* testnet5_genesis_msg = ""; // BIP95 leaves the message empty
+        // TODO: use a recent mainnet block hash as the pubkey
+        const CScript testnet5_genesis_script = CScript() << "000000000000000000000000000000000000000000000000000000000000000000"_hex << OP_CHECKSIG;
+        genesis = CreateGenesisBlock(testnet5_genesis_msg,
+                testnet5_genesis_script,
+                0, // TODO: nTime
+                0, // TODO: nNonce
+                0x1a0fffff,
+                1,
+                50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256{"e9a8fd2b0c78e01702e9ede3f79f2217142c25fb70e22dd86bff2879afd5761e"}); // TODO
+        assert(genesis.hashMerkleRoot == uint256{"b3f9a8c19683a9bb0475e37b13a77ed3051965c642da2aef093c7fe3eb08e3bc"}); // TODO
+
+        // No DNS or fixed seeds defined for Testnet 5 yet.
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+
+        bech32_hrp = "tb";
+
+        fDefaultConsistencyChecks = false;
+        m_is_mockable_chain = false;
+
+        // No assumeutxo snapshots for Testnet 5 yet.
+
+        chainTxData = ChainTxData{
+            0,
+            0,
+            0,
+        };
+
+        m_headers_sync_params = HeadersSyncParams{
+            .commitment_period = 606,
+            .redownload_buffer_size = 16092, // 16092/606 = ~26.6 commitments
+        };
+    }
+};
+
+/**
  * Signet: test network with an additional consensus parameter (see BIP325).
  */
 class SigNetParams : public CChainParams {
@@ -505,6 +626,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         ApplyDeploymentOptions(options.dep_opts);
 
@@ -589,6 +715,14 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 108; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 144; // Faster than normal for regtest (144 instead of 2016)
+
+        // Deployment of the Consensus Cleanup (BIP 54)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].min_activation_height = 0; // No activation delay
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].threshold = 108; // 75%
+        consensus.vDeployments[Consensus::DEPLOYMENT_CONSENSUSCLEANUP].period = 144;
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
@@ -686,6 +820,11 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet4(const TestNetOptions&
     return std::make_unique<const CTestNet4Params>(options);
 }
 
+std::unique_ptr<const CChainParams> CChainParams::TestNet5(const TestNetOptions& options)
+{
+    return std::make_unique<const CTestNet5Params>(options);
+}
+
 std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 {
     std::vector<int> heights;
@@ -702,6 +841,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
     const auto mainnet_msg = CChainParams::Main()->MessageStart();
     const auto testnet_msg = CChainParams::TestNet()->MessageStart();
     const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
+    const auto testnet5_msg = CChainParams::TestNet5()->MessageStart();
     const auto regtest_msg = CChainParams::RegTest()->MessageStart();
     const auto signet_msg = CChainParams::SigNet()->MessageStart();
 
@@ -711,6 +851,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
         return ChainType::TESTNET;
     } else if (std::ranges::equal(message, testnet4_msg)) {
         return ChainType::TESTNET4;
+    } else if (std::ranges::equal(message, testnet5_msg)) {
+        return ChainType::TESTNET5;
     } else if (std::ranges::equal(message, regtest_msg)) {
         return ChainType::REGTEST;
     } else if (std::ranges::equal(message, signet_msg)) {
