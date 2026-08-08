@@ -87,7 +87,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
 
     LOCK(wallet->cs_wallet);
-    auto available_coins = AvailableCoins(*wallet);
+    auto available_coins = *Assert(AvailableCoins(*wallet));
     std::vector<COutput> coins = available_coins.All();
     // Preselect the first 3 UTXO (150 BTC total)
     std::set<COutPoint> preset_inputs = {coins[0].outpoint, coins[1].outpoint, coins[2].outpoint};

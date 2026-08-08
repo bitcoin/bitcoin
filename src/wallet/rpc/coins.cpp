@@ -600,7 +600,7 @@ RPCMethod listunspent()
         cctl.m_include_unsafe_inputs = include_unsafe;
         filter_coins.check_version_trucness = false;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoins(*pwallet, &cctl, /*feerate=*/std::nullopt, filter_coins).All();
+        vecOutputs = CHECK_NONFATAL(AvailableCoins(*pwallet, &cctl, /*feerate=*/std::nullopt, filter_coins))->All();
     }
 
     LOCK(pwallet->cs_wallet);
