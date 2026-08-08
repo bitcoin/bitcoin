@@ -797,6 +797,21 @@ void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx)
     }
 }
 
+void StripPSBTKeyOriginFields(PartiallySignedTransaction& psbt)
+{
+    psbt.m_xpubs.clear();
+
+    for (PSBTInput& input : psbt.inputs) {
+        input.hd_keypaths.clear();
+        input.m_tap_bip32_paths.clear();
+    }
+
+    for (PSBTOutput& output : psbt.outputs) {
+        output.hd_keypaths.clear();
+        output.m_tap_bip32_paths.clear();
+    }
+}
+
 bool FinalizePSBT(PartiallySignedTransaction& psbtx)
 {
     // Finalize input signatures -- in case we have partial signatures that add up to a complete
