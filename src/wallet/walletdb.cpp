@@ -1039,7 +1039,7 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         try {
             CWalletTx wtx{deserialize, value, ReadWtxVariants(batch, hash)};
             if (wtx.GetHash() != hash) {
-                result = std::max(result, DBErrors::NEED_RESCAN);
+                return DBErrors::CORRUPT;
             }
 
             if (wtx.nOrderPos == -1) {
