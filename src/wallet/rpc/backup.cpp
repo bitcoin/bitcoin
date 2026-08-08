@@ -233,37 +233,25 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             } else if (parsed_descs.size() > 2) {
                 CHECK_NONFATAL(!desc_internal);
             }
-            // Need to ExpandPrivate to check if private keys are available for all pubkeys
+            // Expand to check whether the descriptor can be derived at the first index.
             FlatSigningProvider expand_keys;
             std::vector<CScript> scripts;
             if (!parsed_desc->Expand(0, keys, scripts, expand_keys)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Cannot expand descriptor. Probably because of hardened derivations without private keys provided");
             }
-            parsed_desc->ExpandPrivate(0, keys, expand_keys);
 
             for (const auto& w : parsed_desc->Warnings()) {
                warnings.push_back(w);
             }
 
-            // Check if all private keys are provided
-            bool have_all_privkeys = !expand_keys.keys.empty();
-            for (const auto& entry : expand_keys.origins) {
-                const CKeyID& key_id = entry.first;
-                CKey key;
-                if (!expand_keys.GetKey(key_id, key)) {
-                    have_all_privkeys = false;
-                    break;
-                }
-            }
-
             // If private keys are enabled, check some things.
             if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-               if (keys.keys.empty()) {
+                if (keys.keys.empty()) {
                     throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
-               }
-               if (!have_all_privkeys) {
-                   warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
-               }
+                }
+                if (!parsed_desc->HavePrivateKeys(keys)) {
+                    warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
+                }
             }
 
             // If this is an unused(KEY) descriptor, check that the wallet doesn't already have other descriptors with this key
