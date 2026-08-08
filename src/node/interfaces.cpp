@@ -43,7 +43,6 @@
 #include <node/mining_args.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
-#include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -61,6 +60,7 @@
 #include <univalue.h>
 #include <util/btcsignals.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -371,7 +371,7 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output);
     }
-    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
+    util::Expected<void, TransactionError> broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
     {
         return BroadcastTransaction(*m_context,
                                     std::move(tx),
@@ -687,11 +687,11 @@ public:
         TxBroadcast broadcast_method,
         std::string& err_string) override
     {
-        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, broadcast_method, /*wait_callback=*/false);
+        const auto result = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, broadcast_method, /*wait_callback=*/false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
-        return TransactionError::OK == err;
+        return static_cast<bool>(result);
     }
     void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize, CAmount* ancestorfees) override
     {
