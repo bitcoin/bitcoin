@@ -117,7 +117,7 @@ static std::vector<RPCResult> FeeEstimateHorizonDoc(bool elide = false)
         {RPCResult::Type::OBJ, "fail", /*optional=*/true, "information about the highest range of feerates to fail to meet the threshold", FeeRateBucketDoc(/*elide=*/true)},
         {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
         {
-            {RPCResult::Type::STR, "error", ""},
+            {RPCResult::Type::STR, "", "error"},
         }},
     };
     return elide ? ElideGroup(std::move(fields)) : fields;
