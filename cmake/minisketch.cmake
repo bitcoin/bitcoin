@@ -27,14 +27,20 @@ check_cxx_source_compiles_with_flags("
   CXXFLAGS ${CLMUL_CXXFLAGS}
 )
 
-add_library(minisketch_common INTERFACE)
+add_library(nowarn_minisketch_interface INTERFACE)
 if(MSVC)
-  target_compile_options(minisketch_common INTERFACE
+  target_compile_options(nowarn_minisketch_interface INTERFACE
     /wd4060
     /wd4065
     /wd4146
     /wd4244
     /wd4267
+  )
+else()
+  # This exemption can be removed once the minisketch subtree
+  # includes https://github.com/bitcoin-core/minisketch/pull/102.
+  try_append_cxx_flags("-Wunused-template" TARGET nowarn_minisketch_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-unused-template"
   )
 endif()
 
@@ -64,7 +70,7 @@ target_include_directories(minisketch
 target_link_libraries(minisketch
   PRIVATE
     core_interface
-    minisketch_common
+    nowarn_minisketch_interface
 )
 
 set_target_properties(minisketch PROPERTIES
