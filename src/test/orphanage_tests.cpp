@@ -15,6 +15,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/transaction_utils.h>
+#include <util/check.h>
 
 #include <array>
 #include <cstdint>
@@ -335,6 +336,20 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
 
         orphanage->SanityCheck();
+    }
+
+    // More peers than global latency slots.
+    {
+        constexpr auto global_limit{2U};
+        auto orphanage{node::MakeTxOrphanage(global_limit, /*reserved_peer_usage=*/TOTAL_SIZE)};
+
+        for (auto peer{0U}; peer < global_limit; ++peer) orphanage->AddTx(txns.at(peer), peer);
+
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), 1);
+        BOOST_CHECK(orphanage->AddTx(txns.at(2), /*peer=*/2));
+
+        BOOST_CHECK_EQUAL(orphanage->TotalLatencyScore(), global_limit);
+        BOOST_CHECK_EQUAL(orphanage->CountAnnouncements(), global_limit);
     }
 
     // Test eviction of multiple transactions at a time
