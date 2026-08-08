@@ -9,6 +9,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 
 #include <fstream>
 #include <iterator>
@@ -119,7 +120,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     return errors.empty();
 }
 
-bool WriteSettings(const fs::path& path,
+bool WriteJson(const fs::path& path,
     const std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors)
 {
@@ -131,20 +132,25 @@ bool WriteSettings(const fs::path& path,
     for (const auto& value : values) {
         out.pushKVEnd(value.first, value.second);
     }
+    const fs::path path_tmp{path + ".tmp"};
     std::ofstream file;
-    file.open(path.std_path());
+    file.open(path_tmp.std_path());
     if (file.fail()) {
-        errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));
+        errors.emplace_back(strprintf("Error: Unable to open JSON file %s for writing", fs::PathToString(path_tmp)));
         return false;
     }
     file << out.write(/* prettyIndent= */ 4, /* indentLevel= */ 1) << std::endl;
     if (file.fail()) {
-        errors.emplace_back(strprintf("Error: Unable to write settings file %s", fs::PathToString(path)));
+        errors.emplace_back(strprintf("Error: Unable to write JSON file %s", fs::PathToString(path_tmp)));
         return false;
     }
     file.close();
     if (file.fail()) {
-        errors.emplace_back(strprintf("Error: Unable to close settings file %s", fs::PathToString(path)));
+        errors.emplace_back(strprintf("Error: Unable to close JSON file %s", fs::PathToString(path_tmp)));
+        return false;
+    }
+    if (!RenameOver(path_tmp, path)) {
+        errors.emplace_back(strprintf("Failed renaming JSON file %s to %s", fs::PathToString(path_tmp), fs::PathToString(path)));
         return false;
     }
     return true;
