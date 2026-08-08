@@ -107,6 +107,7 @@ typedef int64_t NodeId;
 struct AddedNodeParams {
     std::string m_added_node;
     bool m_use_v2transport;
+    bool m_bip152_highbandwidth{false};
 };
 
 struct AddedNodeInfo {
@@ -1357,6 +1358,9 @@ public:
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(std::string_view node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    /** Whether an outbound peer matches an added node configured for BIP152 high-bandwidth announcements. */
+    bool IsBip152HighBandwidthAddedNode(const CNode& node) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_nodes_mutex);
 
