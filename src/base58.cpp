@@ -37,25 +37,25 @@ static const int8_t mapBase58[256] = {
     -1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
 };
 
-[[nodiscard]] static bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_len)
+[[nodiscard]] static bool DecodeBase58(const char* psz, const char* end, std::vector<unsigned char>& vch, int max_ret_len)
 {
     // Skip leading spaces.
-    while (*psz && IsSpace(*psz))
+    while (psz != end && IsSpace(*psz))
         psz++;
     // Skip and count leading '1's.
     int zeroes = 0;
     int length = 0;
-    while (*psz == '1') {
+    while (psz != end && *psz == '1') {
         zeroes++;
         if (zeroes > max_ret_len) return false;
         psz++;
     }
     // Allocate enough space in big-endian base256 representation.
-    int size = strlen(psz) * 733 /1000 + 1; // log(58) / log(256), rounded up.
+    int size = (end - psz) * 733 / 1000 + 1; // log(58) / log(256), rounded up.
     std::vector<unsigned char> b256(size);
     // Process the characters.
     static_assert(std::size(mapBase58) == 256, "mapBase58.size() should be 256"); // guarantee not out of range
-    while (*psz && !IsSpace(*psz)) {
+    while (psz != end && !IsSpace(*psz)) {
         // Decode base58 character
         int carry = mapBase58[(uint8_t)*psz];
         if (carry == -1)  // Invalid b58 character
@@ -72,9 +72,9 @@ static const int8_t mapBase58[256] = {
         psz++;
     }
     // Skip trailing spaces.
-    while (IsSpace(*psz))
+    while (psz != end && IsSpace(*psz))
         psz++;
-    if (*psz != 0)
+    if (psz != end)
         return false;
     // Skip leading zeroes in b256.
     std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
@@ -126,12 +126,12 @@ std::string EncodeBase58(std::span<const unsigned char> input)
     return str;
 }
 
-bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
+bool DecodeBase58(std::string_view str, std::vector<unsigned char>& vchRet, int max_ret_len)
 {
     if (!ContainsNoNUL(str)) {
         return false;
     }
-    return DecodeBase58(str.c_str(), vchRet, max_ret_len);
+    return DecodeBase58(str.data(), str.data() + str.size(), vchRet, max_ret_len);
 }
 
 std::string EncodeBase58Check(std::span<const unsigned char> input)
@@ -143,9 +143,9 @@ std::string EncodeBase58Check(std::span<const unsigned char> input)
     return EncodeBase58(vch);
 }
 
-[[nodiscard]] static bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet, int max_ret_len)
+[[nodiscard]] static bool DecodeBase58Check(const char* psz, const char* end, std::vector<unsigned char>& vchRet, int max_ret_len)
 {
-    if (!DecodeBase58(psz, vchRet, max_ret_len > std::numeric_limits<int>::max() - 4 ? std::numeric_limits<int>::max() : max_ret_len + 4) ||
+    if (!DecodeBase58(psz, end, vchRet, max_ret_len > std::numeric_limits<int>::max() - 4 ? std::numeric_limits<int>::max() : max_ret_len + 4) ||
         (vchRet.size() < 4)) {
         vchRet.clear();
         return false;
@@ -160,10 +160,10 @@ std::string EncodeBase58Check(std::span<const unsigned char> input)
     return true;
 }
 
-bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret)
+bool DecodeBase58Check(std::string_view str, std::vector<unsigned char>& vchRet, int max_ret)
 {
     if (!ContainsNoNUL(str)) {
         return false;
     }
-    return DecodeBase58Check(str.c_str(), vchRet, max_ret);
+    return DecodeBase58Check(str.data(), str.data() + str.size(), vchRet, max_ret);
 }
