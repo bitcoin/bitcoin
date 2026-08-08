@@ -24,6 +24,7 @@ from test_framework.messages import (
     DEFAULT_BLOCK_RESERVED_WEIGHT,
     MAX_BLOCK_SIGOPS_COST,
     MAX_BLOCK_WEIGHT,
+    MAX_MONEY,
     from_hex,
     msg_headers,
     ser_uint256,
@@ -267,35 +268,53 @@ class IPCMiningTest(BitcoinTestFramework):
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
 
-                self.log.debug("Wait for a new template")
+                self.log.debug("Wait for a new template, get one after the tip updates")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                waitoptions.timeout = self.default_ipc_timeout
-                waitoptions.feeThreshold = 1
+                # Ignore fee increases, wait only for the tip update
+                waitoptions.feeThreshold = MAX_MONEY
+                # The current waitNext() implementation only checks fees once
+                # per second and at the timeout deadline. Temporarily increase
+                # the timeout to allow a fee check to happen before the deadline.
+                waitoptions.timeout = 2000.0 * self.options.timeout_factor
+                self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
-                    lambda: self.generate(self.nodes[0], 1))
+                    # This mines the transaction, so it won't be in the next template
+                    lambda: self.generate(self.nodes[0], 1),
+                    # Sleep past the first fee check (currently after 1s), so
+                    # that waitNext would return early if MAX_MONEY was ignored.
+                    sleep_time=1.1 * self.options.timeout_factor)
                 assert template2 is not None
                 block2 = await mining_get_block(template2, ctx)
+                # If waitNext had returned for a fee increase instead of tip
+                # update, this template would include the mempool transaction.
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
+                # Temporarily decrease the timeout since we want to hit the
+                # deadline, which in the current implementation triggers a
+                # final fee check, and see what happens.
+                waitoptions.timeout = 100
+                self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template3 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
                 assert template3 is None
 
+                waitoptions.timeout = self.default_ipc_timeout
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
+                waitoptions.feeThreshold = 1
                 template4 = await wait_and_do(
                     mining_wait_next_template(template2, stack, ctx, waitoptions),
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
                 assert template4 is not None
                 block3 = await mining_get_block(template4, ctx)
-                assert_equal(len(block3.vtx), 2)
+                assert_equal(len(block3.vtx), 3)
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
                 template5 = await mining_wait_next_template(template4, stack, ctx, waitoptions)
                 assert template5 is not None
                 block4 = await mining_get_block(template5, ctx)
-                assert_equal(len(block4.vtx), 2)
+                assert_equal(len(block4.vtx), 3)
                 waitoptions.feeThreshold = 1
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
@@ -304,7 +323,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
                 assert template6 is not None
                 block4 = await mining_get_block(template6, ctx)
-                assert_equal(len(block4.vtx), 3)
+                assert_equal(len(block4.vtx), 4)
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
