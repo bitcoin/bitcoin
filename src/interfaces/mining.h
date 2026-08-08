@@ -78,7 +78,7 @@ public:
 
     //! Deprecated older method preserved to return an explicit error for IPC
     //! clients using mining.capnp @7.
-    virtual bool submitSolutionOld7(uint32_t, uint32_t, uint32_t, CTransactionRef)
+    [[noreturn]] virtual bool submitSolutionOld7(uint32_t, uint32_t, uint32_t, CTransactionRef)
     {
         throw std::runtime_error("Old submitSolution (@7) not supported. Please update your client!");
     }

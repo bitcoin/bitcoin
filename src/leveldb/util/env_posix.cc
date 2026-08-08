@@ -730,9 +730,9 @@ class PosixEnv : public Env {
   }
 
  private:
-  void BackgroundThreadMain();
+  [[noreturn]] void BackgroundThreadMain();
 
-  static void BackgroundThreadEntryPoint(PosixEnv* env) {
+  [[noreturn]] static void BackgroundThreadEntryPoint(PosixEnv* env) {
     env->BackgroundThreadMain();
   }
 
