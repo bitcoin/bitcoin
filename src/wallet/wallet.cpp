@@ -764,28 +764,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
     }
 }
 
-/**
- * Outpoint is spent if any non-conflicted transaction
- * spends it:
- */
-bool CWallet::IsSpent(const COutPoint& outpoint) const
-{
-    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
-    range = mapTxSpends.equal_range(outpoint);
-
-    for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
-        const Txid& txid = it->second;
-        const auto mit = mapWallet.find(txid);
-        if (mit != mapWallet.end()) {
-            const auto& wtx = mit->second;
-            if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted())
-                return true; // Spent
-        }
-    }
-    return false;
-}
-
-CWallet::SpendType CWallet::HowSpent(const COutPoint& outpoint) const
+CWallet::SpendType CWallet::HowSpent(const COutPoint& outpoint, bool isSpent) const
 {
     SpendType st{SpendType::UNSPENT};
 
@@ -803,6 +782,9 @@ CWallet::SpendType CWallet::HowSpent(const COutPoint& outpoint) const
             } else if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted()) {
                 if (st == SpendType::UNSPENT) st = SpendType::NONMEMPOOL;
             }
+            // If we are only checking for spent condition and not how the coin is spent
+            // early exit as fast as we know if it is spent.
+            if (isSpent && st != SpendType::UNSPENT) return st;
         }
     }
     return st;
