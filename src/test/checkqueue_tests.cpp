@@ -10,7 +10,7 @@
 #include <util/chaintype.h>
 #include <util/time.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -233,7 +233,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
         }
         auto result = control.Complete();
         if (i > 0) {
-            BOOST_REQUIRE(result.has_value() && *result == static_cast<int>(17 * i));
+            BOOST_REQUIRE(result.has_value());
+            BOOST_REQUIRE(*result == static_cast<int>(17 * i));
         } else {
             BOOST_REQUIRE(!result.has_value());
         }

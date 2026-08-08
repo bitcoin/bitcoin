@@ -39,7 +39,7 @@
 #include <map>
 #include <string>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <univalue.h>
 
@@ -382,11 +382,12 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     SpanReader{vch} >> TX_WITH_WITNESS(tx);
     TxValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE((!CheckTransaction(CTransaction(tx), state) || !state.IsValid()), "Transaction with duplicate txins should be invalid.");
 }
 
 BOOST_AUTO_TEST_CASE(test_Get)

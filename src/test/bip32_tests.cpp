@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <clientversion.h>
 #include <key.h>
@@ -13,6 +13,20 @@
 
 #include <string>
 #include <vector>
+
+static std::string stringify(const CExtKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtKey{" + HexStr(code) + "}";
+}
+
+static std::string stringify(const CExtPubKey& k)
+{
+    unsigned char code[BIP32_EXTKEY_SIZE];
+    k.Encode(code);
+    return "CExtPubKey{" + HexStr(code) + "}";
+}
 
 namespace {
 
@@ -197,7 +211,8 @@ BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     }
 
     // But trying to derive a non-existent 256th depth will fail!
-    BOOST_CHECK(key_parent.nDepth == 255 && pubkey_parent.nDepth == 255);
+    BOOST_CHECK(key_parent.nDepth == 255);
+    BOOST_CHECK(pubkey_parent.nDepth == 255);
     BOOST_CHECK(!key_parent.Derive(key_child, 0));
     BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
 }

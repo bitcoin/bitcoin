@@ -17,7 +17,8 @@
 #include <util/asmap.h>
 #include <util/string.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
+#include <test/util/stringify.h>
 
 #include <cstdint>
 #include <optional>
@@ -26,6 +27,14 @@
 using namespace std::literals;
 using node::NodeContext;
 using util::ToString;
+
+static std::string stringify(const AddressPosition& p)
+{
+    return "AddressPosition{tried=" + ToString(p.tried) +
+           ", multiplicity=" + ToString(p.multiplicity) +
+           ", bucket=" + ToString(p.bucket) +
+           ", position=" + ToString(p.position) + "}";
+}
 
 static auto EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static const bool DETERMINISTIC{true};
@@ -186,7 +195,7 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK(addrman->Add({CAddress(addr1_port, NODE_NONE)}, source));
     BOOST_CHECK_EQUAL(addrman->Size(), 2U);
     auto addr_ret2 = addrman->Select().first;
-    BOOST_CHECK(addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334");
+    BOOST_CHECK((addr_ret2.ToStringAddrPort() == "250.1.1.1:8333" || addr_ret2.ToStringAddrPort() == "250.1.1.1:8334"));
 
     // Test: Add same IP but diff port to tried table; this converts the entry with
     // the specified port to tried, but not the other.
@@ -312,7 +321,7 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
 
     while (--counter > 0 && (!new_selected || !tried_selected)) {
         const CAddress selected{addrman->Select(/*new_only=*/false, {NET_I2P}).first};
-        BOOST_REQUIRE(selected == i2p_addr || selected == i2p_addr2);
+        BOOST_REQUIRE((selected == i2p_addr || selected == i2p_addr2));
         if (selected == i2p_addr) {
             tried_selected = true;
         } else {

@@ -5,7 +5,7 @@
 #include <consensus/amount.h>
 #include <policy/fees/block_policy_estimator.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <set>
 
