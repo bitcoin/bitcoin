@@ -41,7 +41,6 @@ enum class MessageVerificationResult {
 };
 
 enum class SigningResult {
-    OK, //!< No error
     PRIVATE_KEY_NOT_AVAILABLE,
     SIGNING_FAILED,
 };

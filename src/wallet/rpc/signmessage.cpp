@@ -57,10 +57,12 @@ RPCMethod signmessage()
             }
 
             std::string signature;
-            SigningResult err = pwallet->SignMessage(strMessage, *pkhash, signature);
-            if (err == SigningResult::SIGNING_FAILED) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
-            } else if (err != SigningResult::OK) {
+            auto res = pwallet->SignMessage(strMessage, *pkhash, signature);
+            if (!res) {
+                const SigningResult err{res.error()};
+                if (err == SigningResult::SIGNING_FAILED) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
+                }
                 throw JSONRPCError(RPC_WALLET_ERROR, SigningResultString(err));
             }
 
