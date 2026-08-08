@@ -64,9 +64,6 @@ class WalletTaprootTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-    def init_wallet(self, *, node):
-        pass
-
     @staticmethod
     def make_desc(pattern, privmap, keys, pub_only = False):
         pat = pattern.replace("$H", H_POINT)
@@ -171,8 +168,8 @@ class WalletTaprootTest(BitcoinTestFramework):
         assert rpc_online.gettransaction(txid)["confirmations"] > 0
         rpc_online.unloadwallet()
 
-    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
-        self.log.info("Testing %s through PSBT" % comment)
+    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change, keypath_only):
+        self.log.info(f"Testing {comment} through PSBT { '(key path only)' if keypath_only else '' }")
 
         # Create wallets
         wallet_uuid = uuid.uuid4().hex
@@ -212,12 +209,16 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['psbt']
-            res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
+            fee_rate = 1
+            if not keypath_only:
+                # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+                fee_rate = 200
+            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
+            res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=keypath_only)
             for wallet in [psbt_offline, key_only_wallet]:
-                res = wallet.walletprocesspsbt(psbt=psbt, finalize=False)
+                res = wallet.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=keypath_only)
 
+                retry = False
                 decoded = wallet.decodepsbt(res["psbt"])
                 if pattern.startswith("tr("):
                     for psbtin in decoded["inputs"]:
@@ -225,18 +226,64 @@ class WalletTaprootTest(BitcoinTestFramework):
                         assert "witness_utxo" in psbtin
                         assert "taproot_internal_key" in psbtin
                         assert "taproot_bip32_derivs" in psbtin
-                        assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
+                        if keypath_only:
+                            assert "taproot_script_path_sigs" not in psbtin
+                            if  "taproot_key_path_sig" not in psbtin:
+                                retry = True
+                        else:
+                            assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
                         if "taproot_script_path_sigs" in psbtin:
                             assert "taproot_merkle_root" in psbtin
                             assert "taproot_scripts" in psbtin
 
+                if retry:
+                    self.log.debug("Retry with script path")
+                    fee_rate = 200
+                    psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
+                    res = wallet.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=False)
+
                 rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
                 res = self.nodes[0].testmempoolaccept([rawtx])
+                self.log.debug(res)
                 assert res[0]["allowed"]
 
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert psbt_online.gettransaction(txid)['confirmations'] > 0
+
+        if keypath_only:
+            self.log.info("Testing send with keypath_only")
+
+            def assert_no_script_path(psbt):
+                decoded = psbt_online.decodepsbt(psbt)
+                for psbtin in decoded["inputs"]:
+                    assert "taproot_script_path_sigs" not in psbtin
+
+            test_balance = int(psbt_online.getbalance() * 100000000)
+            outputs = {self.boring.getnewaddress(): Decimal(test_balance // 2) / 100000000}
+            res = psbt_online.send(
+                outputs=outputs,
+                options={
+                    "keypath_only": True,
+                    "psbt": True,
+                    "add_to_wallet": False,
+                    "fee_rate": 1,
+                    "subtract_fee_from_outputs": [0],
+                },
+            )
+            assert_equal(res["complete"], False)
+            assert_no_script_path(res["psbt"])
+
+            self.log.info("Testing sendall with keypath_only")
+            res = psbt_online.sendall(
+                recipients=[self.boring.getnewaddress()],
+                keypath_only=True,
+                psbt=True,
+                add_to_wallet=False,
+                fee_rate=1,
+            )
+            assert_equal(res["complete"], False)
+            assert_no_script_path(res["psbt"])
 
         # Cleanup
         psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True)["psbt"]
@@ -250,13 +297,15 @@ class WalletTaprootTest(BitcoinTestFramework):
 
     def do_test(self, comment, pattern, privmap, treefn):
         nkeys = len(privmap)
-        keys = random.sample(self.keys, nkeys * 4)
+        keys = random.sample(self.keys, nkeys * 6)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
-        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
+        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys], keypath_only=False)
+        if 'tr' in pattern:
+            self.do_test_psbt(comment, pattern, privmap, treefn, keys[4*nkeys:5*nkeys], keys[5*nkeys:6*nkeys], keypath_only=True)
 
     def generate_test_keys(self):
-        xprvs = [ExtendedPrivateKey.generate() for _ in range(0, 13)]
+        xprvs = [ExtendedPrivateKey.generate() for _ in range(0, 18)]
         return [{
             "xprv": xprv.to_string(),
             "xpub": xprv.pubkey().to_string(),
