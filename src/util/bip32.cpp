@@ -7,9 +7,11 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <optional>
+#include <span>
 #include <sstream>
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
@@ -17,7 +19,7 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
-    while (std::getline(ss, item, '/')) {
+    while (std::getline(ss, item, '/') || std::getline(ss, item, 'h')) {
         if (item.compare("m") == 0) {
             if (first) {
                 first = false;
@@ -28,6 +30,9 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         // Finds whether it is hardened
         uint32_t path = 0;
         size_t pos = item.find('\'');
+        if (pos == std::string::npos) {
+            pos = item.find('h');
+        }
         if (pos != std::string::npos) {
             // The hardened tick can only be in the last index of the string
             if (pos != item.size() - 1) {
@@ -40,6 +45,11 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         // Ensure this is only numbers
         const auto number{ToIntegral<uint32_t>(item)};
         if (!number) {
+            return false;
+        }
+        // A BIP32 child index is 31 bits; the top bit is reserved for the
+        // hardened marker, so the numeric part must not exceed 2^31 - 1.
+        if (*number > 0x7fffffff) {
             return false;
         }
         path |= *number;
@@ -63,4 +73,11 @@ std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe)
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe)
 {
     return "m" + FormatHDKeypath(keypath, apostrophe);
+}
+
+bool HasHardenedDerivation(std::span<const uint32_t> keypath)
+{
+    return std::any_of(keypath.begin(), keypath.end(), [](uint32_t index) {
+        return index >> 31;
+    });
 }
