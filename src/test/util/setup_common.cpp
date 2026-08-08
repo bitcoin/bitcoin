@@ -148,6 +148,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
     // Reset globals
     fDiscover = true;
+    fDiscoverSoftDisabled = false;
     fListen = true;
     SetRPCWarmupStarting();
     g_reachable_nets.Reset();
