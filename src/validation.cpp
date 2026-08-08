@@ -4828,8 +4828,7 @@ bool Chainstate::ReplayBlocks()
             return false;
         }
         pindexOld = &(m_blockman.m_block_index[hashHeads[1]]);
-        pindexFork = LastCommonAncestor(pindexOld, pindexNew);
-        assert(pindexFork != nullptr);
+        pindexFork = &LastCommonAncestor(*pindexOld, *pindexNew);
     }
 
     // Rollback along the old branch.
