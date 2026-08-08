@@ -136,6 +136,7 @@ BASE_SCRIPTS = [
     'p2p_dns_seeds.py',
     'wallet_groups.py',
     'p2p_blockfilters.py',
+    'wallet_chain_reprocess.py',
     'feature_assumevalid.py',
     'wallet_taproot.py',
     'feature_bip68_sequence.py',
