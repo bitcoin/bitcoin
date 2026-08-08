@@ -2726,7 +2726,7 @@ util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
         if (signer_spk_man == nullptr) {
             continue;
         }
-        auto signer{ExternalSignerScriptPubKeyMan::GetExternalSigner()};
+        auto signer{ExternalSignerScriptPubKeyMan::GetExternalSigner(m_external_signer_command, m_external_signer_chain)};
         if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
         return signer_spk_man->DisplayAddress(dest, *signer);
     }
@@ -2992,6 +2992,11 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
         }
         wallet->m_default_change_type = parsed.value();
     }
+
+    // Capture external signer settings here so signing code reads them from the
+    // wallet rather than from globals.
+    wallet->m_external_signer_command = args.GetArg("-signer", "");
+    wallet->m_external_signer_chain = args.GetChainTypeString();
 
     if (const auto arg{args.GetArg("-mintxfee")}) {
         std::optional<CAmount> min_tx_fee = ParseMoney(*arg);
@@ -3592,7 +3597,7 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
 {
     std::unique_ptr<DescriptorScriptPubKeyMan> spk_manager;
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        spk_manager = ExternalSignerScriptPubKeyMan::LoadFromStorage(*this, desc, m_keypool_size, keys, ckeys);
+        spk_manager = ExternalSignerScriptPubKeyMan::LoadFromStorage(*this, desc, m_keypool_size, keys, ckeys, m_external_signer_command, m_external_signer_chain);
     } else {
         spk_manager = DescriptorScriptPubKeyMan::LoadFromStorage(*this, desc, m_keypool_size, keys, ckeys);
     }
@@ -3649,7 +3654,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             return true;
         })) throw std::runtime_error("Error: cannot process db transaction for descriptors setup");
     } else {
-        auto signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
+        auto signer = ExternalSignerScriptPubKeyMan::GetExternalSigner(m_external_signer_command, m_external_signer_chain);
         if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
 
         // TODO: add account parameter
@@ -3677,7 +3682,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                     continue;
                 }
                 OutputType t =  *desc->GetOutputType();
-                auto spk_manager = ExternalSignerScriptPubKeyMan::CreateNew(*this, batch, m_keypool_size, std::move(desc));
+                auto spk_manager = ExternalSignerScriptPubKeyMan::CreateNew(*this, batch, m_keypool_size, std::move(desc), m_external_signer_command, m_external_signer_chain);
                 uint256 id = spk_manager->GetID();
                 AddScriptPubKeyMan(id, std::move(spk_manager));
                 AddActiveScriptPubKeyManWithDb(batch, id, t, internal);
