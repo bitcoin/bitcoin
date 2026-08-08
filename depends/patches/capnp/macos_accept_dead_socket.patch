@@ -1,0 +1,30 @@
+Fix IPC listeners on macOS dying when accepting a dead socket
+
+After `accept()`, kj unconditionally calls `setsockopt(TCP_NODELAY)` on
+the connection socket. For Unix sockets, kj handles the usual "not supported"
+error codes, however, on macOS EINVAL is returned when the client has
+already disconnected and kj only tolerates that code when built for FreeBSD.
+The unexpected error then goes uncaught in the accept loop, causing the
+listener to stop accepting new connections.
+
+See https://github.com/bitcoin-core/libmultiprocess/issues/319 for more details.
+
+Based on the EINVAL handling from https://github.com/capnproto/capnproto/commit/7df5bd078.
+
+diff --git a/c++/src/kj/async-io-unix.c++ b/c++/src/kj/async-io-unix.c++
+index 7e1c85fc..a254c2cc 100644
+--- a/c++/src/kj/async-io-unix.c++
++++ b/c++/src/kj/async-io-unix.c++
+@@ -1357,8 +1357,10 @@ public:
+               ownFd.get(), IPPROTO_TCP, TCP_NODELAY, (char*)&one, sizeof(one))) {
+           case EOPNOTSUPP:
+           case ENOPROTOOPT: // (returned for AF_UNIX in cygwin)
+-#if __FreeBSD__
+-          case EINVAL: // (returned for AF_UNIX in FreeBSD)
++#if __APPLE__ || __FreeBSD__
++          case EINVAL:
++            // On FreeBSD, EINVAL is returned for AF_UNIX sockets.
++            // On macOS, EINVAL may be returned for sockets that are already dead (due to a race with RST).
+ #endif
+             break;
+           default:
