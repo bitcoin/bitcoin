@@ -25,7 +25,7 @@ bool IsTopoSortedPackage(const Package& txns, std::unordered_set<Txid, SaltedTxi
     // txns. If any transaction's input spends a tx in that set, we've found a parent placed later
     // than its child.
     for (const auto& tx : txns) {
-        for (const auto& input : tx->vin) {
+        for (const auto& input : tx->GetInputs()) {
             if (later_txids.contains(input.prevout.hash)) {
                 // The parent is a subsequent transaction in the package.
                 return false;
@@ -54,14 +54,14 @@ bool IsConsistentPackage(const Package& txns)
     // Don't allow any conflicting transactions, i.e. spending the same inputs, in a package.
     std::unordered_set<COutPoint, SaltedOutpointHasher> inputs_seen;
     for (const auto& tx : txns) {
-        if (tx->vin.empty()) {
+        if (tx->GetInputs().empty()) {
             // This function checks consistency based on inputs, and we can't do that if there are
             // no inputs. Duplicate empty transactions are also not consistent with one another.
             // This doesn't create false negatives, as unconfirmed transactions are not allowed to
             // have no inputs.
             return false;
         }
-        for (const auto& input : tx->vin) {
+        for (const auto& input : tx->GetInputs()) {
             if (inputs_seen.contains(input.prevout)) {
                 // This input is also present in another tx in the package.
                 return false;
@@ -70,7 +70,7 @@ bool IsConsistentPackage(const Package& txns)
         // Batch-add all the inputs for a tx at a time. If we added them 1 at a time, we could
         // catch duplicate inputs within a single tx.  This is a more severe, consensus error,
         // and we want to report that from CheckTransaction instead.
-        std::transform(tx->vin.cbegin(), tx->vin.cend(), std::inserter(inputs_seen, inputs_seen.end()),
+        std::transform(tx->GetInputs().cbegin(), tx->GetInputs().cend(), std::inserter(inputs_seen, inputs_seen.end()),
                        [](const auto& input) { return input.prevout; });
     }
     return true;
@@ -124,7 +124,7 @@ bool IsChildWithParents(const Package& package)
     // The package is expected to be sorted, so the last transaction is the child.
     const auto& child = package.back();
     std::unordered_set<Txid, SaltedTxidHasher> input_txids;
-    std::transform(child->vin.cbegin(), child->vin.cend(),
+    std::transform(child->GetInputs().cbegin(), child->GetInputs().cend(),
                    std::inserter(input_txids, input_txids.end()),
                    [](const auto& input) { return input.prevout.hash; });
 
@@ -141,7 +141,7 @@ bool IsChildWithParentsTree(const Package& package)
                    [](const auto& ptx) { return ptx->GetHash(); });
     // Each parent must not have an input who is one of the other parents.
     return std::all_of(package.cbegin(), package.cend() - 1, [&](const auto& ptx) {
-        for (const auto& input : ptx->vin) {
+        for (const auto& input : ptx->GetInputs()) {
             if (parent_txids.contains(input.prevout.hash)) return false;
         }
         return true;

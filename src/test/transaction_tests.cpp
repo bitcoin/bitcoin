@@ -90,8 +90,8 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
 {
     bool tx_valid = true;
     ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
-    for (unsigned int i = 0; i < tx.vin.size() && tx_valid; ++i) {
-        const CTxIn input = tx.vin[i];
+    for (unsigned int i = 0; i < tx.GetInputs().size() && tx_valid; ++i) {
+        const CTxIn input = tx.GetInputs()[i];
         const CAmount amount = map_prevout_values.contains(input.prevout) ? map_prevout_values.at(input.prevout) : 0;
         try {
             tx_valid = VerifyScript(input.scriptSig, map_prevout_scriptPubKeys.at(input.prevout),
@@ -427,10 +427,10 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     DataStream ssout;
     ssout << TX_WITH_WITNESS(outputm);
     ssout >> TX_WITH_WITNESS(output);
-    assert(output->vin.size() == 1);
-    assert(output->vin[0] == outputm.vin[0]);
-    assert(output->vout.size() == 1);
-    assert(output->vout[0] == outputm.vout[0]);
+    assert(output->GetInputs().size() == 1);
+    assert(output->GetInputs()[0] == outputm.vin[0]);
+    assert(output->GetOutputs().size() == 1);
+    assert(output->GetOutputs()[0] == outputm.vout[0]);
 
     CMutableTransaction inputm;
     inputm.version = 1;
@@ -457,7 +457,7 @@ static void CheckWithFlag(const CTransactionRef& output, const CMutableTransacti
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &error);
+    bool ret = VerifyScript(inputi.GetInputs()[0].scriptSig, output->GetOutputs()[0].scriptPubKey, &inputi.GetInputs()[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->GetOutputs()[0].nValue, MissingDataBehavior::ASSERT_FAIL), &error);
     assert(ret == success);
 }
 
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
-        vChecks.emplace_back(coins[tx.vin[i].prevout.n].out, tx, signature_cache, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        vChecks.emplace_back(coins[tx.GetInputs()[i].prevout.n].out, tx, signature_cache, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
         control.Add(std::move(vChecks));
     }
 
@@ -561,9 +561,9 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
 {
     SignatureData sigdata;
-    sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
-    sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0]));
-    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, {.sighash_type = SIGHASH_DEFAULT}), tx->vout[0].scriptPubKey, sigdata);
+    sigdata = DataFromTransaction(input1, 0, tx->GetOutputs()[0]);
+    sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->GetOutputs()[0]));
+    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->GetOutputs()[0].nValue, {.sighash_type = SIGHASH_DEFAULT}), tx->GetOutputs()[0].scriptPubKey, sigdata);
     return sigdata;
 }
 

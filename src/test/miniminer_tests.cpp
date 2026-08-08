@@ -46,15 +46,15 @@ static inline bool sanity_check(const std::vector<CTransactionRef>& transactions
         if (fee == 0) continue;
         auto outpoint_ = outpoint; // structured bindings can't be captured in C++17, so we need to use a variable
         const bool found = std::any_of(transactions.cbegin(), transactions.cend(), [&](const auto& tx) {
-            return outpoint_.hash == tx->GetHash() && outpoint_.n < tx->vout.size();
+            return outpoint_.hash == tx->GetHash() && outpoint_.n < tx->GetOutputs().size();
         });
         if (!found) return false;
     }
     for (const auto& tx : transactions) {
         // If tx has multiple outputs, they must all have the same bumpfee (if they exist).
-        if (tx->vout.size() > 1) {
+        if (tx->GetOutputs().size() > 1) {
             std::set<CAmount> distinct_bumpfees;
-            for (size_t i{0}; i < tx->vout.size(); ++i) {
+            for (size_t i{0}; i < tx->GetOutputs().size(); ++i) {
                 const auto bumpfee = bumpfees.find(COutPoint{tx->GetHash(), static_cast<uint32_t>(i)});
                 if (bumpfee != bumpfees.end()) distinct_bumpfees.insert(bumpfee->second);
             }
