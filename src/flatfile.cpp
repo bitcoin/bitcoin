@@ -37,8 +37,16 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
     if (pos.IsNull()) {
         return nullptr;
     }
-    fs::path path = FileName(pos);
-    fs::create_directories(path.parent_path());
+    const fs::path path = FileName(pos);
+    // Create parent path only if we are going to write.
+    if (!read_only) {
+        std::error_code ec;
+        fs::create_directories(path.parent_path(), ec);
+        if (ec) {
+            LogError("Unable to open file '%s'. Error creating parent directories: %s", fs::PathToString(path), ec.message());
+            return nullptr;
+        }
+    }
     FILE* file = fsbridge::fopen(path, read_only ? "rb": "rb+");
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
