@@ -789,8 +789,7 @@ While `LogInfo`, `LogWarning` and `LogError` messages should be rare,
 in case there are circumstances where they are not, those messages
 are automatically rate-limited to prevent potential disk-filling
 attacks. For the cases where this protection is undesirable,
-rate-limiting can be avoided with the `util::log::NO_RATE_LIMIT` tag, eg
-`LogInfo(util::log::NO_RATE_LIMIT, "UpdateTip: new best=%s ...",...)`.
+rate-limiting can be avoided with the `ratelimit = false` log option.
 
 ## General C++
 
