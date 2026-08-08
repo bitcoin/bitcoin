@@ -20,12 +20,45 @@ const GIT: &str = "git";
 
 const DEFAULT_PAR: usize = 1;
 
+#[derive(Clone, Copy, PartialEq)]
+enum CoverageCheck {
+    Both,
+    IndividualInputs,
+    AllInputs,
+}
+
+impl CoverageCheck {
+    fn from_arg(arg: Option<&str>) -> Result<Self, AppError> {
+        let mode = match arg {
+            Some(s) => s.parse::<u8>().map_err(|e| {
+                exit_help(&format!(
+                    "Could not parse coverage check mode as integer ({s}): {e}"
+                ))
+            })?,
+            None => 0,
+        };
+        match mode {
+            0 => Ok(Self::Both),
+            1 => Ok(Self::IndividualInputs),
+            2 => Ok(Self::AllInputs),
+            _ => Err(exit_help(&format!(
+                "Coverage check mode must be 0, 1, or 2 ({mode})"
+            ))),
+        }
+    }
+}
+
 fn exit_help(err: &str) -> AppError {
     format!(
         r#"
 Error: {err}
 
-Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name [parallelism={DEFAULT_PAR}]
+Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name [parallelism={DEFAULT_PAR}] [coverage_check=0]
+
+coverage_check:
+  0  Check each input individually and all inputs in one go
+  1  Check each input individually
+  2  Check all inputs in one go
 
 Refer to the devtools/README.md for more details."#
     )
@@ -74,7 +107,8 @@ fn app() -> AppResult {
         None => DEFAULT_PAR,
     }
     .max(1);
-    if args.get(5).is_some() {
+    let coverage_check = CoverageCheck::from_arg(args.get(5).map(String::as_str))?;
+    if args.get(6).is_some() {
         Err(exit_help("Too many args"))?;
     }
 
@@ -84,7 +118,14 @@ fn app() -> AppResult {
 
     sanity_check(corpora_dir, &fuzz_exe)?;
 
-    deterministic_coverage(build_dir, corpora_dir, &fuzz_exe, fuzz_target, par)
+    deterministic_coverage(
+        build_dir,
+        corpora_dir,
+        &fuzz_exe,
+        fuzz_target,
+        par,
+        coverage_check,
+    )
 }
 
 fn using_libfuzzer(fuzz_exe: &Path) -> Result<bool, AppError> {
@@ -106,6 +147,7 @@ fn deterministic_coverage(
     fuzz_exe: &Path,
     fuzz_target: &str,
     par: usize,
+    coverage_check: CoverageCheck,
 ) -> AppResult {
     let using_libfuzzer = using_libfuzzer(fuzz_exe)?;
     if using_libfuzzer {
@@ -210,51 +252,53 @@ The coverage was not deterministic between runs.
     //
     // Also, This can catch issues where several fuzz inputs are non-deterministic, but the sum of
     // their overall coverage trace remains the same across runs and thus remains undetected.
-    println!(
-        "Check each fuzz input individually ... ({} inputs with parallelism {par})",
-        entries.len()
-    );
-    let check_individual = |entry: &DirEntry, thread_id: usize| -> AppResult {
-        let entry = entry.path();
-        if !entry.is_file() {
-            Err(format!("{} should be a file", entry.display()))?;
-        }
-        let cov_txt_base = run_single('a', &entry, thread_id)?;
-        let cov_txt_repeat = run_single('b', &entry, thread_id)?;
-        check_diff(
-            &cov_txt_base,
-            &cov_txt_repeat,
-            &format!("The fuzz target input was {}.", entry.display()),
-        )?;
-        Ok(())
-    };
-    thread::scope(|s| -> AppResult {
-        let mut handles = VecDeque::with_capacity(par);
-        let mut res = Ok(());
-        for (i, entry) in entries.iter().enumerate() {
-            println!("[{}/{}]", i + 1, entries.len());
-            handles.push_back(s.spawn(move || check_individual(entry, i % par)));
-            while handles.len() >= par || i == (entries.len() - 1) || res.is_err() {
-                if let Some(th) = handles.pop_front() {
-                    let thread_result = match th.join() {
-                        Err(_e) => Err("A scoped thread panicked".to_string()),
-                        Ok(r) => r,
-                    };
-                    if thread_result.is_err() {
-                        res = thread_result;
+    if coverage_check != CoverageCheck::AllInputs {
+        println!(
+            "Check each fuzz input individually ... ({} inputs with parallelism {par})",
+            entries.len()
+        );
+        let check_individual = |entry: &DirEntry, thread_id: usize| -> AppResult {
+            let entry = entry.path();
+            if !entry.is_file() {
+                Err(format!("{} should be a file", entry.display()))?;
+            }
+            let cov_txt_base = run_single('a', &entry, thread_id)?;
+            let cov_txt_repeat = run_single('b', &entry, thread_id)?;
+            check_diff(
+                &cov_txt_base,
+                &cov_txt_repeat,
+                &format!("The fuzz target input was {}.", entry.display()),
+            )?;
+            Ok(())
+        };
+        thread::scope(|s| -> AppResult {
+            let mut handles = VecDeque::with_capacity(par);
+            let mut res = Ok(());
+            for (i, entry) in entries.iter().enumerate() {
+                println!("[{}/{}]", i + 1, entries.len());
+                handles.push_back(s.spawn(move || check_individual(entry, i % par)));
+                while handles.len() >= par || i == (entries.len() - 1) || res.is_err() {
+                    if let Some(th) = handles.pop_front() {
+                        let thread_result = match th.join() {
+                            Err(_e) => Err("A scoped thread panicked".to_string()),
+                            Ok(r) => r,
+                        };
+                        if thread_result.is_err() {
+                            res = thread_result;
+                        }
+                    } else {
+                        return res;
                     }
-                } else {
-                    return res;
                 }
             }
-        }
-        res
-    })?;
+            res
+        })?;
+    }
     // Finally, check that running over all fuzz inputs in one process is deterministic as well.
     // This can catch issues where mutable global state is leaked from one fuzz input execution to
     // the next.
-    println!("Check all fuzz inputs in one go ...");
-    {
+    if coverage_check != CoverageCheck::IndividualInputs {
+        println!("Check all fuzz inputs in one go ...");
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
         }
