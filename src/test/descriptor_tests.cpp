@@ -1282,10 +1282,195 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<2;3>)/<3;4>)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<2;3>)/<3;4>)", "tr(): musig(): Cannot have multipath participant keys if musig() is also multipath");
     CheckUnparsable("tr(musig()/0)", "tr(musig()/0)", "tr(): musig(): Must contain key expressions");
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)", "tr(): musig(): Cannot have ranged participant keys if musig() also has derivation");
+    CheckUnparsable("","rawtr(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659)unexpected_chars)","rawtr(): Unexpected characters after musig() expression");
 
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_extended_keys)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xpub, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!providers.front()->IsRange());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), xpub);
+        BOOST_CHECK(!providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(!providers.front()->GetOriginInfo().has_value());
+    }
+
+    {
+        const std::string xprv{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xprv, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!providers.front()->IsRange());
+        BOOST_CHECK(!keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), xpub);
+
+        std::string private_string;
+        BOOST_CHECK(providers.front()->ToPrivateString(keys, private_string));
+        BOOST_CHECK_EQUAL(private_string, xprv);
+    }
+
+    {
+        const std::string xpub_with_origin{"[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xpub_with_origin, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK(providers.front()->IsRange());
+        BOOST_CHECK(providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), xpub_with_origin);
+
+        const auto origin_info{providers.front()->GetOriginInfo()};
+        BOOST_REQUIRE(origin_info.has_value());
+        BOOST_CHECK_EQUAL(HexStr(origin_info->fingerprint), "deadbeef");
+        BOOST_REQUIRE_EQUAL(origin_info->path.size(), 3U);
+        BOOST_CHECK_EQUAL(origin_info->path[0], 0x80000000U);
+        BOOST_CHECK_EQUAL(origin_info->path[1], 0x80000000U);
+        BOOST_CHECK_EQUAL(origin_info->path[2], 0U);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_raw_keys)
+{
+    {
+        const std::string compressed_pubkey{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(compressed_pubkey, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), compressed_pubkey);
+    }
+
+    const std::string xonly_pubkey{"a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xonly_pubkey, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(!providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), xonly_pubkey);
+    }
+
+    {
+        const std::string wif_private_key{"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(wif_private_key, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), xonly_pubkey);
+    }
+
+    {
+        const std::string pubkey_with_origin{"[deadbeef/0h/0h/0]03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(pubkey_with_origin, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK(providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(), pubkey_with_origin);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_musig)
+{
+    const std::string musig{"musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)"};
+
+    FlatSigningProvider keys;
+    std::string error;
+    const auto providers{ParsePubkey(musig, keys, error)};
+
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    BOOST_CHECK(providers.front()->IsBIP32());
+    BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 3U);
+    BOOST_CHECK(keys.keys.empty());
+    BOOST_CHECK(!providers.front()->GetRootPubKey().has_value());
+    BOOST_CHECK(!providers.front()->GetRootExtPubKey().has_value());
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_multipath)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    const auto providers{ParsePubkey("[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>/*", keys, error)};
+
+    BOOST_REQUIRE_MESSAGE(providers.size() == 2, error);
+    BOOST_CHECK(keys.keys.empty());
+
+    BOOST_CHECK(providers[0]->IsBIP32());
+    BOOST_CHECK(providers[0]->IsRange());
+    BOOST_CHECK_EQUAL(providers[0]->ToString(), "[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*");
+
+    BOOST_CHECK(providers[1]->IsBIP32());
+    BOOST_CHECK(providers[1]->IsRange());
+    BOOST_CHECK_EQUAL(providers[1]->ToString(), "[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*");
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_invalid_keys)
+{
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "Uncompressed keys are not allowed");
+    }
+
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "Uncompressed keys are not allowed");
+    }
+
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "key 'L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2' is not valid");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
