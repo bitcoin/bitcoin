@@ -139,12 +139,17 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    const auto& func = [&](const CTxDestination& address, const std::string& label, bool is_change, const std::optional<AddressPurpose>& purpose) {
+    const auto& func = [&](const CTxDestination& address, const std::string& label, bool is_change,
+                            const std::optional<AddressPurpose>& purpose) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) {
         if (is_change) return; // no change addresses
 
+        // Entries in mapTally are only ever added for wallet.IsMine() addresses (see the tally
+        // loop above), so it's only addresses missing from mapTally that need the IsMine() check.
         auto it = mapTally.find(address);
-        if (it == mapTally.end() && !fIncludeEmpty)
-            return;
+        if (it == mapTally.end()) {
+            if (!fIncludeEmpty) return;
+            if (!wallet.IsMine(address)) return; // exclude addresses not owned by the wallet (e.g. "send" purpose)
+        }
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
