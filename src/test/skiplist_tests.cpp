@@ -184,10 +184,12 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     BOOST_CHECK(!chain.FindEarliestAtLeast(0, 9));
 
     CBlockIndex* ret1 = chain.FindEarliestAtLeast(100, 2);
-    BOOST_CHECK(ret1->nTimeMax >= 100 && ret1->nHeight == 2);
+    BOOST_CHECK(ret1->nTimeMax >= 100);
+    BOOST_CHECK(ret1->nHeight == 2);
     BOOST_CHECK(!chain.FindEarliestAtLeast(300, 9));
     CBlockIndex* ret2 = chain.FindEarliestAtLeast(200, 4);
-    BOOST_CHECK(ret2->nTimeMax >= 200 && ret2->nHeight == 4);
+    BOOST_CHECK(ret2->nTimeMax >= 200);
+    BOOST_CHECK(ret2->nHeight == 4);
 }
 
 BOOST_AUTO_TEST_CASE(build_skip_height_test)

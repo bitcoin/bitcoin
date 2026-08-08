@@ -81,11 +81,15 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     // Previously, precision was limited to three decimal digits
     // due to only supporting satoshis per kB, so CFeeRate(CAmount(1), 1001) was equal to CFeeRate(0)
     // Since #32750, higher precision is maintained.
-    BOOST_CHECK(CFeeRate(CAmount(1), 1001) > CFeeRate(0) && CFeeRate(CAmount(1), 1001) < CFeeRate(1));
-    BOOST_CHECK(CFeeRate(CAmount(2), 1001) > CFeeRate(1) && CFeeRate(CAmount(2), 1001) < CFeeRate(2));
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001) > CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001) < CFeeRate(1));
+    BOOST_CHECK(CFeeRate(CAmount(2), 1001) > CFeeRate(1));
+    BOOST_CHECK(CFeeRate(CAmount(2), 1001) < CFeeRate(2));
     // some more integer checks
-    BOOST_CHECK(CFeeRate(CAmount(26), 789) > CFeeRate(32) && CFeeRate(CAmount(26), 789) < CFeeRate(33));
-    BOOST_CHECK(CFeeRate(CAmount(27), 789) > CFeeRate(34) && CFeeRate(CAmount(27), 789) < CFeeRate(35));
+    BOOST_CHECK(CFeeRate(CAmount(26), 789) > CFeeRate(32));
+    BOOST_CHECK(CFeeRate(CAmount(26), 789) < CFeeRate(33));
+    BOOST_CHECK(CFeeRate(CAmount(27), 789) > CFeeRate(34));
+    BOOST_CHECK(CFeeRate(CAmount(27), 789) < CFeeRate(35));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<int32_t>::max()).GetFeePerK();
 

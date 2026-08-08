@@ -1161,7 +1161,8 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
             child_key, child_spk, coinbase_value - 199 - 1300, /*submit=*/false));
 
         // In all packages, the parents conflict with each other
-        BOOST_CHECK(tx_parent_1->GetHash() != tx_parent_2->GetHash() && tx_parent_2->GetHash() != tx_parent_3->GetHash());
+        BOOST_CHECK(tx_parent_1->GetHash() != tx_parent_2->GetHash());
+        BOOST_CHECK(tx_parent_2->GetHash() != tx_parent_3->GetHash());
 
         // 1 parent paying 200sat, 1 child paying 200sat.
         Package package1{tx_parent_1, tx_child_1};

@@ -172,7 +172,8 @@ void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
     arith_uint256 pow_compact;
     bool neg, over;
     pow_compact.SetCompact(chainParams->GenesisBlock().nBits, &neg, &over);
-    BOOST_CHECK(!neg && pow_compact != 0);
+    BOOST_CHECK(!neg);
+    BOOST_CHECK(pow_compact != 0);
     BOOST_CHECK(!over);
     BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
 

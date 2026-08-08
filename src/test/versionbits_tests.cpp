@@ -295,7 +295,8 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     BOOST_REQUIRE(nStartTime < nTimeout);
     BOOST_REQUIRE(nStartTime >= 0);
     BOOST_REQUIRE(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
-    BOOST_REQUIRE(0 <= bit && bit < 32);
+    BOOST_REQUIRE(0 <= bit);
+    BOOST_REQUIRE(bit < 32);
     // Make sure that no deployment tries to set an invalid bit.
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
     BOOST_REQUIRE(min_activation_height >= 0);
@@ -459,7 +460,8 @@ BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
             const uint32_t dep_mask{uint32_t{1} << dep_info.bit};
             BOOST_CHECK(!(chain_all_vbits & dep_mask));
             chain_all_vbits |= dep_mask;
-            BOOST_CHECK(0 <= dep_info.bit && dep_info.bit < VERSIONBITS_MAX_NUM_BITS);
+            BOOST_CHECK(0 <= dep_info.bit);
+            BOOST_CHECK(dep_info.bit < VERSIONBITS_MAX_NUM_BITS);
             if (chain_type != ChainType::REGTEST) {
                 if (dep == Consensus::DEPLOYMENT_TESTDUMMY) {
                     BOOST_CHECK_EQUAL(dep_info.nStartTime, Consensus::BIP9Deployment::NEVER_ACTIVE);
