@@ -965,6 +965,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 return os.path.join(cache_node_dir, self.chain, *paths)
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
+            shutil.rmtree(cache_path('fees'), ignore_errors=True)
             for entry in os.listdir(cache_path()):
                 if entry not in ['chainstate', 'blocks', 'indexes']:  # Only indexes, chainstate and blocks folders
                     os.remove(cache_path(entry))

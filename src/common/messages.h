@@ -18,7 +18,6 @@
 struct bilingual_str;
 enum class FeeEstimateMode;
 enum class FeeReason;
-
 namespace node {
 enum class TransactionError;
 } // namespace node
