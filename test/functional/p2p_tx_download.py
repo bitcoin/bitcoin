@@ -365,20 +365,20 @@ class TxDownloadTest(BitcoinTestFramework):
             assert_equal(log.count(inv_a_log), 1)
             assert_equal(log.count(inv_b_log), 0)
 
-        self.log.info('Check that MSG_TX and MSG_WITNESS_TX are deduplicated as txids')
+        self.log.info('Check that MSG_WITNESS_TX inv is ignored with txid relay')
         peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=False))
-        for first_type, first_name, second_type, second_name, hash_a in [
-            (MSG_TX, 'tx', MSG_WITNESS_TX, 'witness-tx', 0x667788),
-            (MSG_WITNESS_TX, 'witness-tx', MSG_TX, 'tx', 0x778899),
+        for first_type, second_type, hash_a in [
+            (MSG_TX, MSG_WITNESS_TX, 0x667788),
+            (MSG_WITNESS_TX, MSG_TX, 0x778899),
         ]:
             log = send_invs_and_read_log(peer, [
                 CInv(t=first_type, h=hash_a),
                 CInv(t=second_type, h=hash_a),
             ])
-            assert_equal(log.count(f"got inv: {first_name} {hash_a:064x}"), 1)
-            assert_equal(log.count(f"got inv: {second_name} {hash_a:064x}"), 0)
+            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 0)
+            assert_equal(log.count(f"got inv: tx {hash_a:064x}"), 1)
 
-        self.log.info('Check that txids and wtxids are deduplicated separately')
+        self.log.info('Check that MSG_WITNESS_TX inv is ignored with wtxid relay')
         peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=True))
         for first_type, second_type, hash_a in [
             (MSG_WITNESS_TX, MSG_WTX, 0x8899aa),
@@ -388,7 +388,7 @@ class TxDownloadTest(BitcoinTestFramework):
                 CInv(t=first_type, h=hash_a),
                 CInv(t=second_type, h=hash_a),
             ])
-            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 1)
+            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 0)
             assert_equal(log.count(f"got inv: wtx {hash_a:064x}"), 1)
 
     def test_spurious_notfound(self):
