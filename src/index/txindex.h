@@ -7,11 +7,12 @@
 
 #include <index/base.h>
 #include <primitives/transaction.h>
+#include <uint256.h>
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 
-class uint256;
 namespace interfaces {
 class Chain;
 }
@@ -33,6 +34,15 @@ private:
 
     bool AllowPrune() const override { return false; }
 
+    /// A found transaction and the hash of the block that contains it.
+    struct TxIndexResult {
+        uint256 block_hash;
+        CTransactionRef tx;
+    };
+
+    /// Look up a transaction among the legacy (full-txid) entries.
+    std::optional<TxIndexResult> FindLegacyTx(const Txid& tx_hash) const;
+
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
@@ -48,8 +58,8 @@ public:
     /// Look up a transaction by hash.
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.
-    /// @param[out]  block_hash  The hash of the block the transaction is found in.
-    /// @param[out]  tx  The transaction itself.
+    /// @param[out]  block_hash  The hash of the block the transaction is found in. Unchanged if false is returned.
+    /// @param[out]  tx  The transaction itself. Unchanged if false is returned.
     /// @return  true if transaction is found, false otherwise
     [[nodiscard]] bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
 };

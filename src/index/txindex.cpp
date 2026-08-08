@@ -104,31 +104,41 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const
+std::optional<TxIndex::TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
 {
     CDiskTxPos postx;
     if (!m_db->ReadTxPos(tx_hash, postx)) {
-        return false;
+        return std::nullopt;
     }
 
-    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
+    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
         LogError("OpenBlockFile failed");
-        return false;
+        return std::nullopt;
     }
     CBlockHeader header;
+    CTransactionRef tx;
     try {
         file >> header;
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
         LogError("Deserialize or I/O error - %s", e.what());
-        return false;
+        return std::nullopt;
     }
     if (tx->GetHash() != tx_hash) {
         LogError("txid mismatch");
-        return false;
+        return std::nullopt;
     }
-    block_hash = header.GetHash();
+    return TxIndexResult{header.GetHash(), std::move(tx)};
+}
+
+bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const
+{
+    auto result{FindLegacyTx(tx_hash)};
+    if (!result) return false;
+
+    block_hash = result->block_hash;
+    tx = std::move(result->tx);
     return true;
 }
