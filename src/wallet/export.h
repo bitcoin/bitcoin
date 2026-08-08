@@ -23,6 +23,7 @@ struct WalletDescInfo {
     std::optional<bool> internal;
     std::optional<std::pair<int64_t,int64_t>> range;
     int64_t next_index;
+    DescriptorCache cache;
 };
 
 //! Export the descriptors from a wallet so that they can be imported elsewhere
