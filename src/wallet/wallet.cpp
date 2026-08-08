@@ -1946,8 +1946,35 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     result.status = ScanResult::FAILURE;
                     break;
                 }
-                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, /*rescanning_old_block=*/true);
+                // Collect range_end per HD descriptor so we can detect a mid-block
+                // look-ahead pool expansion (TopUp called from MarkUnusedAddresses).
+                auto collect_range_ends = [this]() {
+                    std::map<uint256, int32_t> ends;
+                    for (const auto* spkm : GetAllScriptPubKeyMans()) {
+                        if (const auto* desc = dynamic_cast<const DescriptorScriptPubKeyMan*>(spkm)) {
+                            if (desc->IsHDEnabled()) ends[desc->GetID()] = desc->GetEndRange();
+                        }
+                    }
+                    return ends;
+                };
+                // Process transactions in vtx order. If a pool-expanding tx (which
+                // triggers TopUp and derives new keys) appears after a tx sending to
+                // one of those not-yet-derived keys in the same block, the earlier tx
+                // is missed. Re-process the block until the pool is stable so that
+                // transactions to newly-derived keys at earlier vtx positions are found.
+                // Each extra pass requires at least one newly pool-expanded tx, so the
+                // number of passes is bounded by block size. The pass cap is a safety
+                // net against adversarially crafted blocks where many txs cascade
+                // successive pool expansions; in normal operation the loop runs once.
+                auto range_ends = collect_range_ends();
+                for (size_t pass = 0; ; ++pass) {
+                    for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+                        SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, /*rescanning_old_block=*/true);
+                    }
+                    auto new_range_ends = collect_range_ends();
+                    if (new_range_ends == range_ends) break;
+                    if (pass >= block.vtx.size()) break; // safety cap
+                    range_ends = std::move(new_range_ends);
                 }
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
