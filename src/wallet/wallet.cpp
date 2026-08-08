@@ -91,6 +91,7 @@ using interfaces::FoundBlock;
 using kernel::ChainstateRole;
 using util::ReplaceAll;
 using util::ToString;
+using util::TrimStringView;
 
 namespace wallet {
 
@@ -385,7 +386,7 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
 std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     // Wallet must have a non-empty name
-    if (name.empty()) {
+    if (TrimStringView(name).empty()) {
         error = Untranslated("Wallet name cannot be empty");
         status = DatabaseStatus::FAILED_NEW_UNNAMED;
         return nullptr;
