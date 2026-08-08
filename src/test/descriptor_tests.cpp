@@ -1288,6 +1288,27 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
 }
 
+BOOST_AUTO_TEST_CASE(multipath_miniscript_duplicate_keys)
+{
+    const std::string xpub{"xpub6BgBgsespWvERF3LHQu6CnqdvfEvtMcQjYrcRzx53QJjSxarj2afYWcLteoGVky7D3UKDP9QyrLprQ3VCECoY49yfdDEHGCtMMj92pReUsQ"};
+
+    FlatSigningProvider provider;
+    std::string error;
+    const auto valid{Parse("wsh(or_i(pk(" + xpub + "/<0;1>),pk(" + xpub + "/<2;3>)))", provider, error)};
+    BOOST_CHECK_EQUAL(valid.size(), 2);
+    BOOST_CHECK(error.empty());
+
+    CheckUnparsable(
+        "",
+        "wsh(or_i(pk(" + xpub + "/<0;1>),pk(" + xpub + "/<2;1>)))",
+        "or_i(pk(" + xpub + "/1),pk(" + xpub + "/1)) is not sane: contains duplicate public keys");
+
+    CheckUnparsable(
+        "",
+        "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,or_i(pk(" + xpub + "/<0;1;2>),pk(" + xpub + "/<3;4;2>)))",
+        "or_i(pk(" + xpub + "/2),pk(" + xpub + "/2)) is not sane: contains duplicate public keys");
+}
+
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
 {
     // Trailing '\0' string literal should be ignored.
