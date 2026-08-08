@@ -13,6 +13,8 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -136,7 +138,12 @@ public:
 
     /** Wait for the controller thread to exit */
     void Join();
+
+    /** Enable or disable Tor control connectivity based on networkactive. */
+    void SetNetworkActive(bool active);
 private:
+    bool SleepWithNetworkPolling(std::chrono::milliseconds timeout, uint64_t expected_change_count);
+
     CThreadInterrupt m_interrupt;
     std::thread m_thread;
     const std::string m_tor_control_center;
@@ -153,6 +160,8 @@ private:
     std::vector<uint8_t> m_client_nonce;
 
     /// \anchor torcontrol
+    std::atomic_bool m_network_active{false};
+    std::atomic<uint64_t> m_network_active_change_count{0};
     void ThreadControl();
 
 public:
