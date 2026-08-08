@@ -5,7 +5,9 @@
 #include <headerssync.h>
 
 #include <pow.h>
+#include <tinyformat.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/log.h>
 #include <util/time.h>
 #include <util/vector.h>
@@ -14,22 +16,10 @@
 // CompressedHeader (we should re-calculate parameters if we compress further).
 static_assert(sizeof(CompressedHeader) == 48);
 
-HeadersSyncState::HeadersSyncState(NodeId id,
-                                   const Consensus::Params& consensus_params,
-                                   const HeadersSyncParams& params,
-                                   const CBlockIndex& chain_start,
-                                   const arith_uint256& minimum_required_work)
-    : m_commit_offset((assert(params.commitment_period > 0), // HeadersSyncParams field must be initialized to non-zero.
-                       FastRandomContext().randrange(params.commitment_period))),
-      m_id(id),
-      m_consensus_params(consensus_params),
-      m_params(params),
-      m_chain_start(chain_start),
-      m_minimum_required_work(minimum_required_work),
-      m_current_chain_work(chain_start.nChainWork),
-      m_last_header_received(m_chain_start.GetBlockHeader()),
-      m_current_height(chain_start.nHeight)
+util::Expected<uint64_t, std::string> HeadersSyncState::ComputeMaxCommitments(const HeadersSyncParams& params, const CBlockIndex& chain_start, NodeSeconds now)
 {
+    Assert(params.commitment_period > 0);
+
     // Estimate the number of blocks that could possibly exist on the peer's
     // chain *right now* using 6 blocks/second (fastest blockrate given the MTP
     // rule) times the number of seconds from the last allowed block until
@@ -38,10 +28,41 @@ HeadersSyncState::HeadersSyncState(NodeId id,
     // exceeds this bound, because it's not possible for a consensus-valid
     // chain to be longer than this (at the current time -- in the future we
     // could try again, if necessary, to sync a longer chain).
-    const auto max_seconds_since_start{(Ticks<std::chrono::seconds>(NodeClock::now() - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}}))
-                                       + MAX_FUTURE_BLOCK_TIME};
-    m_max_commitments = 6 * max_seconds_since_start / m_params.commitment_period;
+    const int64_t max_seconds_since_start{Ticks<std::chrono::seconds>(now - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}})
+                                          + MAX_FUTURE_BLOCK_TIME};
+    if (max_seconds_since_start < 0) {
+        // Typically we would expect the chain state loading logic to
+        // already have verified that the tip of the locally stored
+        // chain is <= system clock + MAX_FUTURE_BLOCK_TIME. Getting
+        // here is really unexpected.
+        return util::Unexpected{strprintf(
+            "Failure when attempting to initiate headers sync: system clock is "
+            "more than %d minutes behind chain start MTP (%s vs %s).",
+            MAX_FUTURE_BLOCK_TIME / 60,
+            FormatISO8601DateTime(TicksSinceEpoch<std::chrono::seconds>(now)),
+            FormatISO8601DateTime(chain_start.GetMedianTimePast()))};
+    }
+    return 6 * max_seconds_since_start / params.commitment_period;
+}
 
+HeadersSyncState::HeadersSyncState(NodeId id,
+                                   const Consensus::Params& consensus_params,
+                                   const HeadersSyncParams& params,
+                                   const CBlockIndex& chain_start,
+                                   const arith_uint256& minimum_required_work,
+                                   const uint64_t max_commitments)
+    : m_commit_offset((assert(params.commitment_period > 0), // HeadersSyncParams field must be initialized to non-zero.
+                       FastRandomContext().randrange(params.commitment_period))),
+      m_id(id),
+      m_consensus_params(consensus_params),
+      m_params(params),
+      m_chain_start(chain_start),
+      m_minimum_required_work(minimum_required_work),
+      m_current_chain_work(chain_start.nChainWork),
+      m_max_commitments(max_commitments),
+      m_last_header_received(m_chain_start.GetBlockHeader()),
+      m_current_height(chain_start.nHeight)
+{
     LogDebug(BCLog::NET, "Initial headers sync started with peer=%d: height=%i, max_commitments=%i, min_work=%s\n", m_id, m_current_height, m_max_commitments, m_minimum_required_work.ToString());
 }
 
