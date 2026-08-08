@@ -104,24 +104,8 @@ void CWalletTx::RecomputeCanonical()
     // the least weight.
     Assert(!m_txs.empty());
 
-    // Returns true if 'a' should be preferred over 'b'
-    auto is_better = [](const CTransactionRef& a, const CTransactionRef& b) {
-        // A witnessed variant always beats a witnessless one
-        if (a->HasWitness() != b->HasWitness()) return a->HasWitness();
-        // Otherwise the lighter one wins
-        return GetTransactionWeight(*a) < GetTransactionWeight(*b);
-    };
-
-    auto it = m_txs.begin();
-    auto best_wtxid = it->first;
-    const CTransactionRef* best = &it->second;
-    it = std::next(it);
-    for (; it != m_txs.end(); it = std::next(it)) {
-        if (is_better(it->second, *best)) {
-            best = &it->second;
-            best_wtxid = it->first;
-        }
-    }
-    m_canonical_wtxid = best_wtxid;
+    m_canonical_wtxid = std::ranges::min_element(m_txs, std::less{}, [](const auto& entry) {
+                            return std::make_pair(!entry.second->HasWitness(), GetTransactionWeight(*entry.second));
+                        })->first;
 }
 } // namespace wallet
