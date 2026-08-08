@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <dbwrapper.h>
 #include <streams.h>
 #include <test/util/common.h>
 #include <test/util/poolresourcetester.h>
@@ -19,6 +20,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -1083,6 +1085,21 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
 
     BOOST_CHECK(*Assert(base.GetCoin(outpoint)) == coin);
     BOOST_CHECK_EQUAL(base.GetBestBlock(), block_hash);
+}
+
+BOOST_AUTO_TEST_CASE(malformed_first_coin_key_cursor_invalid)
+{
+    const fs::path path{m_args.GetDataDirBase() / "chainstate"};
+    {
+        CDBWrapper dbw{{.path = path, .cache_bytes = 1_MiB, .wipe_data = true}};
+        dbw.Write(uint8_t{'C'}, Coin{CTxOut{/*nValueIn=*/1, CScript{}}, /*nHeightIn=*/1, /*fCoinBaseIn=*/false});
+    }
+
+    CCoinsViewDB view{{.path = path, .cache_bytes = 1_MiB}, /*options=*/{}};
+    std::unique_ptr cursor{Assert(view.Cursor())};
+    BOOST_CHECK(!cursor->Valid());
+    COutPoint outpoint;
+    BOOST_CHECK(!cursor->GetKey(outpoint));
 }
 
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)
