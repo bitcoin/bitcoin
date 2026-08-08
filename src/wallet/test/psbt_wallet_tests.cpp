@@ -81,76 +81,108 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
 BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 {
-    std::vector<uint32_t> keypath;
+    static constexpr uint32_t H0{0x80000000U}; // 0'
+    static constexpr uint32_t H1{0x80000001U}; // 1'
 
-    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1", keypath));
-    BOOST_CHECK(!ParseHDKeypath("///////////////////////////", keypath));
+    struct TestCase {
+        bool is_valid;
+        std::string keypath;
+        std::vector<uint32_t> expected;
+    };
 
-    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1", keypath));
-    BOOST_CHECK(!ParseHDKeypath("//////////////////////////'/", keypath));
+    const std::vector<TestCase> tests{
+        // 28 unhardened ones, no trailing slash
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}},
+        {false, "///////////////////////////", {}},
+        // 26 unhardened ones, then hardened 1, then unhardened 1
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,H1,1}},
+        {false, "//////////////////////////'/", {}},
+        // 27 unhardened ones, trailing slash ignored
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}},
+        {false, "1///////////////////////////", {}},
+        // 26 unhardened ones, hardened 1, trailing slash ignored
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,H1}},
+        {false, "1/'//////////////////////////", {}},
+        {true,  "", {}},
+        {false, " ", {}},
+        {true,  "0", {0}},
+        {false, "O", {}},
+        {true,  "0000'/0000'/0000'", {H0, H0, H0}},
+        {false, "0000,/0000,/0000,", {}},
+        {true,  "01234", {1234}},
+        {false, "0x1234", {}},
+        {true,  "1", {1}},
+        {false, " 1", {}},
+        {true,  "42", {42}},
+        {false, "m42", {}},
+        {true,  "4294967295", {0xFFFFFFFF}},  // 0xFFFFFFFF (uint32_t max)
+        {false, "4294967296", {}},    // 0xFFFFFFFF + 1
+        {true,  "m", {}},
+        {false, "n", {}},
+        {true,  "m/", {}},
+        {false, "n/", {}},
+        {true,  "m/0", {0}},
+        {false, "n/0", {}},
+        {true,  "m/0'", {H0}},
+        {false, "m/0''", {}},
+        {true,  "m/0'/0'", {H0, H0}},
+        {false, "m/'0/0'", {}},
+        {true,  "m/0/0", {0, 0}},
+        {false, "n/0/0", {}},
+        {true,  "m/0/0/00", {0, 0, 0}},
+        {false, "m/0/0/f00", {}},
+        {true,  "m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                {0, 0, 0}},
+        {false, "m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", {}},
+        {true,  "m/0/00/0", {0, 0, 0}},
+        {false, "m/0'/00/'0", {}},
+        {true,  "m/1/", {1}},
+        {false, "m/1//", {}},
+        {true,  "m/0/4294967295", {0, 0xFFFFFFFF}},  // 0xFFFFFFFF (uint32_t max)
+        {false, "m/0/4294967296", {}},        // 0xFFFFFFFF + 1
+        {true,  "m/4294967295",   {0xFFFFFFFF}},      // 0xFFFFFFFF (uint32_t max)
+        {false, "m/4294967296",   {}},        // 0xFFFFFFFF + 1
+        {false, "1/2h/3h",   {}},
+        {false, "1/2'/3h",   {}},
+        {false, "1/2H/3H",   {}},
+    };
 
-    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/", keypath));
-    BOOST_CHECK(!ParseHDKeypath("1///////////////////////////", keypath));
+    for (const auto& [is_valid, keypath_str, expected] : tests) {
+        std::vector<uint32_t> keypath_num;
+        const bool res1{ParseHDKeypathLegacy(keypath_str, keypath_num)};
+        if (!is_valid) {
+            BOOST_CHECK_EQUAL(res1, false);
+        } else {
+            BOOST_CHECK_EQUAL(res1, true);
+            BOOST_REQUIRE_EQUAL(keypath_num.size(), expected.size());
+            for (size_t i{0}; i < keypath_num.size(); ++i) {
+                BOOST_CHECK_EQUAL(keypath_num[i], expected[i]);
+            }
 
-    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/", keypath));
-    BOOST_CHECK(!ParseHDKeypath("1/'//////////////////////////", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("", keypath));
-    BOOST_CHECK(!ParseHDKeypath(" ", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("0", keypath));
-    BOOST_CHECK(!ParseHDKeypath("O", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("0000'/0000'/0000'", keypath));
-    BOOST_CHECK(!ParseHDKeypath("0000,/0000,/0000,", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("01234", keypath));
-    BOOST_CHECK(!ParseHDKeypath("0x1234", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("1", keypath));
-    BOOST_CHECK(!ParseHDKeypath(" 1", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("42", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m42", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
-
-    BOOST_CHECK(ParseHDKeypath("m", keypath));
-    BOOST_CHECK(!ParseHDKeypath("n", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/", keypath));
-    BOOST_CHECK(!ParseHDKeypath("n/", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0", keypath));
-    BOOST_CHECK(!ParseHDKeypath("n/0", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
-    BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0/0/00", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/0/0/f00", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0/00/0", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/0'/00/'0", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
-
-    BOOST_CHECK(ParseHDKeypath("m/0/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
-
-    BOOST_CHECK(ParseHDKeypath("m/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+            // Round-trip test:
+            // num -> str2
+            const std::string keypath_str2{FormatHDKeypath(keypath_num, /*apostrophe=*/true)};
+            // Note keypath_str2 may differ from keypath_str. Leading '/' is not parsed, it is removed
+            std::string keypath_str2_adjusted{keypath_str2};
+            if (keypath_str2_adjusted.starts_with('/')) {
+                keypath_str2_adjusted.erase(0, 1);
+            }
+            // str2 -> num2
+            std::vector<uint32_t> keypath_num2;
+            BOOST_CHECK(ParseHDKeypathLegacy(keypath_str2_adjusted, keypath_num2));
+            BOOST_REQUIRE_EQUAL(keypath_num2.size(), keypath_num.size());
+            for (size_t i{0}; i < keypath_num2.size(); ++i) {
+                BOOST_CHECK_EQUAL(keypath_num2[i], keypath_num[i]);
+            }
+            // num2 -> str3
+            const std::string keypath_str3{FormatHDKeypath(keypath_num2, /*apostrophe=*/true)};
+            BOOST_CHECK_EQUAL(keypath_str3, keypath_str2);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

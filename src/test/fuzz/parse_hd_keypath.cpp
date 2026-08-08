@@ -14,10 +14,10 @@ FUZZ_TARGET(parse_hd_keypath)
 {
     const std::string keypath_str(buffer.begin(), buffer.end());
     std::vector<uint32_t> keypath;
-    (void)ParseHDKeypath(keypath_str, keypath);
+    (void)ParseHDKeypathLegacy(keypath_str, keypath);
 
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint32_t> random_keypath = ConsumeRandomLengthIntegralVector<uint32_t>(fuzzed_data_provider);
-    (void)FormatHDKeypath(random_keypath, /*apostrophe=*/true); // WriteHDKeypath calls this with false
-    (void)WriteHDKeypath(random_keypath);
+    (void)FormatHDKeypath(random_keypath, /*apostrophe=*/fuzzed_data_provider.ConsumeBool());
+    (void)WriteHDKeypath(random_keypath, /*apostrophe=*/fuzzed_data_provider.ConsumeBool());
 }
