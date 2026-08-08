@@ -11,6 +11,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <algorithm>
 #include <cstdlib>
 
 using util::ToString;
@@ -115,6 +117,32 @@ BOOST_AUTO_TEST_CASE(num_chain_tx_max)
     CBlockIndex block_index{};
     block_index.m_chain_tx_count = std::numeric_limits<uint64_t>::max();
     BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(cblockindex_comparator_sorting)
+{
+    constexpr std::array<std::pair<uint64_t, int32_t>, 4> original{{
+        {1, 20},
+        {1, 10},
+        {2, 20},
+        {2, 10},
+    }};
+
+    std::array<CBlockIndex, original.size()> pointer_storage{};
+    std::array<CBlockIndex*, original.size()> indexes{};
+    for (size_t i{0}; i < pointer_storage.size(); ++i) {
+        pointer_storage[i].nChainWork = arith_uint256{original[i].first};
+        pointer_storage[i].nSequenceId = original[i].second;
+        indexes[i] = &pointer_storage[i];
+    }
+
+    std::ranges::shuffle(indexes, m_rng);
+    std::ranges::sort(indexes, node::CBlockIndexWorkComparator{});
+
+    for (size_t i{0}; i < indexes.size(); ++i) {
+        BOOST_CHECK_EQUAL(indexes[i]->nChainWork, original[i].first);
+        BOOST_CHECK_EQUAL(indexes[i]->nSequenceId, original[i].second);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
