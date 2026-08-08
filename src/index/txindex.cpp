@@ -9,6 +9,7 @@
 #include <flatfile.h>
 #include <index/base.h>
 #include <index/disktxpos.h>
+#include <index/txindex_key.h>
 #include <interfaces/chain.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
@@ -29,9 +30,6 @@
 #include <utility>
 #include <vector>
 
-constexpr uint8_t DB_TXINDEX{'t'};
-const std::string DB_BEST_BLOCK_V2{"best_block_v2"};
-
 std::unique_ptr<TxIndex> g_txindex;
 
 
@@ -40,10 +38,6 @@ class TxIndex::DB : public BaseIndex::DB
 {
 public:
     explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
-
-    /// Read the disk location of the transaction data with the given hash. Returns false if the
-    /// transaction hash is not indexed.
-    bool ReadTxPos(const Txid& txid, CDiskTxPos& pos) const;
 
     /// Write a block of transaction positions to the DB.
     void WriteTxs(const interfaces::BlockInfo& block);
@@ -56,15 +50,10 @@ TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
     BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)
 {}
 
-bool TxIndex::DB::ReadTxPos(const Txid& txid, CDiskTxPos& pos) const
-{
-    return Read(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
-}
-
 CBlockLocator TxIndex::DB::ReadBestBlock() const
 {
     CBlockLocator locator;
-    if (Read(DB_BEST_BLOCK_V2, locator)) {
+    if (Read(txindex::DB_BEST_BLOCK_V2, locator)) {
         return locator;
     }
     // If we don't have a locator yet, start from the legacy best block.
@@ -73,7 +62,7 @@ CBlockLocator TxIndex::DB::ReadBestBlock() const
 
 void TxIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
 {
-    batch.Write(DB_BEST_BLOCK_V2, locator);
+    batch.Write(txindex::DB_BEST_BLOCK_V2, locator);
 }
 
 void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
@@ -81,7 +70,7 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     CDBBatch batch(*this);
     CDiskTxPos pos({block.file_number, block.data_pos}, GetSizeOfCompactSize(block.data->vtx.size()));
     for (const auto& tx : block.data->vtx) {
-        batch.Write(std::make_pair(DB_TXINDEX, tx->GetHash().ToUint256()), pos);
+        batch.Write(std::make_pair(txindex::DB_TXINDEX, tx->GetHash().ToUint256()), pos);
         pos.nTxOffset += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
     }
     WriteBatch(batch);
@@ -108,7 +97,7 @@ BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
 {
     CDiskTxPos postx;
-    if (!m_db->ReadTxPos(tx_hash, postx)) {
+    if (!m_db->Read(txindex::LegacyTxKey(tx_hash), postx)) {
         return std::nullopt;
     }
 
