@@ -5,10 +5,15 @@
 #ifndef BITCOIN_SIGNET_H
 #define BITCOIN_SIGNET_H
 
+#include <kernel/messagestartchars.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
+#include <cstdint>
 #include <optional>
+#include <vector>
+
+extern const std::vector<uint8_t> SIGNET_DEFAULT_CHALLENGE;
 
 class CScript;
 namespace Consensus {
@@ -19,6 +24,12 @@ struct Params;
  * Extract signature and check whether a block has a valid solution
  */
 bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& consensusParams);
+
+/**
+ * Return the message start bytes for a signet: the first four bytes of the
+ * double-SHA256 hash of the serialized signet challenge script (BIP325)
+ */
+MessageStartChars GetSignetMessageStart(const std::vector<uint8_t>& signet_challenge);
 
 /**
  * Generate the signet tx corresponding to the given block
