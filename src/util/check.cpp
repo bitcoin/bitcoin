@@ -24,6 +24,11 @@ std::string StrFormatInternalBug(std::string_view msg, const std::source_locatio
                      CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
 }
 
+std::string StrFormatFailedCheck(std::string_view assertion)
+{
+    return strprintf("'%s' check failed", assertion);
+}
+
 NonFatalCheckError::NonFatalCheckError(std::string_view msg, const std::source_location& loc)
     : std::runtime_error{StrFormatInternalBug(msg, loc)}
 {
@@ -34,9 +39,9 @@ bool g_detail_test_only_CheckFailuresAreExceptionsNotAborts{false};
 void assertion_fail(const std::source_location& loc, std::string_view assertion)
 {
     if (g_detail_test_only_CheckFailuresAreExceptionsNotAborts) {
-        throw NonFatalCheckError{assertion, loc};
+        throw NonFatalCheckError{StrFormatFailedCheck(assertion), loc};
     }
-    auto str = strprintf("%s:%s %s: Assertion `%s' failed.\n", loc.file_name(), loc.line(), loc.function_name(), assertion);
+    auto str = strprintf("%s:%s %s: Assertion failed: %s.\n", loc.file_name(), loc.line(), loc.function_name(), StrFormatFailedCheck(assertion));
     fwrite(str.data(), 1, str.size(), stderr);
     std::abort();
 }
