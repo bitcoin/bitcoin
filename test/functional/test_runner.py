@@ -159,6 +159,7 @@ BASE_SCRIPTS = [
     'p2p_timeouts.py --v2transport',
     'rpc_signer.py',
     'wallet_signer.py',
+    'wallet_signer_musig2.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
     'rpc_orphans.py',
