@@ -109,6 +109,10 @@ host_prefix=$($(host_arch)_$(host_os)_prefix)
 build_prefix=$(host_prefix)/native
 build_host=$(build)
 
+qt_required_common_tools = bison pkgconf ninja python3
+qt_required_tools_linux = $(qt_required_common_tools) g++ xz
+qt_required_tools_freebsd = $(qt_required_common_tools)
+
 all: install
 
 include hosts/$(host_os).mk
@@ -249,6 +253,23 @@ define check_or_remove_sources
       rm -f $($(package)_all_sources) $($(1)_fetched))) || true
 endef
 
+check-host-tools:
+ifeq ($(NO_QT),)
+	@for tool in $(qt_required_tools_$(host_os)); do \
+		if [ "$$tool" = "ninja" ]; then \
+			command -v ninja >/dev/null 2>&1 || command -v samu >/dev/null 2>&1 || { \
+				echo "Error: ninja (or samurai in Alpine) host package is required to build Qt dependencies. Pass NO_QT=1 option to make if you wish to skip Qt."; \
+				exit 1; \
+			}; \
+		else \
+			command -v $$tool >/dev/null 2>&1 || { \
+				echo "Error: $$tool host package is required to build Qt dependencies. Pass NO_QT=1 option to make if you wish to skip Qt."; \
+				exit 1; \
+			}; \
+		fi; \
+	done
+endif
+
 check-packages:
 	@$(foreach package,$(all_packages),$(call check_or_remove_cached,$(package));)
 check-sources:
@@ -264,7 +285,7 @@ clean-all: clean
 clean:
 	@rm -rf $(WORK_PATH) $(BASE_CACHE) $(BUILD) *.log
 
-install: check-packages $(host_prefix)/toolchain.cmake
+install: check-host-tools check-packages $(host_prefix)/toolchain.cmake
 
 
 download-one: check-sources $(all_sources)
@@ -279,6 +300,6 @@ download: download-osx download-linux download-win
 
 $(foreach package,$(all_packages),$(eval $(call ext_add_stages,$(package))))
 
-.PHONY: install cached clean clean-all download-one download-osx download-linux download-win download check-packages check-sources
+.PHONY: install cached clean clean-all download-one download-osx download-linux download-win download check-packages check-sources check-host-tools
 .PHONY: FORCE
 $(V).SILENT:
