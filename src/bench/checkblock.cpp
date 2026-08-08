@@ -44,9 +44,8 @@ static void CheckBlockTest(benchmark::Bench& bench)
             assert(block.vtx.size() == 1557);
         })
         .run([&] {
-            BlockValidationState validationState;
-            const bool checked{CheckBlock(block, validationState, chain_params->GetConsensus())};
-            assert(checked);
+            const BlockValidationState validationState{CheckBlock(block, chain_params->GetConsensus())};
+            assert(validationState.IsValid());
         });
 }
 
