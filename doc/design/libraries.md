@@ -12,7 +12,6 @@
 | *libbitcoin_node*        | P2P and RPC server functionality used by *bitcoind* and *bitcoin-qt* executables. |
 | *libbitcoin_util*        | Home for common functionality shared by different executables and libraries. Similar to *libbitcoin_common*, but lower-level (see [Dependencies](#dependencies)). |
 | *libbitcoin_wallet*      | Wallet functionality used by *bitcoind* and *bitcoin-wallet* executables. |
-| *libbitcoin_wallet_tool* | Lower-level wallet functionality used by *bitcoin-wallet* executable. |
 | *libbitcoin_zmq*         | [ZeroMQ](../zmq.md) functionality used by *bitcoind* and *bitcoin-qt* executables. |
 
 ## Conventions
@@ -44,43 +43,28 @@ bitcoin-cli[bitcoin-cli]-->libbitcoin_cli;
 bitcoind[bitcoind]-->libbitcoin_node;
 bitcoind[bitcoind]-->libbitcoin_wallet;
 
-bitcoin-qt[bitcoin-qt]-->libbitcoin_node;
 bitcoin-qt[bitcoin-qt]-->libbitcoinqt;
-bitcoin-qt[bitcoin-qt]-->libbitcoin_wallet;
 
 bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet;
-bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet_tool;
 
 libbitcoin_cli-->libbitcoin_util;
-libbitcoin_cli-->libbitcoin_common;
 
-libbitcoin_consensus-->libbitcoin_crypto;
+libbitcoin_consensus-->libbitcoin_util;
 
 libbitcoin_common-->libbitcoin_consensus;
-libbitcoin_common-->libbitcoin_crypto;
-libbitcoin_common-->libbitcoin_util;
 
 libbitcoin_kernel-->libbitcoin_consensus;
-libbitcoin_kernel-->libbitcoin_crypto;
-libbitcoin_kernel-->libbitcoin_util;
 
-libbitcoin_node-->libbitcoin_consensus;
-libbitcoin_node-->libbitcoin_crypto;
 libbitcoin_node-->libbitcoin_kernel;
 libbitcoin_node-->libbitcoin_common;
-libbitcoin_node-->libbitcoin_util;
 
-libbitcoinqt-->libbitcoin_common;
-libbitcoinqt-->libbitcoin_util;
+libbitcoinqt-->libbitcoin_cli;
+libbitcoinqt-->libbitcoin_node;
+libbitcoinqt-->libbitcoin_wallet;
 
 libbitcoin_util-->libbitcoin_crypto;
 
 libbitcoin_wallet-->libbitcoin_common;
-libbitcoin_wallet-->libbitcoin_crypto;
-libbitcoin_wallet-->libbitcoin_util;
-
-libbitcoin_wallet_tool-->libbitcoin_wallet;
-libbitcoin_wallet_tool-->libbitcoin_util;
 
 classDef bold stroke-width:2px, font-weight:bold, font-size: smaller;
 class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold

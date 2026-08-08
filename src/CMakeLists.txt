@@ -118,7 +118,6 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   core_io.cpp
   deploymentinfo.cpp
   external_signer.cpp
-  init/common.cpp
   kernel/chainparams.cpp
   key.cpp
   key_io.cpp
@@ -202,6 +201,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   index/txindex.cpp
   index/txospenderindex.cpp
   init.cpp
+  init/common.cpp
   kernel/chain.cpp
   kernel/checks.cpp
   kernel/coinstats.cpp
