@@ -673,6 +673,35 @@ Additional resources:
 A few non-style-related recommendations for developers, as well as points to
 pay attention to for reviewers of Bitcoin Core code.
 
+## General Testing
+
+As a rule of thumb, an externally observable change (new feature, bug fix, or
+changed default) should be accompanied by an automated test.
+New tests are usually not needed for behavior-preserving work that is easy to
+validate, such as moving code, renaming, or mechanical refactors.
+When an automated test would be brittle or have limited long-term value,
+a manual testing guide in the commit message or PR description is an
+acceptable alternative.
+
+### Commit Structure for Tests
+
+Test placement depends on existing coverage and the type of change:
+
+* When existing tests already cover the behavior being changed, update them in
+  the same commit as the change. The diff records the old and new expectations
+  together and shows the change was intentional.
+* For a simple feature or bug fix without existing coverage, the change and its
+  test can often be in the same commit.
+* For a non-trivial refactor, if the relevant invariant is not already covered
+  by automated tests, first add that coverage in a separate test commit. The
+  refactor commit should not need to update test expectations.
+* For a non-trivial change to existing behavior without coverage, consider
+  adding a preceding commit with a [characterization test](https://en.wikipedia.org/wiki/Characterization_test)
+  to document the current behavior. Mark assertions whose expected values will
+  change with `TODO` comments so they are not mistaken for intended behavior.
+  Remove the comments when updating those assertions in the behavior-changing
+  commit.
+
 ## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
