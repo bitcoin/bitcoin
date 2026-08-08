@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -64,7 +65,8 @@ protected:
 
 public:
     // Constructs the index, which becomes available to be queried.
-    explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false,
+                            std::function<void()> read_error_cb = [] {});
 
     interfaces::Chain::NotifyOptions CustomOptions() override;
 
