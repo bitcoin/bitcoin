@@ -13,6 +13,12 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
+if(POLICY CMP0156)
+  # De-duplicate libraries on link lines based on linker capabilities.
+  # See: https://cmake.org/cmake/help/latest/policy/CMP0156.html
+  cmake_policy(SET CMP0156 NEW)
+endif()
+
 if(POLICY CMP0171)
   # `codegen` is a reserved target name.
   # See: https://cmake.org/cmake/help/latest/policy/CMP0171.html
