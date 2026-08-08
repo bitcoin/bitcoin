@@ -83,6 +83,7 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 struct bilingual_str;
 
 namespace wallet {
+class ChainScanner;
 struct WalletContext;
 
 //! Explicitly delete the wallet.
@@ -302,7 +303,7 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
-class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
+
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
  */
@@ -313,12 +314,7 @@ private:
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
-    std::atomic<bool> fAbortRescan{false};
-    std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
-    std::atomic<bool> m_scanning_with_passphrase{false};
-    std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
-    std::atomic<double> m_scanning_progress{0};
-    friend class WalletRescanReserver;
+    friend class ChainScanner;
 
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
@@ -397,6 +393,8 @@ private:
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> m_database;
 
+    std::unique_ptr<ChainScanner> m_scanner;
+
     /**
      * The following is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
@@ -473,18 +471,8 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
-        : m_chain(chain),
-          m_name(name),
-          m_database(std::move(database))
-    {
-    }
-
-    ~CWallet()
-    {
-        // Should not have slots connected at this point.
-        assert(NotifyUnload.empty());
-    }
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database);
+    ~CWallet();
 
     bool IsLocked() const override;
     bool Lock();
@@ -576,15 +564,8 @@ public:
     bool UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /*
-     * Rescan abort properties
-     */
-    void AbortRescan() { fAbortRescan = true; }
-    bool IsAbortingRescan() const { return fAbortRescan; }
-    bool IsScanning() const { return fScanningWallet; }
-    bool IsScanningWithPassphrase() const { return m_scanning_with_passphrase; }
-    SteadyClock::duration ScanningDuration() const { return fScanningWallet ? SteadyClock::now() - m_scanning_start.load() : SteadyClock::duration{}; }
-    double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
+    ChainScanner& Scanner();
+    const ChainScanner& Scanner() const;
 
     //! Upgrade DescriptorCaches
     void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -635,24 +616,6 @@ public:
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
-    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver);
-
-    struct ScanResult {
-        enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
-
-        //! Hash and height of most recent block that was successfully scanned.
-        //! Unset if no blocks were scanned due to read errors or the chain
-        //! being empty.
-        uint256 last_scanned_block;
-        std::optional<int> last_scanned_height;
-
-        //! Height of the most recent block that could not be scanned due to
-        //! read errors or pruning. Will be set if status is FAILURE, unset if
-        //! status is SUCCESS, and may or may not be set if status is
-        //! USER_ABORT.
-        uint256 last_failed_block;
-    };
-    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
@@ -1095,52 +1058,6 @@ public:
  */
 void MaybeResendWalletTxs(WalletContext& context);
 
-/** RAII object to check and reserve a wallet rescan */
-class WalletRescanReserver
-{
-private:
-    using Clock = std::chrono::steady_clock;
-    using NowFn = std::function<Clock::time_point()>;
-    CWallet& m_wallet;
-    bool m_could_reserve{false};
-    NowFn m_now;
-public:
-    explicit WalletRescanReserver(CWallet& w) : m_wallet(w) {}
-
-    bool reserve(bool with_passphrase = false)
-    {
-        assert(!m_could_reserve);
-        if (m_wallet.fScanningWallet.exchange(true)) {
-            return false;
-        }
-        // Discard any abort request left over from previous reservation, so
-        // that an abort requested while the reservation is held always applies
-        // to abort this rescan, even if it arrives before the scan loop starts.
-        m_wallet.fAbortRescan = false;
-        m_wallet.m_scanning_with_passphrase.exchange(with_passphrase);
-        m_wallet.m_scanning_start = SteadyClock::now();
-        m_wallet.m_scanning_progress = 0;
-        m_could_reserve = true;
-        return true;
-    }
-
-    bool isReserved() const
-    {
-        return (m_could_reserve && m_wallet.fScanningWallet);
-    }
-
-    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); };
-
-    void setNow(NowFn now) { m_now = std::move(now); }
-
-    ~WalletRescanReserver()
-    {
-        if (m_could_reserve) {
-            m_wallet.fScanningWallet = false;
-            m_wallet.m_scanning_with_passphrase = false;
-        }
-    }
-};
 
 //! Add wallet name to persistent configuration so it will be loaded on startup.
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
