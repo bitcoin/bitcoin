@@ -15,6 +15,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <interfaces/types.h>
+#include <kernel/fatal_error.h>
 #include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_args.h>
@@ -31,6 +32,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/feefrac.h>
 #include <util/log.h>
 #include <util/result.h>
@@ -229,8 +231,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
-        if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
-            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
+        auto res{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)};
+        if (!res) {
+            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", res.error().message()));
+        }
+
+        if (!res->IsValid()) {
+            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", res->ToString()));
         }
     }
     const auto time_2{SteadyClock::now()};
@@ -399,12 +406,15 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
-    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    auto res{chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block)};
+    bool accepted = res && *res;
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
-    if (!new_block && accepted) {
+    if (!res) {
+        reason = res.error().message();
+    } else if (!new_block && accepted) {
         reason = "duplicate";
     } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example

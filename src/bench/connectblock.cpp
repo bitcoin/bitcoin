@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <key.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
@@ -18,6 +19,7 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <cstddef>
@@ -108,11 +110,11 @@ void BenchmarkConnectBlock(benchmark::Bench& bench, std::vector<CKey>& keys, std
         LOCK(cs_main);
         auto& chainman{test_setup.m_node.chainman};
         auto& chainstate{chainman->ActiveChainstate()};
-        BlockValidationState test_block_state;
         auto* pindex{chainman->m_blockman.AddToBlockIndex(test_block, chainman->m_best_header)}; // Doing this here doesn't impact the benchmark
         CCoinsViewCache viewNew{&chainstate.CoinsTip()};
 
-        assert(chainstate.ConnectBlock(test_block, test_block_state, pindex, viewNew));
+        auto res{chainstate.ConnectBlock(test_block, pindex, viewNew)};
+        assert(res && res->IsValid());
     });
 }
 

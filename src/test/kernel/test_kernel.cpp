@@ -184,10 +184,6 @@ public:
             }
             return;
         }
-        case ValidationMode::INTERNAL_ERROR: {
-            std::cout << "Internal error" << std::endl;
-            return;
-        }
         }
     }
 
