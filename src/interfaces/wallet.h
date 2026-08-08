@@ -10,36 +10,34 @@
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
-#include <primitives/transaction_identifier.h>
-#include <pubkey.h>
-#include <script/script.h>
+#include <primitives/transaction.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
 
+#include <compare>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
+#include <set>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
-class CFeeRate;
-class CKey;
+class ArgsManager;
+class CKeyID;
+class CPubKey;
+class CScript;
+class PartiallySignedTransaction;
+class uint256;
 enum class FeeReason;
 enum class OutputType;
-class PartiallySignedTransaction;
 struct bilingual_str;
-namespace common {
-enum class PSBTError;
-} // namespace common
-namespace node {
-enum class TransactionError;
-} // namespace node
 namespace wallet {
 struct CreatedTransactionResult;
 class CCoinControl;
