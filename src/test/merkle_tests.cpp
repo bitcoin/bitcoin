@@ -200,6 +200,20 @@ BOOST_AUTO_TEST_CASE(merkle_test_OddTxWithRepeatedLastTx_block)
     BOOST_CHECK_EQUAL(mutated, true);
 }
 
+BOOST_AUTO_TEST_CASE(merkle_test_mutated_return_value)
+{
+    // CVE-2012-2459 construction: [1,2,3,4,5,6] and [1,2,3,4,5,6,5,6] produce the same root.
+    const std::vector leaves{uint256{1}, uint256{2}, uint256{3}, uint256{4}, uint256{5}, uint256{6}};
+    auto mutated_leaves{leaves};
+    mutated_leaves.insert(mutated_leaves.end(), leaves.end() - 2, leaves.end()); // repeat last two elements
+
+    bool mutated{true};
+    const auto unmutated_root{ComputeMerkleRoot(leaves, &mutated)};
+    BOOST_CHECK(!mutated);
+    BOOST_CHECK_EQUAL(unmutated_root, ComputeMerkleRoot(mutated_leaves, &mutated));
+    BOOST_CHECK(mutated);
+}
+
 BOOST_AUTO_TEST_CASE(merkle_test_LeftSubtreeRightSubtree)
 {
     CBlock block, leftSubtreeBlock, rightSubtreeBlock;
