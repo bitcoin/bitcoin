@@ -95,6 +95,7 @@ static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector
     if (!req_sigs) return false;
     required_sigs = *req_sigs;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
+        if (!CheckMinimalPush(data, opcode)) return false;
         pubkeys.emplace_back(std::move(data));
     }
     auto num_keys = GetScriptNumber(opcode, data, required_sigs, MAX_PUBKEYS_PER_MULTISIG);
