@@ -12,6 +12,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/hasher.h>
+#include <util/time.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -56,6 +57,13 @@ private:
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
 
+    // Cumulative timing for bench logging in CustomAppend.
+    SteadyClock::duration m_time_construct{};
+    SteadyClock::duration m_time_header{};
+    SteadyClock::duration m_time_write{};
+    SteadyClock::duration m_time_total{};
+    int64_t m_num_blocks_total{0};
+
     bool AllowPrune() const override { return true; }
 
     bool Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
@@ -95,6 +103,11 @@ public:
     /** Get a range of filter hashes between two heights on a chain. */
     bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
                                std::vector<uint256>& hashes_out) const;
+
+    /// A lookup miss for `target` may be racing with the validation-interface
+    /// BlockConnected callback that writes the filter, rather than reflecting a
+    /// real indexing/DB issue. Cheap, non-blocking check -- see BaseIndex::IsRacing.
+    bool IsRacing(const CBlockIndex* target) const;
 };
 
 /**

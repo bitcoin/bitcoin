@@ -155,6 +155,17 @@ public:
     /// not block and immediately returns false.
     bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
 
+    /// A lookup miss for `target` may be racing with the validation-interface
+    /// BlockConnected callback that writes it, rather than reflecting a real
+    /// indexing/DB issue: `target` is within `max_ahead` blocks of the index's
+    /// last processed block, so the write may simply not have run yet.
+    ///
+    /// This is a cheap, non-blocking check only -- it does not wait for the
+    /// validation-interface queue to drain. Callers that get `true` should
+    /// treat the miss as pending and retry later, rather than treating it as a
+    /// hard failure.
+    bool IsRacing(const CBlockIndex* target, int max_ahead) const;
+
     void Interrupt();
 
     /// Initializes the sync state and registers the instance to the

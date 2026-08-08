@@ -23,6 +23,7 @@
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/syserror.h>
+#include <util/time.h>
 
 #include <cerrno>
 #include <exception>
@@ -58,6 +59,10 @@ constexpr unsigned int FLTR_FILE_CHUNK_SIZE{1_MiB};
  *  is big enough for a 2,000,000 length block chain, which
  *  we should be enough until ~2047. */
 constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
+/** A lookup for a block that is at most this many blocks ahead of the index's last
+ *  processed block may be racing with the validation-interface BlockConnected callback
+ *  that writes the filter, rather than reflecting a real indexing/DB issue. */
+constexpr int CF_MAX_BLOCKS_AHEAD_RACE_WAIT{2};
 
 namespace {
 
@@ -258,10 +263,42 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
+    const auto time_start{SteadyClock::now()};
     BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
+    const auto time_filter{SteadyClock::now()};
     const uint256& header = filter.ComputeHeader(m_last_header);
+    const auto time_header{SteadyClock::now()};
     bool res = Write(filter, block.height, header);
+    const auto time_write{SteadyClock::now()};
     if (res) m_last_header = header; // update last header
+
+    const uint32_t n_elements{filter.GetFilter().GetN()};
+
+    ++m_num_blocks_total;
+    m_time_construct += time_filter - time_start;
+    m_time_header += time_header - time_filter;
+    m_time_write += time_write - time_header;
+    m_time_total += time_write - time_start;
+    LogDebug(BCLog::BENCH, "    - Construct: %.2fms (%.4fms/elem, %u elements) [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_filter - time_start),
+             n_elements == 0 ? 0 : Ticks<MillisecondsDouble>(time_filter - time_start) / n_elements,
+             n_elements,
+             Ticks<SecondsDouble>(m_time_construct),
+             Ticks<MillisecondsDouble>(m_time_construct) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "    - Header: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_header - time_filter),
+             Ticks<SecondsDouble>(m_time_header),
+             Ticks<MillisecondsDouble>(m_time_header) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "    - Write: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_write - time_header),
+             Ticks<SecondsDouble>(m_time_write),
+             Ticks<MillisecondsDouble>(m_time_write) / m_num_blocks_total);
+    LogDebug(BCLog::BENCH, "  - Filter (%s): %.2fms [%.2fs (%.2fms/blk)] [height=%d]\n",
+             BlockFilterTypeName(m_filter_type),
+             Ticks<MillisecondsDouble>(time_write - time_start),
+             Ticks<SecondsDouble>(m_time_total),
+             Ticks<MillisecondsDouble>(m_time_total) / m_num_blocks_total,
+             block.height);
     return res;
 }
 
@@ -439,6 +476,11 @@ bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex
         hashes_out.push_back(entry.hash);
     }
     return true;
+}
+
+bool BlockFilterIndex::IsRacing(const CBlockIndex* target) const
+{
+    return BaseIndex::IsRacing(target, CF_MAX_BLOCKS_AHEAD_RACE_WAIT);
 }
 
 BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type)

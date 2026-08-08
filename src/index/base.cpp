@@ -500,6 +500,19 @@ IndexSummary BaseIndex::GetSummary() const
     return summary;
 }
 
+bool BaseIndex::IsRacing(const CBlockIndex* target, int max_ahead) const
+{
+    if (!target || !m_synced) return false;
+    const CBlockIndex* best = m_best_block_index.load();
+    if (!best) return false;
+    // `ahead == 0` covers same-height sibling reorgs: a same-height miss means
+    // a queued BlockConnected for the sibling is in flight. `ahead < 0` is a
+    // real miss for an older block -- it is not in flight and no amount of
+    // waiting will resolve it.
+    const int ahead = target->nHeight - best->nHeight;
+    return ahead >= 0 && ahead <= max_ahead;
+}
+
 void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
 {
     assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
