@@ -234,6 +234,8 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
     return len;
 }
 
+int FuzzedSock::ShutdownSend() const { return 0; }
+
 int FuzzedSock::Connect(const sockaddr*, socklen_t) const
 {
     // Have a permanent error at connect_errnos[0] because when the fuzzed data is exhausted
