@@ -788,4 +788,63 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     server.StopListening();
 }
 
+BOOST_AUTO_TEST_CASE(http_server_rejects_disallowed_client_before_read)
+{
+    // DynSock reports accepted connections as coming from 5.5.5.5.
+    gArgs.ForceSetArg("-rpcallowip", "4.4.4.4");
+
+    std::atomic_bool request_dispatched{false};
+    HTTPServer server{[&request_dispatched](std::unique_ptr<HTTPRequest>&&) {
+        request_dispatched = true;
+    }};
+    BOOST_REQUIRE(server.InitHTTPAllowList());
+
+    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    server.StartSocketsThreads();
+
+    // Queue a complete request; the server should never read from it.
+    std::shared_ptr<DynSock::Pipes> client_pipes{
+        ConnectClient(std::as_bytes(std::span(full_request)))};
+
+    // Wait for the socket to close
+    bool disconnected{false};
+    for (int attempts{0}; attempts != 1'000; ++attempts) {
+        char byte;
+        const ssize_t bytes_read{client_pipes->send.GetBytes(&byte, sizeof(byte), MSG_PEEK)};
+        if (bytes_read == 0) {
+            disconnected = true;
+            break;
+        }
+        if (bytes_read > 0) {
+            break;
+        }
+        std::this_thread::sleep_for(10ms);
+    }
+
+    const size_t connections{server.GetConnectionsCount()};
+
+    server.InterruptNet();
+    server.JoinSocketsThreads();
+    const bool dispatched{request_dispatched.load()};
+    server.ClearConnectedClients();
+    server.StopListening();
+
+    BOOST_CHECK(!dispatched);
+    BOOST_CHECK(disconnected);
+    BOOST_CHECK_EQUAL(connections, 0);
+
+    // 'recv' buffer still holds the client's request untouched which
+    // proves the server never called Recv()
+    std::string unread_request(full_request.size(), '\0');
+    BOOST_REQUIRE_EQUAL(
+        client_pipes->recv.GetBytes(unread_request.data(), unread_request.size()),
+        static_cast<ssize_t>(full_request.size()));
+    BOOST_CHECK_EQUAL(unread_request, std::string{full_request});
+
+    // No extra bytes expected after the recv buffer is drained
+    char extra_byte;
+    BOOST_CHECK_EQUAL(client_pipes->recv.GetBytes(&extra_byte, sizeof(extra_byte)), -1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
