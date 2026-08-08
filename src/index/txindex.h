@@ -27,8 +27,8 @@ struct TxIndexResult {
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
- * The index is written to a LevelDB database and records the filesystem
- * location of each transaction by transaction hash.
+ * The index is written to a LevelDB database and records the block sequence
+ * number and serialized block offset of each transaction by transaction hash.
  */
 class TxIndex final : public BaseIndex
 {
@@ -39,6 +39,9 @@ private:
     const std::unique_ptr<DB> m_db;
 
     bool AllowPrune() const override { return false; }
+
+    /// Look up a transaction among the legacy (full-txid) entries.
+    std::optional<TxIndexResult> FindLegacyTx(const Txid& tx_hash) const;
 
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
