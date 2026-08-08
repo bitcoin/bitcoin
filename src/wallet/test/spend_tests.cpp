@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
         CRecipient recipient{PubKeyDestination({}), 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
         CCoinControl coin_control;
-        coin_control.m_feerate.emplace(10000);
+        coin_control.m_feerate.emplace(10000_sats);
         coin_control.fOverrideFeeRate = true;
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
@@ -55,17 +55,17 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         const auto& txr = *res;
         BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
         BOOST_CHECK_EQUAL(txr.tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr.fee);
-        BOOST_CHECK_GT(txr.fee, 0);
+        BOOST_CHECK_GT(txr.fee, 0_sats);
         return txr.fee;
     };
 
     // Send full input amount to recipient, check that only nonzero fee is
     // subtracted (to_reduce == fee).
-    const CAmount fee{check_tx(0)};
+    const CAmount fee{check_tx(0_sats)};
 
     // Send slightly less than full input amount to recipient, check leftover
     // input amount is paid to recipient not the miner (to_reduce == fee - 123)
-    BOOST_CHECK_EQUAL(fee, check_tx(123));
+    BOOST_CHECK_EQUAL(fee, check_tx(123_sats));
 
     // Send full input minus fee amount to recipient, check leftover input
     // amount is paid to recipient not the miner (to_reduce == 0)
@@ -75,7 +75,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // leftover input amount is paid to recipient not the miner (to_reduce ==
     // -123). This overpays the recipient instead of overpaying the miner more
     // than double the necessary fee.
-    BOOST_CHECK_EQUAL(fee, check_tx(fee + 123));
+    BOOST_CHECK_EQUAL(fee, check_tx(fee + 123_sats));
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)

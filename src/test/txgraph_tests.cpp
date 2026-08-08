@@ -55,11 +55,11 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
     refs.reserve(NUM_TOTAL_TX);
     // First all bottom transactions: the i'th bottom transaction is at position i.
     for (unsigned int i = 0; i < NUM_BOTTOM_TX; ++i) {
-        graph->AddTransaction(refs.emplace_back(), FeePerWeight{200 - i, 100});
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{CAmount{200 - i}, 100});
     }
     // Then all top transactions: the i'th top transaction is at position NUM_BOTTOM_TX + i.
     for (unsigned int i = 0; i < NUM_TOP_TX; ++i) {
-        graph->AddTransaction(refs.emplace_back(), FeePerWeight{100 - i, 100});
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{CAmount{100 - i}, 100});
     }
 
     // Create the zigzag dependency structure.
@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_flower)
     refs.reserve(NUM_TOTAL_TX);
 
     // Add all transactions. They are in individual clusters.
-    graph->AddTransaction(refs.emplace_back(), {1, 100});
+    graph->AddTransaction(refs.emplace_back(), {1_sats, 100});
     for (unsigned int i = 0; i < NUM_TOP_TX; ++i) {
-        graph->AddTransaction(refs.emplace_back(), FeePerWeight{500 + i, 100});
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{CAmount{500 + i}, 100});
     }
     graph->SanityCheck();
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
         for (int chaintx = 0; chaintx < NUM_TX_PER_TOP_CHAIN; ++chaintx) {
             // Use random fees, size 1.
-            int64_t fee = rng.randbits<27>() + 100;
+            CAmount fee{rng.randbits<27>() + 100};
             FeePerWeight feerate{fee, 1};
             graph->AddTransaction(top_refs.emplace_back(), feerate);
             // Add internal dependencies linking the chain transactions together.
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
     // Construct the bottom transactions, and dependencies to the top chains.
     while (top_components.size() > 1) {
         // Construct the transaction.
-        int64_t fee = rng.randbits<27>() + 100;
+        CAmount fee{rng.randbits<27>() + 100};
         FeePerWeight feerate{fee, 1};
         TxGraph::Ref bottom_tx;
         graph->AddTransaction(bottom_tx, feerate);
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     for (unsigned int i = 0; i < NUM_TOTAL_TX; ++i) {
         // The 88th transaction is oversized.
         // Every 20th transaction is oversized.
-        const FeePerWeight feerate{500 + i, (i == 88 || i % 20 == 0) ? MAX_CLUSTER_SIZE + 1 : 100};
+        const FeePerWeight feerate{CAmount{500 + i}, (i == 88 || i % 20 == 0) ? MAX_CLUSTER_SIZE + 1 : 100};
         graph->AddTransaction(refs.emplace_back(), feerate);
     }
     graph->SanityCheck();
@@ -337,10 +337,10 @@ BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
     std::vector<TxGraph::Ref> refs;
     refs.reserve(4);
 
-    FeePerWeight feerateA{2, 10};
-    FeePerWeight feerateB{1, 10};
-    FeePerWeight feerateC{2, 10};
-    FeePerWeight feerateD{4, 10};
+    FeePerWeight feerateA{2_sats, 10};
+    FeePerWeight feerateB{1_sats, 10};
+    FeePerWeight feerateC{2_sats, 10};
+    FeePerWeight feerateD{4_sats, 10};
 
     // everytime adding a transaction, test the chunk status
     // [A]
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(txgraph_staging)
     std::vector<TxGraph::Ref> refs;
     refs.reserve(2);
 
-    FeePerWeight feerateA{2, 10};
-    FeePerWeight feerateB{1, 10};
+    FeePerWeight feerateA{2_sats, 10};
+    FeePerWeight feerateB{1_sats, 10};
 
     // everytime adding a transaction, test the chunk status
     // [A]

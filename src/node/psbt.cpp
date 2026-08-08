@@ -27,7 +27,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
     bool calc_fee = true;
 
-    CAmount in_amt = 0;
+    CAmount in_amt = 0_sats;
 
     result.inputs.resize(psbtx.inputs.size());
 

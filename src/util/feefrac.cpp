@@ -48,7 +48,7 @@ std::partial_ordering CompareChunks(std::span<const FeeFrac> chunks0, std::span<
         if (done_0 || done_1) {
             // If a single side has no points left, act as if AB has slope tail_feerate(of 0).
             Assume(!(done_0 && done_1));
-            cmp = ByRatio{slope_ap} <=> ByRatio{FeeFrac(0, 1)};
+            cmp = ByRatio{slope_ap} <=> ByRatio{FeeFrac(0_sats, 1)};
         } else {
             // If both sides have points left, compute B, and the slope of AB explicitly.
             const FeeFrac& point_b = next_point(!unproc_side);

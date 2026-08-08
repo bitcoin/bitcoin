@@ -78,13 +78,12 @@ static void RegisterMetaTypes()
     qRegisterMetaType<bool*>();
     qRegisterMetaType<SynchronizationState>();
     qRegisterMetaType<SyncType>();
+    qRegisterMetaType<CAmount>();
   #ifdef ENABLE_WALLET
     qRegisterMetaType<WalletModel*>();
     qRegisterMetaType<wallet::AddressPurpose>();
   #endif // ENABLE_WALLET
     // Register typedefs (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType)
-    // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
-    qRegisterMetaType<CAmount>("CAmount");
     qRegisterMetaType<size_t>("size_t");
 
     qRegisterMetaType<std::function<void()>>("std::function<void()>");

@@ -41,7 +41,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // 98*dustRelayFee/1000 (in satoshis).
     // 294 satoshis at the default rate of 3000 sat/kvB.
     if (txout.scriptPubKey.IsUnspendable())
-        return 0;
+        return 0_sats;
 
     uint64_t nSize{GetSerializeSize(txout)};
     int witnessversion = 0;

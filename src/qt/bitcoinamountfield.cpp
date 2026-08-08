@@ -47,7 +47,7 @@ public:
     void fixup(QString &input) const override
     {
         bool valid;
-        CAmount val;
+        CAmount val{0};
 
         if (input.isEmpty() && !m_allow_empty) {
             valid = true;
@@ -64,9 +64,9 @@ public:
         }
     }
 
-    CAmount value(bool *valid_out=nullptr) const
+    BitcoinAmountField::QAmount value(bool *valid_out=nullptr) const
     {
-        return parse(text(), valid_out);
+        return BitcoinAmountField::QAmount(parse(text(), valid_out));
     }
 
     void setValue(const CAmount& value)
@@ -151,10 +151,10 @@ public:
 
 private:
     BitcoinUnit currentUnit{BitcoinUnit::BTC};
-    CAmount singleStep{CAmount(100000)}; // satoshis
+    CAmount singleStep{100000}; // satoshis
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
-    CAmount m_min_amount{CAmount(0)};
+    CAmount m_min_amount{0};
     CAmount m_max_amount{BitcoinUnits::maxMoney()};
 
     /**
@@ -164,16 +164,16 @@ private:
      */
     CAmount parse(const QString &text, bool *valid_out=nullptr) const
     {
-        CAmount val = 0;
+        CAmount val = 0_sats;
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
-            if(val < 0 || val > BitcoinUnits::maxMoney())
+            if(val < 0_sats || val > BitcoinUnits::maxMoney())
                 valid = false;
         }
         if(valid_out)
             *valid_out = valid;
-        return valid ? val : 0;
+        return valid ? val : 0_sats;
     }
 
 protected:
@@ -291,7 +291,7 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     return unit;
 }
 
-CAmount BitcoinAmountField::value(bool *valid_out) const
+BitcoinAmountField::QAmount BitcoinAmountField::value(bool *valid_out) const
 {
     return amount->value(valid_out);
 }

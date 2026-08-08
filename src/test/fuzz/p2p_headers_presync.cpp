@@ -135,7 +135,7 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const uint256& pre
     CMutableTransaction tx;
     tx.vin.resize(1);
     tx.vout.resize(1);
-    tx.vout[0].nValue = 0;
+    tx.vout[0].nValue = 0_sats;
     tx.vin[0].scriptSig.resize(2);
     block.vtx.push_back(MakeTransactionRef(tx));
     block.hashMerkleRoot = block.vtx[0]->GetHash().ToUint256();

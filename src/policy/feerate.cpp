@@ -22,7 +22,7 @@ CAmount CFeeRate::GetFee(int32_t virtual_bytes) const
     Assume(virtual_bytes >= 0);
     if (m_feerate.IsEmpty()) { return CAmount(0);}
     CAmount nFee = CAmount(m_feerate.EvaluateFeeUp(virtual_bytes));
-    if (nFee == 0 && virtual_bytes != 0 && m_feerate.fee < 0) return CAmount(-1);
+    if (nFee == 0_sats && virtual_bytes != 0 && m_feerate.fee < 0_sats) return CAmount(-1);
     return nFee;
 }
 

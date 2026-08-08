@@ -73,7 +73,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         } // no default case, so the compiler can warn about missing cases
         assert(false);
     }()};
-    const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1);
+    const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1_sats);
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
 
     // Sign spending transaction, precompute transaction data

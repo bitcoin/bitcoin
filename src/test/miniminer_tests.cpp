@@ -15,9 +15,9 @@
 
 BOOST_FIXTURE_TEST_SUITE(miniminer_tests, TestingSetup)
 
-const CAmount low_fee{CENT/2000}; // 500 ṩ
-const CAmount med_fee{CENT/200}; // 5000 ṩ
-const CAmount high_fee{CENT/10}; // 100_000 ṩ
+constexpr CAmount low_fee{     500_sats};
+constexpr CAmount med_fee{   5'000_sats};
+constexpr CAmount high_fee{100'000_sats};
 
 
 static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, size_t num_outputs)
@@ -42,8 +42,8 @@ static inline bool sanity_check(const std::vector<CTransactionRef>& transactions
 {
     // No negative bumpfees.
     for (const auto& [outpoint, fee] : bumpfees) {
-        if (fee < 0) return false;
-        if (fee == 0) continue;
+        if (fee < 0_sats) return false;
+        if (fee == 0_sats) continue;
         auto outpoint_ = outpoint; // structured bindings can't be captured in C++17, so we need to use a variable
         const bool found = std::any_of(transactions.cbegin(), transactions.cend(), [&](const auto& tx) {
             return outpoint_.hash == tx->GetHash() && outpoint_.n < tx->vout.size();
@@ -82,7 +82,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_negative, TestChain100Setup)
     const CAmount positive_base_fee{1000};
     const CAmount negative_fee_delta{-50000};
     const CAmount negative_modified_fees{positive_base_fee + negative_fee_delta};
-    BOOST_CHECK(negative_modified_fees < 0);
+    BOOST_CHECK(negative_modified_fees < 0_sats);
     const auto tx_mod_negative = make_tx({COutPoint{m_coinbase_txns[4]->GetHash(), 0}}, /*num_outputs=*/1);
     TryAddToMempool(pool, entry.Fee(positive_base_fee).FromTx(tx_mod_negative));
     pool.PrioritiseTransaction(tx_mod_negative->GetHash(), negative_fee_delta);
@@ -91,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_negative, TestChain100Setup)
     // When target feerate is 0, transactions with negative fees are not selected.
     node::MiniMiner mini_miner_target0(pool, {only_outpoint});
     BOOST_CHECK(mini_miner_target0.IsReadyToCalculate());
-    const CFeeRate feerate_zero(0);
+    const CFeeRate feerate_zero(0_sats);
     mini_miner_target0.BuildMockTemplate(feerate_zero);
     // Check the quit condition:
     BOOST_CHECK(negative_modified_fees < feerate_zero.GetFee(Assert(pool.GetEntry(tx_mod_negative->GetHash()))->GetTxSize()));
@@ -184,10 +184,10 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
                                               CFeeRate(entry.GetModifiedFee(), entry.GetTxSize())});
     }
 
-    const std::vector<CFeeRate> various_normal_feerates({CFeeRate(0), CFeeRate(500), CFeeRate(999),
-                                                         CFeeRate(1000), CFeeRate(2000), CFeeRate(2500),
-                                                         CFeeRate(3333), CFeeRate(7800), CFeeRate(11199),
-                                                         CFeeRate(23330), CFeeRate(50000), CFeeRate(5*CENT)});
+    const std::vector<CFeeRate> various_normal_feerates({CFeeRate(0_sats), CFeeRate(500_sats), CFeeRate(999_sats),
+                                                         CFeeRate(1000_sats), CFeeRate(2000_sats), CFeeRate(2500_sats),
+                                                         CFeeRate(3333_sats), CFeeRate(7800_sats), CFeeRate(11199_sats),
+                                                         CFeeRate(23330_sats), CFeeRate(50000_sats), CFeeRate(5*CENT)});
 
     // All nonexistent entries have a bumpfee of zero, regardless of feerate
     std::vector<COutPoint> nonexistent_outpoints({ COutPoint{Txid::FromUint256(GetRandHash()), 0}, COutPoint{Txid::FromUint256(GetRandHash()), 3} });
@@ -202,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
         for (const auto& outpoint: nonexistent_outpoints) {
             auto it = bump_fees.find(outpoint);
             BOOST_CHECK(it != bump_fees.end());
-            BOOST_CHECK_EQUAL(it->second, 0);
+            BOOST_CHECK_EQUAL(it->second, 0_sats);
         }
     }
 
@@ -219,7 +219,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
         const TxDimensions& tx0_dimensions = tx_dims.find(tx0->GetHash())->second;
         CAmount bumpfee0 = Find(bump_fees, COutPoint{tx0->GetHash(), 1});
         if (target_feerate <= tx0_dimensions.feerate) {
-            BOOST_CHECK_EQUAL(bumpfee0, 0);
+            BOOST_CHECK_EQUAL(bumpfee0, 0_sats);
         } else {
             // Difference is fee to bump tx0 from current to target feerate.
             BOOST_CHECK_EQUAL(bumpfee0, target_feerate.GetFee(tx0_dimensions.vsize) - tx0_dimensions.mod_fee);
@@ -232,7 +232,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
         CAmount bumpfee2 = Find(bump_fees, COutPoint{tx2->GetHash(), 1});
         if (target_feerate <= tx2_feerate) {
             // As long as target feerate is below tx3's ancestor feerate, there is no bump fee.
-            BOOST_CHECK_EQUAL(bumpfee2, 0);
+            BOOST_CHECK_EQUAL(bumpfee2, 0_sats);
         } else {
             // Difference is fee to bump tx2 from current to target feerate, without tx3.
             BOOST_CHECK_EQUAL(bumpfee2, target_feerate.GetFee(tx2_dimensions.vsize) - tx2_dimensions.mod_fee);
@@ -252,7 +252,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
         CAmount bumpfee4 = Find(bump_fees, COutPoint{tx4->GetHash(), 1});
         if (target_feerate <= tx4_feerate) {
             // As long as target feerate is below tx5's ancestor feerate, there is no bump fee.
-            BOOST_CHECK_EQUAL(bumpfee4, 0);
+            BOOST_CHECK_EQUAL(bumpfee4, 0_sats);
         } else {
             // Difference is fee to bump tx4 from current to target feerate, without tx5.
             BOOST_CHECK_EQUAL(bumpfee4, target_feerate.GetFee(tx4_dimensions.vsize) - tx4_dimensions.mod_fee);
@@ -281,7 +281,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
             const TxDimensions& tx0_dimensions = tx_dims.find(tx0->GetHash())->second;
             CAmount it0_spent = Find(bump_fees, COutPoint{tx0->GetHash(), 0});
             if (target_feerate <= tx0_dimensions.feerate) {
-                BOOST_CHECK_EQUAL(it0_spent, 0);
+                BOOST_CHECK_EQUAL(it0_spent, 0_sats);
             } else {
                 // Difference is fee to bump tx0 from current to target feerate.
                 BOOST_CHECK_EQUAL(it0_spent, target_feerate.GetFee(tx0_dimensions.vsize) - tx0_dimensions.mod_fee);
@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
             const CFeeRate tx2_feerate_unbumped = tx2_dimensions.feerate;
             auto it2_spent = Find(bump_fees, COutPoint{tx2->GetHash(), 0});
             if (target_feerate <= tx2_feerate_unbumped) {
-                BOOST_CHECK_EQUAL(it2_spent, 0);
+                BOOST_CHECK_EQUAL(it2_spent, 0_sats);
             } else {
                 // Difference is fee to bump tx2 from current to target feerate, without tx3.
                 BOOST_CHECK_EQUAL(it2_spent, target_feerate.GetFee(tx2_dimensions.vsize) - tx2_dimensions.mod_fee);
@@ -303,7 +303,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
             const CFeeRate tx4_feerate_unbumped = tx4_dimensions.feerate;
             auto it4_spent = Find(bump_fees, COutPoint{tx4->GetHash(), 0});
             if (target_feerate <= tx4_feerate_unbumped) {
-                BOOST_CHECK_EQUAL(it4_spent, 0);
+                BOOST_CHECK_EQUAL(it4_spent, 0_sats);
             } else {
                 // Difference is fee to bump tx4 from current to target feerate, without tx5.
                 BOOST_CHECK_EQUAL(it4_spent, target_feerate.GetFee(tx4_dimensions.vsize) - tx4_dimensions.mod_fee);
@@ -511,7 +511,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     }
     // Feerate just below tx4: tx6 and tx7 have different bump fees.
     {
-        const auto just_below_tx4 = CFeeRate(tx4_feerate.GetFeePerK() - 5);
+        const auto just_below_tx4 = CFeeRate(tx4_feerate.GetFeePerK() - 5_sats);
         node::MiniMiner mini_miner(pool, all_unspent_outpoints);
         BOOST_CHECK(mini_miner.IsReadyToCalculate());
         auto bump_fees = mini_miner.CalculateBumpFees(just_below_tx4);
@@ -534,7 +534,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     }
     // Feerate between tx6 and tx7's ancestor feerates: don't need to bump tx5 because tx7 already does.
     {
-        const auto just_above_tx6 = CFeeRate(med_fee + 10, tx_vsizes[6]);
+        const auto just_above_tx6 = CFeeRate(med_fee + 10_sats, tx_vsizes[6]);
         BOOST_CHECK(just_above_tx6 <= CFeeRate(low_fee + high_fee, tx_vsizes[5] + tx_vsizes[7]));
         node::MiniMiner mini_miner(pool, all_unspent_outpoints);
         BOOST_CHECK(mini_miner.IsReadyToCalculate());
@@ -547,7 +547,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
         BOOST_CHECK_EQUAL(tx6_bumpfee->second, just_above_tx6.GetFee(tx_vsizes[6]) - (med_fee));
         const auto tx7_bumpfee = bump_fees.find(COutPoint{tx7->GetHash(), 0});
         BOOST_CHECK(tx7_bumpfee != bump_fees.end());
-        BOOST_CHECK_EQUAL(tx7_bumpfee->second, 0);
+        BOOST_CHECK_EQUAL(tx7_bumpfee->second, 0_sats);
     }
     // Check linearization order
     std::vector<node::MiniMinerMempoolEntry> miniminer_info;
@@ -678,7 +678,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
         const int64_t child_vsize{1000};
 
         std::vector<node::MiniMinerMempoolEntry> miniminer_info;
-        miniminer_info.emplace_back(grandparent_zero_fee,          /*vsize_self=*/tx_vsize,/*vsize_ancestor=*/tx_vsize, /*fee_self=*/0,/*fee_ancestor=*/0);
+        miniminer_info.emplace_back(grandparent_zero_fee,          /*vsize_self=*/tx_vsize,/*vsize_ancestor=*/tx_vsize, /*fee_self=*/0_sats,/*fee_ancestor=*/0_sats);
         miniminer_info.emplace_back(parent_high_feerate,                          tx_vsize,                 2*tx_vsize, high_fee,      high_fee);
         miniminer_info.emplace_back(grandparent_double_low_feerate,               tx_vsize,                   tx_vsize, 2*low_fee,     2*low_fee);
         miniminer_info.emplace_back(parent_med_feerate,                           tx_vsize,                 2*tx_vsize, med_fee,       2*low_fee+med_fee);

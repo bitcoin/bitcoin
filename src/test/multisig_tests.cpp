@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 static CScript
 sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0, SigVersion::BASE);
+    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0_sats, SigVersion::BASE);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     ScriptError err;
     CKey key[4];
-    CAmount amount = 0;
+    CAmount amount = 0_sats;
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         txTo[i].vout.resize(1);
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vout[0].nValue = 1_sats;
     }
 
     std::vector<CKey> keys;
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
         txTo[i].vout.resize(1);
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vout[0].nValue = 1_sats;
     }
 
     for (int i = 0; i < 3; i++)

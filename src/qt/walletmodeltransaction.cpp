@@ -59,7 +59,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 
 CAmount WalletModelTransaction::getTotalTransactionAmount() const
 {
-    CAmount totalTransactionAmount = 0;
+    CAmount totalTransactionAmount = 0_sats;
     for (const SendCoinsRecipient &rcp : recipients)
     {
         totalTransactionAmount += rcp.amount;

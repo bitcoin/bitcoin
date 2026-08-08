@@ -44,7 +44,7 @@ public:
 
     CFeeRate estimateSmartFee(int confTarget, FeeCalculation* feeCalc, bool conservative) const override
     {
-        return CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)};
+        return CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000_sats)};
     }
 
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const override
@@ -69,14 +69,14 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 
     bilingual_str error;
     CTxMemPool::Options mempool_opts{
-        .incremental_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
-        .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
-        .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
+        .incremental_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000_sats)},
+        .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000_sats)},
+        .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000_sats)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
     g_setup->SetFeeEstimator(std::move(fee_estimator));
-    auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
+    auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000_sats)}};
     if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&
         target_feerate > node.mempool->m_opts.min_relay_feerate) {
         MockMempoolMinFee(target_feerate, *node.mempool);

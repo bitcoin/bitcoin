@@ -306,13 +306,11 @@ void TransactionView::changedAmount()
 {
     if(!transactionProxyModel)
         return;
-    CAmount amount_parsed = 0;
+    CAmount amount_parsed = 0_sats;
     if (BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amountWidget->text(), &amount_parsed)) {
         transactionProxyModel->setMinAmount(amount_parsed);
-    }
-    else
-    {
-        transactionProxyModel->setMinAmount(0);
+    } else {
+        transactionProxyModel->setMinAmount(0_sats);
     }
 }
 

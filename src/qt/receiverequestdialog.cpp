@@ -60,7 +60,7 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
     ui->uri_content->setText("<a href=\"" + uri + "\">" + GUIUtil::HtmlEscape(uri) + "</a>");
     ui->address_content->setText(info.address);
 
-    if (!info.amount) {
+    if (info.amount == 0_sats) {
         ui->amount_tag->hide();
         ui->amount_content->hide();
     } // Amount is set in updateDisplayUnit() slot.

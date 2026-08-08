@@ -155,7 +155,7 @@ void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
         if (dust_indexes.empty()) continue;
 
         // Transaction must have no base fee
-        Assert(entry.GetFee() == 0 && entry.GetModifiedFee() == 0);
+        Assert(entry.GetFee() == 0_sats && entry.GetModifiedFee() == 0_sats);
 
         // Transaction has single dust; make sure it's swept or will not be mined
         const auto& children = tx_pool.GetChildren(entry);

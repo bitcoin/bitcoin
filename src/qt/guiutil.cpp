@@ -158,7 +158,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     if (rv.address.endsWith("/")) {
         rv.address.truncate(rv.address.length() - 1);
     }
-    rv.amount = 0;
+    rv.amount = 0_sats;
 
     QUrlQuery uriQuery(uri);
     QList<QPair<QString, QString> > items = uriQuery.queryItems();
@@ -215,8 +215,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     QString ret = QString("bitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
-    if (info.amount)
-    {
+    if (info.amount != 0_sats) {
         ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnit::BTC, info.amount, false, BitcoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }
