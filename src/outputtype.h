@@ -23,7 +23,7 @@ enum class OutputType {
     UNKNOWN,
 };
 
-static constexpr auto OUTPUT_TYPES = std::array{
+inline constexpr auto OUTPUT_TYPES = std::array{
     OutputType::LEGACY,
     OutputType::P2SH_SEGWIT,
     OutputType::BECH32,

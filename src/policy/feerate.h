@@ -16,8 +16,8 @@
 #include <string>
 #include <type_traits>
 
-const std::string CURRENCY_UNIT = "BTC"; // One formatted unit
-const std::string CURRENCY_ATOM = "sat"; // One indivisible minimum value unit
+inline const std::string CURRENCY_UNIT = "BTC"; // One formatted unit
+inline const std::string CURRENCY_ATOM = "sat"; // One indivisible minimum value unit
 
 enum class FeeRateFormat {
     BTC_KVB, //!< Use BTC/kvB fee rate unit
@@ -38,7 +38,7 @@ public:
     /** Fee rate of 0 satoshis per 0 vB */
     CFeeRate() = default;
     template<std::integral I> // Disallow silent float -> int conversion
-    explicit CFeeRate(const I m_feerate_kvb) : m_feerate(FeePerVSize(m_feerate_kvb, 1000)) {}
+    explicit constexpr CFeeRate(const I m_feerate_kvb) : m_feerate(FeePerVSize(m_feerate_kvb, 1000)) {}
 
     /**
      * Construct a fee rate from a fee in satoshis and a vsize in vB.

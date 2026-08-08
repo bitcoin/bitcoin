@@ -177,8 +177,8 @@ struct TransactionSerParams {
     const bool allow_witness;
     SER_PARAMS_OPFUNC
 };
-static constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
-static constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
+inline constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
+inline constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
 
 /**
  * Basic transaction serialization format:

@@ -21,7 +21,7 @@ class CThreadInterrupt;
  * Maximum time to wait for I/O readiness.
  * It will take up until this time to break off in case of an interruption.
  */
-static constexpr auto MAX_WAIT_FOR_IO = 1s;
+inline constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 inline bool IOErrorIsPermanent(int err)
 {

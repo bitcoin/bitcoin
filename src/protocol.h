@@ -310,8 +310,8 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::FEATURE,
 })};
 
-static constexpr size_t MAX_FEATUREID_LENGTH{80};
-static constexpr size_t MAX_FEATUREDATA_LENGTH{512};
+inline constexpr size_t MAX_FEATUREID_LENGTH{80};
+inline constexpr size_t MAX_FEATUREDATA_LENGTH{512};
 
 namespace NetMsgFeature {
 //inline constexpr std::string_view FOO{"BIP-FOO"};
@@ -487,8 +487,8 @@ public:
 };
 
 /** getdata message type flags */
-const uint32_t MSG_WITNESS_FLAG = 1 << 30;
-const uint32_t MSG_TYPE_MASK = 0xffffffff >> 2;
+inline constexpr uint32_t MSG_WITNESS_FLAG = 1 << 30;
+inline constexpr uint32_t MSG_TYPE_MASK = 0xffffffff >> 2;
 
 /** getdata / inv message types.
  * These numbers are defined by the protocol. When adding a new value, be sure

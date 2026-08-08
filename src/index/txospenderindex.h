@@ -21,7 +21,7 @@
 
 struct CDiskTxPos;
 
-static constexpr bool DEFAULT_TXOSPENDERINDEX{false};
+inline constexpr bool DEFAULT_TXOSPENDERINDEX{false};
 
 struct TxoSpender {
     CTransactionRef tx;
