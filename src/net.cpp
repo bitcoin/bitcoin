@@ -252,7 +252,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
             // For inbound connections, assume both the address and the port
             // as seen from the peer.
             addrLocal = CService{node.GetAddrLocal()};
-        } else {
+        } else if (!GetProxy(node.addr.GetNetwork()).has_value()) {
             // For outbound connections, assume just the address as seen from
             // the peer and leave the port in `addrLocal` as returned by
             // `GetLocalAddress()` above. The peer has no way to observe our
