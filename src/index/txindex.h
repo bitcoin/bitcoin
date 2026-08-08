@@ -21,8 +21,8 @@ static constexpr bool DEFAULT_TXINDEX{false};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
- * The index is written to a LevelDB database and records the filesystem
- * location of each transaction by transaction hash.
+ * The index is written to a LevelDB database and records the block sequence
+ * number and serialized block offset of each transaction by transaction hash.
  */
 class TxIndex final : public BaseIndex
 {
@@ -39,6 +39,9 @@ private:
         uint256 block_hash;
         CTransactionRef tx;
     };
+
+    /// Look up a transaction in the hashed-prefix index.
+    std::optional<TxIndexResult> FindHashedTx(const Txid& tx_hash) const;
 
     /// Look up a transaction among the legacy (full-txid) entries.
     std::optional<TxIndexResult> FindLegacyTx(const Txid& tx_hash) const;
