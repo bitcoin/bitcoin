@@ -136,7 +136,7 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
         }
         throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
     }
-    throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+    throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing required timestamp field for import request: %s", data.write()));
 }
 
 static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
