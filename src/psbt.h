@@ -330,6 +330,11 @@ public:
     /**
      * Retrieves the UTXO for this input
      *
+     * Prefers non_witness_utxo when present and usable. Falls back to
+     * witness_utxo only if non_witness_utxo is absent. Returns false if
+     * neither can be used (including when non_witness_utxo is present but
+     * does not match this input).
+     *
      * @param[out] utxo The UTXO of this input
      * @return Whether the UTXO could be retrieved
      */

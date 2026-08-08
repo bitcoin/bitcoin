@@ -216,4 +216,48 @@ BOOST_AUTO_TEST_CASE(merge_proprietary_fields)
     BOOST_CHECK(output_it->value == right_prop.value);
 }
 
+BOOST_AUTO_TEST_CASE(psbt2_getutxo)
+{
+    CMutableTransaction mtx;
+    mtx.vout = {CTxOut{100, CScript()}};
+    const auto tx{MakeTransactionRef(mtx)};
+
+    PSBTInput psbt_in(/*psbt_version=*/2, tx->GetHash(), /*prev_out=*/0);
+    psbt_in.non_witness_utxo = tx;
+    CTxOut utxo;
+
+    // Reject OOB prev_out
+    psbt_in.prev_out = 1;
+    BOOST_CHECK(!psbt_in.GetUTXO(utxo));
+
+    // Reject mismatched prev_txid
+    psbt_in.prev_out = 0;
+    psbt_in.prev_txid = Txid::FromUint256(uint256::ONE);
+    BOOST_CHECK(!psbt_in.GetUTXO(utxo));
+
+    // Accept valid non_witness_utxo
+    psbt_in.prev_txid = tx->GetHash();
+    BOOST_CHECK(psbt_in.GetUTXO(utxo));
+    BOOST_CHECK_EQUAL(utxo.nValue, 100);
+
+    // Fall back to witness_utxo when non_witness_utxo is absent
+    psbt_in.non_witness_utxo.reset();
+    psbt_in.witness_utxo = CTxOut{50, CScript()};
+    BOOST_CHECK(psbt_in.GetUTXO(utxo));
+    BOOST_CHECK_EQUAL(utxo.nValue, 50);
+
+    // Reject when both utxo types are absent
+    psbt_in.witness_utxo.SetNull();
+    BOOST_CHECK(!psbt_in.GetUTXO(utxo));
+
+    // Prefer verified non_witness_utxo when both are present
+    psbt_in.non_witness_utxo = tx;
+    psbt_in.witness_utxo = CTxOut{50, CScript()};
+    BOOST_CHECK(psbt_in.GetUTXO(utxo));
+    BOOST_CHECK_EQUAL(utxo.nValue, 100);
+
+    // Do not fall through to witness_utxo when non_witness_utxo is invalid
+    psbt_in.prev_txid = Txid::FromUint256(uint256::ONE);
+    BOOST_CHECK(!psbt_in.GetUTXO(utxo));
+}
 BOOST_AUTO_TEST_SUITE_END()
