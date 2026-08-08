@@ -127,6 +127,10 @@ def check_ELF_FORTIFY(binary) -> bool:
     if '--monolithic' in binary.strings:
         return True
 
+    # The glibc used for static builds is compiled with fortify source
+    if binary.concrete.interpreter == "":
+        return True
+
     chk_funcs = set()
 
     for sym in binary.imported_symbols:
