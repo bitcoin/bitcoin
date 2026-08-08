@@ -279,6 +279,11 @@ public:
      */
     bool IsEmpty();
 
+    //! Probe an unopened database for a key prefix. Return true if a database at
+    //! path exists and contains at least 1 entry beginning with prefix; missing
+    //! or empty databases return false, and database errors throw dbwrapper_error.
+    static bool HasKeyStartingWith(const fs::path& path, uint8_t prefix);
+
     template<typename K>
     size_t EstimateSize(const K& key_begin, const K& key_end) const
     {
