@@ -7,7 +7,6 @@
 
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
