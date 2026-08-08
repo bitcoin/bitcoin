@@ -21,6 +21,7 @@ from test_framework.blocktools import (
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import (
+    COIN,
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
@@ -116,6 +117,7 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+        test_bumpfee_uncomputable_cluster(self, rbf_node, dest_address)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -829,6 +831,78 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
     self.clear_mempool()
+
+
+def test_bumpfee_uncomputable_cluster(self, rbf_node, dest_address):
+    self.log.info('Test that bumpfee fails when unconfirmed UTXOs depend on an enormous cluster')
+    # CheckFeeRate() can only fail to compute a combined bump fee when
+    # CTxMemPool::GatherClusters() hits its 500 transaction limit. Clusters are capped
+    # at 64 transactions, so we need the tx we bump to spend from 8 of them.
+    #
+    # That tx can't be in the mempool once they're full, or it would merge all 8 into
+    # one and get rejected. We can't create it then either, since coin selection runs
+    # into the same MiniMiner limit. So we broadcast it while the clusters are still
+    # single transactions and evict it afterwards by raising -minrelaytxfee. It stays
+    # in the wallet, which is all bumpfee needs.
+    NUM_CLUSTERS = 8             # 8 * 64 = 512, above the 500 gather limit
+    CLUSTER_SIZE = 64
+    SEED_PAYMENT = COIN // 100   # paid to rbf_node by every seed
+    SEED_FEE = 20_000            # high enough to survive the -minrelaytxfee bump below
+    ORIGINAL_TX_FEE = 2000       # ~3 sat/vB, low enough to get evicted by it
+
+    # Keep the peer disconnected so we don't relay txs to it.
+    self.disconnect_nodes(0, 1)
+
+    # Fund a MiniWallet on rbf_node so the cluster transactions end up in its mempool,
+    # which is the one the bump fee calculation looks at. The tag keeps these coins
+    # separate from the default MiniWallet other tests use on this node. get_utxo()
+    # skips immature coinbases, so mine COINBASE_MATURITY blocks on top.
+    miniwallet = MiniWallet(rbf_node, tag_name="feebumper_cluster")
+    self.generatetoaddress(rbf_node, COINBASE_MATURITY + NUM_CLUSTERS,
+                           miniwallet.get_address(), sync_fun=self.no_op)
+    miniwallet.rescan_utxos()
+
+    # Each seed pays rbf_node and keeps a MiniWallet output we grow the cluster from.
+    rbf_spk = bytes.fromhex(rbf_node.getaddressinfo(rbf_node.getnewaddress())["scriptPubKey"])
+    seeds = [miniwallet.send_to(from_node=rbf_node, scriptPubKey=rbf_spk,
+                                  amount=SEED_PAYMENT, fee=SEED_FEE)
+             for _ in range(NUM_CLUSTERS)]
+
+    # Broadcast the tx we'll bump while every cluster is still a single transaction.
+    inputs = [{"txid": seed["txid"], "vout": seed["sent_vout"]} for seed in seeds]
+    outputs = {dest_address: Decimal(NUM_CLUSTERS * SEED_PAYMENT - ORIGINAL_TX_FEE) / COIN}
+    signed = rbf_node.signrawtransactionwithwallet(rbf_node.createrawtransaction(inputs, outputs))
+    original_txid = rbf_node.sendrawtransaction(signed["hex"])
+
+    # Bumping -minrelaytxfee to 10 sat/vB drops it on mempool reload and rejects the
+    # resubmission the wallet does on startup. The seeds pay much more, so they stay.
+    # Note the bump below uses NORMAL (100 sat/vB); if that ever ends up under the
+    # -minrelaytxfee here, CheckFeeRate() bails on its mempool minimum check instead.
+    self.restart_node(1, ["-minrelaytxfee=0.0001"] + self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    assert_equal(set(rbf_node.getrawmempool()), {seed["txid"] for seed in seeds})
+    assert_equal(rbf_node.gettransaction(original_txid)["confirmations"], 0)
+
+    # Grow each seed into a full cluster. MiniWallet's default 300 sat/vB keeps these
+    # above the raised -minrelaytxfee.
+    for seed in seeds:
+        miniwallet.send_self_transfer_chain(from_node=rbf_node,
+                                            chain_length=CLUSTER_SIZE - 1,
+                                            utxo_to_spend=miniwallet.get_utxo(txid=seed["txid"]))
+    # Make sure the setup worked, so the check below can't pass for the wrong reason.
+    assert_equal(len(rbf_node.getrawmempool()), NUM_CLUSTERS * CLUSTER_SIZE)
+
+    assert_raises_rpc_error(-4,
+                            "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
+                            rbf_node.bumpfee, original_txid, {"fee_rate": NORMAL})
+
+    # Restore initial state
+    rbf_node.abandontransaction(original_txid)
+    self.generate(rbf_node, 1, sync_fun=self.no_op)
+    self.restart_node(1, self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
+    self.sync_all()
 
 
 if __name__ == "__main__":
