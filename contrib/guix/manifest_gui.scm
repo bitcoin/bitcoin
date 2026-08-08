@@ -1,8 +1,8 @@
 (use-modules (gnu packages bison)
+             ((gnu packages build-tools) #:select (ninja))
              ((gnu packages compression) #:select (xz zip))
              (gnu packages gawk)
              ((gnu packages installers) #:select (nsis-x86_64))
-             (gnu packages ninja)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-xyz) #:select (python-lief)))
@@ -14,7 +14,7 @@
         ;; Build tools
         ninja
         ;; Packaging scripts
-        python-minimal ;; (3.11)
+        python-minimal ;; (3.12)
         ;; Tests
         python-lief)
   (let ((target (getenv "HOST")))

@@ -1,11 +1,11 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
-             ((gnu packages cmake) #:select (cmake-minimal))
+             ((gnu packages cmake) #:select (cmake-minimal-4))
              (gnu packages commencement)
              ((gnu packages compression) #:select (gzip))
              (gnu packages cross-base)
              (gnu packages gcc)
-             ((gnu packages linux) #:select (linux-libre-headers-6.1))
+             ((gnu packages linux) #:select (linux-libre-headers-6.18))
              (gnu packages llvm)
              (gnu packages mingw)
              ((gnu packages version-control) #:select (git-minimal))
@@ -28,14 +28,14 @@ FILE-NAME found in ./patches relative to the current file."
 (define (base-binutils target)
   (package
     (inherit (cross-binutils target)) ;; 2.44
-    (version "2.46.0")
+    (version "2.46.1")
     (source (origin
               (method url-fetch)
               (uri (string-append "mirror://gnu/binutils/binutils-"
                           version ".tar.bz2"))
               (sha256
                (base32
-                "04nd9vl7c1pxjbc9wh3ckddzhz5g82xyjqq9y9kf171a59im4c8g"))))
+                "0fd45n9rrymplx41vk32676d6pqnvfjlq42xma7a4cr6v85d8kij"))))
     (arguments
       (substitute-keyword-arguments (package-arguments (cross-binutils target))
         ((#:configure-flags flags)
@@ -103,12 +103,10 @@ chain for " target " development."))
   (package-with-extra-patches gcc-14
     (search-our-patches "gcc-remap-guix-store.patch" "gcc-ssa-generation.patch")))
 
-(define base-linux-kernel-headers linux-libre-headers-6.1)
-
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
-                                       (base-kernel-headers base-linux-kernel-headers)
+                                       (base-kernel-headers linux-libre-headers-6.18)
                                        (base-libc glibc-2.31)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
@@ -269,7 +267,7 @@ chain for " target " development."))
         tar
         gzip
         ;; Build tools
-        cmake-minimal
+        cmake-minimal-4
         gnu-make
         ;; Git
         git-minimal)
