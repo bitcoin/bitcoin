@@ -63,7 +63,6 @@ extern const std::string UNIX_EPOCH_TIME;
  */
 extern const std::string EXAMPLE_ADDRESS[2];
 
-class FillableSigningProvider;
 class CScript;
 struct Sections;
 

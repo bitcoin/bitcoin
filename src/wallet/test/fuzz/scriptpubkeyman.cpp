@@ -307,7 +307,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
                     }
                 );
                 if (fuzzed_data_provider.ConsumeBool()) script = GetScriptForDestination(ScriptHash(script));
-                if (!legacy_data.HaveCScript(CScriptID(script)) && legacy_data.AddCScript(script)) added_script++;
+                if (!legacy_data.HaveCScript(CScriptID(script)) && legacy_data.LoadCScript(script)) added_script++;
             },
             [&] {
                 CKey key;
@@ -331,7 +331,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
                 }
                 if (pubkeys.size() < num_keys) return;
                 CScript multisig_script{GetScriptForMultisig(num_keys, pubkeys)};
-                if (!legacy_data.HaveCScript(CScriptID(multisig_script)) && legacy_data.AddCScript(multisig_script)) {
+                if (!legacy_data.HaveCScript(CScriptID(multisig_script)) && legacy_data.LoadCScript(multisig_script)) {
                     added_script++;
                 }
             }
