@@ -1146,8 +1146,17 @@ To update the subtree:
 
 ```sh
 git fetch libmultiprocess
+git checkout <previous subtree merge commit>
 git subtree pull --prefix=src/ipc/libmultiprocess libmultiprocess master --squash
+test/lint/git-subtree-check.sh src/ipc/libmultiprocess
 ```
+
+Normally, the new subtree merge commit should be based on the previous subtree
+merge commit, so if subtree changes need to be backported, the same commit can
+be merged into release branches and the changes do not need to be rereviewed.
+However, if there have been API changes causing subtree code and Bitcoin Core
+code to be incompatible, this may not be possible and a later base commit can be
+used instead (pass `--incompatible` to `git-subtree-check.sh` in this case.)
 
 The ultimate upstream of the few externally managed subtrees are:
 
