@@ -12,6 +12,25 @@ REST Interface consistency guarantees
 The [same guarantees as for the RPC Interface](/doc/JSON-RPC-interface.md#rpc-consistency-guarantees)
 apply.
 
+Default HTTP caching
+--------------------
+
+REST responses include `Cache-Control` headers by default:
+
+* `public, immutable, max-age=86400` for `/block` and `/block/notxdetails`
+  binary and hex responses, `/blockpart`, `/blockfilter` and `/spenttxouts` in
+  all formats, and `/deploymentinfo/<BLOCKHASH>.json`. The TTL is deliberately
+  short so caches do not hold older response shapes across software upgrades.
+* `no-store` for `/block` and `/block/notxdetails` JSON, `/tx`, `/headers`,
+  `/blockfilterheaders`, `/blockhashbyheight`, `/chaininfo`, `/mempool`,
+  `/getutxos`, `/deploymentinfo.json`, and all error responses. These responses
+  can change with active chain or node state and do not currently provide cache
+  validators such as `ETag` or `Last-Modified`.
+
+If you front `bitcoind` with a reverse proxy or CDN such as Caddy or nginx with
+the headers-more module, you can override these defaults there. Keep overrides
+scoped to responses you know are safe to cache more aggressively.
+
 Limitations
 -----------
 
