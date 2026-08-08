@@ -221,6 +221,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
 
         auto result = init::SetLoggingLevel(args);
+        BOOST_REQUIRE(init::SetLoggingExcludes(args));
         BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
     }
