@@ -3,17 +3,22 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     msg_version,
-    msg_filterload
+    msg_filterload,
+    msg_mempool,
 )
 from test_framework.p2p import (
     P2PInterface,
+    P2PTxInvStore,
     P2P_SERVICES,
     P2P_SUBVERSION,
     P2P_VERSION,
 )
+from test_framework.wallet import MiniWallet
 
 
 class P2PConnectionLimits(BitcoinTestFramework):
@@ -25,22 +30,21 @@ class P2PConnectionLimits(BitcoinTestFramework):
     def run_test(self):
         self.test_inbound_limits()
 
-    def create_blocks_only_version(self):
-        no_txrelay_version_msg = msg_version()
-        no_txrelay_version_msg.nVersion = P2P_VERSION
-        no_txrelay_version_msg.strSubVer = P2P_SUBVERSION
-        no_txrelay_version_msg.nServices = P2P_SERVICES
-        no_txrelay_version_msg.relay = 0
-        return no_txrelay_version_msg
-
-    def create_no_services_blocks_only_version(self):
-        """VERSION with relay=0 and nServices=0 to avoid block-relay eviction protection."""
+    def add_relay_disabled_peers(self, p2ps, *, services=P2P_SERVICES):
         version_msg = msg_version()
         version_msg.nVersion = P2P_VERSION
         version_msg.strSubVer = P2P_SUBVERSION
-        version_msg.nServices = 0
+        version_msg.nServices = services
         version_msg.relay = 0
-        return version_msg
+        peers = [self.nodes[0].add_p2p_connection(p2p, send_version=False, wait_for_verack=False) for p2p in p2ps]
+        for peer in peers:
+            peer.send_without_ping(version_msg)
+        for peer in peers:
+            peer.wait_for_verack()
+        return peers
+
+    def add_relay_disabled_peer(self, p2p, *, services=P2P_SERVICES):
+        return self.add_relay_disabled_peers([p2p], services=services)[0]
 
     def test_inbound_limits(self):
         node = self.nodes[0]
@@ -56,9 +60,7 @@ class P2PConnectionLimits(BitcoinTestFramework):
         node.disconnect_p2ps()
 
         self.log.info('Connect a block-relay inbound peer - test that second full relay peer is accepted')
-        peer1 = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
-        peer1.send_without_ping(self.create_blocks_only_version())
-        peer1.wait_for_verack()
+        self.add_relay_disabled_peer(P2PInterface())
 
         node.add_p2p_connection(P2PInterface())
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
@@ -70,15 +72,39 @@ class P2PConnectionLimits(BitcoinTestFramework):
 
         self.log.info('Run with bloom filter support and check that a switch to tx relay during runtime can trigger eviction')
         self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters'])
-        peer1 = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
-        peer1.send_without_ping(self.create_blocks_only_version())
-        peer1.wait_for_verack()
+        peer1 = self.add_relay_disabled_peer(P2PInterface())
 
         node.add_p2p_connection(P2PInterface())
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
         with node.assert_debug_log(['connection dropped after filterload message'], timeout=2):
             peer1.send_without_ping(msg_filterload(data=b'\xbb'*(100)))
         self.wait_until(lambda: len(node.getpeerinfo()) == 1)
+
+        self.log.info('Check BIP35 requests do not enable ongoing transaction relay')
+        self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters', '-inboundrelaypercent=100'])
+        node.setmocktime(int(time.time()))
+        wallet = MiniWallet(node)
+        # Complete the requested snapshot before creating the transaction tested for ongoing relay.
+        snapshot_tx = wallet.send_self_transfer(from_node=node)
+        bip35_peer = self.add_relay_disabled_peer(P2PTxInvStore())
+        bip35_peer.send_and_ping(msg_mempool())
+        node.bumpmocktime(60)
+        bip35_peer.wait_for_broadcast([snapshot_tx['wtxid']])
+
+        relay_peer = node.add_p2p_connection(P2PTxInvStore())
+        tx = wallet.send_self_transfer(from_node=node)
+        node.bumpmocktime(60)
+        relay_peer.wait_for_broadcast([tx['wtxid']])
+        bip35_peer.sync_with_ping()
+        assert int(tx['wtxid'], 16) not in bip35_peer.get_invs()
+
+        self.log.info('Check BIP35 requests against inbound transaction-relay capacity')
+        # NODE_BLOOM permits BIP35, while zero capacity makes any counted requester exceed the limit.
+        self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters', '-inboundrelaypercent=0'])
+        peer1 = self.add_relay_disabled_peer(P2PInterface())
+        with node.assert_debug_log(['connection dropped after mempool message'], timeout=2):
+            peer1.send_without_ping(msg_mempool())
+            peer1.wait_for_disconnect()
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
@@ -93,10 +119,8 @@ class P2PConnectionLimits(BitcoinTestFramework):
         self.log.info('Test that EvictTxPeerIfFull only evicts tx-relaying peers')
         NUM_BLOCK_RELAY_PEERS = 21
         self.restart_node(0, ['-maxconnections=33', '-inboundrelaypercent=0'])
-        for _ in range(NUM_BLOCK_RELAY_PEERS):
-            p = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
-            p.send_without_ping(self.create_no_services_blocks_only_version())
-            p.wait_for_verack()
+        # Avoid block-relay eviction protection.
+        self.add_relay_disabled_peers([P2PInterface() for _ in range(NUM_BLOCK_RELAY_PEERS)], services=0)
         self.wait_until(lambda: len(node.getpeerinfo()) == NUM_BLOCK_RELAY_PEERS)
 
         with node.assert_debug_log(['failed to find a tx-relaying eviction candidate - connection dropped'], timeout=5):

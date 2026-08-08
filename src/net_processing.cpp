@@ -668,11 +668,11 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
-    /** If an inbound peer wants tx relay and we are at capacity for those, attempt to
+    /** If an inbound peer consumes tx-relay capacity and the limit is exceeded, attempt to
      *  evict a tx-relaying inbound peer - possibly node itself, unless it is protected.
      *  Only if no peer can be evicted, disconnect node.
      *
-     * @param[in]   node          The node that wants to relay txs to us.
+     * @param[in]   node          The node to check after setting `m_relays_txs`.
      * @param[in]   msg_type      The message that triggered this check, for logging.
      * @param[in]   protect_peer  Peer that is exempt from being evicted.
      * @return                    True if the node was disconnected because no eviction candidate
@@ -5200,6 +5200,12 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
+            if (pfrom.IsInboundConn() && !pfrom.m_relays_txs) {
+                // Keep tx_relay->m_relay_txs unchanged so fRelay=false still
+                // disables ongoing announcements.
+                pfrom.m_relays_txs = true;
+                if (MaybeDisconnectForTxRelayCapacity(pfrom, msg_type) || pfrom.fDisconnect) return;
+            }
             LOCK(tx_relay->m_tx_inventory_mutex);
             tx_relay->m_send_mempool = true;
         }
