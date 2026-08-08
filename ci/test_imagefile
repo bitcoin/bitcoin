@@ -17,6 +17,7 @@ ENV BASE_ROOT_DIR=${BASE_ROOT_DIR}
 # Make retry available in PATH, needed for CI_RETRY_EXE
 COPY ./ci/retry/retry /usr/bin/retry
 COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh ${BASE_ROOT_DIR}/ci/test/
+COPY ./contrib/devtools/shell-win64-cross.nix ${BASE_ROOT_DIR}/contrib/devtools/
 COPY ./ci/test/*.patch ${BASE_ROOT_DIR}/ci/test/
 
 # Bash is required, so install it when missing
