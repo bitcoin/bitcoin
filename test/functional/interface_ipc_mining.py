@@ -28,6 +28,10 @@ from test_framework.messages import (
     msg_headers,
     ser_uint256,
 )
+from test_framework.script import (
+    CScript,
+    CScriptNum,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -126,8 +130,29 @@ class IPCMiningTest(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         return block
 
-    async def assert_submit_block(self, mining, ctx, block, *, result, reason="", debug=""):
-        submit = await mining.submitBlock(ctx, block.serialize())
+    def make_block_variant(self, block, coinbase, extra_nonce):
+        """Make a solved same-template block with a distinct coinbase scriptSig."""
+        block = deepcopy(block)
+        coinbase = deepcopy(coinbase)
+        coinbase.vin[0].scriptSig = CScript(bytes(coinbase.vin[0].scriptSig) + bytes(CScript([CScriptNum(extra_nonce)])))
+        block.vtx[0] = coinbase
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.solve()
+        return block, coinbase
+
+    def assert_chain_tip(self, node, block_hash, *, active):
+        matching_tips = [tip for tip in node.getchaintips() if tip["hash"] == block_hash]
+        assert_equal(len(matching_tips), 1)
+        if active:
+            assert_equal(matching_tips[0]["status"], "active")
+        else:
+            assert_not_equal(matching_tips[0]["status"], "active")
+
+    async def assert_submit_block(self, mining, ctx, block, *, result, reason="", debug="", precious=None):
+        if precious is None:
+            submit = await mining.submitBlock(ctx, block.serialize())
+        else:
+            submit = await mining.submitBlock(ctx, block.serialize(), precious)
         assert_equal(submit.result, result)
         assert_equal(submit.reason, reason)
         assert_equal(submit.debug, debug)
@@ -805,6 +830,124 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_precious_submission_test(self):
+        """Test precious submitBlock and submitSolution IPC arguments."""
+        self.log.info("Running precious block submission test")
+
+        async def async_routine():
+            node = self.nodes[0]
+            ctx, mining = await make_mining_ctx(self)
+
+            async with AsyncExitStack() as stack:
+                self.log.debug("Build same-height blocks from one template")
+                template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                block = await self.build_candidate_block(template, ctx)
+                coinbase = block.vtx[0]
+                active_block, _ = self.make_block_variant(block, coinbase, extra_nonce=1)
+                side_block, _ = self.make_block_variant(block, coinbase, extra_nonce=2)
+
+                assert_not_equal(active_block.hash_hex, side_block.hash_hex)
+                assert_equal(active_block.hashPrevBlock, side_block.hashPrevBlock)
+
+                self.log.debug("submitBlock with precious=false stores but does not connect a same-work side block")
+                await self.assert_submit_block(mining, ctx, active_block, result=True)
+                assert_equal(node.getbestblockhash(), active_block.hash_hex)
+                await self.assert_submit_block(mining, ctx, side_block, result=False, reason="inconclusive", precious=False)
+                assert_equal(node.getbestblockhash(), active_block.hash_hex)
+                self.assert_chain_tip(node, side_block.hash_hex, active=False)
+
+                self.log.debug("submitBlock with precious=true prefers the stored side block")
+                await self.assert_submit_block(mining, ctx, side_block, result=True, precious=True)
+                assert_equal(node.getbestblockhash(), side_block.hash_hex)
+                self.assert_chain_tip(node, side_block.hash_hex, active=True)
+
+                self.log.debug("submitBlock with precious=true on the active tip should still report success")
+                await self.assert_submit_block(mining, ctx, side_block, result=True, precious=True)
+                assert_equal(node.getbestblockhash(), side_block.hash_hex)
+
+                self.log.debug("submitBlock with precious=true on a brand-new same-work block reorgs on the first try")
+                fresh_template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                fresh_block = await self.build_candidate_block(fresh_template, ctx)
+                fresh_coinbase = fresh_block.vtx[0]
+                fresh_active, _ = self.make_block_variant(fresh_block, fresh_coinbase, extra_nonce=10)
+                fresh_side, _ = self.make_block_variant(fresh_block, fresh_coinbase, extra_nonce=11)
+                assert_not_equal(fresh_active.hash_hex, fresh_side.hash_hex)
+                assert_equal(fresh_active.hashPrevBlock, fresh_side.hashPrevBlock)
+
+                await self.assert_submit_block(mining, ctx, fresh_active, result=True)
+                assert_equal(node.getbestblockhash(), fresh_active.hash_hex)
+                # fresh_side has never been submitted, so this exercises the
+                # AcceptBlock-then-PreciousBlock path on a single call.
+                await self.assert_submit_block(mining, ctx, fresh_side, result=True, precious=True)
+                assert_equal(node.getbestblockhash(), fresh_side.hash_hex)
+                self.assert_chain_tip(node, fresh_side.hash_hex, active=True)
+
+                self.log.debug("submitBlock with precious=true on an invalid block surfaces the validation error and does not change the tip")
+                invalid_template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                invalid_block = await mining_get_block(invalid_template, ctx)
+                invalid_block.hashMerkleRoot = 1
+                invalid_block.nNonce = 0
+                invalid_block.solve()
+                tip_before_invalid = node.getbestblockhash()
+                await self.assert_submit_block(
+                    mining, ctx, invalid_block,
+                    result=False,
+                    reason="bad-txnmrklroot",
+                    debug="hashMerkleRoot mismatch",
+                    precious=True,
+                )
+                assert_equal(node.getbestblockhash(), tip_before_invalid)
+
+                self.log.debug("Build another same-height pair for submitSolution")
+                stale_template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                stale_block = await self.build_candidate_block(stale_template, ctx)
+                stale_coinbase = stale_block.vtx[0]
+                active_solution_block, _ = self.make_block_variant(stale_block, stale_coinbase, extra_nonce=3)
+                side_solution_block, side_solution_coinbase = self.make_block_variant(stale_block, stale_coinbase, extra_nonce=4)
+
+                assert_not_equal(active_solution_block.hash_hex, side_solution_block.hash_hex)
+                assert_equal(active_solution_block.hashPrevBlock, side_solution_block.hashPrevBlock)
+
+                self.log.debug("Make the template stale by connecting a sibling block")
+                await self.assert_submit_block(mining, ctx, active_solution_block, result=True)
+                assert_equal(node.getbestblockhash(), active_solution_block.hash_hex)
+
+                self.log.debug("submitSolution with precious=false does not connect the stale same-work solution")
+                result = await stale_template.submitSolution(
+                    ctx,
+                    side_solution_block.nVersion,
+                    side_solution_block.nTime,
+                    side_solution_block.nNonce,
+                    side_solution_coinbase.serialize(),
+                    False,
+                )
+                assert_equal(result.result, False)
+                assert_equal(result.reason, "inconclusive")
+                assert_equal(result.debug, "")
+                assert_equal(node.getbestblockhash(), active_solution_block.hash_hex)
+                self.assert_chain_tip(node, side_solution_block.hash_hex, active=False)
+
+                self.log.debug("submitSolution with precious=true prefers the stale same-work solution")
+                result = await stale_template.submitSolution(
+                    ctx,
+                    side_solution_block.nVersion,
+                    side_solution_block.nTime,
+                    side_solution_block.nNonce,
+                    side_solution_coinbase.serialize(),
+                    True,
+                )
+                assert_equal(result.result, True)
+                assert_equal(result.reason, "")
+                assert_equal(result.debug, "")
+                assert_equal(node.getbestblockhash(), side_solution_block.hash_hex)
+                self.assert_chain_tip(node, side_solution_block.hash_hex, active=True)
+
+            # Move to a strictly better chain so peers converge before later tests.
+            self.connect_nodes(0, 1)
+            self.generate(node, 1)
+
+        asyncio.run(capnp.run(async_routine()))
+
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Amount of time in milliseconds the test is allowed to wait or be idle before it should fail.
@@ -819,6 +962,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_coinbase_and_submission_test()
         self.run_waitnext_mining_policy_test()
         self.run_block_max_weight_test()
+        self.run_precious_submission_test()
         self.run_ipc_option_override_test()
         self.run_transaction_lookup_test()
 

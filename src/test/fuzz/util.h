@@ -13,13 +13,13 @@
 #include <consensus/consensus.h>
 #include <key.h>
 #include <merkleblock.h>
-#include <pow.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/mining.h>
 #include <uint256.h>
 #include <validation.h>
 
@@ -366,9 +366,7 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
 
 inline void FinalizeHeader(CBlockHeader& header, const ChainstateManager& chainman)
 {
-    while (!CheckProofOfWork(header.GetHash(), header.nBits, chainman.GetParams().GetConsensus())) {
-        ++(header.nNonce);
-    }
+    GrindBlock(header, chainman.GetParams().GetConsensus());
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H

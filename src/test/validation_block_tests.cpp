@@ -9,13 +9,13 @@
 #include <consensus/validation.h>
 #include <interfaces/mining.h>
 #include <node/blockstorage.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -114,9 +114,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
-    while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-        ++(pblock->nNonce);
-    }
+    GrindBlock(*pblock, Params().GetConsensus());
 
     // submit block header, so that miner can get the block height from the
     // global state and the node has the topology of the chain

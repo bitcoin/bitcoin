@@ -1709,7 +1709,8 @@ static RPCMethod preciousblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
+    bool connected{false};
+    chainman.ActiveChainstate().PreciousBlock(state, pblockindex, connected);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());

@@ -13,13 +13,13 @@
 #include <interfaces/mining.h>
 #include <key.h>
 #include <node/blockstorage.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/blockfilter.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <tinyformat.h>
@@ -111,7 +111,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    GrindBlock(block, m_node.chainman->GetConsensus());
 
     return block;
 }
