@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <ipc/util.h>
+#include <optional>
 #include <string>
 
 namespace ipc {
@@ -31,9 +32,9 @@ public:
     virtual int waitSpawned(mp::ProcessId pid) = 0;
 
     //! Parse command line and determine if current process is a spawned child
-    //! process. If so, return true and a socket id for communicating
-    //! with the parent process.
-    virtual bool checkSpawned(int argc, char* argv[], mp::SocketId& socket) = 0;
+    //! process. If so, return a socket id for communicating with the parent
+    //! process, otherwise return std::nullopt.
+    virtual std::optional<mp::SocketId> checkSpawned(int argc, char* argv[]) = 0;
 
     //! Canonicalize and connect to address, returning socket id.
     virtual mp::SocketId connect(const fs::path& data_dir,
