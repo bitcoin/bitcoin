@@ -529,6 +529,92 @@ BOOST_AUTO_TEST_CASE(decode_provider_payload_without_netinfo)
     }
 }
 
+// DomainPort used a bare std::string unserialize path (bounded only by
+// MAX_SIZE == 32 MiB) and NetInfoEntry::Unserialize swallowed ios_base::failure.
+// That combination allowed a tiny ProTx ExtNetInfo payload to force repeated
+// allocate-and-zero of multi-megabyte strings. These tests pin the serialization
+// layer to reject oversized domain claims without performing the large allocation.
+static CDataStream MakeOversizedDomainPortStream(const size_t claimed_len)
+{
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    WriteCompactSize(ds, claimed_len);
+    // Provide a full body so pre-fix code can complete the string read; the
+    // bound must reject based on the CompactSize alone, not on a short read.
+    const std::string body(claimed_len, 'a');
+    if (!body.empty()) {
+        ds.write(MakeByteSpan(body));
+    }
+    ser_writedata16be(ds, 443);
+    return ds;
+}
+
+BOOST_AUTO_TEST_CASE(domainport_deser_rejects_oversized_string)
+{
+    // DOMAIN_MAX_LEN is 253; a fully-formed 1000-byte domain must be rejected at
+    // deserialization time (LIMITED_STRING), not accepted then failed later in
+    // ValidateDomain.
+    constexpr size_t kOversized{1000};
+    CDataStream ds{MakeOversizedDomainPortStream(kOversized)};
+
+    DomainPort domain;
+    BOOST_CHECK_THROW(ds >> domain, std::ios_base::failure);
+}
+
+BOOST_AUTO_TEST_CASE(netinfoentry_domain_deser_rejects_oversized_string)
+{
+    // NetInfoEntry must not swallow the length-limit failure: rethrow so the
+    // enclosing ProTx payload deserialization aborts and the peer is penalised.
+    constexpr size_t kOversized{1000};
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    ds << uint8_t{NetInfoEntry::NetInfoType::Domain};
+    {
+        CDataStream body{MakeOversizedDomainPortStream(kOversized)};
+        ds.write(MakeByteSpan(body));
+    }
+
+    NetInfoEntry entry;
+    BOOST_CHECK_THROW(ds >> entry, std::ios_base::failure);
+}
+
+BOOST_AUTO_TEST_CASE(domainport_deser_rejects_huge_claimed_length)
+{
+    // CompactSize claims 1 MiB with no body. Pre-fix this would allocate 1 MiB
+    // then throw on short-read; post-fix LIMITED_STRING rejects before resize.
+    // Either way the operation must throw; the important property is that a
+    // declared length above DOMAIN_MAX_LEN never produces a successful DomainPort.
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    WriteCompactSize(ds, size_t{1} << 20);
+
+    DomainPort domain;
+    BOOST_CHECK_THROW(ds >> domain, std::ios_base::failure);
+}
+
+BOOST_AUTO_TEST_CASE(extnetinfo_domain_amplification_rejected)
+{
+    // Simulate the attack shape: ExtNetInfo vector of Domain entries each
+    // claiming a large string length from a small stream. Pre-fix,
+    // NetInfoEntry swallows the short-read and the vector loop continues
+    // (stream position does not advance on the failed body read), producing
+    // repeated large allocations. Post-fix the first oversized claim throws
+    // and aborts the whole ExtNetInfo unserialize.
+    constexpr size_t kClaimed{1 << 16}; // 64 KiB — large enough to prove, small enough to not OOM pre-fix
+    constexpr size_t kEntries{8};
+
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    ds << uint8_t{1}; // ExtNetInfo version
+    WriteCompactSize(ds, 1); // one purpose
+    ds << NetInfoPurpose::PLATFORM_HTTPS;
+    WriteCompactSize(ds, kEntries);
+    for (size_t i = 0; i < kEntries; ++i) {
+        ds << uint8_t{NetInfoEntry::NetInfoType::Domain};
+        // Claim kClaimed bytes but supply none — CompactSize only.
+        WriteCompactSize(ds, kClaimed);
+    }
+
+    ExtNetInfo netInfo;
+    BOOST_CHECK_THROW(ds >> netInfo, std::ios_base::failure);
+}
+
 BOOST_FIXTURE_TEST_CASE(extnetinfo_validate_deser, RegTestingSetup)
 {
     // The in-memory builder (AddEntry/ProcessCandidate) refuses duplicates, domains

@@ -20,8 +20,6 @@ static std::once_flag g_main_params_flag;
 
 /** Maximum length of a label in a domain per RFC 1035 */
 static constexpr uint8_t DOMAIN_LABEL_MAX_LEN{63};
-/** Maximum possible length of a ASCII FQDN */
-static constexpr uint8_t DOMAIN_MAX_LEN{253};
 /** Minimum length of a FQDN */
 static constexpr uint8_t DOMAIN_MIN_LEN{3};
 
