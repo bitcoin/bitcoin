@@ -8,6 +8,7 @@
 
 #include <attributes.h>
 #include <consensus/amount.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
@@ -22,13 +23,9 @@
 #include <utility>
 #include <vector>
 
-class COutPoint;
-class CTxIn;
-class CTxOut;
 class Coin;
 
 struct bilingual_str;
-struct CMutableTransaction;
 struct SignatureData;
 
 struct SignOptions {
@@ -49,7 +46,7 @@ public:
     virtual bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const =0;
 };
 
-/** A signature creator for transactions. */
+/** A signature creator for transactions. Signing fails when input_idx has no corresponding input. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator
 {
     const CMutableTransaction& m_txto;
@@ -59,12 +56,14 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
+    bool HasInput() const { return nIn < m_txto.vin.size(); }
     std::optional<uint256> ComputeSchnorrSignatureHash(const uint256* leaf_hash, SigVersion sigversion) const;
 
 public:
     MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const SignOptions& options);
     MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, const SignOptions& options);
-    const BaseSignatureChecker& Checker() const override { return checker; }
+    /** Returns the transaction checker, or a rejecting checker when input_idx has no corresponding input. */
+    const BaseSignatureChecker& Checker() const override;
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
     std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const override;

@@ -2,10 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
+#include <key.h>
 #include <psbt.h>
+#include <script/descriptor.h>
+#include <script/script.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
+#include <script/solver.h>
+#include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/util/setup_common.h>
+
+#include <string>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(psbt_tests, BasicTestingSetup)
 
@@ -214,6 +227,108 @@ BOOST_AUTO_TEST_CASE(merge_proprietary_fields)
     const auto output_it = left.outputs[0].m_proprietary.find(right_prop);
     BOOST_REQUIRE(output_it != left.outputs[0].m_proprietary.end());
     BOOST_CHECK(output_it->value == right_prop.value);
+}
+
+struct PSBTOutputTest {
+    CPubKey pubkey;
+    FlatSigningProvider provider;
+    CScript script_pubkey;
+
+    explicit PSBTOutputTest(std::string descriptor)
+    {
+        CKey key{GenerateRandomKey()};
+        pubkey = key.GetPubKey();
+        provider.keys.emplace(pubkey.GetID(), key);
+
+        util::ReplaceAll(descriptor, "<KEY>", HexStr(pubkey));
+        std::string error;
+        auto descriptors{Parse(descriptor, provider, error, /*require_checksum=*/false)};
+        BOOST_REQUIRE_MESSAGE(!descriptors.empty(), error);
+        std::vector<CScript> output_scripts;
+        BOOST_REQUIRE(descriptors[0]->Expand(/*pos=*/0, provider, output_scripts, provider));
+        BOOST_REQUIRE_EQUAL(output_scripts.size(), 1);
+        script_pubkey = output_scripts[0];
+    }
+
+    PSBTOutput UpdateOutput(bool has_input) const
+    {
+        CMutableTransaction tx;
+        if (has_input) tx.vin.emplace_back();
+        tx.vout.emplace_back(0, script_pubkey);
+        PartiallySignedTransaction psbt{tx};
+        UpdatePSBTOutput(provider, psbt, 0);
+        return psbt.outputs[0];
+    }
+};
+
+BOOST_AUTO_TEST_CASE(update_psbt_output_keypaths)
+{
+    for (bool has_input : {false, true}) {
+        for (const auto& descriptor : {"pkh(<KEY>)", "wpkh(<KEY>)"}) {
+            PSBTOutputTest test{descriptor};
+            auto out{test.UpdateOutput(has_input)};
+            BOOST_CHECK(out.hd_keypaths.contains(test.pubkey));
+            BOOST_CHECK(out.redeem_script.empty());
+            BOOST_CHECK(out.witness_script.empty());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(update_psbt_output_redeem_script)
+{
+    for (bool has_input : {false, true}) {
+        PSBTOutputTest test{"sh(wpkh(<KEY>))"};
+        auto out{test.UpdateOutput(has_input)};
+        BOOST_CHECK(out.redeem_script == GetScriptForDestination(WitnessV0KeyHash{test.pubkey}));
+        BOOST_CHECK(out.hd_keypaths.contains(test.pubkey));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(update_psbt_output_witness_script)
+{
+    for (bool has_input : {false, true}) {
+        PSBTOutputTest test{"wsh(pk(<KEY>))"};
+        auto out{test.UpdateOutput(has_input)};
+        BOOST_CHECK(out.witness_script == GetScriptForRawPubKey(test.pubkey));
+        BOOST_CHECK(out.hd_keypaths.contains(test.pubkey));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(update_psbt_output_miniscript_timelock)
+{
+    for (bool has_input : {false, true}) {
+        PSBTOutputTest test{"wsh(and_v(v:pk(<KEY>),older(144)))"};
+        auto out{test.UpdateOutput(has_input)};
+        BOOST_CHECK(GetScriptForDestination(WitnessV0ScriptHash{out.witness_script}) == test.script_pubkey);
+        BOOST_CHECK(out.hd_keypaths.contains(test.pubkey));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
+{
+    for (bool has_input : {false, true}) {
+        PSBTOutputTest test{"rawtr(<KEY>)"};
+        auto out{test.UpdateOutput(has_input)};
+        BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
+        BOOST_CHECK(out.hd_keypaths.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(schnorr_signature_creator_inputs)
+{
+    PSBTOutputTest test{"rawtr(<KEY>)"};
+    CTransaction tx_from{BuildCreditingTransaction(test.script_pubkey)};
+    CMutableTransaction tx_to{BuildSpendingTransaction(CScript(), CScriptWitness(), tx_from)};
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx_to, {tx_from.vout[0]}, /*force=*/true);
+
+    for (auto input_idx : {0U, 1U}) {
+        MutableTransactionSignatureCreator creator{tx_to, input_idx, CAmount{0}, &txdata, {.sighash_type = SIGHASH_DEFAULT}};
+        std::vector<uint8_t> sig;
+        BOOST_CHECK_EQUAL(
+            creator.CreateSchnorrSig(test.provider, sig, XOnlyPubKey{test.pubkey}, /*leaf_hash=*/nullptr, /*merkle_root=*/nullptr, SigVersion::TAPROOT),
+            input_idx == 0U);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

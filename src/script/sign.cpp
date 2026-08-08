@@ -51,9 +51,17 @@ MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMu
 {
 }
 
+const BaseSignatureChecker& MutableTransactionSignatureCreator::Checker() const
+{
+    static const BaseSignatureChecker REJECT_ALL;
+    return HasInput() ? checker : REJECT_ALL;
+}
+
 bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
     assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0);
+
+    if (!HasInput()) return false;
 
     CKey key;
     if (!provider.GetKey(address, key))
@@ -79,6 +87,8 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
 std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatureHash(const uint256* leaf_hash, SigVersion sigversion) const
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+
+    if (!HasInput()) return std::nullopt;
 
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset

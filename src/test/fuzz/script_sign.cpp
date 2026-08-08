@@ -23,6 +23,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 void initialize_script_sign()
@@ -116,19 +117,30 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
                 auto amount = ConsumeMoney(fuzzed_data_provider);
                 auto n_hash_type = fuzzed_data_provider.ConsumeIntegral<int>();
                 (void)SignSignature(provider, from_pub_key, script_tx_to, n_in, amount, n_hash_type, empty);
-                MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), {.sighash_type = fuzzed_data_provider.ConsumeIntegral<int>()}};
-                std::vector<unsigned char> vch_sig;
-                CKeyID address;
-                if (fuzzed_data_provider.ConsumeBool()) {
-                    if (k.IsValid()) {
-                        address = k.GetPubKey().GetID();
-                    }
-                } else {
-                    address = CKeyID{ConsumeUInt160(fuzzed_data_provider)};
+            }
+            MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), {.sighash_type = fuzzed_data_provider.ConsumeIntegral<int>()}};
+            std::vector<uint8_t> vch_sig;
+            CKeyID address;
+            if (fuzzed_data_provider.ConsumeBool()) {
+                if (k.IsValid()) {
+                    address = k.GetPubKey().GetID();
                 }
-                auto script_code = ConsumeScript(fuzzed_data_provider);
-                auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
-                (void)signature_creator.CreateSig(provider, vch_sig, address, script_code, sigversion);
+            } else {
+                address = CKeyID{ConsumeUInt160(fuzzed_data_provider)};
+            }
+            auto script_code = ConsumeScript(fuzzed_data_provider);
+            auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
+            (void)signature_creator.CreateSig(provider, vch_sig, address, script_code, sigversion);
+            SignatureData sigdata;
+            (void)ProduceSignature(provider, signature_creator, script_code, sigdata);
+            if (k.IsValid() && k.IsCompressed()) { // X-only lookup probes compressed key IDs
+                std::vector<CTxOut> spent_outputs(tx_to.vin.size(), CTxOut{CAmount{0}, CScript{}});
+                PrecomputedTransactionData txdata;
+                txdata.Init(tx_to, std::move(spent_outputs), /*force=*/true);
+                MutableTransactionSignatureCreator schnorr_creator{tx_to, n_in, CAmount{0}, &txdata, {.sighash_type = SIGHASH_DEFAULT}};
+                std::vector<uint8_t> schnorr_sig;
+                XOnlyPubKey xonly{k.GetPubKey()};
+                (void)schnorr_creator.CreateSchnorrSig(provider, schnorr_sig, xonly, /*leaf_hash=*/nullptr, /*merkle_root=*/nullptr, SigVersion::TAPROOT);
             }
             std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
             std::map<int, bilingual_str> input_errors;
