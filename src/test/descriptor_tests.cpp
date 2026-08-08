@@ -1380,7 +1380,7 @@ void CheckUnused(const std::string& prv, const std::string& pub)
     // Check both only have one pubkey
     std::set<CPubKey> prv_pubkeys;
     std::set<CExtPubKey> prv_extpubs;
-    parse_pub->GetPubKeys(prv_pubkeys, prv_extpubs);
+    parse_priv->GetPubKeys(prv_pubkeys, prv_extpubs);
     BOOST_CHECK_EQUAL(prv_pubkeys.size() + prv_extpubs.size(), 1);
     std::set<CPubKey> pub_pubkeys;
     std::set<CExtPubKey> pub_extpubs;
