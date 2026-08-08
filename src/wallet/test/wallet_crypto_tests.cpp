@@ -7,6 +7,7 @@
 #include <util/strencodings.h>
 #include <wallet/crypter.h>
 
+#include <limits>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -24,7 +25,7 @@ static void TestPassphraseSingle(const std::span<const unsigned char> salt, cons
                                  const std::span<const unsigned char> correct_iv = {})
 {
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase(passphrase, salt, rounds, 0);
+    BOOST_REQUIRE(crypt.SetKeyFromPassphrase(passphrase, salt, rounds, /*derivation_method=*/0));
 
     if (!correct_key.empty()) {
         BOOST_CHECK_MESSAGE(memcmp(crypt.vchKey.data(), correct_key.data(), crypt.vchKey.size()) == 0,
@@ -50,8 +51,9 @@ static void TestDecrypt(const CCrypter& crypt, const std::span<const unsigned ch
                         const std::span<const unsigned char> correct_plaintext = {})
 {
     CKeyingMaterial decrypted;
-    crypt.Decrypt(ciphertext, decrypted);
+    const bool decrypt_ok{crypt.Decrypt(ciphertext, decrypted)};
     if (!correct_plaintext.empty()) {
+        BOOST_REQUIRE(decrypt_ok);
         BOOST_CHECK_EQUAL_COLLECTIONS(decrypted.begin(), decrypted.end(), correct_plaintext.begin(), correct_plaintext.end());
     }
 }
@@ -60,7 +62,7 @@ static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& plai
                               const std::span<const unsigned char> correct_ciphertext = {})
 {
     std::vector<unsigned char> ciphertext;
-    crypt.Encrypt(plaintext, ciphertext);
+    BOOST_REQUIRE(crypt.Encrypt(plaintext, ciphertext));
 
     if (!correct_ciphertext.empty()) {
         BOOST_CHECK_EQUAL_COLLECTIONS(ciphertext.begin(), ciphertext.end(), correct_ciphertext.begin(), correct_ciphertext.end());
@@ -96,10 +98,23 @@ BOOST_AUTO_TEST_CASE(passphrase) {
     TestCrypter::TestPassphrase(vchSalt, SecureString(hash.begin(), hash.end()), rounds);
 }
 
+BOOST_AUTO_TEST_CASE(passphrase_rounds_limit) {
+    constexpr auto salt{"0000deadbeef0000"_hex_u8};
+    CCrypter crypt;
+    // Iteration counts above INT_MAX (e.g. from a crafted or corrupted wallet file) narrow to a
+    // negative count in the KDF and must be rejected instead of making key derivation loop for an
+    // unbounded amount of time.
+    for (unsigned int rounds : {0u, std::numeric_limits<int>::max() + 1u}) {
+        BOOST_CHECK(!crypt.SetKeyFromPassphrase("passphrase", salt, rounds, /*derivation_method=*/0));
+    }
+    // In-range values still work.
+    BOOST_CHECK(crypt.SetKeyFromPassphrase("passphrase", salt, /*rounds=*/1, /*derivation_method=*/0));
+}
+
 BOOST_AUTO_TEST_CASE(encrypt) {
     constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, 0);
+    BOOST_REQUIRE(crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, /*derivation_method=*/0));
     TestCrypter::TestEncrypt(crypt, "22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d"_hex_u8);
 
     for (int i = 0; i != 100; i++)
@@ -113,9 +128,9 @@ BOOST_AUTO_TEST_CASE(encrypt) {
 BOOST_AUTO_TEST_CASE(decrypt) {
     constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, 0);
+    BOOST_REQUIRE(crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, /*derivation_method=*/0));
 
-    // Some corner cases the came up while testing
+    // Some corner cases that came up while testing
     TestCrypter::TestDecrypt(crypt,"795643ce39d736088367822cdc50535ec6f103715e3e48f4f3b1a60a08ef59ca"_hex_u8);
     TestCrypter::TestDecrypt(crypt,"de096f4a8f9bd97db012aa9d90d74de8cdea779c3ee8bc7633d8b5d6da703486"_hex_u8);
     TestCrypter::TestDecrypt(crypt,"32d0a8974e3afd9c6c3ebf4d66aa4e6419f8c173de25947f98cf8b7ace49449c"_hex_u8);
