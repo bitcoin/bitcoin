@@ -14,7 +14,9 @@
 #include <util/bitdeque.h>
 #include <util/hasher.h>
 
+#include <chrono>
 #include <deque>
+#include <utility>
 #include <vector>
 
 // A compressed CBlockHeader, which leaves out the prevhash
@@ -52,6 +54,31 @@ struct CompressedHeader {
         return ret;
     };
 };
+
+
+/** Find the best (period, bufsize) headers synchronization configuration for:
+ *
+ * - A specified timespan between genesis and the tip of the chain.
+ * - A specified number of headers in the minchainwork chain.
+ *
+ * See the constants in the implementation that control what attack success rate is acceptable.
+ *
+ * Returns {commitment period, redownload buffer size}.
+ */
+std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers);
+
+
+/** Find the best (period, bufsize) headers synchronization configuration for:
+ *
+ * - No more than max_headers headers are possible.
+ * - There are minchainwork_headers in the minchainwork chain.
+ * - Up to attack_headers low-difficulty headers are allowed to be accepted by
+ *   the victim, per attack.
+ *
+ * This is the internal computationally-heavy part of ComputeHeadersSyncParams. Test-only.
+ */
+std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers);
+
 
 /** HeadersSyncState:
  *
