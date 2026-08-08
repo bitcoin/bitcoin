@@ -52,7 +52,7 @@ def filter_output_indices_by_value(vouts, value):
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1", "-txospenderindex=1"], []]
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
 
@@ -303,6 +303,7 @@ class RESTTest (BitcoinTestFramework):
         self.generate(self.nodes[1], 5)
         expected_filter = {
             'basic block filter index': {'synced': True, 'best_block_height': 208},
+            'txospenderindex': {'synced': True, 'best_block_height': 208},
         }
         self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
@@ -414,6 +415,111 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request(f"/block/notxdetails/{newblockhash[0]}")
         for tx in txs:
             assert tx in json_obj['tx']
+
+        self.log.info("Test the /txspendingprevout URI")
+
+        # Create two new transactions - one to spend and one spending transaction
+        # First, create a transaction that will have an output to spend
+        utxo_for_new_tx = self.wallet.get_utxo()
+        base_tx = self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_for_new_tx)
+        base_txid = base_tx['txid']
+        base_vout = 0  # The change output
+        self.sync_all()
+
+        # Now create a transaction that spends from base_tx
+        spending_tx = self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=self.wallet.get_utxo(txid=base_txid))
+        spending_txid = spending_tx['txid']
+        self.sync_all()
+
+        # Test with single outpoint - should find the spending transaction
+        json_obj = self.test_rest_request(f"/txspendingprevout/{base_txid}-{base_vout}")
+        assert_equal(len(json_obj), 1)
+        assert_equal(json_obj[0]['txid'], base_txid)
+        assert_equal(json_obj[0]['vout'], base_vout)
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+
+        # Test return_spending_tx=true adds full transaction hex
+        json_obj = self.test_rest_request(
+            f"/txspendingprevout/{base_txid}-{base_vout}",
+            query_params={"return_spending_tx": "true"},
+        )
+        assert_equal(len(json_obj), 1)
+        assert_equal(json_obj[0]['txid'], base_txid)
+        assert_equal(json_obj[0]['vout'], base_vout)
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+        assert 'spendingtx' in json_obj[0]
+        assert_equal(json_obj[0]['spendingtx'], spending_tx['hex'])
+
+        # Test with unspent output - should not have spendingtxid
+        utxo_unspent = self.wallet.get_utxo()
+        json_obj = self.test_rest_request(f"/txspendingprevout/{utxo_unspent['txid']}-{utxo_unspent['vout']}")
+        assert_equal(len(json_obj), 1)
+        assert_equal(json_obj[0]['txid'], utxo_unspent['txid'])
+        assert_equal(json_obj[0]['vout'], utxo_unspent['vout'])
+        assert 'spendingtxid' not in json_obj[0]
+
+        # Test with multiple outpoints
+        json_obj = self.test_rest_request(f"/txspendingprevout/{base_txid}-{base_vout}/{utxo_unspent['txid']}-{utxo_unspent['vout']}")
+        assert_equal(len(json_obj), 2)
+        # First output is spent
+        assert_equal(json_obj[0]['txid'], base_txid)
+        assert_equal(json_obj[0]['vout'], base_vout)
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+        # Second output is unspent
+        assert_equal(json_obj[1]['txid'], utxo_unspent['txid'])
+        assert_equal(json_obj[1]['vout'], utxo_unspent['vout'])
+        assert 'spendingtxid' not in json_obj[1]
+
+        # Test with invalid outpoint format
+        resp = self.test_rest_request(f"/txspendingprevout/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').strip(), 'Parse error')
+
+        # Test with empty request
+        resp = self.test_rest_request("/txspendingprevout/", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').strip(), 'Error: empty request')
+
+        # Test max outpoints limit (same as getutxos: 15)
+        too_many = "/".join(f"{utxo_unspent['txid']}-{utxo_unspent['vout']}" for _ in range(16))
+        resp = self.test_rest_request(f"/txspendingprevout/{too_many}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').strip(), 'Error: max outpoints exceeded (max: 15, tried: 16)')
+
+        # Test invalid mempool_only query parameter value
+        resp = self.test_rest_request(
+            f"/txspendingprevout/{base_txid}-{base_vout}",
+            ret_type=RetType.OBJ,
+            status=400,
+            query_params={"mempool_only": "not_bool"},
+        )
+        assert_equal(
+            resp.read().decode('utf-8').strip(),
+            'The "mempool_only" query parameter must be either "true" or "false".',
+        )
+
+        # Test invalid return_spending_tx query parameter value
+        resp = self.test_rest_request(
+            f"/txspendingprevout/{base_txid}-{base_vout}",
+            ret_type=RetType.OBJ,
+            status=400,
+            query_params={"return_spending_tx": "not_bool"},
+        )
+        assert_equal(
+            resp.read().decode('utf-8').strip(),
+            'The "return_spending_tx" query parameter must be either "true" or "false".',
+        )
+
+        # Mine the transactions to clean up mempool
+        blockhash = self.generate(self.nodes[0], 1)[0]
+
+        # Test txospenderindex path after confirmation
+        json_obj = self.test_rest_request(f"/txspendingprevout/{base_txid}-{base_vout}")
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+        assert_equal(json_obj[0]['blockhash'], blockhash)
+
+        json_obj = self.test_rest_request(
+            f"/txspendingprevout/{base_txid}-{base_vout}",
+            query_params={"mempool_only": "true"},
+        )
+        assert 'spendingtxid' not in json_obj[0]
 
         self.log.info("Test the /chaininfo URI")
 

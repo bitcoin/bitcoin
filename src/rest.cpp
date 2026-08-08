@@ -13,6 +13,7 @@
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
+#include <index/txospenderindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <primitives/block.h>
@@ -836,6 +837,145 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     }
 }
 
+static bool rest_txspendingprevout(const std::any& context, HTTPRequest* req, const std::string& uri_part)
+{
+    if (!CheckWarmup(req)) {
+        return false;
+    }
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, uri_part);
+
+    std::vector<std::string> uri_parts = SplitString(param, '/');
+
+    // Check that we have at least one outpoint
+    if (uri_parts.size() == 0 || (uri_parts.size() == 1 && uri_parts[0].empty())) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+    }
+
+    std::vector<COutPoint> prevouts;
+
+    // Parse outpoints from URI in the format txid-vout
+    for (size_t i = 0; i < uri_parts.size(); ++i) {
+        const auto txid_out{util::Split<std::string_view>(uri_parts[i], '-')};
+        if (txid_out.size() != 2) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+        auto txid{Txid::FromHex(txid_out.at(0))};
+        auto output{ToIntegral<uint32_t>(txid_out.at(1))};
+
+        if (!txid || !output.has_value()) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+
+        prevouts.emplace_back(*txid, *output);
+    }
+
+    if (prevouts.size() > MAX_GETUTXOS_OUTPOINTS) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, prevouts.size()));
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::JSON: {
+        // Parse optional query parameters
+        std::string raw_mempool_only;
+        try {
+            raw_mempool_only = req->GetQueryParameter("mempool_only").value_or("");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+        if (!raw_mempool_only.empty() && raw_mempool_only != "true" && raw_mempool_only != "false") {
+            return RESTERR(req, HTTP_BAD_REQUEST, "The \"mempool_only\" query parameter must be either \"true\" or \"false\".");
+        }
+        std::string raw_return_spending_tx;
+        try {
+            raw_return_spending_tx = req->GetQueryParameter("return_spending_tx").value_or("false");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+        if (raw_return_spending_tx != "true" && raw_return_spending_tx != "false") {
+            return RESTERR(req, HTTP_BAD_REQUEST, "The \"return_spending_tx\" query parameter must be either \"true\" or \"false\".");
+        }
+        const bool mempool_only{raw_mempool_only.empty() ? !g_txospenderindex : (raw_mempool_only == "true")};
+        const bool return_spending_tx{raw_return_spending_tx == "true"};
+
+        const CTxMemPool* mempool = GetMemPool(context, req);
+        if (!mempool) return false;
+
+        struct Entry {
+            COutPoint outpoint;
+            UniValue raw;
+        };
+        std::vector<Entry> prevouts_to_process;
+        prevouts_to_process.reserve(prevouts.size());
+        for (const COutPoint& prevout : prevouts) {
+            UniValue o(UniValue::VOBJ);
+            o.pushKV("txid", prevout.hash.ToString());
+            o.pushKV("vout", prevout.n);
+            prevouts_to_process.emplace_back(prevout, std::move(o));
+        }
+
+        auto make_output = [return_spending_tx](const Entry& prevout, const CTransaction* spending_tx = nullptr) {
+            UniValue o{prevout.raw};
+            if (spending_tx) {
+                o.pushKV("spendingtxid", spending_tx->GetHash().ToString());
+                if (return_spending_tx) {
+                    o.pushKV("spendingtx", EncodeHexTx(*spending_tx));
+                }
+            }
+            return o;
+        };
+
+        UniValue result{UniValue::VARR};
+
+        {
+            LOCK(mempool->cs);
+            for (auto it = prevouts_to_process.begin(); it != prevouts_to_process.end(); ) {
+                const CTransaction* spending_tx{mempool->GetConflictTx(it->outpoint)};
+
+                if (!spending_tx && !mempool_only) {
+                    ++it;
+                    continue;
+                }
+
+                result.push_back(make_output(*it, spending_tx));
+                it = prevouts_to_process.erase(it);
+            }
+        }
+
+        if (!prevouts_to_process.empty()) {
+            if (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain()) {
+                return RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Mempool lacks a relevant spend, and txospenderindex is unavailable.");
+            }
+
+            for (const auto& prevout : prevouts_to_process) {
+                const auto spender{g_txospenderindex->FindSpender(prevout.outpoint)};
+                if (!spender) {
+                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, spender.error());
+                }
+
+                if (const auto& spender_opt{spender.value()}) {
+                    UniValue o{make_output(prevout, spender_opt->tx.get())};
+                    o.pushKV("blockhash", spender_opt->block_hash.GetHex());
+                    result.push_back(std::move(o));
+                } else {
+                    result.push_back(make_output(prevout));
+                }
+            }
+        }
+
+        std::string str_json = result.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, str_json);
+        return true;
+    }
+
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+}
+
 static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
     if (!CheckWarmup(req))
@@ -1157,6 +1297,7 @@ static const struct {
     {"/rest/deploymentinfo", rest_deploymentinfo},
     {"/rest/blockhashbyheight/", rest_blockhash_by_height},
     {"/rest/spenttxouts/", rest_spent_txouts},
+    {"/rest/txspendingprevout/", rest_txspendingprevout},
 };
 
 void StartREST(const std::any& context)
