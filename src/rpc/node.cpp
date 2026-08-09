@@ -311,13 +311,7 @@ static RPCHelpMan mnauth()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
-        pNode->SetVerifiedProRegTxHash(proTxHash);
-        pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
-        return true;
-    });
-
-    return fSuccess;
+    return node.connman->TryMarkVerified(nodeId, proTxHash, publicKey.GetHash());
 },
     };
 }
