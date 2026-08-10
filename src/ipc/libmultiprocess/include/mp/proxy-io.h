@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -293,6 +294,9 @@ public:
 
     //! Check if loop should exit.
     bool done() const MP_REQUIRES(m_mutex);
+
+    //! View of incoming connections yielding Connection& for each entry.
+    auto incoming_connections() { return std::views::all(m_incoming_connections); }
 
     //! Process name included in thread names so combined debug output from
     //! multiple processes is easier to understand.
