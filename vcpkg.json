@@ -39,7 +39,10 @@
     "wallet": {
       "description": "Enable wallet (SQLite)",
       "dependencies": [
-        "sqlite3"
+        {
+          "name": "sqlite3",
+          "default-features": false
+        }
       ]
     },
     "zeromq": {
