@@ -415,6 +415,9 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         schema.pushKV("type", "object");
         if (!arg.m_inner.empty()) {
             schema.pushKV("additionalProperties", OpenRPCArgSchema(arg.m_inner[0], include_hidden, in_skip_type_check));
+            if (!arg.m_inner[0].m_description.empty()) {
+                schema.pushKV("description", arg.m_inner[0].m_description);
+            }
         } else {
             schema.pushKV("additionalProperties", true);
         }
