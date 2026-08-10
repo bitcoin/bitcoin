@@ -243,7 +243,7 @@ static RPCMethod getrpcinfo()
 }
 
 namespace {
-UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden);
+UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_type_check);
 UniValue OpenRPCResultSchema(const RPCResult& result);
 
 UniValue MakeObject(std::initializer_list<std::pair<std::string, UniValue>> entries)
@@ -262,21 +262,21 @@ void PushUniqueSchema(UniValue& schemas, std::unordered_set<std::string>& seen, 
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-UniValue DedupArrayItemsSchema(std::span<const RPCArg> inner, bool include_hidden)
+UniValue DedupArrayItemsSchema(std::span<const RPCArg> inner, bool include_hidden, bool in_skip_type_check)
 {
     if (inner.empty()) return UniValue{UniValue::VOBJ};
-    if (inner.size() == 1) return OpenRPCArgSchema(inner.front(), include_hidden);
+    if (inner.size() == 1) return OpenRPCArgSchema(inner.front(), include_hidden, in_skip_type_check);
 
     UniValue one_of{UniValue::VARR};
     std::unordered_set<std::string> seen;
     for (const auto& item : inner) {
-        PushUniqueSchema(one_of, seen, OpenRPCArgSchema(item, include_hidden));
+        PushUniqueSchema(one_of, seen, OpenRPCArgSchema(item, include_hidden, in_skip_type_check));
     }
 
     if (one_of.size() == 1) return one_of[0];
 
     UniValue items{UniValue::VOBJ};
-    items.pushKV("oneOf", std::move(one_of));
+    items.pushKV(in_skip_type_check ? "anyOf" : "oneOf", std::move(one_of));
     return items;
 }
 
@@ -331,14 +331,18 @@ void ApplyArgFallback(UniValue& schema, const RPCArg& arg)
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden)
+UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_type_check)
 {
     UniValue schema{UniValue::VOBJ};
     if (arg.m_opts.skip_type_check) {
         ApplyTypeStrOverride(schema, arg);
         if (schema.empty() && arg.m_type == RPCArg::Type::ARR) {
+            UniValue items{UniValue::VOBJ};
+            items.pushKV("type", "array");
+            items.pushKV("items", DedupArrayItemsSchema(arg.m_inner, include_hidden, /*in_skip_type_check=*/true));
+
             UniValue one_of{UniValue::VARR};
-            one_of.push_back(MakeObject({{"type", "array"}}));
+            one_of.push_back(std::move(items));
             one_of.push_back(MakeObject({{"type", "object"}}));
             schema.pushKV("oneOf", std::move(one_of));
         }
@@ -383,7 +387,7 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden)
         break;
     }
     case RPCArg::Type::ARR: {
-        UniValue items{DedupArrayItemsSchema(arg.m_inner, include_hidden)};
+        UniValue items{DedupArrayItemsSchema(arg.m_inner, include_hidden, in_skip_type_check)};
         schema.pushKV("type", "array");
         schema.pushKV("items", std::move(items));
         break;
@@ -394,7 +398,7 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden)
         UniValue required{UniValue::VARR};
         for (const auto& inner : arg.m_inner) {
             if (!include_hidden && inner.m_opts.hidden) continue;
-            UniValue prop{OpenRPCArgSchema(inner, include_hidden)};
+            UniValue prop{OpenRPCArgSchema(inner, include_hidden, in_skip_type_check)};
             if (!inner.m_description.empty()) prop.pushKV("description", inner.m_description);
             if (inner.m_opts.placeholder) prop.pushKV("x-bitcoin-placeholder", true);
             if (inner.m_opts.also_positional) prop.pushKV("x-bitcoin-also-positional", true);
@@ -410,7 +414,7 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden)
     case RPCArg::Type::OBJ_USER_KEYS: {
         schema.pushKV("type", "object");
         if (!arg.m_inner.empty()) {
-            schema.pushKV("additionalProperties", OpenRPCArgSchema(arg.m_inner[0], include_hidden));
+            schema.pushKV("additionalProperties", OpenRPCArgSchema(arg.m_inner[0], include_hidden, in_skip_type_check));
         } else {
             schema.pushKV("additionalProperties", true);
         }
@@ -911,7 +915,7 @@ UniValue CRPCTable::buildOpenRPCDoc(bool include_hidden) const
             UniValue param{UniValue::VOBJ};
             param.pushKV("name", arg.GetFirstName());
             param.pushKV("required", !arg.IsOptional());
-            param.pushKV("schema", OpenRPCArgSchema(arg, include_hidden));
+            param.pushKV("schema", OpenRPCArgSchema(arg, include_hidden, /*in_skip_type_check=*/false));
 
             std::vector<std::string> names{SplitString(arg.m_names, '|')};
             if (names.size() > 1) {
