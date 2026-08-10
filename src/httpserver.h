@@ -49,11 +49,10 @@ enum class HTTPRequestMethod {
     PUT
 };
 
-namespace http_bitcoin {
-    class HTTPRequest;
-}
+class HTTPRequest;
+
 /** Handler for requests to a certain HTTP path */
-using HTTPRequestHandler = std::function<void(http_bitcoin::HTTPRequest* req, const std::string&)>;
+using HTTPRequestHandler = std::function<void(HTTPRequest* req, const std::string&)>;
 
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
@@ -63,9 +62,7 @@ void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPR
 /** Unregister handler for prefix */
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
-namespace http_bitcoin {
-using util::LineReader;
-
+namespace bitcoin_http {
 //! Shortest valid request line, used by libevent in evhttp_parse_request_line()
 inline constexpr size_t MIN_REQUEST_LINE_LENGTH = std::string_view("GET / HTTP/1.0").size();
 
@@ -83,6 +80,7 @@ inline constexpr uint64_t MAX_BODY_SIZE{32_MiB};
 struct ContentTooLargeError : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+} // namespace bitcoin_http
 
 class HTTPHeaders
 {
@@ -163,9 +161,9 @@ public:
      * @throws      std::runtime_error if data is invalid.
      */
     /// @{
-    bool LoadControlData(LineReader& reader);
-    bool LoadHeaders(LineReader& reader);
-    bool LoadBody(LineReader& reader);
+    bool LoadControlData(util::LineReader& reader);
+    bool LoadHeaders(util::LineReader& reader);
+    bool LoadBody(util::LineReader& reader);
     /// @}
 
     void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
@@ -630,6 +628,5 @@ void InterruptHTTPServer();
 
 /** Stop HTTP server */
 void StopHTTPServer();
-} // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H

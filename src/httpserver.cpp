@@ -50,7 +50,8 @@ static constexpr auto SELECT_TIMEOUT{50ms};
 static constexpr int SOCKET_OPTION_TRUE{1};
 
 using common::InvalidPortErrMsg;
-using http_bitcoin::HTTPRequest;
+using util::LineReader;
+using namespace bitcoin_http;
 
 struct HTTPPathHandler
 {
@@ -65,7 +66,7 @@ struct HTTPPathHandler
 
 /** HTTP module state */
 
-static std::unique_ptr<http_bitcoin::HTTPServer> g_http_server{nullptr};
+static std::unique_ptr<HTTPServer> g_http_server{nullptr};
 //! Handlers for (sub)paths
 static GlobalMutex g_httppathhandlers_mutex;
 static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_mutex);
@@ -74,7 +75,6 @@ static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_m
 static ThreadPool g_threadpool_http("http");
 static int g_max_queue_depth{100};
 
-namespace http_bitcoin {
 /** Check if a network address is allowed to access the HTTP server */
 bool HTTPServer::ClientAllowed(const CNetAddr& netaddr) const
 {
@@ -112,7 +112,6 @@ bool HTTPServer::InitHTTPAllowList()
     LogDebug(BCLog::HTTP, "Allowing HTTP connections from: %s\n", strAllowed);
     return true;
 }
-} // namespace http_bitcoin
 
 /** HTTP request method as string - use for logging only */
 std::string_view RequestMethodString(HTTPRequestMethod m)
@@ -200,7 +199,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     }
 }
 
-static void RejectRequest(std::unique_ptr<http_bitcoin::HTTPRequest> hreq)
+static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
 {
     LogDebug(BCLog::HTTP, "Rejecting request while shutting down");
     WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE);
@@ -261,7 +260,6 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
     }
 }
 
-namespace http_bitcoin {
 using util::Split;
 
 std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
@@ -1388,4 +1386,3 @@ void StopHTTPServer()
     }
     LogDebug(BCLog::HTTP, "Stopped HTTP server");
 }
-} // namespace http_bitcoin
