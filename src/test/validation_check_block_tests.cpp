@@ -287,4 +287,176 @@ BOOST_AUTO_TEST_CASE(block_bad_blk_sigops)
     BOOST_CHECK(state.GetRejectReason() == "bad-blk-sigops");
 }
 
+BOOST_AUTO_TEST_CASE(contextual_block_valid)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    const CBlock block{chainparams->GenesisBlock()};
+
+    BlockValidationState state;
+
+    // Without a previous block the height is zero, so none of the deployments
+    // this depends on are active yet.
+    BOOST_CHECK(ContextualCheckBlock(block, state, consensusParams, /*pindexPrev=*/nullptr));
+    BOOST_CHECK(state.IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_bad_txns_nonfinal)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    // A locktime that has not passed yet is ignored as long as every input is
+    // final, so the sequence number has to be lowered as well.
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.nLockTime = block.nTime;
+    mtx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+
+    BlockValidationState state;
+
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, /*pindexPrev=*/nullptr));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-nonfinal");
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_cb_height)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    CBlockIndex prev;
+    prev.nHeight = consensusParams.DeploymentHeight(Consensus::DEPLOYMENT_HEIGHTINCB);
+    const int height{prev.nHeight + 1};
+
+    BlockValidationState state;
+
+    // The genesis coinbase does not start with the serialized block height.
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, &prev));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-cb-height");
+
+    // A scriptSig that is too short to hold the height is rejected on its
+    // length alone, before a comparison that would read past the end of it.
+    CMutableTransaction truncated{*block.vtx[0]};
+    truncated.vin[0].scriptSig = CScript();
+    block.vtx[0] = MakeTransactionRef(std::move(truncated));
+
+    BlockValidationState state_truncated;
+    BOOST_CHECK(!ContextualCheckBlock(block, state_truncated, consensusParams, &prev));
+    BOOST_CHECK(state_truncated.IsInvalid());
+    BOOST_CHECK(state_truncated.GetRejectReason() == "bad-cb-height");
+
+    // Prefixing the coinbase with the height of this block makes it acceptable.
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.vin[0].scriptSig = CScript() << height;
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+
+    BlockValidationState state_with_height;
+    BOOST_CHECK(ContextualCheckBlock(block, state_with_height, consensusParams, &prev));
+    BOOST_CHECK(state_with_height.IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_unexpected_witness)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    // Segwit is not active at height zero, so the block is not allowed to
+    // carry any witness data at all.
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.vin[0].scriptWitness.stack.emplace_back(32, 0);
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+    BOOST_REQUIRE(block.vtx[0]->HasWitness());
+
+    BlockValidationState state;
+
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, /*pindexPrev=*/nullptr));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "unexpected-witness");
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_bad_witness_nonce_size)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    CBlockIndex prev;
+    prev.nHeight = consensusParams.DeploymentHeight(Consensus::DEPLOYMENT_SEGWIT);
+    prev.nTime = block.nTime;
+    const int height{prev.nHeight + 1};
+
+    // Give the coinbase a witness commitment, so that the witness reserved
+    // value is looked at. The output script is OP_RETURN followed by a
+    // 36 byte push: the four byte header and a 32 byte commitment hash. The
+    // height prefix is needed because BIP34 is active by this height as well.
+    std::vector<unsigned char> commitment{0xaa, 0x21, 0xa9, 0xed};
+    commitment.resize(36);
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.vin[0].scriptSig = CScript() << height;
+    mtx.vout.emplace_back(0, CScript() << OP_RETURN << commitment);
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+
+    BlockValidationState state;
+
+    // The coinbase commits to witness data but carries no reserved value.
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, &prev));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-witness-nonce-size");
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_bad_witness_merkle_match)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    CBlockIndex prev;
+    prev.nHeight = consensusParams.DeploymentHeight(Consensus::DEPLOYMENT_SEGWIT);
+    prev.nTime = block.nTime;
+    const int height{prev.nHeight + 1};
+
+    // As above, but with a reserved value of the expected size, so that the
+    // commitment itself is compared against the witness merkle root.
+    std::vector<unsigned char> commitment{0xaa, 0x21, 0xa9, 0xed};
+    commitment.resize(36);
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.vin[0].scriptSig = CScript() << height;
+    mtx.vin[0].scriptWitness.stack.emplace_back(32, 0);
+    mtx.vout.emplace_back(0, CScript() << OP_RETURN << commitment);
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+
+    BlockValidationState state;
+
+    // The commitment is all zeroes, which is not the witness merkle root.
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, &prev));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-witness-merkle-match");
+}
+
+BOOST_AUTO_TEST_CASE(contextual_block_bad_blk_weight)
+{
+    const auto chainparams{CChainParams::Main()};
+    const Consensus::Params& consensusParams{chainparams->GetConsensus()};
+    CBlock block{chainparams->GenesisBlock()};
+
+    // Pad the coinbase with the maximum base size worth of data. There is no
+    // witness data, so the weight is four times the base size and the block
+    // ends up just over the limit.
+    const std::vector<unsigned char> padding(MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR, OP_RETURN);
+    CMutableTransaction mtx{*block.vtx[0]};
+    mtx.vout[0].scriptPubKey = CScript(padding.begin(), padding.end());
+    block.vtx[0] = MakeTransactionRef(std::move(mtx));
+
+    BlockValidationState state;
+
+    BOOST_CHECK(!ContextualCheckBlock(block, state, consensusParams, /*pindexPrev=*/nullptr));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK(state.GetRejectReason() == "bad-blk-weight");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
