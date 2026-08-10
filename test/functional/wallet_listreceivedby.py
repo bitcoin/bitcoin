@@ -101,6 +101,17 @@ class ReceivedByTest(BitcoinTestFramework):
         res = self.nodes[1].listreceivedbyaddress(0, True, True, other_addr)
         assert_equal(len(res), 0)
 
+        self.log.info("listreceivedbyaddress and listreceivedbylabel exclude not owned addresses")
+        # setlabel assigns a "send" purpose when the wallet doesn't own the address.
+        send_label = "external-address"
+        external_addr = self.nodes[0].getnewaddress(send_label)
+        self.nodes[1].setlabel(external_addr, send_label)
+        assert_equal(self.nodes[1].getaddressinfo(external_addr)["ismine"], False)
+        assert_array_result(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True),
+                            {"address": external_addr}, {}, True)
+        assert_array_result(self.nodes[1].listreceivedbylabel(minconf=0, include_empty=True),
+                            {"label": send_label}, {}, True)
+
         self.log.info("getreceivedbyaddress Test")
 
         # Send from node 0 to 1
