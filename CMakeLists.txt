@@ -504,6 +504,13 @@ else()
   try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
     IF_CHECK_PASSED "-Wno-unused-parameter"
   )
+
+  try_append_cxx_flags("-Wc++23-lambda-attributes" TARGET warn_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-c++23-lambda-attributes"
+  )
+  try_append_cxx_flags("-Wc++23-extensions" TARGET warn_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-c++23-extensions"
+  )
 endif()
 
 configure_file(cmake/script/Coverage.cmake Coverage.cmake USE_SOURCE_PERMISSIONS COPYONLY)
