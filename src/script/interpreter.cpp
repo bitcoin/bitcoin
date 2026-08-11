@@ -11,6 +11,7 @@
 #include <prevector.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/trace.h>
 #include <serialize.h>
 #include <span.h>
 #include <tinyformat.h>
@@ -444,6 +445,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     execdata.m_codeseparator_pos = 0xFFFFFFFFUL;
     execdata.m_codeseparator_pos_init = true;
 
+    SCRIPT_TRACE_SCOPE(stack, script, opcode_pos, altstack, [&vfExec]() { return vfExec.all_true(); }, nOpCount, sigversion, execdata.m_tapleaf_hash_init ? execdata.m_tapleaf_hash.data() : nullptr, execdata.m_codeseparator_pos, serror);
+
     try
     {
         for (; pc < pend; ++opcode_pos) {
@@ -452,8 +455,12 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             //
             // Read instruction
             //
-            if (!script.GetOp(pc, opcode, vchPushValue))
+            if (!script.GetOp(pc, opcode, vchPushValue)) {
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+            }
+
+            SCRIPT_TRACE_STEP(fExec, opcode);
+
             if (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 

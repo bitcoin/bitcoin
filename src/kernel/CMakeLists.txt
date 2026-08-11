@@ -119,6 +119,12 @@ if(bitcoinkernel_type STREQUAL "STATIC_LIBRARY")
   target_compile_definitions(bitcoinkernel PUBLIC BITCOINKERNEL_STATIC)
 endif()
 
+option(ENABLE_SCRIPT_TRACE "Enable script execution trace hooks" OFF)
+if(ENABLE_SCRIPT_TRACE)
+  target_sources(bitcoinkernel PRIVATE ../script/trace.cpp)
+  target_compile_definitions(bitcoinkernel PRIVATE ENABLE_SCRIPT_TRACE)
+endif()
+
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT libbitcoinkernel)
 
