@@ -31,12 +31,9 @@ Background:
    before the block arrives, so the pool is already extended when blockConnected
    processes the block in vtx order.
 
-   This test demonstrates the incorrect behaviour. Parts 1 and 2 assert that
-   Tx_lookahead is missed on the first scan; Part 3 confirms that a second
-   rescanblockchain does recover it (pool was extended as a side effect of finding
-   Tx_expand).
-
-   TODO: Parts 1 and 2 assertions will be flipped once the fix lands.
+   This test verifies the fix: after re-processing the vtx prefix up to the last
+   pool expansion, Tx_lookahead is found on the first scan. Part 3 confirms that
+   a second rescanblockchain is no longer needed to recover the missed transaction.
 
    Reference: https://github.com/bitcoin/bitcoin/pull/31629#issuecomment-2657775368
 """
@@ -130,9 +127,8 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         txids = {tx['txid'] for tx in w.listtransactions('*', 1000)}
         assert tx_expand['txid'] in txids, \
             "tx_expand must always be found (it was within the initial pool)"
-        # TODO: flip to `in` once the fix lands — currently missed due to vtx-order bug
-        assert tx_lookahead['txid'] not in txids, \
-            "pre-fix: tx_lookahead is missed when pool-expanding tx appears later in vtx order"
+        assert tx_lookahead['txid'] in txids, \
+            "tx_lookahead must be found after fix: block is re-processed when pool expands mid-block"
 
         # -----------------------------------------------------------------------
         # Part 2: ScanForWalletTransactions via importdescriptors (timestamp=0)
@@ -148,9 +144,8 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         txids_rescan = {tx['txid'] for tx in w_rescan.listtransactions('*', 1000)}
         assert tx_expand['txid'] in txids_rescan, \
             "tx_expand must be found after full rescan"
-        # TODO: flip to `in` once the fix lands — currently missed due to vtx-order bug
-        assert tx_lookahead['txid'] not in txids_rescan, \
-            "pre-fix: tx_lookahead is missed on full rescan"
+        assert tx_lookahead['txid'] in txids_rescan, \
+            "tx_lookahead must be found after fix: block re-processed when pool expands mid-block"
 
         # -----------------------------------------------------------------------
         # Part 3: a second rescanblockchain recovers tx_lookahead.
@@ -167,6 +162,88 @@ class WalletRescanIntraBlockOrderingTest(BitcoinTestFramework):
         assert tx_lookahead['txid'] in txids_after_second_scan, \
             "tx_lookahead must be recovered on a second rescan (pool was already extended)"
         assert tx_expand['txid'] in txids_after_second_scan
+
+        # -----------------------------------------------------------------------
+        # Part 4: cascading pool expansions — two levels in one block, interleaved.
+        #
+        # vtx order: [lookahead_1, expand_1, lookahead_2, expand_2]
+        #   pos 0: lookahead_1 — outside pool → missed without fix
+        #   pos 1: expand_1   — in pool → found, TopUp fires (pool grows to [0, e2])
+        #   pos 2: lookahead_2 — outside expanded pool → missed without fix
+        #   pos 3: expand_2   — in expanded pool → found, TopUp fires again
+        #
+        # With first_expansion_pos=1, re-scanning [0,1) finds lookahead_1 but misses
+        # lookahead_2. last_expansion_pos=3 re-scans [0,3) and finds both.
+        #
+        # A probe wallet triggers the first TopUp via the mempool path and reads the
+        # resulting boundary dynamically — no hardcoded keypool size assumptions.
+        # -----------------------------------------------------------------------
+        self.log.info("Part 4: cascading pool expansions — two TopUp levels in one block")
+
+        node.createwallet(wallet_name='w_probe', disable_private_keys=True, blank=True)
+        w_probe = node.get_wallet_rpc('w_probe')
+        w_probe.importdescriptors([{"desc": recv_desc['desc'], "timestamp": "now"}])
+        probe_descs = w_probe.listdescriptors()['descriptors']
+        probe_recv = next(d for d in probe_descs if 'range' in d and not d.get('internal', False))
+        _, e1 = probe_recv['range']
+        addr_expand_1 = w_probe.deriveaddresses(probe_recv['desc'], [e1, e1])[0]
+        addr_lookahead_1 = w_probe.deriveaddresses(probe_recv['desc'], [e1 + 1, e1 + 1])[0]
+
+        probe_tx = funding_wallet.send_to(
+            from_node=node,
+            scriptPubKey=address_to_scriptpubkey(addr_expand_1),
+            amount=10_000,
+        )
+        node.syncwithvalidationinterfacequeue()
+
+        probe_descs = w_probe.listdescriptors()['descriptors']
+        probe_recv = next(d for d in probe_descs if 'range' in d and not d.get('internal', False))
+        _, e2 = probe_recv['range']
+        addr_expand_2 = w_probe.deriveaddresses(probe_recv['desc'], [e2, e2])[0]
+        addr_lookahead_2 = w_probe.deriveaddresses(probe_recv['desc'], [e2 + 1, e2 + 1])[0]
+        node.unloadwallet('w_probe')
+
+        self.log.info(f"First boundary:  e1={e1}, expand_1={addr_expand_1}, lookahead_1={addr_lookahead_1}")
+        self.log.info(f"Second boundary: e2={e2}, expand_2={addr_expand_2}, lookahead_2={addr_lookahead_2}")
+
+        self.generateblock(node, output="raw(51)", transactions=[probe_tx['txid']])
+
+        # Mine an extra block so the probe block is strictly before w_cascade's scan
+        # start. Without this, importdescriptors(timestamp="now") may include the probe
+        # block in the rescan, triggering TopUp early and making lookahead_1 visible
+        # before the cascade block is processed — hiding the bug this test targets.
+        self.generate(node, 1)
+
+        node.createwallet(wallet_name='w_cascade', disable_private_keys=True, blank=True)
+        w_cascade = node.get_wallet_rpc('w_cascade')
+        w_cascade.importdescriptors([{"desc": recv_desc['desc'], "timestamp": "now"}])
+        node.unloadwallet('w_cascade')
+
+        tx_c_expand_1 = funding_wallet.send_to(from_node=node, scriptPubKey=address_to_scriptpubkey(addr_expand_1), amount=10_000)
+        tx_c_expand_2 = funding_wallet.send_to(from_node=node, scriptPubKey=address_to_scriptpubkey(addr_expand_2), amount=10_000)
+        tx_c_lookahead_1 = funding_wallet.send_to(from_node=node, scriptPubKey=address_to_scriptpubkey(addr_lookahead_1), amount=10_000)
+        tx_c_lookahead_2 = funding_wallet.send_to(from_node=node, scriptPubKey=address_to_scriptpubkey(addr_lookahead_2), amount=10_000)
+
+        self.generateblock(node, output="raw(51)", transactions=[
+            tx_c_lookahead_1['txid'],
+            tx_c_expand_1['txid'],
+            tx_c_lookahead_2['txid'],
+            tx_c_expand_2['txid'],
+        ])
+
+        node.loadwallet('w_cascade')
+        w_cascade = node.get_wallet_rpc('w_cascade')
+        node.syncwithvalidationinterfacequeue()
+
+        txids_cascade = {tx['txid'] for tx in w_cascade.listtransactions('*', 1000)}
+        assert tx_c_expand_1['txid'] in txids_cascade, \
+            "expand_1 must be found (it was within the initial pool)"
+        assert tx_c_expand_2['txid'] in txids_cascade, \
+            "expand_2 must be found (it enters pool after expand_1 fires TopUp)"
+        assert tx_c_lookahead_1['txid'] in txids_cascade, \
+            "lookahead_1 must be found after fix: visible after first TopUp re-scan"
+        assert tx_c_lookahead_2['txid'] in txids_cascade, \
+            "lookahead_2 must be found after fix: visible after second TopUp re-scan"
 
 
 if __name__ == '__main__':
