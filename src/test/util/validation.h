@@ -16,6 +16,7 @@ namespace node {
 class BlockManager;
 }
 class CValidationInterface;
+class FakeNodeClock;
 struct TestingSetup;
 
 struct TestBlockManager : public node::BlockManager {
@@ -47,6 +48,6 @@ public:
         const CBlockIndex* pindex);
 };
 
-std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup);
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock);
 
 #endif // BITCOIN_TEST_UTIL_VALIDATION_H
