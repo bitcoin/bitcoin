@@ -179,7 +179,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
 {
     QString tx_description;
     QLatin1String bullet_point(" * ");
-    CAmount totalAmount = 0;
+    CAmount totalAmount = 0_sats;
     for (const PSBTOutput& out : psbtx.outputs) {
         CTxDestination address;
         ExtractDestination(out.script, address);
@@ -194,7 +194,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
 
     PSBTAnalysis analysis = AnalyzePSBT(psbtx);
     tx_description.append(bullet_point);
-    if (!*analysis.fee) {
+    if (*analysis.fee == 0_sats) {
         // This happens if the transaction is missing input UTXO information.
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {

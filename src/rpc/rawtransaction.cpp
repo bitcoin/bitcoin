@@ -338,8 +338,9 @@ static RPCMethod getrawtransaction()
     // Add sigop-adjusted virtual size if the transaction exists in the mempool.
     if (blockindex == nullptr && hash_block.IsNull() && node.mempool) {
         auto info = node.mempool->info(tx->GetHash());
-        if (info.tx) {
-            result.pushKV("vsize_adjusted", info.vsize);
+        if (info) {
+            CHECK_NONFATAL(info->tx);
+            result.pushKV("vsize_adjusted", info->vsize);
         }
     }
 
@@ -1171,7 +1172,7 @@ static RPCMethod decodepsbt()
     result.pushKV("unknown", std::move(unknowns));
 
     // inputs
-    CAmount total_in = 0;
+    CAmount total_in = 0_sats;
     bool have_all_utxos = true;
     UniValue inputs(UniValue::VARR);
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
@@ -1460,7 +1461,7 @@ static RPCMethod decodepsbt()
     result.pushKV("inputs", std::move(inputs));
 
     // outputs
-    CAmount output_value = 0;
+    CAmount output_value = 0_sats;
     UniValue outputs(UniValue::VARR);
     for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
         const PSBTOutput& output = psbtx.outputs[i];

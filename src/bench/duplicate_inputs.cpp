@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
@@ -55,7 +56,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
 
 
     naughtyTx.vout.resize(1);
-    naughtyTx.vout[0].nValue = 0;
+    naughtyTx.vout[0].nValue = 0_sats;
     naughtyTx.vout[0].scriptPubKey = SCRIPT_PUB;
 
     uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).ComputeTotalSize() + CTransaction(naughtyTx).ComputeTotalSize())) / 41) - 100;

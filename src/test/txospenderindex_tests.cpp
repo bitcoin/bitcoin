@@ -37,7 +37,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
 
         // Sign
         std::vector<unsigned char> vchSig;
-        const uint256 hash = SignatureHash(coinbase_script, spender[i], 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        const uint256 hash = SignatureHash(coinbase_script, spender[i], 0, SIGHASH_ALL, 0_sats, SigVersion::BASE);
         BOOST_REQUIRE(coinbaseKey.Sign(hash, vchSig));
         vchSig.push_back((unsigned char)SIGHASH_ALL);
         spender[i].vin[0].scriptSig << vchSig;

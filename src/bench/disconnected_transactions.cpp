@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <kernel/disconnected_transactions.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

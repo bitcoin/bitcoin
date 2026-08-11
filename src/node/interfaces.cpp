@@ -705,7 +705,7 @@ public:
         if (!m_node.mempool) {
             std::map<COutPoint, CAmount> bump_fees;
             for (const auto& outpoint : outpoints) {
-                bump_fees.emplace(outpoint, 0);
+                bump_fees.emplace(outpoint, 0_sats);
             }
             return bump_fees;
         }
@@ -715,7 +715,7 @@ public:
     std::optional<CAmount> calculateCombinedBumpFee(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) override
     {
         if (!m_node.mempool) {
-            return 0;
+            return 0_sats;
         }
         return MiniMiner(*m_node.mempool, outpoints).CalculateTotalBumpFees(target_feerate);
     }

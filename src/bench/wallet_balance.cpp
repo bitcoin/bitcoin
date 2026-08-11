@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/chainparams.h>
@@ -22,6 +23,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+#include <compare>
 #include <memory>
 #include <optional>
 #include <string>
@@ -61,7 +63,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
         .run([&] {
             bal = GetBalance(wallet);
             ankerl::nanobench::doNotOptimizeAway(bal);
-            assert(add_mine == (bal.m_mine_trusted > 0));
+            assert(add_mine == (bal.m_mine_trusted > 0_sats));
         });
 }
 

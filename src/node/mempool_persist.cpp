@@ -87,18 +87,17 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 
             CTransactionRef tx;
             int64_t nTime;
-            int64_t nFeeDelta;
+            CAmount fee_delta{0};
             file >> TX_WITH_WITNESS(tx);
             file >> nTime;
-            file >> nFeeDelta;
+            file >> fee_delta;
 
             if (opts.use_current_time) {
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
             }
 
-            CAmount amountdelta = nFeeDelta;
-            if (amountdelta && opts.apply_fee_delta_priority) {
-                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+            if (fee_delta != 0_sats && opts.apply_fee_delta_priority) {
+                pool.PrioritiseTransaction(tx->GetHash(), fee_delta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
@@ -122,12 +121,12 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
-        std::map<Txid, CAmount> mapDeltas;
+        std::map<Txid, CAmount::inner_type> mapDeltas;
         file >> mapDeltas;
 
         if (opts.apply_fee_delta_priority) {
             for (const auto& i : mapDeltas) {
-                pool.PrioritiseTransaction(i.first, i.second);
+                pool.PrioritiseTransaction(i.first, CAmount{i.second});
             }
         }
 
@@ -163,9 +162,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     {
         LOCK(pool.cs);
-        for (const auto &i : pool.mapDeltas) {
-            mapDeltas[i.first] = i.second;
-        }
+        mapDeltas = pool.mapDeltas;
         vinfo = pool.infoAll();
         unbroadcast_txids = pool.GetUnbroadcastTxs();
     }
@@ -196,7 +193,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
-            file << int64_t{i.nFeeDelta};
+            file << i.nFeeDelta.Int();
             mapDeltas.erase(i.tx->GetHash());
         }
 

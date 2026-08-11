@@ -1713,7 +1713,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
     vchSig.pop_back();
 
     // Witness sighashes need the amount.
-    if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return HandleMissingData(m_mdb);
+    if (sigversion == SigVersion::WITNESS_V0 && amount < 0_sats) return HandleMissingData(m_mdb);
 
     uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata, &m_sighash_cache);
 
