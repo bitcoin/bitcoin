@@ -239,25 +239,20 @@ public:
         Assert(tx);
         m_canonical_wtxid = tx->GetWitnessHash();
         m_txs.emplace(tx->GetWitnessHash(), std::move(tx));
-        Init();
+        SetDefaults();
     }
 
     template <typename Stream>
     CWalletTx(deserialize_type, Stream& s, const std::map<Wtxid, CTransactionRef>& variants) : m_state(TxStateInactive{})
     {
         Unserialize(s);
+        const Txid& canonical_txid = GetHash();
+        for (const auto& [wtxid, tx] : variants) {
+            if (tx->GetHash() != canonical_txid) throw std::runtime_error("variant txid does not match wallet txid");
+        }
         // Merge witness variants
         m_txs.insert(variants.begin(), variants.end());
         Assert(m_txs.contains(GetWitnessHash()));
-    }
-
-    void Init()
-    {
-        nTimeReceived = 0;
-        nTimeSmart = 0;
-        fChangeCached = false;
-        nChangeCached = 0;
-        nOrderPos = -1;
     }
 
     TxState m_state;
@@ -357,7 +352,7 @@ public:
     // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
     // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
     // those with witnesses are preferred, followed by least weight.
-    bool Update(CTransactionRef tx, const TxState& arg_state);
+    bool Update(CTransactionRef tx, const TxState& new_state);
 
     //! make sure balances are recalculated
     void MarkDirty()
@@ -405,6 +400,22 @@ public:
     CWalletTx(CWalletTx&&) = default;
 
 private:
+    void SetDefaults()
+    {
+        nTimeReceived = 0;
+        nTimeSmart = 0;
+        fChangeCached = false;
+        nChangeCached = 0;
+        nOrderPos = -1;
+    }
+
+    void Init()
+    {
+        m_txs.clear();
+        m_canonical_wtxid = Wtxid{};
+        SetDefaults();
+    }
+
     Wtxid m_canonical_wtxid;
     std::map<Wtxid, CTransactionRef> m_txs;
 

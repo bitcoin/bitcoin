@@ -356,6 +356,16 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_equal(wallet.gettransaction(txid)["confirmations"], 0)
         self.check_tx_variants(wallet, txid, key_path_tx, key_path_wtxid, alternate_wtxids=[script_path_wtxid])
 
+        # listsinceblock "removed" entries reflect the wallet's current CWalletTx, not a
+        # snapshot of the detached block. The detached block contained the heavier script
+        # path variant, but "wtxid" reports the current canonical (key path) variant and
+        # the script path variant appears under "alternate_wtxids". A future improvement
+        # could track which specific variant was in the detached block and report that.
+        removed = next(e for e in wallet.listsinceblock(block)["removed"] if e["txid"] == txid)
+        assert_equal(removed["confirmations"], 0)
+        assert_equal(removed["wtxid"], key_path_wtxid)
+        assert_equal(removed["alternate_wtxids"], [script_path_wtxid])
+
 
 if __name__ == '__main__':
     ListTransactionsTest(__file__).main()
