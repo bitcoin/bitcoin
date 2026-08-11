@@ -444,7 +444,7 @@ void BitcoinGUI::createActions()
             //: The title for Restore Wallet File Windows
             QString title_windows = tr("Load Wallet Backup");
 
-            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
+            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file +  QLatin1String(" (*.dat *.wallet);;") + tr("All Files") + QLatin1String(" (*)"), nullptr);
             if (backup_file.isEmpty()) return;
 
             bool wallet_name_ok;
