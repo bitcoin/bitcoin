@@ -745,6 +745,12 @@ BOOST_AUTO_TEST_CASE(btck_block)
     CheckHandle(block, block_100);
     Block block_tx{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[205])};
     CheckRange(block_tx.Transactions(), block_tx.CountTransactions());
+    auto transactions{block_tx.Transactions()};
+    auto transactions_copy{transactions};
+    BOOST_CHECK(transactions.begin() != transactions_copy.begin()); // TODO: Iterators over the same underlying block should compare equal.
+    BOOST_CHECK(transactions.begin() != block_tx.Transactions().begin()); // TODO: Iterators over the same underlying block should compare equal.
+    auto transaction_it{transactions.begin()};
+    BOOST_CHECK((*transaction_it).Txid() == block_tx.GetTransaction(0).Txid());
     auto invalid_data = hex_string_to_byte_vec("012300");
     BOOST_CHECK_THROW(Block{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
