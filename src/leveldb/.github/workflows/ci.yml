@@ -1,0 +1,12 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: cmake -B build -DBUILD_SHARED_LIBS=OFF
+      - run: cmake --build build -j$(nproc)
+      - run: ctest --test-dir build --output-on-failure -j$(nproc)
