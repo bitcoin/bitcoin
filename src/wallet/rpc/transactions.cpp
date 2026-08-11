@@ -387,6 +387,51 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     }
 }
 
+/**
+ * Append a raw transaction entry for the given wallet transaction to ret.
+ *
+ * @param  wallet         The wallet.
+ * @param  wtx            The wallet transaction.
+ * @param  ret            Output vector to append the entry to.
+ * @param  verbose        If true, include a decoded transaction object.
+ */
+template <class Vec>
+static void ListRawTransaction(const CWallet& wallet, const CWalletTx& wtx, Vec& ret, bool verbose)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    UniValue entry(UniValue::VOBJ);
+
+    CAmount credit = CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount net = credit - debit;
+    bool is_from_me = CachedTxIsFromMe(wallet, wtx);
+    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : 0);
+
+    entry.pushKV("amount", ValueFromAmount(net - fee));
+    if (is_from_me)
+        entry.pushKV("fee", ValueFromAmount(fee));
+
+    WalletTxToJSON(wallet, wtx, entry);
+    entry.pushKV("abandoned", wtx.isAbandoned());
+    entry.pushKV("hex", EncodeHexTx(*wtx.GetTx()));
+
+    if (verbose) {
+        UniValue decoded(UniValue::VOBJ);
+        TxToUniv(*wtx.GetTx(),
+                /*block_hash=*/uint256(),
+                /*entry=*/decoded,
+                /*include_hex=*/false,
+                /*txundo=*/nullptr,
+                /*verbosity=*/TxVerbosity::SHOW_DETAILS,
+                /*is_change_func=*/[&wallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) {
+                                        AssertLockHeld(wallet.cs_wallet);
+                                        return OutputIsChange(wallet, txout);
+                                    });
+        entry.pushKV("decoded", std::move(decoded));
+    }
+
+    ret.push_back(std::move(entry));
+}
 
 static std::vector<RPCResult> TransactionDescriptionString()
 {
@@ -409,8 +454,8 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            }},
-           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx was replaced."},
-           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx replaces another."},
+           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "The txid of the transaction that replaced this one."},
+           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "The txid of the transaction that this one replaces."},
            {RPCResult::Type::ARR, "mempoolconflicts", "Transactions in the mempool that directly conflict with either this transaction or an ancestor transaction",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
@@ -421,7 +466,7 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", /*optional=*/true, "(\"yes|no|unknown\") (DEPRECATED) Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability.\n"
                "May be unknown for unconfirmed transactions not in the mempool because their unconfirmed ancestors are unknown."},
-           {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the output script of this coin.", {
+           {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "List of parent descriptors for the output script of this coin.", {
                {RPCResult::Type::STR, "desc", "The descriptor string."},
            }},
            };
@@ -530,6 +575,90 @@ RPCMethod listtransactions()
     auto txs_rev_it{std::make_move_iterator(ret.rend())};
     UniValue result{UniValue::VARR};
     result.push_backV(txs_rev_it - nFrom - nCount, txs_rev_it - nFrom); // Return oldest to newest
+    return result;
+},
+    };
+}
+
+RPCMethod listrawtransactions()
+{
+    return RPCMethod{
+        "listrawtransactions",
+        "Returns up to 'count' most recent wallet transactions ordered from oldest to newest, "
+        "skipping the first 'skip' transactions. Unlike `listtransactions`, each wallet transaction "
+        "appears exactly once with its net wallet balance change, without logical interpretation "
+        "(no category assignment, no change suppression). This means consolidation and self-transfer "
+        "transactions that are invisible in `listtransactions` are included here.\n",
+        {
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return."},
+            {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
+                {
+                    {RPCResult::Type::STR_AMOUNT, "amount", "The net change to the wallet balance caused by this transaction "
+                        "(excluding fee). Positive means the wallet gained funds, negative means it lost funds, "
+                        "zero means a pure self-transfer (e.g. consolidation)."},
+                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The fee paid in " + CURRENCY_UNIT + ". "
+                        "Only present when the wallet funded the transaction."},
+                },
+                Cat(TransactionDescriptionString(),
+                {
+                    {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                    {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
+                    {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
+                    {
+                        TxDoc({.wallet = true}),
+                    }},
+                }))},
+            }
+        },
+        RPCExamples{
+            "\nList the most recent 10 transactions\n"
+            + HelpExampleCli("listrawtransactions", "") +
+            "\nList transactions 100 to 120\n"
+            + HelpExampleCli("listrawtransactions", "20 100") +
+            "\nList the most recent 10 transactions with decoded transaction data\n"
+            + HelpExampleCli("listrawtransactions", "10 0 true") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("listrawtransactions", "20, 100")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    int count = self.Arg<int>("count");
+    int skip = self.Arg<int>("skip");
+    bool verbose = self.Arg<bool>("verbose");
+
+    if (count < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (skip < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
+
+    std::vector<UniValue> ret;
+    {
+        LOCK(pwallet->cs_wallet);
+
+        const CWallet::TxItems& tx_ordered = pwallet->wtxOrdered;
+
+        int skipped = 0;
+        for (CWallet::TxItems::const_reverse_iterator it = tx_ordered.rbegin(); it != tx_ordered.rend(); ++it) {
+            if ((int)ret.size() >= count) break;
+            if (skipped++ < skip) continue;
+            CWalletTx* const pwtx = (*it).second;
+            ListRawTransaction(*pwallet, *pwtx, ret, verbose);
+        }
+    }
+
+    UniValue result{UniValue::VARR};
+    result.push_backV(ret.rbegin(), ret.rend());
     return result;
 },
     };
