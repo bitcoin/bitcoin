@@ -56,7 +56,7 @@
  *              cap on the number of tracked announcements per peer. As failed requests in response to announcements
  *              from honest peers should be rare, this almost solely hinders attackers.
  *              Transaction censoring attacks can be done by announcing transactions quickly while not answering
- *              requests for them. See https://allquantor.at/blockchainbib/pdf/miller2015topology.pdf for more
+ *              requests for them. See https://www.cs.umd.edu/projects/coinscope/coinscope.pdf for more
  *              information.
  *
  * - Transactions are not requested from a peer until its reqtime has passed.
