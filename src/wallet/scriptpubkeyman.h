@@ -158,7 +158,7 @@ public:
     btcsignals::signal<void (const ScriptPubKeyMan* spkm, int64_t new_birth_time)> NotifyFirstKeyTimeChanged;
 };
 
-/** OutputTypes supported by the LegacyScriptPubKeyMan */
+/** Output types associated with LegacyDataSPKM. */
 inline const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
     OutputType::LEGACY,
     OutputType::P2SH_SEGWIT,
@@ -168,8 +168,7 @@ inline const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
 using KeyMap = std::map<CKeyID, CKey>;
 using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
 
-// Manages the data for a LegacyScriptPubKeyMan.
-// This is the minimum necessary to load a legacy wallet so that it can be migrated.
+// Manages the minimum data needed to load and migrate a legacy wallet.
 class LegacyDataSPKM : public ScriptPubKeyMan, public FillableSigningProvider
 {
 private:
@@ -247,14 +246,14 @@ public:
      */
     std::unordered_set<CScript, SaltedSipHasher> GetNotMineScriptPubKeys() const;
 
-    /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
-     * Does not modify this ScriptPubKeyMan. */
+    /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyDataSPKM.
+     * Does not modify this LegacyDataSPKM. */
     std::optional<MigrationData> MigrateToDescriptor();
-    /** Delete all the records of this LegacyScriptPubKeyMan from disk*/
+    /** Delete the legacy wallet records from disk. */
     bool DeleteRecordsWithDB(WalletBatch& batch);
 };
 
-/** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr. Does not provide privkeys */
+/** SigningProvider wrapper for LegacyDataSPKM that does not provide private keys. */
 class LegacySigningProvider : public SigningProvider
 {
 private:
@@ -360,8 +359,8 @@ public:
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
-    // and is used to expand the descriptor in GetNewDestination. DescriptorScriptPubKeyMan relies
-    // more on ephemeral data than LegacyScriptPubKeyMan. For wallets using unhardened derivation
+    // and is used to expand the descriptor in GetNewDestination. Descriptor wallets rely more on
+    // ephemeral data than legacy wallets. For wallets using unhardened derivation
     // (with or without private keys), the "keypool" is a single xpub.
     bool TopUp(unsigned int size = 0) override;
 
