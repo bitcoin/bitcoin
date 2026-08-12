@@ -2352,34 +2352,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
-    // Enforce per-miner cooldown: a miner (identified by coinbase vout[0].scriptPubKey)
-    // must wait 120 seconds between blocks they mine. This is a consensus rule:
-    // when a previous block by the same miner is within 120 seconds, reject.
-    // NOTE: This requires reading historical blocks; if a block cannot be read
-    // (pruned), the check will be skipped.
-    if (!fJustCheck) {
-        if (!block.vtx.empty() && !block.vtx[0]->vout.empty()) {
-            const CScript miner_script = block.vtx[0]->vout[0].scriptPubKey;
-            const CBlockIndex* it = pindex->pprev;
-            while (it != nullptr) {
-                CBlock prev_block;
-                if (m_blockman.ReadBlock(prev_block, *it)) {
-                    if (!prev_block.vtx.empty() && !prev_block.vtx[0]->vout.empty()) {
-                        if (prev_block.vtx[0]->vout[0].scriptPubKey == miner_script) {
-                            int64_t prev_time = it->GetBlockTime();
-                            int64_t cur_time = pindex->GetBlockTime();
-                            if (cur_time - prev_time < 120) {
-                                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "miner-cooldown", "miner must wait 120 seconds between blocks");
-                            }
-                            break;
-                        }
-                    }
-                }
-                it = it->pprev;
-            }
-        }
-    }
-
     const char* script_check_reason;
     if (m_chainman.AssumedValidBlock().IsNull()) {
         script_check_reason = "assumevalid=0 (always verify)";
