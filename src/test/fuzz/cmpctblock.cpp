@@ -132,7 +132,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    GetFakeNodeClock().set(1610000000s);
+    GetFakeNodeClock().set(1610000000s); // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
 
     auto setup = g_setup;
