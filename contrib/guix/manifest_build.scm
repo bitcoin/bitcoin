@@ -1,5 +1,6 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
+             ((gnu packages base) #:select (glibc))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              ((gnu packages compression) #:select (gzip))
@@ -57,9 +58,19 @@ FILE-NAME found in ./patches relative to the current file."
   (let* ((xbinutils (base-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (cross-gcc target
-                                    #:xgcc base-gcc-for-libc
-                                    #:xbinutils xbinutils))
+         (xgcc-sans-libc-base
+          (cross-gcc target
+                     #:xgcc base-gcc-for-libc
+                     #:xbinutils xbinutils))
+         (xgcc-sans-libc
+          (package
+            (inherit xgcc-sans-libc-base)
+            (arguments
+             (substitute-keyword-arguments
+                 (package-arguments xgcc-sans-libc-base)
+               ((#:configure-flags flags)
+                #~(append #$flags
+                          (list "--disable-fixincludes")))))))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
