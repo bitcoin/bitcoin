@@ -63,8 +63,6 @@ inline constexpr int64_t UNKNOWN_TIME = std::numeric_limits<int64_t>::max();
 //! Default for -keypool
 inline constexpr unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 
-std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider);
-
 struct WalletDestination
 {
     CTxDestination dest;
