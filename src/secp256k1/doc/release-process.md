@@ -15,6 +15,7 @@ This process also assumes that there will be no minor releases for old major rel
 We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Bitcoin Core releases. Every second release should be published one month before the feature freeze of the next major Bitcoin Core release, allowing sufficient time to update the library in Core.
 
 ## Sanity checks
+
 Perform these checks when reviewing the release PR (see below):
 
 1. Ensure `make distcheck` doesn't fail.
@@ -39,20 +40,27 @@ Perform these checks when reviewing the release PR (see below):
    tools/check-abi.sh
    ```
 
-## Regular release
+## Preparing and tagging a release
+
+If you're going to sign the release, make sure that your default GPG signing key is the [expected one](../SECURITY.md).
+You can see your default key by running `echo "test" | gpg --sign --verbose > /dev/null`.
+
+### Regular release
 
 1. Open a PR to the master branch with a commit (using message `"release: prepare for $MAJOR.$MINOR.$PATCH"`, for example) that
    * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) by
        * adding a section for the release (make sure that the version number is a link to a diff between the previous and new version),
        * removing the `[Unreleased]` section header,
-       * ensuring that the release notes are not missing entries (check the `needs-changelog` label on github), and
+       * ensuring that the release notes are not missing entries
+         (check the `needs-changelog` label on GitHub and also go manually through the list of commits since the previous release), and
        * including an entry for `### ABI Compatibility` if it doesn't exist,
    * sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`, and,
    * if this is not a patch release,
        * updates `_PKG_VERSION_*` and `_LIB_VERSION_*`  in `configure.ac`, and
        * updates `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_*` in `CMakeLists.txt`.
-2. Perform the [sanity checks](#sanity-checks) on the PR branch.
-3. After the PR is merged, tag the commit, and push the tag:
+2. Perform the [sanity checks](#sanity-checks) on the PR branch
+   and attach the output of the [`check-abi`](/tools/check-abi.sh) tool (screenshot of the generated compatibility HTML report) to the PR description.
+3. After the PR has been merged, tag the commit, and push the tag:
    ```
    RELEASE_COMMIT=<merge commit of step 1>
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH" $RELEASE_COMMIT
@@ -64,10 +72,8 @@ Perform these checks when reviewing the release PR (see below):
    * adds an `[Unreleased]` section header and a corresponding `[Unreleased]` link at the bottom of [CHANGELOG.md](../CHANGELOG.md).
 
    If other maintainers are not present to approve the PR, it can be merged without ACKs.
-5. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
-6. Send an announcement email to the bitcoin-dev mailing list.
 
-## Maintenance release
+### Maintenance release
 
 Note that bug fixes need to be backported only to releases for which no compatible release without the bug exists.
 
@@ -83,12 +89,29 @@ Note that bug fixes need to be backported only to releases for which no compatib
      and the `$PATCH` component of `project(libsecp256k1 VERSION ...)` and `${PROJECT_NAME}_LIB_VERSION_REVISION` in `CMakeLists.txt`
      (with commit message `"release: bump versions for $MAJOR.$MINOR.$PATCH"`, for example).
 3. Perform the [sanity checks](#sanity-checks) on the PR branch.
-4. After the PRs are merged, update the release branch, tag the commit, and push the tag:
+4. After the PR has been merged, update the release branch, tag the commit, and push the tag:
    ```
    git checkout $MAJOR.$MINOR && git pull
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH"
    git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
-6. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
-7. Send an announcement email to the bitcoin-dev mailing list.
-8. Open PR to the master branch that includes a commit (with commit message `"release notes: add $MAJOR.$MINOR.$PATCH"`, for example) that adds release notes to [CHANGELOG.md](../CHANGELOG.md).
+5. Open a PR to the master branch that includes a commit (with commit message `"release notes: add $MAJOR.$MINOR.$PATCH"`, for example) that adds release notes to [CHANGELOG.md](../CHANGELOG.md).
+6. Get the PR merged to ensure that the [CHANGELOG.md](../CHANGELOG.md) file on the master branch is current before announcing the release.
+
+## Creating a tarball and announcing the release
+
+1. Create a tarball and a detached GPG signature covering it, and check that the signature verifies under the expected key.
+     ```
+     git archive --output "libsecp256k1-$MAJOR.$MINOR.$PATCH.tar.gz" --prefix "libsecp256k1-$MAJOR.$MINOR.$PATCH/" v$MAJOR.$MINOR.$PATCH
+     gpg --detach-sign "libsecp256k1-$MAJOR.$MINOR.$PATCH.tar.gz"
+     gpg --verify "libsecp256k1-$MAJOR.$MINOR.$PATCH.tar.gz.sig"
+     ```
+2. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
+   Attach the tarball and the detached signature.
+3. Send an announcement email to the bitcoin-dev mailing list.
+
+
+## Cleaning up
+
+1. Close the GitHub milestone, and create a new one. Consider moving unresolved issues to the new milestone.
+2. Remove the `needs-changelog` label from all merged PRs.

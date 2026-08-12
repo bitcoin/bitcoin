@@ -75,15 +75,14 @@ typedef struct secp256k1_silentpayments_recipient {
  *  unfindable by the recipient.
  *
  *  Returns: 1 if creation of outputs was successful.
- *           0 on failure. This is expected only with an adversarially chosen
- *           recipient spend key. Specifically, failure occurs when:
- *             - Input secret keys sum to 0
- *               (negligible probability if at least one of the input secret
- *               keys is uniformly random and independent of all other keys)
- *             - A hash output is not a valid scalar (negligible probability
- *               per hash evaluation)
- *             - Any group (i.e. recipients sharing the same scan public key) exceeds
- *               the protocol limit SECP256K1_SILENTPAYMENTS_RECIPIENT_GROUP_LIMIT
+ *           0 on failure, i.e., when one of the following occurs:
+ *             - The size of any group (i.e. recipients sharing the same scan public key)
+ *               exceeds the protocol limit SECP256K1_SILENTPAYMENTS_RECIPIENT_GROUP_LIMIT.
+ *             - The sum of all input secret keys is 0.
+ *               (This occurs only with negligible probability if at least one of the
+ *               input secret keys is uniformly random and independent of all other keys.)
+ *             - An invalid output public key is created. (This can only happen for an
+ *               adversarially chosen recipient spend public key.)
  *
  *  Args:                ctx: pointer to a context object
  *                            (not secp256k1_context_static).
@@ -97,16 +96,14 @@ typedef struct secp256k1_silentpayments_recipient {
  *  In:           recipients: pointer to an array of pointers to Silent Payments
  *                            recipients, where each recipient is a scan public
  *                            key, a spend public key, and an index indicating
- *                            its position in the original ordering. The
- *                            recipient array will be grouped by scan public key
- *                            in place (as specified in BIP0352), but generated
- *                            outputs are saved in the `generated_outputs` array
- *                            to match the original ordering (using the index
- *                            field). This ensures the caller is able to match
- *                            the generated outputs to the correct Silent
- *                            Payments addresses. The same recipient can be
- *                            passed multiple times to create multiple outputs
- *                            for the same recipient.
+ *                            its position in the original ordering. This function
+ *                            may reorder the pointers to the recipient objects
+ *                            within the array, i.e., after the call (including on
+ *                            failure), the index fields of the recipient objects
+ *                            may no longer correspond to the positions in the
+ *                            array. Multiple recipient objects with the same scan
+ *                            public key and/or same spend public key can be passed
+ *                            if they carry different indices.
  *              n_recipients: the size of the recipients array.
  *       outpoint_smallest36: serialized (36-byte) smallest outpoint
  *                            (lexicographically) from the transaction inputs
