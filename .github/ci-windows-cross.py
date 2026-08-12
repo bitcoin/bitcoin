@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -26,6 +27,31 @@ def run(cmd, **kwargs):
 def print_version():
     bitcoind = Path.cwd() / "bin" / "bitcoind.exe"
     run([str(bitcoind), "-version"])
+
+
+def check_imports():
+    bitcoind = Path.cwd() / "bin" / "bitcoind.exe"
+    output = run(
+        ["dumpbin.exe", "/imports", str(bitcoind)],
+        capture_output=True,
+        text=True,
+    ).stdout
+    dlls = re.findall(r"^\s*(\S+\.dll)\s*$", output, re.IGNORECASE | re.MULTILINE)
+    print("\n".join(dlls))
+
+    # Ensure the executable is linked against the expected C runtime.
+    dlls = {name.lower() for name in dlls}
+    uses_msvcrt = "msvcrt.dll" in dlls
+    uses_ucrt = any(name.startswith("api-ms-win-crt-") for name in dlls)
+    crt = os.environ["CRT"]
+    if crt == "msvcrt":
+        crt_ok = uses_msvcrt and not uses_ucrt
+    elif crt == "ucrt":
+        crt_ok = uses_ucrt and not uses_msvcrt
+    else:
+        sys.exit(f"Unexpected CRT value: {crt!r}")
+    if not crt_ok:
+        sys.exit(f"Imported DLLs do not match the expected {crt!r} C runtime.")
 
 
 def check_manifests():
@@ -143,6 +169,7 @@ def main():
     parser = argparse.ArgumentParser(description="Utility to run Windows CI steps.")
     steps = list(map(lambda f: f.__name__, [
         print_version,
+        check_imports,
         check_manifests,
         prepare_tests,
         run_unit_tests,
