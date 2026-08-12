@@ -16,10 +16,28 @@
 #include <system_error>
 #include <variant>
 
+#ifdef WIN32
+#include <afunix.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#endif
+
+#ifdef WIN32
+// Ensure WSAStartup is called before any SocketListener operation. Winsock
+// requires WSAStartup before any socket call; the mp library calls it inside
+// StartSpawned(), but test files that create sockets directly never reach that
+// code path. WSACleanup is intentionally omitted: the OS reclaims Winsock
+// state on exit. TODO: check the return value and fail fast on error.
+namespace {
+struct WsaInit {
+    WsaInit() { WSADATA data; WSAStartup(MAKEWORD(2, 2), &data); }
+} g_wsa_init;
+} // namespace
+#endif
 
 namespace mp {
 namespace test {
@@ -32,9 +50,17 @@ class SocketListener
 public:
     SocketListener()
     {
-        // Currently only AF_UNIX sockets are supported. TCP (sockaddr_in) will
-        // be added later.
+        // Use TCP on Windows to work around Wine's incompatibility with
+        // AF_UNIX: Wine does not support the AcceptEx extension used by KJ's
+        // AF_UNIX listener
+        // (https://gitlab.winehq.org/wine/wine/-/merge_requests/7650).
+        // AF_UNIX sockets work fine on real Windows. It could make sense
+        // later to test TCP connections on Unix as well.
+#ifdef WIN32
+        m_addr.emplace<sockaddr_in>();
+#else
         m_addr.emplace<sockaddr_un>();
+#endif
         std::visit([this](auto& addr) { Init(addr); }, m_addr);
     }
 
@@ -62,6 +88,21 @@ public:
     }
 
 private:
+    void Init(sockaddr_in& addr)
+    {
+        m_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        KJ_REQUIRE(m_fd != SocketError);
+
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        addr.sin_port = 0;
+        KJ_REQUIRE(bind(m_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0);
+        KJ_REQUIRE(listen(m_fd, SOMAXCONN) == 0);
+
+        socklen_t len = sizeof(addr);
+        KJ_REQUIRE(getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0);
+    }
+
     void Init(sockaddr_un& addr)
     {
         auto base = std::filesystem::temp_directory_path();
@@ -85,6 +126,16 @@ private:
         KJ_REQUIRE(listen(m_fd, SOMAXCONN) == 0);
     }
 
+    static SocketId Connect(const sockaddr_in& addr)
+    {
+        SocketId fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        KJ_REQUIRE(fd != SocketError);
+
+        sockaddr_in a = addr;
+        KJ_REQUIRE(connect(fd, reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0);
+        return fd;
+    }
+
     static SocketId Connect(const sockaddr_un& addr)
     {
         SocketId fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -97,7 +148,7 @@ private:
 
     SocketId m_fd{SocketError};
     std::string m_dir;
-    std::variant<sockaddr_un> m_addr;
+    std::variant<sockaddr_in, sockaddr_un> m_addr;
 };
 
 } // namespace test
