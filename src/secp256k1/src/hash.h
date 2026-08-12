@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "../include/secp256k1.h"
+
 typedef struct {
     secp256k1_sha256_compression_function fn_sha256_compression;
 } secp256k1_hash_ctx;

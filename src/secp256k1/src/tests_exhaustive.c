@@ -220,7 +220,7 @@ static void test_exhaustive_ecmult_multi(const secp256k1_context *ctx, const sec
                         data.pt[0] = group[x];
                         data.pt[1] = group[y];
 
-                        secp256k1_ecmult_multi_var(&ctx->error_callback, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
+                        CHECK(secp256k1_ecmult_multi_var(&ctx->error_callback, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2) == 1);
                         CHECK(secp256k1_gej_eq_ge_var(&tmp, &group[(i * x + j * y + k) % EXHAUSTIVE_TEST_ORDER]));
                     }
                 }

@@ -53,8 +53,8 @@ static void test_xonly_pubkey(void) {
     CHECK(secp256k1_xonly_pubkey_from_pubkey(CTX, &xonly_pk, &pk_parity, &pk) == 1);
     CHECK(secp256k1_memcmp_var(&xonly_pk, &pk, sizeof(xonly_pk)) != 0);
     CHECK(pk_parity == 1);
-    secp256k1_pubkey_load(CTX, &pk1, &pk);
-    secp256k1_pubkey_load(CTX, &pk2, (secp256k1_pubkey *) &xonly_pk);
+    CHECK(secp256k1_pubkey_load(CTX, &pk1, &pk) == 1);
+    CHECK(secp256k1_pubkey_load(CTX, &pk2, (secp256k1_pubkey *) &xonly_pk) == 1);
     CHECK(secp256k1_fe_equal(&pk1.x, &pk2.x) == 1);
     secp256k1_fe_negate(&y, &pk2.y, 1);
     CHECK(secp256k1_fe_equal(&pk1.y, &y) == 1);

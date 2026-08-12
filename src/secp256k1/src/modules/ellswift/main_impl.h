@@ -449,12 +449,13 @@ int secp256k1_ellswift_create(const secp256k1_context *ctx, unsigned char *ell64
     secp256k1_fe_normalize_var(&p.x);
     secp256k1_fe_normalize_var(&p.y);
 
-    /* Set up hasher state. The used RNG is H(privkey || "\x00"*32 [|| auxrnd32] || cnt++),
+    /* Set up hasher state. The used RNG is H(seckey32 || "\x00"*32 [|| auxrnd32] || cnt++),
      * using BIP340 tagged hash with tag "secp256k1_ellswift_create". */
     secp256k1_ellswift_sha256_init_create(&hash);
     secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, seckey32, 32);
     secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, zero32, sizeof(zero32));
-    secp256k1_declassify(ctx, &hash, sizeof(hash)); /* private key is hashed now */
+    /* Declassify only hash state. seckey32 has been hashed, but copy remains in the hash buffer */
+    secp256k1_declassify(ctx, &hash.s, sizeof(hash.s));
     if (auxrnd32) secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, auxrnd32, 32);
 
     /* Compute ElligatorSwift encoding and construct output. */
@@ -463,6 +464,7 @@ int secp256k1_ellswift_create(const secp256k1_context *ctx, unsigned char *ell64
 
     secp256k1_memczero(ell64, 64, !ret);
     secp256k1_scalar_clear(&seckey_scalar);
+    secp256k1_sha256_clear(&hash);
 
     return ret;
 }

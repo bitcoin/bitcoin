@@ -823,9 +823,6 @@ static void test_schnorrsig_sign_internal(void) {
     CHECK(secp256k1_keypair_xonly_pub(CTX, &pk, NULL, &keypair));
     CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypair, NULL) == 1);
     CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), &pk));
-    /* Check that deprecated alias gives the same result */
-    CHECK(secp256k1_schnorrsig_sign(CTX, sig2, msg, &keypair, NULL) == 1);
-    CHECK(secp256k1_memcmp_var(sig, sig2, sizeof(sig)) == 0);
 
     /* Test different nonce functions */
     CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &keypair, &extraparams) == 1);

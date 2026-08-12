@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <time.h>
@@ -194,9 +195,6 @@ static void run_ec_illegal_argument_tests(void) {
 }
 
 static void run_static_context_tests(int use_prealloc) {
-    /* Check that deprecated secp256k1_context_no_precomp is an alias to secp256k1_context_static. */
-    CHECK(secp256k1_context_no_precomp == secp256k1_context_static);
-
     {
         unsigned char seed[32] = {0x17};
 
@@ -486,6 +484,79 @@ static void run_plug_sha256_compression_tests(void) {
 
     secp256k1_context_destroy(ctx);
     secp256k1_context_destroy(ctx_cloned);
+}
+
+/* Hashes the first block over and over instead of moving on. */
+static void sha256_transform_noadvance(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    size_t i;
+    for (i = 0; i < blocks; i++) {
+        secp256k1_sha256_transform(s, chunk, 1);
+    }
+}
+
+/* Drops the last block of a multi-block call. */
+static void sha256_transform_short(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    secp256k1_sha256_transform(s, chunk, blocks > 0 ? blocks - 1 : 0);
+}
+
+/* Starts from the IV instead of the state it was given. */
+static void sha256_transform_ivreset(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    secp256k1_sha256 h;
+    secp256k1_sha256_initialize(&h);
+    memcpy(s, h.s, sizeof(h.s));
+    secp256k1_sha256_transform(s, chunk, blocks);
+}
+
+/* Correct only on multiples of four blocks. */
+static void sha256_transform_batch4(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    secp256k1_sha256_transform(s, chunk, blocks - (blocks & 3));
+}
+
+/* Right digest, one bit off. */
+static void sha256_transform_corrupt(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    secp256k1_sha256_transform(s, chunk, blocks);
+    s[0] ^= 1;
+}
+
+#ifdef UINTPTR_MAX
+
+/* Wrong when input is 64-byte aligned, like a broken SIMD fast path. */
+static void sha256_transform_align64_fail(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    int aligned = ((uintptr_t)chunk % 64) == 0;
+    secp256k1_sha256_transform(s, chunk, blocks);
+    if (aligned) s[0] ^= 1;
+}
+
+/* Wrong when input is 32-byte aligned but not 64 */
+static void sha256_transform_align32_fail(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    int align32_not64 = (((uintptr_t)chunk % 32) == 0) && (((uintptr_t)chunk % 64) != 0);
+    secp256k1_sha256_transform(s, chunk, blocks);
+    if (align32_not64) {
+        s[0] ^= 1;
+    }
+}
+
+/* Wrong on any unaligned input. */
+static void sha256_transform_unaligned_fail(uint32_t *s, const unsigned char *chunk, size_t blocks) {
+    int aligned = ((uintptr_t)chunk % 64) == 0;
+    secp256k1_sha256_transform(s, chunk, blocks);
+    if (!aligned) s[0] ^= 1;
+}
+
+#endif /* UINTPTR_MAX */
+
+static void run_sha256_compression_smoke_test_tests(void) {
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_noadvance) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_short) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_ivreset) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_batch4) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_corrupt) == 0);
+#ifdef UINTPTR_MAX
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_align64_fail) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_align32_fail) == 0);
+    CHECK(secp256k1_sha256_smoke_test(sha256_transform_unaligned_fail) == 0);
+#endif
+    CHECK(secp256k1_sha256_smoke_test(good_sha256_compression) == 1);
 }
 
 static void run_sha256_multi_block_compression_tests(void) {
@@ -6873,7 +6944,7 @@ static void test_sort_helper(secp256k1_pubkey *pk, size_t *pk_order, size_t n_pk
     for (i = 0; i < n_pk; i++) {
         pk_test[i] = &pk[pk_order[i]];
     }
-    secp256k1_ec_pubkey_sort(CTX, pk_test, n_pk);
+    CHECK(secp256k1_ec_pubkey_sort(CTX, pk_test, n_pk) == 1);
     for (i = 0; i < n_pk; i++) {
         CHECK(secp256k1_memcmp_var(pk_test[i], &pk[i], sizeof(*pk_test[i])) == 0);
     }
@@ -6962,7 +7033,7 @@ static void test_sort(void) {
             testutil_random_pubkey_test(&pk[j]);
             pk_ptr[j] = &pk[j];
         }
-        secp256k1_ec_pubkey_sort(CTX, pk_ptr, 5);
+        CHECK(secp256k1_ec_pubkey_sort(CTX, pk_ptr, 5) == 1);
         for (j = 1; j < 5; j++) {
             CHECK(secp256k1_ec_pubkey_sort_cmp(&pk_ptr[j - 1], &pk_ptr[j], CTX) <= 0);
         }
@@ -7958,6 +8029,7 @@ static const struct tf_test_entry tests_general[] = {
     CASE(scratch_tests),
     CASE(invalid_scratch_space_tests),
     CASE(plug_sha256_compression_tests),
+    CASE(sha256_compression_smoke_test_tests),
     CASE(sha256_multi_block_compression_tests),
 };
 

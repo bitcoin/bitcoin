@@ -249,9 +249,9 @@ void ellswift_encode_decode_roundtrip_tests(void) {
         secp256k1_pubkey_save(&pubkey, &g);
         testrand256(rnd32);
         /* Convert the public key to ElligatorSwift and back. */
-        secp256k1_ellswift_encode(CTX, ell64, &pubkey, rnd32);
-        secp256k1_ellswift_decode(CTX, &pubkey2, ell64);
-        secp256k1_pubkey_load(CTX, &g2, &pubkey2);
+        CHECK(secp256k1_ellswift_encode(CTX, ell64, &pubkey, rnd32) == 1);
+        CHECK(secp256k1_ellswift_decode(CTX, &pubkey2, ell64) == 1);
+        CHECK(secp256k1_pubkey_load(CTX, &g2, &pubkey2) == 1);
         /* Compare with original. */
         CHECK(secp256k1_ge_eq_var(&g, &g2));
     }
@@ -276,8 +276,8 @@ void ellswift_create_tests(void) {
         ret = secp256k1_ellswift_create(CTX, ell64, sec32, (i & 1) ? auxrnd32 : NULL);
         CHECK(ret);
         /* Decode it, and compare with traditionally-computed public key. */
-        secp256k1_ellswift_decode(CTX, &pub, ell64);
-        secp256k1_pubkey_load(CTX, &dec, &pub);
+        CHECK(secp256k1_ellswift_decode(CTX, &pub, ell64) == 1);
+        CHECK(secp256k1_pubkey_load(CTX, &dec, &pub) == 1);
         secp256k1_ecmult(&res, NULL, &secp256k1_scalar_zero, &sec);
         CHECK(secp256k1_gej_eq_ge_var(&res, &dec));
     }
@@ -300,15 +300,15 @@ void ellswift_compute_shared_secret_tests(void) {
         /* Generate random ElligatorSwift encoding for the remote key and decode it. */
         testrand256_test(ell64);
         testrand256_test(ell64 + 32);
-        secp256k1_ellswift_decode(CTX, &pub, ell64);
-        secp256k1_pubkey_load(CTX, &dec, &pub);
+        CHECK(secp256k1_ellswift_decode(CTX, &pub, ell64) == 1);
+        CHECK(secp256k1_pubkey_load(CTX, &dec, &pub) == 1);
         secp256k1_gej_set_ge(&decj, &dec);
         /* Compute the X coordinate of seckey*pubkey using ellswift_xdh. Note that we
          * pass ell64 as claimed (but incorrect) encoding for sec32 here; this works
          * because the "hasher" function we use here ignores the ell64 arguments. */
         ret = secp256k1_ellswift_xdh(CTX, share32, ell64, ell64, sec32, i & 1, &ellswift_xdh_hash_x32, NULL);
         CHECK(ret);
-        (void)secp256k1_fe_set_b32_limit(&share_x, share32); /* no overflow is possible */
+        CHECK(secp256k1_fe_set_b32_limit(&share_x, share32)); /* no overflow is possible */
         SECP256K1_FE_VERIFY(&share_x);
         /* Compute seckey*pubkey directly. */
         secp256k1_ecmult(&resj, &decj, &sec, NULL);

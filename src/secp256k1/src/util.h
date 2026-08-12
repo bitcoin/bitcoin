@@ -7,7 +7,6 @@
 #ifndef SECP256K1_UTIL_H
 #define SECP256K1_UTIL_H
 
-#include "../include/secp256k1.h"
 #include "checkmem.h"
 
 #include <string.h>
@@ -46,7 +45,7 @@ static void print_buf_plain(const unsigned char *buf, size_t len) {
 }
 
 # if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-#  if SECP256K1_GNUC_PREREQ(2,7)
+#  if defined(__GNUC__)
 #   define SECP256K1_INLINE __inline__
 #  elif (defined(_MSC_VER))
 #   define SECP256K1_INLINE __inline
@@ -58,7 +57,7 @@ static void print_buf_plain(const unsigned char *buf, size_t len) {
 # endif
 
 # if !defined(_DEBUG) && !defined(__NO_INLINE__) && !defined(__OPTIMIZE_SIZE__)
-#  if defined(__OPTIMIZE__) && (SECP256K1_GNUC_PREREQ(3, 0) || defined(__clang__))
+#  if defined(__OPTIMIZE__) && defined(__GNUC__)
 #   define SECP256K1_FORCE_INLINE SECP256K1_INLINE __attribute__((always_inline))
 #  elif defined(_MSC_VER)
 #   define SECP256K1_FORCE_INLINE __forceinline
@@ -143,7 +142,7 @@ static const secp256k1_callback default_error_callback = {
 } while(0)
 #endif
 
-#if SECP256K1_GNUC_PREREQ(3, 0)
+#if defined(__GNUC__)
 #define EXPECT(x,c) __builtin_expect((x),(c))
 #else
 #define EXPECT(x,c) (x)
@@ -199,7 +198,7 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 # define SECP256K1_RESTRICT
 #else
 # if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-#  if SECP256K1_GNUC_PREREQ(3,0)
+#  if defined(__GNUC__)
 #   define SECP256K1_RESTRICT __restrict__
 #  elif (defined(_MSC_VER) && _MSC_VER >= 1400)
 #   define SECP256K1_RESTRICT __restrict
@@ -392,13 +391,13 @@ static SECP256K1_INLINE int secp256k1_ctz64_var_debruijn(uint64_t x) {
 /* Determine the number of trailing zero bits in a (non-zero) 32-bit x. */
 static SECP256K1_INLINE int secp256k1_ctz32_var(uint32_t x) {
     VERIFY_CHECK(x != 0);
-#if (__has_builtin(__builtin_ctz) || SECP256K1_GNUC_PREREQ(3,4))
+#if (__has_builtin(__builtin_ctz) || defined(__GNUC__))
     /* If the unsigned type is sufficient to represent the largest uint32_t, consider __builtin_ctz. */
     if (((unsigned)UINT32_MAX) == UINT32_MAX) {
         return __builtin_ctz(x);
     }
 #endif
-#if (__has_builtin(__builtin_ctzl) || SECP256K1_GNUC_PREREQ(3,4))
+#if (__has_builtin(__builtin_ctzl) || defined(__GNUC__))
     /* Otherwise consider __builtin_ctzl (the unsigned long type is always at least 32 bits). */
     return __builtin_ctzl(x);
 #else
@@ -410,13 +409,13 @@ static SECP256K1_INLINE int secp256k1_ctz32_var(uint32_t x) {
 /* Determine the number of trailing zero bits in a (non-zero) 64-bit x. */
 static SECP256K1_INLINE int secp256k1_ctz64_var(uint64_t x) {
     VERIFY_CHECK(x != 0);
-#if (__has_builtin(__builtin_ctzl) || SECP256K1_GNUC_PREREQ(3,4))
+#if (__has_builtin(__builtin_ctzl) || defined(__GNUC__))
     /* If the unsigned long type is sufficient to represent the largest uint64_t, consider __builtin_ctzl. */
     if (((unsigned long)UINT64_MAX) == UINT64_MAX) {
         return __builtin_ctzl(x);
     }
 #endif
-#if (__has_builtin(__builtin_ctzll) || SECP256K1_GNUC_PREREQ(3,4))
+#if (__has_builtin(__builtin_ctzll) || defined(__GNUC__))
     /* Otherwise consider __builtin_ctzll (the unsigned long long type is always at least 64 bits). */
     return __builtin_ctzll(x);
 #else
