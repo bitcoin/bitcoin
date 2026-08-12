@@ -358,6 +358,11 @@ std::array<SocketId, 2> SocketPair()
     return {pair[0], pair[1]};
 }
 
+void CloseSocket(SocketId fd)
+{
+    KJ_SYSCALL(close(fd));
+}
+
 ProcessId StartProcess(const std::vector<std::string>& args)
 {
     const std::vector<char*> argv{MakeArgv(args)};
