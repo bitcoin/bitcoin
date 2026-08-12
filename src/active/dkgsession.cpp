@@ -115,7 +115,7 @@ void ActiveDKGSession::SendContributions(CDKGPendingMessages& pendingMessages, P
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc, peerman);
+    pendingMessages.PushPendingMessage(-1, myProTxHash, qc, peerman);
 }
 
 // Verifies all pending secret key contributions in one batch
@@ -312,7 +312,7 @@ void ActiveDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages, PeerM
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc, peerman);
+    pendingMessages.PushPendingMessage(-1, myProTxHash, qc, peerman);
 }
 
 void ActiveDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
@@ -402,7 +402,7 @@ void ActiveDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, P
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qj, peerman);
+    pendingMessages.PushPendingMessage(-1, myProTxHash, qj, peerman);
 }
 
 void ActiveDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
@@ -559,7 +559,7 @@ void ActiveDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages, Peer
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc, peerman);
+    pendingMessages.PushPendingMessage(-1, myProTxHash, qc, peerman);
 }
 
 std::vector<CFinalCommitment> ActiveDKGSession::FinalizeCommitments()

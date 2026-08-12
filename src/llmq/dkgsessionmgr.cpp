@@ -192,7 +192,9 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     // attacker-controlled payloads, so they must originate from an MNAuth-verified
     // masternode. qwatch is unauthenticated (any peer can set it via QWATCH) and is
     // only meaningful for pull/observation paths; it must not bypass this gate.
-    if (pfrom.GetVerifiedProRegTxHash().IsNull()) {
+    // Read once: the same value keys the retention quota below
+    const uint256 sender_protx = pfrom.GetVerifiedProRegTxHash();
+    if (sender_protx.IsNull()) {
         return MisbehavingError{10, "DKG message from non-verified peer"};
     }
 
@@ -277,7 +279,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     }
 
     WITH_LOCK(cs_indexedQuorumsCache, indexedQuorumsCache[llmqType].insert(quorumHash, quorumIndex));
-    return Assert(dkgSessionHandlers.at({llmqType, quorumIndex}))->ProcessMessage(pfrom.GetId(), msg_type, vRecv);
+    return Assert(dkgSessionHandlers.at({llmqType, quorumIndex}))->ProcessMessage(pfrom.GetId(), sender_protx, msg_type, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
