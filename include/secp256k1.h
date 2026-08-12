@@ -101,15 +101,6 @@ typedef int (*secp256k1_nonce_function)(
     unsigned int attempt
 );
 
-# if !defined(SECP256K1_GNUC_PREREQ)
-#  if defined(__GNUC__)&&defined(__GNUC_MINOR__)
-#   define SECP256K1_GNUC_PREREQ(_maj,_min) \
- ((__GNUC__<<16)+__GNUC_MINOR__>=((_maj)<<16)+(_min))
-#  else
-#   define SECP256K1_GNUC_PREREQ(_maj,_min) 0
-#  endif
-# endif
-
 /*  When this header is used at build-time the SECP256K1_BUILD define needs to be set
  *  to correctly setup export attributes and nullness checks.  This is normally done
  *  by secp256k1.c but to guard against this header being included before secp256k1.c
@@ -178,12 +169,12 @@ typedef int (*secp256k1_nonce_function)(
 /* Warning attributes
  * NONNULL is not used if SECP256K1_BUILD is set to avoid the compiler optimizing out
  * some paranoid null checks. */
-# if defined(__GNUC__) && SECP256K1_GNUC_PREREQ(3, 4)
+# if defined(__GNUC__)
 #  define SECP256K1_WARN_UNUSED_RESULT __attribute__ ((__warn_unused_result__))
 # else
 #  define SECP256K1_WARN_UNUSED_RESULT
 # endif
-# if !defined(SECP256K1_BUILD) && defined(__GNUC__) && SECP256K1_GNUC_PREREQ(3, 4)
+# if !defined(SECP256K1_BUILD) && defined(__GNUC__)
 #  define SECP256K1_ARG_NONNULL(_x)  __attribute__ ((__nonnull__(_x)))
 # else
 #  define SECP256K1_ARG_NONNULL(_x)
@@ -244,10 +235,6 @@ typedef int (*secp256k1_nonce_function)(
  *  It is highly recommended to call secp256k1_selftest before using this context.
  */
 SECP256K1_API const secp256k1_context * const secp256k1_context_static;
-
-/** Deprecated alias for secp256k1_context_static. */
-SECP256K1_API const secp256k1_context * const secp256k1_context_no_precomp
-SECP256K1_DEPRECATED("Use secp256k1_context_static instead");
 
 /** Perform basic self tests (to be used in conjunction with secp256k1_context_static)
  *
@@ -426,7 +413,7 @@ typedef void (*secp256k1_sha256_compression_function)(
 /**
  * Set a callback function to override the internal SHA256 compression function.
  *
- * This installs a function to replace the built-in block-compression
+ * This installs a callback to replace the built-in block-compression
  * step used by the library's internal SHA256 implementation.
  * The provided callback must exactly implement the effect of n_blocks
  * repeated applications of the SHA256 compression function.
@@ -435,6 +422,21 @@ typedef void (*secp256k1_sha256_compression_function)(
  * SHA256 compression step through a hardware-accelerated or otherwise
  * specialized implementation. It is NOT meant for replacing SHA256
  * with a different hash function.
+ *
+ * Since auxiliary functions exposed by the library via a function
+ * pointer such as secp256k1_nonce_function_default do not take a
+ * context object, they will not use the callback when called directly
+ * from user code. (But they will use the callback when called from
+ * other library functions that do take a context object, e.g., when
+ * noncefp==NULL or noncefp==secp256k1_nonce_function_default is passed
+ * as an argument to secp256k1_ecdsa_sign.)
+ *
+ * Note: The provided function is tested against a set of known SHA256
+ * digests; invokes the context's illegal callback on any mismatch
+ * (which aborts by default), in order to catch basic misbehavior early.
+ * It takes well under 2.5 ms on a desktop machine.
+ * This is NOT a substitute for having proper test coverage of the
+ * supplied function outside this library.
  *
  * Args:    ctx:             pointer to a context object.
  * In:      fn_compression:  pointer to a function implementing the compression function;

@@ -137,6 +137,71 @@ static void secp256k1_sha256_transform(uint32_t *state, const unsigned char *blo
     }
 }
 
+/* Perform a smoke test on a supplied SHA256 compression function. */
+static int secp256k1_sha256_smoke_test(const secp256k1_sha256_compression_function fn_compression) {
+    secp256k1_hash_ctx ctx;
+    secp256k1_sha256 sha_msg, sha_accum;
+    unsigned char out[32];
+    size_t i, j;
+
+    /* SHA256 works on 64 byte blocks, secp256k1_sha256_write gives as many blocks
+     * at once to compression, so the count is what varies here. A SIMD implementation
+     * typically hashes four or eight at a time, then any left over one by one.
+     * These lengths cover every number from 1 to 9, which includes counts that
+     * divide evenly and counts leaving one, two or three over. */
+    static const size_t msg_lens[] = {
+        0, 1, 28,               /* Shorter than a block, so padding makes up the rest */
+        55, 56,                 /* Final 0x80 and 8 byte length fit in the last block, and don't */
+        64, 128, 192, 256, 320, /* 1 to 5 blocks */
+        384, 448, 512, 576      /* 6 to 9 blocks */
+    };
+    unsigned char msg[640]; /* Longest message, plus 64 for the shifted start */
+
+    /* Accumulated digest of every message, hashed with the built-in secp256k1_sha256_transform.
+     * Note: To regenerate set 'ctx.fn_sha256_compression = secp256k1_sha256_transform' below
+     * and print the sha_accum digest. */
+    static const unsigned char accum_expected[32] = {
+        0x22, 0x8E, 0x6A, 0x1F, 0x78, 0x02, 0x1B, 0xCF,
+        0x4E, 0xF4, 0xEA, 0xB3, 0x8A, 0x40, 0x69, 0xBF,
+        0x8D, 0xF3, 0x72, 0xAB, 0xE2, 0x11, 0x93, 0xA6,
+        0xE6, 0x46, 0x98, 0xBF, 0xD4, 0x3D, 0x19, 0x84,
+    };
+    /* The purpose of this VERIFY_CHECK is to make anyone aware that they
+     * should also change the size of msg_buf when changing the length of the
+     * longest message. */
+    VERIFY_CHECK(msg_lens[ARRAY_SIZE(msg_lens) - 1] == 576);
+
+    VERIFY_CHECK(fn_compression != NULL);
+    secp256k1_hash_ctx_init(&ctx);
+    ctx.fn_sha256_compression = fn_compression;
+    secp256k1_sha256_initialize(&sha_accum);
+
+    /* No two blocks of a message are equal, so a function that doesn't advance the block
+     * pointer gives a different digest. 251 is prime, so its repeats only line up with
+     * block starts every 251 blocks; wrapping at 256 would do so every 4. */
+    for (i = 0; i < sizeof(msg); i++) {
+        msg[i] = (unsigned char)(i % 251);
+    }
+
+    /* Each round starts one byte further along to check different alignments,
+     * secp256k1_sha256_write invokes compression directly on input >= 64 bytes */
+    for (i = 0; i < 64; i++) {
+        unsigned char *m = msg + i;
+        m[0] ^= 0xff; /* Changes the first byte, so every state after it changes too */
+        for (j = 0; j < ARRAY_SIZE(msg_lens); j++) {
+            secp256k1_sha256_initialize(&sha_msg);
+            secp256k1_sha256_write(&ctx, &sha_msg, m, msg_lens[j]);
+            secp256k1_sha256_finalize(&ctx, &sha_msg, out);
+            secp256k1_sha256_write(&ctx, &sha_accum, out, 32);
+        }
+        m[0] ^= 0xff; /* Reset first byte */
+    }
+
+    /* Compare against pre-computed accumulated digest */
+    secp256k1_sha256_finalize(&ctx, &sha_accum, out);
+    return secp256k1_memcmp_var(accum_expected, out, 32) == 0;
+}
+
 static void secp256k1_hash_ctx_init(secp256k1_hash_ctx *hash_ctx) {
     VERIFY_CHECK(hash_ctx != NULL);
     hash_ctx->fn_sha256_compression = secp256k1_sha256_transform;

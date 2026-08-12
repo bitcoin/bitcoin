@@ -295,7 +295,7 @@ int main(void) {
             NULL, 0
         );
         if (!ret) {
-            printf("Something went wrong, a recipient provided an invalid address.\n");
+            printf("Something went wrong, group limit exceeded or input secret keys sum to zero.\n");
             return EXIT_FAILURE;
         }
         printf("Alice created the following outputs for Bob and Carol:\n");

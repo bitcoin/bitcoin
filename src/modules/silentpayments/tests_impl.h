@@ -138,7 +138,7 @@ static void test_recipient_sort_helper(unsigned char (*sp_addresses[3])[2][33], 
     );
     CHECK(ret == 1);
     for (i = 0; i < 3; i++) {
-        secp256k1_xonly_pubkey_serialize(CTX, xonly_ser, &generated_outputs[i]);
+        CHECK(secp256k1_xonly_pubkey_serialize(CTX, xonly_ser, &generated_outputs[i]) == 1);
         CHECK(secp256k1_memcmp_var(xonly_ser, (*sp_outputs[i]), 32) == 0);
     }
 }

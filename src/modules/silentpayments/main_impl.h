@@ -588,8 +588,11 @@ static int secp256k1_silentpayments_check_label_batch(
     *label_tweak = NULL;
     secp256k1_ge_set_all_gej_var(label_candidates_ge, label_candidates_gej, 2 * n_batch);
     for (i = 0; i < 2 * n_batch; i++) {
-        /* Serialize only non-infinity points because candidates are collected only when
-         * tx_output != unlabeled_output_xonly. */
+        /* Note: serialize will only fail if a label candidate is the point at infinity, but we know
+         * this cannot happen since we only collect candidates if tx_output != unlabeled_output. Thus,
+         * we know that label_candidate = tx_output - unlabeled_output cannot be the point at infinity.
+         */
+        VERIFY_CHECK(!secp256k1_ge_is_infinity(&label_candidates_ge[i]));
         secp256k1_eckey_pubkey_serialize33(&label_candidates_ge[i], label33);
         *label_tweak = label_lookup(label33, label_context);
         if (*label_tweak != NULL) {
@@ -648,6 +651,8 @@ int secp256k1_silentpayments_recipient_scan_outputs(
     }
     secp256k1_ge_from_bytes(&prevouts_pubkey_sum_ge, &prevouts_summary->data[5]);
     combined = (int)prevouts_summary->data[4];
+    /* Note that the "combined" flag can currently only be 0, as we only have support for full nodes, i.e.,
+     * the following branch is always taken. "combined" can also be 1 once we add light client support. */
     if (!combined) {
         secp256k1_scalar input_hash_scalar;
         secp256k1_scalar_set_b32(&input_hash_scalar, &prevouts_summary->data[5 + 64], NULL);
