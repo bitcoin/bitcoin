@@ -103,6 +103,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
+#include <poa/poa.h>
+#include <p2p/routing.h>
 
 #include <algorithm>
 #include <any>
@@ -1391,6 +1393,14 @@ static ChainstateLoadResult InitAndLoadChainstate(
         return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated(strprintf("Failed to initialize ChainstateManager: %s", e.what()))};
     }
     ChainstateManager& chainman = *node.chainman;
+
+    // Initialize PoA module (prototype) if enabled via -enable-poa
+    poa::InitPoA();
+    if (poa::IsPoAEnabled()) {
+        // Initialize experimental P2P routing prototype when PoA is active
+        p2p::InitRouting();
+    }
+
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // This is defined and set here instead of inline in validation.h to avoid a hard
