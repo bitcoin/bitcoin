@@ -31,6 +31,14 @@
 
 using node::NodeContext;
 
+void GrindBlock(CBlockHeader& block, const Consensus::Params& consensus)
+{
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) {
+        ++block.nNonce;
+        assert(block.nNonce != 0);
+    }
+}
+
 COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
 {
     const auto dest = DecodeDestination(address);
@@ -67,10 +75,7 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
         block.nBits = params.GenesisBlock().nBits;
         block.nNonce = 0;
 
-        while (!CheckProofOfWork(block.GetHash(), block.nBits, params.GetConsensus())) {
-            ++block.nNonce;
-            assert(block.nNonce);
-        }
+        GrindBlock(block, params.GetConsensus());
     }
     return ret;
 }
@@ -101,10 +106,7 @@ protected:
 
 COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
 {
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
-    }
+    GrindBlock(*block, Params().GetConsensus());
 
     return ProcessBlock(node, block);
 }

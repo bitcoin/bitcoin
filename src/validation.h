@@ -555,8 +555,8 @@ class Chainstate
 protected:
     /**
      * The ChainState Mutex
-     * A lock that must be held when modifying this ChainState - held in ActivateBestChain() and
-     * InvalidateBlock()
+     * A lock that must be held when modifying this ChainState - held in
+     * ActivateBestChain(), PreciousBlock(), and InvalidateBlock()
      */
     Mutex m_chainstate_mutex;
 
@@ -574,6 +574,13 @@ protected:
     mutable const CBlockIndex* m_cached_target_block GUARDED_BY(::cs_main){nullptr};
 
     std::optional<const char*> m_last_script_check_reason_logged GUARDED_BY(::cs_main){};
+
+    //! Internal helper for callers that already hold m_chainstate_mutex.
+    bool ActivateBestChain_(
+        BlockValidationState& state,
+        std::shared_ptr<const CBlock> pblock)
+        EXCLUSIVE_LOCKS_REQUIRED(m_chainstate_mutex)
+        LOCKS_EXCLUDED(::cs_main);
 
 public:
     //! Reference to a BlockManager instance which itself is shared across all
@@ -790,9 +797,13 @@ public:
     // Manual block validity manipulation:
     /** Mark a block as precious and reorganize.
      *
+     * @param[out] connected Whether the block is in the active chain when the
+     *                       operation completes, captured before releasing
+     *                       m_chainstate_mutex.
+     *
      * May not be called in a validationinterface callback.
      */
-    bool PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+    bool PreciousBlock(BlockValidationState& state, CBlockIndex* pindex, bool& connected)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
 

@@ -38,7 +38,6 @@
 #include <noui.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -54,6 +53,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <test/util/coverage.h>
+#include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
@@ -461,7 +461,7 @@ CBlock TestChain100Setup::CreateBlock(
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    GrindBlock(block, m_node.chainman->GetConsensus());
 
     return block;
 }

@@ -7,8 +7,8 @@
 #include <consensus/params.h>
 #include <headerssync.h>
 #include <net_processing.h>
-#include <pow.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -92,8 +92,6 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
     }
 
 private:
-    /** Search for a nonce to meet (regtest) proof of work */
-    void FindProofOfWork(CBlockHeader& starting_header);
     /**
      * Generate headers in a chain that build off a given starting hash, using
      * the given nVersion, advancing time by 1 second from the starting
@@ -103,13 +101,6 @@ private:
             uint256 prev_hash, int32_t nVersion, uint32_t prev_time,
             const uint256& merkle_root, uint32_t nBits);
 };
-
-void HeadersGeneratorSetup::FindProofOfWork(CBlockHeader& starting_header)
-{
-    while (!CheckProofOfWork(starting_header.GetHash(), starting_header.nBits, Params().GetConsensus())) {
-        ++starting_header.nNonce;
-    }
-}
 
 std::vector<CBlockHeader> HeadersGeneratorSetup::GenerateHeaders(
         const size_t count, uint256 prev_hash, const int32_t nVersion,
@@ -123,7 +114,7 @@ std::vector<CBlockHeader> HeadersGeneratorSetup::GenerateHeaders(
         next_header.nTime = ++prev_time;
         next_header.nBits = nBits;
 
-        FindProofOfWork(next_header);
+        GrindBlock(next_header, Params().GetConsensus());
         prev_hash = next_header.GetHash();
     }
     return headers;
