@@ -1,0 +1,32 @@
+QXcbAtom: add missing <cstdlib> #include
+
+Clang 21 complained about free() being an undefined identifier.
+
+See: https://codereview.qt-project.org/c/qt/qtbase/+/686891
+
+--- a/qtbase/src/plugins/platforms/xcb/qxcbatom.cpp
++++ b/qtbase/src/plugins/platforms/xcb/qxcbatom.cpp
+@@ -7,6 +7,7 @@
+ #include <string.h>
+ 
+ #include <algorithm>
++#include <cstdlib>
+ 
+ static const char *xcb_atomnames = {
+     // window-manager <-> client protocols
+
+
+syncqt.cpp: Include <algorithm> for std::transform
+
+See: https://codereview.qt-project.org/c/qt/qtbase/+/673183
+
+--- a/qtbase/src/tools/syncqt/main.cpp
++++ b/qtbase/src/tools/syncqt/main.cpp
+@@ -15,6 +15,7 @@
+  * pre-defined list of header files.
+  */
+ 
++#include <algorithm>
+ #include <iostream>
+ #include <fstream>
+ #include <string>

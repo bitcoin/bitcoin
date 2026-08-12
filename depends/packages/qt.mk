@@ -28,6 +28,7 @@ $(package)_patches += fix-macos26-qyield.patch
 $(package)_patches += fix-qbytearray-include.patch
 $(package)_patches += fix_openbsd_network_kernel.patch
 $(package)_patches += fix_openbsd_plugin_qelfparser.patch
+$(package)_patches += fix_missed_headers.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
 $(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
@@ -293,7 +294,8 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix-macos26-qyield.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_openbsd_network_kernel.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_plugin_qelfparser.patch
+  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_plugin_qelfparser.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_missed_headers.patch
 endef
 ifeq ($(host),$(build))
   $(package)_preprocess_cmds += && patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
