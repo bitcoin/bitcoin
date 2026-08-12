@@ -14,7 +14,6 @@
 #include <mp/test/foo.capnp.proxy.h>
 #include <mp/util.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 #include <array>
 #include <chrono>
@@ -88,7 +87,7 @@ KJ_TEST("ConnectStream throws when the socket is already disconnected")
     TestSetup setup;
     auto [client_fd, server_fd] = SocketPair();
 
-    KJ_SYSCALL(close(server_fd));
+    CloseSocket(server_fd);
 
     try {
         auto init = ConnectStream<messages::FooInit>(*setup.m_loop, MakeStream(*setup.m_loop, client_fd));
@@ -106,7 +105,7 @@ KJ_TEST("ConnectStream defers disconnect failure to the first IPC request for in
     TestSetup setup;
     auto [client_fd, server_fd] = SocketPair();
 
-    KJ_SYSCALL(close(server_fd));
+    CloseSocket(server_fd);
 
     // Without a construct() method no IPC call is made during client
     // creation, so ConnectStream succeeds even though the peer is gone.
@@ -144,7 +143,7 @@ KJ_TEST("ConnectStream handles a disconnect when no client calls are made")
     });
     auto [client_fd, server_fd] = SocketPair();
 
-    KJ_SYSCALL(close(server_fd));
+    CloseSocket(server_fd);
 
     auto foo = ConnectStream<messages::FooInterface>(*setup.m_loop, MakeStream(*setup.m_loop, client_fd));
 
@@ -163,7 +162,7 @@ KJ_TEST("ConnectStream throws when the socket disconnects after receiving data")
         char buf[128];
 
         recv(server_fd, buf, sizeof(buf), 0);
-        KJ_SYSCALL(close(server_fd));
+        CloseSocket(server_fd);
     });
 
     try {
@@ -181,19 +180,19 @@ KJ_TEST("ConnectStream throws when a connection accepted from a listener disconn
 {
     UnixListener listener;
     TestSetup setup;
-    int client_fd = listener.MakeConnectedSocket();
-    int server_fd = listener.release();
+    SocketId client_fd = listener.MakeConnectedSocket();
+    SocketId server_fd = listener.release();
 
     std::thread server_thread([&]() {
         char buf[128];
 
-        int connection_fd = accept(server_fd, nullptr, nullptr);
+        SocketId connection_fd = accept(server_fd, nullptr, nullptr);
 
-        if (connection_fd >= 0) {
+        if (connection_fd != SocketError) {
             recv(connection_fd, buf, sizeof(buf), 0);
-            KJ_SYSCALL(close(connection_fd));
+            CloseSocket(connection_fd);
         }
-        KJ_SYSCALL(close(server_fd));
+        CloseSocket(server_fd);
     });
 
     try {
