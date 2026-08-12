@@ -26,7 +26,6 @@
 #include <optional>
 #include <string>
 #include <thread>
-#include <unistd.h>
 
 namespace mp {
 namespace test {
@@ -40,7 +39,7 @@ constexpr auto FAILURE_TIMEOUT = std::chrono::seconds{30};
 class ClientSetup
 {
 public:
-    explicit ClientSetup(int fd)
+    explicit ClientSetup(SocketId fd)
         : thread([this, fd] {
               EventLoop loop("mptest-client", DefaultLogHandler);
               client_promise.set_value(ConnectStream<messages::FooInterface>(loop, MakeStream(loop, fd)));
@@ -241,8 +240,8 @@ KJ_TEST("ListenConnections handles a client that disconnects before being accept
 
     // This is racy, if the close does not happen before accept(),
     // the connection is accepted normally.
-    int fd = server.listener.MakeConnectedSocket();
-    KJ_SYSCALL(close(fd));
+    SocketId fd = server.listener.MakeConnectedSocket();
+    CloseSocket(fd);
 
     // Wait for the connection to either be accepted and disconnected, or fail
     // to be accepted and log the error above.
