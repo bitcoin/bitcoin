@@ -6,7 +6,6 @@
 Test how locally submitted transactions are sent to the network when private broadcast is used.
 """
 
-import re
 import time
 import threading
 
@@ -68,33 +67,32 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.trigger_no_relay_peer = False
         self.no_relay_peer = None
 
-        def find_connection_type_in_debug_log(to_addr, to_port):
-            """
-            Scan the debug log of tx_originator for a connection attempt to to_addr:to_port.
-            Return the connection type (outbound-full-relay, private-broadcast, etc) or
-            None if there is no connection attempt to to_addr:to_port.
-            """
-            with open(self.tx_originator_debug_log_path, mode="r", encoding="utf-8") as debug_log:
-                for line in debug_log.readlines():
-                    match = re.match(f".*trying v. connection \\((.+)\\) to \\[?{to_addr}]?:{to_port},.*", line)
-                    if match:
-                        return match.group(1)
-            return None
-
-        def destinations_factory(requested_to_addr, requested_to_port):
+        def destinations_factory(requested_to_addr, requested_to_port, proxy_client):
             """
             Instruct the SOCKS5 proxy to redirect connections:
             * The first automatic outbound connection -> P2PDataStore
             * The first private broadcast connection -> nodes[1]
             * Anything else -> P2PInterface
+
+            proxy_client is the client's socket address as seen by the proxy (host:port),
+            equal to the node's addrbind for this connection.
             """
             conn_type = None
-            def found_connection_in_debug_log():
-                nonlocal conn_type
-                conn_type = find_connection_type_in_debug_log(requested_to_addr, requested_to_port)
-                return conn_type is not None
+            # SOCKS handlers run in separate threads, so each needs its own RPC connection.
+            rpc = self.nodes[0].create_new_rpc_connection()
 
-            self.wait_until(found_connection_in_debug_log)
+            def connection_type_found():
+                nonlocal conn_type
+                # The proxy has already replied SUCCESS to the SOCKS5 request, so the node
+                # has finished ConnectNode and registered the peer (or is about to).
+                # The proxy client address equals the node's addrbind for this connection.
+                for peer in rpc.getpeerinfo():
+                    if peer.get("addrbind") == proxy_client:
+                        conn_type = peer["connection_type"]
+                        return True
+                return False
+
+            self.wait_until(connection_type_found)
 
             with self.destinations_lock:
                 i = len(self.destinations)
@@ -233,7 +231,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
     def run_test(self):
         tx_originator = self.nodes[0]
-        self.tx_originator_debug_log_path = tx_originator.debug_log_path
         tx_receiver = self.nodes[1]
         far_observer = tx_receiver.add_p2p_connection(P2PInterface())
 
