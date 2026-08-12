@@ -27,6 +27,9 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${build_STRIP+build_STRIP="$build_STRIP"} \
                                    NO_QT=1
 
+# LDFLAGS
+HOST_LDFLAGS="-Wl,-fatal_warnings"
+
 mkdir -p "$DISTSRC"
 (
     cd "$DISTSRC"
@@ -35,7 +38,8 @@ mkdir -p "$DISTSRC"
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     # Configure this DISTSRC for $HOST
-    env cmake -S . -B build \
+    env LDFLAGS="${HOST_LDFLAGS}" \
+    cmake -S . -B build \
           --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
           -DBUILD_BENCH=OFF \
           -DBUILD_FUZZ_BINARY=OFF \
