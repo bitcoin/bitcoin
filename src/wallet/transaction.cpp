@@ -10,7 +10,7 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
+bool CWalletTx::IsMalleation(const CWalletTx& _tx) const
 {
     return GetTx()->Equals(*_tx.GetTx(), {.include_script_sig = false, .include_witness_data = false});
 }

@@ -772,7 +772,7 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
     std::set<CWalletTx*, WalletTxOrderComparator> txs;
     for (const Txid& txid : candidate_malleated_txids) {
         CWalletTx* candidate = &mapWallet.find(txid)->second;
-        if (!wtx.IsEquivalentTo(*candidate)) {
+        if (!wtx.IsMalleation(*candidate)) {
             continue;
         }
         txs.insert(candidate);
