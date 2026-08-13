@@ -7,6 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
 )
 from test_framework.messages import (
     COIN,
@@ -143,6 +144,41 @@ class TxnMallTest(BitcoinTestFramework):
         if (self.options.mine_block):
             expected -= 50
         assert_equal(self.nodes[0].getbalance(), expected)
+
+        self.test_malleated_metadata_synced()
+
+    def malleate_tx(self, wallet, txid):
+        rawtx = wallet.getrawtransaction(txid)
+        tx = tx_from_hex(rawtx)
+        for txin in tx.vin:
+            txin.scriptSig = b""
+        for wit in tx.wit.vtxinwit:
+            wit.scriptWitness.stack.clear()
+        unsigned_tx = tx.serialize_without_witness().hex()
+
+        # malleate the tx by signing with a different sighash
+        malleated_tx = wallet.signrawtransactionwithwallet(hexstring=unsigned_tx, sighashtype="ALL|ANYONECANPAY")["hex"]
+        malleated_txid = wallet.decoderawtransaction(malleated_tx)["txid"]
+        assert_not_equal(malleated_txid, txid)
+        return malleated_tx, malleated_txid
+
+
+    def test_malleated_metadata_synced(self):
+        self.log.info("Test malleated tx has copied user provided metadata")
+        self.nodes[0].createwallet("metadata_clone")
+        wallet = self.nodes[0].get_wallet_rpc("metadata_clone")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.sendtoaddress(wallet.getnewaddress(address_type="legacy"), 1)
+
+        self.generate(self.nodes[0], 1)
+
+        original_txid = wallet.sendtoaddress(def_wallet.getnewaddress(), 0.5, comment="testing", fee_rate=1)
+        malleated_tx, malleated_txid = self.malleate_tx(wallet, original_txid)
+
+        self.generateblock(self.nodes[0], def_wallet.getnewaddress(), [malleated_tx])
+
+        assert_equal(wallet.gettransaction(malleated_txid)["comment"], "testing")
 
 
 if __name__ == '__main__':
