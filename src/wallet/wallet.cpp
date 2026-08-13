@@ -721,7 +721,7 @@ void CWallet::Close()
     GetDatabase().Close();
 }
 
-void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
+void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx, bool sync_from)
 {
     if (wtx.IsCoinBase()) {
         // Coinbases cannot be malleated
@@ -768,6 +768,11 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
         return;
     }
 
+    // If sync_from, remove wtx from the candidates
+    if (sync_from) {
+        candidate_malleated_txids.erase(wtx.GetHash());
+    }
+
     // Get the actual transactions, sorted by insertion order
     std::set<CWalletTx*, WalletTxOrderComparator> txs;
     for (const Txid& txid : candidate_malleated_txids) {
@@ -778,11 +783,16 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
         txs.insert(candidate);
     }
 
-    // We want all the malleated wallet transactions to have the same metadata as
-    // the oldest. txs is sorted by nOrderPos already, so copy from the first one.
     auto it = txs.begin();
-    const CWalletTx* copy_from = *it;
-    it = std::next(it);
+    const CWalletTx* copy_from;
+    if (sync_from) {
+        copy_from = &wtx;
+    } else {
+        // When not sync_from, we want all the malleated wallet transactions to have the same metadata as
+        // the oldest. txs is sorted by nOrderPos already, so copy from the first one.
+        copy_from = *it;
+        it = std::next(it);
+    }
 
     for (; it != txs.end(); it = std::next(it)) {
         CWalletTx* copy_to = *it;
@@ -1030,6 +1040,7 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     Assert(!wtx.m_replaced_by_txid);
 
     wtx.m_replaced_by_txid = newHash;
+    SyncMalleatedTxMetadata(wtx, /*sync_from=*/true);
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
