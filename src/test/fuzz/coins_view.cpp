@@ -16,6 +16,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/coins.h>
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <util/hasher.h>
@@ -35,14 +36,6 @@
 #include <vector>
 
 namespace {
-const Coin EMPTY_COIN{};
-
-bool operator==(const Coin& a, const Coin& b)
-{
-    if (a.IsSpent() && b.IsSpent()) return true;
-    return a.fCoinBase == b.fCoinBase && a.nHeight == b.nHeight && a.out == b.out;
-}
-
 /**
  * MutationGuardCoinsViewCache asserts that nothing mutates cacheCoins until
  * BatchWrite is called. It keeps a snapshot of the cacheCoins state, which it
@@ -370,7 +363,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
 
     {
         const Coin& coin_using_access_coin = coins_view_cache.AccessCoin(random_out_point);
-        const bool exists_using_access_coin = !(coin_using_access_coin == EMPTY_COIN);
+        const bool exists_using_access_coin = !coin_using_access_coin.IsSpent();
         const bool exists_using_have_coin = coins_view_cache.HaveCoin(random_out_point);
         const bool exists_using_have_coin_in_cache = coins_view_cache.HaveCoinInCache(random_out_point);
         if (auto coin{coins_view_cache.GetCoin(random_out_point)}) {

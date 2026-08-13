@@ -5,7 +5,12 @@
 #ifndef BITCOIN_TEST_UTIL_COINS_H
 #define BITCOIN_TEST_UTIL_COINS_H
 
+#include <coins.h>
+#include <crypto/hex_base.h>
 #include <primitives/transaction.h>
+#include <tinyformat.h>
+
+#include <ostream>
 
 class CCoinsViewCache;
 class FastRandomContext;
@@ -16,5 +21,18 @@ class FastRandomContext;
  * @returns the COutPoint of the created coin.
  */
 COutPoint AddTestCoin(FastRandomContext& rng, CCoinsViewCache& coins_view);
+
+//! Strict equality, including fields of spent coins
+inline bool operator==(const Coin& a, const Coin& b)
+{
+    return a.fCoinBase == b.fCoinBase && a.nHeight == b.nHeight && a.out == b.out;
+}
+
+//! Printed when a coin comparison fails
+inline std::ostream& operator<<(std::ostream& os, const Coin& coin)
+{
+    return os << strprintf("Coin(spent=%d, coinbase=%d, height=%d, value=%d, scriptPubKey=%s)",
+                           coin.IsSpent(), coin.fCoinBase, coin.nHeight, coin.out.nValue, HexStr(coin.out.scriptPubKey));
+}
 
 #endif // BITCOIN_TEST_UTIL_COINS_H
