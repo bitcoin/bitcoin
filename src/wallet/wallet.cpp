@@ -753,7 +753,7 @@ std::set<CWalletTx*, WalletTxOrderComparator> CWallet::GetMalleatedVariants(cons
         if (!Assume(entry != mapWallet.end())) continue; // sanity-check: mapTxSpends has txs that are in mapWallet
         const bool is_self = &entry->second == &wtx;
         found_self |= is_self;
-        if (is_self || wtx.IsEquivalentTo(entry->second)) {
+        if (is_self || wtx.IsMalleation(entry->second)) {
             Assume(txs.insert(&entry->second).second);
         }
     }
