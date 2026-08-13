@@ -59,7 +59,7 @@ public:
                boolval == rhs.boolval &&
                stringval == rhs.stringval &&
                strcmp(charstrval, rhs.charstrval) == 0 &&
-               *txval == *rhs.txval;
+               txval->Equals(*rhs.txval);
     }
 };
 
