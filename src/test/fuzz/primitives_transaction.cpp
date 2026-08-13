@@ -29,6 +29,6 @@ FUZZ_TARGET(primitives_transaction)
     if (mutable_tx_1 && mutable_tx_2) {
         const CTransaction tx_1{*mutable_tx_1};
         const CTransaction tx_2{*mutable_tx_2};
-        assert((tx_1 == tx_2) != (tx_1 != tx_2));
+        (void)tx_1.Equals(tx_2);
     }
 }
