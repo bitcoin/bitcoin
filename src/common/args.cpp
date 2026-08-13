@@ -188,20 +188,28 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key.starts_with("-psn_")) continue;
 #endif
 
-        if (key == "-") break; //bitcoin-tx using stdin
+        bool options_ended{false};
+        if (key == "--") {
+            options_ended = true;
+            if (++i >= argc) break;
+            key = argv[i];
+        }
+        if (!options_ended && key == "-") break; //bitcoin-tx using stdin
         std::optional<std::string> val;
-        size_t is_index = key.find('=');
-        if (is_index != std::string::npos) {
-            val = key.substr(is_index + 1);
-            key.erase(is_index);
+        if (!options_ended) {
+            size_t is_index = key.find('=');
+            if (is_index != std::string::npos) {
+                val = key.substr(is_index + 1);
+                key.erase(is_index);
+            }
         }
 #ifdef WIN32
         key = ToLower(key);
-        if (key[0] == '/')
+        if (!options_ended && key[0] == '/')
             key[0] = '-';
 #endif
 
-        if (key[0] != '-') {
+        if (options_ended || key[0] != '-') {
             if (!m_accept_any_command && m_command.empty()) {
                 // The first non-dash arg is a registered command
                 std::optional<unsigned int> flags = GetArgFlags_(key);
@@ -212,6 +220,10 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             }
             // Preserve unregistered commands verbatim; key may have been normalized above.
             m_command.push_back(m_accept_any_command ? std::string{argv[i]} : key);
+            if (options_ended) {
+                while (++i < argc) m_command.emplace_back(argv[i]);
+                break;
+            }
             while (++i < argc) {
                 std::string cmd_arg(argv[i]);
                 // "--" ends option processing; all subsequent args are positional

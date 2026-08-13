@@ -826,6 +826,38 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters_gnu_style)
     }
 #endif
 
+    // "--" also ends option processing before the command.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "--", "cmd", "-not-an-option", "arg2"};
+        BOOST_CHECK(test.ParseParameters(5, argv, error));
+        BOOST_CHECK(!test.IsArgSet("-opt"));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK_EQUAL(cmd->command, "cmd");
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 2U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-not-an-option");
+        BOOST_CHECK_EQUAL(cmd->args[1], "arg2");
+    }
+
+    // Options before "--" are parsed; the first positional argument after
+    // it may begin with a dash.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        std::string error;
+        const char* argv[] = {"x", "-opt", "--", "-1"};
+        BOOST_CHECK(test.ParseParameters(4, argv, error));
+        BOOST_CHECK(test.IsArgSet("-opt"));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK(cmd->command.empty());
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 1U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-1");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(util_AddCommand_clearargs_replaces_command_options)
