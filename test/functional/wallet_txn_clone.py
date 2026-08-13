@@ -146,6 +146,7 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), expected)
 
         self.test_malleated_metadata_synced()
+        self.test_malleated_rbf_metadata_synced()
 
     def malleate_tx(self, wallet, txid):
         rawtx = wallet.getrawtransaction(txid)
@@ -179,6 +180,26 @@ class TxnMallTest(BitcoinTestFramework):
         self.generateblock(self.nodes[0], def_wallet.getnewaddress(), [malleated_tx])
 
         assert_equal(wallet.gettransaction(malleated_txid)["comment"], "testing")
+
+    def test_malleated_rbf_metadata_synced(self):
+        self.log.info("Test malleation of a rbf has copied user provided and replacement metadata")
+        self.nodes[0].createwallet("rbf_metadata_clone")
+        wallet = self.nodes[0].get_wallet_rpc("rbf_metadata_clone")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.sendtoaddress(wallet.getnewaddress(address_type="legacy"), 1)
+
+        self.generate(self.nodes[0], 1)
+
+        orig_txid = wallet.sendtoaddress(def_wallet.getnewaddress(), 0.9999, comment="testing")
+        txid = wallet.bumpfee(orig_txid)["txid"]
+        malleated_tx, malleated_txid = self.malleate_tx(wallet, txid)
+
+        self.generateblock(self.nodes[0], def_wallet.getnewaddress(), [malleated_tx])
+
+        txinfo = wallet.gettransaction(malleated_txid)
+        assert_equal(txinfo["comment"], "testing")
+        assert_equal(txinfo["replaces_txid"], orig_txid)
 
 
 if __name__ == '__main__':
