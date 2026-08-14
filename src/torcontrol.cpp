@@ -436,9 +436,10 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
     // NOTE: We can only get here if -onion is unset
     std::string socks_location;
     if (reply.code == TOR_REPLY_OK) {
+        static constexpr std::string_view SOCKS_PREFIX{"net/listeners/socks="};
         for (const auto& line : reply.lines) {
-            if (line.starts_with("net/listeners/socks=")) {
-                const std::string port_list_str = line.substr(20);
+            if (line.starts_with(SOCKS_PREFIX)) {
+                const std::string port_list_str = line.substr(SOCKS_PREFIX.size());
                 std::vector<std::string> port_list = SplitString(port_list_str, ' ');
 
                 for (auto& portstr : port_list) {
