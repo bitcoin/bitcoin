@@ -24,6 +24,7 @@
 #include <test/util/validation.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -1696,6 +1697,207 @@ BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
         g_reachable_nets.Add(net);
     }
     fDiscover = discover_orig;
+}
+
+BOOST_AUTO_TEST_CASE(outbound_bind_address_selection)
+{
+    const uint64_t seed{0};
+    auto connman = std::make_unique<ConnmanTestMsg>(seed, seed, *m_node.addrman, *m_node.netgroupman, Params());
+
+    CConnman::Options options;
+    options.m_msgproc = m_node.peerman.get();
+
+    const CNetAddr addr4{LookupHost("203.0.113.1", /*fAllowLookup=*/false).value()};
+    const CNetAddr addr6{LookupHost("2001:db8::1", /*fAllowLookup=*/false).value()};
+
+    // An address is stored per family; an unset family stays unset.
+    options.outbound_bind_v4 = addr4;
+    connman->Init(options);
+    BOOST_REQUIRE(connman->GetOutboundBindV4());
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV4()->ToStringAddr(), addr4.ToStringAddr());
+    BOOST_CHECK(!connman->GetOutboundBindV6());
+    // With the v6 family unset, an IPv6 target selects nothing.
+    BOOST_CHECK(!connman->SelectOutboundBindPublic(CService{LookupHost("2001:db8::3", /*fAllowLookup=*/false).value(), /*port=*/8333}));
+
+    // Setting the other family leaves the first family's stored address intact.
+    connman = std::make_unique<ConnmanTestMsg>(seed, seed, *m_node.addrman, *m_node.netgroupman, Params());
+    options.outbound_bind_v6 = addr6;
+    connman->Init(options);
+    BOOST_REQUIRE(connman->GetOutboundBindV4());
+    BOOST_REQUIRE(connman->GetOutboundBindV6());
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV6()->ToStringAddr(), addr6.ToStringAddr());
+
+    // SelectOutboundBind() picks the configured source by the target's family,
+    // and binds nothing for a non-clearnet (Tor/I2P/CJDNS) target.
+    const auto sel4{connman->SelectOutboundBindPublic(CService{LookupHost("198.51.100.1", /*fAllowLookup=*/false).value(), /*port=*/8333})};
+    BOOST_REQUIRE(sel4);
+    BOOST_CHECK_EQUAL(sel4->ToStringAddr(), addr4.ToStringAddr());
+    const auto sel6{connman->SelectOutboundBindPublic(CService{LookupHost("2001:db8::2", /*fAllowLookup=*/false).value(), /*port=*/8333})};
+    BOOST_REQUIRE(sel6);
+    BOOST_CHECK_EQUAL(sel6->ToStringAddr(), addr6.ToStringAddr());
+    const CService onion{LookupHost("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", /*fAllowLookup=*/false).value(), /*port=*/8333};
+    BOOST_CHECK(!connman->SelectOutboundBindPublic(onion));
+    CNetAddr i2p;
+    BOOST_REQUIRE(i2p.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"));
+    BOOST_CHECK(!connman->SelectOutboundBindPublic(CService{i2p, /*port=*/8333}));
+    // CJDNS resembles IPv6 (fc00::/8) but IsIPv6() is false for it, so it too
+    // selects nothing; guards against a byte-based family check that would bind
+    // a clearnet source to a socket routed through the CJDNS tunnel.
+    g_reachable_nets.Add(NET_CJDNS);
+    const CService cjdns{MaybeFlipIPv6toCJDNS(CService{LookupHost("fc00:3344:5566:7788:9900:aabb:ccdd:eeff", /*fAllowLookup=*/false).value(), /*port=*/8333})};
+    BOOST_REQUIRE(cjdns.IsCJDNS());
+    BOOST_CHECK(!connman->SelectOutboundBindPublic(cjdns));
+}
+
+BOOST_AUTO_TEST_CASE(outbound_bind_connect)
+{
+    // ConnectDirectly() must bind() the socket to the given source address
+    // before connecting, and must not bind() when no address is given.
+    class BindRecordingSock : public ZeroSock
+    {
+    public:
+        explicit BindRecordingSock(std::optional<CService>& bind_dest) : m_bind_dest{bind_dest} {}
+        int Bind(const sockaddr* addr, socklen_t len) const override
+        {
+            // SetSockAddr() accepts only the exact per-family sockaddr length,
+            // so a wrong len passed to bind() leaves m_bind_dest unset.
+            CService service;
+            if (service.SetSockAddr(addr, len)) m_bind_dest = service;
+            return 0;
+        }
+        // Override ZeroSock::operator=(Sock&&) to avoid -Woverloaded-virtual; unused.
+        BindRecordingSock& operator=(Sock&&) override
+        {
+            Assert(false);
+            return *this;
+        }
+
+    private:
+        std::optional<CService>& m_bind_dest;
+    };
+
+    // A mock whose Bind() fails, to drive the fail-closed path.
+    class FailBindSock : public ZeroSock
+    {
+    public:
+        explicit FailBindSock(bool& connect_called) : m_connect_called{connect_called} {}
+        int Bind(const sockaddr*, socklen_t) const override { return SOCKET_ERROR; }
+        int Connect(const sockaddr*, socklen_t) const override
+        {
+            m_connect_called = true;
+            return 0;
+        }
+        // Override ZeroSock::operator=(Sock&&) to avoid -Woverloaded-virtual; unused.
+        FailBindSock& operator=(Sock&&) override
+        {
+            Assert(false);
+            return *this;
+        }
+
+    private:
+        bool& m_connect_called;
+    };
+
+    // Restore CreateSock on any exit path, including a throwing BOOST_REQUIRE,
+    // so a failure here does not leak the mock into later tests.
+    struct SockRestore {
+        const decltype(CreateSock) orig{CreateSock};
+        ~SockRestore() { CreateSock = orig; }
+    } sock_restore;
+
+    std::optional<CService> bound;
+    CreateSock = [&bound](int, int, int) { return std::make_unique<BindRecordingSock>(bound); };
+
+    const CService dest{LookupNumeric("198.51.100.34", 8333)};
+    const CNetAddr src{LookupHost("203.0.113.1", /*fAllowLookup=*/false).value()};
+
+    BOOST_REQUIRE(ConnectDirectly(dest, /*manual_connection=*/false, src));
+    BOOST_REQUIRE(bound.has_value());
+    BOOST_CHECK_EQUAL(bound->ToStringAddrPort(), CService(src, /*port=*/0).ToStringAddrPort());
+
+    // The same for IPv6.
+    bound.reset();
+    const CService dest6{LookupNumeric("2001:db8::1", 8333)};
+    const CNetAddr src6{LookupHost("2001:db8::2", /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(ConnectDirectly(dest6, /*manual_connection=*/false, src6));
+    BOOST_REQUIRE(bound.has_value());
+    BOOST_CHECK_EQUAL(bound->ToStringAddrPort(), CService(src6, /*port=*/0).ToStringAddrPort());
+
+    // The bind_failed out-param stays false when no bind was requested and on
+    // a successful bind, so the caller only skips addrman accounting when the
+    // local source, not the peer, was the problem.
+    bool bind_failed{false};
+    bound.reset();
+    BOOST_REQUIRE(ConnectDirectly(dest, /*manual_connection=*/false, /*bind_addr=*/std::nullopt, &bind_failed));
+    BOOST_CHECK(!bound.has_value());
+    BOOST_CHECK(!bind_failed);
+
+    bound.reset();
+    BOOST_REQUIRE(ConnectDirectly(dest, /*manual_connection=*/false, src, &bind_failed));
+    BOOST_CHECK(!bind_failed);
+
+    // Fail-closed: a failed source bind aborts the connection and never connects,
+    // so the real source is never used as a fallback. It also reports bind_failed.
+    bool connect_called{false};
+    CreateSock = [&connect_called](int, int, int) { return std::make_unique<FailBindSock>(connect_called); };
+    BOOST_CHECK(!ConnectDirectly(dest, /*manual_connection=*/false, src, &bind_failed));
+    BOOST_CHECK(!connect_called);
+    BOOST_CHECK(bind_failed);
+
+    // A non-clearnet source has no sockaddr: ConnectDirectly() aborts before
+    // connecting (defensive; SelectOutboundBind() never yields such a source).
+    // This local failure also reports bind_failed.
+    CNetAddr onion_src;
+    BOOST_REQUIRE(onion_src.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    CreateSock = [](int, int, int) { return std::make_unique<ZeroSock>(); };
+    bind_failed = false;
+    BOOST_CHECK(!ConnectDirectly(dest, /*manual_connection=*/false, onion_src, &bind_failed));
+    BOOST_CHECK(bind_failed);
+}
+
+BOOST_AUTO_TEST_CASE(is_addr_bindable)
+{
+    // IsAddrBindable() trial-binds a fresh socket and reports the result.
+    const CNetAddr addr{LookupHost("127.0.0.1", /*fAllowLookup=*/false).value()};
+    struct SockRestore {
+        const decltype(CreateSock) orig{CreateSock};
+        ~SockRestore() { CreateSock = orig; }
+    } sock_restore;
+    bilingual_str error;
+
+    // Bind() succeeds -> bindable, error left empty.
+    CreateSock = [](int, int, int) { return std::make_unique<ZeroSock>(); };
+    BOOST_CHECK(IsAddrBindable(addr, error));
+    BOOST_CHECK(error.empty());
+
+    // Bind() fails -> not bindable, error populated.
+    class FailBind : public ZeroSock
+    {
+    public:
+        int Bind(const sockaddr*, socklen_t) const override { return SOCKET_ERROR; }
+        FailBind& operator=(Sock&&) override
+        {
+            Assert(false);
+            return *this;
+        }
+    };
+    CreateSock = [](int, int, int) { return std::make_unique<FailBind>(); };
+    error = bilingual_str{};
+    BOOST_CHECK(!IsAddrBindable(addr, error));
+    BOOST_CHECK(!error.empty());
+
+    // No socket created -> not bindable, error populated.
+    CreateSock = [](int, int, int) { return std::unique_ptr<Sock>{}; };
+    error = bilingual_str{};
+    BOOST_CHECK(!IsAddrBindable(addr, error));
+    BOOST_CHECK(!error.empty());
+
+    // A non-clearnet address has no sockaddr -> not bindable, family error.
+    CNetAddr onion;
+    BOOST_REQUIRE(onion.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    error = bilingual_str{};
+    BOOST_CHECK(!IsAddrBindable(onion, error));
+    BOOST_CHECK(!error.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
