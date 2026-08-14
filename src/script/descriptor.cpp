@@ -27,6 +27,7 @@
 #include <uint256.h>
 #include <util/bip32.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
@@ -46,6 +47,20 @@
 #include <vector>
 
 using util::Split;
+
+util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high)
+{
+    if (low < 0) {
+        return util::Unexpected<std::string>("Range should be greater or equal than 0");
+    }
+    if ((high >> 31) != 0) {
+        return util::Unexpected<std::string>("End of range is too high");
+    }
+    if (high >= low + 1000000) {
+        return util::Unexpected<std::string>("Range is too large");
+    }
+    return {};
+}
 
 namespace {
 
