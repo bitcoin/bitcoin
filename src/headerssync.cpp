@@ -182,7 +182,7 @@ bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& curren
     Assume(m_download_state == State::PRESYNC);
     if (m_download_state != State::PRESYNC) return false;
 
-    int next_height = m_current_height + 1;
+    int64_t next_height = m_current_height + 1;
 
     // Verify that the difficulty isn't growing too fast; an adversary with
     // limited hashing capability has a greater chance of producing a high
