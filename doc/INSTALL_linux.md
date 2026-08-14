@@ -12,7 +12,7 @@ GUI Runtime Requirements
 ------------------------
 
 The GUI executable, `bitcoin-qt`, is based on the Qt 6 framework and uses the `xcb` QPA (Qt Platform Abstraction) platform plugin
-to run on X11. Its runtime library dependencies are as follows:
+to run on X11 display server protocol. Its runtime library dependencies are as follows:
 - `libfontconfig`
 - `libfreetype`
 
