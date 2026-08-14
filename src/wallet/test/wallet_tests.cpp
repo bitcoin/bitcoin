@@ -4,9 +4,15 @@
 
 #include <wallet/wallet.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <future>
+#include <limits>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <addresstype.h>
@@ -16,6 +22,7 @@
 #include <node/types.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
+#include <script/descriptor.h>
 #include <script/solver.h>
 #include <test/util/common.h>
 #include <test/util/logging.h>
@@ -26,6 +33,7 @@
 #include <validationinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/imports.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
@@ -69,6 +77,47 @@ static void AddKey(CWallet& wallet, const CKey& key)
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+}
+
+BOOST_AUTO_TEST_CASE(reject_invalid_descriptor_ranges)
+{
+    const int height{*Assert(m_node.chain->getHeight())};
+    {
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        m_wallet.SetLastBlockProcessed(height, m_node.chain->getBlockHash(height));
+    }
+
+    CExtKey ext_key;
+    ext_key.SetSeed(std::array<std::byte, 32>{});
+    const std::string descriptor_without_checksum{"wpkh(" + EncodeExtKey(ext_key) + "/*)"};
+    const std::string descriptor{descriptor_without_checksum + "#" + GetDescriptorChecksum(descriptor_without_checksum)};
+
+    const std::array invalid_ranges{
+        std::pair{std::pair<int64_t, int64_t>{2, 1}, "Range specified as [begin,end] must not have begin after end"},
+        std::pair{std::pair<int64_t, int64_t>{-1, 10}, "Range should be greater or equal than 0"},
+        std::pair{std::pair<int64_t, int64_t>{0, 1'000'000}, "Range is too large"},
+        std::pair{std::pair<int64_t, int64_t>{0, std::numeric_limits<int64_t>::max()}, "End of range is too high"},
+        std::pair{std::pair<int64_t, int64_t>{0, 1LL << 31}, "End of range is too high"},
+    };
+
+    for (const auto& [range, expected_error] : invalid_ranges) {
+        std::vector requests{ImportDescriptorRequest{
+            .descriptor = descriptor,
+            .label = {},
+            .timestamp = 0,
+            .active = false,
+            .internal = std::nullopt,
+            .range = range,
+            .next_index = std::nullopt,
+        }};
+        const auto results{ProcessDescriptorsImport(m_wallet, requests)};
+        BOOST_REQUIRE_EQUAL(results.size(), 1U);
+        BOOST_REQUIRE(results.front().error.has_value());
+        BOOST_CHECK(results.front().error->wallet_error.code == WalletErrorCode::InvalidParameter);
+        BOOST_CHECK_EQUAL(results.front().error->wallet_error.message.original, expected_error);
+        BOOST_CHECK(!results.front().error->is_general_error);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
