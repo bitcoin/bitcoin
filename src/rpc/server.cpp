@@ -311,7 +311,7 @@ void ApplyTypeStrOverride(UniValue& schema, const RPCArg& arg)
     };
     if (number_or_string.contains(type_label)) {
         UniValue one_of{UniValue::VARR};
-        one_of.push_back(MakeObject({{"type", "number"}}));
+        one_of.push_back(MakeObject({{"type", "integer"}}));
         one_of.push_back(MakeObject({{"type", "string"}}));
         schema = UniValue{UniValue::VOBJ};
         schema.pushKV("oneOf", std::move(one_of));

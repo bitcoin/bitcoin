@@ -52,7 +52,7 @@ class OpenRPCDocTest(BitcoinTestFramework):
         self.log.info("Checking type_str override schemas")
         getblockstats = find_method(openrpc, "getblockstats")
         hash_or_height = find_param(getblockstats, "hash_or_height")
-        assert_equal(hash_or_height["schema"], {"oneOf": [{"type": "number"}, {"type": "string"}]})
+        assert_equal(hash_or_height["schema"], {"oneOf": [{"type": "integer"}, {"type": "string"}]})
 
         self.log.info("Checking fixed-length array schemas")
         deriveaddresses = find_method(openrpc, "deriveaddresses")
