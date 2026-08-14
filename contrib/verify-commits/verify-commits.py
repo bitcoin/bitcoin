@@ -14,6 +14,14 @@ import time
 
 GIT = os.getenv('GIT', 'git')
 
+def is_ancestor(older, newer, root_name):
+    """Return whether older is an ancestor of newer, rejecting Git errors."""
+    result = subprocess.run([GIT, "merge-base", "--is-ancestor", older, newer])
+    if result.returncode not in (0, 1):
+        print(f'Failed to determine ancestry between "{older}" and "{newer}" for the {root_name} (git merge-base exited with {result.returncode}).', file=sys.stderr)
+        sys.exit(1)
+    return result.returncode == 0
+
 def tree_sha512sum(commit='HEAD'):
     """Calculate the Tree-sha512 for the commit.
 
@@ -107,12 +115,13 @@ def main():
         logging.debug("verify-commits: [in-progress] processing commit {}".format(current_commit[:8]))
 
         if current_commit == verified_root:
+            # Ensure the trusted root identifies an existing commit.
+            is_ancestor(verified_root, current_commit, "trusted Git root")
             print('There is a valid path from "{}" to {} where all commits are signed!'.format(initial_commit, verified_root))
             sys.exit(0)
         else:
             # Make sure this commit isn't older than trusted roots
-            check_root_older_res = subprocess.run([GIT, "merge-base", "--is-ancestor", verified_root, current_commit])
-            if check_root_older_res.returncode != 0:
+            if not is_ancestor(verified_root, current_commit, "trusted Git root"):
                 print(f"\"{current_commit}\" predates the trusted root, stopping!")
                 sys.exit(0)
 
@@ -123,8 +132,7 @@ def main():
                 no_sha1 = False
             else:
                 # Skip the tree check if we are older than the trusted root
-                check_root_older_res = subprocess.run([GIT, "merge-base", "--is-ancestor", verified_sha512_root, current_commit])
-                if check_root_older_res.returncode != 0:
+                if not is_ancestor(verified_sha512_root, current_commit, "trusted Tree-SHA512 root"):
                     print(f"\"{current_commit}\" predates the trusted SHA512 root, disabling tree verification.")
                     verify_tree = False
                     no_sha1 = False
