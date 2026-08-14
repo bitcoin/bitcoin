@@ -561,6 +561,54 @@ class EstimateFeeTest(BitcoinTestFramework):
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "mempool_policy")
 
+    def test_persisted_health_requires_mempool_restore(self):
+        node0 = self.nodes[0]
+
+        assert_equal(node0.getmempoolinfo()["size"], 0)
+        healthy_estimate = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "none"})
+        assert_equal(len(healthy_estimate["mempool_health_statistics"]), 6)
+        floor = max(node0.getmempoolinfo()["minrelaytxfee"], node0.getmempoolinfo()["mempoolminfee"])
+        block_policy_feerate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        assert_greater_than(block_policy_feerate, floor)
+
+        self.stop_node(1)
+        self.stop_node(2)
+        self.restart_node(0, ["-persistmempool=0"])
+
+        num_txs = 10
+        target_vsize = int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / num_txs)
+        utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
+        self.send_transactions(utxos, Decimal("0.00004"), target_vsize)
+        assert_equal(node0.getmempoolinfo()["size"], num_txs)
+
+        self.restart_node(0, ["-persistmempool=0"])
+        assert_equal(node0.getmempoolinfo()["size"], 0)
+        assert_equal(node0.getmempoolinfo()["loaded"], True)
+
+        block_policy_feerate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        assert_greater_than(block_policy_feerate, floor)
+
+        estimate_without_restore = node0.estimatesmartfee(
+            1,
+            "economical",
+            {"verbosity": 2, "fee_rate_estimator": "none"},
+        )
+        assert "feerate" not in estimate_without_restore, (
+            "The combined estimator trusted persisted mempool-health statistics "
+            "after mempool restoration was disabled: "
+            f"{estimate_without_restore}"
+        )
+        assert "errors" in estimate_without_restore
+
+        # Restore the normal test network for the remaining cases.
+        self.restart_node(0)
+        self.start_node(1)
+        self.start_node(2)
+        self.connect_nodes(1, 0)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(2, 1)
+        self.sync_all()
+
     def test_stale_mempool_block_stats_are_rejected_on_load(self):
         # Persisted mempool block stats must be tied to the best block hash,
         # not just height, because a reorg can replace the tip without
@@ -657,6 +705,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test that estimatesmartfee returns mempool estimates when lower")
         self.clear_estimates()
         self.test_estimatesmartfee_return_mempool_estimates()
+
+        self.log.info("Test that persisted health requires a restored mempool")
+        self.test_persisted_health_requires_mempool_restore()
 
         self.log.info("Test that stale mempool block stats are rejected on load")
         self.test_stale_mempool_block_stats_are_rejected_on_load()
