@@ -227,6 +227,12 @@ class ConfArgsTest(BitcoinTestFramework):
                     expected_msg="Error: Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets",
                     extra_args=[f'-nowallet={value}'],
                 )
+        # Provide a value different from 1 to the -connect negated option
+        for value in [0, 'not_a_boolean']:
+            self.nodes[0].assert_start_raises_init_error(
+                expected_msg="Error: Invalid value detected for '-connect' or '-noconnect'. '-connect' requires a string value (hostname or IP), while '-noconnect' accepts only '1' to disable automatic connections",
+                extra_args=[f'-noconnect={value}'],
+            )
 
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=["[warning] Parsed potentially confusing double-negative -listen=0\n"]):

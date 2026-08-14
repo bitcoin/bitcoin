@@ -83,6 +83,7 @@
 #include <txgraph.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/asmap.h>
 #include <util/batchpriority.h>
 #include <util/btcsignals.h>
@@ -2277,6 +2278,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     connOptions.vSeedNodes = args.GetArgs("-seednode");
+
+    for (const auto& value : args.GetSettingsList("-connect")) {
+        if (!value.isStr()) {
+            return InitError(_("Invalid value detected for '-connect' or '-noconnect'. "
+                               "'-connect' requires a string value (hostname or IP), while "
+                               "'-noconnect' accepts only '1' to disable automatic connections"));
+        }
+    }
 
     const auto connect = args.GetArgs("-connect");
     if (!connect.empty() || args.IsArgNegated("-connect")) {
