@@ -212,6 +212,14 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         result = node0.gettxspendingprevout([prevout(tx1['txid'], vout=0)], return_spending_tx=True)
         assert_equal(result, [unspent_out(tx1['txid'], vout=0)])
 
+        self.log.info("Check mixed mempool and index result order")
+        tx4 = create_tx(utxos_to_spend=[txH["new_utxos"][0]], num_outputs=1)
+        result = node0.gettxspendingprevout([prevout(txid_reorg_cancel_utxo, vout=0), prevout(txidH, vout=0)])
+        assert_equal(result, [
+            spent_out(txid_reorg_cancel_utxo, vout=0, spending_tx_id=tx3["txid"]) | {"blockhash": blockhash},
+            spent_out(txidH, vout=0, spending_tx_id=tx4["txid"]),
+        ])
+
 
 if __name__ == '__main__':
     GetTxSpendingPrevoutTest(__file__).main()
