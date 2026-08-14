@@ -414,9 +414,16 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def broadcast_many(self, broadcaster, feerate, count, miner=None):
         """Broadcast and maybe mine some number of transactions with a specified fee rate."""
+        tx_batch = []
         for _ in range(count):
-            tx = self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate, confirmed_only=True, utxo_to_spend=self.confutxo.pop(0))
+            tx = self.wallet.create_self_transfer(fee_rate=feerate, utxo_to_spend=self.confutxo.pop(0))
             self.memutxo.append(tx["new_utxo"])
+            tx_batch.append(tx)
+        # To speed up the test, submit the transactions in batches to the nodes directly
+        # avoiding having to wait for p2p to propagate them between the nodes.
+        batch_send_tx = [broadcaster.sendrawtransaction.get_request(hexstring=tx["hex"]) for tx in tx_batch]
+        for node in self.nodes:
+            node.batch(batch_send_tx)
         self.sync_mempools(wait=0.1, nodes=[self.nodes[0], self.nodes[1], self.nodes[2]])
         if miner:
             mined = miner.getblock(self.generate(miner, 1)[0], True)["tx"]
