@@ -22,6 +22,15 @@ def is_ancestor(older, newer, root_name):
         sys.exit(1)
     return result.returncode == 0
 
+def predates(commit, root, root_name):
+    """Return whether commit is provably older than root, rejecting divergent history."""
+    if is_ancestor(root, commit, root_name):
+        return False
+    elif is_ancestor(commit, root, root_name):
+        return True
+    print(f'"{commit}" diverges from the {root_name} "{root}", refusing to verify.', file=sys.stderr)
+    sys.exit(1)
+
 def tree_sha512sum(commit='HEAD'):
     """Calculate the Tree-sha512 for the commit.
 
@@ -119,23 +128,19 @@ def main():
             is_ancestor(verified_root, current_commit, "trusted Git root")
             print('There is a valid path from "{}" to {} where all commits are signed!'.format(initial_commit, verified_root))
             sys.exit(0)
-        else:
-            # Make sure this commit isn't older than trusted roots
-            if not is_ancestor(verified_root, current_commit, "trusted Git root"):
-                print(f"\"{current_commit}\" predates the trusted root, stopping!")
-                sys.exit(0)
+        elif predates(current_commit, verified_root, "trusted Git root"):
+            print(f"\"{current_commit}\" predates the trusted root, stopping!")
+            sys.exit(0)
 
         if verify_tree:
             if current_commit == verified_sha512_root:
                 print("All Tree-SHA512s matched up to {}".format(verified_sha512_root), file=sys.stderr)
                 verify_tree = False
                 no_sha1 = False
-            else:
-                # Skip the tree check if we are older than the trusted root
-                if not is_ancestor(verified_sha512_root, current_commit, "trusted Tree-SHA512 root"):
-                    print(f"\"{current_commit}\" predates the trusted SHA512 root, disabling tree verification.")
-                    verify_tree = False
-                    no_sha1 = False
+            elif predates(current_commit, verified_sha512_root, "trusted Tree-SHA512 root"):
+                print(f"\"{current_commit}\" predates the trusted SHA512 root, disabling tree verification.")
+                verify_tree = False
+                no_sha1 = False
 
 
         os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
