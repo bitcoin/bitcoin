@@ -7,16 +7,23 @@
 
 #include <index/base.h>
 #include <primitives/transaction.h>
+#include <uint256.h>
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 
-class uint256;
 namespace interfaces {
 class Chain;
 }
 
 static constexpr bool DEFAULT_TXINDEX{false};
+
+/// A found transaction and the hash of the block that contains it.
+struct TxIndexResult {
+    uint256 block_hash;
+    CTransactionRef tx;
+};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
@@ -48,10 +55,8 @@ public:
     /// Look up a transaction by hash.
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.
-    /// @param[out]  block_hash  The hash of the block the transaction is found in.
-    /// @param[out]  tx  The transaction itself.
-    /// @return  true if transaction is found, false otherwise
-    bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
+    /// @return  the transaction and containing block hash, or nullopt if it is not found
+    std::optional<TxIndexResult> FindTx(const Txid& tx_hash) const;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.
