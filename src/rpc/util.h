@@ -43,7 +43,7 @@ namespace node {
 enum class TransactionError;
 } // namespace node
 
-static constexpr bool DEFAULT_RPC_DOC_CHECK{
+inline constexpr bool DEFAULT_RPC_DOC_CHECK{
 #ifdef RPC_DOC_CHECK
     true
 #else

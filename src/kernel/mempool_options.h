@@ -16,15 +16,15 @@
 class ValidationSignals;
 
 /** Default for -maxmempool, maximum megabytes of mempool memory usage */
-static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
+inline constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
 /** Default for -maxmempool when blocksonly is set */
-static constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
+inline constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
-static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
+inline constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
 /** Whether to fall back to legacy V1 serialization when writing mempool.dat */
-static constexpr bool DEFAULT_PERSIST_V1_DAT{false};
+inline constexpr bool DEFAULT_PERSIST_V1_DAT{false};
 /** Default for -acceptnonstdtxn */
-static constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
+inline constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
 
 namespace kernel {
 /**

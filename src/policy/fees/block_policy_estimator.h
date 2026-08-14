@@ -23,16 +23,16 @@
 
 
 // How often to flush fee estimates to fee_estimates.dat.
-static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
+inline constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
 /** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
  * as fee estimates are based on historical data and may be inaccurate if
  * network activity has changed.
  */
-static constexpr std::chrono::hours MAX_FILE_AGE{60};
+inline constexpr std::chrono::hours MAX_FILE_AGE{60};
 
 // Whether we allow importing a fee_estimates file older than MAX_FILE_AGE.
-static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
+inline constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 
 class AutoFile;
 class TxConfirmStats;
@@ -47,7 +47,7 @@ enum class FeeEstimateHorizon {
     LONG_HALFLIFE,
 };
 
-static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
+inline constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
     FeeEstimateHorizon::SHORT_HALFLIFE,
     FeeEstimateHorizon::MED_HALFLIFE,
     FeeEstimateHorizon::LONG_HALFLIFE,

@@ -23,7 +23,7 @@
 namespace util {
 namespace detail {
 template <unsigned num_params>
-constexpr static void CheckNumFormatSpecifiers(const char* str)
+constexpr void CheckNumFormatSpecifiers(const char* str)
 {
     unsigned count_normal{0}; // Number of "normal" specifiers, like %s
     unsigned count_pos{0};    // Max number in positional specifier, like %8$s

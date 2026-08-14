@@ -27,9 +27,9 @@ namespace leveldb {
 class Env;
 } // namespace leveldb
 
-static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
-static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
-static const size_t DBWRAPPER_MAX_FILE_SIZE{32_MiB};
+inline constexpr size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
+inline constexpr size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
+inline constexpr size_t DBWRAPPER_MAX_FILE_SIZE{32_MiB};
 
 //! User-controlled performance and debug options.
 struct DBOptions {

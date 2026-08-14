@@ -16,8 +16,8 @@
 #include <optional>
 #include <vector>
 
-const unsigned int BIP32_EXTKEY_SIZE = 74;
-const unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
+inline constexpr unsigned int BIP32_EXTKEY_SIZE = 74;
+inline constexpr unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
 using KeyFingerprint = std::array<unsigned char, 4>;
 

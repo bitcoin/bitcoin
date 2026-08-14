@@ -9,8 +9,8 @@
 #include <script/script.h>
 #include <script/verify_flags.h>
 
-static const std::vector<uint8_t> WITNESS_STACK_ELEM_OP_TRUE{uint8_t{OP_TRUE}};
-static const CScript P2WSH_OP_TRUE{
+inline const std::vector<uint8_t> WITNESS_STACK_ELEM_OP_TRUE{uint8_t{OP_TRUE}};
+inline const CScript P2WSH_OP_TRUE{
     CScript{}
     << OP_0
     << ToByteVector([] {
@@ -19,8 +19,8 @@ static const CScript P2WSH_OP_TRUE{
            return hash;
        }())};
 
-static const std::vector<uint8_t> EMPTY{};
-static const CScript P2WSH_EMPTY{
+inline const std::vector<uint8_t> EMPTY{};
+inline const CScript P2WSH_EMPTY{
     CScript{}
     << OP_0
     << ToByteVector([] {
@@ -28,8 +28,8 @@ static const CScript P2WSH_EMPTY{
            CSHA256().Write(EMPTY.data(), EMPTY.size()).Finalize(hash.begin());
            return hash;
        }())};
-static const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TRUE_STACK{{static_cast<uint8_t>(OP_TRUE)}, {}};
-static const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TWO_STACK{{static_cast<uint8_t>(OP_2)}, {}};
+inline const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TRUE_STACK{{static_cast<uint8_t>(OP_TRUE)}, {}};
+inline const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TWO_STACK{{static_cast<uint8_t>(OP_2)}, {}};
 
 /** Flags that are not forbidden by an assert in script validation */
 bool IsValidFlagCombination(script_verify_flags flags);

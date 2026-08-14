@@ -16,12 +16,12 @@
 #include <vector>
 
 /** Default maximum number of transactions in a package. */
-static constexpr uint32_t MAX_PACKAGE_COUNT{25};
+inline constexpr uint32_t MAX_PACKAGE_COUNT{25};
 /** Default maximum total weight of transactions in a package in weight
     to allow for context-less checks. This must allow a superset of sigops
     weighted vsize limited transactions to not disallow transactions we would
     have otherwise accepted individually. */
-static constexpr uint32_t MAX_PACKAGE_WEIGHT = 404'000;
+inline constexpr uint32_t MAX_PACKAGE_WEIGHT = 404'000;
 static_assert(MAX_PACKAGE_WEIGHT >= MAX_STANDARD_TX_WEIGHT);
 
 // Packages are part of a single cluster, so ensure that the package limits are

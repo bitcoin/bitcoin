@@ -19,13 +19,13 @@
 #include <set>
 
 namespace wallet {
-const int DEFAULT_MIN_DEPTH = 0;
-const int DEFAULT_MAX_DEPTH = 9999999;
+inline constexpr int DEFAULT_MIN_DEPTH = 0;
+inline constexpr int DEFAULT_MAX_DEPTH = 9'999'999;
 
-const int DEFAULT_WALLET_TX_VERSION = CTransaction::CURRENT_VERSION;
+inline constexpr int DEFAULT_WALLET_TX_VERSION = CTransaction::CURRENT_VERSION;
 
 //! Default for -avoidpartialspends
-static constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
+inline constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
 
 class PreselectedInput
 {
