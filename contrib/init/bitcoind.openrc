@@ -21,7 +21,7 @@ BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 name="Bitcoin Core Daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
+command="${BITCOIND_BIN}"
 command_args="-pid=\"${BITCOIND_PIDFILE}\" \
 		-conf=\"${BITCOIND_CONFIGFILE}\" \
 		-datadir=\"${BITCOIND_DATADIR}\" \
@@ -30,6 +30,7 @@ command_args="-pid=\"${BITCOIND_PIDFILE}\" \
 
 required_files="${BITCOIND_CONFIGFILE}"
 start_stop_daemon_args="-u ${BITCOIND_USER} \
+			-g ${BITCOIND_GROUP} \
 			-N ${BITCOIND_NICE} -w 2000"
 pidfile="${BITCOIND_PIDFILE}"
 
