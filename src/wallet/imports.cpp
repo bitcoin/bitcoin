@@ -41,8 +41,14 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
         );
     } else if (parsed_descs.at(0)->IsRange()) {
         if (request.range.has_value()) {
-            range_start = request.range->first;
-            range_end = request.range->second + 1; // Specified range end is inclusive, but we need range end as exclusive
+            int64_t low = request.range->first;
+            int64_t high = request.range->second;
+            if (auto res = CheckDescriptorRangeBounds(low, high); !res) {
+                return ImportResult(WalletErrorCode::InvalidParameter,
+                    res.error());
+            }
+            range_start = low;
+            range_end = high + 1; // Specified range end is inclusive, but we need range end as exclusive
         } else {
             warnings.emplace_back("Range not given, using default keypool range");
             range_start = 0;
