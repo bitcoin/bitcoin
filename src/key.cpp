@@ -16,6 +16,8 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
+#include <algorithm>
+
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
@@ -362,6 +364,18 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     out.fingerprint = id_key_fingerprint();
     out.nChild = _nChild;
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
+}
+
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path)
+{
+    CExtKey descendant = ext_key;
+    KeyOriginInfo origin;
+    origin.fingerprint = ext_key.id_key_fingerprint();
+    origin.path = path;
+    for (uint32_t i : path) {
+        if (!descendant.Derive(descendant, i)) return std::nullopt;
+    }
+    return std::make_pair(descendant, origin);
 }
 
 void CExtKey::SetSeed(std::span<const std::byte> seed)
