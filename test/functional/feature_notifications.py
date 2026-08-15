@@ -184,8 +184,8 @@ class NotificationsTest(BitcoinTestFramework):
                 self.sync_mempools()
                 notify_path = os.path.join(self.walletnotify_dir, notify_outputname(wallet_name, txid))
                 self.wait_until(lambda: os.path.exists(command_marker) or os.path.exists(notify_path), timeout=10)
-                assert os.path.exists(command_marker)  # TODO: Wallet names must not inject shell commands.
-                assert not os.path.exists(notify_path)  # TODO: Wallet names must remain literal in notification paths.
+                assert not os.path.exists(command_marker)
+                assert os.path.exists(notify_path)
 
         self.log.info("test -alertnotify with large work invalid chain")
         # create a bunch of invalid blocks
