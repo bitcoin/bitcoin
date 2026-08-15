@@ -49,5 +49,8 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
                    unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data);
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
                    unsigned int nIn, int nHashType, SignatureData& sig_data);
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo,
+                   unsigned int nIn, const CAmount& amount, std::vector<CTxOut>&& spent_outputs, int nHashType,
+                   SignatureData& sig_data);
 
 #endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
