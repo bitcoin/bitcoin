@@ -61,9 +61,9 @@ public:
 class CTxIn
 {
 public:
-    COutPoint prevout;
-    CScript scriptSig;
-    uint32_t nSequence;
+    CONSTRUCTOR_ARGUMENT(1, 3) COutPoint prevout;
+    CONSTRUCTOR_ARGUMENT(2, 3) CScript scriptSig;
+    CONSTRUCTOR_ARGUMENT(3, 3) uint32_t nSequence;
     CScriptWitness scriptWitness; //!< Only serialized through CTransaction
 
     /**
