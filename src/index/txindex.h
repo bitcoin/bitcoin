@@ -7,9 +7,11 @@
 
 #include <index/base.h>
 #include <primitives/transaction.h>
+#include <util/expected.h>
 
 #include <cstddef>
 #include <memory>
+#include <string>
 
 class uint256;
 namespace interfaces {
@@ -49,9 +51,8 @@ public:
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.
     /// @param[out]  block_hash  The hash of the block the transaction is found in.
-    /// @param[out]  tx  The transaction itself.
-    /// @return  true if transaction is found, false otherwise
-    bool FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
+    /// @return  The tx if found, nullptr if not found, or an error string for I/O issues.
+    util::Expected<CTransactionRef, std::string> FindTx(const Txid& tx_hash, uint256& block_hash) const;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.
