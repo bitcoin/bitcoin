@@ -306,10 +306,14 @@ BOOST_AUTO_TEST_CASE(util_ReplaceAll)
     }};
 
     test_replaceall(original, "", "foo", original);
+    test_replaceall(original, "missing", "foo", original);
     test_replaceall(original, original, "foo", "foo");
     test_replaceall(original, "%s", "foo", "A test \"foo\" string 'foo'.");
     test_replaceall(original, "\"", "foo", "A test foo%sfoo string '%s'.");
     test_replaceall(original, "'", "foo", "A test \"%s\" string foo%sfoo.");
+    test_replaceall("a.b", ".", "x", "xxx"); // TODO: Search text must remain literal.
+    test_replaceall("%w and %w", "%w", "$&$`$'$1$$", "%w and %w$ and %w and $"); // TODO: Replacement bytes must remain literal.
+    test_replaceall("x", "x", "xx", "xx");
 }
 
 BOOST_AUTO_TEST_CASE(util_TrimString)
