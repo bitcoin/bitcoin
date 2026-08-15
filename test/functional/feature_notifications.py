@@ -175,6 +175,18 @@ class NotificationsTest(BitcoinTestFramework):
             self.expect_wallet_notify([(bump2, blockheight2, blockhash2), (tx2, -1, UNCONFIRMED_HASH_STRING)])
             assert_equal(self.nodes[1].gettransaction(bump2)["confirmations"], 1)
 
+            if platform.system() != 'Windows':
+                self.log.info("test -walletnotify replacement metacharacters in wallet name")
+                self.nodes[1].unloadwallet(self.wallet)
+                command_marker = os.path.join(self.options.tmpdir, "walletnotify_injected")
+                wallet_name = self.nodes[1].createwallet(f"$'$'; echo Pwned > {os.path.basename(command_marker)}; #")["name"]
+                txid = self.nodes[0].sendtoaddress(self.nodes[1].get_wallet_rpc(wallet_name).getnewaddress(), 1)
+                self.sync_mempools()
+                notify_path = os.path.join(self.walletnotify_dir, notify_outputname(wallet_name, txid))
+                self.wait_until(lambda: os.path.exists(command_marker) or os.path.exists(notify_path), timeout=10)
+                assert os.path.exists(command_marker)  # TODO: Wallet names must not inject shell commands.
+                assert not os.path.exists(notify_path)  # TODO: Wallet names must remain literal in notification paths.
+
         self.log.info("test -alertnotify with large work invalid chain")
         # create a bunch of invalid blocks
         tip = self.nodes[0].getbestblockhash()
