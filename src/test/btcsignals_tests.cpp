@@ -81,6 +81,65 @@ BOOST_AUTO_TEST_CASE(disconnects)
     BOOST_CHECK_EQUAL(val, 6);
 }
 
+/* Characterize when a callback object and the state it owns are destroyed.
+ * disconnect() only disables the callback. The object itself is kept alive
+ * both by the signal, until a later connect() call garbage collects
+ * disconnected entries (or the signal is destroyed), and by every connection
+ * handle referencing it. It is destroyed when the last of these references
+ * goes away.
+ */
+BOOST_AUTO_TEST_CASE(callback_destruction)
+{
+    // With no connection handle held, callbacks are destroyed with the signal.
+    std::weak_ptr<int> weak0;
+    {
+        btcsignals::signal<void()> sig0;
+        auto state0{std::make_shared<int>(0)};
+        weak0 = state0;
+        sig0.connect([state0 = std::move(state0)] {});
+        BOOST_CHECK(!weak0.expired());
+    }
+    BOOST_CHECK(weak0.expired());
+
+    // disconnect() does not destroy the callback. A later connect() garbage
+    // collects the signal's reference, and the callback is destroyed once the
+    // connection handle is released as well.
+    btcsignals::signal<void()> sig1;
+    auto state1{std::make_shared<int>(0)};
+    std::weak_ptr<int> weak1{state1};
+    auto conn1{sig1.connect([state1 = std::move(state1)] {})};
+    conn1.disconnect();
+    BOOST_CHECK(!weak1.expired());
+    sig1.connect([] {}); // garbage collects the signal's reference
+    BOOST_CHECK(!weak1.expired());
+    conn1 = {}; // release the last connection handle
+    BOOST_CHECK(weak1.expired());
+}
+
+/* A callback that disconnects itself during emission remains valid until its
+ * invocation returns, and afterwards is destroyed under the same rules as any
+ * other disconnected callback.
+ */
+BOOST_AUTO_TEST_CASE(self_disconnect_destruction)
+{
+    btcsignals::signal<void()> sig0;
+    auto state0{std::make_shared<int>(0)};
+    std::weak_ptr<int> weak0{state0};
+    btcsignals::connection conn0;
+    conn0 = sig0.connect([&conn0, weak0, state0 = std::move(state0)] {
+        conn0.disconnect();
+        // The callback and the state it owns stay valid while it executes.
+        BOOST_CHECK(!weak0.expired());
+        *state0 += 1;
+    });
+    sig0();
+    BOOST_CHECK(!weak0.expired());
+    conn0 = {}; // release the connection handle
+    BOOST_CHECK(!weak0.expired());
+    sig0.connect([] {}); // garbage collects the signal's reference
+    BOOST_CHECK(weak0.expired());
+}
+
 BOOST_AUTO_TEST_CASE(any_of_combiner)
 {
     btcsignals::signal<bool(), btcsignals::any_of> sig0;
