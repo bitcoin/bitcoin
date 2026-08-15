@@ -26,6 +26,20 @@
 #define EXPECT(x,c) (x)
 #endif
 
+#if defined(__has_cpp_attribute)
+#  if __has_cpp_attribute(maybe_unused)
+#    define MAYBE_UNUSED [[maybe_unused]]
+#  endif
+#endif
+
+#ifndef MAYBE_UNUSED
+#  if defined(__GNUC__)
+#    define MAYBE_UNUSED __attribute__((unused))
+#  else
+#    define MAYBE_UNUSED
+#  endif
+#endif
+
 /* Assertion macros */
 
 /**
