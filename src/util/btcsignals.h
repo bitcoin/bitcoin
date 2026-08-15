@@ -24,6 +24,13 @@
  * imply, std::function is used to store the callbacks. Lifetime management of
  * the callbacks is left up to the user.
  *
+ * Disconnecting a connection destroys the associated callback object eagerly
+ * (or, if the callback is currently executing on another thread, as soon as
+ * the last in-flight invocation completes), matching boost::signals2
+ * behavior. This makes callback lifetime predictable when callbacks own
+ * resources whose release has side effects, instead of tying it to unrelated
+ * future connect() calls and to the lifetimes of connection handles.
+ *
  * All usage is thread-safe except for interacting with a connection while
  * copying/moving it on another thread.
  */
@@ -66,7 +73,22 @@ class connection
         friend class connection;
         std::atomic_bool m_connected{true};
 
-        void disconnect() { m_connected.store(false); }
+        void disconnect()
+        {
+            m_connected.store(false);
+            // Destroy the owned callback now instead of waiting for the next
+            // signal::connect() garbage collection, which may never happen. An
+            // invocation that already loaded the owner keeps the callback
+            // alive until it returns.
+            m_owner.store(nullptr);
+        }
+
+    protected:
+        //! Type-erased owner of the callback stored by the derived
+        //! signal::connection_holder. Loaded by signal invocation to keep the
+        //! callback alive while it runs, cleared by disconnect().
+        std::atomic<std::shared_ptr<const void>> m_owner{};
+
     public:
         bool connected() const { return m_connected.load(); }
     };
@@ -94,8 +116,10 @@ public:
      * If a connection is disabled as part of a signal's callback function, it
      * will _not_ be executed in the current signal invocation.
      *
-     * Note that disconnected callbacks are not removed from their owning
-     * signals here. They are garbage collected in signal::connect().
+     * The callback object is destroyed here (or when the last concurrently
+     * executing invocation of it completes). The empty holder entry is not
+     * removed from the owning signal; it is garbage collected in
+     * signal::connect().
      */
     void disconnect()
     {
@@ -157,11 +181,20 @@ class signal
      */
     struct connection_holder : connection::liveness {
         template <typename Callable>
-        connection_holder(Callable&& callback) : m_callback{std::forward<Callable>(callback)}
+        connection_holder(Callable&& callback)
         {
+            auto owner{std::make_shared<const function_type>(std::forward<Callable>(callback))};
+            m_callback = owner.get();
+            m_owner.store(std::move(owner));
         }
 
-        const function_type m_callback;
+        //! Load the owner, keeping the callback alive while the returned
+        //! shared_ptr is held. Returns null if disconnected.
+        std::shared_ptr<const void> owner() const { return m_owner.load(); }
+
+        //! Raw pointer to the callback, only valid while holding a shared_ptr
+        //! returned by owner().
+        const function_type* m_callback;
     };
 
     mutable Mutex m_mutex;
@@ -209,8 +242,11 @@ public:
             static_assert(std::is_same_v<result_type, typename function_type::result_type>,
                           "Callback result type must be equal to the combiner result type (void).");
             for (const auto& connection : connections) {
-                if (connection->connected()) {
-                    connection->m_callback(args...);
+                // Loading the owner both checks that the connection is still
+                // connected and keeps the callback alive for the duration of
+                // the call if it is disconnected concurrently.
+                if (const auto owner{connection->owner()}) {
+                    (*connection->m_callback)(args...);
                 }
             }
         } else {
@@ -220,8 +256,8 @@ public:
                           "Callback result type must be equal to the combiner result type (bool).");
             result_type ret{false};
             for (const auto& connection : connections) {
-                if (connection->connected()) {
-                    ret |= connection->m_callback(args...);
+                if (const auto owner{connection->owner()}) {
+                    ret |= (*connection->m_callback)(args...);
                 }
             }
             return ret;
