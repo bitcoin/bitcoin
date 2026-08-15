@@ -6,7 +6,6 @@
 
 #include <iterator>
 #include <memory>
-#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -14,7 +13,19 @@ namespace util {
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute)
 {
     if (search.empty()) return;
-    in_out = std::regex_replace(in_out, std::regex(search), substitute);
+    auto pos{in_out.find(search)};
+    if (pos == std::string::npos) return;
+
+    // Build separately because repeated std::string::replace() calls move the remaining suffix when sizes differ
+    std::string result;
+    result.reserve(in_out.size());
+    std::string::size_type start{0};
+    for (; pos != std::string::npos; pos = in_out.find(search, start)) {
+        result.append(in_out, start, pos - start).append(substitute);
+        start = pos + search.size();
+    }
+    result.append(in_out, start);
+    in_out.swap(result);
 }
 
 LineReader::LineReader(std::string_view str, size_t max_line_length)
