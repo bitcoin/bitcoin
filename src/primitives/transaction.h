@@ -28,8 +28,8 @@
 class COutPoint
 {
 public:
-    Txid hash;
-    uint32_t n;
+    CONSTRUCTOR_ARGUMENT(1, 2) Txid hash;
+    CONSTRUCTOR_ARGUMENT(2, 2) uint32_t n;
 
     static constexpr uint32_t NULL_INDEX = std::numeric_limits<uint32_t>::max();
 
