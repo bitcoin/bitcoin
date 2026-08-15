@@ -139,8 +139,8 @@ public:
 class CTxOut
 {
 public:
-    CAmount nValue;
-    CScript scriptPubKey;
+    CONSTRUCTOR_ARGUMENT(1, 2) CAmount nValue;
+    CONSTRUCTOR_ARGUMENT(2, 2) CScript scriptPubKey;
 
     CTxOut()
     {
