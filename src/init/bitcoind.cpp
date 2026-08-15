@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <init.h>
+
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
 #include <interfaces/init.h>
@@ -18,33 +19,67 @@ using node::NodeContext;
 
 namespace init {
 namespace {
-const char* EXE_NAME = "bitcoind";
 
-class BitcoindInit : public interfaces::Init
+constexpr const char* EXE_NAME = "bitcoind";
+
+class BitcoindInit final : public interfaces::Init
 {
 public:
-    BitcoindInit(NodeContext& node) : m_node(node)
+    explicit BitcoindInit(NodeContext& node) : m_node(node)
     {
         InitContext(m_node);
         m_node.init = this;
     }
-    std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }
-    std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
-    std::unique_ptr<interfaces::Mining> makeMining() override { return interfaces::MakeMining(m_node); }
-    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain) override
+
+    ~BitcoindInit() override = default;
+
+    std::unique_ptr<interfaces::Node> makeNode() override
+    {
+        return interfaces::MakeNode(m_node);
+    }
+
+    std::unique_ptr<interfaces::Chain> makeChain() override
+    {
+        return interfaces::MakeChain(m_node);
+    }
+
+    std::unique_ptr<interfaces::Mining> makeMining() override
+    {
+        return interfaces::MakeMining(m_node);
+    }
+
+    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(
+        interfaces::Chain& chain) override
     {
         return MakeWalletLoader(chain, *Assert(m_node.args));
     }
-    std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
-    const char* exeName() override { return EXE_NAME; }
+
+    std::unique_ptr<interfaces::Echo> makeEcho() override
+    {
+        return interfaces::MakeEcho();
+    }
+
+    const char* exeName() override
+    {
+        return EXE_NAME;
+    }
+
+private:
     NodeContext& m_node;
 };
+
 } // namespace
 } // namespace init
 
 namespace interfaces {
-std::unique_ptr<Init> MakeNodeInit(NodeContext& node, int argc, char* argv[], int& exit_status)
+
+std::unique_ptr<Init> MakeNodeInit(
+    NodeContext& node,
+    int /* argc */,
+    char* /* argv */[],
+    int& /* exit_status */)
 {
     return std::make_unique<init::BitcoindInit>(node);
 }
+
 } // namespace interfaces
