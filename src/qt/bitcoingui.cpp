@@ -444,7 +444,7 @@ void BitcoinGUI::createActions()
             //: The title for Restore Wallet File Windows
             QString title_windows = tr("Load Wallet Backup");
 
-            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
+            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file +  QLatin1String(" (*.dat *.wallet);;") + tr("All Files") + QLatin1String(" (*)"), nullptr);
             if (backup_file.isEmpty()) return;
 
             bool wallet_name_ok;
@@ -529,7 +529,11 @@ void BitcoinGUI::createActions()
         connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::setPrivacy);
         connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::enableHistoryAction);
         GUIUtil::ExceptionSafeConnect(m_export_watchonly_action, &QAction::triggered, [this](bool) {
-            QString destination = GUIUtil::getSaveFileName(this, tr("Save Watch-only Wallet Export"), QString(), QString(), nullptr);
+            QString destination = GUIUtil::getSaveFileName(this,
+                tr("Save Watch-only Wallet Export"), QString(),
+                //: Name of the wallet data file format.
+                tr("Wallet Data") + QLatin1String(" (*.dat)"), nullptr);
+
             if (destination.isEmpty()) return;
             WalletModel* model = walletFrame->currentWalletModel();
             if (!Assume(model)) return;
