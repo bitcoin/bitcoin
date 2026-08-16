@@ -6,6 +6,7 @@
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
 #include <crypto/hkdf_sha256_32.h>
+#include <crypto/hmac_pbkdf2.h>
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
 #include <crypto/poly1305.h>
@@ -353,6 +354,14 @@ void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex,
     unsigned char out[32];
     hkdf32.Expand32(info_stringified, out);
     BOOST_CHECK(HexStr(out) == okm_check_hex);
+}
+
+void TestPBKDF2_HMAC_SHA512(const std::string &password_hex, const std::string &salt_hex, uint32_t iterations, size_t dklen, const std::string &dk_check_hex) {
+    std::vector<unsigned char> password = ParseHex(password_hex);
+    std::vector<unsigned char> salt = ParseHex(salt_hex);
+    std::vector<unsigned char> out(dklen);
+    PBKDF2_HMAC_SHA512(password.data(), password.size(), salt.data(), salt.size(), iterations, out.data(), out.size());
+    BOOST_CHECK(HexStr(out) == dk_check_hex);
 }
 
 void TestSHA3_256(const std::string& input, const std::string& output);
@@ -1069,6 +1078,62 @@ BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
                 "",
                 "",
                 "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d");
+}
+
+BOOST_AUTO_TEST_CASE(pbkdf2_hmac_sha512_testvectors)
+{
+    // Known-answer test vectors for PBKDF2 (RFC 8018 / PKCS#5 v2.1) with
+    // HMAC-SHA-512 as the PRF. Vectors TC1-TC9 are taken from the
+    // brycx/Test-Vector-Generation PBKDF2-HMAC-SHA2 set, whose inputs (P, S, c,
+    // dkLen) follow RFC 6070 and whose SHA-512 outputs were produced with the
+    // Python cryptography package (itself validated against RFC 6070).
+    // Source:
+    // https://github.com/brycx/Test-Vector-Generation/blob/master/PBKDF2/pbkdf2-hmac-sha2-test-vectors.md
+    // TC1: password/salt, c=1, dkLen=20 (single iteration, truncated output).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"70617373776f7264", /*salt=*/"73616c74", /*c=*/1, /*dkLen=*/20,
+                           "867f70cf1ade02cff3752599a3a53dc4af34c7a6");
+    // TC2: password/salt, c=2, dkLen=20 (XOR of two iterations U_1 ^ U_2).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"70617373776f7264", /*salt=*/"73616c74", /*c=*/2, /*dkLen=*/20,
+                           "e1d9c16aa681708a45f5c7c4e215ceb66e011a2e");
+    // TC3: password/salt, c=4096, dkLen=20 (high iteration count).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"70617373776f7264", /*salt=*/"73616c74", /*c=*/4096, /*dkLen=*/20,
+                           "d197b1b33db0143e018b12f3d1d1479e6cdebdcc");
+    // TC4: password/salt, c=16777216, dkLen=20 (16M iterations the
+    // highest-count RFC 6070 vector).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"70617373776f7264", /*salt=*/"73616c74", /*c=*/16777216, /*dkLen=*/20,
+                           "6180a3ceabab45cc3964112c811e0131bca93a35");
+    // TC5: passwordPASSWORDpassword / saltSALTsalt..., c=4096, dkLen=25
+    // (RFC 6070 vector 5; dkLen is not a multiple of the hash length).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"70617373776f726450415353574f524470617373776f7264",
+                           /*salt=*/"73616c7453414c5473616c7453414c5473616c7453414c5473616c7453414c5473616c74",
+                           /*c=*/4096, /*dkLen=*/25,
+                           "8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868");
+    // TC6: pass\0word / sa\0lt, c=4096, dkLen=16 (embedded NUL bytes in both the
+    // password and the salt).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"7061737300776f7264", /*salt=*/"7361006c74", /*c=*/4096, /*dkLen=*/16,
+                           "9d9e9c4cd21fe4be24d5b8244c759665");
+    // TC7: passwd/salt, c=1, dkLen=128 (two 64-byte output blocks: i=1, i=2).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"706173737764", /*salt=*/"73616c74", /*c=*/1, /*dkLen=*/128,
+                           "c74319d99499fc3e9013acff597c23c5baf0a0bec5634c46b8352b793e324723"
+                           "d55caa76b2b25c43402dcfdc06cdcf66f95b7d0429420b39520006749c51a04e"
+                           "f3eb99e576617395a178ba33214793e48045132928a9e9bf2661769fdc668f31"
+                           "798597aaf6da70dd996a81019726084d70f152baed8aafe2227c07636c6ddece");
+    // TC8: Password/NaCl, c=80000, dkLen=128 (high iteration count, two blocks).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"50617373776f7264", /*salt=*/"4e61436c", /*c=*/80000, /*dkLen=*/128,
+                           "e6337d6fbeb645c794d4a9b5b75b7b30dac9ac50376a91df1f4460f6060d5add"
+                           "b2c1fd1f84409abacc67de7eb4056e6bb06c2d82c3ef4ccd1bded0f675ed97c6"
+                           "5c33d39f81248454327aa6d03fd049fc5cbb2b5e6dac08e8ace996cdc960b1bd"
+                           "4530b7e754773d75f67a733fdb99baf6470e42ffcb753c15c352d4800fb6f9d6");
+    // TC9: Password/sa\0lt, c=4096, dkLen=256 (four blocks, embedded NUL salt).
+    TestPBKDF2_HMAC_SHA512(/*pw=*/"50617373776f7264", /*salt=*/"7361006c74", /*c=*/4096, /*dkLen=*/256,
+                           "10176fb32cb98cd7bb31e2bb5c8f6e425c103333a2e496058e3fd2bd88f65748"
+                           "5c89ef92daa0668316bc23ebd1ef88f6dd14157b2320b5d54b5f26377c5dc279"
+                           "b1dcdec044bd6f91b166917c80e1e99ef861b1d2c7bce1b961178125fb86867f"
+                           "6db489a2eae0022e7bc9cf421f044319fac765d70cb89b45c214590e2ffb2c2b"
+                           "565ab3b9d07571fde0027b1dc57f8fd25afa842c1056dd459af4074d7510a0c0"
+                           "20b914a5e202445d4d3f151070589dd6a2554fc506018c4f001df6239643dc86"
+                           "771286ae4910769d8385531bba57544d63c3640b90c98f1445ebdd129475e020"
+                           "86b600f0beb5b05cc6ca9b3633b452b7dad634e9336f56ec4c3ac0b4fe54ced8");
 }
 
 BOOST_AUTO_TEST_CASE(sha256d64)
