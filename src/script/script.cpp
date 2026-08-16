@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <pubkey.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -264,6 +265,13 @@ bool CScript::IsPayToTaproot() const
     return (this->size() == 34 &&
             (*this)[0] == OP_1 &&
             (*this)[1] == 0x20);
+}
+
+bool CScript::IsCompressedPayToPubKey() const noexcept
+{
+    return size() == 2 + CPubKey::COMPRESSED_SIZE &&
+           (*this)[0] == CPubKey::COMPRESSED_SIZE &&
+           (*this)[1 + CPubKey::COMPRESSED_SIZE] == OP_CHECKSIG;
 }
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode

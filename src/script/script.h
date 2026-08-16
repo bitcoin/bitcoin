@@ -562,6 +562,9 @@ public:
 
     bool IsPayToTaproot() const;
 
+    //! Detect P2PK script with a compressed public key. Doesn't check the 0x02/0x03 key prefix.
+    bool IsCompressedPayToPubKey() const noexcept;
+
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;

@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
 
     CScript script = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // COMPRESSED_PUBLIC_KEY_SIZE (33)
     BOOST_CHECK_EQUAL(script.size(), 35U);
+    BOOST_CHECK(script.IsCompressedPayToPubKey());
 
     CompressedScript out;
     bool done = CompressScript(script, out);
