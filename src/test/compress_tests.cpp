@@ -167,4 +167,19 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
     }
 }
 
+BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_invalid_prefix)
+{
+    for (const bool compressed : {true, false}) {
+        auto key{ToByteVector(GenerateRandomKey(compressed).GetPubKey())};
+        // Valid prefixes are 0x02/0x03 (compressed) and 0x04 (uncompressed, though GetLen() recognizes 6 as well).
+        key[0] = 0x06;
+        const auto script{CScript{} << key << OP_CHECKSIG};
+        BOOST_CHECK(compressed ? script.IsCompressedPayToPubKey() : script.IsUncompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
