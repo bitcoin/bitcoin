@@ -42,7 +42,7 @@ static void CheckP2SHSigOps(const CScript& script_sig, const CScript& script_pub
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
 
 // Asserts the expected legacy/accurate sigop totals for common script templates
-BOOST_AUTO_TEST_CASE(GetSigOpCountKnownTemplates)
+BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
 {
     const CPubKey pubkey{GenerateRandomKey(/*compressed=*/true).GetPubKey()};
     constexpr auto p2pkh_hash{"cd2b3298b7f455f39805377e5f213093df3cc09a"_hex};
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(P2SHSigOpCountEdgeCases)
 
 // Feeds malformed PUSHDATA sequences to confirm the parser never crashes and
 // still counts sigops that appear before the error.
-BOOST_AUTO_TEST_CASE(GetSigOpCountErrors)
+BOOST_AUTO_TEST_CASE(CountSigOpsErrors)
 {
     // The opcodetype casts append raw script bytes; bytes after PUSHDATA are
     // parsed as lengths, not opcodes.
@@ -160,15 +160,15 @@ BOOST_AUTO_TEST_CASE(GetSigOpCountErrors)
 BOOST_AUTO_TEST_CASE(GetSigOpCount)
 {
     CScript s1;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/false), 0);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 0);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 0);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 0);
 
     uint160 dummy;
     s1 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 2);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 2);
     s1 << OP_IF << OP_CHECKSIG << OP_ENDIF;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 3);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/false), 21);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 3);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 21);
 
     CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
@@ -181,12 +181,12 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
         keys.push_back(k.GetPubKey());
     }
     CScript s2 = GetScriptForMultisig(1, keys);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(/*fAccurate=*/true), 3);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(/*fAccurate=*/false), 20);
+    BOOST_CHECK_EQUAL(s2.CountSigOps(/*fAccurate=*/true), 3);
+    BOOST_CHECK_EQUAL(s2.CountSigOps(/*fAccurate=*/false), 20);
 
     p2sh = GetScriptForDestination(ScriptHash(s2));
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(/*fAccurate=*/true), 0);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(/*fAccurate=*/false), 0);
+    BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/true), 0);
+    BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/false), 0);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
