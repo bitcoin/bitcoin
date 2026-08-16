@@ -19,6 +19,9 @@ export DEP_OPTS="DEBUG=1 NO_QT=1 CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXX
 export GOAL="all"
 # Setting CMAKE_{C,CXX}_FLAGS_DEBUG flags to an empty string ensures that the flags set in MSAN_FLAGS remain unaltered.
 # _FORTIFY_SOURCE is not compatible with MSAN.
+# Unlike the other jobs that define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE,
+# BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING is not defined here, as it
+# would push the job past the 240-minute limit on the Warp runner.
 export BITCOIN_CONFIG="\
  -DCMAKE_BUILD_TYPE=Debug \
  -DCMAKE_C_FLAGS_DEBUG='' \
