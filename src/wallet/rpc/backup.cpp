@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <limits>
 #include <tuple>
 #include <string>
 
@@ -187,6 +188,11 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 warnings.push_back("Range not given, using default keypool range");
                 range_start = 0;
                 range_end = wallet.m_keypool_size;
+            }
+            // WalletDescriptor stores the range as int32_t with an exclusive end, so an
+            // end past the maximum index would be truncated to a negative range.
+            if (range_end > std::numeric_limits<int32_t>::max()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "End of range is too high");
             }
             next_index = range_start;
             is_ranged = true;
