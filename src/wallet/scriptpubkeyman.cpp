@@ -16,6 +16,7 @@
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -1059,8 +1060,13 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         target_size = m_keypool_size;
     }
 
-    // Calculate the new range_end
-    int32_t new_range_end = std::max(m_wallet_descriptor.next_index + (int32_t)target_size, m_wallet_descriptor.range_end);
+    // Calculate the new range_end. next_index is user controlled for imported descriptors
+    // and target_size comes from the user configurable -keypool, so this addition can
+    // overflow. There is no representable end in that case, so leave the range unchanged.
+    int32_t new_range_end = m_wallet_descriptor.range_end;
+    if (auto target_end{CheckedAdd(m_wallet_descriptor.next_index, static_cast<int32_t>(target_size))}) {
+        new_range_end = std::max(*target_end, m_wallet_descriptor.range_end);
+    }
 
     // If the descriptor is not ranged, we actually just want to fill the first cache item
     if (!m_wallet_descriptor.descriptor->IsRange()) {
