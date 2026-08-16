@@ -209,6 +209,12 @@ unsigned int CScript::CountSigOps(bool fAccurate) const
     return GetSigOpCount(fAccurate);
 }
 
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey)
+{
+    if (!scriptPubKey.IsPayToScriptHash()) return 0;
+    return scriptPubKey.GetSigOpCount(scriptSig);
+}
+
 bool CScript::IsPayToAnchor() const
 {
     return (this->size() == 4 &&

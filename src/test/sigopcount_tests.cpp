@@ -37,6 +37,7 @@ static void CheckSigOps(const CScript& script, bool accurate, unsigned int expec
 static void CheckP2SHSigOps(const CScript& script_sig, const CScript& script_pub_key, unsigned int expected_sigops)
 {
     BOOST_CHECK_EQUAL(script_pub_key.GetSigOpCount(script_sig), expected_sigops);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(script_sig, script_pub_key), expected_sigops);
 }
 
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
@@ -102,9 +103,10 @@ BOOST_AUTO_TEST_CASE(P2SHSigOpCountEdgeCases)
     CheckP2SHSigOps(/*script_sig=*/CScript{}, p2sh_script_pubkey, 0);
     const auto single_sigop{CScript{} << ToByteVector(CScript{} << OP_CHECKMULTISIG)};
     CheckP2SHSigOps(single_sigop, p2sh_script_pubkey, MAX_PUBKEYS_PER_MULTISIG);
-    // For a non-P2SH scriptPubKey, the existing overload counts the scriptPubKey itself.
+    // For a non-P2SH scriptPubKey `CountP2SHSigOps` returns 0, unlike `GetSigOpCount` which counts the scriptPubKey itself.
     const auto non_p2sh_script_pubkey{CScript{} << OP_CHECKSIG};
     BOOST_CHECK_EQUAL(non_p2sh_script_pubkey.GetSigOpCount(single_sigop), 1);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/single_sigop, /*scriptPubKey=*/non_p2sh_script_pubkey), 0);
 
     // Only the final push in scriptSig is treated as the redeemScript.
     const auto sigop_then_trivial{CScript{} << ToByteVector(CScript{} << OP_CHECKSIG) << ToByteVector(CScript{} << OP_TRUE)};
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
+    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3);
 
     std::vector<CPubKey> keys;
     for (int i{0}; i < 3; ++i) {
@@ -189,7 +191,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/false), 0);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
+    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3);
 }
 
 /**
@@ -281,6 +283,9 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptSig = CScript() << OP_0 << OP_0 << ToByteVector(redeemScript);
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+        BOOST_CHECK_EQUAL(
+            GetP2SHSigOpCount(CTransaction{spendingTx}, coins),
+            CountP2SHSigOps(/*scriptSig=*/scriptSig, /*scriptPubKey=*/scriptPubKey));
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2 * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
 

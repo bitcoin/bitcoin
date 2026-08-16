@@ -613,6 +613,12 @@ public:
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
 };
 
+/**
+ * Count sigops in the redeemScript selected by a P2SH scriptSig for the given scriptPubKey.
+ * Returns 0 if the scriptPubKey is not P2SH or the scriptSig is not a valid push-only script.
+ */
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey);
+
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
 
