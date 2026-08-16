@@ -1145,6 +1145,16 @@ private:
      */
     void ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vRecv);
 
+    /** Serve a getcfilters/getcfheaders/getcfcheckpt request that has
+     *  already been parsed. May disconnect from the peer in the case of a
+     *  bad request. */
+    void ServeGetCFilters(CNode& node, Peer& peer, BlockFilterType filter_type,
+                          uint32_t start_height, const uint256& stop_hash);
+    void ServeGetCFHeaders(CNode& node, Peer& peer, BlockFilterType filter_type,
+                           uint32_t start_height, const uint256& stop_hash);
+    void ServeGetCFCheckPt(CNode& node, Peer& peer, BlockFilterType filter_type,
+                           const uint256& stop_hash);
+
     /**
      * Handle a cfheaders request.
      *
@@ -3561,8 +3571,12 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
 
     vRecv >> filter_type_ser >> start_height >> stop_hash;
 
-    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    ServeGetCFilters(node, peer, static_cast<BlockFilterType>(filter_type_ser), start_height, stop_hash);
+}
 
+void PeerManagerImpl::ServeGetCFilters(CNode& node, Peer& peer, BlockFilterType filter_type,
+                                       uint32_t start_height, const uint256& stop_hash)
+{
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
     if (!PrepareBlockFilterRequest(node, peer, filter_type, start_height, stop_hash,
@@ -3573,7 +3587,7 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
     std::vector<BlockFilter> filters;
     if (!filter_index->LookupFilterRange(start_height, stop_index, filters)) {
         LogDebug(BCLog::NET, "Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
-                     BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
+                 BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
     }
 
@@ -3590,8 +3604,12 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& node, Peer& peer, DataStream& v
 
     vRecv >> filter_type_ser >> start_height >> stop_hash;
 
-    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    ServeGetCFHeaders(node, peer, static_cast<BlockFilterType>(filter_type_ser), start_height, stop_hash);
+}
 
+void PeerManagerImpl::ServeGetCFHeaders(CNode& node, Peer& peer, BlockFilterType filter_type,
+                                        uint32_t start_height, const uint256& stop_hash)
+{
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
     if (!PrepareBlockFilterRequest(node, peer, filter_type, start_height, stop_hash,
@@ -3613,15 +3631,15 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& node, Peer& peer, DataStream& v
     std::vector<uint256> filter_hashes;
     if (!filter_index->LookupFilterHashRange(start_height, stop_index, filter_hashes)) {
         LogDebug(BCLog::NET, "Failed to find block filter hashes in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
-                     BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
+                 BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
     }
 
     MakeAndPushMessage(node, NetMsgType::CFHEADERS,
-              filter_type_ser,
-              stop_index->GetBlockHash(),
-              prev_header,
-              filter_hashes);
+                       static_cast<uint8_t>(filter_type),
+                       stop_index->GetBlockHash(),
+                       prev_header,
+                       filter_hashes);
 }
 
 void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& vRecv)
@@ -3631,8 +3649,12 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
 
     vRecv >> filter_type_ser >> stop_hash;
 
-    const BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+    ServeGetCFCheckPt(node, peer, static_cast<BlockFilterType>(filter_type_ser), stop_hash);
+}
 
+void PeerManagerImpl::ServeGetCFCheckPt(CNode& node, Peer& peer, BlockFilterType filter_type,
+                                        const uint256& stop_hash)
+{
     const CBlockIndex* stop_index;
     BlockFilterIndex* filter_index;
     if (!PrepareBlockFilterRequest(node, peer, filter_type, /*start_height=*/0, stop_hash,
@@ -3651,15 +3673,15 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
 
         if (!filter_index->LookupFilterHeader(block_index, headers[i])) {
             LogDebug(BCLog::NET, "Failed to find block filter header in index: filter_type=%s, block_hash=%s\n",
-                         BlockFilterTypeName(filter_type), block_index->GetBlockHash().ToString());
+                     BlockFilterTypeName(filter_type), block_index->GetBlockHash().ToString());
             return;
         }
     }
 
     MakeAndPushMessage(node, NetMsgType::CFCHECKPT,
-              filter_type_ser,
-              stop_index->GetBlockHash(),
-              headers);
+                       static_cast<uint8_t>(filter_type),
+                       stop_index->GetBlockHash(),
+                       headers);
 }
 
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
