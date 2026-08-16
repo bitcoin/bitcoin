@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2PKH
             const auto script{GetScriptForDestination(PKHash(pubkey.GetID()))};
+            BOOST_REQUIRE(script.IsPayToPubKeyHash());
             CheckSigOps(script, accurate_sigops, 1);
         }
         {

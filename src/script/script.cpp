@@ -232,6 +232,16 @@ bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& progr
         program[1] == 0x73;
 }
 
+bool CScript::IsPayToPubKeyHash() const noexcept
+{
+    return size() == 25 &&
+           (*this)[0] == OP_DUP &&
+           (*this)[1] == OP_HASH160 &&
+           (*this)[2] == 20 &&
+           (*this)[23] == OP_EQUALVERIFY &&
+           (*this)[24] == OP_CHECKSIG;
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:

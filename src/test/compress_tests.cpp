@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
 
     CScript script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK_EQUAL(script.size(), 25U);
+    BOOST_CHECK(script.IsPayToPubKeyHash());
 
     CompressedScript out;
     bool done = CompressScript(script, out);

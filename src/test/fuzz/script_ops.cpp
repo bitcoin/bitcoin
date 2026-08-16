@@ -50,6 +50,7 @@ FUZZ_TARGET(script_ops)
     (void)CountP2SHSigOps(/*scriptSig=*/script_sig, /*scriptPubKey=*/script);
     (void)script.HasValidOps();
     (void)script.IsPayToScriptHash();
+    (void)script.IsPayToPubKeyHash();
     (void)script.IsPayToAnchor();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();

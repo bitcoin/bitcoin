@@ -180,6 +180,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
 
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
+        assert(script_for_destination.IsPayToPubKeyHash());
         assert(script_for_destination.size() == 25);
 
         const std::string destination_address = EncodeDestination(tx_destination);
