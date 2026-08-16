@@ -100,6 +100,9 @@ void TxDownloadManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& 
     m_orphanage->EraseForBlock(*pblock);
 
     for (const auto& ptx : pblock->vtx) {
+        // Reconsider potential child transactions.
+        m_orphanage->AddChildrenToWorkSet(*ptx, m_opts.m_rng);
+
         RecentConfirmedTransactionsFilter().insert(ptx->GetHash().ToUint256());
         if (ptx->HasWitness()) {
             RecentConfirmedTransactionsFilter().insert(ptx->GetWitnessHash().ToUint256());

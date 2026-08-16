@@ -531,6 +531,8 @@ void TxOrphanageImpl::LimitOrphans()
 
 std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
 {
+    if (m_orphans.empty()) return {};
+
     std::vector<std::pair<Wtxid, NodeId>> ret;
     auto& index_by_wtxid = m_orphans.get<ByWtxid>();
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
