@@ -31,6 +31,7 @@ Serialize(const CScript& s)
 static void CheckSigOps(const CScript& script, bool accurate, unsigned int expected_sigops)
 {
     BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate), expected_sigops);
+    BOOST_CHECK_EQUAL(script.CountSigOps(accurate), expected_sigops);
 }
 
 static void CheckP2SHSigOps(const CScript& script_sig, const CScript& script_pub_key, unsigned int expected_sigops)
@@ -256,6 +257,12 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptSig = CScript() << OP_0 << OP_0;
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+        BOOST_CHECK_EQUAL(
+            GetLegacySigOpCount(CTransaction{spendingTx}),
+            spendingTx.vin.at(0).scriptSig.CountSigOps(/*fAccurate=*/false) + spendingTx.vout.at(0).scriptPubKey.CountSigOps(/*fAccurate=*/false));
+        BOOST_CHECK_EQUAL(
+            GetLegacySigOpCount(CTransaction{creationTx}),
+            creationTx.vin.at(0).scriptSig.CountSigOps(/*fAccurate=*/false) + creationTx.vout.at(0).scriptPubKey.CountSigOps(/*fAccurate=*/false));
         // Legacy counting only includes signature operations in scriptSigs and scriptPubKeys
         // of a transaction and does not take the actual executed sig operations into account.
         // spendingTx in itself does not contain a signature operation.

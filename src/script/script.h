@@ -535,6 +535,18 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    /**
+     * Count the number of signature operations (sigops) in this script.
+     *
+     * The `fAccurate` parameter controls how `CHECKMULTISIG` operations are counted.
+     * When enforcing the `MAX_BLOCK_SIGOPS_COST` limit, set `fAccurate` to `true` when
+     * counting a redeemScript (P2SH) or witnessScript (P2WSH), and set it to `false`
+     * when counting a scriptPubKey or scriptSig.
+     *
+     * This helper is equivalent to `GetSigOpCount(bool)`.
+     */
+    unsigned int CountSigOps(bool fAccurate) const;
+
     /*
      * OP_1 <0x4e73>
      */

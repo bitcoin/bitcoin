@@ -204,6 +204,11 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+unsigned int CScript::CountSigOps(bool fAccurate) const
+{
+    return GetSigOpCount(fAccurate);
+}
+
 bool CScript::IsPayToAnchor() const
 {
     return (this->size() == 4 &&

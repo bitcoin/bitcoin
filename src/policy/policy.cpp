@@ -182,7 +182,7 @@ static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inpu
         // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs(VERIFY) with 16 pubkeys
         // or fewer. This method of accounting was introduced by BIP16, and BIP54 reuses it.
         // The GetSigOpCount call on the previous scriptPubKey counts both bare and P2SH sigops.
-        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
+        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true); // TODO: Use CountSigOps
         sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
 
         if (sigops > MAX_TX_LEGACY_SIGOPS) {
