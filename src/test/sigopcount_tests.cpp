@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2PK (uncompressed)
             const auto script{GetScriptForRawPubKey(GenerateRandomKey(/*compressed=*/false).GetPubKey())};
+            BOOST_REQUIRE(script.IsUncompressedPayToPubKey());
             CheckSigOps(script, accurate_sigops, 1);
         }
         {

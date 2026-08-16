@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
     CKey key = GenerateRandomKey(/*compressed=*/false); // case uncompressed PubKeyID
     CScript script =  CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // PUBLIC_KEY_SIZE (65)
     BOOST_CHECK_EQUAL(script.size(), 67U);                   // 1 char code + 65 char pubkey + OP_CHECKSIG
+    BOOST_CHECK(script.IsUncompressedPayToPubKey());
 
     CompressedScript out;
     bool done = CompressScript(script, out);

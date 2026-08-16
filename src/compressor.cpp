@@ -45,7 +45,7 @@ static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
         return true;
     }
     if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
+                            && script[1] == 0x04) { // TODO: Use IsUncompressedPayToPubKey
         pubkey.Set(&script[1], &script[66]);
         return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
     }

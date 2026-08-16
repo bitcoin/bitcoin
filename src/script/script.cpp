@@ -274,6 +274,13 @@ bool CScript::IsCompressedPayToPubKey() const noexcept
            (*this)[1 + CPubKey::COMPRESSED_SIZE] == OP_CHECKSIG;
 }
 
+bool CScript::IsUncompressedPayToPubKey() const noexcept
+{
+    return size() == 2 + CPubKey::SIZE &&
+           (*this)[0] == CPubKey::SIZE &&
+           (*this)[1 + CPubKey::SIZE] == OP_CHECKSIG;
+}
+
 // A witness program is any valid CScript that consists of a 1-byte push opcode
 // followed by a data push between 2 and 40 bytes.
 bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const

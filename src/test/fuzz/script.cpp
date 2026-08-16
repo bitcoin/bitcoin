@@ -149,6 +149,7 @@ FUZZ_TARGET(script, .init = initialize_script)
 
         const auto* pubkey_dest{std::get_if<PubKeyDestination>(&tx_destination_1)};
         Assert(dest.IsCompressedPayToPubKey() == (pubkey_dest && pubkey_dest->GetPubKey().size() == 33));
+        Assert(dest.IsUncompressedPayToPubKey() == (pubkey_dest && pubkey_dest->GetPubKey().size() == 65));
         Assert(dest.IsPayToPubKeyHash() == std::holds_alternative<PKHash>(tx_destination_1));
         if (!pubkey_dest) {
             // Only try to round trip non-pubkey destinations since PubKeyDestination has no encoding

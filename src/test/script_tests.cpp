@@ -1249,6 +1249,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
         CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
     }
 
