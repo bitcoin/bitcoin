@@ -252,6 +252,13 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+bool CScript::IsPayToWitnessPubKeyHash() const noexcept
+{
+    return size() == 22 &&
+           (*this)[0] == OP_0 &&
+           (*this)[1] == 20;
+}
+
 bool CScript::IsPayToWitnessScriptHash() const
 {
     // Extra-fast test for pay-to-witness-script-hash CScripts:

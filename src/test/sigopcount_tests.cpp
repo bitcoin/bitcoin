@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2WPKH
             const auto script{GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID()))};
+            BOOST_REQUIRE(script.IsPayToWitnessPubKeyHash());
             CheckSigOps(script, accurate_sigops, 0);
         }
         // P2SH
