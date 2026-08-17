@@ -1,0 +1,158 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+---
+name: Guix
+on:
+  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request.
+  pull_request:
+  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#push.
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: guix-${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GUIX_BINARY_VERSION: 1.5.0
+  GUIX_BINARY_SHA256: aa41025489c5061543e9c48873eaa829b900b2da75d40f9648913622f5f47817
+  GUIX_BOOTSTRAP_DIR: ${{ github.workspace }}/.guix-cache/bootstrap
+  SUBSTITUTE_SERVER: https://guix.fish.foo
+  SUBSTITUTE_SERVER_KEY_SHA256: 5796b4e6cc23635052ba7cecdc4b8b92ba6a53ef374208ce5094c0920a72f40f
+  SOURCES_PATH: ${{ github.workspace }}/.guix-cache/depends-sources
+  BASE_CACHE: ${{ github.workspace }}/.guix-cache/depends-built
+  SDK_PATH: ${{ github.workspace }}/.guix-cache/sdk
+  SUBSTITUTE_URLS: https://guix.fish.foo
+  CI_RETRY_EXE: ${{ github.workspace }}/ci/retry/retry
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  guix:
+    name: Guix, ${{ matrix.host }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-24.04' }}
+    timeout-minutes: 360
+    strategy:
+      matrix:
+        host:
+          - arm64-apple-darwin
+          - x86_64-linux-gnu
+          - x86_64-w64-mingw32
+    env:
+      HOSTS: ${{ matrix.host }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set cache variables
+        id: cache-vars
+        run: |
+          source contrib/guix/libexec/prelude.bash
+          echo "time-machine-commit=$GUIX_TIME_MACHINE_COMMIT" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Guix bootstrap cache
+        id: guix-bootstrap-cache
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: |
+            ${{ env.GUIX_BOOTSTRAP_DIR }}
+            ~/.cache/guix/checkouts
+          key: guix-bootstrap-${{ env.GUIX_BINARY_VERSION }}-${{ steps.cache-vars.outputs.time-machine-commit }}
+          restore-keys: guix-bootstrap-${{ env.GUIX_BINARY_VERSION }}-
+
+      - name: Restore depends sources cache
+        id: depends-sources-cache
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.SOURCES_PATH }}
+          key: guix-depends-sources-${{ hashFiles('depends/**') }}
+          restore-keys: guix-depends-sources-
+
+      - name: Restore built depends cache
+        id: built-depends-cache
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.BASE_CACHE }}
+          key: guix-built-depends-${{ matrix.host }}-${{ env.GUIX_BINARY_VERSION }}-${{ hashFiles('depends/**') }}-${{ hashFiles('contrib/guix/**') }}
+          restore-keys: guix-built-depends-${{ matrix.host }}-${{ env.GUIX_BINARY_VERSION }}-
+
+      - name: Restore macOS SDK cache
+        if: matrix.host == 'arm64-apple-darwin'
+        id: macos-sdk-cache
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.SDK_PATH }}
+          key: guix-macos-sdk-${{ hashFiles('depends/hosts/darwin.mk', 'ci/test/00_setup_env_mac_cross.sh') }}
+          restore-keys: guix-macos-sdk-
+
+      - name: Install macOS SDK
+        if: matrix.host == 'arm64-apple-darwin'
+        run: |
+          source ci/test/00_setup_env_mac_cross.sh
+          sdk_name="Xcode-$XCODE_VERSION-$XCODE_BUILD_ID-extracted-SDK-with-libcxx-headers"
+          sdk_path="$SDK_PATH/$sdk_name"
+          sdk_archive="$RUNNER_TEMP/$sdk_name.tar"
+          if [ ! -d "$sdk_path" ]; then
+            mkdir -p "$SDK_PATH"
+            curl --location --fail "$SDK_URL/$sdk_name.tar" --output "$sdk_archive"
+            printf '%s  %s\n' "$OSX_SDK_SHA256" "$sdk_archive" | sha256sum --check
+            tar -C "$SDK_PATH" -xf "$sdk_archive"
+          fi
+
+      - name: Install Guix
+        run: |
+          ./.github/install-guix.sh
+
+      - name: Build with Guix
+        run: |
+          set -o errexit -o pipefail
+          ./contrib/guix/guix-build
+
+      - name: Save Guix bootstrap cache
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.guix-bootstrap-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/cache/save/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: |
+            ${{ env.GUIX_BOOTSTRAP_DIR }}
+            ~/.cache/guix/checkouts
+          key: ${{ steps.guix-bootstrap-cache.outputs.cache-primary-key }}
+
+      - name: Save depends sources cache
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.depends-sources-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/cache/save/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.SOURCES_PATH }}
+          key: ${{ steps.depends-sources-cache.outputs.cache-primary-key }}
+
+      - name: Save macOS SDK cache
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && matrix.host == 'arm64-apple-darwin' && steps.macos-sdk-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/cache/save/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.SDK_PATH }}
+          key: ${{ steps.macos-sdk-cache.outputs.cache-primary-key }}
+
+      - name: Save built depends cache
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.built-depends-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/cache/save/internal
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+          path: ${{ env.BASE_CACHE }}
+          key: ${{ steps.built-depends-cache.outputs.cache-primary-key }}
