@@ -152,7 +152,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
         // Look in the txindex
         if (g_txindex) {
-            if (auto result{g_txindex->FindTx(psbt_input.prev_txid)}) tx = result->tx;
+            if (CTransactionRef found{g_txindex->FindTx(psbt_input.prev_txid).tx}) tx = std::move(found);
         }
         // If we still don't have it look in the mempool
         if (!tx) {
