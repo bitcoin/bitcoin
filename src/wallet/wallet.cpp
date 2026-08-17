@@ -178,7 +178,8 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
 
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
-    WITH_LOCK(wallet->cs_wallet, wallet->WriteBestBlock());
+    // Write failure is ok, next load will need to rescan
+    WITH_LOCK(wallet->cs_wallet, (void)wallet->WriteBestBlock());
 
     // Unregister with the validation interface which also drops shared pointers.
     wallet->DisconnectChainNotifications();
@@ -674,7 +675,9 @@ void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
     AssertLockHeld(cs_wallet);
 
     SetLastBlockProcessedInMem(block_height, block_hash);
-    WriteBestBlock();
+    if (!WriteBestBlock()) {
+        WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+    }
 }
 
 std::set<Txid> CWallet::GetConflicts(const Txid& txid) const
@@ -1573,7 +1576,9 @@ void CWallet::blockConnected(const ChainstateRole& role, const interfaces::Block
 
     // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
     if (wallet_updated || block.height % 144 == 0) {
-        WriteBestBlock();
+        if (!WriteBestBlock()) {
+            WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+        }
     }
 }
 
@@ -3151,7 +3156,9 @@ void CWallet::postInitProcess()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
-    WITH_LOCK(cs_wallet, WriteBestBlock());
+    if (!WITH_LOCK(cs_wallet, return WriteBestBlock())) {
+        return false;
+    }
     return GetDatabase().Backup(strDest);
 }
 
@@ -4482,7 +4489,7 @@ std::optional<CExtKey> CWallet::GetExtKey(const CExtPubKey& xpub) const
     return std::nullopt;
 }
 
-void CWallet::WriteBestBlock() const
+bool CWallet::WriteBestBlock() const
 {
     AssertLockHeld(cs_wallet);
 
@@ -4492,9 +4499,10 @@ void CWallet::WriteBestBlock() const
 
         if (!loc.IsNull()) {
             WalletBatch batch(GetDatabase());
-            batch.WriteBestBlock(loc);
+            return batch.WriteBestBlock(loc);
         }
     }
+    return true;
 }
 
 void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
