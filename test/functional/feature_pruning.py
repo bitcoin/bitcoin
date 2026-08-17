@@ -124,7 +124,8 @@ class PruneTest(BitcoinTestFramework):
             extra_args=['-prune=549'],
         )
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: Prune mode is incompatible with -txindex.',
+            expected_msg='Error: txindex best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)'
+                         f'{os.linesep}Error: A fatal internal error occurred, see debug.log for details: Failed to start indexes, shutting down…',
             extra_args=['-prune=550', '-txindex'],
         )
         self.nodes[0].assert_start_raises_init_error(

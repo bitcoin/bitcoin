@@ -136,6 +136,7 @@ BOOST_AUTO_TEST_CASE(txindex_hash_prefix)
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    BOOST_CHECK(txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
 
     // Transaction should not be found in the index before it is started.
@@ -240,6 +241,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
     }
 
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    BOOST_CHECK(!txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
     txindex.Sync();
 
