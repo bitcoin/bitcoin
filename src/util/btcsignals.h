@@ -55,6 +55,31 @@ public:
 template <typename Signature, typename Combiner = null_value>
 class signal;
 
+namespace detail {
+#ifdef __cpp_lib_atomic_shared_ptr
+template <typename T>
+using atomic_shared_ptr = std::atomic<std::shared_ptr<T>>;
+#else
+//! Substitute for the C++20 std::atomic<std::shared_ptr<T>> specialization on
+//! standard libraries that do not provide it yet (feature-test macro
+//! __cpp_lib_atomic_shared_ptr), implemented with the C++11 atomic_load and
+//! atomic_store overloads for shared_ptr. Only the members used here are
+//! provided.
+template <typename T>
+class atomic_shared_ptr
+{
+    std::shared_ptr<T> m_ptr;
+
+public:
+    atomic_shared_ptr(std::shared_ptr<T> ptr) noexcept : m_ptr{std::move(ptr)} {}
+    atomic_shared_ptr(const atomic_shared_ptr&) = delete;
+    atomic_shared_ptr& operator=(const atomic_shared_ptr&) = delete;
+    std::shared_ptr<T> load() const noexcept { return std::atomic_load(&m_ptr); }
+    void store(std::shared_ptr<T> ptr) noexcept { std::atomic_store(&m_ptr, std::move(ptr)); }
+};
+#endif
+} // namespace detail
+
 /*
  * State object representing the liveness of a registered callback.
  * signal::connect() returns an enabled connection which can be held and
@@ -75,7 +100,7 @@ class connection
         //! signal type, and set to null by disconnect(). Signal invocation
         //! holds a reference to it while calling it, so a callback
         //! disconnected during a call is destroyed when the call returns.
-        std::atomic<std::shared_ptr<const void>> m_callback;
+        detail::atomic_shared_ptr<const void> m_callback;
 
         void disconnect() { m_callback.store(nullptr); }
 
