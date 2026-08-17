@@ -80,14 +80,27 @@ class connection
             // signal::connect() garbage collection, which may never happen. An
             // invocation that already loaded the owner keeps the callback
             // alive until it returns.
+#ifdef __cpp_lib_atomic_shared_ptr
             m_owner.store(nullptr);
+#else
+            std::atomic_store(&m_owner, std::shared_ptr<const void>{});
+#endif
         }
 
     protected:
         //! Type-erased owner of the callback stored by the derived
         //! signal::connection_holder. Loaded by signal invocation to keep the
         //! callback alive while it runs, cleared by disconnect().
+        //!
+        //! std::atomic<shared_ptr<T>> is a C++20 specialization (feature-test
+        //! macro __cpp_lib_atomic_shared_ptr). Fall back to the C++14 free
+        //! functions atomic_load/atomic_store, which are specifically overloaded
+        //! for shared_ptr, on implementations that do not provide it.
+#ifdef __cpp_lib_atomic_shared_ptr
         std::atomic<std::shared_ptr<const void>> m_owner{};
+#else
+        std::shared_ptr<const void> m_owner{};
+#endif
 
     public:
         bool connected() const { return m_connected.load(); }
@@ -185,12 +198,23 @@ class signal
         {
             auto owner{std::make_shared<const function_type>(std::forward<Callable>(callback))};
             m_callback = owner.get();
+#ifdef __cpp_lib_atomic_shared_ptr
             m_owner.store(std::move(owner));
+#else
+            std::atomic_store(&m_owner, std::shared_ptr<const void>(std::move(owner)));
+#endif
         }
 
         //! Load the owner, keeping the callback alive while the returned
         //! shared_ptr is held. Returns null if disconnected.
-        std::shared_ptr<const void> owner() const { return m_owner.load(); }
+        std::shared_ptr<const void> owner() const
+        {
+#ifdef __cpp_lib_atomic_shared_ptr
+            return m_owner.load();
+#else
+            return std::atomic_load(&m_owner);
+#endif
+        }
 
         //! Raw pointer to the callback, only valid while holding a shared_ptr
         //! returned by owner().
