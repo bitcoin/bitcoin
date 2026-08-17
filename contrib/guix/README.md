@@ -151,8 +151,8 @@ If you perform a lot of builds and have a bunch of worktrees, you may find it
 more efficient to keep the depends tree's download cache, build cache, and SDKs
 outside of the worktrees to avoid duplicate downloads and unnecessary builds. To
 help with this situation, the `guix-build` script honours the `SOURCES_PATH`,
-`BASE_CACHE`, and `SDK_PATH` environment variables and will pass them on to the
-depends tree so that you can do something like:
+`BASE_CACHE`, and `SDK_PATH` environment variables so that you can do something
+like:
 
 ```sh
 env SOURCES_PATH="$HOME/depends-SOURCES_PATH" BASE_CACHE="$HOME/depends-BASE_CACHE" SDK_PATH="$HOME/macOS-SDKs" ./contrib/guix/guix-build
@@ -249,9 +249,10 @@ details.
 
 * _**BASE_CACHE**_
 
-  Set the depends tree cache for built packages. This is passed through to the
-  depends tree. Setting this to the same directory across multiple builds of the
-  depends tree can eliminate unnecessary building of packages.
+  Set the root directory for cached built packages. Non-GUI and GUI builds use
+  the `GUIX/BUILD` and `GUIX/GUI` subdirectories, respectively, so their caches do
+  not evict each other's packages. Setting this to the same directory across
+  multiple Guix builds can eliminate unnecessary building of packages.
 
   The path that this environment variable points to **must be a directory**, and
   **NOT a symlink to a directory**.
