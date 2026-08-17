@@ -101,7 +101,7 @@ def main():
     configfile = os.path.abspath(os.path.dirname(__file__)) + "/../config.ini"
     config.read_file(open(configfile))
 
-    if not config["components"].getboolean("ENABLE_FUZZ_BINARY"):
+    if not config.getboolean("components", "ENABLE_FUZZ_BINARY"):
         logging.error("Must have fuzz executable built")
         sys.exit(1)
 
