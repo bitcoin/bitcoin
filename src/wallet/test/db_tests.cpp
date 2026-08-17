@@ -404,5 +404,45 @@ BOOST_AUTO_TEST_CASE(bdbro_btree_page_referenced_twice)
     BOOST_CHECK_EQUAL(error.original, "BTree page referenced more than once");
 }
 
+BOOST_AUTO_TEST_CASE(bdbro_overflow_page_referenced_twice)
+{
+    // A record's overflow page points back at itself. It carries no data, so the
+    // length check cannot bound the chain; check the repeated page is rejected.
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.MetaPage(/*page=*/0, /*last_page=*/4, /*root=*/1);
+    builder.OuterLeaf(/*page=*/1, /*inner_meta_page=*/2);
+    builder.MetaPage(/*page=*/2, /*last_page=*/4, /*root=*/3);
+
+    // Page 3: a leaf whose two records are a key and an overflow record -> page 4.
+    builder.WLE(3, 4, 1, 4);          // lsn_offset = 1
+    builder.WLE(3, 8, 3, 4);          // page_num
+    builder.WLE(3, 20, 2, 2);         // entries = 2
+    builder.W8(3, 24, 1);             // level = 1
+    builder.W8(3, 25, 5);             // type = BTREE_LEAF
+    builder.WLE(3, 26, 30, 2);        // index[0] -> key record
+    builder.WLE(3, 28, 34, 2);        // index[1] -> overflow record
+    builder.WLE(3, 30, 1, 2); builder.W8(3, 32, 1); builder.WStr(3, 33, "k");
+    builder.WLE(3, 34, 0, 2);         // RecordHeader.len = 0
+    builder.W8(3, 36, 3);             // RecordHeader.type = OVERFLOW_DATA
+    builder.WLE(3, 38, 4, 4);         // OverflowRecord.page_number = 4
+    builder.WLE(3, 42, 1, 4);         // OverflowRecord.item_len = 1
+
+    // Page 4: an overflow page with no data whose next page is itself.
+    builder.WLE(4, 4, 1, 4);          // lsn_offset = 1
+    builder.WLE(4, 8, 4, 4);          // page_num
+    builder.WLE(4, 16, 4, 4);         // next_page = 4
+    builder.W8(4, 25, 7);             // type = OVERFLOW_DATA
+
+    const fs::path path{builder.WriteTo(m_path_root, "bdbro_overflow.dat")};
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_CHECK(!db);
+    BOOST_CHECK_EQUAL(status, DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK_EQUAL(error.original, "Overflow page referenced more than once");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

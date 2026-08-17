@@ -700,7 +700,14 @@ void BerkeleyRODatabase::Open()
                     if (orec->item_len > max_data_size) {
                         throw std::runtime_error("Overflow record has an impossible length");
                     }
+                    // Overflow pages that carry no data do not grow the accumulated
+                    // size, so the length check above cannot bound a chain of them.
+                    // Track visited pages to reject a chain that references one twice.
+                    std::unordered_set<uint32_t> visited_overflow;
                     while (next_page != 0) {
+                        if (!visited_overflow.insert(next_page).second) {
+                            throw std::runtime_error("Overflow page referenced more than once");
+                        }
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
