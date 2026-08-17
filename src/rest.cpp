@@ -14,6 +14,7 @@
 #include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -897,11 +898,15 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
 
     const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
-    uint256 hashBlock = uint256();
-    const CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), *hash,  node->chainman->m_blockman, hashBlock)};
-    if (!tx) {
+    const TxLookupResult result{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), *hash, node->chainman->m_blockman)};
+    if (!result.tx) {
+        if (!result.pruned_block_hashes.empty()) {
+            return RESTERR(req, HTTP_NOT_FOUND, PrunedBlocksErrorMessage(result.pruned_block_hashes));
+        }
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
+    const CTransactionRef& tx{result.tx};
+    const uint256& hashBlock{result.block_hash};
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         DataStream ssTx;
