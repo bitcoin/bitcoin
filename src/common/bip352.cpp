@@ -25,6 +25,7 @@
 #include <util/check.h>
 
 #include <algorithm>
+#include <ios>
 #include <optional>
 #include <span>
 #include <type_traits>
@@ -56,6 +57,54 @@ PrevoutsSummary::~PrevoutsSummary() = default;
 secp256k1_silentpayments_prevouts_summary* PrevoutsSummary::Get() const
 {
     return m_impl->Get();
+}
+
+SilentPaymentsLabel::SilentPaymentsLabel(const secp256k1_silentpayments_label& label) {
+    m_label = std::make_unique<secp256k1_silentpayments_label>(label);
+    int ret = secp256k1_silentpayments_recipient_label_serialize(secp256k1_context_static, m_vch, m_label.get());
+    assert(ret);
+}
+
+SilentPaymentsLabel::SilentPaymentsLabel(const unsigned char* label) {
+    memcpy(m_vch, label, CPubKey::COMPRESSED_SIZE);
+}
+
+SilentPaymentsLabel SilentPaymentsLabel::FromBytes(const unsigned char* vch33)
+{
+    secp256k1_silentpayments_label label_obj;
+    if (!secp256k1_silentpayments_recipient_label_parse(secp256k1_context_static, &label_obj, vch33)) {
+        throw std::ios_base::failure("SilentPaymentsLabel: invalid label");
+    }
+    return SilentPaymentsLabel(label_obj);
+}
+
+SilentPaymentsLabel::SilentPaymentsLabel(SilentPaymentsLabel&&) noexcept = default;
+SilentPaymentsLabel& SilentPaymentsLabel::operator=(SilentPaymentsLabel&&) noexcept = default;
+SilentPaymentsLabel::~SilentPaymentsLabel() = default;
+
+SilentPaymentsLabel::SilentPaymentsLabel(const SilentPaymentsLabel& label) {
+    if (label.m_label.get() != nullptr) {
+        m_label = std::make_unique<secp256k1_silentpayments_label>(*label.m_label.get());
+    }
+    memcpy(m_vch, label.m_vch, CPubKey::COMPRESSED_SIZE);
+}
+SilentPaymentsLabel& SilentPaymentsLabel::operator=(const SilentPaymentsLabel& label) {
+    if (this != &label) {
+        if (label.m_label.get() != nullptr) {
+            m_label = std::make_unique<secp256k1_silentpayments_label>(*label.m_label.get());
+        } else {
+            m_label.reset();
+        }
+        memcpy(m_vch, label.m_vch, CPubKey::COMPRESSED_SIZE);
+    }
+    return *this;
+}
+
+const secp256k1_silentpayments_label* SilentPaymentsLabel::Get() const {
+    // SilentPaymentsLabel::SilentPaymentsLabel(const unsigned char* label) is a private
+    // constructor that is only used by LabelLookupCallback for comparison
+    assert(m_label.get() != nullptr);
+    return m_label.get();
 }
 
 std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
@@ -282,8 +331,8 @@ std::optional<std::map<size_t, WitnessV1Taproot>> GenerateSilentPaymentsTaprootD
 }
 
 const unsigned char* LabelLookupCallback(const unsigned char* key, const void* context) {
-    auto label_context = static_cast<const std::map<CPubKey, uint256>*>(context);
-    CPubKey label{key, key + CPubKey::COMPRESSED_SIZE};
+    auto label_context = static_cast<const std::map<SilentPaymentsLabel, uint256>*>(context);
+    SilentPaymentsLabel label{key};
     auto it = label_context->find(label);
     if (it != label_context->end()) {
         return it->second.begin();
@@ -291,25 +340,19 @@ const unsigned char* LabelLookupCallback(const unsigned char* key, const void* c
     return nullptr;
 }
 
-std::pair<CPubKey, uint256> CreateLabel(const CKey& scan_key, const uint32_t m) {
+std::pair<SilentPaymentsLabel, uint256> CreateLabel(const CKey& scan_key, const uint32_t m) {
     secp256k1_silentpayments_label label_obj;
     unsigned char label_tweak[32];
     bool ret = secp256k1_silentpayments_recipient_label_create(GetSecp256k1SignContext(), &label_obj, label_tweak, UCharCast(scan_key.data()), m);
     assert(ret);
-    CPubKey label;
-    ret = secp256k1_silentpayments_recipient_label_serialize(secp256k1_context_static, (unsigned char*)label.begin(), &label_obj);
-    assert(ret);
-    return {label, uint256{label_tweak}};
+    return {SilentPaymentsLabel(label_obj), uint256{label_tweak}};
 }
 
-CPubKey CreateLabeledSpendPubKey(const CPubKey& spend_pubkey, const CPubKey& label) {
-    secp256k1_silentpayments_label label_obj;
+CPubKey CreateLabeledSpendPubKey(const CPubKey& spend_pubkey, const SilentPaymentsLabel& label) {
     secp256k1_pubkey spend_obj, labeled_spend_obj;
     bool ret = secp256k1_ec_pubkey_parse(secp256k1_context_static, &spend_obj, spend_pubkey.data(), spend_pubkey.size());
     assert(ret);
-    ret = secp256k1_silentpayments_recipient_label_parse(secp256k1_context_static, &label_obj, label.data());
-    assert(ret);
-    ret = secp256k1_silentpayments_recipient_create_labeled_spend_pubkey(secp256k1_context_static, &labeled_spend_obj, &spend_obj, &label_obj);
+    ret = secp256k1_silentpayments_recipient_create_labeled_spend_pubkey(secp256k1_context_static, &labeled_spend_obj, &spend_obj, label.Get());
     assert(ret);
     size_t pubkeylen = CPubKey::COMPRESSED_SIZE;
     CPubKey labeled_spend_pubkey;
@@ -318,7 +361,7 @@ CPubKey CreateLabeledSpendPubKey(const CPubKey& spend_pubkey, const CPubKey& lab
     return labeled_spend_pubkey;
 }
 
-V0SilentPaymentsDestination GenerateSilentPaymentsLabeledAddress(const V0SilentPaymentsDestination& recipient, const CPubKey& label)
+V0SilentPaymentsDestination GenerateSilentPaymentsLabeledAddress(const V0SilentPaymentsDestination& recipient, const SilentPaymentsLabel& label)
 {
     CPubKey labeled_spend_pubkey = CreateLabeledSpendPubKey(recipient.GetSpendPubKey(), label);
     return V0SilentPaymentsDestination{recipient.GetScanPubKey(), labeled_spend_pubkey};
@@ -329,7 +372,7 @@ std::vector<SilentPaymentsOutput> ScanForSilentPaymentsOutputs(
     const PrevoutsSummary& prevouts_summary,
     const CPubKey& spend_pubkey,
     const std::vector<XOnlyPubKey>& tx_outputs,
-    const std::map<CPubKey, uint256>& labels
+    const std::map<SilentPaymentsLabel, uint256>& labels
 ) {
     bool ret;
     secp256k1_pubkey spend_pubkey_obj;
@@ -379,12 +422,9 @@ std::vector<SilentPaymentsOutput> ScanForSilentPaymentsOutputs(
         assert(ret);
         sp_output.tweak = uint256{found_output_objs[i].tweak};
         if (found_output_objs[i].found_with_label) {
-            CPubKey label;
-            ret = secp256k1_silentpayments_recipient_label_serialize(secp256k1_context_static, (unsigned char *)label.begin(), &found_output_objs[i].label);
-            assert(ret);
-            sp_output.label = label;
+            sp_output.label = SilentPaymentsLabel(found_output_objs[i].label);
         }
-        outputs.push_back(sp_output);
+        outputs.emplace_back(std::move(sp_output));
     }
     return outputs;
 }

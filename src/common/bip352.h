@@ -17,10 +17,12 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <utility>
 #include <variant>
 #include <vector>
 
+struct secp256k1_silentpayments_label;
 struct secp256k1_silentpayments_prevouts_summary;
 class CKey;
 class CScript;
@@ -65,10 +67,64 @@ struct BIP352Comparator {
     }
 };
 
+class SilentPaymentsLabel {
+private:
+    std::unique_ptr<secp256k1_silentpayments_label> m_label;
+    unsigned char m_vch[CPubKey::COMPRESSED_SIZE];
+
+    //! private constructor only meant to be used by
+    //! LabelLookupCallback. It does not parse the label
+    //! bytes to avoid EC-point parse. This is safe because
+    //!the resulting object is only used for comparison.
+    SilentPaymentsLabel(const unsigned char* label);
+
+    //! Parses raw bytes into a fully valid label, throws
+    //! std::ios_base::failure if vch33 is not a validly-encoded label.
+    static SilentPaymentsLabel FromBytes(const unsigned char* vch33);
+
+public:
+    SilentPaymentsLabel(const secp256k1_silentpayments_label& label);
+
+    SilentPaymentsLabel(SilentPaymentsLabel&&) noexcept;
+    SilentPaymentsLabel& operator=(SilentPaymentsLabel&&) noexcept;
+    SilentPaymentsLabel(const SilentPaymentsLabel&);
+    SilentPaymentsLabel& operator=(const SilentPaymentsLabel&);
+
+    ~SilentPaymentsLabel();
+
+    friend const unsigned char* LabelLookupCallback(const unsigned char* key, const void* context);
+
+    friend bool operator==(const SilentPaymentsLabel& a, const SilentPaymentsLabel& b) {
+        return memcmp(a.m_vch,  b.m_vch, CPubKey::COMPRESSED_SIZE) == 0;
+    }
+    friend bool operator<(const SilentPaymentsLabel& a, const SilentPaymentsLabel& b) {
+        return memcmp(a.m_vch,  b.m_vch, CPubKey::COMPRESSED_SIZE) < 0;
+    }
+    friend bool operator>(const SilentPaymentsLabel& a, const SilentPaymentsLabel& b) {
+        return b < a;
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << std::span{m_vch, CPubKey::COMPRESSED_SIZE};
+    }
+
+    template <typename Stream>
+    static SilentPaymentsLabel Unserialize(Stream& s)
+    {
+        unsigned char vch[CPubKey::COMPRESSED_SIZE];
+        s >> std::span{vch, CPubKey::COMPRESSED_SIZE};
+        return FromBytes(vch);
+    }
+
+    const secp256k1_silentpayments_label* Get() const;
+};
+
 struct SilentPaymentsOutput {
     XOnlyPubKey output;
     uint256 tweak;
-    std::optional<CPubKey> label;
+    std::optional<SilentPaymentsLabel> label;
 };
 
 /**
@@ -111,11 +167,11 @@ std::optional<std::map<size_t, WitnessV1Taproot>> GenerateSilentPaymentsTaprootD
  *
  * @param scan_key                 The recipient's scan_key, used to salt the hash
  * @param m                        An integer m (only use m = 0 for the change label)
- * @return The label public key and label tweak.
+ * @return The silent payments label and label tweak.
  *
  * @see GenerateSilentPaymentsLabeledAddress
  */
-std::pair<CPubKey, uint256> CreateLabel(const CKey& scan_key, uint32_t m);
+std::pair<SilentPaymentsLabel, uint256> CreateLabel(const CKey& scan_key, uint32_t m);
 
 /**
  * @brief Generate a silent payments labeled address.
@@ -126,7 +182,7 @@ std::pair<CPubKey, uint256> CreateLabel(const CKey& scan_key, uint32_t m);
  *
  * @see CreateLabel(const CKey& scan_key, const int m);
  */
-V0SilentPaymentsDestination GenerateSilentPaymentsLabeledAddress(const V0SilentPaymentsDestination& recipient, const CPubKey& label);
+V0SilentPaymentsDestination GenerateSilentPaymentsLabeledAddress(const V0SilentPaymentsDestination& recipient, const SilentPaymentsLabel& label);
 
 /**
  * @brief Get silent payments public data from transaction inputs.
@@ -165,6 +221,6 @@ std::optional<PrevoutsSummary> GetSilentPaymentsPrevoutsSummary(const std::vecto
  * @param labels                                            The recipient's labels.
  * @return std::vector<SilentPaymentsOutput>                The found outputs.
  */
-std::vector<SilentPaymentsOutput> ScanForSilentPaymentsOutputs(const CKey& scan_key, const PrevoutsSummary& prevouts_summary, const CPubKey& spend_pubkey, const std::vector<XOnlyPubKey>& tx_outputs, const std::map<CPubKey, uint256>& labels);
+std::vector<SilentPaymentsOutput> ScanForSilentPaymentsOutputs(const CKey& scan_key, const PrevoutsSummary& prevouts_summary, const CPubKey& spend_pubkey, const std::vector<XOnlyPubKey>& tx_outputs, const std::map<SilentPaymentsLabel, uint256>& labels);
 }; // namespace bip352
 #endif // BITCOIN_COMMON_BIP352_H
