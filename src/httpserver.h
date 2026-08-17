@@ -6,7 +6,6 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <atomic>
-#include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -105,13 +104,15 @@ public:
      */
     void RemoveAll(std::string_view key);
     /**
+     * @param[in] reader A LineReader instance initialized with the client's receive buffer.
+     * @param[in] write  Whether or not to write the parsed data to the object after validation.
      * @returns false if LineReader hits the end of the buffer before reading an
      *                \n, meaning that we are still waiting on more data from the client.
      *          true  after reading an entire HTTP headers section, terminated
      *                by an empty line and \n.
      * @throws on exceeded read limit and on bad headers syntax (e.g. no ":" in a line)
      */
-    bool Read(util::LineReader& reader);
+    bool Read(util::LineReader& reader, bool write = true);
     std::string Stringify() const;
 
 private:
@@ -120,6 +121,9 @@ private:
      * https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
      */
     std::vector<std::pair<std::string, std::string>> m_headers;
+
+    //! Track total bytes consumed in Read() for limit checks
+    size_t m_consumed{0};
 };
 
 struct HTTPVersion {
@@ -195,6 +199,27 @@ public:
     std::pair<bool, std::string> GetHeader(std::string_view hdr) const;
     std::string ReadBody() const { return m_body; }
     void WriteHeader(std::string&& hdr, std::string&& value);
+
+    enum class State {
+        Init,
+        NeedsHeaders,
+        NeedsBody,
+        Complete,
+        Error
+    };
+    State GetState() const { return m_state; }
+    void SetState(State state) { m_state = state; }
+
+    // If a large request is sent with "Transfer-encoding: chunked" we may
+    // read the chunk size in a separate I/O loop iteration than the chunk
+    // of data itself. Store the chunk size value here until the chunk is read.
+    std::optional<uint64_t> m_chunk_size;
+    // We may also read a large chunk over multiple loop iterations.
+    // Track the progress of the chunk here.
+    uint64_t m_chunk_read{0};
+
+private:
+    State m_state = State::Init;
 };
 
 class HTTPServer
@@ -479,10 +504,9 @@ public:
     std::string m_recv_buffer{};
 
     //! Requests from a client must be processed in the order in which
-    //! they were received, blocking on a per-client basis. We won't
-    //! process the next request in the queue if we are currently busy
-    //! handling a previous request.
-    std::deque<std::unique_ptr<HTTPRequest>> m_req_queue;
+    //! they were received, blocking on a per-client basis. We read
+    //! one request at a time from the socket buffer then pass it to a worker.
+    std::unique_ptr<HTTPRequest> m_req;
 
     //! Set to true by the I/O thread when a request is popped off
     //! and passed to a worker thread, reset to false by the worker thread.
@@ -555,12 +579,19 @@ public:
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
 
+    //! Release any in-progress request. HTTPRequest holds a shared_ptr back to its
+    //! HTTPRemoteClient to keep the client alive from a worker thread. If a request
+    //! hasn't been moved to a worker yet it will prevent the client from destructing
+    //! and never close the socket. Therefore this must be called when disconnecting.
+    void ReleaseRequest() { m_req.reset(); }
+
     /**
      * Try to read an HTTP request from the receive buffer.
+     * Updates HTTPRequest.m_state and drains buffer on error.
      * @param[in]   req     A HTTPRequest to read into
-     * @returns true upon reading a complete request, otherwise false (may throw).
+     * @throws std::runtime_error if request is unreadable or violates protocol
      */
-    bool ReadRequest(HTTPRequest& req);
+    void ReadRequest(HTTPRequest& req);
 
     /**
      * Push data (if there is any) from client's m_send_buffer to the connected socket.

@@ -30,7 +30,6 @@
 #include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
-#include <deque>
 #include <memory>
 #include <optional>
 #include <span>
@@ -299,17 +298,22 @@ void HTTPHeaders::RemoveAll(std::string_view key)
     m_headers.erase(moved.begin(), moved.end());
 }
 
-bool HTTPHeaders::Read(util::LineReader& reader)
+bool HTTPHeaders::Read(util::LineReader& reader, bool write)
 {
     // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
     // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+    size_t start{reader.Consumed()};
     while (auto maybe_line = reader.ReadLine()) {
-        if (reader.Consumed() > MAX_HEADERS_SIZE) throw std::runtime_error("HTTP headers exceed size limit");
+        if (reader.Consumed() - start + m_consumed > MAX_HEADERS_SIZE) throw std::runtime_error("HTTP headers exceed size limit");
 
         const std::string_view& line = *maybe_line;
 
         // An empty line indicates end of the headers section https://www.rfc-editor.org/rfc/rfc2616#section-4
-        if (line.empty()) return true;
+        if (line.empty()) {
+            // Ensure all headers are accounted for in case there is a chunked trailer
+            m_consumed += reader.Consumed() - start;
+            return true;
+        }
 
         // "Field values containing CR, LF, or NUL characters are invalid and dangerous"
         // https://httpwg.org/specs/rfc9110.html#rfc.section.5.5
@@ -337,8 +341,15 @@ bool HTTPHeaders::Read(util::LineReader& reader)
         // that can not be empty.
         if (key.empty()) throw std::runtime_error("Empty HTTP header name");
 
-        Write(std::string(key), std::move(value));
+        if (write) {
+            Write(std::string(key), std::move(value));
+        }
     }
+
+    // We have not received all the request headers yet.
+    // Keep track of how much data we have already consumed to enforce
+    // the total limit over multiple read operations.
+    m_consumed += reader.Consumed() - start;
 
     return false;
 }
@@ -428,62 +439,68 @@ bool HTTPRequest::LoadBody(LineReader& reader)
         // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1
         // see evhttp_handle_chunked_read() in libevent http.c
         while (reader.Remaining() > 0) {
-            auto maybe_chunk_size = reader.ReadLine();
-            if (!maybe_chunk_size) return false;
+            if (!m_chunk_size) {
+                auto maybe_chunk_size = reader.ReadLine();
+                if (!maybe_chunk_size) return false;
 
-            // Allow (but ignore) Chunk Extensions
-            // See https://www.rfc-editor.org/rfc/rfc9112.html#name-chunk-extensions
-            std::string_view chunk_size_noext{maybe_chunk_size.value()};
-            const auto semicolon_pos = chunk_size_noext.find(';');
-            if (semicolon_pos != chunk_size_noext.npos) {
-                chunk_size_noext.remove_suffix(chunk_size_noext.size() - semicolon_pos);
+                // Allow (but ignore) Chunk Extensions
+                // See https://www.rfc-editor.org/rfc/rfc9112.html#name-chunk-extensions
+                std::string_view chunk_size_noext{maybe_chunk_size.value()};
+                const auto semicolon_pos = chunk_size_noext.find(';');
+                if (semicolon_pos != chunk_size_noext.npos) {
+                    chunk_size_noext.remove_suffix(chunk_size_noext.size() - semicolon_pos);
+                }
+
+                m_chunk_size = ToIntegral<uint64_t>(util::TrimStringView(chunk_size_noext), /*base=*/16);
+                if (!m_chunk_size) throw std::runtime_error("Cannot parse chunk length value");
+
+                if ((m_body.size() > MAX_BODY_SIZE) ||
+                    (*m_chunk_size > MAX_BODY_SIZE - m_body.size()))
+                    throw ContentTooLargeError("Chunk will exceed max body size");
             }
 
-            const auto chunk_size{ToIntegral<uint64_t>(util::TrimStringView(chunk_size_noext), /*base=*/16)};
-            if (!chunk_size) throw std::runtime_error("Cannot parse chunk length value");
-
-            if ((m_body.size() > MAX_BODY_SIZE) ||
-                (*chunk_size > MAX_BODY_SIZE - m_body.size()))
-                throw ContentTooLargeError("Chunk will exceed max body size");
+            // We either just read the chunk size, or we have it saved
+            // from a prior I/O loop iteration
+            Assume(m_chunk_size);
 
             // Last chunk has size 0
-            if (*chunk_size == 0) {
-                // Allow (but ignore) Chunked Trailer section, by
-                // reading CRLF-terminated lines until we read an empty line,
-                // which indicates the end of this request.
+            if (*m_chunk_size == 0) {
+                // Validate Chunked Trailer section, which is used for
+                // additional headers sent at the end of the message.
+                // Data consumed here is counted towards MAX_HEADERS_SIZE
+                // along with the headers we read in the beginning of the request.
+                // At this time we ignore and drop these data after validating.
                 // See https://httpwg.org/specs/rfc9112.html#rfc.section.7.1.2
-                const size_t trailer_start{reader.Consumed()};
-                while (true) {
-                    auto maybe_trailer = reader.ReadLine();
-                    if (reader.Consumed() - trailer_start > MAX_HEADERS_SIZE) {
-                        throw std::runtime_error("HTTP chunked trailer exceeds size limit");
-                    }
-                    if (!maybe_trailer) return false;
-                    if (maybe_trailer->empty()) break;
-                }
-                // Complete request has been parsed, reader is now pointing
-                // to beginning of next request or end of the buffer.
-                return true;
+                return m_headers.Read(reader, /*write=*/false);
             }
 
-            // We are still expecting more data for this chunk
-            if (reader.Remaining() < *chunk_size) {
-                return false;
-            }
+            // We have not read the entire chunk from the buffer yet
+            if (m_chunk_read < *m_chunk_size) {
+                // Get what we can from the buffer
+                const uint64_t chunk_need{*m_chunk_size - m_chunk_read};
+                const uint64_t buffer_has{std::min(chunk_need, static_cast<uint64_t>(reader.Remaining()))};
 
-            // Pack chunk onto body
-            m_body += reader.ReadLength(*chunk_size);
+                // Pack [partial] chunk onto body and update state
+                m_body += reader.ReadLength(buffer_has);
+                m_chunk_read += buffer_has;
+            }
 
             // Even though every chunk size is explicitly declared,
             // they are still terminated by a CRLF we don't need,
             // just consume it here.
-            auto crlf = reader.ReadLine();
-            if (!crlf) {
-                // CRLF not found before end of buffer: it has not been received by our socket yet.
-                return false;
+            if (m_chunk_read == *m_chunk_size) {
+                auto crlf = reader.ReadLine();
+                if (!crlf) {
+                    // CRLF not found before end of buffer: it has not been received by our socket yet.
+                    return false;
+                }
+                // CRLF was found but there was unexpected data after the chunk_sized chunk
+                if (!crlf.value().empty()) throw std::runtime_error("Improperly terminated chunk");
+
+                // Clear state for next chunk
+                m_chunk_size.reset();
+                m_chunk_read = 0;
             }
-            // CRLF was found but there was unexpected data after the chunk_sized chunk
-            if (!crlf.value().empty()) throw std::runtime_error("Improperly terminated chunk");
         }
 
         // We read all the chunks but never got the last chunk, wait for client to send more
@@ -505,12 +522,15 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 
         if (*content_length > MAX_BODY_SIZE) throw ContentTooLargeError("Max body size exceeded");
 
-        // Not enough data in buffer for expected body
-        if (reader.Remaining() < *content_length) return false;
+        // A large body may arrive over multiple I/O loop iterations. Copy
+        // whatever the buffer has now; m_body's size tracks our progress.
+        const uint64_t body_need{*content_length - m_body.size()};
+        const uint64_t buffer_has{std::min(body_need, static_cast<uint64_t>(reader.Remaining()))};
 
-        m_body = reader.ReadLength(*content_length);
+        // Pack [partial] body on and update state
+        m_body += reader.ReadLength(buffer_has);
 
-        return true;
+        return m_body.size() == *content_length;
     }
 }
 
@@ -996,62 +1016,56 @@ void HTTPServer::ThreadSocketHandler()
 
 void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
 {
-    // Try reading (potentially multiple) HTTP requests from the buffer
-    while (!client->m_recv_buffer.empty()) {
-        // Create a new request object and try to fill it with data from the receive buffer
-        auto req = std::make_unique<HTTPRequest>(client);
-        try {
-            // Stop reading if we need more data from the client to parse a complete request
-            if (!client->ReadRequest(*req)) break;
-        } catch (const ContentTooLargeError& e) {
-            LogDebug(
-                BCLog::HTTP,
-                "HTTP request body too large from client %s (id=%llu): %s",
-                client->m_origin,
-                client->m_id,
-                e.what());
-
-            WriteNoStoreErrorReply(*req, HTTP_CONTENT_TOO_LARGE);
-            client->m_disconnect = true;
-            return;
-        } catch (const std::runtime_error& e) {
-            LogDebug(
-                BCLog::HTTP,
-                "Error reading HTTP request from client %s (id=%llu): %s",
-                client->m_origin,
-                client->m_id,
-                e.what());
-
-            // We failed to read a complete request from the buffer
-            WriteNoStoreErrorReply(*req, HTTP_BAD_REQUEST);
-            client->m_disconnect = true;
-            return;
-        }
-
-        // We read a complete request from the buffer into the queue
-        LogDebug(
-            BCLog::HTTP,
-            "Received a %s request for %s from %s (id=%llu)",
-            RequestMethodString(req->m_method),
-            req->m_target,
-            client->m_origin,
-            client->m_id);
-
-        // add request to client queue
-        client->m_req_queue.push_back(std::move(req));
-    }
-
     // If we are already handling a request from
     // this client, do nothing. We'll check again on the next I/O
     // loop iteration.
     if (client->m_req_busy) return;
 
-    // Otherwise, if there is a pending request in the queue, handle it.
-    if (!client->m_req_queue.empty()) {
+    if (!client->m_req) {
+        client->m_req = std::make_unique<HTTPRequest>(client);
+    }
+
+    try {
+        // Read data from the buffer into the current request
+        client->ReadRequest(*client->m_req);
+    } catch (const ContentTooLargeError& e) {
+        LogDebug(
+            BCLog::HTTP,
+            "HTTP request body too large from client %s (id=%llu): %s",
+            client->m_origin,
+            client->m_id,
+            e.what());
+
+        WriteNoStoreErrorReply(*client->m_req, HTTP_CONTENT_TOO_LARGE);
+        client->m_disconnect = true;
+        return;
+    } catch (const std::runtime_error& e) {
+        LogDebug(
+            BCLog::HTTP,
+            "Error reading HTTP request from client %s (id=%llu): %s",
+            client->m_origin,
+            client->m_id,
+            e.what());
+
+        // We failed to read a complete request from the buffer
+        WriteNoStoreErrorReply(*client->m_req, HTTP_BAD_REQUEST);
+        client->m_disconnect = true;
+        return;
+    }
+
+    // If the request is ready, hand it to a worker.
+    if (client->m_req->GetState() == HTTPRequest::State::Complete) {
+        LogDebug(
+            BCLog::HTTP,
+            "Received a %s request for %s from %s (id=%llu)",
+            RequestMethodString(client->m_req->m_method),
+            client->m_req->m_target,
+            client->m_origin,
+            client->m_id);
+
         LOCK(m_request_dispatcher_mutex);
         client->m_req_busy = true;
-        m_request_dispatcher(std::move(client->m_req_queue.front()));
-        client->m_req_queue.pop_front();
+        m_request_dispatcher(std::move(client->m_req));
     }
 }
 
@@ -1102,6 +1116,7 @@ void HTTPServer::DisconnectClients()
                                                  "Disconnecting HTTP client %s (id=%llu)",
                                                  client->m_origin,
                                                  client->m_id);
+                                        client->ReleaseRequest();
                                         return true;
                                     });
     if (erased > 0) {
@@ -1116,25 +1131,53 @@ void HTTPServer::ClearConnectedClients()
     if (m_connected.empty()) return;
     LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
     m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
+    for (auto& client : m_connected) {
+        client->ReleaseRequest();
+    }
     m_connected.clear();
 }
 
-bool HTTPRemoteClient::ReadRequest(HTTPRequest& req)
+void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
 {
+    if (m_recv_buffer.empty()) return;
+
     LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
 
-    if (!req.LoadControlData(reader)) return false;
-    if (!req.LoadHeaders(reader)) return false;
-    if (!req.LoadBody(reader)) return false;
+    try {
+        switch (req.GetState()) {
+        case HTTPRequest::State::Init:
+            if (!req.LoadControlData(reader)) break;
+            req.SetState(HTTPRequest::State::NeedsHeaders);
+            [[fallthrough]];
+
+        case HTTPRequest::State::NeedsHeaders:
+            if (!req.LoadHeaders(reader)) break;
+            req.SetState(HTTPRequest::State::NeedsBody);
+            [[fallthrough]];
+
+        case HTTPRequest::State::NeedsBody:
+            if (!req.LoadBody(reader)) break;
+            req.SetState(HTTPRequest::State::Complete);
+            [[fallthrough]];
+
+        case HTTPRequest::State::Complete:
+            break;
+
+        case HTTPRequest::State::Error:
+            break;
+        }
+    } catch (...) {
+        // Don't try to read any more data for this request
+        req.SetState(HTTPRequest::State::Error);
+        // Clear the memory allocated to this client, caller must disconnect
+        m_recv_buffer.clear();
+        throw;
+    }
 
     // Remove the bytes read out of the buffer.
-    // If one of the above calls throws an error, the caller must
-    // catch it and disconnect the client.
     m_recv_buffer.erase(
         m_recv_buffer.begin(),
         m_recv_buffer.begin() + reader.Consumed());
-
-    return true;
 }
 
 bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
