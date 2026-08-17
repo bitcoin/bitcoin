@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <crypto/hex_base.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>
@@ -101,10 +102,15 @@ static RPCMethod gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
-                if (!tx || hashBlock.IsNull()) {
+                const TxLookupResult result{GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman)};
+                if (!result.pruned_block_hashes.empty()) {
+                    throw JSONRPCError(RPC_MISC_ERROR, PrunedBlocksErrorMessage(result.pruned_block_hashes),
+                                       PrunedBlocksErrorData(result.pruned_block_hashes));
+                }
+                if (!result.tx || result.block_hash.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
+                hashBlock = result.block_hash;
 
                 LOCK(cs_main);
                 pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
