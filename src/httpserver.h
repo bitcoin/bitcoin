@@ -477,7 +477,6 @@ std::optional<std::string> GetQueryParameterFromUri(std::string_view uri, std::s
 
 class HTTPRemoteClient
 {
-public:
     //! ID provided by HTTPServer upon connection and instantiation
     const HTTPServer::Id m_id;
 
@@ -508,7 +507,7 @@ public:
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
     /// @{
-    Mutex m_send_mutex;
+    mutable Mutex m_send_mutex;
     std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
     /// @}
 
@@ -563,12 +562,26 @@ public:
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
     std::atomic<SteadySeconds> m_idle_since;
 
+    /**
+     * Try to read an HTTP request from the receive buffer.
+     * Updates HTTPRequest.m_state and drains buffer on error.
+     * @param[in]   req     A HTTPRequest to read into
+     * @throws std::runtime_error if request is unreadable or violates protocol
+     */
+    void ReadRequest(HTTPRequest& req);
+
+public:
     explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
         : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
 
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    const std::string& GetOrigin() const { return m_origin; }
+    const CService& GetPeer() const { return m_addr; }
+    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
+    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
 
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
@@ -582,14 +595,6 @@ public:
      * will mark this client for disconnection.
      */
     static std::unique_ptr<HTTPRequest> ReadRequests(const std::shared_ptr<HTTPRemoteClient>& client);
-
-    /**
-     * Try to read an HTTP request from the receive buffer.
-     * Updates HTTPRequest.m_state and drains buffer on error.
-     * @param[in]   req     A HTTPRequest to read into
-     * @throws std::runtime_error if request is unreadable or violates protocol
-     */
-    void ReadRequest(HTTPRequest& req);
 
     /**
      * Push data (if there is any) from client's m_send_buffer to the connected socket.
