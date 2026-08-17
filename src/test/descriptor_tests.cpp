@@ -56,6 +56,7 @@ constexpr int MUSIG = 1 << 9; // This is a MuSig so key counts will have an extr
 constexpr int MUSIG_DERIVATION = 1 << 10; // MuSig with BIP 328 derivation from the aggregate key
 constexpr int MIXED_MUSIG = 1 << 11; // Both MuSig and normal key expressions are present
 constexpr int UNIQUE_XPUBS = 1 << 12; // Whether the xpub count should be of unique xpubs
+constexpr int NO_KEYS = 1 << 13; // No keys are present at all in the descriptor
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
 bool EqualDescriptor(std::string a, std::string b)
@@ -122,6 +123,7 @@ static size_t CountUniqueXpubs(const std::string& desc)
 }
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
+const std::set<std::vector<uint32_t>> NO_PATHS{};
 
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
@@ -275,9 +277,11 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK(parse_pub->GetOutputType() == type);
 
     // Check private keys are extracted from the private version but not the public one.
-    BOOST_CHECK(keys_priv.keys.size());
+    BOOST_CHECK_EQUAL(keys_priv.keys.empty(), !!(flags & NO_KEYS));
     BOOST_CHECK(!keys_pub.keys.size());
-    const bool have_all_private_keys = !(flags & MISSING_PRIVKEYS);
+    // HavePrivateKeys() returns false for a descriptor with no keys at all, same as one
+    // with some private keys genuinely missing.
+    const bool have_all_private_keys = !(flags & (MISSING_PRIVKEYS | NO_KEYS));
     BOOST_CHECK_EQUAL(parse_priv->HavePrivateKeys(keys_priv), have_all_private_keys);
     BOOST_CHECK_EQUAL(parse_pub->HavePrivateKeys(keys_priv), have_all_private_keys);
     BOOST_CHECK(!parse_priv->HavePrivateKeys(keys_pub));
@@ -301,7 +305,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     }
 
     // Check that both can be serialized with private key back to the private version, but not without private key.
-    if (!(flags & MISSING_PRIVKEYS)) {
+    // (Descriptors with no keys at all have nothing to check here.)
+    if (!(flags & (MISSING_PRIVKEYS | NO_KEYS))) {
         std::string prv1;
         BOOST_CHECK(parse_priv->ToPrivateString(keys_priv, prv1));
         if (expected_prv) {
@@ -346,13 +351,23 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
-    // Check that the highest key expression index matches the number of keys in the descriptor
-    BOOST_TEST_INFO("Pub desc: " + pub);
+    // Check that the highest key expression index matches the number of keys in the descriptor.
+    // Descriptors with no keys at all (flags & NO_KEYS) have neither.
+    BOOST_TEST_INFO_SCOPE("Pub desc: " + pub);
     uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
-    BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
-    BOOST_TEST_INFO("Priv desc: " + prv);
+    if (flags & NO_KEYS) {
+        BOOST_CHECK_EQUAL(key_exprs, 0U);
+        BOOST_CHECK_EQUAL(parse_pub->GetKeyCount(), 0U);
+    } else {
+        BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
+    }
+    BOOST_TEST_INFO_SCOPE("Priv desc: " + prv);
     BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
-    BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+    if (flags & NO_KEYS) {
+        BOOST_CHECK_EQUAL(parse_priv->GetKeyCount(), 0U);
+    } else {
+        BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+    }
 
     // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
     //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
@@ -1116,6 +1131,14 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("", "addr(asdf)", "Address is not valid"); // Invalid address
     CheckUnparsable("", "raw(asdf)", "Raw script is not hex"); // Invalid script
     CheckUnparsable("", "raw(Ü)#00000000", "Invalid characters in payload"); // Invalid chars
+
+    Check("raw(1337)", "raw(1337)", "raw(1337)", NO_KEYS | UNSOLVABLE, {{"1337"}}, std::nullopt, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", NO_KEYS | UNSOLVABLE, {{"76a91419c84184d9473c2d52913c7468dc6743db09ea9688ac"}}, OutputType::LEGACY, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", NO_KEYS | UNSOLVABLE, {{"a914e9c3dd0c07aac76179ebc76a6c78d4d67c6c160a87"}}, OutputType::LEGACY, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", NO_KEYS | UNSOLVABLE, {{"00144160bb1870159a08724557f75c7bb665a3a132e0"}}, OutputType::BECH32, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", NO_KEYS | UNSOLVABLE, {{"00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262"}}, OutputType::BECH32, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", NO_KEYS | UNSOLVABLE, {{"5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", NO_KEYS | UNSOLVABLE, {{"5210751e76e8199196d454941c45d1b3a323"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, NO_PATHS);
 
     Check(
         "rawtr(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/86'/1'/0'/1/*)#a5gn3t7k",
