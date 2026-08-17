@@ -138,8 +138,7 @@ std::optional<CMutableTransaction> PartiallySignedTransaction::GetUnsignedTx() c
     }
     for (const PSBTOutput& output : outputs) {
         CTxOut txout;
-        txout.nValue = output.amount;
-        txout.scriptPubKey = output.script;
+        txout = CTxOut(output.amount, output.script);
         mtx.vout.push_back(txout);
     }
     return mtx;

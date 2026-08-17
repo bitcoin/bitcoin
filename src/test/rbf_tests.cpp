@@ -30,8 +30,7 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
         tx.vin[i].scriptWitness = witness;
     }
     for (size_t i = 0; i < output_values.size(); ++i) {
-        tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        tx.vout[i].nValue = output_values[i];
+        tx.vout[i] = CTxOut(output_values[i], CScript() << OP_11 << OP_EQUAL);
     }
     return MakeTransactionRef(tx);
 }

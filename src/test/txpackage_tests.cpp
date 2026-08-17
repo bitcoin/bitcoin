@@ -40,8 +40,7 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
         mtx.vin[i].scriptSig = random_script;
     }
     for (size_t o{0}; o < num_outputs; ++o) {
-        mtx.vout[o].nValue = 1 * CENT;
-        mtx.vout[o].scriptPubKey = random_script;
+        mtx.vout[o] = CTxOut(1 * CENT, random_script);
     }
     return MakeTransactionRef(mtx);
 }
@@ -665,8 +664,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     mtx_child1.vin[0].scriptSig = CScript();
     mtx_child1.vin[0].scriptWitness = witness1;
     mtx_child1.vout.resize(1);
-    mtx_child1.vout[0].nValue = CAmount(48 * COIN);
-    mtx_child1.vout[0].scriptPubKey = child_locking_script;
+    mtx_child1.vout[0] = CTxOut(CAmount(48 * COIN), child_locking_script);
 
     CMutableTransaction mtx_child2{mtx_child1};
     mtx_child2.vin[0].scriptWitness = witness2;
@@ -792,8 +790,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     mtx_parent2_v1.vin[0].scriptSig = CScript();
     mtx_parent2_v1.vin[0].scriptWitness = parent2_witness1;
     mtx_parent2_v1.vout.resize(1);
-    mtx_parent2_v1.vout[0].nValue = CAmount(48 * COIN);
-    mtx_parent2_v1.vout[0].scriptPubKey = acs_spk;
+    mtx_parent2_v1.vout[0] = CTxOut(CAmount(48 * COIN), acs_spk);
 
     CMutableTransaction mtx_parent2_v2{mtx_parent2_v1};
     mtx_parent2_v2.vin[0].scriptWitness = parent2_witness2;

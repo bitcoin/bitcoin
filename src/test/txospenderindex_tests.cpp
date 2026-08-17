@@ -31,8 +31,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
         spender[i].vin.resize(1);
         spender[i].vin[0].prevout = COutPoint(spent[i].hash, spent[i].n);
         spender[i].vout.resize(1);
-        spender[i].vout[0].nValue = coinbase_tx->GetValueOut();
-        spender[i].vout[0].scriptPubKey = coinbase_script;
+        spender[i].vout[0] = CTxOut(coinbase_tx->GetValueOut(), coinbase_script);
 
         // Sign
         std::vector<unsigned char> vchSig;

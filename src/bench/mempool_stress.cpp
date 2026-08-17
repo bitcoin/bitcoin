@@ -54,8 +54,7 @@ static std::vector<CTransactionRef> CreateCoinCluster(FastRandomContext& det_ran
         tx.vin[0].scriptWitness.stack.push_back(CScriptNum(x).getvch());
         tx.vout.resize(det_rand.randrange(10)+2);
         for (auto& out : tx.vout) {
-            out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
-            out.nValue = 10 * COIN;
+            out = CTxOut(10 * COIN, CScript() << CScriptNum(tx_counter) << OP_EQUAL);
         }
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
@@ -83,8 +82,7 @@ static std::vector<CTransactionRef> CreateCoinCluster(FastRandomContext& det_ran
             }
             tx.vout.resize(det_rand.randrange(10)+2);
             for (auto& out : tx.vout) {
-                out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
-                out.nValue = 10 * COIN;
+                out = CTxOut(10 * COIN, CScript() << CScriptNum(tx_counter) << OP_EQUAL);
             }
         }
         ordered_coins.emplace_back(MakeTransactionRef(tx));

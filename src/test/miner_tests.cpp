@@ -331,8 +331,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     tx.vin[0].prevout = COutPoint(first_tx->GetHash(), 0);
     tx.vout.resize(50);
     for (auto &out : tx.vout) {
-        out.nValue = first_tx->vout[0].nValue / 50;
-        out.scriptPubKey = CScript() << OP_1;
+        out = CTxOut(first_tx->vout[0].nValue / 50, CScript() << OP_1);
     }
 
     tx.vout[0].nValue -= CENT;
@@ -351,8 +350,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
         tx2.vout.resize(20);
         tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
         for (auto &out : tx2.vout) {
-            out.nValue = 0;
-            out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
+            out = CTxOut(0, CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1);
         }
         ret.push_back(MakeTransactionRef(tx2));
     }
@@ -513,8 +511,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // double spend txn pair in tx_mempool, template creation fails
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
         tx.vin[0].scriptSig = CScript() << OP_1;
-        tx.vout[0].nValue = BLOCKSUBSIDY - HIGHFEE;
-        tx.vout[0].scriptPubKey = CScript() << OP_1;
+        tx.vout[0] = CTxOut(BLOCKSUBSIDY - HIGHFEE, CScript() << OP_1);
         hash = tx.GetHash();
         TryAddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         tx.vout[0].scriptPubKey = CScript() << OP_2;
@@ -597,8 +594,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vin[0].nSequence = m_node.chainman->ActiveChain().Tip()->nHeight + 1; // txFirst[0] is the 2nd block
     prevheights[0] = baseheight + 1;
     tx.vout.resize(1);
-    tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
-    tx.vout[0].scriptPubKey = CScript() << OP_1;
+    tx.vout[0] = CTxOut(BLOCKSUBSIDY-HIGHFEE, CScript() << OP_1);
     tx.nLockTime = 0;
     hash = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
