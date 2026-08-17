@@ -144,6 +144,11 @@ TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, 
 
 TxIndex::~TxIndex() = default;
 
+IndexPrunePolicy TxIndex::GetPrunePolicy() const
+{
+    return m_db->m_has_legacy ? IndexPrunePolicy::Disallowed : IndexPrunePolicy::FullHistory;
+}
+
 bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     // Exclude genesis block transaction because outputs are not spendable.

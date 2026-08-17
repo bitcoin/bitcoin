@@ -502,9 +502,9 @@ IndexSummary BaseIndex::GetSummary() const
 
 void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
 {
-    assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
+    assert(!m_chainstate->m_blockman.IsPruneMode() || GetPrunePolicy() != IndexPrunePolicy::Disallowed);
 
-    if (AllowPrune()) {
+    if (GetPrunePolicy() != IndexPrunePolicy::Disallowed) {
         node::PruneLockInfo prune_lock;
         prune_lock.height_first = block ? block->nHeight : 0;
         WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));

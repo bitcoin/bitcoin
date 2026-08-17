@@ -56,7 +56,7 @@ private:
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
 
-    bool AllowPrune() const override { return true; }
+    IndexPrunePolicy GetPrunePolicy() const override { return IndexPrunePolicy::FullHistory; }
 
     bool Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
 

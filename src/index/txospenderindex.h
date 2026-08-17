@@ -38,7 +38,7 @@ class TxoSpenderIndex final : public BaseIndex
 private:
     std::unique_ptr<BaseIndex::DB> m_db;
     std::pair<uint64_t, uint64_t> m_siphash_key;
-    bool AllowPrune() const override { return false; }
+    IndexPrunePolicy GetPrunePolicy() const override { return IndexPrunePolicy::Disallowed; }
     void WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
     void EraseSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
     util::Expected<TxoSpender, std::string> ReadTransaction(const CDiskTxPos& pos) const;
