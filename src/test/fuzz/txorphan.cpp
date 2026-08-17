@@ -173,11 +173,13 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     {
                         auto bytes_from_peer_before{orphanage->UsageByPeer(peer_id)};
                         Assert(have_tx == orphanage->EraseTx(tx->GetWitnessHash()));
-                        // After EraseTx, the orphanage may trim itself, so all peers' usage may have gone up or down.
-                        if (have_tx) {
-                            if (!have_tx_and_peer) {
-                                Assert(orphanage->UsageByPeer(peer_id) == bytes_from_peer_before);
-                            }
+                        // After EraseTx, the orphanage may trim itself, so any peer's usage may decrease.
+                        if (!have_tx) {
+                            Assert(orphanage->UsageByPeer(peer_id) == bytes_from_peer_before);
+                        } else if (have_tx_and_peer) {
+                            Assert(orphanage->UsageByPeer(peer_id) <= bytes_from_peer_before - tx_weight);
+                        } else {
+                            Assert(orphanage->UsageByPeer(peer_id) <= bytes_from_peer_before);
                         }
                     }
                     have_tx = orphanage->HaveTx(tx->GetWitnessHash());
