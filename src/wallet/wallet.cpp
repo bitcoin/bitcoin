@@ -907,7 +907,9 @@ DBErrors CWallet::ReorderTransactions()
                 return DBErrors::LOAD_FAIL;
         }
     }
-    batch.WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return DBErrors::LOAD_FAIL;
+    }
 
     return DBErrors::LOAD_OK;
 }
@@ -1073,7 +1075,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             desc_tx->m_state = inactive_state;
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
-            batch.WriteTxMetadata(*desc_tx);
+            if (!batch.WriteTxMetadata(*desc_tx)) {
+                return nullptr;
+            }
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1356,7 +1360,11 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTxMetadata(wtx);
+            if (batch) {
+                if (!batch->WriteTxMetadata(wtx)) {
+                    throw std::runtime_error(strprintf("Unable to update state for %s", wtx.GetHash().ToString()));
+                }
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
