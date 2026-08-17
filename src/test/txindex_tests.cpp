@@ -17,6 +17,7 @@
 #include <interfaces/chain.h>
 #include <key.h>
 #include <node/blockstorage.h>
+#include <node/tx_lookup_result.h>
 #include <primitives/block.h>
 #include <script/script.h>
 #include <streams.h>
@@ -30,6 +31,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -85,9 +87,15 @@ FlatFilePos BlockFilePos(const ChainstateManager& chainman, uint32_t height)
 uint256 LookupTx(const TxIndex& txindex, const Txid& txid)
 {
     const auto result{txindex.FindTx(txid)};
-    BOOST_REQUIRE(result);
-    BOOST_CHECK(result->tx->GetHash() == txid);
-    return result->block_hash;
+    const auto& [tx, block_hash]{*Assert(result.GetFound())};
+    BOOST_CHECK(tx->GetHash() == txid);
+    return block_hash;
+}
+
+void CheckNotFound(const TxIndex& txindex, const Txid& txid, const std::set<uint256>& expected_pruned_block_hashes = {})
+{
+    const auto result{txindex.FindTx(txid)};
+    BOOST_CHECK(Assert(result.GetMiss())->pruned_block_hashes == expected_pruned_block_hashes);
 }
 
 void InvalidateBlock(ChainstateManager& chainman, const uint256& block_hash)
@@ -96,6 +104,12 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256& block_hash)
     BOOST_REQUIRE(block_index);
     BlockValidationState state;
     BOOST_REQUIRE(chainman.ActiveChainstate().InvalidateBlock(state, block_index));
+}
+
+void PruneBlock(ChainstateManager& chainman, const uint256& block_hash)
+{
+    LOCK(cs_main);
+    Assert(chainman.m_blockman.LookupBlockIndex(block_hash))->nStatus &= ~BLOCK_HAVE_DATA;
 }
 
 } // namespace
@@ -141,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // Transaction should not be found in the index before it is started.
     for (const auto& txn : m_coinbase_txns) {
-        BOOST_CHECK(!txindex.FindTx(txn->GetHash()));
+        CheckNotFound(txindex, txn->GetHash());
     }
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
@@ -152,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
     for (const auto& txn : genesis_block.vtx) {
-        BOOST_CHECK(!txindex.FindTx(txn->GetHash()));
+        CheckNotFound(txindex, txn->GetHash());
     }
 
     // Check that txindex has all txs that were in the chain before it started.
@@ -211,7 +225,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     BOOST_CHECK(target_bucket[0] != fake_pos);
     BOOST_CHECK(target_bucket[1] == fake_pos);
 
-    LookupTx(txindex, target_txid);
+    const uint256 target_block_hash{LookupTx(txindex, target_txid)};
+    const uint256 fake_block_hash{LookupTx(txindex, fake_txid)};
 
     // A database created fresh by this version cannot contain legacy entries, so
     // lookups skip the legacy fallback: drop the last coinbase's hashed entry and
@@ -222,7 +237,13 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     const CDiskTxPos fake_physical{BlockFilePos(*m_node.chainman, fake_pos.block_seq + 1), fake_pos.tx_offset_in_block - txindex::BLOCK_HEADER_SIZE};
     db.Erase(txindex::DBKey{fake_prefix, fake_pos});
     db.Write(txindex::LegacyTxKey(fake_txid), fake_physical);
-    BOOST_CHECK(!txindex.FindTx(fake_txid));
+    CheckNotFound(txindex, fake_txid);
+
+    PruneBlock(*m_node.chainman, fake_block_hash);
+    BOOST_CHECK(LookupTx(txindex, target_txid) == target_block_hash);
+
+    PruneBlock(*m_node.chainman, target_block_hash);
+    CheckNotFound(txindex, target_txid, {target_block_hash, fake_block_hash});
 
     StopIndex(txindex, m_node);
 }
@@ -350,6 +371,12 @@ BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
     const auto reorg_bucket{BucketPositions(db, prefix)};
     BOOST_REQUIRE_EQUAL(reorg_bucket.size(), 2U);
     BOOST_CHECK(reorg_bucket.front() == original_bucket.front());
+
+    PruneBlock(chainman, stale_block_hash);
+    // A readable stale copy still supplies the transaction when the active copy is pruned.
+    BOOST_CHECK(LookupTx(txindex, unique_txid) == branch_block_hash);
+    PruneBlock(chainman, branch_block_hash);
+    CheckNotFound(txindex, unique_txid, {stale_block_hash});
 
     StopIndex(txindex, m_node);
 }
