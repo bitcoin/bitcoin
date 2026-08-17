@@ -242,7 +242,7 @@ bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKe
     const bool own_txn{!HasActiveTxn()};
     if (own_txn && !TxnBegin()) return false;
     if (!WriteIC(encrypted_key, secret, /*fOverwrite=*/false) || !EraseIC(plaintext_key) || (own_txn && !TxnCommit())) {
-        if (own_txn) TxnAbort();
+        if (own_txn) (void)TxnAbort();
         return false;
     }
     return true;
@@ -1249,7 +1249,8 @@ static bool RunWithinTxn(WalletBatch& batch, std::string_view process_desc, cons
     // Run procedure
     if (!func(batch)) {
         LogDebug(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
-        batch.TxnAbort();
+        // Transaction abort failure will be handled by destructors when the WalletBatch goes out of scope
+        (void)batch.TxnAbort();
         return false;
     }
 
