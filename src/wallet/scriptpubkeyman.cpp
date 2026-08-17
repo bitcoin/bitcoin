@@ -906,7 +906,10 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
             return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
         m_wallet_descriptor.next_index++;
-        WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+        if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor)) {
+            m_wallet_descriptor.next_index--;
+            return util::Error{_("Error: Unable to update database with new address")};
+        }
         return dest;
     }
 }
@@ -1115,7 +1118,9 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         m_max_cached_index++;
     }
     m_wallet_descriptor.range_end = new_range_end;
-    batch.WriteDescriptor(GetID(), m_wallet_descriptor);
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": updating descriptor failed");
+    }
 
     // By this point, the cache size should be the size of the entire range
     assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
