@@ -596,6 +596,16 @@ public:
      * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
      */
     bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+
+    //! Used for tests.
+    //! @{
+    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
+    const HTTPRequest* GetRequest() const { return m_req.get(); }
+    //! @}
+
+protected:
+    //! Used for tests.
+    std::string& MutateRecvBuffer() { return m_recv_buffer; }
 };
 
 /** Initialize HTTP server.
