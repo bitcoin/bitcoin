@@ -8,6 +8,33 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Debug and enable IPv6
+      shell: bash
+      run: |
+        echo 'IPv6 state before enabling:'
+        uname -a
+        echo 'Kernel command line:'
+        cat /proc/cmdline || true
+        echo 'IPv6 module state before loading:'
+        lsmod | grep '^ipv6' || true
+        modinfo ipv6 2>&1 || true
+        echo 'IPv6-related kernel messages before loading:'
+        sudo dmesg | grep -i ipv6 || true
+        sysctl net.ipv6.conf.all.disable_ipv6 net.ipv6.conf.default.disable_ipv6 || true
+        ls -la /proc/sys/net/ipv6/conf 2>&1 || true
+
+        sudo modprobe ipv6 || true
+        sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 || true
+        sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0 || true
+
+        echo 'IPv6 state after enabling:'
+        echo 'IPv6 module state after loading:'
+        lsmod | grep '^ipv6' || true
+        sysctl net.ipv6.conf.all.disable_ipv6 net.ipv6.conf.default.disable_ipv6 || true
+        ls -la /proc/sys/net/ipv6/conf 2>&1 || true
+        echo 'IPv6-related kernel messages after loading:'
+        sudo dmesg | grep -i ipv6 || true
+
     - name: Set up Docker Buildx for Warp cache
       if: ${{ inputs.provider == 'warp' }}
       uses: docker/setup-buildx-action@v4
