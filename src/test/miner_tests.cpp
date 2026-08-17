@@ -589,9 +589,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
-    tx.vin[0].prevout = COutPoint(txFirst[0]->GetHash(), 0);
-    tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].nSequence = m_node.chainman->ActiveChain().Tip()->nHeight + 1; // txFirst[0] is the 2nd block
+    tx.vin[0] = CTxIn(COutPoint(txFirst[0]->GetHash(), 0), CScript() << OP_1, m_node.chainman->ActiveChain().Tip()->nHeight + 1); // txFirst[0] is the 2nd block
     prevheights[0] = baseheight + 1;
     tx.vout.resize(1);
     tx.vout[0] = CTxOut(BLOCKSUBSIDY-HIGHFEE, CScript() << OP_1);
