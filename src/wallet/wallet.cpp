@@ -975,7 +975,9 @@ DBErrors CWallet::ReorderTransactions()
                 return DBErrors::LOAD_FAIL;
         }
     }
-    batch.WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return DBErrors::LOAD_FAIL;
+    }
 
     return DBErrors::LOAD_OK;
 }
@@ -1120,7 +1122,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             desc_tx->m_state = inactive_state;
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
-            batch.WriteTx(*desc_tx);
+            if (!batch.WriteTx(*desc_tx)) {
+                return nullptr;
+            }
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1408,7 +1412,11 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTx(wtx);
+            if (batch) {
+                if (!batch->WriteTx(wtx)) {
+                    throw std::runtime_error(strprintf("Unable to update state for %s", wtx.GetHash().ToString()));
+                }
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -4029,7 +4037,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         // Copy the next tx order pos to the watchonly wallet
         LOCK(data.watchonly_wallet->cs_wallet);
         data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
-        watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
+        if (!watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext)) {
+            return util::Error{_("Error: Unable to write watchonly wallet next transaction order")};
+        }
         // Write the locator record. An empty locator is valid and triggers rescan on load.
         if (!watchonly_batch->WriteBestBlock(best_block_locator)) {
             return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
@@ -4059,7 +4069,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
-                watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
+                if (!watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash))) {
+                    return util::Error{strprintf(_("Error: Could not write watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
+                }
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
@@ -4072,7 +4084,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
-        local_wallet_batch.WriteTx(*wtx);
+        if (!local_wallet_batch.WriteTx(*wtx)) {
+            return util::Error{strprintf(_("Error: Could not update tx %s in migrated wallet"), wtx->GetHash().GetHex())};
+        }
     }
 
     // Do the removes
