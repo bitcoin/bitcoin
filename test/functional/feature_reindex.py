@@ -36,9 +36,13 @@ class ReindexTest(BitcoinTestFramework):
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex"]]
         # Reindex connects multiple blocks in one ActivateBestChain() call, exercising read-ahead.
-        read_ahead_msgs = ["Using cached block"]
-        with self.nodes[0].assert_debug_log(expected_msgs=read_ahead_msgs, unexpected_msgs=blockread_msgs(1)):
+        read_ahead_msgs = blockread_msgs(1) + ["Using cached block"]
+        with self.nodes[0].assert_debug_log(expected_msgs=read_ahead_msgs, unexpected_msgs=[]):
             self.start_nodes(extra_args)
+        block_hash = self.nodes[0].getblockhash(1)  # Reconnect in a second activation to check worker reuse.
+        self.nodes[0].invalidateblock(block_hash)
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=blockread_msgs(1)):
+            self.nodes[0].reconsiderblock(block_hash)
         assert_equal(self.nodes[0].getblockcount(), blockcount)  # start_node is blocking on reindex
         self.log.info("Success")
 
