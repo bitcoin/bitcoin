@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -639,9 +640,15 @@ void BerkeleyRODatabase::Open()
     PageHeader root_header(inner_meta.root, inner_meta.other_endian);
     db_file >> root_header;
 
-    // Do a DFS through the BTree, starting at root
-    // We track the expected level of each page in order to avoid loops
+    // Do a DFS through the BTree, starting at root.
+    // The expected level of each page is tracked to reject cycles, but that is not
+    // sufficient on its own: a page reachable through more than one parent is
+    // level-consistent, passes the level check, and would be re-parsed once per path
+    // to it, so a small file can describe an exponential amount of work. Track the
+    // visited pages and reject any seen more than once, as a valid BTree references
+    // each page exactly once.
     std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
+    std::unordered_set<uint32_t> visited_pages;
     while (pages.size() > 0) {
         auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
@@ -651,6 +658,9 @@ void BerkeleyRODatabase::Open()
         //     throw std::runtime_error("Page number is greater than subdatabase last page");
         // }
         pages.pop_back();
+        if (!visited_pages.insert(curr_page).second) {
+            throw std::runtime_error("BTree page referenced more than once");
+        }
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;

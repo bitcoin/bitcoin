@@ -15,6 +15,8 @@
 #include <wallet/walletutil.h>
 
 #include <cstddef>
+#include <cstdint>
+#include <fstream>
 #include <memory>
 #include <span>
 #include <string>
@@ -304,6 +306,102 @@ BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
     InMemoryWalletDatabase database;
     database.Close();
     BOOST_CHECK_THROW(database.Open(), std::runtime_error);
+}
+
+namespace {
+//! Hand-crafts a legacy BDB file. Core has no BDB write support, so the read-only
+//! parser can only be tested against bytes laid out here in the format it reads.
+class BDBFileBuilder
+{
+    static constexpr uint32_t PAGE_BYTES{512};
+    std::vector<std::byte> m_bytes;
+
+    size_t Offset(uint32_t page, size_t off) const { return size_t{page} * PAGE_BYTES + off; }
+
+public:
+    explicit BDBFileBuilder(uint32_t num_pages) : m_bytes(size_t{num_pages} * PAGE_BYTES, std::byte{0}) {}
+
+    void W8(uint32_t page, size_t off, uint8_t v) { m_bytes.at(Offset(page, off)) = std::byte{v}; }
+    void WLE(uint32_t page, size_t off, uint32_t v, size_t n) { for (size_t i = 0; i < n; ++i) W8(page, off + i, static_cast<uint8_t>(v >> (8 * i))); }
+    void WBE(uint32_t page, size_t off, uint32_t v, size_t n) { for (size_t i = 0; i < n; ++i) W8(page, off + i, static_cast<uint8_t>(v >> (8 * (n - 1 - i)))); }
+    void WStr(uint32_t page, size_t off, std::string_view s) { for (char c : s) W8(page, off++, static_cast<uint8_t>(c)); }
+
+    //! A BTREE_META page (type 9) pointing at a subdatabase root.
+    void MetaPage(uint32_t page, uint32_t last_page, uint32_t root)
+    {
+        WLE(page, 4, 1, 4);            // lsn_offset = 1 (LSNs must read as reset)
+        WLE(page, 8, page, 4);         // page_num
+        WLE(page, 12, 0x00053162, 4);  // btree magic
+        WLE(page, 16, 9, 4);           // version
+        WLE(page, 20, PAGE_BYTES, 4);   // pagesize
+        W8(page, 25, 9);               // type = BTREE_META
+        WLE(page, 32, last_page, 4);   // last_page
+        WLE(page, 48, 0x20, 4);        // flags = SUBDB
+        WLE(page, 88, root, 4);        // root
+    }
+
+    //! The outer root leaf that names the "main" subdatabase and its meta page.
+    void OuterLeaf(uint32_t page, uint32_t inner_meta_page)
+    {
+        WLE(page, 4, 1, 4);            // lsn_offset = 1
+        WLE(page, 8, page, 4);         // page_num
+        WLE(page, 20, 2, 2);           // entries = 2
+        W8(page, 24, 1);               // level = 1
+        W8(page, 25, 5);               // type = BTREE_LEAF
+        WLE(page, 26, 30, 2);          // index[0] -> "main" record
+        WLE(page, 28, 37, 2);          // index[1] -> inner meta page record
+        WLE(page, 30, 4, 2); W8(page, 32, 1); WStr(page, 33, "main");
+        WLE(page, 37, 4, 2); W8(page, 39, 1); WBE(page, 40, inner_meta_page, 4);
+    }
+
+    fs::path WriteTo(const fs::path& dir, const std::string& name) const
+    {
+        const fs::path path{dir / fs::PathFromString(name)};
+        std::ofstream file{path.std_path(), std::ios::binary};
+        file.write(reinterpret_cast<const char*>(m_bytes.data()), static_cast<std::streamsize>(m_bytes.size()));
+        return path;
+    }
+};
+} // namespace
+
+BOOST_AUTO_TEST_CASE(bdbro_btree_page_referenced_twice)
+{
+    // An internal page with two entries pointing at the same child stays level
+    // consistent, so the level check passes, but the child (and its subtree) would
+    // be parsed once per parent edge. Check the parser rejects the second visit.
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.MetaPage(/*page=*/0, /*last_page=*/4, /*root=*/1);
+    builder.OuterLeaf(/*page=*/1, /*inner_meta_page=*/2);
+    builder.MetaPage(/*page=*/2, /*last_page=*/4, /*root=*/3);
+
+    // Page 3: an internal page (level 2) whose two entries point at one record
+    // whose child page is 4.
+    builder.WLE(3, 4, 1, 4);          // lsn_offset = 1
+    builder.WLE(3, 8, 3, 4);          // page_num
+    builder.WLE(3, 20, 2, 2);         // entries = 2
+    builder.W8(3, 24, 2);             // level = 2
+    builder.W8(3, 25, 3);             // type = BTREE_INTERNAL
+    builder.WLE(3, 26, 30, 2);        // index[0] -> record
+    builder.WLE(3, 28, 30, 2);        // index[1] -> same record
+    builder.WLE(3, 30, 1, 2);         // RecordHeader.len = 1
+    builder.W8(3, 32, 1);             // RecordHeader.type = KEYDATA
+    builder.WLE(3, 34, 4, 4);         // InternalRecord.page_num = 4
+
+    // Page 4: an empty leaf, parsed once and then reached a second time.
+    builder.WLE(4, 4, 1, 4);          // lsn_offset = 1
+    builder.WLE(4, 8, 4, 4);          // page_num
+    builder.W8(4, 24, 1);             // level = 1
+    builder.W8(4, 25, 5);             // type = BTREE_LEAF
+
+    const fs::path path{builder.WriteTo(m_path_root, "bdbro_btree.dat")};
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_CHECK(!db);
+    BOOST_CHECK_EQUAL(status, DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK_EQUAL(error.original, "BTree page referenced more than once");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
