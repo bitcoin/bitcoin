@@ -150,11 +150,9 @@ static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputG
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 {
     utxo_pool.clear();
-    CAmount target = 0;
+    CAmount target = 8'000;
     for (int i = 0; i < utxos; ++i) {
-        target += CAmount{1} << (utxos+i);
-        add_coin(CAmount{1} << (utxos+i), 2*i, utxo_pool);
-        add_coin((CAmount{1} << (utxos+i)) + (CAmount{1} << (utxos-1-i)), 2*i + 1, utxo_pool);
+        add_coin(1'000 + i, i, utxo_pool);
     }
     return target;
 }
@@ -163,9 +161,16 @@ static void BnBExhaustion(benchmark::Bench& bench)
 {
     std::vector<OutputGroup> utxo_pool;
     CAmount target;
-    bench.setup([&] { target = make_hard_case(17, utxo_pool); })
+    // cost_of_change amount determines the number of possible solutions.
+    // setting a cost_of_change less than 38 will produce too few solutions
+    // to be found before the exhausting the 100,000 attempt limit.
+    int cost_of_change = 38;
+    bench.setup([&] { target = make_hard_case(19, utxo_pool); })
         .run([&] {
-            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
+            auto res{SelectCoinsBnB(utxo_pool, target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
+            assert(res->GetSelectedEffectiveValue() > target);
+            assert(res->GetInputSet().size() == 8U);
+            assert(res->GetSelectionsEvaluated() == 100'000);
             ankerl::nanobench::doNotOptimizeAway(res);
         });
 }
