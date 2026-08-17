@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -641,7 +642,9 @@ void BerkeleyRODatabase::Open()
 
     // Do a DFS through the BTree, starting at root
     // We track the expected level of each page in order to avoid loops
+    // We also track visited pages, since a page with multiple parents would be parsed once per path
     std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
+    std::unordered_set<uint32_t> visited_pages;
     while (pages.size() > 0) {
         auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
@@ -651,6 +654,9 @@ void BerkeleyRODatabase::Open()
         //     throw std::runtime_error("Page number is greater than subdatabase last page");
         // }
         pages.pop_back();
+        if (!visited_pages.insert(curr_page).second) {
+            throw std::runtime_error("BTree page referenced more than once");
+        }
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
