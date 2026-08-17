@@ -21,7 +21,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [],
-            ["-txindex"],
+            ["-txindex", "-prune=1", "-fastprune"],
         ]
 
     def run_test(self):
@@ -106,6 +106,25 @@ class MerkleBlockTest(BitcoinTestFramework):
 
         # TODO: try more variants, eg transactions at different depths, and
         # verify that the proofs are invalid
+
+        self.log.info("Check multi-transaction proof recovery with a readable stale copy")
+        full, pruned = self.nodes
+        first_txid, second_txid = sorted([txid1, txid2], key=lambda txid: bytes.fromhex(txid)[::-1])
+        for node in self.nodes:
+            node.invalidateblock(blockhash)
+        stale_hash = self.generateblock(full, output=miniwallet.get_address(), transactions=[first_txid])["hash"]
+        for node in self.nodes:
+            node.reconsiderblock(blockhash)
+        miniwallet.send_self_transfer(from_node=full, utxo_to_spend=miniwallet.get_utxo(txid=txid_unspent))
+        self.generate(full, 600)
+        pruned.pruneblockchain(pruned.getblockcount())
+
+        pruned.submitblock(full.getblock(stale_hash, 0))
+        assert_equal(pruned.gettxoutproof([first_txid], stale_hash), full.gettxoutproof([first_txid], stale_hash))
+        assert_raises_rpc_error(-1, f"Transaction may be in pruned block {blockhash}.", pruned.gettxoutproof, [first_txid, second_txid])
+
+        pruned.submitblock(full.getblock(blockhash, 0))
+        assert_equal(pruned.verifytxoutproof(pruned.gettxoutproof([first_txid, second_txid])), txlist)
 
 if __name__ == '__main__':
     MerkleBlockTest(__file__).main()
