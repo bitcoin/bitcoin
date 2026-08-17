@@ -188,7 +188,8 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 
 /**
  * Set a height-based locktime for new transactions (uses the height of the
- * current chain tip unless we are not synced with the current chain
+ * current chain tip unless we are not synced with the current chain).
+ * In 10% of cases, back-date the locktime by up to 100 blocks for privacy.
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
