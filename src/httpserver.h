@@ -192,7 +192,7 @@ public:
     CService GetPeer() const;
     HTTPRequestMethod GetRequestMethod() const { return m_method; }
     std::optional<std::string> GetQueryParameter(std::string_view key) const;
-    std::pair<bool, std::string> GetHeader(std::string_view hdr) const;
+    std::optional<std::string> GetHeader(std::string_view hdr) const;
     std::string ReadBody() const { return m_body; }
     void WriteHeader(std::string&& hdr, std::string&& value);
 
