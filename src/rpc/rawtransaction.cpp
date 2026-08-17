@@ -15,6 +15,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <kernel/chainparams.h>
 #include <key.h>
@@ -71,6 +72,7 @@
 #include <span>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using node::AnalyzePSBT;
@@ -178,7 +180,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
         // Look in the txindex
         if (g_txindex) {
-            if (auto result{g_txindex->FindTx(psbt_input.prev_txid)}) tx = result->tx;
+            TxLookupResult result{g_txindex->FindTx(psbt_input.prev_txid)};
+            if (auto* found{std::get_if<TxFound>(&result)}) tx = std::move(found->tx);
         }
         // If we still don't have it look in the mempool
         if (!tx) {

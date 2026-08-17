@@ -6,6 +6,7 @@
 #include <node/transaction.h>
 
 #include <consensus/validation.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <net.h>
 #include <net_processing.h>
@@ -16,6 +17,8 @@
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <variant>
 
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
@@ -146,13 +149,14 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
         if (ptx) return ptx;
     }
     if (g_txindex) {
-        if (auto result{g_txindex->FindTx(hash)}) {
-            if (!block_index || block_index->GetBlockHash() == result->block_hash) {
+        TxLookupResult result{g_txindex->FindTx(hash)};
+        if (const auto* found{std::get_if<TxFound>(&result)}) {
+            if (!block_index || block_index->GetBlockHash() == found->block_hash) {
                 // Don't return the transaction if the provided block hash doesn't match.
                 // The case where a transaction appears in multiple blocks (e.g. reorgs or
                 // BIP30) is handled by the block lookup below.
-                hashBlock = result->block_hash;
-                return result->tx;
+                hashBlock = found->block_hash;
+                return found->tx;
             }
         }
     }
