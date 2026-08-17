@@ -179,6 +179,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     // On-disk, so the legacy-entry probe at construction runs against a fresh
     // database, as it would on a node whose index was created by this version.
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    BOOST_CHECK(txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
     txindex.Sync();
 
@@ -240,6 +241,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
     }
 
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    BOOST_CHECK(!txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
     txindex.Sync();
 
