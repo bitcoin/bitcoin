@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/register.h> // IWYU pragma: associated
-
 #include <addresstype.h>
 #include <base58.h>
 #include <chain.h>
@@ -15,6 +13,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <kernel/chainparams.h>
 #include <key.h>
@@ -32,6 +31,7 @@
 #include <random.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -178,7 +178,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
         // Look in the txindex
         if (g_txindex) {
-            if (auto result{g_txindex->FindTx(psbt_input.prev_txid)}) tx = result->tx;
+            if (CTransactionRef found{g_txindex->FindTx(psbt_input.prev_txid).tx}) tx = std::move(found);
         }
         // If we still don't have it look in the mempool
         if (!tx) {
