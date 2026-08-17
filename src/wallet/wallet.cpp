@@ -4104,12 +4104,27 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // Write address book entry to disk
     auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
         auto address{EncodeDestination(dest)};
-        if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
-        if (entry.label) batch.WriteName(address, *entry.label);
-        for (const auto& [id, request] : entry.receive_requests) {
-            batch.WriteAddressReceiveRequest(dest, id, request);
+        if (entry.purpose) {
+            if (!batch.WritePurpose(address, PurposeToString(*entry.purpose))) {
+                return false;
+            }
         }
-        if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
+        if (entry.label) {
+            if (!batch.WriteName(address, *entry.label)) {
+                return false;
+            }
+        }
+        for (const auto& [id, request] : entry.receive_requests) {
+            if (!batch.WriteAddressReceiveRequest(dest, id, request)) {
+                return false;
+            }
+        }
+        if (entry.previously_spent) {
+            if (!batch.WriteAddressPreviouslySpent(dest, true)) {
+                return false;
+            }
+        }
+        return true;
     };
 
     // Check the address book data in the same way we did for transactions
@@ -4125,7 +4140,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
             // Copy the entire address book entry
             wallet->m_address_book[dest] = record;
-            func_store_addr(*batch, dest, record);
+            if (!func_store_addr(*batch, dest, record)) {
+                return util::Error{_("Error: Unable to write address book data")};
+            }
 
             copied = true;
             // Only delete 'receive' records that are no longer part of the original wallet
