@@ -6,12 +6,11 @@
 #define BITCOIN_INDEX_TXINDEX_H
 
 #include <index/base.h>
+#include <index/tx_lookup_result.h>
 #include <primitives/transaction.h>
-#include <uint256.h>
 
 #include <cstddef>
 #include <memory>
-#include <optional>
 
 namespace interfaces {
 class Chain;
@@ -21,12 +20,6 @@ class TxIndexTest;
 }
 
 inline constexpr bool DEFAULT_TXINDEX{false};
-
-/// A found transaction and the hash of the block that contains it.
-struct TxIndexResult {
-    uint256 block_hash;
-    CTransactionRef tx;
-};
 
 /**
  * TxIndex is used to look up transactions included in the blockchain by hash.
@@ -43,7 +36,7 @@ private:
     const std::unique_ptr<DB> m_db;
 
     /// Look up a transaction among the legacy (full-txid) entries.
-    std::optional<TxIndexResult> FindLegacyTx(const Txid& tx_hash) const;
+    TxLookupResult FindLegacyTx(const Txid& tx_hash) const;
 
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
@@ -63,8 +56,9 @@ public:
     /// Look up a transaction by hash.
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.
-    /// @return  the transaction and containing block hash, or nullopt if it is not found
-    std::optional<TxIndexResult> FindTx(const Txid& tx_hash) const;
+    /// @return  The transaction and containing block hash if found.
+    ///          If not found, the hashes of blocks that may contain the tx but were pruned are returned instead.
+    TxLookupResult FindTx(const Txid& tx_hash) const;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.
