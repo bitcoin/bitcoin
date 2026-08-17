@@ -72,17 +72,17 @@ ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, str]] = 
 
 ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, list[int]]] = {
     lief.ELF.ARCH.X86_64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.ARM: {
-        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,7,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.PPC64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,10,0],
-        lief.Header.ENDIANNESS.BIG: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
+        lief.Header.ENDIANNESS.BIG: [3,17,0],
     },
     lief.ELF.ARCH.RISCV: {
         lief.Header.ENDIANNESS.LITTLE: [4,15,0],
