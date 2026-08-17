@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(murmurhash3)
    ...
    in = 00 01 02 ... 3e (63 bytes)
 
-   from: https://131002.net/siphash/siphash24.c
+   from: https://github.com/veorq/SipHash/blob/master/vectors.h
 */
 uint64_t siphash_4_2_testvec[] = {
     0x726fdb47dd0e0e31, 0x74f839c593dc67fd, 0x0d6c8009d9a94f5a, 0x85676696d7fb7e2d,
