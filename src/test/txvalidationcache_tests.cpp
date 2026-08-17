@@ -50,8 +50,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
     {
         spends[i].version = 1;
         spends[i].vin.resize(1);
-        spends[i].vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
-        spends[i].vin[0].prevout.n = 0;
+        spends[i].vin[0].prevout = COutPoint(m_coinbase_txns[0]->GetHash(), 0);
         spends[i].vout.resize(1);
         spends[i].vout[0].nValue = 11*CENT;
         spends[i].vout[0].scriptPubKey = scriptPubKey;
@@ -185,8 +184,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
 
     spend_tx.version = 1;
     spend_tx.vin.resize(1);
-    spend_tx.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
-    spend_tx.vin[0].prevout.n = 0;
+    spend_tx.vin[0].prevout = COutPoint(m_coinbase_txns[0]->GetHash(), 0);
     spend_tx.vout.resize(4);
     spend_tx.vout[0].nValue = 11*CENT;
     spend_tx.vout[0].scriptPubKey = p2sh_scriptPubKey;
@@ -247,8 +245,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         CMutableTransaction invalid_under_p2sh_tx;
         invalid_under_p2sh_tx.version = 1;
         invalid_under_p2sh_tx.vin.resize(1);
-        invalid_under_p2sh_tx.vin[0].prevout.hash = spend_tx.GetHash();
-        invalid_under_p2sh_tx.vin[0].prevout.n = 0;
+        invalid_under_p2sh_tx.vin[0].prevout = COutPoint(spend_tx.GetHash(), 0);
         invalid_under_p2sh_tx.vout.resize(1);
         invalid_under_p2sh_tx.vout[0].nValue = 11*CENT;
         invalid_under_p2sh_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
@@ -264,8 +261,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         invalid_with_cltv_tx.version = 1;
         invalid_with_cltv_tx.nLockTime = 100;
         invalid_with_cltv_tx.vin.resize(1);
-        invalid_with_cltv_tx.vin[0].prevout.hash = spend_tx.GetHash();
-        invalid_with_cltv_tx.vin[0].prevout.n = 2;
+        invalid_with_cltv_tx.vin[0].prevout = COutPoint(spend_tx.GetHash(), 2);
         invalid_with_cltv_tx.vin[0].nSequence = 0;
         invalid_with_cltv_tx.vout.resize(1);
         invalid_with_cltv_tx.vout[0].nValue = 11*CENT;
@@ -292,8 +288,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         CMutableTransaction invalid_with_csv_tx;
         invalid_with_csv_tx.version = 2;
         invalid_with_csv_tx.vin.resize(1);
-        invalid_with_csv_tx.vin[0].prevout.hash = spend_tx.GetHash();
-        invalid_with_csv_tx.vin[0].prevout.n = 3;
+        invalid_with_csv_tx.vin[0].prevout = COutPoint(spend_tx.GetHash(), 3);
         invalid_with_csv_tx.vin[0].nSequence = 100;
         invalid_with_csv_tx.vout.resize(1);
         invalid_with_csv_tx.vout[0].nValue = 11*CENT;
@@ -323,8 +318,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         CMutableTransaction valid_with_witness_tx;
         valid_with_witness_tx.version = 1;
         valid_with_witness_tx.vin.resize(1);
-        valid_with_witness_tx.vin[0].prevout.hash = spend_tx.GetHash();
-        valid_with_witness_tx.vin[0].prevout.n = 1;
+        valid_with_witness_tx.vin[0].prevout = COutPoint(spend_tx.GetHash(), 1);
         valid_with_witness_tx.vout.resize(1);
         valid_with_witness_tx.vout[0].nValue = 11*CENT;
         valid_with_witness_tx.vout[0].scriptPubKey = p2pk_scriptPubKey;
@@ -348,10 +342,8 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
 
         tx.version = 1;
         tx.vin.resize(2);
-        tx.vin[0].prevout.hash = spend_tx.GetHash();
-        tx.vin[0].prevout.n = 0;
-        tx.vin[1].prevout.hash = spend_tx.GetHash();
-        tx.vin[1].prevout.n = 1;
+        tx.vin[0].prevout = COutPoint(spend_tx.GetHash(), 0);
+        tx.vin[1].prevout = COutPoint(spend_tx.GetHash(), 1);
         tx.vout.resize(1);
         tx.vout[0].nValue = 22*CENT;
         tx.vout[0].scriptPubKey = p2pk_scriptPubKey;

@@ -23,8 +23,7 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
     tx.vin.resize(inputs.size());
     tx.vout.resize(output_values.size());
     for (size_t i = 0; i < inputs.size(); ++i) {
-        tx.vin[i].prevout.hash = inputs[i]->GetHash();
-        tx.vin[i].prevout.n = 0;
+        tx.vin[i].prevout = COutPoint(inputs[i]->GetHash(), 0);
         // Add a witness so wtxid != txid
         CScriptWitness witness;
         witness.stack.emplace_back(i + 10);

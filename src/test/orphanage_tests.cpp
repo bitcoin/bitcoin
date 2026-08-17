@@ -441,8 +441,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     {
         CMutableTransaction tx;
         tx.vin.resize(1);
-        tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = Txid::FromUint256(m_rng.rand256());
+        tx.vin[0].prevout = COutPoint(Txid::FromUint256(m_rng.rand256()), 0);
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = i*CENT;
@@ -460,8 +459,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
         CMutableTransaction tx;
         tx.vin.resize(1);
-        tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = txPrev->GetHash();
+        tx.vin[0].prevout = COutPoint(txPrev->GetHash(), 0);
         tx.vout.resize(1);
         tx.vout[0].nValue = i*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
@@ -485,8 +483,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin.resize(2777);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
-            tx.vin[j].prevout.n = j;
-            tx.vin[j].prevout.hash = txPrev->GetHash();
+            tx.vin[j].prevout = COutPoint(txPrev->GetHash(), j);
         }
         SignatureData empty;
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));

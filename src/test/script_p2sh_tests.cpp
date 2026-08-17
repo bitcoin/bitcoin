@@ -46,8 +46,7 @@ static bool Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool f
     CMutableTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
-    txTo.vin[0].prevout.n = 0;
-    txTo.vin[0].prevout.hash = txFrom.GetHash();
+    txTo.vin[0].prevout = COutPoint(txFrom.GetHash(), 0);
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
@@ -103,8 +102,7 @@ BOOST_AUTO_TEST_CASE(sign)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
+        txTo[i].vin[0].prevout = COutPoint(txFrom.GetHash(), i);
         txTo[i].vout[0].nValue = 1;
     }
     for (int i = 0; i < 8; i++)
@@ -200,8 +198,7 @@ BOOST_AUTO_TEST_CASE(set)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
+        txTo[i].vin[0].prevout = COutPoint(txFrom.GetHash(), i);
         txTo[i].vout[0].nValue = 1*CENT;
         txTo[i].vout[0].scriptPubKey = inner[i];
     }
@@ -362,8 +359,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txTo.vin.resize(5);
         for (int i = 0; i < 5; i++)
         {
-            txTo.vin[i].prevout.n = i;
-            txTo.vin[i].prevout.hash = txFrom.GetHash();
+            txTo.vin[i].prevout = COutPoint(txFrom.GetHash(), i);
         }
         SignatureData empty;
         BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL, empty));
@@ -397,8 +393,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txToNonStd1.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txToNonStd1.vout[0].nValue = 1000;
         txToNonStd1.vin.resize(1);
-        txToNonStd1.vin[0].prevout.n = 5;
-        txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
+        txToNonStd1.vin[0].prevout = COutPoint(txFrom.GetHash(), 5);
         txToNonStd1.vin[0].scriptSig << std::vector<unsigned char>(sixteenSigops.begin(), sixteenSigops.end());
 
         const auto txToNonStd1_res = ::ValidateInputsStandardness(CTransaction(txToNonStd1), coins);
@@ -415,8 +410,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txToNonStd2.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txToNonStd2.vout[0].nValue = 1000;
         txToNonStd2.vin.resize(1);
-        txToNonStd2.vin[0].prevout.n = 6;
-        txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
+        txToNonStd2.vin[0].prevout = COutPoint(txFrom.GetHash(), 6);
         txToNonStd2.vin[0].scriptSig << std::vector<unsigned char>(twentySigops.begin(), twentySigops.end());
 
         const auto txToNonStd2_res = ::ValidateInputsStandardness(CTransaction(txToNonStd2), coins);
@@ -432,8 +426,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txToNonStd2_no_scriptSig.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txToNonStd2_no_scriptSig.vout[0].nValue = 1000;
         txToNonStd2_no_scriptSig.vin.resize(1);
-        txToNonStd2_no_scriptSig.vin[0].prevout.n = 6;
-        txToNonStd2_no_scriptSig.vin[0].prevout.hash = txFrom.GetHash();
+        txToNonStd2_no_scriptSig.vin[0].prevout = COutPoint(txFrom.GetHash(), 6);
 
         const auto txToNonStd2_no_scriptSig_res = ::ValidateInputsStandardness(CTransaction(txToNonStd2_no_scriptSig), coins);
         BOOST_CHECK(txToNonStd2_no_scriptSig_res.IsInvalid());
@@ -449,8 +442,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txToNonStd3.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txToNonStd3.vout[0].nValue = 1000;
         txToNonStd3.vin.resize(1);
-        txToNonStd3.vin[0].prevout.n = 7;
-        txToNonStd3.vin[0].prevout.hash = txFrom.GetHash();
+        txToNonStd3.vin[0].prevout = COutPoint(txFrom.GetHash(), 7);
 
         const auto txToNonStd3_res = ::ValidateInputsStandardness(CTransaction(txToNonStd3), coins);
         BOOST_CHECK(txToNonStd3_res.IsInvalid());
@@ -465,8 +457,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txToNonStd4.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txToNonStd4.vout[0].nValue = 1000;
         txToNonStd4.vin.resize(1);
-        txToNonStd4.vin[0].prevout.n = 8;
-        txToNonStd4.vin[0].prevout.hash = txFrom.GetHash();
+        txToNonStd4.vin[0].prevout = COutPoint(txFrom.GetHash(), 8);
         txToNonStd4.vin[0].scriptSig = op_return_script;
 
         const auto txToNonStd4_res = ::ValidateInputsStandardness(CTransaction(txToNonStd4), coins);
@@ -482,8 +473,7 @@ BOOST_AUTO_TEST_CASE(ValidateInputsStandardness)
         txWitnessUnknown.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
         txWitnessUnknown.vout[0].nValue = 1000;
         txWitnessUnknown.vin.resize(1);
-        txWitnessUnknown.vin[0].prevout.n = 9;
-        txWitnessUnknown.vin[0].prevout.hash = txFrom.GetHash();
+        txWitnessUnknown.vin[0].prevout = COutPoint(txFrom.GetHash(), 9);
         const auto txWitnessUnknown_res = ::ValidateInputsStandardness(CTransaction(txWitnessUnknown), coins);
         BOOST_CHECK(txWitnessUnknown_res.IsInvalid());
         BOOST_CHECK_EQUAL(txWitnessUnknown_res.GetRejectReason(), "bad-txns-nonstandard-inputs");

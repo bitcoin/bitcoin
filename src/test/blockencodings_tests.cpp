@@ -38,14 +38,12 @@ static CBlock BuildBlockTestCase(FastRandomContext& ctx) {
     block.hashPrevBlock = ctx.rand256();
     block.nBits = 0x207fffff;
 
-    tx.vin[0].prevout.hash = Txid::FromUint256(ctx.rand256());
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout = COutPoint(Txid::FromUint256(ctx.rand256()), 0);
     block.vtx[1] = MakeTransactionRef(tx);
 
     tx.vin.resize(10);
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        tx.vin[i].prevout.hash = Txid::FromUint256(ctx.rand256());
-        tx.vin[i].prevout.n = 0;
+        tx.vin[i].prevout = COutPoint(Txid::FromUint256(ctx.rand256()), 0);
     }
     block.vtx[2] = MakeTransactionRef(tx);
 
@@ -321,8 +319,7 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     auto rand_ctx(FastRandomContext(uint256{42}));
 
     CMutableTransaction mtx = BuildTransactionTestCase();
-    mtx.vin[0].prevout.hash = Txid::FromUint256(rand_ctx.rand256());
-    mtx.vin[0].prevout.n = 0;
+    mtx.vin[0].prevout = COutPoint(Txid::FromUint256(rand_ctx.rand256()), 0);
     const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
 
     CBlock block(BuildBlockTestCase(rand_ctx));

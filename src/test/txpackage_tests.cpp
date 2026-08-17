@@ -36,8 +36,7 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
     mtx.vout.resize(num_outputs);
     auto random_script = CScript() << ToByteVector(m_rng.rand256()) << ToByteVector(m_rng.rand256());
     for (size_t i{0}; i < num_inputs; ++i) {
-        mtx.vin[i].prevout.hash = Txid::FromUint256(m_rng.rand256());
-        mtx.vin[i].prevout.n = 0;
+        mtx.vin[i].prevout = COutPoint(Txid::FromUint256(m_rng.rand256()), 0);
         mtx.vin[i].scriptSig = random_script;
     }
     for (size_t o{0}; o < num_outputs; ++o) {
@@ -662,8 +661,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     CMutableTransaction mtx_child1;
     mtx_child1.version = 1;
     mtx_child1.vin.resize(1);
-    mtx_child1.vin[0].prevout.hash = ptx_parent->GetHash();
-    mtx_child1.vin[0].prevout.n = 0;
+    mtx_child1.vin[0].prevout = COutPoint(ptx_parent->GetHash(), 0);
     mtx_child1.vin[0].scriptSig = CScript();
     mtx_child1.vin[0].scriptWitness = witness1;
     mtx_child1.vout.resize(1);
@@ -790,8 +788,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     CMutableTransaction mtx_parent2_v1;
     mtx_parent2_v1.version = 1;
     mtx_parent2_v1.vin.resize(1);
-    mtx_parent2_v1.vin[0].prevout.hash = ptx_grandparent2->GetHash();
-    mtx_parent2_v1.vin[0].prevout.n = 0;
+    mtx_parent2_v1.vin[0].prevout = COutPoint(ptx_grandparent2->GetHash(), 0);
     mtx_parent2_v1.vin[0].scriptSig = CScript();
     mtx_parent2_v1.vin[0].scriptWitness = parent2_witness1;
     mtx_parent2_v1.vout.resize(1);
