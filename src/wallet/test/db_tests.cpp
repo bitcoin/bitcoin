@@ -444,5 +444,42 @@ BOOST_AUTO_TEST_CASE(bdbro_overflow_page_referenced_twice)
     BOOST_CHECK_EQUAL(error.original, "Overflow page referenced more than once");
 }
 
+BOOST_AUTO_TEST_CASE(bdbro_page_records_do_not_fit)
+{
+    // A page whose index entries all point at the same record makes the parser read
+    // and keep that record once per entry. Craft one and check the parser rejects it
+    // rather than reading a single page into entries * record_len bytes of memory.
+    const uint32_t entries{40};
+    const uint32_t record_off{26 + 2 * entries}; // just past the index array
+    const uint32_t record_len{20};
+
+    BDBFileBuilder builder(/*num_pages=*/4);
+    builder.MetaPage(/*page=*/0, /*last_page=*/3, /*root=*/1);
+    builder.OuterLeaf(/*page=*/1, /*inner_meta_page=*/2);
+    builder.MetaPage(/*page=*/2, /*last_page=*/3, /*root=*/3);
+
+    // Page 3: the inner root leaf, with every index pointing at one record.
+    builder.WLE(3, 4, 1, 4);          // lsn_offset = 1
+    builder.WLE(3, 8, 3, 4);          // page_num
+    builder.WLE(3, 20, entries, 2);   // entries
+    builder.W8(3, 24, 1);             // level = 1
+    builder.W8(3, 25, 5);             // type = BTREE_LEAF
+    for (uint32_t i = 0; i < entries; ++i) {
+        builder.WLE(3, 26 + 2 * i, record_off, 2);
+    }
+    builder.WLE(3, record_off, record_len, 2); // RecordHeader.len
+    builder.W8(3, record_off + 2, 1);          // RecordHeader.type = KEYDATA
+
+    const fs::path path{builder.WriteTo(m_path_root, "bdbro_records.dat")};
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_CHECK(!db);
+    BOOST_CHECK_EQUAL(status, DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK_EQUAL(error.original, "Data records exceed page size");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
