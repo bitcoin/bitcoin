@@ -126,6 +126,7 @@ BASE_SCRIPTS = [
     'feature_segwit.py --v1transport',
     'p2p_tx_download.py',
     'feature_txindex_compatibility.py',
+    'feature_txindex_prune.py',
     'wallet_avoidreuse.py',
     'feature_abortnode.py',
     'wallet_address_types.py',
