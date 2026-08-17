@@ -1243,7 +1243,8 @@ static bool RunWithinTxn(WalletBatch& batch, std::string_view process_desc, cons
     // Run procedure
     if (!func(batch)) {
         LogDebug(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
-        batch.TxnAbort();
+        // Transaction abort failure will be handled by destructors when the WalletBatch goes out of scope
+        (void)batch.TxnAbort();
         return false;
     }
 
