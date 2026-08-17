@@ -693,10 +693,9 @@ std::optional<std::string> GetQueryParameterFromUri(const std::string_view uri, 
     return std::nullopt;
 }
 
-std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string_view hdr) const
+std::optional<std::string> HTTPRequest::GetHeader(const std::string_view hdr) const
 {
-    std::optional<std::string> found{m_headers.FindFirst(hdr)};
-    return std::pair{found.has_value(), std::move(found).value_or("")};
+    return m_headers.FindFirst(hdr);
 }
 
 void HTTPRequest::WriteHeader(std::string&& hdr, std::string&& value)

@@ -212,11 +212,11 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK_EQUAL(req.GetURI(), "/");
         BOOST_CHECK_EQUAL(req.m_version.major, 1);
         BOOST_CHECK_EQUAL(req.m_version.minor, 1);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Connection"), "close");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Type"), "application/json");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Authorization"), "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Content-Length"), "46");
+        BOOST_CHECK_EQUAL(req.GetHeader("Host"), "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetHeader("Connection"), "close");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Type"), "application/json");
+        BOOST_CHECK_EQUAL(req.GetHeader("Authorization"), "Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl");
+        BOOST_CHECK_EQUAL(req.GetHeader("Content-Length"), "46");
         BOOST_CHECK_EQUAL(req.m_body.size(), 46);
         BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
     }
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK_EQUAL(req.m_target, "/");
         BOOST_CHECK_EQUAL(req.m_version.major, 1);
         BOOST_CHECK_EQUAL(req.m_version.minor, 0);
-        BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
+        BOOST_CHECK_EQUAL(req.GetHeader("Host"), "127.0.0.1");
         // no body is OK
         BOOST_CHECK_EQUAL(req.m_body.size(), 0);
     }
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK_EQUAL(req.m_body, R"({"method":"getblockcount"})");
         // Chunk Trailer was parsed, but ignored
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
-        BOOST_CHECK(!req.GetHeader("Expires").first);
+        BOOST_CHECK(!req.GetHeader("Expires"));
     }
     {
         // Invalid "chunked" transfer, using roman numerals instead of hex for chunk length
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Error);
 
         // We read up to the invalid line
-        BOOST_CHECK_EQUAL(*client->m_req->m_headers.FindFirst("Host"), "127.0.0.1");
+        BOOST_CHECK_EQUAL(client->m_req->GetHeader("Host"), "127.0.0.1");
         // Buffer was cleared, client should just be disconnected now
         BOOST_CHECK(client->m_recv_buffer.empty());
 
