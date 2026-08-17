@@ -11,6 +11,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 # setup gcc toolchain
 gcc_toolchain
 
+if [ -n "${BASE_CACHE_BUILD:-}" ]; then
+    BASE_CACHE="$BASE_CACHE_BUILD"
+fi
+
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${V:+V=1} \

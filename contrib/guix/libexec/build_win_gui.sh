@@ -11,6 +11,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 # setup mingw-w64 toolchain
 mingw_w64_toolchain
 
+if [ -n "${BASE_CACHE_GUI:-}" ]; then
+    BASE_CACHE="$BASE_CACHE_GUI"
+fi
+
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${V:+V=1} \
