@@ -3189,10 +3189,12 @@ void Chainstate::PruneBlockIndexCandidates() {
 /** Supplies blocks to validation. Destruction waits for any pending reads. */
 class Chainstate::BlockFetcher
 {
+    static constexpr int32_t QUEUE_SIZE{2};
+
     const BlockManager& m_blockman;
     std::shared_ptr<const CBlock> m_provided;
     ThreadPool m_pool{"blockread"};
-    std::future<std::shared_ptr<const CBlock>> m_pending;
+    std::deque<std::future<std::shared_ptr<const CBlock>>> m_pending;
 
     bool IsProvided(const uint256& hash) const { return m_provided && m_provided->GetHash() == hash; }
 
@@ -3204,7 +3206,7 @@ class Chainstate::BlockFetcher
             if (auto block{std::make_shared<CBlock>()}; blockman.ReadBlock(*block, pos, hash)) return block;
             return nullptr; // Let ConnectTip() retry the read if this block is needed.
         })};
-        if (pending) m_pending = std::move(*pending);
+        if (pending) m_pending.emplace_back(std::move(*pending));
         return !!pending;
     }
 
@@ -3216,16 +3218,19 @@ public:
     std::shared_ptr<const CBlock> Load(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         if (IsProvided(hash)) return std::move(m_provided);
-        if (!m_pending.valid()) return nullptr;
-        auto block{m_pending.get()};
+        if (m_pending.empty()) return nullptr;
+        auto block{m_pending[0].get()};
+        m_pending.pop_front();
         return block && block->GetHash() == hash ? block : nullptr;
     }
 
     void Prefetch(const CBlockIndex& index_most_work, int next_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        if (m_pending.valid()) return;
-        if (auto* next{index_most_work.GetAncestor(next_height)}) Enqueue(*next);
+        if (!m_pending.empty()) return;
+        for (int32_t i{0}; i < QUEUE_SIZE; ++i) {
+            if (auto* next{index_most_work.GetAncestor(next_height + i)}; !next || !Enqueue(*next)) break;
+        }
     }
 };
 
