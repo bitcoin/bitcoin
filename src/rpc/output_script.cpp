@@ -185,6 +185,10 @@ static RPCMethod getdescriptorinfo()
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
                 {RPCResult::Type::BOOL, "hasprivatekeys", "Whether the input descriptor contained at least one private key"},
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, about the descriptor.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
             }
         },
         RPCExamples{
@@ -216,6 +220,14 @@ static RPCMethod getdescriptorinfo()
             result.pushKV("isrange", descs.at(0)->IsRange());
             result.pushKV("issolvable", descs.at(0)->IsSolvable());
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
+
+            UniValue warnings(UniValue::VARR);
+            for (const auto& desc : descs) {
+                for (const std::string& w : desc->Warnings()) {
+                    warnings.push_back(w);
+                }
+            }
+            PushWarnings(warnings, result);
             return result;
         },
     };
