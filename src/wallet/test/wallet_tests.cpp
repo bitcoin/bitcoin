@@ -249,11 +249,11 @@ BOOST_FIXTURE_TEST_CASE(add_descriptor_key_database_failure, EncryptionFailureSe
             fail_db->FailNextWrite(record_type);
         }
         BOOST_CHECK_EXCEPTION((void)add_key(), std::runtime_error, HasReason{"UpdateWithSigningProvider: writing descriptor private key failed"});
-        BOOST_CHECK( has_key()); // TODO: A failed database operation must not publish the inserted key
+        BOOST_CHECK(!has_key());
         BOOST_CHECK(!fail_db->HasRecordType(record_type));
         BOOST_CHECK( add_key());
         BOOST_CHECK( has_key());
-        BOOST_CHECK(!fail_db->HasRecordType(record_type)); // TODO: A successful retry must persist the inserted key
+        BOOST_CHECK( fail_db->HasRecordType(record_type));
     }
 }
 
