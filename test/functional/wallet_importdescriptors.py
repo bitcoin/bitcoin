@@ -1104,6 +1104,18 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 warnings=[expected_warning],
             )
 
+            self.log.debug("Importing an unsafe value in a multipath descriptor results in a single warning")
+            self.test_importdesc(
+                {
+                    'desc': descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/<0;1>/*),older({unsafe_value})))"),
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=True,
+                warnings=[expected_warning],
+            )
+
 
         self.test_import_unused_key()
         self.test_import_unused_key_existing()

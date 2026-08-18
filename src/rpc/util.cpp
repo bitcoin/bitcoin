@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <set>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -1402,14 +1403,19 @@ std::vector<uint32_t> ParsePathBIP32(const std::string& path)
 
 void PushWarnings(const UniValue& warnings, UniValue& obj)
 {
-    if (warnings.empty()) return;
-    obj.pushKV("warnings", warnings);
+    UniValue distinct(UniValue::VARR);
+    std::set<std::string> seen;
+    for (const auto& w : warnings.getValues()) {
+        if (seen.insert(w.get_str()).second) distinct.push_back(w);
+    }
+    if (distinct.empty()) return;
+    obj.pushKV("warnings", distinct);
 }
 
 void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj)
 {
     if (warnings.empty()) return;
-    obj.pushKV("warnings", BilingualStringsToUniValue(warnings));
+    PushWarnings(BilingualStringsToUniValue(warnings), obj);
 }
 
 std::vector<RPCResult> ScriptPubKeyDoc() {
