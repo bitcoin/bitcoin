@@ -658,7 +658,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     while not job_queue.done():
         if failfast and not all_passed:
             break
-        for test_result, testdir, stdout, stderr, skip_reason in job_queue.get_next():
+        for test_result, testdir, stdout, stderr, exit_code, skip_reason in job_queue.get_next():
             test_results.append(test_result)
             done_str = f"{len(test_results)}/{test_count} - {BOLD[1]}{test_result.name}{BOLD[0]}"
             if test_result.status == "Passed":
@@ -667,7 +667,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
                 logging.debug(f"{done_str} skipped ({skip_reason})")
             else:
                 all_passed = False
-                print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
+                print(f"{done_str} failed (exit code {exit_code}), Duration: {test_result.time} s\n")
                 print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
                 print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
                 if combined_logs_len and os.path.isdir(testdir):
@@ -829,7 +829,7 @@ class TestHandler:
                     clearline = '\r' + (' ' * dot_count) + '\r'
                     print(clearline, end='', flush=True)
                 dot_count = 0
-                ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr, skip_reason))
+                ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr, proc.returncode, skip_reason))
             if ret:
                 return ret
             if self.use_term_control:
