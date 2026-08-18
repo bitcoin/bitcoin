@@ -287,6 +287,17 @@ class TestNode():
                 # does not provide. In particular, painting a QGroupBox can make Qt call
                 # addSubview: on an invalid native object (QTBUG-49686).
                 subp_env.setdefault("QT_STYLE_OVERRIDE", "fusion")
+            if platform.system() == "OpenBSD":
+                # The system Qt packages are built with GLib support, so Qt uses
+                # QEventDispatcherGlib, which pushes/pops the GLib thread-default
+                # main context in each thread. On OpenBSD the pop can run during
+                # thread exit after GLib's per-thread context stack has already
+                # been torn down, so shutdown emits messages like
+                #   (process:NNN): GLib-CRITICAL **: g_main_context_pop_thread_default:
+                #   assertion 'stack != NULL' failed
+                # on stderr, which the test framework treats as a failure.
+                # Fall back to Qt's poll-based event dispatcher instead.
+                subp_env.setdefault("QT_NO_GLIB", "1")
             subp_env.setdefault("LC_ALL", "nl_NL.UTF-8") # Set language to try to trigger translation bugs
             if sys.platform.startswith("linux") and "XDG_RUNTIME_DIR" not in subp_env:
                 # Qt prints warnings to stderr when XDG_RUNTIME_DIR is unset or has wrong
