@@ -19,7 +19,7 @@ class FastRandomContext;
 
 namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. Helps limit the total amount of memory used by the orphanage. */
-inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
+inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER{404'000};
 /** Default value for TxOrphanage::m_max_global_latency_score. Helps limit the maximum latency for operations like
  * EraseForBlock and LimitOrphans. */
 inline constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
