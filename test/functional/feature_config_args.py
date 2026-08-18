@@ -280,6 +280,23 @@ class ConfArgsTest(BitcoinTestFramework):
 
         node.replace_in_config([("addnode=\n", "")])
 
+    def test_duplicate_addnode(self):
+        self.log.info("Test duplicate addnode configuration values are ignored")
+        node = self.nodes[0]
+
+        with node.assert_debug_log(expected_msgs=["Ignoring duplicate -addnode value: first.node"]):
+            self.start_node(0, extra_args=[
+                "-networkactive=0",
+                "-addnode=first.node",
+                "-addnode=first.node",
+                "-addnode=second.node",
+            ])
+        util.assert_equal(
+            [added["addednode"] for added in node.getaddednodeinfo()],
+            ["first.node", "second.node"],
+        )
+        self.stop_node(0)
+
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
@@ -534,6 +551,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_log_buffer()
         self.test_args_log()
         self.test_empty_addnode()
+        self.test_duplicate_addnode()
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()
