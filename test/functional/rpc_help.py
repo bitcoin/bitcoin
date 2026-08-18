@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 from collections import defaultdict
+import json
 import os
 import re
 
@@ -153,9 +154,18 @@ class HelpRpcTest(BitcoinTestFramework):
         os.mkdir(dump_dir)
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
         for call in calls:
+            help_text = self.nodes[0].help(call)
+            for line in help_text.splitlines():
+                if "--data-binary '" not in line:
+                    continue
+                payload = line.split("--data-binary '", 1)[1].rsplit("' -H 'content-type: application/json'", 1)[0]
+                try:
+                    json.loads(payload)
+                except json.JSONDecodeError as e:
+                    raise AssertionError(f"Invalid JSON in HelpExampleRpc for {call}: {e}: {payload}") from e
             with open(os.path.join(dump_dir, call), 'w') as f:
                 # Make sure the node can generate the help at runtime without crashing
-                f.write(self.nodes[0].help(call))
+                f.write(help_text)
 
     def wallet_help(self):
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
