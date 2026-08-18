@@ -18,6 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 using namespace node;
@@ -452,6 +453,77 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     auto collision_error = tracker.AddToSet(peer_id1, collision);
     BOOST_REQUIRE_EQUAL(collision_error.value().m_error, ReconciliationError::SHORTID_COLLISION);
     BOOST_REQUIRE_EQUAL(collision_error.value().GetCollision(), wtxid);
+}
+
+BOOST_AUTO_TEST_CASE(RemoveFromSetsTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0, peer_id1 = 1, peer_id2 = 2;
+    FastRandomContext frc{/*fDeterministic=*/true};
+    const Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+
+    // Two registered peers, both holding the same transaction
+    for (auto peer_id : {peer_id0, peer_id1}) {
+        tracker.PreRegisterPeer(peer_id);
+        BOOST_REQUIRE(!tracker.RegisterPeer(peer_id, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+        BOOST_REQUIRE(!tracker.AddToSet(peer_id, wtxid).has_value());
+    }
+
+    // Removal reaches every peer's set, not just one
+    tracker.RemoveFromSets({wtxid});
+    BOOST_CHECK(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+    BOOST_CHECK(!tracker.TryRemovingFromSet(peer_id1, wtxid));
+
+    // A transaction we already sketched stays in the snapshot, so that a sketch extension still
+    // describes the same elements, but it must no longer be announced
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    const auto sketched_txs{AddTxsToReconSet(tracker, peer_id2, 5)};
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id2, /*peer_recon_set_size=*/5, Q).has_value());
+    std::vector<uint8_t> skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id2, skdata));
+    BOOST_REQUIRE(!skdata.empty());
+
+    tracker.RemoveFromSets({sketched_txs[0]});
+    const std::vector<uint32_t> none{};
+    const auto announced{std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id2, /*recon_result=*/false, none))};
+    BOOST_CHECK_EQUAL(announced.size(), sketched_txs.size() - 1);
+    BOOST_CHECK(std::ranges::find(announced, sketched_txs[0]) == announced.end());
+}
+
+// A transaction leaving the mempool should be removed from the reconciliation sets, but it should not affect the extensions.
+BOOST_AUTO_TEST_CASE(RemoveFromSetsKeepsExtensionConsistentTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    const std::vector<uint32_t> none{};
+    std::vector<uint8_t> extensions[2];
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+
+    // Two rounds over the same transactions. One of the rounds triggers a removal after the snapshop is created,
+    // while the first does not.
+    for (int round = 0; round < 2; ++round) {
+        const auto txs{AddTxsToReconSet(tracker, peer_id0, 5)};
+        BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size=*/5, Q).has_value());
+        std::vector<uint8_t> base_skdata{};
+        BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, base_skdata));
+        BOOST_REQUIRE(!base_skdata.empty());
+
+        // The node should have snapsotted the set. Trigger removal for one of the iters.
+        if (round == 1) tracker.RemoveFromSets({txs[0]});
+
+        BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id0).has_value());
+        BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, extensions[round]));
+        BOOST_REQUIRE(!extensions[round].empty());
+
+        // Finish the round so the next one starts from a clean state
+        BOOST_REQUIRE(std::holds_alternative<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, none)));
+    }
+
+    // Removing after the snapshop should have no effect on the extension.
+    BOOST_CHECK(extensions[1] == extensions[0]);
 }
 
 // Once a peer's reconciliation set is full, further transactions have to be fanned out instead.

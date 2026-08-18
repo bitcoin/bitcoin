@@ -551,6 +551,35 @@ public:
         return removed;
     }
 
+    void RemoveFromSets(const std::vector<Wtxid>& wtxids) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        size_t removed{0};
+        for (auto& [_, salt_or_state] : m_states) {
+            auto* peer_state = std::get_if<TxReconciliationState>(&salt_or_state);
+            if (!peer_state) continue;
+
+            for (const auto& wtxid : wtxids) {
+                if (peer_state->m_local_set.erase(wtxid) > 0) {
+                    peer_state->m_short_id_mapping.erase(peer_state->ComputeShortID(wtxid));
+                    ++removed;
+                }
+                // The snapshot is left in place so that a sketch extension still covers the same
+                // elements as the sketch we already sent. Flagging it keeps it out of the announcement.
+                if (peer_state->m_local_set_snapshot.contains(wtxid)) {
+                    peer_state->m_announced_while_reconciling.insert(wtxid);
+                }
+            }
+        }
+
+        if (removed > 0) {
+            LogDebug(BCLog::TXRECONCILIATION, "Removed %i entries from reconciliation sets for %i transactions no longer available.\n",
+                removed, wtxids.size());
+        }
+    }
+
     std::variant<ReconCoefficients, ReconciliationError> InitiateReconciliationRequest(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -771,6 +800,11 @@ bool TxReconciliationTracker::ForgetPeer(NodeId peer_id)
 std::optional<AddToSetError> TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wtxid)
 {
     return m_impl->AddToSet(peer_id, wtxid);
+}
+
+void TxReconciliationTracker::RemoveFromSets(const std::vector<Wtxid>& wtxids)
+{
+    m_impl->RemoveFromSets(wtxids);
 }
 
 bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)

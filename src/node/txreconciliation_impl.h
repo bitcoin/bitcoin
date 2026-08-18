@@ -173,6 +173,13 @@ public:
     bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
+     * Remove transactions from every peer's reconciliation set, for example once they have left our
+     * mempool and can no longer be served. Snapshots of an in-flight round are left untouched, so
+     * a sketch extension still describes the same elements as the sketch already sent.
+     */
+    void RemoveFromSets(const std::vector<Wtxid>& wtxids);
+
+    /**
      * Step 2. Unless the peer hasn't finished a previous reconciliation round, this function will
      * return the details of our local state, which should be communicated to the peer so that they
      * better know what we need:

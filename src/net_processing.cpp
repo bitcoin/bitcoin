@@ -585,6 +585,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
+    void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
@@ -2258,6 +2260,27 @@ void PeerManagerImpl::BlockConnected(
         LOCK(m_tx_download_mutex);
         m_txdownloadman.BlockConnected(pblock);
     }
+}
+
+void PeerManagerImpl::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+{
+    // A transaction we can no longer serve must not stay in any reconciliation set: it would be
+    // sketched, asked for, and then dropped, wasting sketch capacity and a round trip.
+    if (m_txreconciliation) m_txreconciliation->RemoveFromSets({tx->GetWitnessHash()});
+}
+
+void PeerManagerImpl::MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
+{
+    // Mined transactions are the bulk of the case above: removeUnchecked deliberately skips
+    // TransactionRemovedFromMempool for MemPoolRemovalReason::BLOCK, so they only arrive here.
+    if (!m_txreconciliation) return;
+
+    std::vector<Wtxid> wtxids;
+    wtxids.reserve(txs_removed_for_block.size());
+    for (const auto& removed : txs_removed_for_block) {
+        wtxids.push_back(removed.info.m_tx->GetWitnessHash());
+    }
+    m_txreconciliation->RemoveFromSets(wtxids);
 }
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
