@@ -26,6 +26,17 @@ namespace node {
 static constexpr NodeId MIN_PEER{std::numeric_limits<NodeId>::min()};
 /** Maximum NodeId for upper_bound lookups. */
 static constexpr NodeId MAX_PEER{std::numeric_limits<NodeId>::max()};
+
+TxOrphanage::Usage GetOrphanUsage(const CTransactionRef& tx)
+{
+    // The total memory is a function of the memory used to store the transaction itself, each entry in m_orphans, and
+    // each entry in m_outpoint_to_orphan_wtxids. We use weight because it is often higher than the actual memory usage
+    // of the transaction. This metric conveniently encompasses m_outpoint_to_orphan_wtxids usage since input data does
+    // not get the witness discount, and makes it easier to reason about each peer's limits using well-understood
+    // transaction attributes.
+    return GetTransactionWeight(*tx);
+}
+
 class TxOrphanageImpl final : public TxOrphanage {
     // Type alias for sequence numbers
     using SequenceNumber = uint64_t;
@@ -41,21 +52,20 @@ class TxOrphanageImpl final : public TxOrphanage {
         const NodeId m_announcer;
         /** What order this transaction entered the orphanage. */
         const SequenceNumber m_entry_sequence;
+        /** Memory accounted for this announcement, cached at construction. Caching guarantees that the same value is
+         * added and subtracted from the per-peer and global totals, and avoids recomputing it on every operation. */
+        const TxOrphanage::Usage m_usage;
         /** Whether this tx should be reconsidered. Always starts out false. A peer's workset is the collection of all
          * announcements with m_reconsider=true. */
         bool m_reconsider{false};
 
         Announcement(const CTransactionRef& tx, NodeId peer, SequenceNumber seq) :
-            m_tx{tx}, m_announcer{peer}, m_entry_sequence{seq}
+            m_tx{tx}, m_announcer{peer}, m_entry_sequence{seq}, m_usage{GetOrphanUsage(tx)}
         { }
 
-        /** Get an approximation for "memory usage". The total memory is a function of the memory used to store the
-         * transaction itself, each entry in m_orphans, and each entry in m_outpoint_to_orphan_wtxids. We use weight because
-         * it is often higher than the actual memory usage of the transaction. This metric conveniently encompasses
-         * m_outpoint_to_orphan_wtxids usage since input data does not get the witness discount, and makes it easier to
-         * reason about each peer's limits using well-understood transaction attributes. */
-        TxOrphanage::Usage GetMemUsage()  const {
-            return GetTransactionWeight(*m_tx);
+        /** Get an approximation for "memory usage" (see GetOrphanUsage). */
+        TxOrphanage::Usage GetMemUsage() const {
+            return m_usage;
         }
 
         /** Get an approximation of how much this transaction contributes to latency in EraseForBlock and EraseForPeer.

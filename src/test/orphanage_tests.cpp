@@ -80,8 +80,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
 
     // Construct transactions to use. They must all be the same size.
     static constexpr unsigned int NUM_TXNS_CREATED = 100;
-    static constexpr int64_t TX_SIZE{469};
-    static constexpr int64_t TOTAL_SIZE = NUM_TXNS_CREATED * TX_SIZE;
+    static constexpr int64_t TX_WEIGHT{469};
 
     std::vector<CTransactionRef> txns;
     txns.reserve(NUM_TXNS_CREATED);
@@ -89,15 +88,20 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
     for (unsigned int i{0}; i < NUM_TXNS_CREATED; ++i) {
         auto ptx = MakeTransactionSpending({}, det_rand);
         txns.emplace_back(ptx);
-        BOOST_CHECK_EQUAL(TX_SIZE, GetTransactionWeight(*ptx));
+        BOOST_CHECK_EQUAL(TX_WEIGHT, GetTransactionWeight(*ptx));
     }
+    // The orphanage accounts the same usage for each of them. Don't hardcode the value, as it is
+    // not necessarily the same on all platforms.
+    const int64_t TX_USAGE{node::GetOrphanUsage(txns.front())};
+    for (const auto& ptx : txns) BOOST_CHECK_EQUAL(TX_USAGE, node::GetOrphanUsage(ptx));
+    const int64_t TOTAL_USAGE{NUM_TXNS_CREATED * TX_USAGE};
 
     // Single peer: eviction is triggered if either limit is hit
     {
         // Test announcement limits
         NodeId peer{8};
-        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/1, /*reserved_peer_usage=*/TX_SIZE * 10);
-        auto orphanage_low_mem = node::MakeTxOrphanage(/*max_global_latency_score=*/10, /*reserved_peer_usage=*/TX_SIZE);
+        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/1, /*reserved_peer_usage=*/TX_USAGE * 10);
+        auto orphanage_low_mem = node::MakeTxOrphanage(/*max_global_latency_score=*/10, /*reserved_peer_usage=*/TX_USAGE);
 
         // Add the first transaction
         orphanage_low_ann->AddTx(txns.at(0), peer);
@@ -121,7 +125,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
     {
         // Test latency score limits
         NodeId peer{10};
-        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/5, /*reserved_peer_usage=*/TX_SIZE * 1000);
+        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/5, /*reserved_peer_usage=*/TX_USAGE * 1000);
 
         // Add the first transaction
         orphanage_low_ann->AddTx(txns.at(0), peer);
@@ -155,7 +159,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
 
         // Test announcement limits
         NodeId peer{9};
-        auto orphanage = node::MakeTxOrphanage(/*max_global_latency_score=*/3, /*reserved_peer_usage=*/TX_SIZE * 10);
+        auto orphanage = node::MakeTxOrphanage(/*max_global_latency_score=*/3, /*reserved_peer_usage=*/TX_USAGE * 10);
 
         // First add a tx which will be made reconsiderable.
         orphanage->AddTx(children.at(0), peer);
@@ -221,7 +225,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
 
         unsigned int max_announcements = 60;
         // Set a high per-peer reservation so announcement limit is always hit first.
-        auto orphanage = node::MakeTxOrphanage(max_announcements, TOTAL_SIZE * 10);
+        auto orphanage = node::MakeTxOrphanage(max_announcements, TOTAL_USAGE * 10);
 
         // No evictions happen before the global limit is reached.
         for (unsigned int i{0}; i < max_announcements; ++i) {
@@ -339,17 +343,19 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
 
     // Test eviction of multiple transactions at a time
     {
-        // Create a large transaction that is 10 times larger than the normal size transaction.
+        // Create a large transaction that uses 10 times as much of the orphanage's usage allowance
+        // as a normal size transaction. The eviction expectations below rely on it being between 10
+        // and 11 times as large.
         CMutableTransaction tx_large;
         tx_large.vin.resize(1);
-        BulkTransaction(tx_large, 10 * TX_SIZE);
+        BulkTransaction(tx_large, 10 * TX_WEIGHT);
         auto ptx_large = MakeTransactionRef(tx_large);
 
-        const auto large_tx_size = GetTransactionWeight(*ptx_large);
-        BOOST_CHECK(large_tx_size > 10 * TX_SIZE);
-        BOOST_CHECK(large_tx_size < 11 * TX_SIZE);
+        const auto large_tx_usage{node::GetOrphanUsage(ptx_large)};
+        BOOST_CHECK_GE(large_tx_usage, 10 * TX_USAGE);
+        BOOST_CHECK_LT(large_tx_usage, 11 * TX_USAGE);
 
-        auto orphanage = node::MakeTxOrphanage(20, large_tx_size);
+        auto orphanage = node::MakeTxOrphanage(20, large_tx_usage);
         // One peer sends 10 normal size transactions. The other peer sends 10 normal transactions and 1 very large one
         NodeId peer_normal{0};
         NodeId peer_large{1};

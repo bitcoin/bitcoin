@@ -149,5 +149,10 @@ public:
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
 std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept;
+
+/** Get the amount TxOrphanage accounts for this transaction, i.e. its contribution to
+ * TotalOrphanUsage() and UsageByPeer(). Exposed so that tests, benchmarks and RPC report the same
+ * metric that the orphanage uses internally. */
+TxOrphanage::Usage GetOrphanUsage(const CTransactionRef& tx);
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
