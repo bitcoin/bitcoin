@@ -685,6 +685,10 @@ class OrphanHandlingTest(BitcoinTestFramework):
         for orphan in ancestor_package[1:]:
             peer_normal.send_and_ping(msg_tx(orphan["tx"]))
 
+        # These orphans are protected from eviction because they fit within what the orphanage
+        # reserves for each peer (DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER). Note that the reservation
+        # is an amount of memory, not of weight: since this package is padded with non-witness data,
+        # it uses about a quarter of its 404,000WU in memory.
         orphan_set = node.getorphantxs()
         for orphan in ancestor_package[1:]:
             assert orphan["txid"] in orphan_set
