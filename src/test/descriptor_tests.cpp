@@ -1345,6 +1345,40 @@ BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
     }
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_multipath_key_cloning_warnings)
+{
+    // multi() with non-multipath key cloned
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        auto descs = Parse("wsh(multi(2,xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*,xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>/*))", keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        const auto& ws = descs[0]->Warnings();
+        BOOST_REQUIRE_EQUAL(ws.size(), 1U);
+        BOOST_CHECK_EQUAL(ws[0], "A multipath descriptor contains a non-multipath key that will be cloned across all branches. This will result in reused key material.");
+    }
+
+    // tr() internal key is non-multipath and is cloned to match subscript
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        auto descs = Parse("tr(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*,pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>/*))", keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        const auto& ws = descs[0]->Warnings();
+        BOOST_REQUIRE_EQUAL(ws.size(), 1U);
+        BOOST_CHECK_EQUAL(ws[0], "A multipath descriptor contains a non-multipath key that will be cloned across all branches. This will result in reused key material.");
+    }
+
+    // tr() subscript is cloned (but internal key is multipath) -> no warning
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        auto descs = Parse("tr(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>/*,pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*))", keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        BOOST_CHECK(descs[0]->Warnings().empty());
+    }
+}
+
 void CheckSingleUnparsable(const std::string& desc, const std::string& expected_error)
 {
     FlatSigningProvider keys;
