@@ -54,12 +54,10 @@ FUZZ_TARGET(psbt)
         (void)PSBTRoleName(input_analysis.next);
     }
 
-    (void)psbt.IsNull();
     (void)psbt.GetUnsignedTx();
 
     for (const PSBTInput& input : psbt.inputs) {
         (void)PSBTInputSigned(input);
-        (void)input.IsNull();
         PSBTInput input_mod = input;
         CTxOut tx_out;
         if (input.GetUTXO(tx_out)) {
@@ -96,7 +94,6 @@ FUZZ_TARGET(psbt)
     (void)CountPSBTUnsignedInputs(psbt);
 
     for (const PSBTOutput& output : psbt.outputs) {
-        (void)output.IsNull();
         PSBTOutput output_mod = output;
         // A PSBT output must roundtrip to signature data.
         PSBTOutput output_fill{psbt_version, output_mod.amount, output_mod.script};

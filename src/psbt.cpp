@@ -31,11 +31,6 @@ PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction
     }
 }
 
-bool PartiallySignedTransaction::IsNull() const
-{
-    return inputs.empty() && outputs.empty() && unknown.empty();
-}
-
 bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
 {
     // Prohibited to merge two PSBTs over different transactions
@@ -289,11 +284,6 @@ COutPoint PSBTInput::GetOutPoint() const
     return COutPoint(prev_txid, prev_out);
 }
 
-bool PSBTInput::IsNull() const
-{
-    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
-}
-
 void PSBTInput::FillSignatureData(SignatureData& sigdata) const
 {
     if (!final_script_sig.empty()) {
@@ -526,11 +516,6 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
         m_tap_bip32_paths.emplace(pubkey, leaf_origin);
     }
     m_musig2_participants.insert(sigdata.musig2_pubkeys.begin(), sigdata.musig2_pubkeys.end());
-}
-
-bool PSBTOutput::IsNull() const
-{
-    return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
 }
 
 bool PSBTOutput::Merge(const PSBTOutput& output)
