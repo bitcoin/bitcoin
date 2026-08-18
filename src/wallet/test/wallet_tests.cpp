@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <future>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include <addresstype.h>
@@ -30,6 +31,7 @@
 #include <test/util/time.h>
 #include <util/byte_units.h>
 #include <util/check.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -68,16 +70,18 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     return mtx;
 }
 
-static void AddKey(CWallet& wallet, const CKey& key)
+static WalletDescriptor AddKey(CWallet& wallet, const CKey& key, bool private_key = true)
 {
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    const std::string key_data{private_key ? EncodeSecret(key) : HexStr(key.GetPubKey())};
+    auto descs = Parse(strprintf("combo(%s)", key_data), provider, error, /*require_checksum=*/false);
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
-    WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-    Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+    WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1);
+    Assert(wallet.AddWalletDescriptor(w_desc, provider, /*label=*/"", /*internal=*/false));
+    return w_desc;
 }
 
 namespace {
@@ -209,6 +213,48 @@ BOOST_FIXTURE_TEST_CASE(add_encrypted_descriptor_key_without_plaintext_record, E
     BOOST_CHECK( wallet->HaveCryptedKeys());
     BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
     BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+}
+
+BOOST_FIXTURE_TEST_CASE(add_descriptor_key_database_failure, EncryptionFailureSetup)
+{
+    enum class Failure { PlaintextWrite, EncryptedWrite, Erase, Commit };
+    for (auto failure : {Failure::PlaintextWrite, Failure::EncryptedWrite, Failure::Erase, Failure::Commit}) {
+        const bool encrypted{failure != Failure::PlaintextWrite};
+        RecreateBlankWallet();
+        CKey key{GenerateRandomKey()};
+        // Add a public descriptor first so the private-key update exercises an existing live manager
+        WalletDescriptor descriptor{AddKey(*wallet, key, /*private_key=*/false)};
+        FlatSigningProvider provider;
+        provider.keys.emplace(key.GetPubKey().GetID(), key);
+        auto add_key{[&] {
+            LOCK(wallet->cs_wallet);
+            return wallet->AddWalletDescriptor(descriptor, provider, /*label=*/"", /*internal=*/false);
+        }};
+        auto has_key{[&] {
+            LOCK(wallet->cs_wallet);
+            return wallet->GetKey(key.GetPubKey().GetID()).has_value();
+        }};
+        if (encrypted) {
+            BOOST_REQUIRE(wallet->EncryptWallet("passphrase"));
+            BOOST_REQUIRE(wallet->Unlock("passphrase"));
+        }
+        BOOST_CHECK(!has_key());
+
+        const std::string record_type{encrypted ? DBKeys::WALLETDESCRIPTORCKEY : DBKeys::WALLETDESCRIPTORKEY};
+        if (failure == Failure::Erase) {
+            fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY);
+        } else if (failure == Failure::Commit) {
+            fail_db->FailNextCommit();
+        } else {
+            fail_db->FailNextWrite(record_type);
+        }
+        BOOST_CHECK_EXCEPTION((void)add_key(), std::runtime_error, HasReason{"UpdateWithSigningProvider: writing descriptor private key failed"});
+        BOOST_CHECK( has_key()); // TODO: A failed database operation must not publish the inserted key
+        BOOST_CHECK(!fail_db->HasRecordType(record_type));
+        BOOST_CHECK( add_key());
+        BOOST_CHECK( has_key());
+        BOOST_CHECK(!fail_db->HasRecordType(record_type)); // TODO: A successful retry must persist the inserted key
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
