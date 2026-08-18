@@ -237,7 +237,8 @@ bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
                 break;
             else {
                 // Rewrite these encrypted keys with checksums
-                batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
+                // Write failure is ok, the wallet will redo this on next load but no data is missing from disk
+                (void)batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
             }
         }
         if (keyPass && keyFail)
@@ -905,7 +906,10 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
             return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
         m_wallet_descriptor.next_index++;
-        WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+        if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor)) {
+            m_wallet_descriptor.next_index--;
+            return util::Error{_("Error: Unable to update database with new address")};
+        }
         return dest;
     }
 }
@@ -951,10 +955,12 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
 bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
     LOCK(cs_desc_man);
+    Assume(batch->HasActiveTxn());
     if (!m_map_crypted_keys.empty()) {
         return false;
     }
 
+    CryptedKeyMap crypted_keys;
     for (const KeyMap::value_type& key_in : m_map_keys)
     {
         const CKey &key = key_in.second;
@@ -964,10 +970,18 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
-        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        if (!batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret)) {
+            return false;
+        }
+        crypted_keys[pubkey.GetID()] = make_pair(pubkey, std::move(crypted_secret));
     }
-    m_map_keys.clear();
+
+    // Update in-memory keys only after the database transaction commits.
+    batch->RegisterTxnListener({.on_commit = [this, keys = std::move(crypted_keys)]() mutable {
+                                    LOCK(cs_desc_man);
+                                    m_map_crypted_keys = std::move(keys);
+                                    m_map_keys.clear(); },
+                                .on_abort = [] {}});
     return true;
 }
 
@@ -986,7 +1000,8 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
     if (m_wallet_descriptor.next_index - 1 == index) {
         m_wallet_descriptor.next_index--;
     }
-    WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+    // Write failure is ok, the wallet will skip a change address which is fine
+    (void)WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
     NotifyCanGetAddressesChanged();
 }
 
@@ -1103,7 +1118,9 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         m_max_cached_index++;
     }
     m_wallet_descriptor.range_end = new_range_end;
-    batch.WriteDescriptor(GetID(), m_wallet_descriptor);
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": updating descriptor failed");
+    }
 
     // By this point, the cache size should be the size of the entire range
     assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);

@@ -143,7 +143,9 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             }
 
             // Copy orderPosNext
-            watchonly_batch.WriteOrderPosNext(wallet.nOrderPosNext);
+            if (!watchonly_batch.WriteOrderPosNext(wallet.nOrderPosNext)) {
+                return util::Error{_("Error: Unable to write the next transaction order position record")};
+            }
 
             // Write the best block locator to avoid rescanning on reload
             CBlockLocator best_block_locator;
@@ -165,18 +167,34 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 if (!watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
                 }
-                watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid));
+                if (!watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid))) {
+                    return util::Error{_("Error: Unable to write the a tx record")};
+                }
             }
 
             // Copy address book
             for (const auto& [dest, entry] : wallet.m_address_book) {
                 auto address{EncodeDestination(dest)};
-                if (entry.purpose) watchonly_batch.WritePurpose(address, PurposeToString(*entry.purpose));
-                if (entry.label) watchonly_batch.WriteName(address, *entry.label);
-                for (const auto& [id, request] : entry.receive_requests) {
-                    watchonly_batch.WriteAddressReceiveRequest(dest, id, request);
+                if (entry.purpose) {
+                    if (!watchonly_batch.WritePurpose(address, PurposeToString(*entry.purpose))) {
+                        return util::Error{_("Error: Unable to write address purpose record")};
+                    }
                 }
-                if (entry.previously_spent) watchonly_batch.WriteAddressPreviouslySpent(dest, true);
+                if (entry.label) {
+                    if (!watchonly_batch.WriteName(address, *entry.label)) {
+                        return util::Error{_("Error: Unable to write address label record")};
+                    }
+                }
+                for (const auto& [id, request] : entry.receive_requests) {
+                    if (!watchonly_batch.WriteAddressReceiveRequest(dest, id, request)) {
+                        return util::Error{_("Error: Unable to write receive request record")};
+                    }
+                }
+                if (entry.previously_spent) {
+                    if (!watchonly_batch.WriteAddressPreviouslySpent(dest, true)) {
+                        return util::Error{_("Error: Unable to write previously spent record")};
+                    }
+                }
             }
 
             if (!watchonly_batch.TxnCommit()) {
