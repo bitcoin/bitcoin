@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/txorphanage.h>
+
 #include <bench/bench.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -9,8 +11,8 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <node/txorphanage.h>
 #include <random.h>
+#include <script/script.h>
 #include <test/util/transaction_utils.h>
 #include <threadsafety.h>
 #include <util/check.h>
@@ -24,14 +26,15 @@
 
 static constexpr node::TxOrphanage::Usage TINY_TX_WEIGHT{240};
 static constexpr int64_t APPROX_WEIGHT_PER_INPUT{200};
+// A 1-byte witness stack element costs its slot in the stack vector plus a (minimally-sized) heap allocation.
+static constexpr node::TxOrphanage::Usage APPROX_USAGE_PER_ELEMENT{sizeof(std::vector<unsigned char>) + 32};
 
 // Creates a transaction with num_inputs inputs and 1 output, padded to target_weight. Use this function to maximize m_outpoint_to_orphan_it operations.
-// If num_inputs is 0, we maximize the number of inputs.
 static CTransactionRef MakeTransactionBulkedTo(unsigned int num_inputs, int64_t target_weight, FastRandomContext& det_rand)
 {
     CMutableTransaction tx;
+    assert(num_inputs > 0);
     assert(target_weight >= 40 + APPROX_WEIGHT_PER_INPUT);
-    if (!num_inputs) num_inputs = (target_weight - 40) / APPROX_WEIGHT_PER_INPUT;
     for (unsigned int i = 0; i < num_inputs; ++i) {
         tx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
     }
@@ -56,6 +59,39 @@ static CTransactionRef MakeTransactionSpendingUpTo(const std::vector<CTxIn>& inp
     assert(tx.vin.size() > 0);
     return MakeTransactionRef(tx);
 }
+// Creates a transaction with num_inputs inputs and 1 output whose usage (see node::GetOrphanUsage) is as close to
+// target_usage as possible without exceeding it. The bytes are placed in a witness stack of many 1-byte elements, as
+// that is the only way to reach a usage close to MAX_ORPHAN_TX_USAGE while staying within MAX_STANDARD_TX_WEIGHT.
+static CTransactionRef MakeTransactionUsing(unsigned int num_inputs, node::TxOrphanage::Usage target_usage, FastRandomContext& det_rand)
+{
+    assert(num_inputs > 0);
+    CMutableTransaction tx;
+    for (unsigned int i = 0; i < num_inputs; ++i) {
+        tx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
+    }
+    tx.vout.resize(1);
+    // Replace the witness stack of the first input with num_elements elements and return the resulting usage.
+    const auto set_num_elements = [&](size_t num_elements) {
+        tx.vin[0].scriptWitness.stack.assign(num_elements, std::vector<unsigned char>{1});
+        tx.vin[0].scriptWitness.stack.shrink_to_fit();
+        return node::GetOrphanUsage(MakeTransactionRef(tx));
+    };
+    // Approach target_usage from below by adding 1-byte witness elements. If the transaction already uses more than
+    // that without any witness data, it is returned as is.
+    size_t num_elements{0};
+    const auto base_usage{set_num_elements(0)};
+    if (target_usage > base_usage) {
+        num_elements = static_cast<size_t>((target_usage - base_usage) / APPROX_USAGE_PER_ELEMENT);
+        // Correct the estimate for allocator rounding.
+        while (num_elements > 0 && set_num_elements(num_elements) > target_usage) --num_elements;
+        while (set_num_elements(num_elements + 1) <= target_usage) ++num_elements;
+    }
+    assert(set_num_elements(num_elements) <= target_usage || num_elements == 0);
+    auto ptx{MakeTransactionRef(tx)};
+    assert(GetTransactionWeight(*ptx) <= MAX_STANDARD_TX_WEIGHT);
+    return ptx;
+}
+
 static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
@@ -72,8 +108,8 @@ static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
     // All of the tiny transactions are accounted the same usage.
     const auto TINY_TX_USAGE{node::GetOrphanUsage(tiny_txs.front())};
     assert(std::all_of(tiny_txs.begin(), tiny_txs.end(), [&](const auto& tx) { return node::GetOrphanUsage(tx) == TINY_TX_USAGE; }));
-    auto large_tx = MakeTransactionBulkedTo(1, MAX_STANDARD_TX_WEIGHT, det_rand);
-    assert(GetTransactionWeight(*large_tx) <= MAX_STANDARD_TX_WEIGHT);
+    // Use the largest orphan that may be stored, to maximize the number of evictions it triggers.
+    auto large_tx = MakeTransactionUsing(1, node::MAX_ORPHAN_TX_USAGE, det_rand);
     const auto LARGE_TX_USAGE{node::GetOrphanUsage(large_tx)};
 
     const auto orphanage{node::MakeTxOrphanage(/*max_global_latency_score=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER)};
@@ -123,21 +159,20 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
 {
     // Best number is just below sqrt(DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE)
     static constexpr unsigned int NUM_PEERS{39};
-    // All peers will have the same transactions. We want to be just under the weight limit, so divide the max usage limit by the number of unique transactions.
+    // All peers will have the same transactions. We want to be just under the usage limit, so divide the max usage limit by the number of unique transactions.
     static constexpr node::TxOrphanage::Count NUM_UNIQUE_TXNS{node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / NUM_PEERS};
     static constexpr node::TxOrphanage::Usage TOTAL_USAGE_LIMIT{node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER * NUM_PEERS};
-    // Subtract 4 because BulkTransaction rounds up and we must avoid going over the weight limit early.
-    static constexpr node::TxOrphanage::Usage LARGE_TX_WEIGHT{TOTAL_USAGE_LIMIT / NUM_UNIQUE_TXNS - 4};
-    static_assert(LARGE_TX_WEIGHT >= TINY_TX_WEIGHT * 2, "Tx is too small, increase NUM_PEERS");
-    // The orphanage does not permit any transactions larger than 400'000, so this test will not work if the large tx is much larger.
-    static_assert(LARGE_TX_WEIGHT <= MAX_STANDARD_TX_WEIGHT, "Tx is too large, decrease NUM_PEERS");
+    static constexpr node::TxOrphanage::Usage LARGE_TX_USAGE_TARGET{TOTAL_USAGE_LIMIT / NUM_UNIQUE_TXNS};
+    // The orphanage does not store transactions using more memory than MAX_ORPHAN_TX_USAGE.
+    static_assert(LARGE_TX_USAGE_TARGET <= node::MAX_ORPHAN_TX_USAGE, "Tx is too large, decrease NUM_PEERS");
 
     FastRandomContext det_rand{true};
-    // Construct large transactions
+    // Construct large transactions. Transactions with 9 inputs maximize the number of m_outpoint_to_orphan_wtxids
+    // operations per unit of latency score.
     std::vector<CTransactionRef> shared_txs;
     shared_txs.reserve(NUM_UNIQUE_TXNS);
     for (unsigned int i{0}; i < NUM_UNIQUE_TXNS; ++i) {
-        shared_txs.emplace_back(MakeTransactionBulkedTo(9, LARGE_TX_WEIGHT, det_rand));
+        shared_txs.emplace_back(MakeTransactionUsing(9, LARGE_TX_USAGE_TARGET, det_rand));
     }
     // All of the shared transactions are accounted the same usage.
     const auto LARGE_TX_USAGE{node::GetOrphanUsage(shared_txs.front())};
@@ -187,7 +222,11 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
     assert(max_usage - total_usage <= LARGE_TX_USAGE);
     assert(orphanage->TotalLatencyScore() <= orphanage->MaxGlobalLatencyScore());
 
-    auto last_tx = MakeTransactionBulkedTo(0, max_usage - total_usage + 1, det_rand);
+    // Construct a transaction that fills the remaining gap and exceeds the limit. MakeTransactionUsing() never exceeds
+    // its target and can only be sized in increments of one witness element, so aim a few elements higher.
+    auto last_tx = MakeTransactionUsing(1, max_usage - total_usage + 4 * APPROX_USAGE_PER_ELEMENT, det_rand);
+    assert(total_usage + node::GetOrphanUsage(last_tx) > max_usage);
+    assert(node::GetOrphanUsage(last_tx) <= node::MAX_ORPHAN_TX_USAGE);
 
     bench.epochs(1).epochIterations(1).run([&]() NO_THREAD_SAFETY_ANALYSIS {
         const auto num_announcements_before_trim{orphanage->CountAnnouncements()};

@@ -108,6 +108,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             const auto total_bytes_start{orphanage->TotalOrphanUsage()};
             const auto total_peer_bytes_start{orphanage->UsageByPeer(peer_id)};
             const auto tx_weight{GetTransactionWeight(*tx)};
+            const auto tx_usage{node::GetOrphanUsage(tx)};
 
             CallOneOf(
                 fuzzed_data_provider,
@@ -134,6 +135,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 
                         if (add_tx) {
                             Assert(tx_weight <= MAX_STANDARD_TX_WEIGHT);
+                            Assert(tx_usage <= node::MAX_ORPHAN_TX_USAGE);
                         } else {
                             // Peer may have been added as an announcer.
                             if (orphanage->UsageByPeer(peer_id) > total_peer_bytes_start) {
@@ -177,7 +179,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         if (!have_tx) {
                             Assert(orphanage->UsageByPeer(peer_id) == bytes_from_peer_before);
                         } else if (have_tx_and_peer) {
-                            Assert(orphanage->UsageByPeer(peer_id) <= bytes_from_peer_before - tx_weight);
+                            Assert(orphanage->UsageByPeer(peer_id) <= bytes_from_peer_before - tx_usage);
                         } else {
                             Assert(orphanage->UsageByPeer(peer_id) <= bytes_from_peer_before);
                         }
@@ -465,8 +467,9 @@ FUZZ_TARGET(txorphanage_sim)
         txn[txorder[t]] = MakeTransactionRef(std::move(tx));
         wtxids.insert(txn[txorder[t]]->GetWitnessHash());
         // The simulation assumes that every transaction can be stored, i.e. none of them is rejected for being too
-        // large. See TxOrphanageImpl::AddTx.
+        // heavy or using too much memory. See TxOrphanageImpl::AddTx.
         assert(GetTransactionWeight(*txn[txorder[t]]) < MAX_STANDARD_TX_WEIGHT);
+        assert(node::GetOrphanUsage(txn[txorder[t]]) <= node::MAX_ORPHAN_TX_USAGE);
         total_usage += node::GetOrphanUsage(txn[txorder[t]]);
     }
 

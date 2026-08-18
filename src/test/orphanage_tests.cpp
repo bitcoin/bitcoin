@@ -55,6 +55,37 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
     return MakeTransactionRef(tx);
 }
 
+// Creates a 1-input, 1-output transaction whose usage (see node::GetOrphanUsage) is as close to
+// target_usage as possible without exceeding it, using a witness stack of many 1-byte elements.
+// Note that the weight of the result is much lower than its usage, as each element only weighs 2WU
+// but is individually heap-allocated.
+static CTransactionRef MakeTransactionWithUsage(node::TxOrphanage::Usage target_usage, FastRandomContext& det_rand)
+{
+    CMutableTransaction tx;
+    tx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
+    tx.vout.resize(1);
+    // Replace the witness stack with num_elements elements and return the resulting usage.
+    const auto set_num_elements = [&](size_t num_elements) {
+        tx.vin[0].scriptWitness.stack.assign(num_elements, std::vector<unsigned char>{1});
+        tx.vin[0].scriptWitness.stack.shrink_to_fit();
+        return node::GetOrphanUsage(MakeTransactionRef(tx));
+    };
+    // Each element costs its slot in the stack vector plus a (minimally-sized) heap allocation.
+    static constexpr node::TxOrphanage::Usage APPROX_USAGE_PER_ELEMENT{sizeof(std::vector<unsigned char>) + 32};
+    // Approach target_usage from below by adding 1-byte witness elements. If the transaction already uses more than
+    // that without any witness data, it is returned as is.
+    size_t num_elements{0};
+    const auto base_usage{set_num_elements(0)};
+    if (target_usage > base_usage) {
+        num_elements = static_cast<size_t>((target_usage - base_usage) / APPROX_USAGE_PER_ELEMENT);
+        // Correct the estimate for allocator rounding.
+        while (num_elements > 0 && set_num_elements(num_elements) > target_usage) --num_elements;
+        while (set_num_elements(num_elements + 1) <= target_usage) ++num_elements;
+    }
+    assert(set_num_elements(num_elements) <= target_usage || num_elements == 0);
+    return MakeTransactionRef(tx);
+}
+
 // Make another (not necessarily valid) tx with the same txid but different wtxid.
 static CTransactionRef MakeMutation(const CTransactionRef& ptx)
 {
@@ -346,10 +377,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         // Create a large transaction that uses 10 times as much of the orphanage's usage allowance
         // as a normal size transaction. The eviction expectations below rely on it being between 10
         // and 11 times as large.
-        CMutableTransaction tx_large;
-        tx_large.vin.resize(1);
-        BulkTransaction(tx_large, 10 * TX_WEIGHT);
-        auto ptx_large = MakeTransactionRef(tx_large);
+        auto ptx_large = MakeTransactionWithUsage(10 * TX_USAGE + TX_USAGE / 2, det_rand);
 
         const auto large_tx_usage{node::GetOrphanUsage(ptx_large)};
         BOOST_CHECK_GE(large_tx_usage, 10 * TX_USAGE);
