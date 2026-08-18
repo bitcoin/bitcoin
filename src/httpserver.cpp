@@ -600,7 +600,10 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         keep_alive = false;
     }
 
-    m_client->m_keep_alive = keep_alive;
+    std::shared_ptr client{m_client.lock()};
+    if (!client) return;
+
+    client->m_keep_alive = keep_alive;
 
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
@@ -609,14 +612,14 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     bool send_buffer_was_empty{false};
     // Fill the send buffer with the complete serialized response headers + body
     {
-        LOCK(m_client->m_send_mutex);
-        send_buffer_was_empty = m_client->m_send_buffer.empty();
-        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+        LOCK(client->m_send_mutex);
+        send_buffer_was_empty = client->m_send_buffer.empty();
+        client->m_send_buffer.insert(client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
 
         // We've been using std::span up until now but it is finally time to copy
         // data. The original data will go out of scope when WriteReply() returns.
         // This is analogous to the memcpy() in libevent's evbuffer_add()
-        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
+        client->m_send_buffer.insert(client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
 
         // If the buffer already held data, the I/O thread is (or soon will be)
         // draining it, so flag that there is more data to send. This must happen
@@ -626,7 +629,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // between, leaving m_send_ready set on an empty buffer. The I/O loop would
         // then only ever poll the socket for writeability, never read the client's
         // next request, and wedge the connection.
-        if (!send_buffer_was_empty) m_client->m_send_ready = true;
+        if (!send_buffer_was_empty) client->m_send_ready = true;
     }
 
     LogDebug(
@@ -634,24 +637,28 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%llu)",
         status,
         headers_bytes.size() + reply_body.size(),
-        m_client->m_origin,
-        m_client->m_id);
+        client->m_origin,
+        client->m_id);
 
     // If the send buffer was empty before we wrote this reply, we can try an
     // optimistic send akin to CConnman::PushMessage() in which we
     // push the data directly out the socket to client right now, instead
     // of waiting for the next iteration of the I/O loop.
     if (send_buffer_was_empty) {
-        m_client->MaybeSendBytesFromBuffer();
+        client->MaybeSendBytesFromBuffer();
     }
 
     // Signal to the I/O loop that we are ready to handle the next request.
-    m_client->m_req_busy = false;
+    client->m_req_busy = false;
 }
 
 CService HTTPRequest::GetPeer() const
 {
-    return m_client->m_addr;
+    if (std::shared_ptr c{m_client.lock()}) {
+        return c->m_addr;
+    } else {
+        return {};
+    }
 }
 
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string_view key) const
@@ -1116,7 +1123,6 @@ void HTTPServer::DisconnectClients()
                                                  "Disconnecting HTTP client %s (id=%llu)",
                                                  client->m_origin,
                                                  client->m_id);
-                                        client->ReleaseRequest();
                                         return true;
                                     });
     if (erased > 0) {
@@ -1131,9 +1137,6 @@ void HTTPServer::ClearConnectedClients()
     if (m_connected.empty()) return;
     LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
     m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
-    for (auto& client : m_connected) {
-        client->ReleaseRequest();
-    }
     m_connected.clear();
 }
 
