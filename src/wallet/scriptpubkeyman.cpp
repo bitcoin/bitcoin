@@ -1218,12 +1218,17 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
             return false;
         }
 
-        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        if (!batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret)) {
+            return false;
+        }
+        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, std::move(crypted_secret));
     } else {
+        if (!batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey())) {
+            return false;
+        }
         m_map_keys[pubkey.GetID()] = key;
-        return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey());
     }
+    return true;
 }
 
 void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
