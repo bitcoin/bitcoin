@@ -231,11 +231,11 @@ BOOST_FIXTURE_TEST_CASE(add_descriptor_key_write_failure, EncryptionFailureSetup
         const std::string record_type{encrypted ? DBKeys::WALLETDESCRIPTORCKEY : DBKeys::WALLETDESCRIPTORKEY};
         fail_db->FailNextWrite(record_type);
         BOOST_CHECK_THROW((void)add_key(), std::runtime_error);
-        BOOST_CHECK( has_key()); // TODO: The failed write publishes the key
+        BOOST_CHECK(!has_key());
         BOOST_CHECK(!fail_db->HasRecordType(record_type));
         BOOST_CHECK(add_key());
         BOOST_CHECK(has_key());
-        BOOST_CHECK(!fail_db->HasRecordType(record_type)); // TODO: The live-only key prevents persistence on retry
+        BOOST_CHECK(fail_db->HasRecordType(record_type));
     }
 }
 
