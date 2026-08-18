@@ -161,12 +161,12 @@ public:
     std::string m_body;
 
     //! Pointer to the client that made the request so we know who to respond to.
-    std::shared_ptr<HTTPRemoteClient> m_client;
+    std::weak_ptr<HTTPRemoteClient> m_client;
 
     //! Response headers may be set in advance before response body is known
     HTTPHeaders m_response_headers;
 
-    explicit HTTPRequest(std::shared_ptr<HTTPRemoteClient> client) : m_client{std::move(client)} {}
+    explicit HTTPRequest(const std::shared_ptr<HTTPRemoteClient>& client) : m_client{client} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
 
@@ -578,12 +578,6 @@ public:
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
-
-    //! Release any in-progress request. HTTPRequest holds a shared_ptr back to its
-    //! HTTPRemoteClient to keep the client alive from a worker thread. If a request
-    //! hasn't been moved to a worker yet it will prevent the client from destructing
-    //! and never close the socket. Therefore this must be called when disconnecting.
-    void ReleaseRequest() { m_req.reset(); }
 
     /**
      * Try to read an HTTP request from the receive buffer.

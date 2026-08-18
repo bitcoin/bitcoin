@@ -521,10 +521,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         client->receive("I miss you\n");
         client->ReadRequest(*client->m_req);
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Complete);
-
-        // m_req holds a shared_ptr back to the client, so break the cycle
-        // before the client goes out of scope (as the server does on disconnect).
-        client->ReleaseRequest();
     }
     {
         // Read body over multiple data pushes, multiple requests in same push
@@ -563,8 +559,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(client->m_req->m_body.size(), 0);
         // Buffer is cleared
         BOOST_CHECK_EQUAL(client->m_recv_buffer.size(), 0);
-
-        client->ReleaseRequest();
     }
     {
         // A Content-Length body is drained out of the receive buffer as it
@@ -589,8 +583,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
             BOOST_CHECK_EQUAL(client->m_recv_buffer.size(), 0);
         }
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Complete);
-
-        client->ReleaseRequest();
     }
     {
         // A body sent in the same push as the next request is split correctly
@@ -607,8 +599,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(client->m_req->m_body, "body");
         // Only the second request is left over
         BOOST_CHECK_EQUAL(client->m_recv_buffer.size(), 20);
-
-        client->ReleaseRequest();
     }
     {
         // Chunked transfer with state
@@ -661,8 +651,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         // We're done
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(client->m_req->m_body, R"({"method":"getblockcount"})");
-
-        client->ReleaseRequest();
     }
     {
         // Invalid headers: error state stops reading
@@ -693,8 +681,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(client->m_recv_buffer.size(), 21);
         client->ReadRequest(*client->m_req);
         BOOST_CHECK_EQUAL(client->m_recv_buffer.size(), 21);
-
-        client->ReleaseRequest();
     }
     {
         // Headers sent in batches that are below MAX_HEADERS_SIZE but the total is excessive
@@ -726,8 +712,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
                               std::runtime_error,
                               HasReason{"HTTP headers exceed size limit"});
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Error);
-
-        client->ReleaseRequest();
     }
     {
         // Client sends chunks that are below the limit but the total is excessive
@@ -757,8 +741,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
                               http_bitcoin::ContentTooLargeError,
                               HasReason{"Chunk will exceed max body size"});
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Error);
-
-        client->ReleaseRequest();
     }
     {
         // Ensure chunk trailer is parsed over state lines
@@ -791,8 +773,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         client->ReadRequest(*client->m_req);
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(client->m_req->m_body, "x");
-
-        client->ReleaseRequest();
     }
     {
         // Ensure chunk trailer counts towards the headers size limit
@@ -818,8 +798,6 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
                               std::runtime_error,
                               HasReason{"HTTP headers exceed size limit"});
         BOOST_CHECK_EQUAL(client->m_req->GetState(), HTTPRequest::State::Error);
-
-        client->ReleaseRequest();
     }
 }
 
@@ -894,7 +872,8 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
                 BOOST_CHECK_EQUAL(requests.front()->GetPeer().ToStringAddrPort(), "5.5.5.5:6789");
 
                 // Inspect the connection pointed to from the request
-                client = requests.front()->m_client;
+                client = requests.front()->m_client.lock();
+                BOOST_REQUIRE(client);
                 BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
 
                 // Respond to request
