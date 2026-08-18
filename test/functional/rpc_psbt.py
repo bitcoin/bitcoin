@@ -1424,6 +1424,14 @@ class PSBTTest(BitcoinTestFramework):
         utxo = self.create_outpoints(self.nodes[0], outputs=[{address: 1}])[0]
         self.sync_all()
 
+        self.log.info("Test descriptorprocesspsbt updates PSBT outputs")
+        for has_input in [False, True]:
+            output_psbt = self.nodes[2].createpsbt([utxo] if has_input else [], {address: 1})
+            processed = self.nodes[2].descriptorprocesspsbt(psbt=output_psbt, descriptors=[descriptor], finalize=False)
+            decoded = self.nodes[2].decodepsbt(processed["psbt"])
+            assert_equal(len(decoded["inputs"]), int(has_input))
+            assert_equal(len(decoded["outputs"][0]["bip32_derivs"]), 1)
+
         psbt = self.nodes[2].createpsbt([utxo], {self.nodes[0].getnewaddress(): 0.99999})
         decoded = self.nodes[2].decodepsbt(psbt)
         test_psbt_input_keys(decoded['inputs'][0], [])
