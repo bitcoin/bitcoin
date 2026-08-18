@@ -715,6 +715,198 @@ BOOST_AUTO_TEST_CASE(too_large_orphan_tx)
     BOOST_CHECK(orphanage->AddTx(MakeTransactionRef(tx), 0));
 }
 
+BOOST_AUTO_TEST_CASE(orphan_usage_limits)
+{
+    FastRandomContext det_rand{true};
+
+    // Orphans are accounted by the memory they use, which is not their weight.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        const auto ptx{MakeTransactionSpending({}, det_rand)};
+        BOOST_CHECK(orphanage->AddTx(ptx, 0));
+        BOOST_CHECK_EQUAL(orphanage->UsageByPeer(0), node::GetOrphanUsage(ptx));
+        BOOST_CHECK_EQUAL(orphanage->TotalOrphanUsage(), node::GetOrphanUsage(ptx));
+        orphanage->SanityCheck();
+    }
+
+    // What fills up a peer's allowance is memory usage, not weight: these orphans are tiny by weight, but each of
+    // them takes up a third of what a peer is granted.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        const auto usage_each{orphanage->ReservedPeerUsage() / 3};
+        std::vector<CTransactionRef> dense_txns;
+        for (unsigned int i{0}; i < 4; ++i) {
+            dense_txns.emplace_back(MakeTransactionWithUsage(usage_each, det_rand));
+            // They would be cheap if they were accounted by weight.
+            BOOST_CHECK_LT(GetTransactionWeight(*dense_txns.back()), orphanage->ReservedPeerUsage() / 10);
+        }
+
+        // Three of them fit.
+        for (unsigned int i{0}; i < 3; ++i) BOOST_CHECK(orphanage->AddTx(dense_txns.at(i), 0));
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 3);
+        BOOST_CHECK_LE(orphanage->TotalOrphanUsage(), orphanage->MaxGlobalUsage());
+
+        // The fourth one exceeds the global limit, so the oldest announcement is evicted.
+        BOOST_CHECK(orphanage->AddTx(dense_txns.at(3), 0));
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 3);
+        BOOST_CHECK(!orphanage->HaveTx(dense_txns.at(0)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(dense_txns.at(3)->GetWitnessHash()));
+        orphanage->SanityCheck();
+    }
+
+    // An orphan using exactly MAX_ORPHAN_TX_USAGE is stored, and fits within one peer's reserved usage together with
+    // some normal orphans, so it is not evicted.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        const auto ptx_max_usage{MakeTransactionWithUsage(node::MAX_ORPHAN_TX_USAGE, det_rand)};
+        BOOST_CHECK_LE(GetTransactionWeight(*ptx_max_usage), MAX_STANDARD_TX_WEIGHT);
+        // As close to the limit as a witness stack of 1-byte elements can get, i.e. within one element of it. The
+        // usage of an individual element depends on the platform, so don't require an exact value.
+        BOOST_CHECK_LE(node::GetOrphanUsage(ptx_max_usage), node::MAX_ORPHAN_TX_USAGE);
+        BOOST_CHECK_GT(node::GetOrphanUsage(ptx_max_usage), node::MAX_ORPHAN_TX_USAGE - 1000);
+
+        BOOST_CHECK(orphanage->AddTx(ptx_max_usage, 0));
+        for (unsigned int i{0}; i < 5; ++i) BOOST_CHECK(orphanage->AddTx(MakeTransactionSpending({}, det_rand), 0));
+        BOOST_CHECK(orphanage->HaveTx(ptx_max_usage->GetWitnessHash()));
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 6);
+        BOOST_CHECK_LE(orphanage->UsageByPeer(0), orphanage->ReservedPeerUsage());
+        orphanage->SanityCheck();
+
+        // One witness element more and it is not stored at all.
+        CMutableTransaction mtx_too_much_usage{*ptx_max_usage};
+        mtx_too_much_usage.vin[0].scriptWitness.stack.emplace_back(1, uint8_t{1});
+        const auto ptx_too_much_usage{MakeTransactionRef(mtx_too_much_usage)};
+        BOOST_CHECK_LE(GetTransactionWeight(*ptx_too_much_usage), MAX_STANDARD_TX_WEIGHT);
+        BOOST_CHECK_GT(node::GetOrphanUsage(ptx_too_much_usage), node::MAX_ORPHAN_TX_USAGE);
+        BOOST_CHECK(!orphanage->AddTx(ptx_too_much_usage, 0));
+        BOOST_CHECK(!orphanage->HaveTx(ptx_too_much_usage->GetWitnessHash()));
+
+        // Nothing that was already stored was affected by it.
+        BOOST_CHECK(orphanage->HaveTx(ptx_max_usage->GetWitnessHash()));
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 6);
+        orphanage->SanityCheck();
+    }
+}
+
+BOOST_AUTO_TEST_CASE(witness_heavy_orphan_tx)
+{
+    FastRandomContext det_rand{true};
+
+    // A transaction whose witness is a stack of many 1-byte elements is of standard weight (and its witness
+    // standardness cannot be checked, since its inputs are missing), but uses far more memory than its weight
+    // suggests: each element is individually heap-allocated.
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
+    mtx.vout.resize(1);
+    mtx.vin[0].scriptWitness.stack.assign(199'000, std::vector<unsigned char>{1});
+    const auto ptx{MakeTransactionRef(mtx)};
+    const auto weight{GetTransactionWeight(*ptx)};
+    BOOST_CHECK_LE(weight, MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_GT(node::GetOrphanUsage(ptx), 10 * weight);
+    BOOST_CHECK_GT(node::GetOrphanUsage(ptx), node::MAX_ORPHAN_TX_USAGE);
+
+    // It is not stored, and does not disturb the orphans that the announcing peer already has.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        std::vector<CTransactionRef> normal_txns;
+        for (unsigned int i{0}; i < 10; ++i) {
+            normal_txns.emplace_back(MakeTransactionSpending({}, det_rand));
+            BOOST_CHECK(orphanage->AddTx(normal_txns.back(), 0));
+        }
+
+        BOOST_CHECK(!orphanage->AddTx(ptx, 0));
+        BOOST_CHECK(!orphanage->HaveTx(ptx->GetWitnessHash()));
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), normal_txns.size());
+        for (const auto& normal_tx : normal_txns) BOOST_CHECK(orphanage->HaveTx(normal_tx->GetWitnessHash()));
+        orphanage->SanityCheck();
+    }
+
+    // Announcing one from every peer does not help: the global limit scales with the number of peers, but each of
+    // these transactions is refused on its own.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        for (NodeId peer{0}; peer < 25; ++peer) {
+            CMutableTransaction unique_mtx{mtx};
+            unique_mtx.vin[0].prevout.n = peer + 1;
+            BOOST_CHECK(!orphanage->AddTx(MakeTransactionRef(unique_mtx), peer));
+        }
+        BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 0);
+        BOOST_CHECK_EQUAL(orphanage->TotalOrphanUsage(), 0);
+        orphanage->SanityCheck();
+    }
+}
+
+BOOST_AUTO_TEST_CASE(large_standard_orphan_tx)
+{
+    FastRandomContext det_rand{true};
+
+    // Large, realistically-shaped orphans are still stored: one with all of its data in a single witness element, and
+    // one with many inputs each carrying a signature and a pubkey.
+    //
+    // How large such a transaction can get is bounded by the standard weight limit and by MAX_ORPHAN_TX_USAGE. Which of
+    // the two binds depends on the per-object memory overhead of the platform's containers, which is considerably
+    // higher in builds using debug-mode standard library containers, so size them against both instead of assuming.
+    static const int64_t BINDING_LIMIT{std::min<int64_t>(MAX_STANDARD_TX_WEIGHT, node::MAX_ORPHAN_TX_USAGE)};
+    std::vector<CTransactionRef> large_txns;
+    {
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
+        mtx.vout.resize(1);
+        // A single element accounts for almost all of both the weight and the memory usage, so leave a little room for
+        // the transaction's fixed overhead.
+        mtx.vin[0].scriptWitness.stack.emplace_back(BINDING_LIMIT - 1000, uint8_t{'X'});
+        large_txns.emplace_back(MakeTransactionRef(mtx));
+    }
+    {
+        static constexpr int64_t APPROX_WEIGHT_PER_INPUT{4 * 41 + 108};
+        const auto make_with_inputs = [&](unsigned int num_inputs) {
+            CMutableTransaction mtx;
+            mtx.vout.resize(1);
+            for (unsigned int i{0}; i < num_inputs; ++i) {
+                CTxIn input{Txid::FromUint256(det_rand.rand256()), 0};
+                input.scriptWitness.stack.emplace_back(72, uint8_t{0});
+                input.scriptWitness.stack.emplace_back(33, uint8_t{0});
+                mtx.vin.push_back(input);
+            }
+            return MakeTransactionRef(mtx);
+        };
+        // Start from the most inputs that fit within the weight limit, then reduce until the memory usage fits too.
+        unsigned int num_inputs{static_cast<unsigned int>(MAX_STANDARD_TX_WEIGHT / APPROX_WEIGHT_PER_INPUT)};
+        CTransactionRef ptx;
+        while (true) {
+            BOOST_REQUIRE(num_inputs > 0);
+            ptx = make_with_inputs(num_inputs);
+            if (GetTransactionWeight(*ptx) <= MAX_STANDARD_TX_WEIGHT &&
+                node::GetOrphanUsage(ptx) <= node::MAX_ORPHAN_TX_USAGE) {
+                break;
+            }
+            num_inputs -= num_inputs / 10 + 1;
+        }
+        large_txns.emplace_back(ptx);
+    }
+
+    for (const auto& ptx_large : large_txns) {
+        BOOST_CHECK_LE(GetTransactionWeight(*ptx_large), MAX_STANDARD_TX_WEIGHT);
+        BOOST_CHECK_LE(node::GetOrphanUsage(ptx_large), node::MAX_ORPHAN_TX_USAGE);
+        // Whatever the container overhead is, a large orphan remains storable.
+        BOOST_CHECK_GT(GetTransactionWeight(*ptx_large), BINDING_LIMIT / 2);
+
+        auto orphanage{node::MakeTxOrphanage()};
+        // The peer already has some normal orphans, which must not be evicted to make room.
+        std::vector<CTransactionRef> normal_txns;
+        for (unsigned int i{0}; i < 5; ++i) {
+            normal_txns.emplace_back(MakeTransactionSpending({}, det_rand));
+            BOOST_CHECK(orphanage->AddTx(normal_txns.back(), 0));
+        }
+
+        BOOST_CHECK(orphanage->AddTx(ptx_large, 0));
+        BOOST_CHECK(orphanage->HaveTx(ptx_large->GetWitnessHash()));
+        for (const auto& normal_tx : normal_txns) BOOST_CHECK(orphanage->HaveTx(normal_tx->GetWitnessHash()));
+        BOOST_CHECK_LE(orphanage->UsageByPeer(0), orphanage->ReservedPeerUsage());
+        orphanage->SanityCheck();
+    }
+}
+
 BOOST_AUTO_TEST_CASE(process_block)
 {
     FastRandomContext det_rand{true};
