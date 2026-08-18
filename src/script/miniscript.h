@@ -1821,9 +1821,7 @@ std::optional<Key> ParseKey(const std::string& func, std::span<const char>& in, 
 }
 
 /** Parse a hex string fully contained within a fragment with the name given by 'func' */
-template<typename Ctx>
-std::optional<std::vector<unsigned char>> ParseHexStr(const std::string& func, std::span<const char>& in, const size_t expected_size,
-                                                                         const Ctx& ctx)
+inline std::optional<std::vector<unsigned char>> ParseHexStr(const std::string& func, std::span<const char>& in, const size_t expected_size)
 {
     std::span<const char> expr = script::Expr(in);
     if (!script::Func(func, expr)) return {};
@@ -2003,22 +2001,22 @@ inline std::optional<Node<Key>> Parse(std::span<const char> in, const Ctx& ctx)
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_H, Vector(std::move(*key)));
                 script_size += 23;
             } else if (Const("sha256(", in, /*skip=*/false)) {
-                std::optional<std::vector<unsigned char>> hash = ParseHexStr("sha256", in, 32, ctx);
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("sha256", in, 32);
                 if (!hash) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::SHA256, std::move(*hash));
                 script_size += 38;
             } else if (Const("ripemd160(", in, /*skip=*/false)) {
-                std::optional<std::vector<unsigned char>> hash = ParseHexStr("ripemd160", in, 20, ctx);
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("ripemd160", in, 20);
                 if (!hash) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::RIPEMD160, std::move(*hash));
                 script_size += 26;
             } else if (Const("hash256(", in, /*skip=*/false)) {
-                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash256", in, 32, ctx);
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash256", in, 32);
                 if (!hash) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH256, std::move(*hash));
                 script_size += 38;
             } else if (Const("hash160(", in, /*skip=*/false)) {
-                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash160", in, 20, ctx);
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash160", in, 20);
                 if (!hash) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH160, std::move(*hash));
                 script_size += 26;
