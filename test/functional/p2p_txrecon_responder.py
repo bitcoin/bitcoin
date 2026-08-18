@@ -220,6 +220,36 @@ class ReconciliationResponderTest(ReconciliationTest):
         peer.peer_disconnect()
         peer.wait_for_disconnect()
 
+    def test_reconciliation_responder_mempool_removal(self):
+        self.log.info('Testing that transactions leaving the mempool leave the reconciliation set')
+        # Two peers receive the same transactions. The first acts normally. The second never
+        # completes a round, so nothing but pruning can empty its set.
+        peer0 = self.test_node.add_p2p_connection(TxReconTestP2PConn())
+        peer1 = self.test_node.add_p2p_connection(TxReconTestP2PConn())
+
+        _, node_txs, _ = self.generate_txs(self.wallet, 0, 5, 0)
+        node_wtxids = [tx.wtxid_int for tx in node_txs]
+        self.bump_mocktime_past_trickle(INBOUND_INVENTORY_BROADCAST_INTERVAL)
+        peer0.sync_with_ping()
+        peer1.sync_with_ping()
+
+        # The transactions are in both sets
+        peer0.send_reqtxrcncl(len(node_txs), wire_q())
+        self.check_sketch(peer0, self.wait_for_sketch(peer0).skdata, node_wtxids, len(node_txs))
+
+        # Mining them takes them out of the mempool, so they must leave the sets too
+        self.generate(self.wallet, 1)
+        peer1.sync_with_ping()
+
+        # A non-zero claimed set size, so an empty sketch can only mean our own set is empty
+        peer1.send_reqtxrcncl(len(node_txs), wire_q())
+        assert_equal(self.wait_for_sketch(peer1).skdata, [])
+
+        self.send_reconcildiff_from(peer1, False, [], sync_with_ping=True)
+        for peer in (peer0, peer1):
+            peer.peer_disconnect()
+            peer.wait_for_disconnect()
+
     def test_reconciliation_responder_feefilter(self):
         self.log.info('Testing that the fee filter is applied to post-reconciliation announcements')
         peer = self.test_node.add_p2p_connection(TxReconTestP2PConn())
@@ -278,6 +308,7 @@ class ReconciliationResponderTest(ReconciliationTest):
         self.test_reconciliation_responder_flow_interleaved_txs()
         self.test_reconciliation_responder_protocol_violations()
         self.test_reconciliation_responder_flow_no_extension(3, 3, 20)
+        self.test_reconciliation_responder_mempool_removal()
         self.test_reconciliation_responder_feefilter()
 
         # TODO: Add more cases, potentially including also extensions
