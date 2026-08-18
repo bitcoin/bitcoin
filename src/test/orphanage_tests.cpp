@@ -285,53 +285,53 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         auto orphanage{node::MakeTxOrphanage()};
         // These stay the same regardless of number of peers
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
 
         // These change with number of peers
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
 
         // Number of peers = 1
         orphanage->AddTx(txns.at(0), 0);
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
 
         // Number of peers = 2
         orphanage->AddTx(txns.at(1), 1);
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 2);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER * 2);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / 2);
 
         // Number of peers = 3
         orphanage->AddTx(txns.at(2), 2);
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 3);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER * 3);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / 3);
 
         // Number of peers didn't change.
         orphanage->AddTx(txns.at(3), 2);
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 3);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER * 3);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / 3);
 
         // Once a peer has no orphans, it is not considered in the limits.
         // Number of peers = 2
         orphanage->EraseForPeer(2);
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 2);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER * 2);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / 2);
 
         // Number of peers = 1
         orphanage->EraseTx(txns.at(0)->GetWitnessHash());
         BOOST_CHECK_EQUAL(orphanage->MaxGlobalLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
-        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
-        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER);
         BOOST_CHECK_EQUAL(orphanage->MaxPeerLatencyScore(), node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE);
 
         orphanage->SanityCheck();

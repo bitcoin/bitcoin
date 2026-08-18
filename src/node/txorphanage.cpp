@@ -103,7 +103,7 @@ class TxOrphanageImpl final : public TxOrphanage {
     AnnouncementMap m_orphans;
 
     const TxOrphanage::Count m_max_global_latency_score{DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE};
-    const TxOrphanage::Usage m_reserved_usage_per_peer{DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER};
+    const TxOrphanage::Usage m_reserved_usage_per_peer{DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER};
 
     /** Number of unique orphans by wtxid. Less than or equal to the number of entries in m_orphans. */
     TxOrphanage::Count m_unique_orphans{0};
