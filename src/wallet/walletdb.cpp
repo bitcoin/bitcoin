@@ -672,7 +672,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
                 }
             }
         } else {
-            pwallet->WalletLogPrintf("Inactive HD Chains found but no Legacy ScriptPubKeyMan\n");
+            pwallet->WalletLogPrintf("Inactive HD chains found but no LegacyDataSPKM\n");
             result = DBErrors::CORRUPT;
         }
     }

@@ -21,7 +21,6 @@ class UniValue;
 struct bilingual_str;
 
 namespace wallet {
-class LegacyScriptPubKeyMan;
 enum class DatabaseStatus;
 struct WalletContext;
 
