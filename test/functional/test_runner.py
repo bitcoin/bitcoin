@@ -130,6 +130,7 @@ BASE_SCRIPTS = [
     'feature_abortnode.py',
     'wallet_address_types.py',
     'p2p_orphan_handling.py',
+    'p2p_orphan_memory_accounting.py',
     'wallet_basic.py',
     'feature_maxtipage.py',
     'wallet_multiwallet.py',
