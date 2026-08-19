@@ -405,6 +405,7 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
         ssKey >> nID;
         CMasterKey kMasterKey;
         ssValue >> kMasterKey;
+        kMasterKey.m_id = nID;
         if(pwallet->mapMasterKeys.contains(nID))
         {
             strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
