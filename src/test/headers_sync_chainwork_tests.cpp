@@ -259,10 +259,7 @@ BOOST_AUTO_TEST_CASE(system_clock_lagging_behind_chain_start)
     BOOST_CHECK_NO_THROW(CreateState());
 
     clock -= 1s;
-    // TODO: Fix - Being more than MAX_FUTURE_BLOCK_TIME behind the starting
-    // block leads HeadersSyncState() to compute a negative max_seconds_since_start
-    // which leads to very high HeadersSyncState::m_max_commitments.
-    BOOST_CHECK_NO_THROW(CreateState());
+    BOOST_CHECK_THROW(CreateState(), HeadersSyncState::SystemClockError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

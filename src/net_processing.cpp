@@ -3030,8 +3030,19 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             // of headers is known, some header in this set must be new, so
             // advancing to the first unknown header would be a small effect.
             LOCK(peer.m_headers_sync_mutex);
-            peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
-                m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
+            try {
+                peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
+                    m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
+            } catch (const HeadersSyncState::SystemClockError& e) {
+                // Typically we would expect the chain state loading logic to
+                // already have verified that the tip of the locally stored
+                // chain is <= system clock + MAX_FUTURE_BLOCK_TIME. Getting
+                // here is really unexpected.
+                const auto msg{strprintf("Failure when attempting to initiate headers sync: %s", e.what())};
+                std::cerr << msg << std::endl;
+                LogError("%s", msg);
+                std::abort();
+            }
 
             // Now a HeadersSyncState object for tracking this synchronization
             // is created, process the headers using it as normal. Failures are
