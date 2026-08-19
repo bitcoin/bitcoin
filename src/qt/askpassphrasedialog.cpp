@@ -3,13 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/askpassphrasedialog.h>
-#include <qt/forms/ui_askpassphrasedialog.h>
 
+#include <qt/forms/ui_askpassphrasedialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
-
 #include <support/allocators/secure.h>
+#include <wallet/types.h>
 
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -158,7 +158,7 @@ void AskPassphraseDialog::accept()
     } break;
     case Unlock:
         try {
-            if (!model->setWalletLocked(false, oldpass)) {
+            if (!model->unlockWallet(oldpass)) {
                 // Check if the passphrase has a null character (see #27067 for details)
                 if (oldpass.find('\0') == std::string::npos) {
                     QMessageBox::critical(this, tr("Wallet unlock failed"),
