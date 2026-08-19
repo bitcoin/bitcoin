@@ -15,6 +15,7 @@ from test_framework.messages import (
 )
 
 from test_framework.blocktools import (
+    MAX_FUTURE_BLOCK_TIME,
     NORMAL_GBT_REQUEST_PARAMS,
     create_block,
 )
@@ -143,6 +144,13 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         # getpeerinfo should show a sync in progress
         assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
+
+        self.log.info("Test whether a lagging clock aborts low-work headers sync")
+        node.disconnect_p2ps()
+        node.setmocktime(node.getblockheader(node.getblockhash(0))['mediantime'] - MAX_FUTURE_BLOCK_TIME - 1)
+        p2p = node.add_p2p_connection(P2PInterface())
+        p2p.send_without_ping(headers_message)
+        p2p.wait_for_getheaders(timeout=30, block_hash=hashPrevBlock)  # TODO: A negative elapsed interval should trigger fatal shutdown.
 
     def test_large_reorgs_can_succeed(self):
         self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")
