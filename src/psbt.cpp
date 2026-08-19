@@ -14,6 +14,7 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <set>
 
 using common::PSBTError;
 
@@ -436,7 +437,17 @@ bool PSBTInput::Merge(const PSBTInput& input)
     m_proprietary.insert(input.m_proprietary.begin(), input.m_proprietary.end());
     unknown.insert(input.unknown.begin(), input.unknown.end());
     m_tap_script_sigs.insert(input.m_tap_script_sigs.begin(), input.m_tap_script_sigs.end());
-    m_tap_scripts.insert(input.m_tap_scripts.begin(), input.m_tap_scripts.end());
+    // Merge by control block, the serialized key (BIP 371), to avoid duplicate keys. Keep the
+    // leaf script already present; BIP 174 lets the Combiner pick arbitrarily on conflict.
+    std::set<std::vector<unsigned char>> seen_control_blocks;
+    for (const auto& [_, control_blocks] : m_tap_scripts) {
+        seen_control_blocks.insert(control_blocks.begin(), control_blocks.end());
+    }
+    for (const auto& [leaf, control_blocks] : input.m_tap_scripts) {
+        for (const auto& control_block : control_blocks) {
+            if (seen_control_blocks.insert(control_block).second) m_tap_scripts[leaf].insert(control_block);
+        }
+    }
     m_tap_bip32_paths.insert(input.m_tap_bip32_paths.begin(), input.m_tap_bip32_paths.end());
 
     if (redeem_script.empty() && !input.redeem_script.empty()) redeem_script = input.redeem_script;
