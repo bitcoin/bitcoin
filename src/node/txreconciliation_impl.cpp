@@ -213,6 +213,8 @@ private:
 
         auto remote_sketch_capacity = uint32_t(skdata.size() / BYTES_PER_SKETCH_CAPACITY);
         // Protocol violation: our peer exceeded the sketch capacity, or sent a malformed sketch.
+        // TODO: benchmarks show decode is quadratic in capacity (~3s at MAX_SKETCH_CAPACITY), while a
+        // conformant peer never needs more than ~MAX_RECONSET_SIZE. Consider lowering this bound.
         if (remote_sketch_capacity > MAX_SKETCH_CAPACITY) return ReconciliationError::PROTOCOL_VIOLATION;
 
         std::optional<Minisketch> local_sketch, remote_sketch;
@@ -281,6 +283,8 @@ private:
         // We allow the peer to send an extension for any capacity, not just original capacity * 2,
         // but it should be within the limits. The limits are MAX_SKETCH_CAPACITY * 2, so that
         // they can extend even the largest (originally) sketch.
+        // TODO: benchmarks show decode is quadratic in capacity (~12s at MAX_SKETCH_CAPACITY * 2),
+        // while a conformant peer never needs more than ~MAX_RECONSET_SIZE * 2. Consider lowering it.
         auto extended_capacity = uint32_t(extended_sketch_size / BYTES_PER_SKETCH_CAPACITY);
         if (extended_capacity > MAX_SKETCH_CAPACITY * 2) return ReconciliationError::PROTOCOL_VIOLATION;
 
