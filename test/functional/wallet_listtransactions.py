@@ -283,7 +283,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         desc = descsum_create(f"tr({xpubs[0].to_string()}/*,pk({xprvs[1].to_string()}/*))")
         assert_equal(wallet.importdescriptors([{"desc": desc, "active": True, "timestamp": "now"}])[0]["success"], True)
         default_wallet.sendtoaddress(wallet.getnewaddress(address_type="bech32m"), 1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         # Isolate node0 for later reorg coverage
         self.disconnect_nodes(0, 1)
         self.disconnect_nodes(0, 2)
