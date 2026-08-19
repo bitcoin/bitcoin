@@ -150,6 +150,7 @@ def run_functional_tests():
 def run_unit_tests():
     workspace = Path.cwd()
     os.environ["DIR_UNIT_TEST_DATA"] = str(workspace / "unit_test_data")
+    os.environ["QT_ASSUME_STDERR_HAS_CONSOLE"] = "1"
     # Can't use ctest here like other jobs as we don't have a CMake build tree.
     commands = [
         ["./bin/test_bitcoin-qt.exe"],
