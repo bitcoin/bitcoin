@@ -183,6 +183,8 @@ class WalletTaprootTest(BitcoinTestFramework):
         psbt_online = self.nodes[0].get_wallet_rpc(f"psbt_online_{wallet_uuid}")
         psbt_offline = self.nodes[1].get_wallet_rpc(f"psbt_offline_{wallet_uuid}")
         key_only_wallet = self.nodes[1].get_wallet_rpc(f"key_only_wallet_{wallet_uuid}")
+        if keypath_only:
+            assert "keypath_only" in psbt_online.help("walletcreatefundedpsbt")
 
         desc_pay = self.make_desc(pattern, privmap, keys_pay, False)
         desc_change = self.make_desc(pattern, privmap, keys_change, False)
@@ -217,7 +219,16 @@ class WalletTaprootTest(BitcoinTestFramework):
             if not keypath_only:
                 # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
                 fee_rate = 200
-            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
+            options = {
+                "subtractFeeFromOutputs": [0],
+                "fee_rate": fee_rate,
+                "change_type": address_type,
+                "keypath_only": keypath_only,
+            }
+            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, options)['psbt']
+            if keypath_only:
+                for psbtin in psbt_online.decodepsbt(psbt)["inputs"]:
+                    assert "taproot_scripts" not in psbtin
             res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=keypath_only)
             for wallet in [psbt_offline, key_only_wallet]:
                 res = wallet.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=keypath_only)
