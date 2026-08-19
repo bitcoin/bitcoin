@@ -237,7 +237,7 @@ public:
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
-    bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
+    bool WriteMasterKey(const CMasterKey& kMasterKey);
     bool EraseMasterKey(unsigned int id);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);

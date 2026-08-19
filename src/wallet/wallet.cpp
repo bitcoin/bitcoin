@@ -665,7 +665,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
                 }
                 WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", master_key.nDeriveIterations);
 
-                WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, master_key);
+                WalletBatch(GetDatabase()).WriteMasterKey(master_key);
                 if (fWasLocked)
                     Lock();
                 return true;
@@ -872,7 +872,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             encrypted_batch = nullptr;
             return false;
         }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, master_key);
+        encrypted_batch->WriteMasterKey(master_key);
 
         for (const auto& spk_man_pair : m_spk_managers) {
             auto spk_man = spk_man_pair.second.get();

@@ -161,9 +161,9 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
-bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
+bool WalletBatch::WriteMasterKey(const CMasterKey& kMasterKey)
 {
-    return WriteIC(std::make_pair(DBKeys::MASTER_KEY, nID), kMasterKey, true);
+    return WriteIC(std::make_pair(DBKeys::MASTER_KEY, kMasterKey.m_id), kMasterKey, true);
 }
 
 bool WalletBatch::EraseMasterKey(unsigned int id)
