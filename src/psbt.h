@@ -321,7 +321,6 @@ public:
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
 
-    bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     [[nodiscard]] bool Merge(const PSBTInput& input);
@@ -956,7 +955,6 @@ public:
     CAmount amount;
     CScript script;
 
-    bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     [[nodiscard]] bool Merge(const PSBTOutput& output);
@@ -1254,7 +1252,6 @@ public:
     uint32_t tx_version;
     std::optional<uint32_t> fallback_locktime;
 
-    bool IsNull() const;
     uint32_t GetVersion() const;
 
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
