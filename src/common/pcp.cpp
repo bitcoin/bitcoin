@@ -462,6 +462,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     // Build request packet. Make sure the packet is zeroed so that reserved fields are zero
     // as required by the spec (and not potentially leak data).
     // Make sure there's space for the request header and MAP specific request data.
+    static_assert(PCP_HDR_SIZE + PCP_MAP_SIZE > PCP_HDR_SIZE, "PCP buffer size addition overflows size_t");
     std::vector<uint8_t> request(PCP_HDR_SIZE + PCP_MAP_SIZE);
     // Fill in request header, See RFC6887 Figure 2.
     size_t ofs = 0;
