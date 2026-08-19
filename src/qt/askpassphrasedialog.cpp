@@ -158,7 +158,7 @@ void AskPassphraseDialog::accept()
     } break;
     case Unlock:
         try {
-            if (!model->setWalletLocked(false, oldpass)) {
+            if (!model->wallet().unlock(oldpass)) {
                 // Check if the passphrase has a null character (see #27067 for details)
                 if (oldpass.find('\0') == std::string::npos) {
                     QMessageBox::critical(this, tr("Wallet unlock failed"),

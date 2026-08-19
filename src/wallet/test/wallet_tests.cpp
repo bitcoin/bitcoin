@@ -232,7 +232,10 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_REQUIRE(master_key_record);
 
     fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
-    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
+    const auto changed{wallet->ChangeWalletPassphrase("old_pass", "new_pass")};
+    BOOST_REQUIRE(!changed);
+    BOOST_CHECK_EQUAL(changed.error().code, WalletErrorCode::GenericError);
+    BOOST_CHECK_EQUAL(changed.error().message.original, "Error: Writing the new encryption key to the wallet database failed");
     BOOST_CHECK( wallet->IsLocked());
     BOOST_CHECK( fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record);
     BOOST_CHECK( wallet->Unlock("old_pass"));
@@ -243,7 +246,10 @@ BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFa
     BOOST_CHECK( fail_db->GetRecordValue(DBKeys::MASTER_KEY) != master_key_record);
     BOOST_CHECK( wallet->Unlock("new_pass"));
     wallet->Lock();
-    BOOST_CHECK(!wallet->Unlock("old_pass"));
+    const auto unlocked{wallet->Unlock("old_pass")};
+    BOOST_REQUIRE(!unlocked);
+    BOOST_CHECK_EQUAL(unlocked.error().code, WalletErrorCode::PassphraseIncorrect);
+    BOOST_CHECK_EQUAL(unlocked.error().message.original, "Error: The wallet passphrase entered was incorrect.");
 }
 
 BOOST_FIXTURE_TEST_CASE(add_encrypted_descriptor_key_without_plaintext_record, EncryptionFailureSetup)
