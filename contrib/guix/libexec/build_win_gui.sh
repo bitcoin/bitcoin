@@ -28,7 +28,7 @@ HOST_CFLAGS+=" -fdebug-prefix-map=${DISTSRC}/src=."
 HOST_CFLAGS+=" -fno-ident"
 
 # CXXFLAGS
-HOST_CXXFLAGS="$HOST_CFLAGS"
+HOST_CXXFLAGS="$HOST_CFLAGS -D_GLIBCXX_USE_DEPRECATED=0"
 
 # LDFLAGS
 HOST_LDFLAGS="-Wl,--no-insert-timestamp -Wl,--fatal-warnings"

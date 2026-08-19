@@ -28,7 +28,7 @@ HOST_CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -
 HOST_CFLAGS+=" -fdebug-prefix-map=${DISTSRC}/src=."
 
 # CXXFLAGS
-HOST_CXXFLAGS="$HOST_CFLAGS"
+HOST_CXXFLAGS="$HOST_CFLAGS -D_GLIBCXX_USE_DEPRECATED=0"
 
 case "$HOST" in
     arm-linux-gnueabihf) HOST_CXXFLAGS="${HOST_CXXFLAGS} -Wno-psabi" ;;
