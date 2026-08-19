@@ -612,11 +612,7 @@ util::Expected<void, WalletError> CWallet::Unlock(const SecureString& strWalletP
 
     {
         LOCK(cs_wallet);
-        for (const auto& [_, master_key] : mapMasterKeys)
-        {
-            if (!DecryptMasterKey(strWalletPassphrase, master_key, plain_master_key)) {
-                continue; // try another master key
-            }
+        if (DecryptMasterKey(strWalletPassphrase, *m_encryption_key, plain_master_key)) {
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
@@ -636,15 +632,11 @@ util::Expected<void, WalletError> CWallet::ChangeWalletPassphrase(const SecureSt
         Lock();
 
         CKeyingMaterial plain_master_key;
-        for (auto& [master_key_id, master_key] : mapMasterKeys)
-        {
-            if (!DecryptMasterKey(strOldWalletPassphrase, master_key, plain_master_key)) {
-                return UnlockPassphraseError(strOldWalletPassphrase);
-            }
+        if (DecryptMasterKey(strOldWalletPassphrase, *m_encryption_key, plain_master_key)) {
             if (Unlock(plain_master_key))
             {
                 if (fWasLocked) Lock();
-                CMasterKey new_master_key{master_key};
+                CMasterKey new_master_key{*m_encryption_key};
                 if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, new_master_key)) {
                     return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Unable to encrypt encryption key with new passphrase")}};
                 }
@@ -652,7 +644,7 @@ util::Expected<void, WalletError> CWallet::ChangeWalletPassphrase(const SecureSt
                     return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Writing the new encryption key to the wallet database failed")}};
                 }
                 WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", new_master_key.nDeriveIterations);
-                master_key = std::move(new_master_key);
+                m_encryption_key = std::move(new_master_key);
                 return {};
             }
         }
@@ -857,7 +849,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     {
         LOCK2(m_relock_mutex, cs_wallet);
-        const unsigned int new_master_key_id{nMasterKeyMaxID + 1};
         if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"wallet encryption", [&](WalletBatch& batch) {
                 if (!batch.WriteMasterKey(master_key)) {
                     return false;
@@ -872,8 +863,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             return false;
         }
 
-        nMasterKeyMaxID = new_master_key_id;
-        mapMasterKeys[new_master_key_id] = std::move(master_key);
+        m_encryption_key = std::move(master_key);
 
         Lock();
         if (!Unlock(strWalletPassphrase)) {
@@ -3369,7 +3359,7 @@ bool CWallet::WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb)
 
 bool CWallet::HasEncryptionKeys() const
 {
-    return !mapMasterKeys.empty();
+    return m_encryption_key.has_value();
 }
 
 bool CWallet::HaveCryptedKeys() const
