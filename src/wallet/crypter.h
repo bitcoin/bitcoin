@@ -76,13 +76,13 @@ private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;
     bool fKeySet;
 
-    int BytesToKeySHA512AES(std::span<const unsigned char> salt, const SecureString& key_data, int count, unsigned char* key, unsigned char* iv) const;
+    [[nodiscard]] int BytesToKeySHA512AES(std::span<const unsigned char> salt, const SecureString& key_data, unsigned int count, unsigned char* key, unsigned char* iv) const;
 
 public:
-    bool SetKeyFromPassphrase(const SecureString& key_data, std::span<const unsigned char> salt, unsigned int rounds, unsigned int derivation_method);
-    bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
-    bool Decrypt(std::span<const unsigned char> ciphertext, CKeyingMaterial& plaintext) const;
-    bool SetKey(const CKeyingMaterial& new_key, std::span<const unsigned char> new_iv);
+    [[nodiscard]] bool SetKeyFromPassphrase(const SecureString& key_data, std::span<const unsigned char> salt, unsigned int rounds, unsigned int derivation_method);
+    [[nodiscard]] bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
+    [[nodiscard]] bool Decrypt(std::span<const unsigned char> ciphertext, CKeyingMaterial& plaintext) const;
+    [[nodiscard]] bool SetKey(const CKeyingMaterial& new_key, std::span<const unsigned char> new_iv);
 
     void CleanKey()
     {
@@ -104,9 +104,9 @@ public:
     }
 };
 
-bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
-bool DecryptSecret(const CKeyingMaterial& master_key, std::span<const unsigned char> ciphertext, const uint256& iv, CKeyingMaterial& plaintext);
-bool DecryptKey(const CKeyingMaterial& master_key, std::span<const unsigned char> crypted_secret, const CPubKey& pub_key, CKey& key);
+[[nodiscard]] bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
+[[nodiscard]] bool DecryptSecret(const CKeyingMaterial& master_key, std::span<const unsigned char> ciphertext, const uint256& iv, CKeyingMaterial& plaintext);
+[[nodiscard]] bool DecryptKey(const CKeyingMaterial& master_key, std::span<const unsigned char> crypted_secret, const CPubKey& pub_key, CKey& key);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_CRYPTER_H
