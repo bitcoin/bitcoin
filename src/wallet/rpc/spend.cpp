@@ -1728,6 +1728,7 @@ RPCMethod walletcreatefundedpsbt()
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are " + FormatAllOutputTypes() + "."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
+                            {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data to the PSBT. Script-path data is not added."},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -1808,8 +1809,9 @@ RPCMethod walletcreatefundedpsbt()
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
+    bool keypath_only{options.exists("keypath_only") ? options["keypath_only"].get_bool() : DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY};
     bool complete = true;
-    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }

@@ -206,6 +206,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletcreatefundedpsbt", 3, "replaceable"},
     { "walletcreatefundedpsbt", 3, "solving_data"},
     { "walletcreatefundedpsbt", 3, "max_tx_weight"},
+    { "walletcreatefundedpsbt", 3, "keypath_only"},
     { "walletcreatefundedpsbt", 4, "bip32derivs" },
     { "walletcreatefundedpsbt", 5, "version" },
     { "walletcreatefundedpsbt", 6, "psbt_version" },
