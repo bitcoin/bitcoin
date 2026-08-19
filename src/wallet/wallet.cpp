@@ -648,7 +648,7 @@ util::Expected<void, WalletError> CWallet::ChangeWalletPassphrase(const SecureSt
                 if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, new_master_key)) {
                     return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Unable to encrypt encryption key with new passphrase")}};
                 }
-                if (!WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, new_master_key)) {
+                if (!WalletBatch(GetDatabase()).WriteMasterKey(new_master_key)) {
                     return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Writing the new encryption key to the wallet database failed")}};
                 }
                 WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", new_master_key.nDeriveIterations);
@@ -859,7 +859,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         LOCK2(m_relock_mutex, cs_wallet);
         const unsigned int new_master_key_id{nMasterKeyMaxID + 1};
         if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"wallet encryption", [&](WalletBatch& batch) {
-                if (!batch.WriteMasterKey(new_master_key_id, master_key)) {
+                if (!batch.WriteMasterKey(master_key)) {
                     return false;
                 }
                 for (const auto& spk_man_pair : m_spk_managers) {
