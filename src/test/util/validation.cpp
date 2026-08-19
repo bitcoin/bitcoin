@@ -105,9 +105,9 @@ void TestChainstateManager::ResetBestInvalid()
     m_best_invalid = nullptr;
 }
 
-std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup)
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock)
 {
-    GetFakeNodeClock().set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
 
     bilingual_str error{};
     setup.m_node.mempool.reset();
