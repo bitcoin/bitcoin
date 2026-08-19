@@ -5,15 +5,17 @@
 #ifndef BITCOIN_NODE_TXORPHANAGE_H
 #define BITCOIN_NODE_TXORPHANAGE_H
 
-#include <consensus/validation.h>
 #include <net.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <sync.h>
-#include <util/time.h>
 
-#include <map>
+#include <cstdint>
+#include <memory>
 #include <set>
+#include <utility>
+#include <vector>
+
+class FastRandomContext;
 
 namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. Helps limit the total amount of memory used by the orphanage. */
