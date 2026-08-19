@@ -30,7 +30,7 @@ env:
   SOURCES_PATH: ${{ github.workspace }}/.guix-cache/depends-sources
   BASE_CACHE: ${{ github.workspace }}/.guix-cache/depends-built
   SDK_PATH: ${{ github.workspace }}/.guix-cache/sdk
-  SUBSTITUTE_URLS: https://guix.fish.foo
+  SUBSTITUTE_URLS: https://guix.fish.foo https://guix2.fish.foo
   CI_RETRY_EXE: ${{ github.workspace }}/ci/retry/retry
 
 defaults:
