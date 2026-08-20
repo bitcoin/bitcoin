@@ -797,8 +797,8 @@ FUZZ_TARGET(txgraph)
             } else if (sims.size() == 2 && !sims[0].IsOversized() && !sims[1].IsOversized() && command-- == 0) {
                 // GetMainStagingDiagrams()
                 auto [real_main_diagram, real_staged_diagram] = real->GetMainStagingDiagrams();
-                auto real_sum_main = std::accumulate(real_main_diagram.begin(), real_main_diagram.end(), FeeFrac{});
-                auto real_sum_staged = std::accumulate(real_staged_diagram.begin(), real_staged_diagram.end(), FeeFrac{});
+                auto real_sum_main = std::accumulate(real_main_diagram.begin(), real_main_diagram.end(), FeeFrac{}, [](auto acc, const auto& next) { return acc + next.feerate; });
+                auto real_sum_staged = std::accumulate(real_staged_diagram.begin(), real_staged_diagram.end(), FeeFrac{}, [](auto acc, const auto& next) { return acc + next.feerate; });
                 auto real_gain = real_sum_staged - real_sum_main;
                 auto sim_gain = sims[1].SumAll() - sims[0].SumAll();
                 // Just check that the total fee gained/lost and size gained/lost according to the
@@ -807,10 +807,10 @@ FUZZ_TARGET(txgraph)
                 assert(sim_gain == real_gain);
                 // Check that the feerates in each diagram are monotonically decreasing.
                 for (size_t i = 1; i < real_main_diagram.size(); ++i) {
-                    assert(ByRatio{real_main_diagram[i]} <= ByRatio{real_main_diagram[i - 1]});
+                    assert(ByRatio{real_main_diagram[i].feerate} <= ByRatio{real_main_diagram[i - 1].feerate});
                 }
                 for (size_t i = 1; i < real_staged_diagram.size(); ++i) {
-                    assert(ByRatio{real_staged_diagram[i]} <= ByRatio{real_staged_diagram[i - 1]});
+                    assert(ByRatio{real_staged_diagram[i].feerate} <= ByRatio{real_staged_diagram[i - 1].feerate});
                 }
                 break;
             } else if (block_builders.size() < 4 && !main_sim.IsOversized() && command-- == 0) {
@@ -1266,34 +1266,45 @@ FUZZ_TARGET(txgraph)
             auto [main_cmp_diagram, stage_cmp_diagram] = real->GetMainStagingDiagrams();
             // Check that the feerates in each diagram are monotonically decreasing.
             for (size_t i = 1; i < main_cmp_diagram.size(); ++i) {
-                assert(ByRatio{main_cmp_diagram[i]} <= ByRatio{main_cmp_diagram[i - 1]});
+                assert(ByRatio{main_cmp_diagram[i].feerate} <= ByRatio{main_cmp_diagram[i - 1].feerate});
             }
             for (size_t i = 1; i < stage_cmp_diagram.size(); ++i) {
-                assert(ByRatio{stage_cmp_diagram[i]} <= ByRatio{stage_cmp_diagram[i - 1]});
+                assert(ByRatio{stage_cmp_diagram[i].feerate} <= ByRatio{stage_cmp_diagram[i - 1].feerate});
             }
             // Treat the diagrams as sets of chunk feerates, and sort them in the same way so that
             // std::set_difference can be used on them below. The exact ordering does not matter
             // here, but it has to be consistent with the one used in main_real_diagram and
             // stage_real_diagram).
-            std::ranges::sort(main_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
-            std::ranges::sort(stage_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
+            std::ranges::sort(main_cmp_diagram, TxGraph::Chunk::GreaterFeerate{});
+            std::ranges::sort(stage_cmp_diagram, TxGraph::Chunk::GreaterFeerate{});
+            // extract the chunk feerates from main and staging compare diagrams
+            std::vector<FeeFrac> main_cmp_diagram_feerates, stage_cmp_diagram_feerates;
+            main_cmp_diagram_feerates.reserve(main_cmp_diagram.size());
+            stage_cmp_diagram_feerates.reserve(stage_cmp_diagram.size());
+            for (const auto& chunk : main_cmp_diagram) {
+                main_cmp_diagram_feerates.emplace_back(chunk.feerate);
+            }
+            for (const auto& chunk : stage_cmp_diagram) {
+                stage_cmp_diagram_feerates.emplace_back(chunk.feerate);
+            }
             // Find the chunks that appear in main_diagram but are missing from main_cmp_diagram.
             // This is allowed, because GetMainStagingDiagrams omits clusters in main unaffected
             // by staging.
+
             std::vector<FeeFrac> missing_main_cmp;
             std::set_difference(main_real_diagram.begin(), main_real_diagram.end(),
-                                main_cmp_diagram.begin(), main_cmp_diagram.end(),
+                                main_cmp_diagram_feerates.begin(), main_cmp_diagram_feerates.end(),
                                 std::inserter(missing_main_cmp, missing_main_cmp.end()),
                                 std::greater<ByRatioNegSize<FeeFrac>>{});
-            assert(main_cmp_diagram.size() + missing_main_cmp.size() == main_real_diagram.size());
+            assert(main_cmp_diagram_feerates.size() + missing_main_cmp.size() == main_real_diagram.size());
             // Do the same for chunks in stage_diagram missing from stage_cmp_diagram.
             auto stage_real_diagram = get_diagram_fn(TxGraph::Level::TOP);
             std::vector<FeeFrac> missing_stage_cmp;
             std::set_difference(stage_real_diagram.begin(), stage_real_diagram.end(),
-                                stage_cmp_diagram.begin(), stage_cmp_diagram.end(),
+                                stage_cmp_diagram_feerates.begin(), stage_cmp_diagram_feerates.end(),
                                 std::inserter(missing_stage_cmp, missing_stage_cmp.end()),
                                 std::greater<ByRatioNegSize<FeeFrac>>{});
-            assert(stage_cmp_diagram.size() + missing_stage_cmp.size() == stage_real_diagram.size());
+            assert(stage_cmp_diagram_feerates.size() + missing_stage_cmp.size() == stage_real_diagram.size());
             // The missing chunks must be equal across main & staging (otherwise they couldn't have
             // been omitted).
             assert(missing_main_cmp == missing_stage_cmp);

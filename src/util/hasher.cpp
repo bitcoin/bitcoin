@@ -5,7 +5,11 @@
 #include <util/hasher.h>
 
 #include <crypto/siphash.h>
+#include <hash.h>
 #include <random.h>
+
+#include <algorithm>
+#include <iterator>
 
 SaltedUint256Hasher::SaltedUint256Hasher() : m_hasher{
     FastRandomContext().rand64(),
@@ -35,4 +39,19 @@ SaltedSipHasher::SaltedSipHasher() :
 size_t SaltedSipHasher::operator()(const std::span<const unsigned char>& script) const
 {
     return CSipHasher(m_k0, m_k1).Write(script).Finalize();
+}
+
+uint256 GetHashFromWitnesses(std::vector<Wtxid> wtxids)
+{
+    // Sort in ascending order
+    std::sort(wtxids.begin(), wtxids.end(), [](const auto& lhs, const auto& rhs) {
+        return std::lexicographical_compare(
+            std::make_reverse_iterator(lhs.end()), std::make_reverse_iterator(lhs.begin()),
+            std::make_reverse_iterator(rhs.end()), std::make_reverse_iterator(rhs.begin()));
+    });
+
+    // Get sha256 hash of the wtxids concatenated in this order
+    HashWriter hw;
+    for (const auto& wtxid : wtxids) hw << wtxid;
+    return hw.GetSHA256();
 }
