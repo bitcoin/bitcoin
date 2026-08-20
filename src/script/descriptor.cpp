@@ -207,7 +207,7 @@ public:
     };
 
     /** Get the descriptor string form. */
-    virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
+    virtual std::string ToString(StringType type) const = 0;
 
     /** Get the descriptor string form including private data (if available in arg).
      *  If the private data is not available, the output string in the "out" parameter
@@ -517,7 +517,7 @@ public:
         }
         return ret;
     }
-    std::string ToString(StringType type=StringType::PUBLIC) const override
+    std::string ToString(StringType type) const override
     {
         return ToString(type, /*normalized=*/false);
     }
@@ -551,7 +551,7 @@ public:
         }
         // Either no derivation or all unhardened derivation
         if (i == -1) {
-            out = ToString();
+            out = ToString(StringType::PUBLIC);
             return true;
         }
         // Get the path to the last hardened stup
@@ -719,7 +719,7 @@ public:
     // musig() expressions can only be used in tr() contexts which have 32 byte xonly pubkeys
     size_t GetSize() const override { return 32; }
 
-    std::string ToString(StringType type=StringType::PUBLIC) const override
+    std::string ToString(StringType type) const override
     {
         std::string out = "musig(";
         for (size_t i = 0; i < m_participants.size(); ++i) {
@@ -955,7 +955,7 @@ public:
                     any_success = pubkey->ToPrivateString(*arg, tmp) || any_success;
                     break;
                 case StringType::PUBLIC:
-                    tmp = pubkey->ToString();
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::PUBLIC);
                     break;
                 case StringType::COMPAT:
                     tmp = pubkey->ToString(PubkeyProvider::StringType::COMPAT);
@@ -1652,7 +1652,7 @@ public:
         has_priv_key = false;
         switch (m_type) {
         case DescriptorImpl::StringType::PUBLIC:
-            ret = m_pubkeys[key]->ToString();
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::PUBLIC);
             break;
         case DescriptorImpl::StringType::PRIVATE:
             has_priv_key = m_pubkeys[key]->ToPrivateString(*m_arg, ret);
@@ -1665,7 +1665,7 @@ public:
             // Prior to 31.0, COMPAT was not provided, so PUBLIC was in use. From this string,
             // DescriptorSPKM IDs were computed from this string, so the incorrect behavior
             // must be preserved for wallets with Miniscript descriptors to be loaded
-            ret = m_pubkeys[key]->ToString();
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::PUBLIC);
             break;
         }
         return ret;
@@ -2264,7 +2264,7 @@ struct KeyParser {
         // Keys that cannot be derived sort before the ones that can, and are compared by their
         // expression so that two different keys are not taken for duplicates.
         if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
-        return key_a.ToString() < key_b.ToString();
+        return key_a.ToString(PubkeyProvider::StringType::PUBLIC) < key_b.ToString(PubkeyProvider::StringType::PUBLIC);
     }
 
     ParseScriptContext ParseContext() const {
@@ -2287,7 +2287,7 @@ struct KeyParser {
 
     std::optional<std::string> ToString(const Key& key, bool&) const
     {
-        return m_keys.at(key).at(0)->ToString();
+        return m_keys.at(key).at(0)->ToString(PubkeyProvider::StringType::PUBLIC);
     }
 
     template<typename I> std::optional<Key> FromPKBytes(I begin, I end) const
