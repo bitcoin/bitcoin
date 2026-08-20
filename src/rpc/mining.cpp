@@ -5,8 +5,6 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
-#include <interfaces/mining.h>
-
 #include <addresstype.h>
 #include <arith_uint256.h>
 #include <chain.h>
@@ -23,6 +21,7 @@
 #include <key_io.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/miner.h>
@@ -78,8 +77,6 @@
 #include <vector>
 
 using interfaces::BlockRef;
-using interfaces::BlockTemplate;
-using interfaces::Mining;
 using node::BlockAssembler;
 using node::GetMinimumTime;
 using node::NodeContext;
@@ -192,15 +189,15 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
+static UniValue generateBlocks(ChainstateManager& chainman, node::BlockTemplateManager& block_template_manager, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
 {
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }, /*cooldown=*/false));
+        std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.coinbase_output_script = coinbase_output_script})};
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
-        if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
+        if (!GenerateBlock(chainman, CBlock{block_template->block}, nMaxTries, block_out, /*process_new_block=*/true)) {
             break;
         }
 
@@ -277,10 +274,10 @@ static RPCMethod generatetodescriptor()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
     ChainstateManager& chainman = EnsureChainman(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, block_template_manager, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -323,12 +320,12 @@ static RPCMethod generatetoaddress()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
     ChainstateManager& chainman = EnsureChainman(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, block_template_manager, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -376,7 +373,7 @@ static RPCMethod generateblock()
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
@@ -408,10 +405,10 @@ static RPCMethod generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script}, /*cooldown=*/false)};
+            std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
             CHECK_NONFATAL(block_template);
 
-            block = block_template->getBlock();
+            block = block_template->block;
         }
 
         CHECK_NONFATAL(block.vtx.size() == 1);
@@ -502,7 +499,7 @@ static RPCMethod getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    const auto mining_options{node::FlattenMiningOptions(node.mining_args)};
+    const auto mining_options{node::FlattenMiningOptions(EnsureBlockTemplateManager(node).BlockCreateArgs())};
     obj.pushKV("blockmintxfee", ValueFromAmount(CHECK_NONFATAL(mining_options.block_min_fee_rate)->GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
@@ -739,7 +736,7 @@ static RPCMethod getblocktemplate()
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    Mining& miner = EnsureMining(node);
+    node::BlockTemplateManager& block_template_manager = EnsureBlockTemplateManager(node);
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -794,13 +791,13 @@ static RPCMethod getblocktemplate()
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    if (!miner.isTestChain()) {
+    if (!chainman.GetParams().IsTestChain()) {
         const CConnman& connman = EnsureConnman(node);
         if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, CLIENT_NAME " is not connected!");
         }
 
-        if (miner.isInitialBlockDownload()) {
+        if (chainman.IsInitialBlockDownload()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, CLIENT_NAME " is in initial sync and waiting for blocks...");
         }
     }
@@ -809,7 +806,7 @@ static RPCMethod getblocktemplate()
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     WAIT_LOCK(cs_main, cs_main_lock);
-    uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
+    uint256 tip{CHECK_NONFATAL(block_template_manager.GetTip()).value().hash};
 
     // Long Polling (BIP22)
     if (!lpval.isNull()) {
@@ -854,7 +851,7 @@ static RPCMethod getblocktemplate()
             while (IsRPCRunning()) {
                 // If hashWatchedChain is not a real block hash, this will
                 // return immediately.
-                std::optional<BlockRef> maybe_tip{miner.waitTipChanged(hashWatchedChain, checktxtime)};
+                std::optional<BlockRef> maybe_tip{block_template_manager.WaitTipChanged(hashWatchedChain, checktxtime)};
                 // Node is shutting down
                 if (!maybe_tip) break;
                 tip = maybe_tip->hash;
@@ -868,7 +865,7 @@ static RPCMethod getblocktemplate()
                 checktxtime = std::chrono::seconds(10);
             }
         }
-        tip = CHECK_NONFATAL(miner.getTip()).value().hash;
+        tip = CHECK_NONFATAL(block_template_manager.GetTip()).value().hash;
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
@@ -890,7 +887,7 @@ static RPCMethod getblocktemplate()
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
-    static std::unique_ptr<BlockTemplate> block_template;
+    static std::unique_ptr<node::CBlockTemplate> block_template;
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
@@ -906,7 +903,7 @@ static RPCMethod getblocktemplate()
         // a delay to each getblocktemplate call. This differs from typical
         // long-lived IPC usage, where the overhead is paid only when creating
         // the initial template.
-        block_template = miner.createNewBlock({}, /*cooldown=*/false);
+        block_template = block_template_manager.CreateNewTemplate({});
         CHECK_NONFATAL(block_template);
 
 
@@ -914,11 +911,11 @@ static RPCMethod getblocktemplate()
         pindexPrev = pindexPrevNew;
     }
     CHECK_NONFATAL(pindexPrev);
-    CBlock block{block_template->getBlock()};
+    CBlockHeader block_header{block_template->block};
 
     // Update nTime
-    UpdateTime(&block, consensusParams, pindexPrev);
-    block.nNonce = 0;
+    UpdateTime(&block_header, consensusParams, pindexPrev);
+    block_header.nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
@@ -927,11 +924,11 @@ static RPCMethod getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<Txid, int64_t> setTxIndex;
-    std::vector<CAmount> tx_fees{block_template->getTxFees()};
-    std::vector<int64_t> tx_sigops{block_template->getTxSigops()};
+    const std::vector<CAmount>& tx_fees{block_template->vTxFees};
+    const std::vector<int64_t>& tx_sigops{block_template->vTxSigOpsCost};
 
     int i = 0;
-    for (const auto& it : block.vtx) {
+    for (const auto& it : block_template->block.vtx) {
         const CTransaction& tx = *it;
         Txid txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
@@ -968,7 +965,7 @@ static RPCMethod getblocktemplate()
 
     UniValue aux(UniValue::VOBJ);
 
-    arith_uint256 hashTarget = arith_uint256().SetCompact(block.nBits);
+    arith_uint256 hashTarget = arith_uint256().SetCompact(block_header.nBits);
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
@@ -1000,16 +997,16 @@ static RPCMethod getblocktemplate()
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
         if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
-            block.nVersion &= ~info.mask;
+            block_header.nVersion &= ~info.mask;
         }
     }
 
     for (const auto& [name, info] : gbtstatus.locked_in) {
-        block.nVersion |= info.mask;
+        block_header.nVersion |= info.mask;
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
         if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
-            block.nVersion &= ~info.mask;
+            block_header.nVersion &= ~info.mask;
         }
     }
 
@@ -1021,15 +1018,15 @@ static RPCMethod getblocktemplate()
         }
     }
 
-    result.pushKV("version", block.nVersion);
+    result.pushKV("version", block_header.nVersion);
     result.pushKV("rules", std::move(aRules));
     result.pushKV("vbavailable", std::move(vbavailable));
     result.pushKV("vbrequired", 0);
 
-    result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
+    result.pushKV("previousblockhash", block_header.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
-    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", block_template->block.vtx[0]->vout[0].nValue);
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
@@ -1048,15 +1045,15 @@ static RPCMethod getblocktemplate()
     if (!fPreSegWit) {
         result.pushKV("weightlimit", MAX_BLOCK_WEIGHT);
     }
-    result.pushKV("curtime", block.GetBlockTime());
-    result.pushKV("bits", strprintf("%08x", block.nBits));
+    result.pushKV("curtime", block_header.GetBlockTime());
+    result.pushKV("bits", strprintf("%08x", block_header.nBits));
     result.pushKV("height", pindexPrev->nHeight + 1);
 
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
     }
 
-    if (auto coinbase{block_template->getCoinbaseTx()}; coinbase.required_outputs.size() > 0) {
+    if (const auto& coinbase{block_template->m_coinbase_tx}; coinbase.required_outputs.size() > 0) {
         CHECK_NONFATAL(coinbase.required_outputs.size() == 1); // Only one output is currently expected
         result.pushKV("default_witness_commitment", HexStr(coinbase.required_outputs[0].scriptPubKey));
     }
