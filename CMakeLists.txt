@@ -637,6 +637,10 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
 endif()
 
+# CMAKE_INSTALL_LIBEXECDIR is substituted into test/config.ini and
+# bitcoin-build-config.h. test/ is added before src/.
+include(GNUInstallDirs)
+
 add_subdirectory(test)
 add_subdirectory(doc)
 

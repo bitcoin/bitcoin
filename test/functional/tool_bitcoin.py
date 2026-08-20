@@ -12,8 +12,11 @@ from test_framework.util import (
     assert_equal,
 )
 
+import os
 import platform
 import re
+import shutil
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -85,6 +88,54 @@ class ToolBitcoinTest(BitcoinTestFramework):
             self.log.info("Ensure bitcoin recognizes -ipcbind in config file")
             append_config(node.datadir_path, ["ipcbind=unix"])
             self.test_args([], [], expect_exe="bitcoin-node")
+
+        self.test_installed_libexecdir()
+
+    def test_installed_libexecdir(self):
+        # Build-tree tests keep every binary next to the wrapper, so they never
+        # hit the installed prefix/bin -> prefix/<LIBEXECDIR> lookup.
+        libexecdir = self.config["environment"]["LIBEXECDIR"]
+        if os.path.isabs(libexecdir):
+            self.log.info("Skipping installed-layout check; CMAKE_INSTALL_LIBEXECDIR is absolute")
+            return
+
+        exeext = self.config["environment"]["EXEEXT"]
+        bitcoin_src = self.get_binaries().paths.bitcoin_bin
+        bitcoind_src = self.get_binaries().paths.bitcoind
+        prefix = self.nodes[0].datadir_path / "fake-prefix"
+
+        def make_layout(name, internal_subdir):
+            root = prefix / name
+            bindir = root / "bin"
+            internaldir = root / internal_subdir
+            bindir.mkdir(parents=True)
+            internaldir.mkdir(parents=True)
+            wrapper = bindir / f"bitcoin{exeext}"
+            shutil.copy2(bitcoin_src, wrapper)
+            shutil.copy2(bitcoind_src, internaldir / f"bitcoind{exeext}")
+            return wrapper
+
+        def run_wrapper(wrapper):
+            env = os.environ.copy()
+            env["PATH"] = ""  # invoked by path; don't let $PATH hide a miss
+            return subprocess.run(
+                [wrapper, "node", "-version"],
+                capture_output=True,
+                env=env,
+                timeout=60,
+            )
+
+        self.log.info("Ensure installed wrapper finds binaries in the configured libexec dir")
+        result = run_wrapper(make_layout("configured", libexecdir))
+        assert_equal(result.returncode, 0)
+        assert_equal(get_exe_name(result.stdout), b"bitcoind")
+        assert_equal(result.stderr, b"")
+
+        other = "lib" if libexecdir != "lib" else "libexec"
+        self.log.info(f"Ensure installed wrapper does not look in an unconfigured {other} dir")
+        result = run_wrapper(make_layout("unconfigured", other))
+        if result.returncode == 0:
+            raise AssertionError(f"wrapper ran bitcoind from unconfigured {other}/: {result.stdout!r} {result.stderr!r}")
 
 
 def get_node_output(node):
