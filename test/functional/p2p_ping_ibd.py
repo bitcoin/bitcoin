@@ -33,6 +33,8 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 TIMEOUT_INTERVAL = 20 * 60
+# Time the peer is given to answer a ping after it delivered its last block.
+POST_BLOCK_PONG_GRACE = 60
 MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16
 PING_NONCE = 1
 # Number of blocks the peer asks for in a single getdata message, the maximum a peer
@@ -155,7 +157,7 @@ class PingIBDTest(BitcoinTestFramework):
         node.disconnect_p2ps()
 
     def test_ping_timeout_ibd(self):
-        self.log.info("Check that a peer is disconnected over a ping timeout while it is serving blocks.")
+        self.log.info("Check that a peer isn't disconnected over a ping while it is serving blocks.")
         # The test framework uses a huge -peertimeout by default, which would disable the
         # ping timeout.
         self.restart_node(0, extra_args=["-peertimeout=1"])
@@ -177,19 +179,30 @@ class PingIBDTest(BitcoinTestFramework):
         self.wait_until(lambda: len(node.getpeerinfo()[0]["inflight"]) == MAX_BLOCKS_IN_TRANSIT_PER_PEER)
 
         self.log.info(f"Send the blocks slowly, until the timeout of {TIMEOUT_INTERVAL}s is exceeded.")
-        while node.mocktime + TIMEOUT_INTERVAL // 5 <= ping_start + TIMEOUT_INTERVAL:
-            node.bumpmocktime(TIMEOUT_INTERVAL // 5)
-            peer.serve_next_block()
-            self.wait_until(lambda: node.getblockcount() == start_height + peer.blocks_served)
-            assert peer.is_connected
+        with node.assert_debug_log([], unexpected_msgs=["ping timeout"]):
+            while node.mocktime <= ping_start + TIMEOUT_INTERVAL:
+                node.bumpmocktime(TIMEOUT_INTERVAL // 5)
+                peer.serve_next_block()
+                self.wait_until(lambda: node.getblockcount() == start_height + peer.blocks_served)
+                assert peer.is_connected
+        assert_greater_than(node.getpeerinfo()[0]["pingwait"], TIMEOUT_INTERVAL)
 
-        self.log.info("Check that the peer is disconnected even though it is serving blocks")
-        # The peer keeps serving the blocks we ask for as fast as we request them, but we
-        # still disconnect it because it didn't get around to answering our ping. A later
-        # commit changes this behavior.
-        assert_greater_than(len(node.getpeerinfo()[0]["inflight"]), 0)
+        self.log.info("Serve the remaining blocks, so that nothing is in flight anymore")
+        while peer.blocks_served < NUM_DOWNLOAD_BLOCKS:
+            # The node only requests the next block once it processed an earlier one.
+            peer.wait_until(lambda: len(peer.getdata_requests) > 0)
+            peer.serve_next_block()
+        self.wait_until(lambda: node.getblockcount() == start_height + NUM_DOWNLOAD_BLOCKS)
+        assert_equal(node.getpeerinfo()[0]["inflight"], [])
+
+        self.log.info("Check that the peer still gets a grace period to answer the ping")
+        node.bumpmocktime(POST_BLOCK_PONG_GRACE // 2)
+        peer.sync_with_ping()
+        assert peer.is_connected
+
+        self.log.info("Check that the ping timeout applies once the grace period is over")
         with node.assert_debug_log(expected_msgs=["ping timeout"]):
-            node.bumpmocktime(TIMEOUT_INTERVAL // 5)
+            node.bumpmocktime(POST_BLOCK_PONG_GRACE)
             peer.wait_for_disconnect()
 
     def run_test(self):
