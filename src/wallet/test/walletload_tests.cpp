@@ -22,6 +22,7 @@ public:
     ~DummyDescriptor() = default;
 
     std::string ToString(bool compat_format) const override { return desc; }
+    std::string ToCanonicalString() const override { return desc; }
     std::optional<OutputType> GetOutputType() const override { return OutputType::UNKNOWN; }
 
     bool IsRange() const override { return false; }

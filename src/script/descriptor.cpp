@@ -213,6 +213,7 @@ public:
 
     enum class StringType {
         PUBLIC,
+        CANONICAL, // string calculation that always use h
         COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
@@ -269,7 +270,7 @@ class OriginPubkeyProvider final : public PubkeyProvider
     std::string OriginString(StringType type, bool normalized=false) const
     {
         // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
+        bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
         return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, use_apostrophe);
     }
 
@@ -514,7 +515,7 @@ public:
     std::string ToString(StringType type, bool normalized) const
     {
         // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        const bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
+        const bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
         std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
         if (IsRange()) {
             ret += "/*";
@@ -879,6 +880,7 @@ public:
         PUBLIC,
         PRIVATE,
         NORMALIZED,
+        CANONICAL,
         COMPAT, // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
@@ -965,6 +967,9 @@ public:
                 case StringType::COMPAT:
                     tmp = pubkey->ToString(PubkeyProvider::StringType::COMPAT);
                     break;
+                case StringType::CANONICAL:
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::CANONICAL);
+                    break;
             }
             ret += tmp;
         }
@@ -981,6 +986,13 @@ public:
     {
         std::string ret;
         ToStringHelper(nullptr, ret, compat_format ? StringType::COMPAT : StringType::PUBLIC);
+        return AddChecksum(ret);
+    }
+
+    std::string ToCanonicalString() const final
+    {
+        std::string ret;
+        ToStringHelper(nullptr, ret, StringType::CANONICAL);
         return AddChecksum(ret);
     }
 
@@ -1671,6 +1683,9 @@ public:
             // DescriptorSPKM IDs were computed from this string, so the incorrect behavior
             // must be preserved for wallets with Miniscript descriptors to be loaded
             ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::PUBLIC);
+            break;
+        case DescriptorImpl::StringType::CANONICAL:
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::CANONICAL);
             break;
         }
         return ret;
