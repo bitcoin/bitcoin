@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_flush_failure)
         writer.write("00"_hex);
         writer.flush();
         }(), std::ios_base::failure, HasReason{"write failed"});
-    BOOST_CHECK_EQUAL(stream.write_attempts, 2); // TODO: Do not retry a failed flush during exception unwinding.
+    BOOST_CHECK_EQUAL(stream.write_attempts, 1);
 }
 
 BOOST_AUTO_TEST_CASE(buffered_writer_reader)
