@@ -376,15 +376,8 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     }
     file.seek(0, SEEK_SET);
 
-    // The buffer size (second arg) must be greater than the rewind
-    // amount (third arg).
-    try {
-        BufferedFile bfbad{file, 25, 25};
-        BOOST_CHECK(false);
-    } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
-                        "Rewind limit must be less than buffer size") != nullptr);
-    }
+    // The buffer size must be greater than the rewind amount.
+    BOOST_CHECK_EXCEPTION((BufferedFile{file, /*nBufSize=*/25, /*nRewindIn=*/25}), std::ios_base::failure, HasReason{"Rewind limit must be less than buffer size"});
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
     BufferedFile bf{file, 25, 10};
@@ -414,13 +407,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // extent. The current file offset is 3, so the following
     // SetLimit() allows zero bytes to be read.
     BOOST_CHECK(bf.SetLimit(3));
-    try {
-        bf >> i;
-        BOOST_CHECK(false);
-    } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
-                           "Attempt to position past buffer limit") != nullptr);
-    }
+    BOOST_CHECK_EXCEPTION(bf >> i, std::ios_base::failure, HasReason{"Attempt to position past buffer limit"});
     // The default argument removes the limit completely.
     BOOST_CHECK(bf.SetLimit());
     // The read position should still be at 3 (no change).
@@ -467,13 +454,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
 
     // We've read the entire file, the next read should throw.
-    try {
-        bf >> i;
-        BOOST_CHECK(false);
-    } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
-                        "BufferedFile::Fill: end of file") != nullptr);
-    }
+    BOOST_CHECK_EXCEPTION(bf >> i, std::ios_base::failure, HasReason{"BufferedFile::Fill: end of file"});
     // Attempting to read beyond the end sets the EOF indicator.
     BOOST_CHECK(bf.eof());
 
@@ -529,12 +510,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
 
     // SkipTo() honors the transfer limit; we can't position beyond the limit.
     bf.SetLimit(13);
-    try {
-        bf.SkipTo(14);
-        BOOST_CHECK(false);
-    } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(), "Attempt to position past buffer limit") != nullptr);
-    }
+    BOOST_CHECK_EXCEPTION(bf.SkipTo(14), std::ios_base::failure, HasReason{"Attempt to position past buffer limit"});
 
     // We can position exactly to the transfer limit.
     bf.SkipTo(13);

@@ -541,24 +541,14 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     BOOST_CHECK_EQUAL(cc3.out.scriptPubKey.size(), 0U);
 
     // scriptPubKey that ends beyond the end of the stream
-    try {
-        Coin cc4;
-        SpanReader{"000007"_hex} >> cc4;
-        BOOST_CHECK_MESSAGE(false, "We should have thrown");
-    } catch (const std::ios_base::failure&) {
-    }
+    BOOST_CHECK_EXCEPTION(SpanReader{"000007"_hex} >> Coin{}, std::ios_base::failure, HasReason{"end of data"});
 
     // Very large scriptPubKey (3*10^9 bytes) past the end of the stream
     DataStream tmp{};
     uint64_t x = 3000000000ULL;
     tmp << VARINT(x);
     BOOST_CHECK_EQUAL(HexStr(tmp), "8a95c0bb00");
-    try {
-        Coin cc5;
-        SpanReader{"00008a95c0bb00"_hex} >> cc5;
-        BOOST_CHECK_MESSAGE(false, "We should have thrown");
-    } catch (const std::ios_base::failure&) {
-    }
+    BOOST_CHECK_EXCEPTION(SpanReader{"00008a95c0bb00"_hex} >> Coin{}, std::ios_base::failure, HasReason{"end of data"});
 }
 
 const static COutPoint OUTPOINT;
