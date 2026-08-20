@@ -123,6 +123,8 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 /** Time between pings automatically sent out for latency probing and keepalive */
 static constexpr auto PING_INTERVAL{2min};
+/** Time to wait for a pong after the last block a peer delivered, before applying the ping timeout */
+static constexpr auto POST_BLOCK_PONG_GRACE{1min};
 /** The maximum number of entries in a locator */
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of entries in an 'inv' protocol message */
@@ -6437,7 +6439,11 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
         }
         // If the peer failed to answer our ping in time, disconnect due to timeout.
-        if (m_connman.ShouldRunInactivityChecks(node, now) &&
+        // Skip the check while it is serving us blocks and let the block download timeout above govern
+        // instead. Once the last new block was received, give the peer a grace period to answer the ping.
+        if (state.vBlocksInFlight.empty() &&
+            now > NodeSeconds{node.m_last_block_time.load()} + POST_BLOCK_PONG_GRACE &&
+            m_connman.ShouldRunInactivityChecks(node, now) &&
             peer.m_ping_nonce_sent &&
             now > peer.m_ping_start.load() + TIMEOUT_INTERVAL)
         {
