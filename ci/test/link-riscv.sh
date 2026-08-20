@@ -17,7 +17,7 @@ LIBM=$("${GCC}" -print-file-name=libm.a)
 
 echo -e "#include <script/script_error.h>\n int main() { return ScriptErrorString(ScriptError_t::SCRIPT_ERR_UNKNOWN_ERROR).size() > 0; }" > test.cpp
 
-"${GXX}" -I "${BASE_ROOT_DIR}"/src -g -std=c++20 -c test.cpp -o test.o
+"${GXX}" -I "${BASE_ROOT_DIR}"/src -g -std=c++23 -c test.cpp -o test.o
 
 # Make the binary executable on linux for testing purposes
 echo -e ".section .text
@@ -52,7 +52,7 @@ echo -e "#include <sys/stat.h>
 
 "${GCC}" -g -c syscalls.c -o syscalls.o
 
-"${GXX}" -g -std=c++20 \
+"${GXX}" -g -std=c++23 \
     -nostdlib \
     "${CRTBEGIN}" \
     test.o \
