@@ -14,6 +14,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdio>
+#include <stdexcept>
+
 using namespace std::string_literals;
 using namespace util::hex_literals;
 
@@ -718,6 +721,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
 
                 total_written += write_size;
             }
+            buffered.flush();
         }
         BOOST_REQUIRE_EQUAL(buffered_file.fclose(), 0);
         BOOST_REQUIRE_EQUAL(direct_file.fclose(), 0);
@@ -751,6 +755,37 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
     fs::remove(test_buffered.FileName(pos));
 }
 
+BOOST_AUTO_TEST_CASE(buffered_writer_flush_failure)
+{
+    struct FailingStream {
+        int write_attempts{0};
+        void write_buffer(std::span<std::byte>) { if (++write_attempts == 1) throw std::ios_base::failure{"write failed"}; }
+    } stream;
+    BOOST_CHECK_EXCEPTION([&] {
+        BufferedWriter writer{stream};
+        writer.write("00"_hex);
+        writer.flush();
+    }(), std::ios_base::failure, HasReason{"write failed"});
+    BOOST_CHECK_EQUAL(stream.write_attempts, 2); // TODO: Do not retry a failed flush during exception unwinding.
+}
+
+BOOST_AUTO_TEST_CASE(buffered_writer_destructor_flushes_pending_bytes)
+{
+    for (const bool throw_before_flush : {false, true}) {
+        AutoFile file{std::tmpfile()};
+        try {
+            BufferedWriter writer{file};
+            writer.write("00"_hex);
+            BOOST_CHECK_EQUAL(file.tell(), 0);
+            if (throw_before_flush) throw std::runtime_error{"serialization failed"};
+        } catch (std::runtime_error&) {
+            BOOST_CHECK(throw_before_flush);
+        }
+        BOOST_CHECK(file.tell());
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(buffered_writer_reader)
 {
     const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};
@@ -762,6 +797,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_reader)
         BufferedWriter f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
         f << v1 << v2;
         f.write(std::as_bytes(std::span{&v3, 1}));
+        f.flush();
     }
     BOOST_REQUIRE_EQUAL(file.fclose(), 0);
 
