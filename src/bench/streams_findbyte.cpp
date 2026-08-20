@@ -27,7 +27,7 @@ static void FindByte(benchmark::Bench& bench)
     bench.setup([&] { bf.SetPos(0); })
         .run([&] { bf.FindByte(std::byte(1)); });
 
-    assert(file.fclose() == 0);
+    Assert(file.fclose() == 0);
 }
 
 BENCHMARK(FindByte);

@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/bip32.h>
+#include <util/check.h>
 
 #include <cassert>
 #include <cstdint>
@@ -24,7 +25,7 @@ FUZZ_TARGET(parse_hd_keypath)
     for (const bool apostrophe : {false, true}) {
         std::vector<uint32_t> roundtrip;
         const std::string written{WriteHDKeypath(random_keypath, apostrophe)};
-        assert(ParseHDKeypath(written, roundtrip));
+        Assert(ParseHDKeypath(written, roundtrip));
         assert(roundtrip == random_keypath);
     }
 }

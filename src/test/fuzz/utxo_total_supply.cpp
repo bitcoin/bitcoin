@@ -135,7 +135,7 @@ FUZZ_TARGET(utxo_total_supply)
         current_block->vtx.front() = MakeTransactionRef(tx);
     }
     current_block->hashMerkleRoot = BlockMerkleRoot(*current_block);
-    assert(!MineBlock(node, current_block).IsNull());
+    Assert(!MineBlock(node, current_block).IsNull());
     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
 
     assert(ActiveHeight() == 1);

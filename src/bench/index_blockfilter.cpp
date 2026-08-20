@@ -46,7 +46,7 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
     bench.minEpochIterations(5).run([&] {
         BlockFilterIndex filter_index(interfaces::MakeChain(test_setup->m_node), BlockFilterType::BASIC,
                                       /*n_cache_size=*/0, /*f_memory=*/false, /*f_wipe=*/true);
-        assert(filter_index.Init());
+        Assert(filter_index.Init());
         assert(!filter_index.BlockUntilSyncedToCurrentChain());
         filter_index.Sync();
 

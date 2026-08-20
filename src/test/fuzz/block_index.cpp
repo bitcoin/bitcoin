@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <validation.h>
 
 using kernel::CBlockFileInfo;
@@ -98,13 +99,13 @@ FUZZ_TARGET(block_index, .init = init_block_index)
     // what we stored above.
     CBlockFileInfo info;
     for (const auto& [n, file_info]: files_info) {
-        assert(block_index.ReadBlockFileInfo(n, info));
+        Assert(block_index.ReadBlockFileInfo(n, info));
         assert(info == *file_info);
     }
 
     // We should be able to read the last block file number. Its value should be consistent.
     int last_block_file;
-    assert(block_index.ReadLastBlockFile(last_block_file));
+    Assert(block_index.ReadLastBlockFile(last_block_file));
     assert(last_block_file == files_count - 1);
 
     // We should be able to flip and read the reindexing flag.

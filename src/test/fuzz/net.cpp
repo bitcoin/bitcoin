@@ -17,6 +17,7 @@
 #include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -101,7 +102,7 @@ FUZZ_TARGET(local_address, .init = initialize_net)
                 if (!added) return;
                 assert(service.IsRoutable());
                 assert(IsLocal(service));
-                assert(SeenLocal(service));
+                Assert(SeenLocal(service));
             },
             [&] {
                 (void)RemoveLocal(service);

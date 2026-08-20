@@ -11,6 +11,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/readwritefile.h>
 
@@ -51,7 +52,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
     const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
     bool force_read_and_write_to_err{false};
     if (start_with_corrupted_banlist) {
-        assert(WriteBinaryFile(banlist_file + ".json",
+        Assert(WriteBinaryFile(banlist_file + ".json",
                                fuzzed_data_provider.ConsumeRandomLengthString()));
     } else {
         force_read_and_write_to_err = fuzzed_data_provider.ConsumeBool();
