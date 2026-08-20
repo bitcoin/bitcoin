@@ -34,7 +34,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
-#include <util/task_runner.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -48,7 +47,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -103,15 +101,6 @@ public:
     }
 };
 
-
-//! Used to run tasks in a std::thread to avoid DEBUG_LOCKORDER false positives.
-class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
-{
-public:
-    void insert(std::function<void()> func) override { std::thread(std::move(func)).join(); }
-    void flush() override {}
-    size_t size() override { return 0; }
-};
 
 } // namespace
 
