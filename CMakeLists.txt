@@ -81,7 +81,7 @@ if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NO
 endif()
 enable_language(CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -514,13 +514,6 @@ try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK
 # set the -Wno-foo case if it works.
 try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
   IF_CHECK_PASSED "-Wno-unused-parameter"
-)
-# Lambda attributes (e.g. [[noreturn]]) before the parameter list are a C++23
-# extension intentionally used in C++20 builds for compatibility with
-# -Wmissing-noreturn. Suppress the extension warning rather than removing the
-# attributes or working around them.
-try_append_cxx_flags("-Wc++23-lambda-attributes" TARGET warn_interface SKIP_LINK
-  IF_CHECK_PASSED "-Wno-c++23-lambda-attributes"
 )
 
 configure_file(cmake/script/Coverage.cmake Coverage.cmake USE_SOURCE_PERMISSIONS COPYONLY)
