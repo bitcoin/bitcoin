@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_flush_failure)
             writer.flush();
         }};
         BOOST_CHECK_EXCEPTION(write_and_flush(), std::ios_base::failure, HasReason{"write failed"});
-        BOOST_CHECK_EQUAL(stream.write_attempts, 2); // TODO: Do not retry a failed flush
+        BOOST_CHECK_EQUAL(stream.write_attempts, 1);
     }
 }
 
