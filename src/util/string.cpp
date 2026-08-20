@@ -8,9 +8,10 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace util {
-void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute)
+void ReplaceAll(std::string& in_out, std::string_view search, std::string_view substitute)
 {
     if (search.empty()) return;
     auto pos{in_out.find(search)};
