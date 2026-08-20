@@ -399,6 +399,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>All Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Amount: %1
 </source>
         <translation type="unfinished"></translation>
