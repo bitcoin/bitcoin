@@ -226,13 +226,20 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     // Otherwise check that they serialize back to the public version.
     std::string pub1 = parse_priv->ToString();
     std::string pub2 = parse_pub->ToString();
+    std::string canonical = UseHInsteadOfApostrophe(pub);
     if (expected_pub) {
         BOOST_CHECK_MESSAGE(EqualDescriptor(*expected_pub, pub1), "Private ser: " + pub1 + " Public desc: " + *expected_pub);
         BOOST_CHECK_MESSAGE(EqualDescriptor(*expected_pub, pub2), "Public ser: " + pub2 + " Public desc: " + *expected_pub);
+        canonical = UseHInsteadOfApostrophe(*expected_pub);
     } else {
         BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub1), "Private ser: " + pub1 + " Public desc: " + pub);
         BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub2), "Public ser: " + pub2 + " Public desc: " + pub);
     }
+
+    std::string priv_canonical = parse_priv->ToCanonicalString();
+    std::string pub_canonical = parse_pub->ToCanonicalString();
+    BOOST_CHECK_MESSAGE(EqualDescriptor(priv_canonical, canonical), "Private ser: " + priv_canonical + " Expected desc: " + canonical);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub_canonical, canonical), "Public ser: " + pub_canonical + " Expected desc: " + canonical);
 
     // Check that the COMPAT identifier did not change
     if (op_desc_id) {
