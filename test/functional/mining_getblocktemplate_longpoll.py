@@ -6,10 +6,14 @@
 
 import random
 import threading
+import time
 
 from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    JSONRPCException,
+    assert_equal,
+)
 from test_framework.wallet import MiniWallet
 
 
@@ -24,6 +28,18 @@ class LongpollThread(threading.Thread):
 
     def run(self):
         self.node.getblocktemplate({'longpollid': self.longpollid, **NORMAL_GBT_REQUEST_PARAMS})
+
+
+class LongpollShutdownThread(LongpollThread):
+    def __init__(self, node):
+        super().__init__(node)
+        self.error = None
+
+    def run(self):
+        try:
+            super().run()
+        except JSONRPCException as e:
+            self.error = e.error
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -70,6 +86,23 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned
         thr.join(60 + 20)
         assert not thr.is_alive()
+
+        self.log.info("Test that a longpoll interrupted by shutdown errors with 'Shutting down' (issue #34262)")
+        thr = LongpollShutdownThread(self.nodes[0])
+        with self.nodes[0].assert_debug_log(["ThreadRPCServer method=getblocktemplate"], timeout=3):
+            thr.start()
+        # Make the cached block template stale, so that the woken longpoll
+        # thread must call createNewBlock() instead of serving the cache: a
+        # mempool change plus a template older than 5 seconds (via mocktime,
+        # to avoid sleeping).
+        self.miniwallet.send_self_transfer(from_node=self.nodes[0])
+        self.nodes[0].setmocktime(int(time.time()) + 10)
+        self.stop_node(0)
+        thr.join(60 * self.options.timeout_factor)
+        assert not thr.is_alive()
+        assert thr.error is not None, "longpoll returned a template instead of an error during shutdown"
+        assert_equal(thr.error['message'], "Shutting down")
+        assert_equal(thr.error['code'], -9)
 
 if __name__ == '__main__':
     GetBlockTemplateLPTest(__file__).main()
