@@ -25,6 +25,7 @@
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -34,7 +35,15 @@
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
+
+namespace txindex {
+static std::string stringify(const BlockTxPosition& p)
+{
+    return "BlockTxPosition{block_seq=" + util::ToString(p.block_seq) +
+           ", tx_offset_in_block=" + util::ToString(p.tx_offset_in_block) + "}";
+}
+} // namespace txindex
 
 BOOST_AUTO_TEST_SUITE(txindex_tests)
 
