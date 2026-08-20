@@ -9,6 +9,8 @@
 #include <mp/type-pair.h>
 #include <mp/util.h>
 
+#include <map>
+
 namespace mp {
 template <typename KeyLocalType, typename ValueLocalType, typename Value, typename Output>
 void CustomBuildField(TypeList<std::map<KeyLocalType, ValueLocalType>>,
