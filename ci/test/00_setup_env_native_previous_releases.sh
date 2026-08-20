@@ -7,10 +7,10 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_previous_releases
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:22.04"
-# Use minimum supported python3.10 and gcc-12, see doc/dependencies.md
-export PACKAGES="gcc-12 g++-12 python3-zmq"
-export DEP_OPTS="CC=gcc-12 CXX=g++-12"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+# Use minimum supported python3.10 (or best-effort 3.12) and gcc-13, see doc/dependencies.md
+export PACKAGES="gcc-13 g++-13 python3-zmq"
+export DEP_OPTS="CC=gcc-13 CXX=g++-13"
 export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
