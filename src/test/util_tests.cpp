@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(util_Join)
 BOOST_AUTO_TEST_CASE(util_ReplaceAll)
 {
     const std::string original("A test \"%s\" string '%s'.");
-    auto test_replaceall{[](std::string test, const std::string& search, const std::string& substitute, const std::string& expected) {
+    auto test_replaceall{[](std::string test, std::string_view search, std::string_view substitute, std::string_view expected) {
         ReplaceAll(test, search, substitute);
         BOOST_CHECK_EQUAL(test, expected);
     }};
