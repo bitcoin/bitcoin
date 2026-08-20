@@ -46,7 +46,7 @@ LTO ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
 C_STANDARD ?= c11
-CXX_STANDARD ?= c++20
+CXX_STANDARD ?= c++23
 
 BUILD = $(shell unset CC && ./config.guess)
 PATCHES_PATH = $(BASEDIR)/patches
