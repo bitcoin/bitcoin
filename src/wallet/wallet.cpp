@@ -796,6 +796,19 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx, bool sync_from)
 
     for (; it != txs.end(); it = std::next(it)) {
         CWalletTx* copy_to = *it;
+        bool needs_rewrite = false;
+        if (copy_to->m_from != copy_from->m_from
+            || copy_to->m_message != copy_from->m_message
+            || copy_to->m_comment != copy_from->m_comment
+            || copy_to->m_comment_to != copy_from->m_comment_to
+            || copy_to->m_replaces_txid != copy_from->m_replaces_txid
+            || copy_to->m_replaced_by_txid != copy_from->m_replaced_by_txid
+            || copy_to->m_messages != copy_from->m_messages
+            || copy_to->m_payment_requests != copy_from->m_payment_requests
+            || copy_to->nTimeSmart != copy_from->nTimeSmart
+        ) {
+            needs_rewrite = true;
+        }
         copy_to->m_from = copy_from->m_from;
         copy_to->m_message = copy_from->m_message;
         copy_to->m_comment = copy_from->m_comment;
@@ -808,6 +821,10 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx, bool sync_from)
         copy_to->nTimeSmart = copy_from->nTimeSmart;
         // nOrderPos not copied on purpose
         // cached members not copied on purpose
+
+        if (needs_rewrite) {
+            (void)WalletBatch(GetDatabase()).WriteTx(*copy_to);
+        }
     }
 }
 
@@ -1225,7 +1242,6 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     }
     wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     AddToSpends(wtx);
-    SyncMalleatedTxMetadata(wtx);
     for (const CTxIn& txin : wtx.GetTx()->vin) {
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
