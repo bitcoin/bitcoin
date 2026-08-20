@@ -26,8 +26,14 @@ using namespace std::chrono_literals;
 /// FakeNodeClock or ::SetMockTime), otherwise the system clock.
 struct NodeClock : public std::chrono::system_clock {
     using time_point = std::chrono::time_point<NodeClock>;
-    /** Return current system time or mocked time, if set */
+    /** Return current system time or mocked time, if set.
+     *  Defined in time_nondet.cpp; not linked into bitcoinkernel. */
     static time_point now() noexcept;
+    /** Same as now(), but callable by kernel code with a scarier name to flag
+     * that it is nondeterministic, and should only be used if it does not
+     * affect validation results (e.g. for logging or flushing), or when kernel
+     * applications have a way to bypass it and stay deterministic. */
+    static time_point _now_nondet() noexcept;
     static std::time_t to_time_t(const time_point&) = delete; // unused
     static time_point from_time_t(std::time_t) = delete;      // unused
     static constexpr time_point epoch{};
@@ -49,9 +55,12 @@ struct MockableSteadyClock : public std::chrono::steady_clock {
 
     using mock_time_point = std::chrono::time_point<MockableSteadyClock, std::chrono::milliseconds>;
     static constexpr mock_time_point::duration INITIAL_MOCK_TIME{1};
-
-    /** Return current system time or mocked time, if set */
+    /** Return current system steady time or mocked time, if set.
+     *  Defined in time_nondet.cpp; not linked into bitcoinkernel. */
     static time_point now() noexcept;
+    /** Same as now(), but callable by kernel code. See \ref
+     * NodeClock::_now_nondet. */
+    static time_point _now_nondet() noexcept;
     static std::time_t to_time_t(const time_point&) = delete; // unused
     static time_point from_time_t(std::time_t) = delete;      // unused
 
@@ -142,6 +151,7 @@ T GetTime()
 {
     return Now<std::chrono::time_point<NodeClock, T>>().time_since_epoch();
 }
+inline int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
 
 /**
  * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date}

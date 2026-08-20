@@ -35,7 +35,7 @@ static std::atomic<MockableSteadyClock::mock_time_point::duration> g_mock_steady
 
 static_assert(NodeClock::epoch.time_since_epoch().count() == 0);
 
-NodeClock::time_point NodeClock::now() noexcept
+NodeClock::time_point NodeClock::_now_nondet() noexcept
 {
     const auto mocktime{g_mock_time.load(std::memory_order_relaxed)};
     if (!mocktime.count()) {
@@ -62,7 +62,7 @@ std::chrono::seconds GetMockTime()
     return g_mock_time.load(std::memory_order_relaxed);
 }
 
-MockableSteadyClock::time_point MockableSteadyClock::now() noexcept
+MockableSteadyClock::time_point MockableSteadyClock::_now_nondet() noexcept
 {
     const auto mocktime{g_mock_steady_time.load(std::memory_order_relaxed)};
     if (!mocktime.count()) {
@@ -85,8 +85,6 @@ void MockableSteadyClock::ClearMockTime()
 {
     g_mock_steady_time.store(0ms, std::memory_order_relaxed);
 }
-
-int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
 
 std::string FormatISO8601DateTime(int64_t nTime)
 {

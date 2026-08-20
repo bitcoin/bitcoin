@@ -275,7 +275,7 @@ struct PackageMempoolAcceptResult
  * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
  */
 MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
-                                       int64_t accept_time, bool bypass_limits, bool test_accept)
+                                       MempoolTime accept_time, bool bypass_limits, bool test_accept)
     EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
@@ -1012,6 +1012,19 @@ public:
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
     bool ShouldCheckBlockIndex() const;
+
+    /**
+     * Return the current time for use in validation and IBD checks. Uses the
+     * m_clock_now_seconds value if one has been set, otherwise uses NodeClock.
+     * Prefer this over NodeClock::now() in all validation paths so that kernel
+     * library users can control clock times used for validation.
+     */
+    NodeClock::time_point Now() const
+    {
+        const auto clock{m_clock_now_seconds.load(std::memory_order_relaxed)};
+        return clock != std::chrono::seconds{0} ? NodeSeconds{clock} : NodeClock::_now_nondet();
+    }
+
     const arith_uint256& MinimumChainWork() const { return *Assert(m_options.minimum_chain_work); }
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
@@ -1052,6 +1065,13 @@ public:
      * enough work and is recent.
      */
     std::atomic_bool m_cached_is_ibd{true};
+
+    /**
+     * Clock time for validation, scoped to this chainstate manager.
+     * Zero means use NodeClock; any other value is seconds since epoch.
+     * Stored as an atomic so Now() can be called lock-free from any thread.
+     */
+    std::atomic<std::chrono::seconds> m_clock_now_seconds{};
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we
