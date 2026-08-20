@@ -18,8 +18,10 @@ class ArgsManager;
 class AddrMan;
 class BanMan;
 class BaseIndex;
+class BlockFilterIndex;
 class CBlockPolicyEstimator;
 class CConnman;
+class CoinStatsIndex;
 class ValidationSignals;
 class CScheduler;
 class CTxMemPool;
@@ -28,6 +30,8 @@ class ECC_Context;
 class NetGroupManager;
 class PeerManager;
 class TorController;
+class TxIndex;
+class TxoSpenderIndex;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -45,6 +49,20 @@ class SignalInterrupt;
 namespace node {
 class KernelNotifications;
 class Warnings;
+
+// Keep NodeContext from depending on index modules while still owning indexes.
+struct BlockFilterIndexDeleter {
+    void operator()(BlockFilterIndex* index) const noexcept;
+};
+struct CoinStatsIndexDeleter {
+    void operator()(CoinStatsIndex* index) const noexcept;
+};
+struct TxIndexDeleter {
+    void operator()(TxIndex* index) const noexcept;
+};
+struct TxoSpenderIndexDeleter {
+    void operator()(TxoSpenderIndex* index) const noexcept;
+};
 
 //! NodeContext struct containing references to chain state and connection
 //! state.
@@ -76,7 +94,7 @@ struct NodeContext {
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
-    std::vector<BaseIndex*> indexes; // raw pointers because memory is not managed by this struct
+    std::vector<BaseIndex*> indexes; // raw pointers because memory is managed by index owner members below or elsewhere
     std::unique_ptr<interfaces::Chain> chain;
     //! List of all chain clients (wallet processes or other client) connected to node.
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
@@ -95,6 +113,11 @@ struct NodeContext {
     std::unique_ptr<KernelNotifications> notifications;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
+    //! Declared after validation_signals so index destructors can unregister safely.
+    std::vector<std::unique_ptr<BlockFilterIndex, BlockFilterIndexDeleter>> block_filter_indexes;
+    std::unique_ptr<TxIndex, TxIndexDeleter> txindex;
+    std::unique_ptr<TxoSpenderIndex, TxoSpenderIndexDeleter> txospenderindex;
+    std::unique_ptr<CoinStatsIndex, CoinStatsIndexDeleter> coin_stats_index;
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;

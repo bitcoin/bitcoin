@@ -9,6 +9,7 @@
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
@@ -19,6 +20,7 @@
 #include <validation.h>
 
 using node::GetTransaction;
+using node::NodeContext;
 
 static RPCMethod gettxoutproof()
 {
@@ -57,7 +59,8 @@ static RPCMethod gettxoutproof()
 
             const CBlockIndex* pblockindex = nullptr;
             uint256 hashBlock;
-            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            ChainstateManager& chainman = EnsureChainman(node);
             if (!request.params[1].isNull()) {
                 LOCK(cs_main);
                 hashBlock = ParseHashV(request.params[1], "blockhash");
@@ -81,12 +84,12 @@ static RPCMethod gettxoutproof()
 
 
             // Allow txindex to catch up if we need to query it and before we acquire cs_main.
-            if (g_txindex && !pblockindex) {
-                g_txindex->BlockUntilSyncedToCurrentChain();
+            if (node.txindex && !pblockindex) {
+                node.txindex->BlockUntilSyncedToCurrentChain();
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
+                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, node.txindex.get(), *setTxids.begin(), chainman.m_blockman, hashBlock);
                 if (!tx || hashBlock.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
