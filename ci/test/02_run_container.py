@@ -183,7 +183,18 @@ def main():
         f"{os.environ['BASE_ROOT_DIR']}",
     ])
     ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_base_install.sh"])
-    ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/03_test_script.sh"])
+    test_script = f"{os.environ['BASE_ROOT_DIR']}/ci/test/03_test_script.sh"
+    if os.environ.get("HOST", "").startswith("x86_64-w64-mingw32"):
+        ci_exec([
+            "env",
+            "NIX_BUILD_SHELL=bash",
+            "nix-shell",
+            f"{os.environ['BASE_ROOT_DIR']}/contrib/devtools/shell-win64-cross.nix",
+            "--run",
+            f"exec bash {shlex.quote(test_script)}",
+        ])
+    else:
+        ci_exec([test_script])
 
     if not os.getenv("DANGER_RUN_CI_ON_HOST"):
         print("Stop and remove CI container by ID")
