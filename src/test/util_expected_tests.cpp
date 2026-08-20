@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(expected_value_or)
 BOOST_AUTO_TEST_CASE(expected_value_throws)
 {
     const Expected<int, std::string> e{Unexpected{"fail"}};
-    BOOST_CHECK_THROW((void)e.value(), BadExpectedAccess);
+    BOOST_CHECK_THROW((void)e.value(), std::bad_expected_access<std::string>);
 
     const Expected<void, std::string> void_e{Unexpected{"fail"}};
-    BOOST_CHECK_THROW(void_e.value(), BadExpectedAccess);
+    BOOST_CHECK_THROW(void_e.value(), std::bad_expected_access<std::string>);
 }
 
 BOOST_AUTO_TEST_CASE(expected_error)
