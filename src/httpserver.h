@@ -331,7 +331,7 @@ private:
     /**
      * List of HTTPRemoteClients with connected sockets.
      * Connections will only be added and removed in the I/O thread, but
-     * shared pointers may be passed to worker threads to handle requests
+     * weak pointers may be passed to worker threads to handle requests
      * and send replies.
      */
     std::vector<std::shared_ptr<HTTPRemoteClient>> m_connected;
@@ -477,7 +477,7 @@ private:
      * Close underlying socket connections for flagged clients
      * by removing their shared pointer from m_connected. If an HTTPRemoteClient
      * is busy in a worker thread, its connection will be closed once that
-     * job is done and the HTTPRequest is out of scope.
+     * job is done.
      */
     void DisconnectClients();
 };

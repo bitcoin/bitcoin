@@ -1084,8 +1084,9 @@ void HTTPServer::DisconnectClients()
                                         // First check for idle timeout. We reset the timer when we send and receive data,
                                         // but if the server is busy handling a request we should ignore the timeout until
                                         // the reply is sent. If we did erase the shared_ptr<HTTPRemoteClient> reference in m_connected
-                                        // while the server is busy with a request, there would still be a reference in a worker
-                                        // thread keeping the socket open even after "disconnecting".
+                                        // while the server is busy with a request, it might be prematurely dropped before
+                                        // the response has been sent, or if the HTTPRequest was holding a temporary shared_ptr
+                                        // client on a worker thread - it would keep the socket open even after "disconnecting".
                                         const bool is_idle{m_rpcservertimeout.count() > 0 &&
                                                            now - client->m_idle_since.load() > m_rpcservertimeout &&
                                                            !client->m_req_busy};
