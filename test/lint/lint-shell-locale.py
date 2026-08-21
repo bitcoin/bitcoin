@@ -15,7 +15,6 @@ import sys
 import re
 
 OPT_OUT_LINES = [
-    'export LC_ALL=C',
     'export LC_ALL=C.UTF-8',
 ]
 
@@ -38,7 +37,7 @@ def main():
     exit_code = 0
     shell_files = get_shell_files_list()
     for file_path in shell_files:
-        if re.search('src/(secp256k1|minisketch)/', file_path):
+        if re.search('src/(ipc/libmultiprocess|secp256k1|minisketch)/', file_path):
             continue
 
         with open(file_path, 'r') as file_obj:
@@ -51,7 +50,7 @@ def main():
 
         first_non_comment_line = non_comment_lines[0]
         if first_non_comment_line not in OPT_OUT_LINES:
-            print(f'Missing "export LC_ALL=C" (to avoid locale dependence) as first non-comment non-empty line in {file_path}')
+            print(f'Missing "export LC_ALL=C.UTF-8" (to avoid locale dependence) as first non-comment non-empty line in {file_path}')
             exit_code = 1
 
     return sys.exit(exit_code)
