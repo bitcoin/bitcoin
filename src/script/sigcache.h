@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
 #include <script/interpreter.h>
+#include <sync.h>
 #include <uint256.h>
 // IWYU incorrectly suggests removing this header.
 // See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
@@ -17,7 +18,6 @@
 #include <util/hasher.h>
 
 #include <cstddef>
-#include <shared_mutex>
 #include <span>
 #include <vector>
 
@@ -45,8 +45,8 @@ private:
     CSHA256 m_salted_hasher_ecdsa;
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
-    map_type setValid;
-    std::shared_mutex cs_sigcache;
+    SharedMutex cs_sigcache;
+    map_type setValid GUARDED_BY(cs_sigcache);
 
 public:
     SignatureCache(size_t max_size_bytes);
