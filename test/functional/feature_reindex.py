@@ -18,6 +18,11 @@ from test_framework.util import (
 )
 
 
+def blockread_msgs(count):
+    """Startup lines logged by the block read-ahead workers, one per worker thread."""
+    return [f"blockread.{worker:02d} thread start" for worker in range(count)]
+
+
 class ReindexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.rpc_timeout *= 2  # To avoid timeout when generating the reindex chain
@@ -25,11 +30,19 @@ class ReindexTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def reindex(self, justchainstate=False):
-        self.generatetoaddress(self.nodes[0], 3, self.nodes[0].get_deterministic_priv_key().address)
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=blockread_msgs(1)):
+            self.generatetoaddress(self.nodes[0], 3, self.nodes[0].get_deterministic_priv_key().address)
         blockcount = self.nodes[0].getblockcount()
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex"]]
-        self.start_nodes(extra_args)
+        # Reindex connects multiple blocks in one ActivateBestChain() call, exercising read-ahead.
+        read_ahead_msgs = blockread_msgs(1) + ["Using cached block"]
+        with self.nodes[0].assert_debug_log(expected_msgs=read_ahead_msgs, unexpected_msgs=[]):
+            self.start_nodes(extra_args)
+        block_hash = self.nodes[0].getblockhash(1)  # Reconnect in a second activation to check worker reuse.
+        self.nodes[0].invalidateblock(block_hash)
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=blockread_msgs(1)):
+            self.nodes[0].reconsiderblock(block_hash)
         assert_equal(self.nodes[0].getblockcount(), blockcount)  # start_node is blocking on reindex
         self.log.info("Success")
 
