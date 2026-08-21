@@ -13,10 +13,10 @@ export CMAKE_GENERATOR="Ninja"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
   -DWITH_USDT=OFF \
   -DREDUCE_EXPORTS=ON \
-  -DCMAKE_EXE_LINKER_FLAGS='-Wl,-stack_size -Wl,0x80000' \
-"
+  -DCMAKE_EXE_LINKER_FLAGS="-Wl,-stack_size -Wl,0x80000"
+export BITCOIN_CONFIG
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
