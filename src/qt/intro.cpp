@@ -9,6 +9,7 @@
 #include <qt/forms/ui_intro.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
+#include <util/time.h>
 
 #include <qt/freespacechecker.h>
 #include <qt/guiconstants.h>
@@ -304,9 +305,9 @@ void Intro::UpdatePruneLabels(bool prune_checked)
     }
     ui->lblExplanation3->setVisible(prune_checked);
     ui->pruneGB->setEnabled(prune_checked);
-    static constexpr uint64_t nPowTargetSpacing = 10 * 60;  // from chainparams, which we don't have at this stage
+    static constexpr uint64_t BLOCKS_PER_DAY{std::chrono::days{1} / 10min}; // spacing from chainparams, which we don't have at this stage
     static constexpr uint32_t expected_block_data_size = 2250000;  // includes undo data
-    const uint64_t expected_backup_days = m_prune_target_gb * 1e9 / (uint64_t(expected_block_data_size) * 86400 / nPowTargetSpacing);
+    const uint64_t expected_backup_days = m_prune_target_gb * 1e9 / (uint64_t(expected_block_data_size) * BLOCKS_PER_DAY);
     ui->lblPruneSuffix->setText(
         //: Explanatory text on the capability of the current prune target.
         tr("(sufficient to restore backups %n day(s) old)", "", expected_backup_days));

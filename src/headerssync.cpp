@@ -39,7 +39,7 @@ HeadersSyncState::HeadersSyncState(NodeId id,
     // chain to be longer than this (at the current time -- in the future we
     // could try again, if necessary, to sync a longer chain).
     const auto max_seconds_since_start{(Ticks<std::chrono::seconds>(NodeClock::now() - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}}))
-                                       + MAX_FUTURE_BLOCK_TIME};
+                                       + (MAX_FUTURE_BLOCK_TIME / 1s)};
     m_max_commitments = 6 * max_seconds_since_start / m_params.commitment_period;
 
     LogDebug(BCLog::NET, "Initial headers sync started with peer=%d: height=%i, max_commitments=%i, min_work=%s\n", m_id, m_current_height, m_max_commitments, m_minimum_required_work.ToString());

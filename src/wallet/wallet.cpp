@@ -2141,7 +2141,7 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
 
             // Attempt to rebroadcast all txes more than 5 minutes older than
             // the last block, or all txs if forcing.
-            if (!force && wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
+            if (!force && wtx.nTimeReceived > m_best_block_time - (5min / 1s)) continue;
             to_submit.insert(&wtx);
         }
         // Now try submitting the transactions to the memory pool and (optionally) relay them.

@@ -23,6 +23,7 @@
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
+#include <util/time.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -209,7 +210,7 @@ protected:
 
 public:
 
-    static constexpr int ROLLING_FEE_HALFLIFE{60 * 60 * 12}; // public only for testing
+    static constexpr std::chrono::seconds ROLLING_FEE_HALFLIFE{12h}; // public only for testing
 
     using indexed_transaction_set = boost::multi_index_container<
         CTxMemPoolEntry,
