@@ -59,7 +59,8 @@ will be treated as a download source, and a tarball of its contents will be
 saved to `sources/`. A hash of the tarball will also become part of the package
 build id, so if the directory contents change, the package and everything
 depending on it will be rebuilt. For efficiency, the tarball is cached once it
-has been created, but if the local directory is touched, it will be rebuilt.
+has been created. Changes to paths, file contents, permissions, or symlink
+targets create a new cached tarball without relying on filesystem timestamps.
 
 Local packages can be useful for using git submodules or subtrees to manage
 package sources, or for testing local changes that are not available to
