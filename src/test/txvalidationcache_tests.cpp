@@ -15,6 +15,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <optional>
+
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
         : TestChain100Setup{ChainType::REGTEST, {.extra_args = {"-testactivationheight=dersig@102"}}} {}
@@ -22,7 +24,7 @@ struct Dersig100Setup : public TestChain100Setup {
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
-                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       bool cacheFullScriptStore, std::optional<PrecomputedTransactionData>& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -122,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
 // any script flag that is implemented as an upgraded NOP code.
 static void ValidateCheckInputsForAllFlags(const CTransaction &tx, script_verify_flags failing_flags, bool add_to_cache, CCoinsViewCache& active_coins_tip, ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    PrecomputedTransactionData txdata;
+    std::optional<PrecomputedTransactionData> txdata;
 
     FastRandomContext insecure_rand(true);
 
@@ -214,7 +216,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         LOCK(cs_main);
 
         TxValidationState state;
-        PrecomputedTransactionData ptd_spend_tx;
+        std::optional<PrecomputedTransactionData> ptd_spend_tx;
 
         BOOST_CHECK(!CheckInputScripts(CTransaction(spend_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, true, true, ptd_spend_tx, m_node.chainman->m_validation_cache, nullptr));
 
@@ -283,7 +285,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // Make it valid, and check again
         invalid_with_cltv_tx.vin[0].scriptSig = CScript() << vchSig << 100;
         TxValidationState state;
-        PrecomputedTransactionData txdata;
+        std::optional<PrecomputedTransactionData> txdata;
         BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_cltv_tx), state, m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, true, true, txdata, m_node.chainman->m_validation_cache, nullptr));
     }
 
@@ -311,7 +313,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // Make it valid, and check again
         invalid_with_csv_tx.vin[0].scriptSig = CScript() << vchSig << 100;
         TxValidationState state;
-        PrecomputedTransactionData txdata;
+        std::optional<PrecomputedTransactionData> txdata;
         BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_csv_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, true, true, txdata, m_node.chainman->m_validation_cache, nullptr));
     }
 
@@ -372,7 +374,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         tx.vin[1].scriptWitness.SetNull();
 
         TxValidationState state;
-        PrecomputedTransactionData txdata;
+        std::optional<PrecomputedTransactionData> txdata;
         // This transaction is now invalid under segwit, because of the second input.
         BOOST_CHECK(!CheckInputScripts(CTransaction(tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true, true, txdata, m_node.chainman->m_validation_cache, nullptr));
 
