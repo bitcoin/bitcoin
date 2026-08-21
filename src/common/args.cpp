@@ -484,19 +484,15 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
 
 bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors, bool backup) const
 {
-    fs::path path, path_tmp;
-    if (!GetSettingsPath(&path, /*temp=*/false, backup) || !GetSettingsPath(&path_tmp, /*temp=*/true, backup)) {
+    fs::path path;
+    if (!GetSettingsPath(&path, /*temp=*/false, backup)) {
         throw std::logic_error("Attempt to write settings file when dynamic settings are disabled.");
     }
 
     LOCK(cs_args);
     std::vector<std::string> write_errors;
-    if (!common::WriteSettings(path_tmp, m_settings.rw_settings, write_errors)) {
+    if (!common::WriteJson(path, m_settings.rw_settings, write_errors)) {
         SaveErrors(write_errors, errors);
-        return false;
-    }
-    if (!RenameOver(path_tmp, path)) {
-        SaveErrors({strprintf("Failed renaming settings file %s to %s\n", fs::PathToString(path_tmp), fs::PathToString(path))}, errors);
         return false;
     }
     return true;

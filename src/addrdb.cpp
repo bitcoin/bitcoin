@@ -142,14 +142,13 @@ CBanDB::CBanDB(fs::path ban_list_path)
 bool CBanDB::Write(const banmap_t& banSet)
 {
     std::vector<std::string> errors;
-    if (common::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
-        return true;
+    if (!common::WriteJson(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
+        for (const auto& err : errors) {
+            LogError("%s\n", err);
+        }
+        return false;
     }
-
-    for (const auto& err : errors) {
-        LogError("%s\n", err);
-    }
-    return false;
+    return true;
 }
 
 bool CBanDB::Read(banmap_t& banSet)
