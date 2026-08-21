@@ -126,11 +126,9 @@ def process_file(path: str, messages: list[Any], recv: bool, progress_bar: Optio
                 # Unrecognized message type
                 try:
                     msgtype_tmp = msgtype.decode()
-                    if not msgtype_tmp.isprintable():
-                        raise UnicodeDecodeError
-                    msg_dict["msgtype"] = msgtype_tmp
                 except UnicodeDecodeError:
-                    msg_dict["msgtype"] = "UNREADABLE"
+                    msgtype_tmp = None
+                msg_dict["msgtype"] = msgtype_tmp if msgtype_tmp and msgtype_tmp.isprintable() else "UNREADABLE"
                 msg_dict["body"] = msg_ser.read().hex()
                 msg_dict["error"] = "Unrecognized message type."
                 messages.append(msg_dict)
