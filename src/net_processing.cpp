@@ -5198,6 +5198,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
+            // Ignore BIP35 requests while the peer has transaction relay disabled, unless the operator permitted it.
+            if (!pfrom.HasPermission(NetPermissionFlags::Mempool) &&
+                !WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs)) return;
             LOCK(tx_relay->m_tx_inventory_mutex);
             tx_relay->m_send_mempool = true;
         }
