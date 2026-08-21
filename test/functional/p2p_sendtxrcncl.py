@@ -45,6 +45,15 @@ class SendTxrcnclReceiver(P2PInterface):
         self.sendtxrcncl_msg_received = message
 
 
+class SendTxrcnclNegotiator(SendTxrcnclReceiver):
+    def on_version(self, message):
+        # Answer with our own SENDTXRCNCL, before VERACK as BIP-330 requires, so the
+        # negotiation completes and the reconciliation slot we were offered is kept.
+        self.send_without_ping(msg_wtxidrelay())
+        self.send_without_ping(create_sendtxrcncl_msg())
+        self.send_without_ping(msg_verack())
+
+
 class P2PFeelerReceiver(SendTxrcnclReceiver):
     def on_version(self, message):
         # feeler connections can not send any message other than their own version
@@ -78,6 +87,21 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
         assert peer.sendtxrcncl_msg_received
         assert_equal(peer.sendtxrcncl_msg_received.version, 1)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('SENDTXRCNCL sent to inbounds only up to the limit')
+        # We only offer reconciliation to a bounded number of inbound peers.
+        # Mirrors MAX_INBOUND_RECONCILIATION_PEERS in net_processing.cpp.
+        # Only peers that complete the negotiation take up a slot, so these have to
+        # answer with their own SENDTXRCNCL.
+        max_inbound_recon_peers = 32
+        peers = [self.nodes[0].add_p2p_connection(SendTxrcnclNegotiator(),
+                                                 send_version=True, wait_for_verack=True)
+                 for _ in range(max_inbound_recon_peers)]
+        assert all(p.sendtxrcncl_msg_received for p in peers)
+        # The next inbound is still accepted as a regular peer, we do not register it for reconciliation.
+        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
+        assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL should be sent before VERACK')
@@ -127,11 +151,17 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         # Now, *sending* to *outbound*.
-        self.log.info('SENDTXRCNCL sent to an outbound')
+        self.log.info('SENDTXRCNCL sent to an outbound reconciliation peer')
         peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-recon")
         assert peer.sendtxrcncl_msg_received
         assert_equal(peer.sendtxrcncl_msg_received.version, 1)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('SENDTXRCNCL should not be sent if outbound-full-relay')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
+        assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL should not be sent if block-relay-only')

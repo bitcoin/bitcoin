@@ -31,6 +31,16 @@ enum class ConnectionType {
      */
     OUTBOUND_FULL_RELAY,
 
+    /**
+    * These are connections that we use to connect to peers used purely for
+    * transaction reconciliation. Similarly to OUTBOUND_FULL_RELAY, there is no
+    * restriction of what is relayed through this, but transactions should be
+    * exchanged via reconciliation instead of fanout. If reconciliation is enabled
+    * in our node, we automatically attempt to open MAX_OUTBOUND_FULL_RECON_CONNECTIONS
+    * using addresses from our AddrMan.
+    */
+    OUTBOUND_FULL_RECONCILIATION,
+
 
     /**
      * We open manual connections to addresses that users explicitly requested

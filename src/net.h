@@ -67,6 +67,8 @@ inline constexpr unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 inline constexpr unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes over which we'll relay everything (blocks, tx, addrs, etc) */
 inline constexpr int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
+/** Maximum number of automatic outgoing nodes used for reconciliation */
+inline constexpr int MAX_OUTBOUND_FULL_RECON_CONNECTIONS = 4;
 /** Maximum number of addnode outgoing nodes */
 inline constexpr int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number of block-relay-only outgoing connections */
@@ -778,6 +780,7 @@ public:
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
+            case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
             case ConnectionType::BLOCK_RELAY:
                 return true;
             case ConnectionType::INBOUND:
@@ -795,6 +798,11 @@ public:
         return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
     }
 
+    bool IsOutboundReconciliationConn() const
+    {
+        return m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION;
+    }
+
     bool IsManualConn() const {
         return m_conn_type == ConnectionType::MANUAL;
     }
@@ -807,7 +815,9 @@ public:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
         case ConnectionType::PRIVATE_BROADCAST:
-                return false;
+        //FIXME: Should this be flagged as fulloutbound?
+        case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
+            return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
         case ConnectionType::MANUAL:
                 return true;
@@ -851,6 +861,7 @@ public:
             case ConnectionType::FEELER:
                 return false;
             case ConnectionType::OUTBOUND_FULL_RELAY:
+            case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::PRIVATE_BROADCAST:
@@ -1090,6 +1101,7 @@ public:
         ServiceFlags m_local_services = NODE_NONE;
         int m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
         int m_full_relay_inbound_percent = DEFAULT_FULL_RELAY_INBOUND_PCT;
+        int m_max_outbound_full_recon = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
         BanMan* m_banman = nullptr;
@@ -1123,7 +1135,8 @@ public:
         m_max_automatic_connections = connOptions.m_max_automatic_connections;
         m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
-        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
+        m_max_outbound_full_recon = std::min(connOptions.m_max_outbound_full_recon, m_max_automatic_connections - m_max_outbound_block_relay - m_max_outbound_full_relay);
+        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_full_recon + m_max_outbound_block_relay + m_max_feeler;
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_max_inbound_full_relay = std::max(0, static_cast<int>(connOptions.m_full_relay_inbound_percent / 100.0 * m_max_inbound));
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
@@ -1725,6 +1738,9 @@ private:
 
     // How many full-relay (tx, block, addr) outbound peers we want
     int m_max_outbound_full_relay;
+
+    // How many reconciliation outbound peers we want (tx via reconciliation, block, addr)
+    int m_max_outbound_full_recon;
 
     // How many block-relay only outbound peers we want
     // We do not relay tx or addr messages with these peers
