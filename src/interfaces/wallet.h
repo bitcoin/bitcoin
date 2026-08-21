@@ -45,6 +45,8 @@ namespace wallet {
 struct CreatedTransactionResult;
 class CCoinControl;
 class CWallet;
+struct ImportDescriptorRequest;
+struct ImportResult;
 enum class AddressPurpose;
 struct CRecipient;
 struct WalletContext;
@@ -204,6 +206,9 @@ public:
         size_t* n_signed,
         PartiallySignedTransaction& psbtx,
         bool& complete) = 0;
+
+    //! Import descriptors
+    virtual std::vector<wallet::ImportResult> importDescriptors(std::vector<wallet::ImportDescriptorRequest>& requests) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
