@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <expected>
 #include <ios>
 #include <span>
 #include <string>

@@ -62,7 +62,6 @@
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/result.h>
