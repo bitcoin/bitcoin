@@ -15,7 +15,7 @@
 #include <netgroup.h>
 #include <node/kernel_notifications.h>
 #include <node/warnings.h>
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
 #include <scheduler.h>
 #include <torcontrol.h>
 #include <txmempool.h>

@@ -9,6 +9,7 @@
 #include <kernel/cs_main.h>
 #include <primitives/transaction.h>
 #include <sync.h>
+#include <uint256.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -112,9 +113,11 @@ protected:
      * as a result of new block being connected.
      * MempoolTransactionsRemovedForBlock will be fired before BlockConnected.
      *
+     * Not fired while initial block download is active.
+     *
      * Called on a background thread.
      */
-    virtual void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) {}
+    virtual void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height) {}
     /**
      * Notifies listeners of a block being connected.
      *
@@ -222,7 +225,7 @@ public:
     void ActiveTipChange(const CBlockIndex&, bool);
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
-    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
+    void MempoolTransactionsRemovedForBlock(std::shared_ptr<const CBlock>, std::vector<RemovedMempoolTransactionInfo>, unsigned int block_height);
     void BlockConnected(const kernel::ChainstateRole&, std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void BlockDisconnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);

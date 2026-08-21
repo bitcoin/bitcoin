@@ -156,7 +156,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     // in the same state at the end of the function, so we benchmark both
     // mining a block and reorging the block's contents back into the mempool.
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight=*/100);
+        pool.removeForBlock(tx_remove_for_block);
         for (auto& tx: tx_remove_for_block) {
             AddTx(tx, pool, det_rand);
         }
