@@ -11,6 +11,7 @@
 #include <index/base.h>
 #include <index/disktxpos.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
@@ -21,7 +22,6 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/fs.h>
-#include <validation.h>
 
 #include <cstddef>
 #include <cstdio>
@@ -61,8 +61,8 @@ struct DBKey {
     }
 };
 
-TxoSpenderIndex::TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txospenderindex", "txospenderidx"), m_db{std::make_unique<DB>(gArgs.GetDataDirNet() / "indexes" / "txospenderindex" / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/false)}
+TxoSpenderIndex::TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, node::BlockManager& blockman, size_t n_cache_size, bool f_memory, bool f_wipe)
+    : BaseIndex(std::move(chain), "txospenderindex", "txospenderidx"), m_db{std::make_unique<DB>(gArgs.GetDataDirNet() / "indexes" / "txospenderindex" / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/false)}, m_blockman(blockman)
 {
     if (!m_db->Read("siphash_key", m_siphash_key)) {
         FastRandomContext rng(false);
@@ -143,7 +143,7 @@ bool TxoSpenderIndex::CustomRemove(const interfaces::BlockInfo& block)
 
 util::Expected<TxoSpender, std::string> TxoSpenderIndex::ReadTransaction(const CDiskTxPos& tx_pos) const
 {
-    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(tx_pos, /*fReadOnly=*/true)};
+    AutoFile file{m_blockman.OpenBlockFile(tx_pos, /*fReadOnly=*/true)};
     if (file.IsNull()) {
         return util::Unexpected("cannot open block");
     }
