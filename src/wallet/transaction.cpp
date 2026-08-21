@@ -10,19 +10,9 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
+bool CWalletTx::IsMalleation(const CWalletTx& _tx) const
 {
-        CMutableTransaction tx1 {*this->GetTx()};
-        CMutableTransaction tx2 {*_tx.GetTx()};
-        for (auto& txin : tx1.vin) {
-            txin.scriptSig = CScript();
-            txin.scriptWitness.SetNull();
-        }
-        for (auto& txin : tx2.vin) {
-            txin.scriptSig = CScript();
-            txin.scriptWitness.SetNull();
-        }
-        return CTransaction(tx1) == CTransaction(tx2);
+    return GetTx()->Equals(*_tx.GetTx(), {.include_script_sig = false, .include_witness_data = false});
 }
 
 bool CWalletTx::InMempool() const
