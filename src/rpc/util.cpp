@@ -23,7 +23,6 @@
 #include <univalue.h>
 #include <util/bip32.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
