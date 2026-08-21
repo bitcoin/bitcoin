@@ -1179,6 +1179,34 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     return pos;
 }
 
+//! Determine whether existing block data in the blocksdir was written with an
+//! XOR key applied, by checking whether the block files still start with the
+//! network magic. A single file that does proves the data is unobfuscated,
+//! while concluding the opposite takes every file disagreeing, so that one
+//! damaged file can't make an unobfuscated blocksdir look obfuscated.
+static bool BlocksdirDataIsObfuscated(const fs::path& blocks_dir, const MessageStartChars& magic)
+{
+    bool obfuscated{false};
+    for (const auto& entry : fs::directory_iterator{blocks_dir}) {
+        const std::string filename{fs::PathToString(entry.path().filename())};
+        if (filename.length() != 12 || !filename.starts_with("blk") || !filename.ends_with(".dat")) continue;
+        if (!entry.is_regular_file()) continue;
+
+        MessageStartChars blk_start{};
+        try {
+            AutoFile blk_file{fsbridge::fopen(entry.path(), "rb")};
+            blk_file >> blk_start;
+        } catch (const std::exception&) {
+            continue; // Unreadable or too short, try the next file
+        }
+        // Skip a block file that was preallocated but never written to.
+        if (blk_start == MessageStartChars{}) continue;
+        if (blk_start == magic) return false;
+        obfuscated = true;
+    }
+    return obfuscated;
+}
+
 static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
@@ -1209,6 +1237,19 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "rb")};
         xor_key_file >> obfuscation;
     } else {
+        // A missing key file means either a fresh blocksdir, or one written
+        // before the XOR key was introduced, where the data is unobfuscated
+        // and the null key below is the correct one. If existing block data is
+        // obfuscated, the key file was lost instead, and storing a null key
+        // would silently render all of that data unreadable.
+        if (BlocksdirDataIsObfuscated(opts.blocks_dir, opts.chainparams.MessageStart())) {
+            throw std::runtime_error{
+                strprintf("The XOR-key file '%s' is missing, but the block files in '%s' are obfuscated with a key. "
+                          "Restore the key file from a backup, or delete the blocks and chainstate directories to sync from scratch. "
+                          "(This can also mean the blocks directory belongs to a different network.)",
+                          fs::PathToString(xor_key_path), fs::PathToString(opts.blocks_dir)),
+            };
+        }
         // Create initial or missing xor key file
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
 #ifdef __MINGW64__
