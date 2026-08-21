@@ -4891,8 +4891,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             return;
         }
 
-        // If we're not close to tip yet, give up and let parallel block fetch work its magic
-        if (!already_in_flight && !CanDirectFetch()) {
+        // If this is not a recent block, give up and let parallel block fetch work its magic
+        if (!already_in_flight && pindex->Time() <= NodeClock::now() - m_chainparams.GetConsensus().PowTargetSpacing() * 20) {
             return;
         }
 
@@ -5018,7 +5018,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // our anti-DoS protections in AcceptBlock, which filters
             // unrequested blocks that might be trying to waste our resources
             // (eg disk space). Because we only try to reconstruct blocks when
-            // we're close to caught up (via the CanDirectFetch() requirement
+            // the announced block is recent (via the block-time requirement
             // above, combined with the behavior of not requesting blocks until
             // we have a chain with at least the minimum chain work), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
