@@ -81,6 +81,9 @@ set(CMAKE_STRIP "@STRIP@")
 set(CMAKE_OBJCOPY "@OBJCOPY@")
 set(CMAKE_OBJDUMP "@OBJDUMP@")
 
+# Mark builds configured with the depends toolchain.
+set(BITCOIN_DEPENDS_BUILD TRUE)
+
 # Using our own built dependencies should not be
 # affected by a potentially random environment.
 set(CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH OFF)

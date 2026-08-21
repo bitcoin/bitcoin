@@ -291,6 +291,17 @@ if(BUILD_GUI_TESTS)
   add_subdirectory(test)
 endif()
 
+# Avoid embedding absolute paths to shared depends libraries in GUI build binaries.
+if(BITCOIN_DEPENDS_BUILD AND NOT CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+  set_target_properties(bitcoin-qt PROPERTIES SKIP_BUILD_RPATH TRUE)
+  if(TARGET bitcoin-gui)
+    set_target_properties(bitcoin-gui PROPERTIES SKIP_BUILD_RPATH TRUE)
+  endif()
+  if(TARGET test_bitcoin-qt)
+    set_target_properties(test_bitcoin-qt PROPERTIES SKIP_BUILD_RPATH TRUE)
+  endif()
+endif()
+
 find_program(XGETTEXT_EXECUTABLE xgettext)
 if(NOT XGETTEXT_EXECUTABLE)
   add_custom_target(translate
