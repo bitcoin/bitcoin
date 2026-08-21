@@ -33,6 +33,6 @@ printf -v BITCOIN_CONFIG "%q " \
  -DCMAKE_C_FLAGS=-ftrivial-auto-var-init=pattern \
  -DCMAKE_CXX_FLAGS=-ftrivial-auto-var-init=pattern \
  -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold \
- -DAPPEND_CXXFLAGS=-std=c++23 \
+ -DAPPEND_CXXFLAGS=-std=c++23  `# Use the next std version to catch deprecated code early` \
  -DAPPEND_CPPFLAGS="-DARENA_DEBUG -DDEBUG_LOCKORDER"
 export BITCOIN_CONFIG
