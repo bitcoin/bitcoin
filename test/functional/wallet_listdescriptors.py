@@ -23,13 +23,10 @@ from test_framework.wallet_util import generate_keypair
 class ListDescriptorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-
-    # do not create any wallet by default
-    def init_wallet(self, *, node):
-        return
 
     def run_test(self):
         node = self.nodes[0]
