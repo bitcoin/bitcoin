@@ -101,6 +101,9 @@ static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{2min};
+/** Age threshold for considering ourselves far behind: initial headers sync is then
+ *  limited to one peer at a time, and a stalling peer's slot is released. */
+static constexpr auto BEST_HEADER_STALE_AGE{24h};
 /** Protect at least this many outbound peers from disconnection due to slow/
  * behind headers chain.
  */
@@ -397,6 +400,8 @@ struct Peer {
 
     /** Time of the last getheaders message to this peer */
     NodeClock::time_point m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){};
+    /** Whether empty headers released this peer's initial sync slot. */
+    bool m_initial_headers_sync_released GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
     /** Protects m_headers_sync **/
     Mutex m_headers_sync_mutex;
@@ -1000,6 +1005,10 @@ private:
 
     bool TipMayBeStale() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    bool IsBestHeaderStale() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    void ReleaseHeadersSyncSlot(CNodeState& state, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
      *  at most count entries.
      */
@@ -1438,6 +1447,21 @@ bool PeerManagerImpl::TipMayBeStale()
         m_last_tip_update = GetTime<std::chrono::seconds>();
     }
     return m_last_tip_update.load() < GetTime<std::chrono::seconds>() - std::chrono::seconds{consensusParams.nPowTargetSpacing * 3} && mapBlocksInFlight.empty();
+}
+
+bool PeerManagerImpl::IsBestHeaderStale() const
+{
+    AssertLockHeld(cs_main);
+    return m_chainman.m_best_header->Time() <= NodeClock::now() - BEST_HEADER_STALE_AGE;
+}
+
+void PeerManagerImpl::ReleaseHeadersSyncSlot(CNodeState& state, Peer& peer)
+{
+    AssertLockHeld(cs_main);
+    Assume(state.fSyncStarted);
+    state.fSyncStarted = false;
+    nSyncStarted--;
+    peer.m_headers_sync_timeout = 0us;
 }
 
 int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
@@ -3209,15 +3233,27 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         // If we were in the middle of headers sync, receiving an empty headers
         // message suggests that the peer suddenly has nothing to give us
         // (perhaps it reorged to our chain). Clear download state for this peer.
-        LOCK(peer.m_headers_sync_mutex);
-        if (peer.m_headers_sync) {
-            peer.m_headers_sync.reset(nullptr);
-            LOCK(m_headers_presync_mutex);
-            m_headers_presync_stats.erase(pfrom.GetId());
+        {
+            LOCK(peer.m_headers_sync_mutex);
+            if (peer.m_headers_sync) {
+                peer.m_headers_sync.reset(nullptr);
+                LOCK(m_headers_presync_mutex);
+                m_headers_presync_stats.erase(pfrom.GetId());
+            }
         }
-        // A headers message with no headers cannot be an announcement, so assume
-        // it is a response to our last getheaders request, if there is one.
-        peer.m_last_getheaders_timestamp = {};
+
+        LOCK(cs_main);
+        CNodeState& state{*Assert(State(pfrom.GetId()))};
+        if (state.fSyncStarted && IsBestHeaderStale()) {
+            ReleaseHeadersSyncSlot(state, peer);
+            peer.m_initial_headers_sync_released = true;
+        } else if (!peer.m_initial_headers_sync_released) {
+            // A headers message with no headers cannot be an announcement, so assume
+            // it is a response to our last getheaders request, if there is one.
+            // A peer that released its slot keeps its request timestamp as a backoff
+            // instead, so the scheduler does not hand the slot straight back to it.
+            peer.m_last_getheaders_timestamp = {};
+        }
         return;
     }
 
@@ -3280,8 +3316,10 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 
     // If headers connect, assume that this is in response to any outstanding getheaders
     // request we may have sent, and clear out the time of our last request. Non-connecting
-    // headers cannot be a response to a getheaders request.
+    // headers cannot be a response to a getheaders request. A connecting response also
+    // ends any released-slot backoff.
     peer.m_last_getheaders_timestamp = {};
+    peer.m_initial_headers_sync_released = false;
 
     // If the headers we received are already in memory and an ancestor of
     // m_best_header or our tip, skip anti-DoS checks. These headers will not
@@ -4407,6 +4445,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // use if we turned on sync with all peers).
             CNodeState& state{*Assert(State(pfrom.GetId()))};
             if (state.fSyncStarted || (!peer.m_inv_triggered_getheaders_before_sync && *best_block != m_last_block_inv_triggering_headers_sync)) {
+                // This peer's backoff was deliberately left armed when it released its
+                // slot; a new block announcement is fresh evidence, so let one request
+                // through rather than waiting for the backoff to expire.
+                if (peer.m_initial_headers_sync_released) peer.m_last_getheaders_timestamp = {};
                 if (MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), peer)) {
                     LogDebug(BCLog::NET, "getheaders (%d) %s to peer=%d\n",
                             m_chainman.m_best_header->nHeight, best_block->ToString(),
@@ -5488,7 +5530,9 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
 
     CNodeState &state = *State(pto.GetId());
 
-    if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && state.fSyncStarted) {
+    // Syncing headers from this peer arms the check; once a timeout is set it stays
+    // armed until cleared below, so releasing the sync slot does not disarm it.
+    if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && (state.fSyncStarted || state.m_chain_sync.m_timeout != 0s)) {
         // This is an outbound peer subject to disconnection if they don't
         // announce a block with as much work as the current tip within
         // CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME seconds (note: if
@@ -6129,7 +6173,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         if (!state.fSyncStarted && CanServeBlocks(peer) && !m_chainman.m_blockman.LoadingBlocks()) {
             // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
+            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || !IsBestHeaderStale()) {
                 const CBlockIndex* pindexStart = m_chainman.m_best_header;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -6143,6 +6187,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
                     LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
 
+                    peer.m_initial_headers_sync_released = false;
                     state.fSyncStarted = true;
                     peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
                         (
@@ -6454,7 +6499,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // Check for headers sync timeouts
         if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
-            if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
+            if (IsBestHeaderStale()) {
                 if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
@@ -6472,9 +6517,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         // Note: this will also result in at least one more
                         // getheaders message to be sent to
                         // this peer (eventually).
-                        state.fSyncStarted = false;
-                        nSyncStarted--;
-                        peer.m_headers_sync_timeout = 0us;
+                        ReleaseHeadersSyncSlot(state, peer);
                     }
                 }
             } else {
