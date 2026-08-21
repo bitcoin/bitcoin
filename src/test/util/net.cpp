@@ -15,6 +15,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 
 #include <chrono>
 #include <optional>
@@ -58,7 +59,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, node.AdvertisedVersion()));
     CNodeStateStats statestats;
-    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
+    Assert(peerman.GetNodeStateStats(node.GetId(), statestats));
     assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
     assert(statestats.their_services == remote_services);
     if (successfully_connected) {
@@ -90,7 +91,7 @@ void ConnmanTestMsg::Reset()
 
 void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const
 {
-    assert(node.ReceiveMsgBytes(msg_bytes, complete));
+    Assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
         node.MarkReceivedMsgsForProcessing();
     }

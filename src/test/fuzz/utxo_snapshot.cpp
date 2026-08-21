@@ -152,7 +152,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
             WriteCompactSize(outfile, 999); // index of coin
             outfile << Coin{coinbase->vout[0], /*nHeightIn=*/999, /*fCoinBaseIn=*/false};
         }
-        assert(outfile.fclose() == 0);
+        Assert(outfile.fclose() == 0);
     }
 
     const auto ActivateFuzzedSnapshot{[&] {

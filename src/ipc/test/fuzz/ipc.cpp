@@ -16,6 +16,7 @@
 #include <ipc/test/fuzz/ipc_fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 
 #include <future>
 #include <memory>
@@ -100,35 +101,35 @@ FUZZ_TARGET(ipc, .init = initialize_ipc)
                 static constexpr int MAX_ADD{1'000'000};
                 const int a = fuzzed_data_provider.ConsumeIntegralInRange<int>(MIN_ADD, MAX_ADD);
                 const int b = fuzzed_data_provider.ConsumeIntegralInRange<int>(MIN_ADD, MAX_ADD);
-                assert(ipc.m_client->add(a, b) == a + b);
+                Assert(ipc.m_client->add(a, b) == a + b);
             },
             [&] {
                 COutPoint outpoint{Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)),
                                    fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
                 COutPoint expected{outpoint.hash, outpoint.n ^ 0xFFFFFFFFu};
-                assert(ipc.m_client->passOutPoint(outpoint) == expected);
+                Assert(ipc.m_client->passOutPoint(outpoint) == expected);
             },
             [&] {
                 std::vector<uint8_t> value = ConsumeRandomLengthByteVector<uint8_t>(fuzzed_data_provider, 512);
                 std::vector<uint8_t> expected{value.rbegin(), value.rend()};
-                assert(ipc.m_client->passVectorUint8(value) == expected);
+                Assert(ipc.m_client->passVectorUint8(value) == expected);
             },
             [&] {
                 CScript script{ConsumeScript(fuzzed_data_provider)};
                 CScript expected{script};
                 expected << OP_NOP;
-                assert(ipc.m_client->passScript(script) == expected);
+                Assert(ipc.m_client->passScript(script) == expected);
             },
             [&] {
                 UniValue value;
                 if (!value.read(fuzzed_data_provider.ConsumeRandomLengthString(512))) return;
-                assert(ipc.m_client->passUniValue(value).write() == value.write());
+                Assert(ipc.m_client->passUniValue(value).write() == value.write());
             },
             [&] {
                 const CMutableTransaction mutable_tx = ConsumeTransaction(fuzzed_data_provider, std::nullopt);
                 if (mutable_tx.vin.empty()) return;
                 const CTransactionRef tx = MakeTransactionRef(mutable_tx);
-                assert(*ipc.m_client->passTransaction(tx) == *tx);
+                Assert(*ipc.m_client->passTransaction(tx) == *tx);
             });
     }
 }

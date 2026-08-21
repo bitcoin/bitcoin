@@ -151,16 +151,16 @@ void VerifyIterator(CDBWrapper& dbw, const Oracle& oracle,
     }
     for (; it->Valid(); it->Next()) {
         uint16_t db_key;
-        assert(it->GetKey(db_key));
+        Assert(it->GetKey(db_key));
         if (oracle_it != oracle.end() && db_key == oracle_it->first) {
             std::vector<uint8_t> db_value;
-            assert(it->GetValue(db_value));
+            Assert(it->GetValue(db_value));
             assert(db_value == MakeValue(db_key, oracle_it->second));
             ++oracle_it;
         } else {
             assert(obfuscate);
             std::string key_str;
-            assert(it->GetKey(key_str));
+            Assert(it->GetKey(key_str));
             assert(key_str == OBFUSCATION_KEY);
         }
     }
@@ -428,7 +428,7 @@ FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLog
                 switch (op) {
                 case ReadOp::Read:
                     if (const auto oit{oracle.find(key)}; oit != oracle.end()) {
-                        assert(db.Read(key, v) && v == MakeValue(key, oit->second));
+                        Assert(db.Read(key, v) && v == MakeValue(key, oit->second));
                     } else {
                         assert(!db.Read(key, v));
                     }
@@ -444,8 +444,8 @@ FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLog
                     if (const auto oit{oracle.lower_bound(key)}; oit != oracle.end()) {
                         assert(it->Valid());
                         uint16_t actual_key;
-                        assert(it->GetKey(actual_key) && actual_key == oit->first);
-                        assert(it->GetValue(v) && v == MakeValue(actual_key, oit->second));
+                        Assert(it->GetKey(actual_key) && actual_key == oit->first);
+                        Assert(it->GetValue(v) && v == MakeValue(actual_key, oit->second));
                     } else {
                         assert(!it->Valid());
                     }

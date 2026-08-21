@@ -429,10 +429,12 @@ KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
     if (success && merkle_root) {
         secp256k1_xonly_pubkey pubkey;
         unsigned char pubkey_bytes[32];
-        assert(secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey, nullptr, keypair));
-        assert(secp256k1_xonly_pubkey_serialize(secp256k1_context_static, pubkey_bytes, &pubkey));
-        uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
-        success = secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, keypair, tweak.data());
+        success = secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey, nullptr, keypair) &&
+                  secp256k1_xonly_pubkey_serialize(secp256k1_context_static, pubkey_bytes, &pubkey);
+        if (success) {
+            uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
+            success = secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, keypair, tweak.data());
+        }
     }
     if (!success) ClearKeyPairData();
 }

@@ -86,7 +86,7 @@ static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
         total_weight_to_add += GetTransactionWeight(*tx);
         if (total_weight_to_add > orphanage->MaxGlobalUsage()) break;
 
-        assert(orphanage->AddTx(tx, peer));
+        Assert(orphanage->AddTx(tx, peer));
 
         // Sanity check: we should always be exiting at the point of hitting the weight limit.
         assert(txindex < NUM_TINY_TRANSACTIONS - 1);
@@ -101,7 +101,7 @@ static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
     bench.epochs(1).epochIterations(1).run([&]() NO_THREAD_SAFETY_ANALYSIS {
         // Lastly, add the large transaction.
         const auto num_announcements_before_trim{orphanage->CountAnnouncements()};
-        assert(orphanage->AddTx(large_tx, peer));
+        Assert(orphanage->AddTx(large_tx, peer));
 
         // If there are multiple peers, note that they all have the same DoS score. We will evict only 1 item at a time for each new DoSiest peer.
         const auto num_announcements_after_trim{orphanage->CountAnnouncements()};
@@ -181,7 +181,7 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
     bench.epochs(1).epochIterations(1).run([&]() NO_THREAD_SAFETY_ANALYSIS {
         const auto num_announcements_before_trim{orphanage->CountAnnouncements()};
         // There is a small gap between the total usage and the max usage. Add a transaction to fill it.
-        assert(orphanage->AddTx(last_tx, 0));
+        Assert(orphanage->AddTx(last_tx, 0));
 
         // If there are multiple peers, note that they all have the same DoS score. We will evict only 1 item at a time for each new DoSiest peer.
         const auto num_evicted{num_announcements_before_trim - orphanage->CountAnnouncements() + 1};
@@ -226,7 +226,7 @@ static void OrphanageEraseAll(benchmark::Bench& bench, bool block_or_disconnect)
 
             assert(GetTransactionWeight(*ptx) <= MAX_STANDARD_TX_WEIGHT);
             assert(!orphanage->HaveTx(ptx->GetWitnessHash()));
-            assert(orphanage->AddTx(ptx, peer));
+            Assert(orphanage->AddTx(ptx, peer));
 
             weight_left_for_peer -= GetTransactionWeight(*ptx);
             if (weight_left_for_peer < TINY_TX_WEIGHT * 2) break;

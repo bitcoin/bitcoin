@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -36,7 +37,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     {
         AutoFile outfile{fsbridge::fopen(wallet_path, "wb")};
         outfile << std::span{buffer};
-        assert(outfile.fclose() == 0);
+        Assert(outfile.fclose() == 0);
     }
 
     const DatabaseOptions options{};
@@ -51,7 +52,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 
     auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
     if (db) {
-        assert(DumpWallet(g_setup->m_args, *db, error));
+        Assert(DumpWallet(g_setup->m_args, *db, error));
     } else {
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
             error.original.starts_with("AutoFile::read: end of file") ||

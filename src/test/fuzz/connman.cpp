@@ -16,6 +16,7 @@
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <util/translation.h>
 
 #include <cstdint>
@@ -148,7 +149,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                     assert(added_node_info.size() < connman.GetAddedNodeInfo(/*include_connected=*/true).size());
                     const auto remove{fuzzed_data_provider.ConsumeBool()};
                     if (remove) {
-                        assert(connman.RemoveAddedNode(node_str));
+                        Assert(connman.RemoveAddedNode(node_str));
                         assert(added_node_info.size() == connman.GetAddedNodeInfo(/*include_connected=*/true).size());
                     }
                 }
