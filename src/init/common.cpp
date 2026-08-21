@@ -32,7 +32,7 @@ void AddLoggingArgs(ArgsManager& argsman)
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-debugexclude=<category>", "Exclude debug and trace logging for a category. Can be used in conjunction with -debug=1 to output debug and trace logging for all categories except the specified category. This option can be specified multiple times to exclude multiple categories. This takes priority over \"-debug\"", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logips", strprintf("Include IP addresses in log output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option or the logging RPC. Possible values are %s (default=%s). The following levels are always logged: error, warning, info. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option. Possible values are %s (default=%s). The following levels are always logged: error, warning, info. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logsourcelocations", strprintf("Prepend debug output with name of the originating source location (source file, line number and function name) (default: %u)", DEFAULT_LOGSOURCELOCATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -62,13 +62,23 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
         for (const std::string& level_str : args.GetArgs("-loglevel")) {
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
-                if (!LogInstance().SetLogLevel(level_str)) {
+                const auto level{BCLog::Logger::GetLogLevel(level_str)};
+                if (!level || *level >  BCLog::Level::Info) {
                     return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", level_str, LogInstance().LogLevelsString())};
                 }
+                // Set log level of categories previously enabled by -debug.
+                LogInstance().SetCategoryLogLevel(LogInstance().GetLogLevels().back(), *level);
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');
-                if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
+                bool ok = toks.size() == 2;
+                if (ok) {
+                    const auto flag{BCLog::Logger::GetLogCategory(toks[0])};
+                    const auto level = BCLog::Logger::GetLogLevel(toks[1]);
+                    ok = flag && level && *level <= BCLog::Level::Info;
+                    if (ok) LogInstance().SetCategoryLogLevel(LogInstance().GetLogLevels().back() & *flag, *level);
+                }
+                if (!ok) {
                     return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
             }
@@ -87,16 +97,20 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
     const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
 
     for (const auto& cat : categories_to_process) {
-        if (!LogInstance().EnableCategory(cat)) {
+        const auto flag{BCLog::Logger::GetLogCategory(cat)};
+        if (!flag) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
         }
+        LogInstance().SetCategoryLogLevel(*flag, BCLog::Level::Debug);
     }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
-        if (!LogInstance().DisableCategory(cat)) {
+        const auto flag{BCLog::Logger::GetLogCategory(cat)};
+        if (!flag) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
+        LogInstance().SetCategoryLogLevel(*flag, BCLog::Level::Info);
     }
 
     LogInfo("Log output may contain privacy-sensitive information. Be cautious when sharing logs.");
@@ -107,7 +121,10 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
 bool StartLogging(const ArgsManager& args)
 {
     if (LogInstance().m_print_to_file) {
-        if (args.GetBoolArg("-shrinkdebugfile", LogInstance().DefaultShrinkDebugFile())) {
+        // Default to shrinking the log file only when no debug categories are
+        // enabled, since the file is unlikely to grow large without debug logging.
+        const bool shrink_by_default{!LogInstance().WillLogCategoryLevel(BCLog::ALL, BCLog::Level::Debug)};
+        if (args.GetBoolArg("-shrinkdebugfile", shrink_by_default)) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
             LogInstance().ShrinkDebugFile();
