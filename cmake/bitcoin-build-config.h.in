@@ -89,7 +89,7 @@
 #cmakedefine HAVE_SYSCTL_ARND 1
 
 /* Define to 1 if std::system is available. */
-#cmakedefine HAVE_SYSTEM 1
+#cmakedefine01 HAVE_SYSTEM
 
 /* Define to the address where bug reports for this package should be sent. */
 #define CLIENT_BUGREPORT "@CLIENT_BUGREPORT@"
