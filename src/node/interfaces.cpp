@@ -738,12 +738,12 @@ public:
         }
         return {};
     }
-    util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const override
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) override
     {
         if (!m_node.fee_estimator_man) return EstimationError(FeeRateEstimatorType::NONE, /*returned_target=*/0, /*error=*/{});
         return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
-    unsigned int maximumFeeEstimationTargetBlocks() const override
+    unsigned int maximumFeeEstimationTargetBlocks() override
     {
         if (!m_node.fee_estimator_man) return 0;
         return m_node.fee_estimator_man->MaximumTarget();
@@ -828,7 +828,7 @@ public:
         return result;
     }
     bool updateRwSetting(const std::string& name,
-                         const interfaces::SettingsUpdate& update_settings_func) override
+                         interfaces::SettingsUpdate update_settings_func) override
     {
         std::optional<interfaces::SettingsAction> action;
         args().LockSettings([&](common::Settings& settings) {
