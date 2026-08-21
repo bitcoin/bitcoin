@@ -899,7 +899,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         Lock();
         if (!Unlock(strWalletPassphrase)) {
-            return false;
+            WalletLogPrintf("Unlocking the encrypted wallet failed\n");
         }
 
         SetupWalletGeneration();
