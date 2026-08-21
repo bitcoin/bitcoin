@@ -330,6 +330,11 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
         {false, "m/0/2147483648", {}},
         {false, "m/0/4294967295", {}},
         {false, "m/0/4294967296", {}},
+        {false, "1/2H/3H", {}},
+        {false, "1/2h/3h ", {}},
+        {false, "1/2h /3h", {}},
+        {true,  "1/2h/3h", {1, 0x80000002, 0x80000003}},
+        {true,  "1/2'/3h", {1, 0x80000002, 0x80000003}},
     };
 
     for (const auto& [is_valid, keypath_str, expected] : tests) {
