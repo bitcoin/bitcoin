@@ -15,10 +15,10 @@ export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie"  # Check that https://pac
 export CI_IMAGE_PLATFORM="linux/arm64"
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
-# -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
-# This could be removed once the ABI change warning does not show up by default
-export BITCOIN_CONFIG=" \
+printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
   -DREDUCE_EXPORTS=ON \
-  -DCMAKE_CXX_FLAGS='-Wno-psabi -Wno-error=maybe-uninitialized' \
-"
+  `# -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"` \
+  `# This could be removed once the ABI change warning does not show up by default` \
+  -DCMAKE_CXX_FLAGS="-Wno-psabi -Wno-error=maybe-uninitialized"
+export BITCOIN_CONFIG
