@@ -835,6 +835,9 @@ public:
     }
 };
 
+//! Warning for descriptors mixing multipath and single-path key expressions, see Parse().
+const std::string MULTIPATH_CLONED_KEYS_WARNING = "multipath expansion: key expressions without a multipath specifier are repeated in every expanded descriptor, reusing the same keys";
+
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
@@ -1085,6 +1088,9 @@ public:
         }
         return all;
     }
+
+    //! Add a warning to this descriptor. Used by Parse().
+    void AddWarning(std::string warning) { m_warnings.push_back(std::move(warning)); }
 
     uint32_t GetMaxKeyExpr() const final
     {
@@ -2326,7 +2332,7 @@ struct KeyParser {
 
 /** Parse a script in a particular context. */
 // NOLINTNEXTLINE(misc-no-recursion)
-std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error, bool& multipath_cloned)
 {
     using namespace script;
     Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR);
@@ -2431,6 +2437,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         // For length 1 vectors, clone key providers until vector is the same length
         for (auto& vec : providers) {
             if (vec.size() == 1) {
+                if (max_providers_len > 1) multipath_cloned = true;
                 for (size_t i = 1; i < max_providers_len; ++i) {
                     vec.emplace_back(vec.at(0)->Clone());
                 }
@@ -2477,7 +2484,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return {};
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
+        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error, multipath_cloned);
         if (descs.empty() || expr.size()) return {};
         std::vector<std::unique_ptr<DescriptorImpl>> ret;
         ret.reserve(descs.size());
@@ -2490,7 +2497,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return {};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
+        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error, multipath_cloned);
         if (descs.empty() || expr.size()) return {};
         for (auto& desc : descs) {
             ret.emplace_back(std::make_unique<WSHDescriptor>(std::move(desc)));
@@ -2544,7 +2551,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 }
                 // Process the actual script expression.
                 auto sarg = Expr(expr);
-                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error));
+                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error, multipath_cloned));
                 if (subscripts.back().empty()) return {};
                 max_providers_len = std::max(max_providers_len, subscripts.back().size());
                 depths.push_back(branches.size());
@@ -2577,6 +2584,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         // For length 1 vectors, clone subdescs until vector is the same length
         for (auto& vec : subscripts) {
             if (vec.size() == 1) {
+                if (max_providers_len > 1) multipath_cloned = true;
                 for (size_t i = 1; i < max_providers_len; ++i) {
                     vec.emplace_back(vec.at(0)->Clone());
                 }
@@ -2590,6 +2598,9 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("tr(): Multipath internal key mismatches multipath subscripts lengths");
             return {};
         }
+
+        // A single-path internal key is about to be cloned into every multipath branch, flag it
+        if (internal_keys.size() == 1 && max_providers_len > 1) multipath_cloned = true;
 
         while (internal_keys.size() < max_providers_len) {
             internal_keys.emplace_back(internal_keys.at(0)->Clone());
@@ -2716,6 +2727,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
 
             for (auto& vec : parser.m_keys) {
                 if (vec.size() == 1) {
+                    if (num_multipath > 1) multipath_cloned = true;
                     for (size_t i = 1; i < num_multipath; ++i) {
                         vec.emplace_back(vec.at(0)->Clone());
                     }
@@ -2950,11 +2962,13 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     uint32_t key_exp_index = 0;
-    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
+    bool multipath_cloned = false;
+    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error, multipath_cloned);
     if (sp.empty() && !ret.empty()) {
         std::vector<std::unique_ptr<Descriptor>> descs;
         descs.reserve(ret.size());
         for (auto& r : ret) {
+            if (multipath_cloned) r->AddWarning(MULTIPATH_CLONED_KEYS_WARNING);
             descs.emplace_back(std::unique_ptr<Descriptor>(std::move(r)));
         }
         return descs;
