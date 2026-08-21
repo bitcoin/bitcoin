@@ -992,7 +992,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
 }
 
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
-                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
+                                 interfaces::Chain& chain, const uint256& block_hash, int block_height, uint32_t minimum_height)
 {
     // All inputs must be added by now
     assert(!tx.vin.empty());
@@ -1024,7 +1024,14 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
         if (rng_fast.randrange(10) == 0) {
-            tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
+            // If a previous locktime is passed (like in the bump fee case), the
+            // backdating is limited between the current height and the previous locktime
+            if (static_cast<uint32_t>(block_height) >= minimum_height) {
+                int locktime_range = std::min(100, int(block_height - minimum_height));
+                if (locktime_range > 0){
+                    tx.nLockTime = std::max(int(minimum_height), int(tx.nLockTime) - int(rng_fast.randrange(locktime_range)));
+                }
+            }
         }
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
@@ -1318,13 +1325,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             txNew.vin.back().scriptWitness = *scripts.second;
         }
     }
+
+    // Minimum height the DiscourageFeeSniping can backdate to
+    uint32_t minimum_height = 0;
     if (coin_control.m_locktime) {
         txNew.nLockTime = coin_control.m_locktime.value();
         // If we have a locktime set, we can't use anti-fee-sniping
         use_anti_fee_sniping = false;
+    } else if (coin_control.m_previous_locktime.has_value() && coin_control.m_previous_locktime < LOCKTIME_THRESHOLD) {
+            minimum_height = coin_control.m_previous_locktime.value();
     }
     if (use_anti_fee_sniping) {
-        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight(), minimum_height);
     }
 
     // Calculate the transaction fee
