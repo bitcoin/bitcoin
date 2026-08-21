@@ -4163,6 +4163,10 @@ static bool IsOutboundMessageAllowedInPrivateBroadcast(std::string_view type) no
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
+    if (!Assume(msg.IsWithinLimits())) {
+        LogDebug(BCLog::NET, "Dropping oversized message (%u-byte type, %u-byte payload), %s", msg.m_type.size(), msg.data.size(), pnode->LogPeer());
+        return;
+    }
 
     if (pnode->IsPrivateBroadcastConn() && !IsOutboundMessageAllowedInPrivateBroadcast(msg.m_type)) {
         LogDebug(BCLog::PRIVBROADCAST, "Omitting send of message '%s', %s", msg.m_type, pnode->LogPeer());
