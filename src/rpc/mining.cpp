@@ -287,7 +287,7 @@ static RPCMethod generatetodescriptor()
 
 static RPCMethod generate()
 {
-    return RPCMethod{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+    return RPCMethod{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [] [[noreturn]] (const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, self.ToString());
     }};
 }

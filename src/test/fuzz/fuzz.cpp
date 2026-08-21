@@ -90,6 +90,11 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
     return std::string{g_fuzz_target};
 }};
 
+// Whether or not this returns depends on the build config.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#endif
 static void initialize()
 {
     CheckGlobals check{};
@@ -166,6 +171,9 @@ static void initialize()
 
     ResetCoverageCounters();
 }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 static bool read_stdin(std::vector<uint8_t>& data)
@@ -197,7 +205,7 @@ static bool read_file(fs::path p, std::vector<uint8_t>& data)
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
 static fs::path g_input_path;
-void signal_handler(int signal)
+[[noreturn]] void signal_handler(int signal)
 {
     if (signal == SIGABRT) {
         std::cerr << "Error processing input " << g_input_path << std::endl;
@@ -206,6 +214,12 @@ void signal_handler(int signal)
     }
     std::_Exit(EXIT_FAILURE);
 }
+#endif
+
+// Whether or not these return depends on the build config.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #endif
 
 // This function is used by libFuzzer
@@ -222,6 +236,9 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
     initialize();
     return 0;
 }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 int main(int argc, char** argv)
