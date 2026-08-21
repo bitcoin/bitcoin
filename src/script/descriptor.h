@@ -7,6 +7,7 @@
 
 #include <outputtype.h>
 #include <pubkey.h>
+#include <script/keyorigin.h>
 #include <uint256.h>
 
 #include <cstddef>
@@ -87,6 +88,90 @@ public:
      */
     DescriptorCache MergeAndDiff(const DescriptorCache& other);
 };
+
+/** Interface for public key objects in descriptors. */
+struct PubkeyProvider
+{
+public:
+    //! Index of this key expression in the descriptor
+    //! E.g. If this PubkeyProvider is key1 in multi(2, key1, key2, key3), then m_expr_index = 0
+    const uint32_t m_expr_index;
+
+    explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
+
+    virtual ~PubkeyProvider() = default;
+
+    /** Compare two public keys represented by this provider.
+     * Used by the Miniscript descriptors to check for duplicate keys in the script.
+     */
+    bool operator<(PubkeyProvider& other) const;
+
+    /** Derive a public key and put it into out.
+     *  read_cache is the cache to read keys from (if not nullptr)
+     *  write_cache is the cache to write keys to (if not nullptr)
+     *  Caches are not exclusive but this is not tested. Currently we use them exclusively
+     */
+    virtual std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const = 0;
+
+    /** Whether this represent multiple public keys at different positions. */
+    virtual bool IsRange() const = 0;
+
+    /** Get the size of the generated public key(s) in bytes (33 or 65). */
+    virtual size_t GetSize() const = 0;
+
+    enum class StringType {
+        PUBLIC,
+        COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
+    };
+
+    /** Get the descriptor string form. */
+    virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
+
+    /** Get the descriptor string form including private data (if available in arg).
+     *  If the private data is not available, the output string in the "out" parameter
+     *  will not contain any private key information,
+     *  and this function will return "false".
+     */
+    virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
+
+    /** Get the descriptor string form with the xpub at the last hardened derivation,
+     *  and always use h for hardened derivation.
+     */
+    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
+
+    /** Derive a private key, if private data is available in arg and put it into out. */
+    virtual void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const = 0;
+
+    /** Whether private data for this provider is available in arg. */
+    virtual bool HavePrivateKeys(const SigningProvider& arg) const;
+
+    /** Return the non-extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CPubKey> GetRootPubKey() const = 0;
+    /** Return the extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
+
+    /** Return explicitly provided key origin information, if any. */
+    virtual std::optional<KeyOriginInfo> GetOriginInfo() const { return std::nullopt; }
+
+    /** Make a deep copy of this PubkeyProvider */
+    virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
+
+    /** Whether this PubkeyProvider is a BIP 32 extended key that can be derived from */
+    virtual bool IsBIP32() const = 0;
+
+    /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
+    virtual size_t GetKeyCount() const { return 1; }
+
+    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
+    virtual bool CanSelfExpand() const = 0;
+};
+
+/** Parse a key expression using P2TR key rules.
+ *
+ * Any private keys in the expression are added to `out`.
+ * If parsing fails, `error` is set and an empty vector is returned.
+ */
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error);
 
 /** \brief Interface for parsed descriptor objects.
  *
