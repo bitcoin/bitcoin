@@ -41,6 +41,8 @@ public:
     unsigned int nDeriveIterations;
     //! Use this for more parameters to key derivation (currently unused)
     std::vector<unsigned char> vchOtherDerivationParameters;
+    //! Id of this CMasterKey. Only used for writing the key of the database record. Retained for backwards compatibility, otherwise unused.
+    uint32_t m_id{1};
 
     //! Default/minimum number of key derivation rounds
     // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M

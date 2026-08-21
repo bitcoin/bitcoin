@@ -629,16 +629,13 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
 
     {
         LOCK(cs_wallet);
-        for (const auto& [_, master_key] : mapMasterKeys)
-        {
-            if (!DecryptMasterKey(strWalletPassphrase, master_key, plain_master_key)) {
-                continue; // try another master key
-            }
-            if (Unlock(plain_master_key)) {
-                // Now that we've unlocked, upgrade the descriptor cache
-                UpgradeDescriptorCache();
-                return true;
-            }
+        if (!DecryptMasterKey(strWalletPassphrase, *m_encryption_key, plain_master_key)) {
+            return false;
+        }
+        if (Unlock(plain_master_key)) {
+            // Now that we've unlocked, upgrade the descriptor cache
+            UpgradeDescriptorCache();
+            return true;
         }
     }
     return false;
@@ -653,23 +650,20 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         Lock();
 
         CKeyingMaterial plain_master_key;
-        for (auto& [master_key_id, master_key] : mapMasterKeys)
+        if (!DecryptMasterKey(strOldWalletPassphrase, *m_encryption_key, plain_master_key)) {
+            return false;
+        }
+        if (Unlock(plain_master_key))
         {
-            if (!DecryptMasterKey(strOldWalletPassphrase, master_key, plain_master_key)) {
+            if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, *m_encryption_key)) {
                 return false;
             }
-            if (Unlock(plain_master_key))
-            {
-                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, master_key)) {
-                    return false;
-                }
-                WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", master_key.nDeriveIterations);
+            WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", m_encryption_key->nDeriveIterations);
 
-                WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, master_key);
-                if (fWasLocked)
-                    Lock();
-                return true;
-            }
+            WalletBatch(GetDatabase()).WriteMasterKey(*m_encryption_key);
+            if (fWasLocked)
+                Lock();
+            return true;
         }
     }
 
@@ -865,14 +859,14 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     {
         LOCK2(m_relock_mutex, cs_wallet);
-        mapMasterKeys[++nMasterKeyMaxID] = master_key;
+        m_encryption_key = master_key;
         WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
         if (!encrypted_batch->TxnBegin()) {
             delete encrypted_batch;
             encrypted_batch = nullptr;
             return false;
         }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, master_key);
+        encrypted_batch->WriteMasterKey(master_key);
 
         for (const auto& spk_man_pair : m_spk_managers) {
             auto spk_man = spk_man_pair.second.get();
@@ -3576,7 +3570,7 @@ bool CWallet::WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb)
 
 bool CWallet::HasEncryptionKeys() const
 {
-    return !mapMasterKeys.empty();
+    return m_encryption_key.has_value();
 }
 
 bool CWallet::HaveCryptedKeys() const
