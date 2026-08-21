@@ -5,6 +5,7 @@
 #include <node/txorphanage.h>
 
 #include <consensus/validation.h>
+#include <core_memusage.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <util/feefrac.h>
@@ -26,6 +27,24 @@ namespace node {
 static constexpr NodeId MIN_PEER{std::numeric_limits<NodeId>::min()};
 /** Maximum NodeId for upper_bound lookups. */
 static constexpr NodeId MAX_PEER{std::numeric_limits<NodeId>::max()};
+
+TxOrphanage::Usage GetOrphanUsage(const CTransactionRef& tx)
+{
+    // Account for the memory this transaction actually uses, including the CTransaction itself.
+    //
+    // Weight would be a more familiar metric and is a decent proxy for the memory used by a transaction whose data
+    // sits in few large pieces (a large witness element, a large output script, ...), but it is not an upper bound:
+    // each witness stack element is separately heap-allocated, so a transaction of standard weight may use many times
+    // more memory than its weight suggests (see MAX_ORPHAN_TX_USAGE).
+    //
+    // Two things are deliberately not included here, as they are not attributable to the transaction itself: the entry
+    // in m_orphans (~130 bytes per announcement) and the entries in m_outpoint_to_orphan_wtxids (~170 bytes per input
+    // of a unique orphan). Both are bounded by the latency score limits, which permit
+    // DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE announcements and 10 times as many inputs, i.e. a few MB in total,
+    // regardless of how high the usage limits are.
+    return RecursiveDynamicUsage(tx);
+}
+
 class TxOrphanageImpl final : public TxOrphanage {
     // Type alias for sequence numbers
     using SequenceNumber = uint64_t;
@@ -41,21 +60,20 @@ class TxOrphanageImpl final : public TxOrphanage {
         const NodeId m_announcer;
         /** What order this transaction entered the orphanage. */
         const SequenceNumber m_entry_sequence;
+        /** Memory accounted for this announcement, cached at construction. Caching guarantees that the same value is
+         * added and subtracted from the per-peer and global totals, and avoids recomputing it on every operation. */
+        const TxOrphanage::Usage m_usage;
         /** Whether this tx should be reconsidered. Always starts out false. A peer's workset is the collection of all
          * announcements with m_reconsider=true. */
         bool m_reconsider{false};
 
         Announcement(const CTransactionRef& tx, NodeId peer, SequenceNumber seq) :
-            m_tx{tx}, m_announcer{peer}, m_entry_sequence{seq}
+            m_tx{tx}, m_announcer{peer}, m_entry_sequence{seq}, m_usage{GetOrphanUsage(tx)}
         { }
 
-        /** Get an approximation for "memory usage". The total memory is a function of the memory used to store the
-         * transaction itself, each entry in m_orphans, and each entry in m_outpoint_to_orphan_wtxids. We use weight because
-         * it is often higher than the actual memory usage of the transaction. This metric conveniently encompasses
-         * m_outpoint_to_orphan_wtxids usage since input data does not get the witness discount, and makes it easier to
-         * reason about each peer's limits using well-understood transaction attributes. */
-        TxOrphanage::Usage GetMemUsage()  const {
-            return GetTransactionWeight(*m_tx);
+        /** Get an approximation for "memory usage" (see GetOrphanUsage). */
+        TxOrphanage::Usage GetMemUsage() const {
+            return m_usage;
         }
 
         /** Get an approximation of how much this transaction contributes to latency in EraseForBlock and EraseForPeer.
@@ -103,7 +121,7 @@ class TxOrphanageImpl final : public TxOrphanage {
     AnnouncementMap m_orphans;
 
     const TxOrphanage::Count m_max_global_latency_score{DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE};
-    const TxOrphanage::Usage m_reserved_usage_per_peer{DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER};
+    const TxOrphanage::Usage m_reserved_usage_per_peer{DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER};
 
     /** Number of unique orphans by wtxid. Less than or equal to the number of entries in m_orphans. */
     TxOrphanage::Count m_unique_orphans{0};
@@ -310,9 +328,22 @@ bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
     const auto& txid{tx->GetHash()};
 
     // Ignore transactions above max standard size to avoid a send-big-orphans memory exhaustion attack.
-    TxOrphanage::Usage sz = GetTransactionWeight(*tx);
-    if (sz > MAX_STANDARD_TX_WEIGHT) {
-        LogDebug(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, txid.ToString(), wtxid.ToString());
+    const TxOrphanage::Usage weight{GetTransactionWeight(*tx)};
+    if (weight > MAX_STANDARD_TX_WEIGHT) {
+        LogDebug(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %d, txid: %s, wtxid: %s)\n", weight, txid.ToString(), wtxid.ToString());
+        return false;
+    }
+
+    // Ignore transactions using more memory than the orphanage is willing to hold for a single orphan, even though
+    // their weight is standard. They are refused here instead of being inserted and evicted again by LimitOrphans()
+    // right away, which would first push out the announcer's older orphans. Since the default reserved usage per peer
+    // is derived from this limit (see DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER), no single orphan can exceed a peer's
+    // allowance on its own. That does not hold for an instance constructed with a smaller reserved_peer_usage, where a
+    // single orphan may still be larger than a peer's whole allowance.
+    const TxOrphanage::Usage usage{GetOrphanUsage(tx)};
+    if (usage > MAX_ORPHAN_TX_USAGE) {
+        LogDebug(BCLog::TXPACKAGES, "ignoring memory-heavy orphan tx (usage: %d, weight: %d, txid: %s, wtxid: %s)\n",
+                    usage, weight, txid.ToString(), wtxid.ToString());
         return false;
     }
 
@@ -338,8 +369,8 @@ bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
         m_unique_orphan_usage += iter->GetMemUsage();
         m_unique_rounded_input_scores += iter->GetLatencyScore() - 1;
 
-        LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n",
-                    txid.ToString(), wtxid.ToString(), sz, m_orphans.size(), m_outpoint_to_orphan_wtxids.size());
+        LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %d, usage: %d (mapsz %u outsz %u)\n",
+                    txid.ToString(), wtxid.ToString(), weight, usage, m_orphans.size(), m_outpoint_to_orphan_wtxids.size());
         Assume(IsUnique(iter));
     } else {
         LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s (wtxid=%s)\n",

@@ -5,19 +5,44 @@
 #ifndef BITCOIN_NODE_TXORPHANAGE_H
 #define BITCOIN_NODE_TXORPHANAGE_H
 
-#include <consensus/validation.h>
 #include <net.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <sync.h>
-#include <util/time.h>
 
-#include <map>
+#include <cstdint>
+#include <memory>
 #include <set>
+#include <utility>
+#include <vector>
+
+class FastRandomContext;
 
 namespace node {
-/** Default value for TxOrphanage::m_reserved_usage_per_peer. Helps limit the total amount of memory used by the orphanage. */
-inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
+/** Maximum memory usage (see GetOrphanUsage) of a single orphan transaction. Orphans using more memory than this are
+ * not stored at all, analogous to how transactions heavier than MAX_STANDARD_TX_WEIGHT are not stored.
+ *
+ * A transaction's memory usage is not proportional to its weight, because every witness stack element is individually
+ * heap-allocated: a transaction of standard weight whose witness consists of many tiny elements uses up to ~28 times
+ * as much memory as its weight suggests (399,000 1-byte elements weigh ~399,000WU but use ~11MB of memory). Witness
+ * standardness, which would restrict this, cannot be checked while a transaction's inputs are missing, so orphans must
+ * be limited by the memory they actually use.
+ *
+ * This value accommodates any transaction within MAX_STANDARD_TX_WEIGHT whose memory usage is up to 1.5 times its
+ * weight, which covers realistically-shaped large transactions (~1.24x for a maximally-sized P2WPKH consolidation,
+ * ~1.47x for inputs carrying the maximum standard P2WSH witness stack of 100 80-byte elements). Transactions built
+ * from unusually many tiny witness elements are deliberately not accommodated: they are dropped rather than stored at
+ * a small fraction of their true cost.
+ *
+ * Note that these ratios are those of an ordinary build. Since the memory usage includes the per-object overhead of the
+ * containers holding the transaction's data, builds using debug-mode standard library containers reach this limit at a
+ * lower weight. */
+inline constexpr int64_t MAX_ORPHAN_TX_USAGE{600'000};
+/** Default value for TxOrphanage::m_reserved_usage_per_peer, in bytes of memory used. Helps limit the total amount of
+ * memory used by the orphanage, as the global limit is this value multiplied by the number of peers that have
+ * announced an orphan. Since a peer staying within its allowance is protected from eviction, this is
+ * MAX_ORPHAN_TX_USAGE plus room for a few normal-sized orphans: a peer that relays one maximally-sized orphan stays
+ * within its allowance and thus cannot cause the eviction of its own (or of anybody else's) orphans. */
+inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER{MAX_ORPHAN_TX_USAGE + 4'000};
 /** Default value for TxOrphanage::m_max_global_latency_score. Helps limit the maximum latency for operations like
  * EraseForBlock and LimitOrphans. */
 inline constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
@@ -101,12 +126,12 @@ public:
     /** Get all orphan transactions */
     virtual std::vector<OrphanInfo> GetOrphanTransactions() const = 0;
 
-    /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
+    /** Get the total usage (memory) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
     virtual Usage TotalOrphanUsage() const = 0;
 
-    /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
-     * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
+    /** Total usage (memory) of orphans for which this peer is an announcer. If an orphan has multiple
+     * announcers, its usage will be accounted for in each PeerOrphanInfo, so the total of all
      * peers' UsageByPeer() may be larger than TotalOrphanUsage(). Similarly, UsageByPeer() may be far higher than
      * ReservedPeerUsage(), particularly if many peers have provided the same orphans. */
     virtual Usage UsageByPeer(NodeId peer) const = 0;
@@ -146,6 +171,15 @@ public:
 
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
+/** Create a TxOrphanage with non-default limits, for tests and benchmarks. Note that reserved_peer_usage is a share of
+ * the global limit and not a hard per-peer cap: a peer may exceed it as long as the global limits are respected. Values
+ * below MAX_ORPHAN_TX_USAGE are allowed (and used to exercise trimming), but then a single orphan can be larger than a
+ * peer's whole allowance, and storing it may evict that peer's other orphans. */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept;
+
+/** Get the amount TxOrphanage accounts for this transaction, i.e. its contribution to
+ * TotalOrphanUsage() and UsageByPeer(). Exposed so that tests, benchmarks and RPC report the same
+ * metric that the orphanage uses internally. */
+TxOrphanage::Usage GetOrphanUsage(const CTransactionRef& tx);
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
