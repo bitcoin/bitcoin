@@ -47,7 +47,6 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <iterator>
 #include <limits>
 #include <list>
 #include <memory>
