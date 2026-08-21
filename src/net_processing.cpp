@@ -257,6 +257,18 @@ struct Peer {
 
     /** Protects block inventory data members */
     Mutex m_block_inv_mutex;
+
+    /** A getcfilters request that raced the filter index (the requested block
+     *  is known but its filter isn't written yet); retried later in
+     *  SendMessages once the filter should be ready. */
+    struct PendingCFilterRequest {
+        BlockFilterType filter_type;
+        uint32_t start_height;
+        uint256 stop_hash;
+    };
+    /** Deferred cfilter requests, oldest first. Capped at MAX_PENDING_CFILTER_REQUESTS. */
+    std::list<PendingCFilterRequest> m_pending_cfilter_requests GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+
     /** List of blocks that we'll announce via an `inv` message.
      * There is no final sorting before sending, as they are always sent
      * immediately and in the order requested. */
@@ -1114,6 +1126,26 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
 
     /**
+     * Look up the requested filter range and, if found, send it. On a genuine
+     * miss (not racing the filter index), logs and gives up.
+     *
+     * @param[in]   node            The node to send the response to
+     * @param[in]   filter_index    The filter index to look up in
+     * @param[in]   stop_index      The CBlockIndex for the stop_hash block
+     * @param[in]   start_height    The start height for the request
+     * @param[in]   filter_type     The filter type the request is for, for logging
+     * @param[in]   stop_hash       The stop_hash for the request, for logging
+     * @return                      True once resolved (filter sent, or genuinely
+     *                              unavailable and already logged) -- caller should
+     *                              not keep this request pending. False if the miss
+     *                              is a plausible race with the filter index --
+     *                              caller should defer and retry later.
+     */
+    bool TryRespondToCFilterRequest(CNode& node, BlockFilterIndex& filter_index,
+                                    const CBlockIndex& stop_index, uint32_t start_height,
+                                    BlockFilterType filter_type, const uint256& stop_hash);
+
+    /**
      * Validation logic for compact filters request handling.
      *
      * May disconnect from the peer in the case of a bad request.
@@ -1143,7 +1175,7 @@ private:
      * @param[in]   peer            The peer that we received the request from
      * @param[in]   vRecv           The raw message received
      */
-    void ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vRecv);
+    void ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /**
      * Handle a cfheaders request.
@@ -3500,6 +3532,28 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     return false;
 }
 
+bool PeerManagerImpl::TryRespondToCFilterRequest(CNode& node, BlockFilterIndex& filter_index,
+                                                 const CBlockIndex& stop_index, uint32_t start_height,
+                                                 BlockFilterType filter_type, const uint256& stop_hash)
+{
+    std::vector<BlockFilter> filters;
+    if (filter_index.LookupFilterRange(start_height, &stop_index, filters)) {
+        for (const auto& filter : filters) {
+            MakeAndPushMessage(node, NetMsgType::CFILTER, filter);
+        }
+        return true;
+    }
+    // Miss may just be racing the filter index's BlockConnected callback.
+    const IndexSummary summary{filter_index.GetSummary()};
+    const int ahead = stop_index.nHeight - summary.best_block_height;
+    if (summary.synced && ahead >= 0 && ahead <= CF_MAX_BLOCKS_AHEAD_RACE_WAIT) {
+        return false;
+    }
+    LogDebug(BCLog::NET, "Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
+                 BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
+    return true;
+}
+
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
                                                 BlockFilterType filter_type, uint32_t start_height,
                                                 const uint256& stop_hash, uint32_t max_height_diff,
@@ -3570,15 +3624,18 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
         return;
     }
 
-    std::vector<BlockFilter> filters;
-    if (!filter_index->LookupFilterRange(start_height, stop_index, filters)) {
-        LogDebug(BCLog::NET, "Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
-                     BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
-        return;
-    }
-
-    for (const auto& filter : filters) {
-        MakeAndPushMessage(node, NetMsgType::CFILTER, filter);
+    if (!TryRespondToCFilterRequest(node, *filter_index, *stop_index, start_height, filter_type, stop_hash)) {
+        // Still racing the filter index. Defer to SendMessages once the
+        // filter should be ready, unless the peer already has too many
+        // requests queued.
+        if (peer.m_pending_cfilter_requests.size() < MAX_PENDING_CFILTER_REQUESTS) {
+            LogDebug(BCLog::NET, "cfilter request raced the filter index, deferring: filter_type=%s, start_height=%d, stop_hash=%s, peer=%d\n",
+                         BlockFilterTypeName(filter_type), start_height, stop_hash.ToString(), node.GetId());
+            peer.m_pending_cfilter_requests.push_back(Peer::PendingCFilterRequest{filter_type, start_height, stop_hash});
+        } else {
+            LogDebug(BCLog::NET, "cfilter request raced the filter index but too many are already deferred, dropping: filter_type=%s, start_height=%d, stop_hash=%s, peer=%d\n",
+                         BlockFilterTypeName(filter_type), start_height, stop_hash.ToString(), node.GetId());
+        }
     }
 }
 
@@ -6546,5 +6603,28 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
     } // release cs_main
     MaybeSendFeefilter(node, peer, current_time);
+
+    //
+    // Retry any cfilter requests that raced the filter index earlier.
+    //
+    for (auto it = peer.m_pending_cfilter_requests.begin(); it != peer.m_pending_cfilter_requests.end();) {
+        const Peer::PendingCFilterRequest& req = *it;
+
+        const CBlockIndex* stop_index;
+        BlockFilterIndex* filter_index;
+        if (!PrepareBlockFilterRequest(node, peer, req.filter_type, req.start_height, req.stop_hash,
+                                       MAX_GETCFILTERS_SIZE, stop_index, filter_index)) {
+            // No longer valid (e.g. reorged away) -- give up, same as any
+            // other unservable request.
+            it = peer.m_pending_cfilter_requests.erase(it);
+        } else if (TryRespondToCFilterRequest(node, *filter_index, *stop_index, req.start_height,
+                                              req.filter_type, req.stop_hash)) {
+            it = peer.m_pending_cfilter_requests.erase(it);
+        } else {
+            // Still racing -- leave pending, retry next call.
+            ++it;
+        }
+    }
+
     return true;
 }
