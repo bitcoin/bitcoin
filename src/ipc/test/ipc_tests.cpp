@@ -5,12 +5,15 @@
 #include <interfaces/init.h>
 #include <ipc/capnp/mining.capnp.h>
 #include <ipc/capnp/protocol.h>
+#include <interfaces/ipc.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>
 #include <ipc/test/ipc_test.capnp.h>
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
 #include <mp/proxy-types.h>
+#include <ipc/types.h>
+
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
@@ -198,12 +201,56 @@ void IpcSocketTest(const fs::path& datadir)
     }
 }
 
+//! Test ipc::Protocol listen() local connection limiting over a unix socket.
+void IpcSocketMaxConnectionsTest(const fs::path& datadir)
+{
+    std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
+    std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol("IpcSocketMaxConnectionsTest")};
+    std::unique_ptr<ipc::Process> process{ipc::MakeProcess()};
+
+    std::string address{strprintf("unix:%s", TempPath("bitcoin_sock_limit_XXXXXX"))};
+    mp::SocketId serve_fd = process->bind(datadir, "test_bitcoin", address);
+    BOOST_CHECK_NE(serve_fd, mp::SocketError);
+    protocol->listen(serve_fd, *init, /*max_connections=*/1);
+
+    auto connect_fd{[&](const std::string& connect_address) {
+        std::string addr{connect_address};
+        mp::SocketId fd{process->connect(datadir, "test_bitcoin", addr)};
+        return std::make_pair(fd, addr);
+    }};
+
+    auto [fd1, addr1] = connect_fd(address);
+    BOOST_CHECK_EQUAL(addr1, address);
+    std::unique_ptr<interfaces::Init> remote_init1{protocol->connect(protocol->makeStream(fd1))};
+    std::unique_ptr<interfaces::Echo> remote_echo1{remote_init1->makeEcho()};
+    BOOST_CHECK_EQUAL(remote_echo1->echo("echo test 1"), "echo test 1");
+
+    auto second_call = std::async(std::launch::async, [&] {
+        std::string addr{address};
+        mp::SocketId fd{process->connect(datadir, "test_bitcoin", addr)};
+        std::unique_ptr<interfaces::Init> remote_init{protocol->connect(protocol->makeStream(fd))};
+        std::unique_ptr<interfaces::Echo> remote_echo{remote_init->makeEcho()};
+        return std::make_pair(remote_echo->echo("echo test 2"), addr);
+    });
+
+    BOOST_CHECK(second_call.wait_for(std::chrono::milliseconds{100}) == std::future_status::timeout);
+
+    remote_echo1.reset();
+    remote_init1.reset();
+
+    BOOST_REQUIRE(second_call.wait_for(std::chrono::seconds{5}) == std::future_status::ready);
+    auto [echo2, addr2] = second_call.get();
+    BOOST_CHECK_EQUAL(addr2, address);
+    BOOST_CHECK_EQUAL(echo2, "echo test 2");
+}
+
 BOOST_FIXTURE_TEST_SUITE(ipc_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(ipc_tests)
 {
     IpcPipeTest();
     IpcSocketPairTest();
     IpcSocketTest(m_args.GetDataDirNet());
+    IpcSocketMaxConnectionsTest(m_args.GetDataDirNet());
 }
 
 // Test address parsing.
@@ -228,6 +275,36 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
                   "unix:" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
                   "Unix address path \"" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
     check_address("invalid", "invalid", "Unrecognized address 'invalid'");
+
+    auto check_listen_address{[](const std::string& configured_address, const std::string& expected_address, size_t expected_max_connections, const std::string& expected_error) {
+        auto listen_address{interfaces::Ipc::parseListenAddress(configured_address)};
+        if (!expected_error.empty()) {
+            BOOST_CHECK(!listen_address);
+            BOOST_CHECK_EQUAL(util::ErrorString(listen_address).original, expected_error);
+            return;
+        }
+        BOOST_REQUIRE_MESSAGE(listen_address, util::ErrorString(listen_address).original);
+        BOOST_CHECK_EQUAL(listen_address->address, expected_address);
+        BOOST_CHECK_EQUAL(listen_address->max_connections, expected_max_connections);
+    }};
+    check_listen_address("unix", "unix", ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_listen_address("unix:", "unix:", ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_listen_address("unix:,max-connections=8", "unix:", 8, "");
+    check_listen_address("unix:path.sock,max-connections=8", "unix:path.sock", 8, "");
+    check_listen_address("unix:,max-connections=1", "unix:", 1, "");
+    check_listen_address("unix:,max-connections=1048576", "unix:", ipc::MAX_CONNECTIONS, "");
+    check_listen_address("unix:path.sock,max-connections=8,unknown=1", "", 0, "Unknown socket option 'unknown'");
+    check_listen_address("unix:,max-connections=8,", "", 0, "Empty socket option");
+    check_listen_address("unix:,max-connections=0", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=-1", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=-9223372036854775808", "", 0, "max-connections must be at least 1");
+    check_listen_address("unix:,max-connections=1048577", "", 0, "max-connections must be at most 1048576");
+    check_listen_address("unix:,max-connections=9223372036854775808", "", 0, "Invalid max-connections value '9223372036854775808'");
+    check_listen_address("unix:,max-connections=", "", 0, "Missing value for max-connections option");
+    check_listen_address("unix:path,backup.sock", "unix:path,backup.sock", ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_listen_address("unix:path,backup.sock,max-connections=8", "unix:path,backup.sock", 8, "");
+    check_listen_address("unix:,max-connections", "", 0, "Missing value for max-connections option");
+    check_listen_address("unix:,max-connections=2,max-connections=1", "unix:", 1, "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
