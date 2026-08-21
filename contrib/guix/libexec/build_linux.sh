@@ -35,10 +35,9 @@ esac
 # LDFLAGS
 HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$(glibc_dynamic_linker "$HOST") -Wl,-O2"
 
-# Use LINK_WARNING_AS_ERROR when using CMake 4.x
 case "$HOST" in
     riscv64-linux-gnu) ;; # https://github.com/boostorg/test/issues/345
-    *) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--fatal-warnings" ;;
+    *) CMAKE_FLAGS="-DCMAKE_LINK_WARNING_AS_ERROR=ON" ;;
 esac
 
 mkdir -p "$DISTSRC"
@@ -60,7 +59,8 @@ mkdir -p "$DISTSRC"
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
           -DCMAKE_SKIP_RPATH=TRUE \
           -DREDUCE_EXPORTS=ON \
-          -DWITH_CCACHE=OFF
+          -DWITH_CCACHE=OFF \
+          "${CMAKE_FLAGS}"
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS"
