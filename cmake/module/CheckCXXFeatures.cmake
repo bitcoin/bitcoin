@@ -38,6 +38,24 @@ function(check_cxx_features)
     )
   endif()
 
+  # Checks for text formatting.
+  check_cxx_source_compiles("
+    #include <format>
+
+    int main() {
+      return std::format(\"{}\", 42).size();
+    }
+  " HAVE_TEXT_FORMATTING)
+
+  if(NOT HAVE_TEXT_FORMATTING)
+    message(FATAL_ERROR
+      "Compiler lacks text formatting support.\n"
+      "You are probably using an old compiler version.\n"
+      "The recommended compiler versions can be checked in\n"
+      "doc/dependencies.md#compiler.\n"
+    )
+  endif()
+
   message(STATUS "Checking for required C++ features - done")
 
 endfunction()
