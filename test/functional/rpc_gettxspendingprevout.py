@@ -4,6 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxspendingprevout RPC."""
 
+from test_framework.blocktools import (
+    create_empty_fork,
+    trigger_reorg,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -144,6 +148,8 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         txid_reorg_replace_utxo = reorg_replace_utxo['txid']
 
         tx1 = create_tx(utxos_to_spend=[reorg_replace_utxo], num_outputs=1)
+        # Prep a fork on each node so tx1's block can later be reorged out
+        fork_blocks_per_node = [create_empty_fork(node) for node in self.nodes]
         blockhash = self.generate(self.wallet, 1)[0]
 
         # tx1 is confirmed, and indexed in txospenderindex as spending our utxo
@@ -151,10 +157,9 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         result = node0.gettxspendingprevout([prevout(txid_reorg_replace_utxo, vout=0)], return_spending_tx=True)
         assert_equal(result, [spent_out_in_block(txid_reorg_replace_utxo, vout=0, spending_tx_id=tx1["txid"], blockhash=blockhash, spending_tx=tx1['hex'])])
 
-        # replace tx1 with tx2 triggering a "reorg"
-        best_block_hash = node0.getbestblockhash()
-        for node in self.nodes:
-            node.invalidateblock(best_block_hash)
+        # replace tx1 with tx2 by triggering a reorg that disconnects tx1's block
+        for fork_blocks, node in zip(fork_blocks_per_node, self.nodes):
+            trigger_reorg(node, fork_blocks)
             assert tx1["txid"] in node.getrawmempool()
 
         # create and submit replacement
@@ -184,7 +189,11 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         result = node0.gettxspendingprevout([prevout(tx1['txid'], vout=0)], return_spending_tx=True)
         assert_equal(result, [spent_out_in_block(tx1['txid'], vout=0, spending_tx_id=tx2["txid"], blockhash=blockhash, spending_tx=tx2['hex'])])
 
-        # replace tx1 with tx3
+        # Disconnect tx1's block so tx1 can be replaced by tx3 below, which also
+        # evicts tx1's child tx2. Unlike the case above, use invalidateblock rather
+        # than a fork-based reorg: the index is only rewound when a block connects,
+        # so disconnecting without connecting anything lets us check below that tx2
+        # is still indexed until the next block.
         blockhash = node0.getbestblockhash()
         for node in self.nodes:
             node.invalidateblock(blockhash)

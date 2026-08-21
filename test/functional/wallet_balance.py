@@ -7,7 +7,11 @@ from decimal import Decimal
 import time
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
-from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+    create_empty_fork,
+    trigger_reorg,
+)
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -237,13 +241,16 @@ class WalletTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[1].sendrawtransaction(hexstring=tx_replace, maxfeerate=0)
 
+        # Prep for fork. Both nodes are in sync here, so one fork serves both.
+        fork_blocks = create_empty_fork(self.nodes[0])
+
         # Now confirm tx_replace
-        block_reorg = self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)[0]
+        self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
 
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
-        self.nodes[0].invalidateblock(block_reorg)
-        self.nodes[1].invalidateblock(block_reorg)
+        trigger_reorg(self.nodes[0], fork_blocks)
+        trigger_reorg(self.nodes[1], fork_blocks)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
 
