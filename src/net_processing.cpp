@@ -249,6 +249,8 @@ struct Peer {
 
     //! Whether this peer is an inbound connection
     const bool m_is_inbound;
+    //! Whether this peer matches a persistent addnode configured for BIP152 high bandwidth.
+    const bool m_bip152_highbandwidth_configured;
 
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
@@ -417,10 +419,11 @@ struct Peer {
      * timestamp the peer sent in the version message. */
     std::atomic<std::chrono::seconds> m_time_offset{0s};
 
-    explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
+    explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound, bool bip152_highbandwidth_configured)
         : m_id{id}
         , m_our_services{our_services}
         , m_is_inbound{is_inbound}
+        , m_bip152_highbandwidth_configured{bip152_highbandwidth_configured}
     {}
 
 private:
@@ -1386,6 +1389,9 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
         // Don't request compact blocks if the peer has not signalled support
         return;
     }
+    // Configured peers are additional to the automatic peers and must not
+    // enter or reorder the automatic selection list.
+    if (peer && peer->m_bip152_highbandwidth_configured) return;
 
     int num_outbound_hb_peers = 0;
     for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
@@ -1705,6 +1711,7 @@ void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_s
 
 void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_services)
 {
+    const bool bip152_highbandwidth_configured{m_connman.IsBip152HighBandwidthAddedNode(node)};
     NodeId nodeid = node.GetId();
     {
         LOCK(cs_main); // For m_node_states
@@ -1716,7 +1723,8 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
         our_services = static_cast<ServiceFlags>(our_services | NODE_BLOOM);
     }
 
-    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, node.IsInboundConn());
+    PeerRef peer = std::make_shared<Peer>(
+        nodeid, our_services, node.IsInboundConn(), bip152_highbandwidth_configured);
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -4112,11 +4120,12 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
             // Tell our peer we are willing to provide version 2 cmpctblocks.
-            // However, we do not request new block announcements using
-            // cmpctblock messages.
             // We send this to non-NODE NETWORK peers as well, because
             // they may wish to request compact blocks from us
-            MakeAndPushMessage(pfrom, NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION);
+            const bool high_bandwidth{
+                peer.m_bip152_highbandwidth_configured && !m_opts.ignore_incoming_txs};
+            MakeAndPushMessage(pfrom, NetMsgType::SENDCMPCT, high_bandwidth, /*version=*/CMPCTBLOCKS_VERSION);
+            pfrom.m_bip152_highbandwidth_to = high_bandwidth;
         }
 
         if (m_txreconciliation) {

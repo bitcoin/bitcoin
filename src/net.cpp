@@ -3866,6 +3866,31 @@ bool CConnman::AddedNodesContain(const CAddress& addr) const
                            [&](const auto& p) { return p.m_added_node == addr_str || p.m_added_node == addr_port_str; }));
 }
 
+bool CConnman::IsBip152HighBandwidthAddedNode(const CNode& node) const
+{
+    AssertLockNotHeld(m_added_nodes_mutex);
+    if (!node.IsManualConn() && !node.IsOutboundOrBlockRelayConn()) return false;
+
+    std::vector<std::string> configured_nodes;
+    {
+        LOCK(m_added_nodes_mutex);
+        for (const auto& params : m_added_node_params) {
+            if (params.m_bip152_highbandwidth && !params.m_added_node.empty()) {
+                configured_nodes.push_back(params.m_added_node);
+            }
+        }
+    }
+
+    for (const auto& endpoint : configured_nodes) {
+        if (node.m_addr_name == endpoint) return true;
+
+        const CService service{MaybeFlipIPv6toCJDNS(
+            LookupNumeric(endpoint, GetDefaultPort(endpoint)))};
+        if (service.IsValid() && service == node.addr) return true;
+    }
+    return false;
+}
+
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const
 {
     LOCK(m_nodes_mutex);

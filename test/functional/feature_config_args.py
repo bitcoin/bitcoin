@@ -280,6 +280,26 @@ class ConfArgsTest(BitcoinTestFramework):
 
         node.replace_in_config([("addnode=\n", "")])
 
+    def test_bip152_high_bandwidth_addnode(self):
+        self.log.info("Test the BIP152 high-bandwidth addnode suffix")
+        node = self.nodes[0]
+
+        self.start_node(0, extra_args=[
+            "-addnode=tagged.example=bip152-hb",
+            "-addnode=opaque.example=x",
+            UNREACHABLE_PROXY_ARG,
+        ])
+        util.assert_equal(
+            [entry["addednode"] for entry in node.getaddednodeinfo()],
+            ["tagged.example", "opaque.example=x"],
+        )
+        self.stop_node(0)
+
+        node.assert_start_raises_init_error(
+            extra_args=["-blocksonly", "-addnode=127.0.0.1:18444=bip152-hb"],
+            expected_msg="Error: Invalid -addnode value '127.0.0.1:18444=bip152-hb': the bip152-hb suffix is incompatible with -blocksonly",
+        )
+
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
@@ -534,6 +554,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_log_buffer()
         self.test_args_log()
         self.test_empty_addnode()
+        self.test_bip152_high_bandwidth_addnode()
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()

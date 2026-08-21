@@ -163,4 +163,52 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_FIXTURE_TEST_CASE(bip152_high_bandwidth_added_node_matching, PeerTest)
+{
+    const CService manual_address{LookupNumeric("127.0.0.1", Params().GetDefaultPort())};
+    const CService numeric_target{LookupNumeric("127.0.0.2", Params().GetDefaultPort())};
+    const CService plain{LookupNumeric("127.0.0.3", Params().GetDefaultPort())};
+    BOOST_REQUIRE(manual_address.IsValid());
+    BOOST_REQUIRE(numeric_target.IsValid());
+    BOOST_REQUIRE(plain.IsValid());
+
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    CConnman::Options options;
+    options.m_added_nodes = {
+        {.m_added_node = "example.test", .m_use_v2transport = false, .m_bip152_highbandwidth = true},
+        {.m_added_node = numeric_target.ToStringAddr(), .m_use_v2transport = false, .m_bip152_highbandwidth = true},
+        {.m_added_node = plain.ToStringAddrPort(), .m_use_v2transport = false},
+    };
+    connman->Init(options);
+
+    const auto make_node = [](NodeId id, const CService& service, std::string name, ConnectionType type) {
+        return std::make_unique<CNode>(id,
+                                       /*sock=*/nullptr,
+                                       CAddress{service, NODE_NONE},
+                                       /*nKeyedNetGroupIn=*/0,
+                                       /*nLocalHostNonceIn=*/0,
+                                       CAddress{},
+                                       std::move(name),
+                                       type,
+                                       /*inbound_onion=*/false,
+                                       /*network_key=*/0);
+    };
+
+    // Exact destination matching works without local DNS, including through a name proxy.
+    const auto manual{make_node(1, manual_address, "example.test", ConnectionType::MANUAL)};
+    BOOST_CHECK(connman->IsBip152HighBandwidthAddedNode(*manual));
+
+    // Numeric aliases also match durable outbound connections by service. Omitting
+    // the default port ensures this cannot pass through exact string matching.
+    const auto addrman{make_node(2, numeric_target, /*name=*/{}, ConnectionType::OUTBOUND_FULL_RELAY)};
+    BOOST_REQUIRE_NE(addrman->m_addr_name, numeric_target.ToStringAddr());
+    BOOST_CHECK(connman->IsBip152HighBandwidthAddedNode(*addrman));
+
+    const auto unconfigured{make_node(3, plain, /*name=*/{}, ConnectionType::OUTBOUND_FULL_RELAY)};
+    BOOST_CHECK(!connman->IsBip152HighBandwidthAddedNode(*unconfigured));
+
+    const auto inbound{make_node(4, numeric_target, /*name=*/{}, ConnectionType::INBOUND)};
+    BOOST_CHECK(!connman->IsBip152HighBandwidthAddedNode(*inbound));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
