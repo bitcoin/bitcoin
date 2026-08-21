@@ -4339,8 +4339,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         const bool reject_tx_invs{RejectIncomingTxs(pfrom)};
-        std::unordered_set<uint256, SaltedUint256Hasher> seen_txids{0, m_txhash_hasher};
-        std::unordered_set<uint256, SaltedUint256Hasher> seen_wtxids{0, m_txhash_hasher};
+        std::unordered_set<uint256, SaltedUint256Hasher> seen_tx_hashes{0, m_txhash_hasher};
 
         LOCK2(cs_main, m_tx_download_mutex);
 
@@ -4349,15 +4348,6 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         for (CInv& inv : vInv) {
             if (interruptMsgProc) return;
-
-            // Ignore INVs that don't match wtxidrelay setting.
-            // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
-            // This is fine as no INV messages are involved in that process.
-            if (peer.m_wtxid_relay) {
-                if (inv.IsMsgTx()) continue;
-            } else {
-                if (inv.IsMsgWtx()) continue;
-            }
 
             if (inv.IsMsgBlk()) {
                 const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
@@ -4379,9 +4369,19 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                     pfrom.fDisconnect = true;
                     return;
                 }
-                // MSG_WITNESS_TX is treated as a txid, despite only being specified for getdata.
-                auto& seen_hashes{inv.IsMsgWtx() ? seen_wtxids : seen_txids};
-                if (!seen_hashes.insert(inv.hash).second) continue;
+
+                // Ignore INVs that don't match wtxidrelay setting.
+                // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
+                // This is fine as no INV messages are involved in that process.
+                if (peer.m_wtxid_relay) {
+                    if (!inv.IsMsgWtx()) continue;
+                } else {
+                    // Allows MSG_WITNESS_TX entries (in violation of
+                    // BIP 144) for compatibility with neutrino
+                    if (inv.IsMsgWtx()) continue;
+                }
+                // Due to the check above, we're only adding hashes of one particular type here
+                if (!seen_tx_hashes.insert(inv.hash).second) continue;
                 const GenTxid gtxid = ToGenTxid(inv);
                 AddKnownTx(peer, inv.hash);
 
