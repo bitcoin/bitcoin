@@ -15,6 +15,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 #include <atomic>
 #include <chrono>
@@ -647,19 +648,53 @@ static bool ConnectToSocket(const Sock& sock,
     return true;
 }
 
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection, const std::optional<CNetAddr>& bind_addr, bool* bind_failed)
 {
-    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout});
+    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout}, bind_addr, bind_failed);
 }
 
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
                                       bool manual_connection,
-                                      std::chrono::milliseconds timeout)
+                                      std::chrono::milliseconds timeout,
+                                      const std::optional<CNetAddr>& bind_addr,
+                                      bool* bind_failed)
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
         LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
         return {};
+    }
+
+    // If a bind address is specified, bind to it before connecting.
+    if (bind_addr) {
+        const CService bind_service{*bind_addr, /*port=*/0};
+        sockaddr_storage bind_sa;
+        socklen_t bind_len = sizeof(bind_sa);
+        if (!bind_service.GetSockAddr(reinterpret_cast<sockaddr*>(&bind_sa), &bind_len)) {
+            LogInfo("Cannot get sockaddr for bind address %s", bind_addr->ToStringAddr());
+            if (bind_failed) *bind_failed = true;
+            return {};
+        }
+#ifdef IP_BIND_ADDRESS_NO_PORT
+        // Defer source port selection to connect() time (Linux 4.2+), which
+        // shares local ports across distinct destinations the way an unbound
+        // connect() does; a port reserved at bind() time is exclusive. The
+        // address itself is still validated by bind() below. Best-effort.
+        const int on{1};
+        if (sock->SetSockOpt(IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, &on, sizeof(on)) == SOCKET_ERROR) {
+            LogDebug(BCLog::NET, "Unable to set IP_BIND_ADDRESS_NO_PORT on outbound socket, continuing anyway");
+        }
+#endif
+        if (sock->Bind(reinterpret_cast<sockaddr*>(&bind_sa), bind_len) == SOCKET_ERROR) {
+            const int err{WSAGetLastError()};
+            // Logged loudly (not gated like automatic-connection failures): a
+            // source that is no longer bindable is an operator misconfiguration
+            // worth surfacing. The global log rate limiter bounds repetition.
+            LogWarning("Failed to bind to %s for outgoing connection to %s: %s",
+                       bind_addr->ToStringAddr(), dest.ToStringAddrPort(), NetworkErrorString(err));
+            if (bind_failed) *bind_failed = true;
+            return {};
+        }
     }
 
     // Create a sockaddr from the specified service.
@@ -981,4 +1016,28 @@ CService GetBindAddress(const Sock& sock)
         LogWarning("getsockname failed\n");
     }
     return addr_bind;
+}
+
+bool IsAddrBindable(const CNetAddr& addr, bilingual_str& error)
+{
+    const CService service{addr, /*port=*/0};
+    sockaddr_storage sa;
+    socklen_t len = sizeof(sa);
+    if (!service.GetSockAddr(reinterpret_cast<sockaddr*>(&sa), &len)) {
+        error = Untranslated(strprintf("Bind address family for %s not supported", addr.ToStringAddr()));
+        return false;
+    }
+    std::unique_ptr<Sock> sock = CreateSock(service.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
+    if (!sock) {
+        const int err{WSAGetLastError()};
+        error = Untranslated(strprintf("Couldn't open socket for %s (socket returned error %s)", addr.ToStringAddr(), NetworkErrorString(err)));
+        return false;
+    }
+    if (sock->Bind(reinterpret_cast<sockaddr*>(&sa), len) == SOCKET_ERROR) {
+        const int err{WSAGetLastError()};
+        error = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"),
+                          addr.ToStringAddr(), NetworkErrorString(err));
+        return false;
+    }
+    return true;
 }
