@@ -103,9 +103,6 @@
 /* Define to the version of this package. */
 #define CLIENT_VERSION_STRING "@CLIENT_VERSION_STRING@"
 
-/* Define to 1 if strerror_r returns char *. */
-#cmakedefine STRERROR_R_CHAR_P 1
-
 /* Define if dbus support should be compiled in */
 #cmakedefine USE_DBUS 1
 

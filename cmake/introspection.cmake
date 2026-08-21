@@ -28,18 +28,6 @@ if(HAVE_STD_SYSTEM)
   set(HAVE_SYSTEM 1)
 endif()
 
-check_cxx_source_compiles("
-  #include <string.h>
-
-  int main()
-  {
-    char buf[100];
-    char* p{strerror_r(0, buf, sizeof buf)};
-    (void)p;
-  }
-  " STRERROR_R_CHAR_P
-)
-
 # Check for malloc_info (for memory statistics information in getmemoryinfo).
 check_cxx_symbol_exists(malloc_info "malloc.h" HAVE_MALLOC_INFO)
 
