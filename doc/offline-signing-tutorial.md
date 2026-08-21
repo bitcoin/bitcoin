@@ -112,7 +112,7 @@ tb1qtu5qgc6ddhmqm5yqjvhg83qgk2t4ewajg0h6yh
 [online]$ ./build/bin/bitcoin-cli -signet -rpcwallet="watch_only_wallet" send \
               '{"tb1q9k5w0nhnhyeh78snpxh0t5t7c3lxdeg3erez32": 0.009}' \
               | jq -r '.psbt' \
-              >> /path/to/funded_psbt.txt
+              > /path/to/funded_psbt.txt
 
 [online]$ cat /path/to/funded_psbt.txt
 
@@ -170,7 +170,7 @@ Use the walletpassphrase command to unlock the `offline_wallet` with the passphr
 [offline]$ ./build/bin/bitcoin-cli -signet -rpcwallet="offline_wallet" walletprocesspsbt \
                 $(cat /path/to/funded_psbt.txt) \
                 | jq -r .hex \
-                >> /path/to/final_psbt.txt
+                > /path/to/final_psbt.txt
  ```
 
 ### Broadcast the Signed and Finalized PSBT
