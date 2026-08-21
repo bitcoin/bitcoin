@@ -5,6 +5,7 @@
 , capnprotoVersion ? null
 , capnprotoSanitizers ? null # Optional sanitizers to build cap'n proto with
 , cmakeVersion ? null
+, gccVersion ? null
 , libcxxSanitizers ? null # Optional LLVM_USE_SANITIZER value to use for libc++, see https://llvm.org/docs/CMake.html
 }:
 
@@ -17,10 +18,6 @@ let
     };
   };
   capnprotoHashes = {
-    "0.7.0" = "sha256-Y/7dUOQPDHjniuKNRw3j8dG1NI9f/aRWpf8V0WzV9k8=";
-    "0.7.1" = "sha256-3cBpVmpvCXyqPUXDp12vCFCk32ZXWpkdOliNH37UwWE=";
-    "0.8.0" = "sha256-rfiqN83begjJ9eYjtr21/tk1GJBjmeVfa3C3dZBJ93w=";
-    "0.8.1" = "sha256-OZqNVYdyszro5rIe+w6YN00g6y8U/1b8dKYc214q/2o=";
     "0.9.0" = "sha256-yhbDcWUe6jp5PbIXzn5EoKabXiWN8lnS08hyfxUgEQ0=";
     "0.9.2" = "sha256-BspWOPZcP5nCTvmsDE62Zutox+aY5pw42d6hpH3v4cM=";
     "0.10.0" = "sha256-++F4l54OMTDnJ+FO3kV/Y/VLobKVRk461dopanuU3IQ=";
@@ -59,6 +56,7 @@ let
   cmakeHashes = {
     "3.12.4" = "sha256-UlVYS/0EPrcXViz/iULUcvHA5GecSUHYS6raqbKOMZQ=";
   };
+  gcc = if gccVersion == null then null else builtins.getAttr ("gcc" + gccVersion) pkgs;
   cmakeBuild = if cmakeVersion == null then pkgs.cmake else (pkgs.cmake.overrideAttrs (old: {
     version = cmakeVersion;
     src = pkgs.fetchurl {
@@ -75,10 +73,13 @@ in crossPkgs.mkShell {
     cmakeBuild
     include-what-you-use
     ninja
-  ] ++ lib.optionals (!minimal) [
+  ] ++ lib.optional (gcc != null) gcc ++ lib.optionals (!minimal) [
     clang
     clang-tools
   ];
+
+  CC = if gcc == null then null else "${gcc}/bin/gcc";
+  CXX = if gcc == null then null else "${gcc}/bin/g++";
 
   # Tell IWYU where its libc++ mapping lives
   IWYU_MAPPING_FILE = if enableLibcxx then "${llvm.libcxx.dev}/include/c++/v1/libcxx.imp" else null;
