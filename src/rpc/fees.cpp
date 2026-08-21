@@ -20,7 +20,6 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/fees.h>
 #include <validationinterface.h>
 
