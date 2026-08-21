@@ -693,6 +693,14 @@ public:
         return *Assert(m_coins_views->m_cacheview);
     }
 
+    //! @returns A reference to the reusable overlay view passed to ConnectBlock().
+    CoinsViewOverlay& ConnectBlockView() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        Assert(m_coins_views);
+        return *Assert(m_coins_views->m_connect_block_view);
+    }
+
     //! @returns A reference to the on-disk UTXO set database.
     CCoinsViewDB& CoinsDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
