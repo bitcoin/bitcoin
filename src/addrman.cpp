@@ -610,7 +610,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, NodeSecond
 
     nid_type nId;
 
-    m_last_good = time;
+    m_last_good[addr.GetNetwork()] = time;
 
     AddrInfo* pinfo = Find(addr, &nId);
 
@@ -685,7 +685,7 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, NodeSeconds
 
     // update info
     info.m_last_try = time;
-    if (fCountFailure && info.m_last_count_attempt < m_last_good) {
+    if (fCountFailure && info.m_last_count_attempt < m_last_good[info.GetNetwork()]) {
         info.m_last_count_attempt = time;
         info.nAttempts++;
     }
