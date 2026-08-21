@@ -99,7 +99,7 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
     std::shuffle(refs.begin(), refs.end(), rng);
 
     for (size_t i = 0; i < n_pool; ++i) {
-        AddTx(refs[i], /*fee=*/refs[i]->vout[0].nValue, pool);
+        AddTx(refs[i], /*fee=*/refs[i]->GetOutputs()[0].nValue, pool);
     }
     for (size_t i = n_pool; i < n_pool + n_extra; ++i) {
         extratxn.emplace_back(refs[i]->GetWitnessHash(), refs[i]);

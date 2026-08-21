@@ -442,7 +442,7 @@ public:
     : m_wtx(wtx),
     m_output(output)
     {
-        Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
+        Assume(std::ranges::find(wtx.GetTx()->GetOutputs(), output) != wtx.GetTx()->GetOutputs().end());
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }
