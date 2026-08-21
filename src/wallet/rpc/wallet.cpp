@@ -1005,53 +1005,18 @@ RPCMethod derivehdkey()
             // the wallet.
             EnsureWalletIsUnlocked(*wallet);
 
-            CExtPubKey xpub;
+            std::optional<CExtPubKey> selected_hdkey;
             if (!hdkey.isNull()) {
-                xpub = DecodeExtPubKey(hdkey.get_str());
+                CExtPubKey xpub{DecodeExtPubKey(hdkey.get_str())};
                 if (!xpub.pubkey.IsValid()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to parse HD key. Please provide a valid xpub");
                 }
-
-                // Accept an xpub from an active or unused(KEY) descriptor, but
-                // not from a (used) inactive one.
-                std::set<CExtPubKey> xpub_candidates;
-                for (const auto& candidate : wallet->GetHDPubKeys(HDKeyFilter::UnusedKey)) {
-                    xpub_candidates.insert(candidate.first);
-                }
-                for (const auto& candidate : wallet->GetHDPubKeys(HDKeyFilter::Active)) {
-                    xpub_candidates.insert(candidate.first);
-                }
-                if (!xpub_candidates.contains(xpub)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "HD key is not used by an active or unused(KEY) descriptor");
-                }
+                selected_hdkey = xpub;
             }
 
-            // If hdkey was not specified, try to look it up. First consider
-            // unused(KEY) descriptors. Otherwise look for active descriptors.
-            if (hdkey.isNull()) {
-                HDPubKeyMap wallet_xpubs{wallet->GetHDPubKeys(HDKeyFilter::UnusedKey)};
-
-                if (wallet_xpubs.size() > 1) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use. Please specify with 'hdkey'");
-                } else if (wallet_xpubs.size() == 1) {
-                    xpub = wallet_xpubs.begin()->first;
-                } else {
-                    HDPubKeyMap active_xpubs = wallet->GetHDPubKeys(HDKeyFilter::Active);
-                    if (active_xpubs.empty()) {
-                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No active or unused(KEY) descriptor found");
-                    }
-
-                    if (active_xpubs.size() > 1) {
-                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'");
-                    }
-
-                    xpub = active_xpubs.begin()->first;
-                }
-            }
-
-            std::optional<CExtKey> xprv{wallet->GetExtKey(xpub)};
+            util::Expected<CExtKey, WalletError> xprv{wallet->SelectHDKey(selected_hdkey)};
             if (!xprv) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Private key for %s is not known", EncodeExtPubKey(xpub)));
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, xprv.error().message.original);
             }
 
             std::optional<std::pair<CExtKey, KeyOriginInfo>> child{DeriveExtKey(*xprv, path)};

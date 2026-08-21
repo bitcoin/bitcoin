@@ -4594,6 +4594,80 @@ std::optional<CExtKey> CWallet::GetExtKey(const CExtPubKey& xpub) const
     return std::nullopt;
 }
 
+util::Expected<CExtKey, WalletError> CWallet::SelectHDKey(const std::optional<CExtPubKey>& hdkey) const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (IsLocked()) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::UnlockNeeded,
+            _("Wallet needs to be unlocked to perform this operation.")
+        }};
+    }
+
+    CExtPubKey xpub;
+    if (hdkey) {
+        xpub = *hdkey;
+
+        // Accept an xpub from an active or unused(KEY) descriptor, but
+        // not from a (used) inactive one.
+        std::set<CExtPubKey> xpub_candidates;
+        for (const auto& candidate : GetHDPubKeys(HDKeyFilter::UnusedKey)) {
+            xpub_candidates.insert(candidate.first);
+        }
+        for (const auto& candidate : GetHDPubKeys(HDKeyFilter::Active)) {
+            xpub_candidates.insert(candidate.first);
+        }
+        if (!xpub_candidates.contains(xpub)) {
+            return util::Unexpected{WalletError{
+                WalletErrorCode::GenericError,
+                _("HD key is not used by an active or unused(KEY) descriptor")
+            }};
+        }
+    }
+
+    // If hdkey was not specified, try to look it up. First consider
+    // unused(KEY) descriptors. Otherwise look for active descriptors.
+    if (!hdkey) {
+        HDPubKeyMap wallet_xpubs{GetHDPubKeys(HDKeyFilter::UnusedKey)};
+
+        if (wallet_xpubs.size() > 1) {
+            return util::Unexpected{WalletError{
+                WalletErrorCode::GenericError,
+                _("Unable to determine which HD key to use. Please specify with 'hdkey'")
+            }};
+        } else if (wallet_xpubs.size() == 1) {
+            xpub = wallet_xpubs.begin()->first;
+        } else {
+            HDPubKeyMap active_xpubs = GetHDPubKeys(HDKeyFilter::Active);
+            if (active_xpubs.empty()) {
+                return util::Unexpected{WalletError{
+                    WalletErrorCode::GenericError,
+                    _("No active or unused(KEY) descriptor found")
+                }};
+            }
+
+            if (active_xpubs.size() > 1) {
+                return util::Unexpected{WalletError{
+                    WalletErrorCode::GenericError,
+                    _("Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'")
+                }};
+            }
+
+            xpub = active_xpubs.begin()->first;
+        }
+    }
+
+    std::optional<CExtKey> xprv{GetExtKey(xpub)};
+    if (!xprv) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::GenericError,
+            strprintf(_("Private key for %s is not known"), EncodeExtPubKey(xpub))
+        }};
+    }
+    return *xprv;
+}
+
 void CWallet::WriteBestBlock() const
 {
     AssertLockHeld(cs_wallet);
