@@ -417,6 +417,15 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     }
 }
 
+std::string PrunedBlocksErrorMessage(std::span<const uint256> pruned_block_hashes)
+{
+    const std::string hashes{Join(pruned_block_hashes, ", ", [](const uint256& hash) { return hash.GetHex(); })};
+    if (pruned_block_hashes.size() == 1) {
+        return strprintf("Transaction may be in pruned block %s.", hashes);
+    }
+    return strprintf("Transaction may be in one of the following pruned blocks: %s.", hashes);
+}
+
 /**
  * A pair of strings that can be aligned (through padding) with other Sections
  * later on
