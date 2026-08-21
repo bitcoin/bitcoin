@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <future>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include <addresstype.h>
@@ -21,6 +22,9 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <util/check.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -59,16 +63,180 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     return mtx;
 }
 
-static void AddKey(CWallet& wallet, const CKey& key)
+static WalletDescriptor AddKey(CWallet& wallet, const CKey& key, bool private_key = true)
 {
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    const std::string key_data{private_key ? EncodeSecret(key) : HexStr(key.GetPubKey())};
+    auto descs = Parse(strprintf("combo(%s)", key_data), provider, error, /*require_checksum=*/false);
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
-    WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-    Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+    WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1);
+    Assert(wallet.AddWalletDescriptor(w_desc, provider, /*label=*/"", /*internal=*/false));
+    return w_desc;
+}
+
+namespace {
+struct EncryptionFailureSetup : TestingSetup {
+    WalletContext context;
+    FaultInjectingDatabase* fail_db{nullptr};
+    std::shared_ptr<CWallet> wallet;
+    FakeNodeClock clock; // Frozen time makes EncryptMasterKey skip its KDF benchmark rounds
+
+    EncryptionFailureSetup()
+    {
+        context.args = &m_args;
+        m_args.ForceSetArg("-keypool", "1"); // Failure injection does not depend on keypool depth
+        context.chain = m_node.chain.get();
+        RecreateWallet(WALLET_FLAG_DESCRIPTORS);
+    }
+
+    void RecreateWallet(uint64_t create_flags)
+    {
+        if (wallet) TestUnloadWallet(std::move(wallet));
+        auto database{std::make_unique<FaultInjectingDatabase>()};
+        fail_db = database.get();
+        wallet = TestCreateWallet(std::move(database), context, create_flags);
+    }
+
+    void RecreateBlankWallet()
+    {
+        RecreateWallet(WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_BLANK_WALLET);
+    }
+
+    ~EncryptionFailureSetup() { TestUnloadWallet(std::move(wallet)); }
+};
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_master_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextCommit(); // The injected failure affects only the first attempt
+    fail_db->MakeBatch(); // Batch construction must not consume the commit failure
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{}; // Keep abort regressions observable
+    BOOST_CHECK(!wallet->EncryptWallet("passphrase"));
+    BOOST_CHECK(!wallet->HasEncryptionKeys());
+    BOOST_CHECK(!wallet->HaveCryptedKeys());
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::MASTER_KEY));
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+    BOOST_CHECK( wallet->EncryptWallet("passphrase"));
+    BOOST_CHECK( wallet->HasEncryptionKeys());
+    BOOST_CHECK( wallet->HaveCryptedKeys());
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::MASTER_KEY));
+    BOOST_CHECK(!fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY));
+    BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextWrite(DBKeys::WALLETDESCRIPTORCKEY, /*matches_to_skip=*/1); // Only one write fails
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::MASTER_KEY), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_erase_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+
+    fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY); // Only one erase fails
+    for (bool success : {false, true}) {
+        BOOST_CHECK_EQUAL(wallet->EncryptWallet("passphrase"), success);
+        BOOST_CHECK_EQUAL(wallet->HasEncryptionKeys(), success);
+        BOOST_CHECK_EQUAL(wallet->HaveCryptedKeys(), success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORKEY), !success);
+        BOOST_CHECK_EQUAL(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY), success);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(change_passphrase_master_key_write_failure, EncryptionFailureSetup)
+{
+    AddKey(*wallet, GenerateRandomKey());
+    BOOST_REQUIRE(wallet->EncryptWallet("old_pass"));
+    const auto master_key_record{fail_db->GetRecordValue(DBKeys::MASTER_KEY)};
+    BOOST_REQUIRE(master_key_record);
+
+    fail_db->FailNextWrite(DBKeys::MASTER_KEY); // The injected failure affects only the first attempt
+    BOOST_CHECK(!wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
+    BOOST_CHECK(fail_db->GetRecordValue(DBKeys::MASTER_KEY) == master_key_record);
+    BOOST_CHECK( wallet->Unlock("old_pass"));
+    wallet->Lock();
+    BOOST_CHECK(!wallet->Unlock("new_pass"));
+    BOOST_CHECK( wallet->ChangeWalletPassphrase("old_pass", "new_pass"));
+    BOOST_CHECK(fail_db->GetRecordValue(DBKeys::MASTER_KEY) != master_key_record);
+    BOOST_CHECK( wallet->Unlock("new_pass"));
+    wallet->Lock();
+    BOOST_CHECK(!wallet->Unlock("old_pass"));
+}
+
+BOOST_FIXTURE_TEST_CASE(add_encrypted_descriptor_key_without_plaintext_record, EncryptionFailureSetup)
+{
+    RecreateBlankWallet();
+    BOOST_REQUIRE(wallet->EncryptWallet("passphrase"));
+    BOOST_REQUIRE(wallet->Unlock("passphrase"));
+
+    fail_db->FailNextErase(DBKeys::WALLETDESCRIPTORKEY);
+    AddKey(*wallet, GenerateRandomKey());
+    BOOST_CHECK(wallet->HaveCryptedKeys());
+    BOOST_CHECK(fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
+}
+
+BOOST_FIXTURE_TEST_CASE(add_descriptor_key_write_failure, EncryptionFailureSetup)
+{
+    for (bool encrypted : {false, true}) {
+        RecreateBlankWallet();
+        CKey key{GenerateRandomKey()};
+        // Add a public descriptor first so the private-key update exercises an existing live manager
+        WalletDescriptor descriptor{AddKey(*wallet, key, /*private_key=*/false)};
+        FlatSigningProvider provider;
+        provider.keys.emplace(key.GetPubKey().GetID(), key);
+        auto add_key{[&] {
+            LOCK(wallet->cs_wallet);
+            return wallet->AddWalletDescriptor(descriptor, provider, /*label=*/"", /*internal=*/false);
+        }};
+        auto has_key{[&] {
+            LOCK(wallet->cs_wallet);
+            return wallet->GetKey(key.GetPubKey().GetID()).has_value();
+        }};
+        if (encrypted) {
+            BOOST_REQUIRE(wallet->EncryptWallet("passphrase"));
+            BOOST_REQUIRE(wallet->Unlock("passphrase"));
+        }
+        BOOST_CHECK(!has_key());
+
+        const std::string record_type{encrypted ? DBKeys::WALLETDESCRIPTORCKEY : DBKeys::WALLETDESCRIPTORKEY};
+        fail_db->FailNextWrite(record_type);
+        BOOST_CHECK_THROW((void)add_key(), std::runtime_error);
+        BOOST_CHECK(!has_key());
+        BOOST_CHECK(!fail_db->HasRecordType(record_type));
+        BOOST_CHECK(add_key());
+        BOOST_CHECK(has_key());
+        BOOST_CHECK(fail_db->HasRecordType(record_type));
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)

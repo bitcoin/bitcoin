@@ -6,11 +6,15 @@
 #define BITCOIN_WALLET_TEST_UTIL_H
 
 #include <addresstype.h>
+#include <streams.h>
 #include <wallet/db.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/sqlite.h>
 
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 
 class ArgsManager;
 class CChain;
@@ -66,6 +70,88 @@ public:
     std::string Filename() override { return "mockable"; }
     std::string Format() override { return "sqlite-mock"; }
     std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<MockableSQLiteBatch>(*this); }
+};
+
+/** A SQLite wallet database that can fail selected operations for testing. */
+class FaultInjectingDatabase : public MockableSQLiteDatabase
+{
+public:
+    void FailNextWrite(std::string record_type, size_t matches_to_skip = 0)
+    {
+        m_fail_write = {std::move(record_type), matches_to_skip};
+    }
+    void FailNextErase(std::string record_type) { m_fail_erase = {std::move(record_type)}; }
+    void FailNextCommit() { m_fail_commit = true; }
+
+    std::optional<SerializeData> GetRecordValue(const std::string& record_type)
+    {
+        DataStream prefix;
+        prefix << record_type;
+        auto batch{MakeBatch()};
+        if (auto cursor{batch->GetNewPrefixCursor(prefix)}) {
+            DataStream key, value;
+            if (cursor->Next(key, value) == DatabaseCursor::Status::MORE) {
+                return SerializeData{value.begin(), value.end()};
+            }
+        }
+        return std::nullopt;
+    }
+
+    bool HasRecordType(const std::string& record_type) { return GetRecordValue(record_type).has_value(); }
+
+    std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<Batch>(*this); }
+
+private:
+    struct Failure {
+        std::string record_type;
+        size_t matches_to_skip{0};
+    };
+
+    static bool ShouldFail(std::optional<Failure>& failure, const DataStream& key)
+    {
+        if (!failure) return false;
+        std::string record_type;
+        SpanReader{MakeByteSpan(key)} >> record_type;
+        if (failure->record_type != record_type) return false;
+        if (failure->matches_to_skip > 0) {
+            --failure->matches_to_skip;
+            return false;
+        }
+        failure.reset();
+        return true;
+    }
+
+    class Batch : public SQLiteBatch
+    {
+    public:
+        explicit Batch(FaultInjectingDatabase& database) : SQLiteBatch(database), m_owner{database} {}
+
+        bool TxnCommit() override
+        {
+            if (std::exchange(m_owner.m_fail_commit, false)) return false;
+            return SQLiteBatch::TxnCommit();
+        }
+
+    protected:
+        bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override
+        {
+            if (ShouldFail(m_owner.m_fail_write, key)) return false;
+            return SQLiteBatch::WriteKey(std::move(key), std::move(value), overwrite);
+        }
+
+        bool EraseKey(DataStream&& key) override
+        {
+            if (ShouldFail(m_owner.m_fail_erase, key)) return false;
+            return SQLiteBatch::EraseKey(std::move(key));
+        }
+
+    private:
+        FaultInjectingDatabase& m_owner;
+    };
+
+    std::optional<Failure> m_fail_write{};
+    std::optional<Failure> m_fail_erase{};
+    bool m_fail_commit{false};
 };
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase();

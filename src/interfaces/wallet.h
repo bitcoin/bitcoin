@@ -14,6 +14,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
@@ -48,6 +49,7 @@ class CWallet;
 enum class AddressPurpose;
 struct CRecipient;
 struct WalletContext;
+struct WalletError;
 } // namespace wallet
 
 namespace interfaces {
@@ -76,14 +78,14 @@ public:
     virtual bool lock() = 0;
 
     //! Unlock wallet.
-    virtual bool unlock(const SecureString& wallet_passphrase) = 0;
+    virtual util::Expected<void, wallet::WalletError> unlock(const SecureString& wallet_passphrase) = 0;
 
     //! Return whether wallet is locked.
     virtual bool isLocked() = 0;
 
     //! Change wallet passphrase.
-    virtual bool changeWalletPassphrase(const SecureString& old_wallet_passphrase,
-        const SecureString& new_wallet_passphrase) = 0;
+    virtual util::Expected<void, wallet::WalletError> changeWalletPassphrase(const SecureString& old_wallet_passphrase,
+                                                                             const SecureString& new_wallet_passphrase) = 0;
 
     //! Abort a rescan.
     virtual void abortRescan() = 0;
