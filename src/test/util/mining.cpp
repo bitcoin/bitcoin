@@ -54,8 +54,7 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
         coinbase_tx.vin[0].prevout.SetNull();
         coinbase_tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
         coinbase_tx.vout.resize(1);
-        coinbase_tx.vout[0].scriptPubKey = P2WSH_OP_TRUE;
-        coinbase_tx.vout[0].nValue = GetBlockSubsidy(height + 1, params.GetConsensus());
+        coinbase_tx.vout[0] = CTxOut(GetBlockSubsidy(height + 1, params.GetConsensus()), P2WSH_OP_TRUE);
         // Always include OP_0 as a dummy extraNonce.
         coinbase_tx.vin[0].scriptSig = CScript() << (height + 1) << OP_0;
         block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};

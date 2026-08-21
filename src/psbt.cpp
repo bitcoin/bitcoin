@@ -132,15 +132,13 @@ std::optional<CMutableTransaction> PartiallySignedTransaction::GetUnsignedTx() c
     uint32_t max_sequence = CTxIn::SEQUENCE_FINAL;
     for (const PSBTInput& input : inputs) {
         CTxIn txin;
-        txin.prevout.hash = input.prev_txid;
-        txin.prevout.n = input.prev_out;
+        txin.prevout = COutPoint(input.prev_txid, input.prev_out);
         txin.nSequence = input.sequence.value_or(max_sequence);
         mtx.vin.push_back(txin);
     }
     for (const PSBTOutput& output : outputs) {
         CTxOut txout;
-        txout.nValue = output.amount;
-        txout.scriptPubKey = output.script;
+        txout = CTxOut(output.amount, output.script);
         mtx.vout.push_back(txout);
     }
     return mtx;

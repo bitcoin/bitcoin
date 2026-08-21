@@ -29,10 +29,7 @@ static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, size
         tx.vin[i].prevout = inputs[i];
     }
     for (size_t i = 0; i < num_outputs; ++i) {
-        tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        // The actual input and output values of these transactions don't really
-        // matter, since all accounting will use the entries' cached fees.
-        tx.vout[i].nValue = COIN;
+        tx.vout[i] = CTxOut(COIN, CScript() << OP_11 << OP_EQUAL);
     }
     return MakeTransactionRef(tx);
 }

@@ -24,4 +24,13 @@
 #  error No known always_inline attribute for this platform.
 #endif
 
+#if defined(__clang__)
+#  if __has_attribute(annotate)
+#    define CONSTRUCTOR_ARGUMENT(INDEX, TOTAL) [[clang::annotate("constructor-argument:" #INDEX "/" #TOTAL)]]
+#  endif
+#endif
+#ifndef CONSTRUCTOR_ARGUMENT
+#  define CONSTRUCTOR_ARGUMENT(INDEX, TOTAL)
+#endif
+
 #endif // BITCOIN_ATTRIBUTES_H

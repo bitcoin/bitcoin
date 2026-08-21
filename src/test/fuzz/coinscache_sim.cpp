@@ -57,8 +57,7 @@ struct PrecomputedData
             const uint8_t ser[4] = {uint8_t(idx), uint8_t(idx >> 8), uint8_t(idx >> 16), uint8_t(idx >> 24)};
             uint256 txid;
             CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(txid.begin());
-            outpoints[i].hash = Txid::FromUint256(txid);
-            outpoints[i].n = i;
+            outpoints[i] = COutPoint(Txid::FromUint256(txid), i);
             tx.vin.emplace_back(outpoints[i]);
         }
         block.vtx.push_back(MakeTransactionRef(tx));

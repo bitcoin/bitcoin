@@ -103,8 +103,7 @@ void RandomTransaction(CMutableTransaction& tx, bool fSingle)
     for (int in = 0; in < ins; in++) {
         tx.vin.emplace_back();
         CTxIn &txin = tx.vin.back();
-        txin.prevout.hash = Txid::FromUint256(m_rng.rand256());
-        txin.prevout.n = m_rng.randbits(2);
+        txin.prevout = COutPoint(Txid::FromUint256(m_rng.rand256()), m_rng.randbits(2));
         RandomScript(txin.scriptSig);
         txin.nSequence = (m_rng.randbool()) ? m_rng.rand32() : std::numeric_limits<uint32_t>::max();
     }

@@ -227,8 +227,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FlatSigningProvider* keystore,
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR, err);
                 }
                 Coin newcoin;
-                newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out = CTxOut(MAX_MONEY, scriptPubKey);
                 if (prevOut.exists("amount")) {
                     newcoin.out.nValue = AmountFromValue(prevOut.find_value("amount"));
                 }

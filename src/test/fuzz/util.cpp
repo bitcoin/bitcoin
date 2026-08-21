@@ -63,9 +63,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
             script_wit = ConsumeScriptWitness(fuzzed_data_provider);
         }
         CTxIn in;
-        in.prevout = COutPoint{txid_prev, index_out};
-        in.nSequence = sequence;
-        in.scriptSig = script_sig;
+        in = CTxIn(COutPoint{txid_prev, index_out}, script_sig, sequence);
         in.scriptWitness = script_wit;
 
         tx_mut.vin.push_back(in);

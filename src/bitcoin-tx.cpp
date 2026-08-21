@@ -643,8 +643,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                     throw std::runtime_error(err);
                 }
                 Coin newcoin;
-                newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
+                newcoin.out = CTxOut(MAX_MONEY, scriptPubKey);
                 if (prevOut.exists("amount")) {
                     newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
                 }

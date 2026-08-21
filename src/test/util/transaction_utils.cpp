@@ -17,8 +17,7 @@ CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, CAmou
     txCredit.vin[0].prevout.SetNull();
     txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
     txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txCredit.vout[0].scriptPubKey = scriptPubKey;
-    txCredit.vout[0].nValue = nValue;
+    txCredit.vout[0] = CTxOut(nValue, scriptPubKey);
 
     return txCredit;
 }
@@ -31,12 +30,8 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
     txSpend.vin.resize(1);
     txSpend.vout.resize(1);
     txSpend.vin[0].scriptWitness = scriptWitness;
-    txSpend.vin[0].prevout.hash = txCredit.GetHash();
-    txSpend.vin[0].prevout.n = 0;
-    txSpend.vin[0].scriptSig = scriptSig;
-    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
+    txSpend.vin[0] = CTxIn(COutPoint(txCredit.GetHash(), 0), scriptSig, CTxIn::SEQUENCE_FINAL);
+    txSpend.vout[0] = CTxOut(txCredit.vout[0].nValue, CScript());
 
     return txSpend;
 }
@@ -62,10 +57,8 @@ std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keyst
     AddCoins(coinsRet, CTransaction(dummyTransactions[0]), 0);
 
     dummyTransactions[1].vout.resize(2);
-    dummyTransactions[1].vout[0].nValue = nValues[2];
-    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[2].GetPubKey()));
-    dummyTransactions[1].vout[1].nValue = nValues[3];
-    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(PKHash(key[3].GetPubKey()));
+    dummyTransactions[1].vout[0] = CTxOut(nValues[2], GetScriptForDestination(PKHash(key[2].GetPubKey())));
+    dummyTransactions[1].vout[1] = CTxOut(nValues[3], GetScriptForDestination(PKHash(key[3].GetPubKey())));
     AddCoins(coinsRet, CTransaction(dummyTransactions[1]), 0);
 
     return dummyTransactions;
