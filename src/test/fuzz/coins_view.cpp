@@ -372,17 +372,15 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
         } else {
             assert(!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin);
         }
-        // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
+        // If the backend coin exists, it must also be in the cache if the cached coin wasn't spent.
         std::optional<Coin> coin_in_backend;
-        bool exists_using_have_coin_in_backend;
         if (dynamic_cast<CoinsViewOverlay*>(&coins_view_cache)) {
             // PeekCoin does not mutate cacheCoins, so async workers can keep running.
             coin_in_backend = backend_coins_view->PeekCoin(random_out_point);
-            exists_using_have_coin_in_backend = coin_in_backend.has_value();
         } else {
-            exists_using_have_coin_in_backend = backend_coins_view->HaveCoin(random_out_point);
             coin_in_backend = backend_coins_view->GetCoin(random_out_point);
         }
+        const bool exists_using_have_coin_in_backend{coin_in_backend.has_value()};
         if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
