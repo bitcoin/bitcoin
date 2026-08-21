@@ -182,7 +182,7 @@ static RPCMethod getpeerinfo()
                     {
                         {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
                     }},
-                    {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
+                    {RPCResult::Type::STR_AMOUNT, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
                     {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                     {
                         {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
@@ -690,8 +690,8 @@ static RPCMethod getnetworkinfo()
                                 {RPCResult::Type::BOOL, "proxy_randomize_credentials", "Whether randomized credentials are used"},
                             }},
                         }},
-                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::STR_AMOUNT, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::STR_AMOUNT, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -723,40 +723,34 @@ static RPCMethod getnetworkinfo()
     obj.pushKV("subversion",    strSubVersion);
     obj.pushKV("protocolversion",PROTOCOL_VERSION);
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (node.connman) {
-        ServiceFlags services = node.connman->GetLocalServices();
-        obj.pushKV("localservices", strprintf("%016x", services));
-        obj.pushKV("localservicesnames", GetServicesNames(services));
-    }
-    if (node.peerman) {
-        auto peerman_info{node.peerman->GetInfo()};
-        obj.pushKV("localrelay", !peerman_info.ignores_incoming_txs);
-        obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(peerman_info.median_outbound_time_offset));
-        obj.pushKV("tx_send_rate", peerman_info.tx_send_rate);
-        auto buckjson = [&](const auto& buckinfo) {
-            UniValue b{UniValue::VOBJ};
-            b.pushKV("backlog", buckinfo.backlog_count);
-            b.pushKV("count_tok", buckinfo.count_bucket);
-            b.pushKV("size_tok", buckinfo.size_bucket);
-            return b;
-        };
-        UniValue invbuckets{UniValue::VOBJ};
-        invbuckets.pushKV("inbound", buckjson(peerman_info.inbound_bucket));
-        invbuckets.pushKV("outbound", buckjson(peerman_info.outbound_bucket));
-        obj.pushKV("inv_buckets", invbuckets);
-    }
-    if (node.connman) {
-        obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections", node.connman->GetNodeCount(ConnectionDirection::Both));
-        obj.pushKV("connections_in", node.connman->GetNodeCount(ConnectionDirection::In));
-        obj.pushKV("connections_out", node.connman->GetNodeCount(ConnectionDirection::Out));
-    }
+    CConnman& connman = EnsureConnman(node);
+    ServiceFlags services = connman.GetLocalServices();
+    obj.pushKV("localservices", strprintf("%016x", services));
+    obj.pushKV("localservicesnames", GetServicesNames(services));
+    auto peerman_info{EnsurePeerman(node).GetInfo()};
+    obj.pushKV("localrelay", !peerman_info.ignores_incoming_txs);
+    obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(peerman_info.median_outbound_time_offset));
+    obj.pushKV("tx_send_rate", peerman_info.tx_send_rate);
+    auto buckjson = [&](const auto& buckinfo) {
+        UniValue b{UniValue::VOBJ};
+        b.pushKV("backlog", buckinfo.backlog_count);
+        b.pushKV("count_tok", buckinfo.count_bucket);
+        b.pushKV("size_tok", buckinfo.size_bucket);
+        return b;
+    };
+    UniValue invbuckets{UniValue::VOBJ};
+    invbuckets.pushKV("inbound", buckjson(peerman_info.inbound_bucket));
+    invbuckets.pushKV("outbound", buckjson(peerman_info.outbound_bucket));
+    obj.pushKV("inv_buckets", invbuckets);
+    obj.pushKV("networkactive", connman.GetNetworkActive());
+    obj.pushKV("connections", connman.GetNodeCount(ConnectionDirection::Both));
+    obj.pushKV("connections_in", connman.GetNodeCount(ConnectionDirection::In));
+    obj.pushKV("connections_out", connman.GetNodeCount(ConnectionDirection::Out));
     obj.pushKV("networks",      GetNetworksInfo());
-    if (node.mempool) {
-        // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
-        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_opts.min_relay_feerate.GetFeePerK()));
-        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_opts.incremental_relay_feerate.GetFeePerK()));
-    }
+    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
+    obj.pushKV("relayfee", ValueFromAmount(mempool.m_opts.min_relay_feerate.GetFeePerK()));
+    obj.pushKV("incrementalfee", ValueFromAmount(mempool.m_opts.incremental_relay_feerate.GetFeePerK()));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(g_maplocalhost_mutex);
