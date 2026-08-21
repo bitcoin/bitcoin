@@ -49,6 +49,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 class Chainstate;
@@ -71,6 +72,9 @@ struct Params;
 namespace util {
 class SignalInterrupt;
 } // namespace util
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 inline constexpr unsigned int MIN_BLOCKS_TO_KEEP = 288;
@@ -340,7 +344,7 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
  */
 class CScriptCheck
 {
-private:
+protected:
     CTxOut m_tx_out;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -361,10 +365,24 @@ public:
     std::optional<std::pair<ScriptError, std::string>> operator()();
 };
 
+class BatchableScriptCheck : private CScriptCheck
+{
+public:
+    BatchableScriptCheck(CScriptCheck&& other) : CScriptCheck(std::move(other)) {}
+
+    BatchableResult operator()();
+};
+
 // CScriptCheck is used a lot in std::vector, make sure that's efficient
 static_assert(std::is_nothrow_move_assignable_v<CScriptCheck>);
 static_assert(std::is_nothrow_move_constructible_v<CScriptCheck>);
 static_assert(std::is_nothrow_destructible_v<CScriptCheck>);
+
+// BatchableScriptCheck is what the script check queue actually stores in its
+// std::vector, so it needs the same guarantees.
+static_assert(std::is_nothrow_move_assignable_v<BatchableScriptCheck>);
+static_assert(std::is_nothrow_move_constructible_v<BatchableScriptCheck>);
+static_assert(std::is_nothrow_destructible_v<BatchableScriptCheck>);
 
 /**
  * Convenience class for initializing and passing the script execution cache
@@ -980,7 +998,7 @@ private:
     MockableSteadyClock::time_point m_last_presync_update GUARDED_BY(GetMutex()){};
 
     //! A queue for script verifications that have to be performed by worker threads.
-    CCheckQueue<CScriptCheck> m_script_check_queue;
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult> m_script_check_queue;
 
     //! Timers and counters used for benchmarking validation in both background
     //! and active chainstates.
@@ -1377,7 +1395,7 @@ public:
     //! or nullopt if the best header does not extend the tip.
     std::optional<int> BlocksAheadOfTip() const LOCKS_EXCLUDED(::cs_main);
 
-    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
 
