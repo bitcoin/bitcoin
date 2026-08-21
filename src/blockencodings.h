@@ -7,6 +7,7 @@
 
 #include <crypto/siphash.h>
 #include <primitives/block.h>
+#include <util/log.h>
 
 #include <functional>
 
@@ -139,7 +140,7 @@ public:
     CBlockHeader header;
 
     // Can be overridden for testing
-    using IsBlockMutatedFn = std::function<bool(const CBlock&, bool)>;
+    using IsBlockMutatedFn = std::function<bool(util::log::Logger*, const CBlock&, bool)>;
     IsBlockMutatedFn m_check_block_mutated_mock{nullptr};
 
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
