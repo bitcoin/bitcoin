@@ -20,9 +20,8 @@ std::string_view RequestMethodString(HTTPRequestMethod m);
 
 FUZZ_TARGET(http_request)
 {
-    using http_bitcoin::HTTPRequest;
-    using http_bitcoin::MAX_HEADERS_SIZE;
     using util::LineReader;
+    using namespace bitcoin_http;
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(4096)};
@@ -47,18 +46,18 @@ FUZZ_TARGET(http_request)
     (void)http_request.GetHeader(header);
     // Reaching here means LoadControlData/LoadHeaders/LoadBody all succeeded, so the
     // parsed body must be consistent with the message framing. Before libevent was
-    // replaced with http_bitcoin::HTTPRequest (#35182), ReadBody() always returned an
+    // replaced with HTTPRequest (#35182), ReadBody() always returned an
     // empty string here; LoadBody now populates the body per RFC 9112 framing, so mirror
     // its branch logic to assert the body matches the framing that produced it.
     const std::string body = http_request.ReadBody();
-    const auto [has_transfer_encoding, transfer_encoding] = http_request.GetHeader("Transfer-Encoding");
-    const auto [has_content_length, content_length] = http_request.GetHeader("Content-Length");
-    if (has_transfer_encoding && ToLower(transfer_encoding) == "chunked") {
+    const auto transfer_encoding = http_request.GetHeader("Transfer-Encoding");
+    const auto content_length = http_request.GetHeader("Content-Length");
+    if (transfer_encoding && ToLower(*transfer_encoding) == "chunked") {
         // A chunked body is the concatenation of the decoded chunks, bounded by MAX_BODY_SIZE.
-        assert(body.size() <= http_bitcoin::MAX_BODY_SIZE);
-    } else if (has_content_length) {
+        assert(body.size() <= MAX_BODY_SIZE);
+    } else if (content_length) {
         // A Content-Length body is exactly that many bytes.
-        const auto parsed_length{ToIntegral<uint64_t>(content_length)};
+        const auto parsed_length{ToIntegral<uint64_t>(*content_length)};
         assert(parsed_length);
         assert(body.size() == *parsed_length);
     } else {
