@@ -494,6 +494,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                         pindex->GetBlockHash() == *snapshot_blockhash) {
                     // Should have been set above; don't disturb it with code below.
                     Assert(pindex->m_chain_tx_count > 0);
+                    // The hardcoded m_chain_tx_count does not imply that the
+                    // background chainstate has processed the base's parents.
+                    if ((pindex->nStatus & BLOCK_HAVE_DATA) && !pindex->pprev->HaveNumChainTxs()) {
+                        m_blocks_unlinked.insert(std::make_pair(pindex->pprev, pindex));
+                    }
                 } else if (pindex->pprev->m_chain_tx_count > 0) {
                     pindex->m_chain_tx_count = pindex->pprev->m_chain_tx_count + pindex->nTx;
                 } else {
@@ -791,16 +796,23 @@ BlockfileType BlockManager::BlockfileTypeForHeight(int height)
     if (!m_snapshot_height) {
         return BlockfileType::NORMAL;
     }
-    return (height >= *m_snapshot_height) ? BlockfileType::ASSUMED : BlockfileType::NORMAL;
+    // The snapshot base block is connected by the background chainstate.
+    // Only blocks above it belong to the snapshot chainstate's blockfile range.
+    return (height > *m_snapshot_height) ? BlockfileType::ASSUMED : BlockfileType::NORMAL;
 }
 
-bool BlockManager::FlushChainstateBlockFile(int tip_height)
+bool BlockManager::FlushChainstateBlockFile(int tip_height, bool snapshot_chainstate)
 {
     AssertLockHeld(::cs_main);
-    auto& cursor = m_blockfile_cursors[BlockfileTypeForHeight(tip_height)];
-    // If the cursor does not exist, it means an assumeutxo snapshot is loaded,
-    // but no blocks past the snapshot height have been written yet, so there
-    // is no data associated with the chainstate, and it is safe not to flush.
+    BlockfileType type{BlockfileTypeForHeight(tip_height)};
+    if (snapshot_chainstate && m_snapshot_height && tip_height == *m_snapshot_height) {
+        // The base block belongs to the background chainstate's normal range,
+        // so a snapshot chainstate at the base height must not flush that cursor.
+        type = BlockfileType::ASSUMED;
+    }
+    auto& cursor = m_blockfile_cursors[type];
+    // If the cursor does not exist, there is no blockfile data associated with
+    // the chainstate, and it is safe not to flush.
     if (cursor) {
         return FlushBlockFile(cursor->file_num, /*fFinalize=*/false, /*finalize_undo=*/false);
     }
