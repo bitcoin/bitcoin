@@ -820,5 +820,71 @@
     "return_code": 1,
     "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
     "description": "Ensure adding witness outputs with uncompressed pubkeys fails"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "1"],
+    "return_code": 0,
+    "output_cmp": "evalscript-op1.json",
+    "description": "evalscript: OP_1 succeeds (default witness_v0, mandatory flags)"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript"],
+    "return_code": 0,
+    "output_cmp": "evalscript-empty.json",
+    "description": "evalscript: empty script fails with EVAL_FALSE"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "93", "03", "05"],
+    "return_code": 0,
+    "output_cmp": "evalscript-add.json",
+    "description": "evalscript: OP_ADD with initial stack 3+5=8"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "evalscript", "51"],
+    "return_code": 0,
+    "output_cmp": "evalscript-tapscript.json",
+    "description": "evalscript: tapscript sigversion, OP_1"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "evalscript", "bb"],
+    "return_code": 0,
+    "output_cmp": "evalscript-opsuccess.json",
+    "description": "evalscript: tapscript OP_SUCCESS opcode (0xbb) succeeds"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "-scriptflags=DISCOURAGE_OP_SUCCESS", "evalscript", "bb"],
+    "return_code": 0,
+    "output_cmp": "evalscript-opsuccess-discouraged.json",
+    "description": "evalscript: tapscript OP_SUCCESS with DISCOURAGE_OP_SUCCESS fails"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=base", "-scriptflags=NONE", "evalscript", "1", "01"],
+    "return_code": 0,
+    "output_cmp": "evalscript-base-noflags.json",
+    "description": "evalscript: base sigversion, no flags, extra stack item allowed"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-scriptflags=P2SH,WITNESS", "evalscript", "1"],
+    "return_code": 0,
+    "output_cmp": "evalscript-customflags.json",
+    "description": "evalscript: custom script flags"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=foo", "evalscript", "1"],
+    "return_code": 1,
+    "error_txt": "Unknown -sigversion=foo",
+    "description": "evalscript: unknown sigversion is an error"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-scriptflags=BOGUS", "evalscript", "1"],
+    "return_code": 1,
+    "error_txt": "Unknown script flag: BOGUS",
+    "description": "evalscript: unknown script flag is an error"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "1", "notahex"],
+    "return_code": 1,
+    "error_txt": "Initial stack element not valid hex: notahex",
+    "description": "evalscript: non-hex stack element is an error"
   }
 ]
