@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <expected>
 #include <map>
 #include <optional>
 #include <ostream>
