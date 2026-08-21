@@ -216,21 +216,21 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
-    // -a, -b and -ccc end up in map, -d ignored because it is after
-    // a non-option argument (non-GNU option parsing)
+    // -a, -b, -ccc and -d end up in map (GNU-style: options are parsed
+    // even after non-option argument "f")
     BOOST_CHECK(testArgs.IsArgSet("-a"));
     BOOST_CHECK(testArgs.IsArgSet("-b"));
     BOOST_CHECK(testArgs.IsArgSet("-ccc"));
     BOOST_CHECK(!testArgs.IsArgSet("f"));
-    BOOST_CHECK(!testArgs.IsArgSet("-d"));
+    BOOST_CHECK(testArgs.IsArgSet("-d"));
     testArgs.LockSettings([&](const common::Settings& s) {
-        BOOST_CHECK(s.command_line_options.size() == 3);
+        BOOST_CHECK(s.command_line_options.size() == 4);
         BOOST_CHECK(s.ro_config.empty());
         BOOST_CHECK(s.command_line_options.contains("a"));
         BOOST_CHECK(s.command_line_options.contains("b"));
         BOOST_CHECK(s.command_line_options.contains("ccc"));
         BOOST_CHECK(!s.command_line_options.contains("f"));
-        BOOST_CHECK(!s.command_line_options.contains("d"));
+        BOOST_CHECK(s.command_line_options.contains("d"));
 
         BOOST_CHECK(s.command_line_options.at("a").size() == 1);
         BOOST_CHECK(s.command_line_options.at("a").front().get_str() == "");
@@ -679,9 +679,10 @@ BOOST_AUTO_TEST_CASE(util_AddCommand)
     };
 
     BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "cmd1"}));
-    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd1", "-opt1=foo"})); // things after the command are "args" and left unparsed, not options
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "cmd1", "-opt1=foo"})); // parsed as option after command; -opt1 is invalid for cmd1
 
     BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd2", "-opt1=foo"})); // opt1 after command; valid for cmd2
     BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd3"}));
     BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd1"}));
     BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd2"}));
@@ -697,6 +698,166 @@ BOOST_AUTO_TEST_CASE(util_AddCommand)
     BOOST_CHECK_EQUAL(PARSE_FAIL, testfn(std::array{"x", "cmd4"}));
     BOOST_CHECK_EQUAL(NO_COMMAND, testfn(std::array{"x", "-opt3=foo"}));
     BOOST_CHECK_EQUAL(PARSE_FAIL, testfn(std::array{"x", "-opt4=foo"}));
+}
+
+BOOST_AUTO_TEST_CASE(util_ParseParameters_gnu_style)
+{
+    // GNU-style parsing: options are recognized after non-option arguments.
+    // Unrecognized options are always errors; use "--" to pass positional
+    // arguments that begin with a dash.
+
+    // Valid option after command is stored normally.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "-opt=val"};
+        BOOST_CHECK(test.ParseParameters(3, argv, error));
+        BOOST_CHECK_EQUAL(test.GetArg("-opt", ""), "val");
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK_EQUAL(cmd->command, "cmd");
+        BOOST_CHECK(cmd->args.empty());
+    }
+
+    // The first positional argument is preserved exactly.
+    {
+        TestArgsManager test;
+        test.SetupArgs({});
+        std::string error;
+        const char* argv[] = {"x", "cmd=val"};
+        BOOST_CHECK(test.ParseParameters(2, argv, error));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 1U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "cmd=val");
+    }
+
+    // Unrecognized option after command is an error (not silently treated as positional).
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "-unknown"};
+        BOOST_CHECK(!test.ParseParameters(3, argv, error));
+        BOOST_CHECK_EQUAL(error, "Invalid parameter -unknown");
+    }
+
+    // "--" ends option processing; everything after is a positional arg,
+    // even arguments beginning with a dash.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "--", "-not-an-option", "arg2"};
+        BOOST_CHECK(test.ParseParameters(5, argv, error));
+        BOOST_CHECK(!test.IsArgSet("-opt"));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK_EQUAL(cmd->command, "cmd");
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 2U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-not-an-option");
+        BOOST_CHECK_EQUAL(cmd->args[1], "arg2");
+    }
+
+    // Options and positional args can be freely mixed after a command.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "arg1", "-opt=val", "arg2"};
+        BOOST_CHECK(test.ParseParameters(5, argv, error));
+        BOOST_CHECK_EQUAL(test.GetArg("-opt", ""), "val");
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 2U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "arg1");
+        BOOST_CHECK_EQUAL(cmd->args[1], "arg2");
+    }
+
+    // A lone hyphen after a command is a positional argument, not an option.
+    {
+        TestArgsManager test;
+        test.SetupArgs({});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "-"};
+        BOOST_CHECK(test.ParseParameters(3, argv, error));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 1U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-");
+    }
+
+    // Negative numbers after a command are positional args, not options.
+    {
+        TestArgsManager test;
+        test.SetupArgs({});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "-10", "-3"};
+        BOOST_CHECK(test.ParseParameters(4, argv, error));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 2U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-10");
+        BOOST_CHECK_EQUAL(cmd->args[1], "-3");
+    }
+
+#ifdef WIN32
+    // On Windows, slash options may have path values, while slash-prefixed paths
+    // remain positional arguments.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "cmd", "/OPT=C:/bitcoin", "/bad/./path"};
+        BOOST_CHECK(test.ParseParameters(4, argv, error));
+        BOOST_CHECK_EQUAL(test.GetArg("-opt", ""), "C:/bitcoin");
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 1U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "/bad/./path");
+    }
+#endif
+
+    // "--" also ends option processing before the command.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        test.AddCommand("cmd", "test command");
+        std::string error;
+        const char* argv[] = {"x", "--", "cmd", "-not-an-option", "arg2"};
+        BOOST_CHECK(test.ParseParameters(5, argv, error));
+        BOOST_CHECK(!test.IsArgSet("-opt"));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK_EQUAL(cmd->command, "cmd");
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 2U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-not-an-option");
+        BOOST_CHECK_EQUAL(cmd->args[1], "arg2");
+    }
+
+    // Options before "--" are parsed; the first positional argument after
+    // it may begin with a dash.
+    {
+        TestArgsManager test;
+        test.SetupArgs({{"-opt", ArgsManager::ALLOW_ANY}});
+        std::string error;
+        const char* argv[] = {"x", "-opt", "--", "-1"};
+        BOOST_CHECK(test.ParseParameters(4, argv, error));
+        BOOST_CHECK(test.IsArgSet("-opt"));
+        const auto cmd = test.GetCommand();
+        BOOST_REQUIRE(cmd);
+        BOOST_CHECK(cmd->command.empty());
+        BOOST_REQUIRE_EQUAL(cmd->args.size(), 1U);
+        BOOST_CHECK_EQUAL(cmd->args[0], "-1");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(util_AddCommand_clearargs_replaces_command_options)
