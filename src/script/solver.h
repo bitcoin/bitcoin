@@ -18,6 +18,7 @@
 #include <vector>
 
 class CPubKey;
+class CTxIn;
 
 enum class TxoutType {
     NONSTANDARD,
@@ -63,5 +64,26 @@ std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> Match
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+
+/**
+ * Result type for GetRedeemAndWitnessScripts.
+ *
+ * For P2SH inputs, `redeem_script` is set.
+ * For P2WSH inputs, `witness_script` is set.
+ * For P2SH-P2WSH (nested) inputs, both are set: `redeem_script` is the
+ * P2WSH program extracted from the scriptSig, and `witness_script` is the
+ * actual script extracted from the witness stack.
+ * If no script could be extracted, both are empty.
+ */
+struct RedeemAndWitnessScripts {
+    CScript redeem_script;
+    CScript witness_script;
+};
+
+/**
+ * Returns the redeem script and/or witness script being executed for a given
+ * transaction input, when the previous output's scriptPubKey is available.
+ */
+RedeemAndWitnessScripts GetRedeemAndWitnessScripts(const CScript& prevScript, const CTxIn& txin);
 
 #endif // BITCOIN_SCRIPT_SOLVER_H

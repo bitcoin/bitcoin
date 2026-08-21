@@ -230,6 +230,7 @@ static RPCMethod getrawtransaction()
         TxDoc({.elision_mode = ElisionMode::Silent,
                .prevout = true,
                .prevout_optional = true,
+               .include_scripts = true,
                .vin_inner_elision = "Same vin fields as verbosity = 1"}));
     return RPCMethod{
                 "getrawtransaction",

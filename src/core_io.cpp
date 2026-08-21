@@ -459,10 +459,10 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", std::move(o));
         }
-        if (!tx.vin[i].scriptWitness.IsNull()) {
+        if (!txin.scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
-            txinwitness.reserve(tx.vin[i].scriptWitness.stack.size());
-            for (const auto& item : tx.vin[i].scriptWitness.stack) {
+            txinwitness.reserve(txin.scriptWitness.stack.size());
+            for (const auto& item : txin.scriptWitness.stack) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
@@ -472,6 +472,20 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             const CTxOut& prev_txout = prev_coin.out;
 
             amt_total_in += prev_txout.nValue;
+
+            // Extract redeem and witness scripts from the input when undo data is available,
+            // as the previous output's scriptPubKey is needed to identify the script type.
+            auto scripts = GetRedeemAndWitnessScripts(prev_txout.scriptPubKey, txin);
+            if (!scripts.redeem_script.empty()) {
+                UniValue d_redeem_script(UniValue::VOBJ);
+                ScriptToUniv(scripts.redeem_script, d_redeem_script, /*include_hex=*/false, /*include_address=*/true);
+                in.pushKV("redeemScript", std::move(d_redeem_script));
+            }
+            if (!scripts.witness_script.empty()) {
+                UniValue d_witness_script(UniValue::VOBJ);
+                ScriptToUniv(scripts.witness_script, d_witness_script, /*include_hex=*/false, /*include_address=*/true);
+                in.pushKV("witnessScript", std::move(d_witness_script));
+            }
 
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
