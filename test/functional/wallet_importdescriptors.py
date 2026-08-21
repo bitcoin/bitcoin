@@ -629,6 +629,24 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                                  success=True)
             assert_equal(w1.getnewaddress('', 'bech32'), addresses[i])
 
+        self.log.info("Equivalent Miniscript descriptors should not be duplicated")
+        self.nodes[1].createwallet(wallet_name="wminiscript", disable_private_keys=True, blank=True)
+        wminiscript = self.nodes[1].get_wallet_rpc("wminiscript")
+        miniscript_request = {
+            'active': True,
+            'range': [0, 9],
+            'timestamp': 'now',
+        }
+        self.test_importdesc({
+            **miniscript_request,
+            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0h/0h]{xpub}/*),older(1)))"),
+        }, success=True, wallet=wminiscript)
+        self.test_importdesc({
+            **miniscript_request,
+            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0'/0']{xpub}/*),older(1)))"),
+        }, success=True, wallet=wminiscript)
+        assert_equal(len(wminiscript.listdescriptors()["descriptors"]), 1)
+
         # Check active=False default
         self.log.info('Check imported descriptors are not active by default')
         self.test_importdesc({'desc': descsum_create('pkh([12345678/1h]' + xpub + '/*)'),
