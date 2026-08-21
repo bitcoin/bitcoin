@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <pubkey.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -204,6 +205,17 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+unsigned int CScript::CountSigOps(bool fAccurate) const
+{
+    return GetSigOpCount(fAccurate);
+}
+
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey)
+{
+    if (!scriptPubKey.IsPayToScriptHash()) return 0;
+    return scriptPubKey.GetSigOpCount(scriptSig);
+}
+
 bool CScript::IsPayToAnchor() const
 {
     return (this->size() == 4 &&
@@ -221,6 +233,16 @@ bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& progr
         program[1] == 0x73;
 }
 
+bool CScript::IsPayToPubKeyHash() const noexcept
+{
+    return size() == 25 &&
+           (*this)[0] == OP_DUP &&
+           (*this)[1] == OP_HASH160 &&
+           (*this)[2] == 20 &&
+           (*this)[23] == OP_EQUALVERIFY &&
+           (*this)[24] == OP_CHECKSIG;
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
@@ -228,6 +250,13 @@ bool CScript::IsPayToScriptHash() const
             (*this)[0] == OP_HASH160 &&
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
+}
+
+bool CScript::IsPayToWitnessPubKeyHash() const noexcept
+{
+    return size() == 22 &&
+           (*this)[0] == OP_0 &&
+           (*this)[1] == 20;
 }
 
 bool CScript::IsPayToWitnessScriptHash() const
@@ -243,6 +272,20 @@ bool CScript::IsPayToTaproot() const
     return (this->size() == 34 &&
             (*this)[0] == OP_1 &&
             (*this)[1] == 0x20);
+}
+
+bool CScript::IsCompressedPayToPubKey() const noexcept
+{
+    return size() == 2 + CPubKey::COMPRESSED_SIZE &&
+           (*this)[0] == CPubKey::COMPRESSED_SIZE &&
+           (*this)[1 + CPubKey::COMPRESSED_SIZE] == OP_CHECKSIG;
+}
+
+bool CScript::IsUncompressedPayToPubKey() const noexcept
+{
+    return size() == 2 + CPubKey::SIZE &&
+           (*this)[0] == CPubKey::SIZE &&
+           (*this)[1 + CPubKey::SIZE] == OP_CHECKSIG;
 }
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode
@@ -297,13 +340,13 @@ std::string CScriptWitness::ToString() const
     return ret + ")";
 }
 
-bool CScript::HasValidOps() const
+bool CScript::HasValidBaseOps() const
 {
     CScript::const_iterator it = begin();
     while (it < end()) {
         opcodetype opcode;
         std::vector<unsigned char> item;
-        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+        if (!GetOp(it, opcode, item) || opcode > MAX_BASE_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             return false;
         }
     }

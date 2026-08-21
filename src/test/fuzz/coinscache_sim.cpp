@@ -78,6 +78,7 @@ struct PrecomputedData
                 std::copy(hash.begin(), hash.begin() + 20, coins[i].out.scriptPubKey.begin() + 3);
                 coins[i].out.scriptPubKey[23] = OP_EQUALVERIFY;
                 coins[i].out.scriptPubKey[24] = OP_CHECKSIG;
+                assert(coins[i].out.scriptPubKey.IsPayToPubKeyHash());
                 break;
             case 1: /* P2SH */
                 coins[i].out.scriptPubKey.resize(23);
@@ -91,6 +92,7 @@ struct PrecomputedData
                 coins[i].out.scriptPubKey[0] = OP_0;
                 coins[i].out.scriptPubKey[1] = 20;
                 std::copy(hash.begin(), hash.begin() + 20, coins[i].out.scriptPubKey.begin() + 2);
+                assert(coins[i].out.scriptPubKey.IsPayToWitnessPubKeyHash());
                 break;
             case 3: /* P2WSH */
                 coins[i].out.scriptPubKey.resize(34);

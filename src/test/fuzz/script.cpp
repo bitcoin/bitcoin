@@ -147,7 +147,12 @@ FUZZ_TARGET(script, .init = initialize_script)
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
 
-        if (!std::get_if<PubKeyDestination>(&tx_destination_1)) {
+        const auto* pubkey_dest{std::get_if<PubKeyDestination>(&tx_destination_1)};
+        Assert(dest.IsCompressedPayToPubKey() == (pubkey_dest && pubkey_dest->GetPubKey().size() == 33));
+        Assert(dest.IsUncompressedPayToPubKey() == (pubkey_dest && pubkey_dest->GetPubKey().size() == 65));
+        Assert(dest.IsPayToPubKeyHash() == std::holds_alternative<PKHash>(tx_destination_1));
+        Assert(dest.IsPayToWitnessPubKeyHash() == std::holds_alternative<WitnessV0KeyHash>(tx_destination_1));
+        if (!pubkey_dest) {
             // Only try to round trip non-pubkey destinations since PubKeyDestination has no encoding
             Assert(dest.empty() != valid);
             Assert(tx_destination_1 == DecodeDestination(encoded_dest));

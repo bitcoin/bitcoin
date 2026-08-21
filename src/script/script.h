@@ -213,8 +213,8 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
-// Maximum value that an opcode can be
-inline constexpr unsigned int MAX_OPCODE = OP_NOP10;
+// Highest opcode allowed in pre-Taproot scripts
+inline constexpr unsigned int MAX_BASE_OPCODE = OP_NOP10;
 
 std::string GetOpName(opcodetype opcode);
 
@@ -535,6 +535,18 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    /**
+     * Count the number of signature operations (sigops) in this script.
+     *
+     * The `fAccurate` parameter controls how `CHECKMULTISIG` operations are counted.
+     * When enforcing the `MAX_BLOCK_SIGOPS_COST` limit, set `fAccurate` to `true` when
+     * counting a redeemScript (P2SH) or witnessScript (P2WSH), and set it to `false`
+     * when counting a scriptPubKey or scriptSig.
+     *
+     * This helper is equivalent to `GetSigOpCount(bool)`.
+     */
+    unsigned int CountSigOps(bool fAccurate) const;
+
     /*
      * OP_1 <0x4e73>
      */
@@ -543,18 +555,25 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
+    bool IsPayToPubKeyHash() const noexcept;
     bool IsPayToScriptHash() const;
+    bool IsPayToWitnessPubKeyHash() const noexcept;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     bool IsPayToTaproot() const;
 
+    //! Detect P2PK script with a compressed public key. Doesn't check the 0x02/0x03 key prefix.
+    bool IsCompressedPayToPubKey() const noexcept;
+    //! Detect P2PK script with an uncompressed public key. Doesn't check the 0x04 key prefix.
+    bool IsUncompressedPayToPubKey() const noexcept;
+
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
 
-    /** Check if the script contains valid OP_CODES */
-    bool HasValidOps() const;
+    /** Check whether the script contains only valid pre-Taproot opcodes. */
+    bool HasValidBaseOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
@@ -600,6 +619,12 @@ public:
     explicit CScriptID(const CScript& in);
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
 };
+
+/**
+ * Count sigops in the redeemScript selected by a P2SH scriptSig for the given scriptPubKey.
+ * Returns 0 if the scriptPubKey is not P2SH or the scriptSig is not a valid push-only script.
+ */
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey);
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);

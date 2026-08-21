@@ -1201,6 +1201,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForDestination(WitnessV0KeyHash{PKHash{dummy_pubkey}})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_KEYHASH);
+        BOOST_CHECK(script.IsPayToWitnessPubKeyHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 22);
     }
 
@@ -1215,6 +1216,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForDestination(PKHash{dummy_pubkey})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEYHASH);
+        BOOST_CHECK(script.IsPayToPubKeyHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 25);
     }
 
@@ -1236,6 +1238,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForRawPubKey(dummy_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
         CHECK_SCRIPT_STATIC_SIZE(script, 35);
     }
 
@@ -1247,6 +1250,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
         CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
     }
 
@@ -1615,18 +1619,48 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK(s == expect);
 }
 
-BOOST_AUTO_TEST_CASE(script_HasValidOps)
+BOOST_AUTO_TEST_CASE(script_HasValidBaseOps)
 {
-    // Exercise the HasValidOps functionality
-    CScript script;
-    script = ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex); // Normal script
-    BOOST_CHECK(script.HasValidOps());
-    script = ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex);
-    BOOST_CHECK(script.HasValidOps());
-    script = ToScript("ff88ac"_hex); // Script with OP_INVALIDOPCODE explicit
-    BOOST_CHECK(!script.HasValidOps());
-    script = ToScript("88acc0"_hex); // Script with undefined opcode
-    BOOST_CHECK(!script.HasValidOps());
+    BOOST_CHECK( ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidBaseOps()); // Normal script
+    BOOST_CHECK( ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidBaseOps());
+    BOOST_CHECK(!ToScript("ff88ac"_hex).HasValidBaseOps()); // Script with OP_INVALIDOPCODE explicit
+    BOOST_CHECK(!ToScript("88acc0"_hex).HasValidBaseOps()); // Script with undefined opcode
+
+    static_assert(OP_CHECKSIGADD > MAX_BASE_OPCODE);
+    BOOST_CHECK(!(CScript{} << OP_CHECKSIGADD).HasValidBaseOps());
+}
+
+// Verifies that GetOpName returns a non-OP_UNKNOWN string for every opcode that should have a name.
+BOOST_AUTO_TEST_CASE(GetOpName_no_missing_mnemonics)
+{
+    for (auto op{OP_0}; op < OP_INVALIDOPCODE; op = opcodetype(op + 1)) {
+        switch (auto name{GetOpName(op)}; op) {
+        // Special
+        case OP_FALSE: BOOST_CHECK_EQUAL(name, "0"); break;
+        case OP_TRUE: BOOST_CHECK_EQUAL(name, "1"); break;
+        // Push data
+        case OP_PUSHDATA1: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA1"); break;
+        case OP_PUSHDATA2: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA2"); break;
+        case OP_PUSHDATA4: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA4"); break;
+        // Other
+        case OP_1NEGATE: BOOST_CHECK_EQUAL(name, "-1"); break;
+        case OP_RESERVED: BOOST_CHECK_EQUAL(name, "OP_RESERVED"); break;
+        default:
+            if (op >= OP_RESERVED + 1 && op < OP_NOP) {
+                // Numbers
+                BOOST_CHECK_EQUAL(name, util::ToString(op - OP_RESERVED));
+            } else if (op >= OP_NOP && op <= OP_CHECKSIGADD) {
+                // Named operations
+                BOOST_CHECK_NE(name, "OP_UNKNOWN");
+                BOOST_CHECK(name.starts_with("OP_"));
+            } else {
+                // Direct pushes and unused opcodes
+                BOOST_CHECK_EQUAL(name, "OP_UNKNOWN");
+            }
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(GetOpName(OP_INVALIDOPCODE), "OP_INVALIDOPCODE");
 }
 
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)

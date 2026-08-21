@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
 
     CScript script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK_EQUAL(script.size(), 25U);
+    BOOST_CHECK(script.IsPayToPubKeyHash());
 
     CompressedScript out;
     bool done = CompressScript(script, out);
@@ -105,6 +106,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
 
     CScript script = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // COMPRESSED_PUBLIC_KEY_SIZE (33)
     BOOST_CHECK_EQUAL(script.size(), 35U);
+    BOOST_CHECK(script.IsCompressedPayToPubKey());
 
     CompressedScript out;
     bool done = CompressScript(script, out);
@@ -121,6 +123,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
     CKey key = GenerateRandomKey(/*compressed=*/false); // case uncompressed PubKeyID
     CScript script =  CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // PUBLIC_KEY_SIZE (65)
     BOOST_CHECK_EQUAL(script.size(), 67U);                   // 1 char code + 65 char pubkey + OP_CHECKSIG
+    BOOST_CHECK(script.IsUncompressedPayToPubKey());
 
     CompressedScript out;
     bool done = CompressScript(script, out);
@@ -161,6 +164,21 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
         CScript uncompressed_script;
         bool success = DecompressScript(uncompressed_script, compression_id, compressed_script);
         BOOST_CHECK_EQUAL(success, false);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_invalid_prefix)
+{
+    for (const bool compressed : {true, false}) {
+        auto key{ToByteVector(GenerateRandomKey(compressed).GetPubKey())};
+        // Valid prefixes are 0x02/0x03 (compressed) and 0x04 (uncompressed, though GetLen() recognizes 6 as well).
+        key[0] = 0x06;
+        const auto script{CScript{} << key << OP_CHECKSIG};
+        BOOST_CHECK(compressed ? script.IsCompressedPayToPubKey() : script.IsUncompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
     }
 }
 

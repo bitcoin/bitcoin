@@ -35,11 +35,11 @@ std::string GetTxnOutputType(TxoutType t)
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
-    if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) {
+    if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) { // TODO: Use IsUncompressedPayToPubKey
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
-    if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) {
+    if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) { // TODO: Use IsCompressedPayToPubKey
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
@@ -48,7 +48,7 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 
 static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
+    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) { // TODO: Use IsPayToPubKeyHash
         pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
         return true;
     }
@@ -154,7 +154,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
+        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) { // TODO: Use IsPayToWitnessPubKeyHash
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_KEYHASH;
         }
