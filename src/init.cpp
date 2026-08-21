@@ -2148,11 +2148,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.m_msgproc = node.peerman.get();
     connOptions.nSendBufferMaxSize = 1000 * args.GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000 * args.GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    std::set<std::string> unique_added_nodes;
     for (const std::string& added_node : args.GetArgs("-addnode")) {
         // Such a value is not a valid connection target, but would otherwise be
         // treated as one and retried indefinitely.
         if (TrimStringView(added_node).empty()) {
             LogWarning("Ignoring empty -addnode value");
+            continue;
+        }
+        if (!unique_added_nodes.insert(added_node).second) {
+            LogWarning("Ignoring duplicate -addnode value: %s", added_node);
             continue;
         }
         connOptions.m_added_nodes.push_back(added_node);
