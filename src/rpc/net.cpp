@@ -651,7 +651,9 @@ static RPCMethod getnetworkinfo()
 {
     return RPCMethod{"getnetworkinfo",
                 "Returns an object containing various state info regarding P2P networking.\n",
-                {},
+                {
+                    {"sat_vb", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled relayfee and incrementalfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+                },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
@@ -690,8 +692,8 @@ static RPCMethod getnetworkinfo()
                                 {RPCResult::Type::BOOL, "proxy_randomize_credentials", "Whether randomized credentials are used"},
                             }},
                         }},
-                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true"},
+                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -754,8 +756,9 @@ static RPCMethod getnetworkinfo()
     obj.pushKV("networks",      GetNetworksInfo());
     if (node.mempool) {
         // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
-        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_opts.min_relay_feerate.GetFeePerK()));
-        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_opts.incremental_relay_feerate.GetFeePerK()));
+        FeeRateUnit feerate_units = self.Arg<bool>("sat_vb") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB;
+        obj.pushKV("relayfee", ValueFromFeeRate(node.mempool->m_opts.min_relay_feerate, feerate_units));
+        obj.pushKV("incrementalfee", ValueFromFeeRate(node.mempool->m_opts.incremental_relay_feerate, feerate_units));
     }
     UniValue localAddresses(UniValue::VARR);
     {
