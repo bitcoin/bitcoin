@@ -76,6 +76,12 @@ check_cxx_source_compiles("
   " HAVE_STRONG_GETAUXVAL
 )
 
+# Check for SetThreadDescription(), which is missing from mingw-w64 headers
+# before 12.0.0.
+if(WIN32)
+  check_cxx_symbol_exists(SetThreadDescription "windows.h" HAVE_SETTHREADDESCRIPTION)
+endif()
+
 # Check for UNIX sockets.
 check_cxx_source_compiles("
   #include <sys/socket.h>
