@@ -249,6 +249,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --max_line_length=160 \
              -Xiwyu --check_also='*/common/types\.h' \
              -Xiwyu --check_also='*/consensus/*\.h' \
+             -Xiwyu --check_also='*/interfaces/*\.h' \
              -Xiwyu --check_also='*/primitives/transaction_identifier\.h' \
              2>&1 || true
     } | tee /tmp/iwyu_ci.out
