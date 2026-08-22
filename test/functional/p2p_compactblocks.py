@@ -61,6 +61,7 @@ from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
+    assert_greater_than,
     softfork_active,
 )
 from test_framework.wallet import MiniWallet
@@ -994,10 +995,11 @@ class CompactBlocksTest(BitcoinTestFramework):
     def test_compact_blocks_ignored(self):
         node = self.nodes[0]
 
-        def build_compact_block():
+        def build_compact_block(utxo=None, num_transactions=10):
             # generate a compact block to send that will force a GETBLOCKTXN
-            utxo = self.utxos.pop(0)
-            block = self.build_block_with_transactions(node, utxo, 10)
+            if utxo is None:
+                utxo = self.utxos.pop(0)
+            block = self.build_block_with_transactions(node, utxo, num_transactions)
             cmpct_block = HeaderAndShortIDs()
             cmpct_block.initialize_from_block(block)
             msg = msg_cmpctblock(cmpct_block.to_p2p())
@@ -1007,8 +1009,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         # for whether or not the node processed the CMPCTBLOCK.
         # Note: since we never fulfill the GETBLOCKTXN, this will never change
         # the HB status of a connection.
-        def ignores_compact_block(conn, solicited=False):
-            block, msg = build_compact_block()
+        def ignores_compact_block(conn, solicited=False, compact_block=None):
+            block, msg = compact_block or build_compact_block()
             conn.clear_getblocktxn()
             if solicited:
                 conn.send_without_ping(msg_headers([block]))
@@ -1048,7 +1050,22 @@ class CompactBlocksTest(BitcoinTestFramework):
         hb_peer_idx = -2
         self.assert_highbandwidth_states(node, idx=hb_peer_idx, hb_to=True, hb_from=False)
         hb_peer = self.nodes[0].p2ps[hb_peer_idx]
-        assert not ignores_compact_block(hb_peer, solicited=False)
+        recency_utxo = self.utxos.pop(0)
+        stale_compact_block = build_compact_block(recency_utxo, num_transactions=9)
+
+        self.log.info("Test that an unsolicited CMPCTBLOCK is accepted based on its header's recency.")
+        stale_block, _ = stale_compact_block
+        stale_time = stale_block.nTime + 20 * 10 * 60 + 1
+        node.setmocktime(stale_time)
+        try:
+            assert ignores_compact_block(hb_peer, compact_block=stale_compact_block)
+
+            recent_compact_block = build_compact_block(recency_utxo, num_transactions=8)
+            recent_block, _ = recent_compact_block
+            assert_greater_than(recent_block.nTime, stale_block.nTime + 20 * 10 * 60)
+            assert not ignores_compact_block(hb_peer, compact_block=recent_compact_block)
+        finally:
+            node.setmocktime(0)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
