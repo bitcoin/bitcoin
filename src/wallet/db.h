@@ -137,7 +137,7 @@ public:
 
     /** Rewrite the entire database on disk
      */
-    virtual bool Rewrite() = 0;
+    [[nodiscard]] virtual bool Rewrite() = 0;
 
     /** Back up the entire database to a file.
      */

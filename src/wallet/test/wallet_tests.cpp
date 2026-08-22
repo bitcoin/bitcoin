@@ -203,7 +203,7 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_rewrite_failure, EncryptionFailureSetup)
         BOOST_CHECK(wallet->HaveCryptedKeys());
         BOOST_CHECK(wallet->IsLocked());
         BOOST_CHECK(wallet->Unlock("passphrase"));
-        BOOST_CHECK_EQUAL(warned, false); // TODO: Warn when the database rewrite fails after encryption
+        BOOST_CHECK_EQUAL(warned, rewrite_failure);
     }
 }
 
