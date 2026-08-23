@@ -2735,6 +2735,32 @@
 ],
 [
     [
+        "00",
+        "#SCRIPT# IF 1 ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_MINIMALIF",
+    "TAPSCRIPT Test that OP_IF with 1-byte vector 0x00 must fail with TAPSCRIPT_MINIMALIF"
+],
+[
+    [
+        "00",
+        "#SCRIPT# NOTIF 1 ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_MINIMALIF",
+    "TAPSCRIPT Test that OP_NOTIF with 1-byte vector 0x00 must fail with TAPSCRIPT_MINIMALIF"
+],
+[
+    [
         "aa",
         "#SCRIPT# 0 CHECKSIG",
         "#CONTROLBLOCK#",
