@@ -634,6 +634,10 @@ public:
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSLazyPublicKey &pubKey) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxPlatformNodeIDConflicts(const CTransaction &tx, const uint160 &platformNodeID) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /** Remove every mempool TX that refers to proTxHash. Used when the MN it names ceases to exist
+     *  (collateral spent, or collateral reused by a replacement ProRegTx), since such TXs can never
+     *  be mined afterwards and would abort block assembly with "bad-protx-hash". */
+    void removeProTxReferences(const uint256& proTxHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxSpentCollateralConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxKeyChangedConflicts(const CTransaction &tx, const uint256& proTxHash, const uint256& newKeyHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeProTxConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
