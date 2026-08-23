@@ -145,6 +145,7 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
             auto index{make_index(m_node)};
             BOOST_REQUIRE(index->Init());
             // Make sure the index can be loaded.
+            BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, 0); // TODO: Establish and reload a pre-crash commit
             BOOST_REQUIRE(index->StartBackgroundSync());
             index->Stop();
         }
