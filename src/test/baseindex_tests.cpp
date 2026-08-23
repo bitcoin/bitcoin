@@ -108,11 +108,15 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
 }
 
 // Test shutdown between BlockConnected and ChainStateFlushed notifications,
-// make sure index is not corrupted and is able to reload.
+// make sure index is not corrupted and reloads at the last committed height.
 BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
     const CChainParams& params = Params();
+    const int tip_height{WITH_LOCK(cs_main, return chainstate.m_chain.Height())};
+    chainstate.ForceFlushStateToDisk();
+    // Drain the notification before registering any index.
+    m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
     for (const auto& [index_name, make_index] : INDEX_FACTORIES) {
         BOOST_TEST_INFO_SCOPE(index_name);
         {
@@ -144,8 +148,8 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
         {
             auto index{make_index(m_node)};
             BOOST_REQUIRE(index->Init());
-            // Make sure the index can be loaded.
-            BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, 0); // TODO: Establish and reload a pre-crash commit
+            // Make sure the index reloads from the pre-crash commit.
+            BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height);
             BOOST_REQUIRE(index->StartBackgroundSync());
             index->Stop();
         }
