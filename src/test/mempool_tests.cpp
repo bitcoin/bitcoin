@@ -34,8 +34,7 @@ BOOST_AUTO_TEST_CASE(MempoolLookupTest)
     tx.vin.resize(1);
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout.resize(1);
-    tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
-    tx.vout[0].nValue = 10 * COIN;
+    tx.vout[0] = CTxOut(10 * COIN, CScript() << OP_1 << OP_EQUAL);
 
     // Not in the mempool, so can't find it by txid or wtxid
     BOOST_CHECK(!pool.get(tx.GetHash()));
@@ -63,30 +62,25 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     txParent.vout.resize(3);
     for (int i = 0; i < 3; i++)
     {
-        txParent.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        txParent.vout[i].nValue = 33000LL;
+        txParent.vout[i] = CTxOut(33000LL, CScript() << OP_11 << OP_EQUAL);
     }
     CMutableTransaction txChild[3];
     for (int i = 0; i < 3; i++)
     {
         txChild[i].vin.resize(1);
         txChild[i].vin[0].scriptSig = CScript() << OP_11;
-        txChild[i].vin[0].prevout.hash = txParent.GetHash();
-        txChild[i].vin[0].prevout.n = i;
+        txChild[i].vin[0].prevout = COutPoint(txParent.GetHash(), i);
         txChild[i].vout.resize(1);
-        txChild[i].vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        txChild[i].vout[0].nValue = 11000LL;
+        txChild[i].vout[0] = CTxOut(11000LL, CScript() << OP_11 << OP_EQUAL);
     }
     CMutableTransaction txGrandChild[3];
     for (int i = 0; i < 3; i++)
     {
         txGrandChild[i].vin.resize(1);
         txGrandChild[i].vin[0].scriptSig = CScript() << OP_11;
-        txGrandChild[i].vin[0].prevout.hash = txChild[i].GetHash();
-        txGrandChild[i].vin[0].prevout.n = 0;
+        txGrandChild[i].vin[0].prevout = COutPoint(txChild[i].GetHash(), 0);
         txGrandChild[i].vout.resize(1);
-        txGrandChild[i].vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        txGrandChild[i].vout[0].nValue = 11000LL;
+        txGrandChild[i].vout[0] = CTxOut(11000LL, CScript() << OP_11 << OP_EQUAL);
     }
 
 
@@ -152,16 +146,14 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx1.vin.resize(1);
     tx1.vin[0].scriptSig = CScript() << OP_1;
     tx1.vout.resize(1);
-    tx1.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
-    tx1.vout[0].nValue = 10 * COIN;
+    tx1.vout[0] = CTxOut(10 * COIN, CScript() << OP_1 << OP_EQUAL);
     TryAddToMempool(pool, entry.Fee(1000LL).FromTx(tx1));
 
     CMutableTransaction tx2 = CMutableTransaction();
     tx2.vin.resize(1);
     tx2.vin[0].scriptSig = CScript() << OP_2;
     tx2.vout.resize(1);
-    tx2.vout[0].scriptPubKey = CScript() << OP_2 << OP_EQUAL;
-    tx2.vout[0].nValue = 10 * COIN;
+    tx2.vout[0] = CTxOut(10 * COIN, CScript() << OP_2 << OP_EQUAL);
     TryAddToMempool(pool, entry.Fee(500LL).FromTx(tx2));
 
     pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
@@ -178,8 +170,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vin[0].prevout = COutPoint(tx2.GetHash(), 0);
     tx3.vin[0].scriptSig = CScript() << OP_2;
     tx3.vout.resize(1);
-    tx3.vout[0].scriptPubKey = CScript() << OP_3 << OP_EQUAL;
-    tx3.vout[0].nValue = 10 * COIN;
+    tx3.vout[0] = CTxOut(10 * COIN, CScript() << OP_3 << OP_EQUAL);
     TryAddToMempool(pool, entry.Fee(2000LL).FromTx(tx3));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
@@ -202,10 +193,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx4.vin[1].prevout.SetNull();
     tx4.vin[1].scriptSig = CScript() << OP_4;
     tx4.vout.resize(2);
-    tx4.vout[0].scriptPubKey = CScript() << OP_4 << OP_EQUAL;
-    tx4.vout[0].nValue = 10 * COIN;
-    tx4.vout[1].scriptPubKey = CScript() << OP_4 << OP_EQUAL;
-    tx4.vout[1].nValue = 10 * COIN;
+    tx4.vout[0] = CTxOut(10 * COIN, CScript() << OP_4 << OP_EQUAL);
+    tx4.vout[1] = CTxOut(10 * COIN, CScript() << OP_4 << OP_EQUAL);
 
     CMutableTransaction tx5 = CMutableTransaction();
     tx5.vin.resize(2);
@@ -214,10 +203,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx5.vin[1].prevout.SetNull();
     tx5.vin[1].scriptSig = CScript() << OP_5;
     tx5.vout.resize(2);
-    tx5.vout[0].scriptPubKey = CScript() << OP_5 << OP_EQUAL;
-    tx5.vout[0].nValue = 10 * COIN;
-    tx5.vout[1].scriptPubKey = CScript() << OP_5 << OP_EQUAL;
-    tx5.vout[1].nValue = 10 * COIN;
+    tx5.vout[0] = CTxOut(10 * COIN, CScript() << OP_5 << OP_EQUAL);
+    tx5.vout[1] = CTxOut(10 * COIN, CScript() << OP_5 << OP_EQUAL);
 
     CMutableTransaction tx6 = CMutableTransaction();
     tx6.vin.resize(2);
@@ -226,10 +213,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx6.vin[1].prevout.SetNull();
     tx6.vin[1].scriptSig = CScript() << OP_6;
     tx6.vout.resize(2);
-    tx6.vout[0].scriptPubKey = CScript() << OP_6 << OP_EQUAL;
-    tx6.vout[0].nValue = 10 * COIN;
-    tx6.vout[1].scriptPubKey = CScript() << OP_6 << OP_EQUAL;
-    tx6.vout[1].nValue = 10 * COIN;
+    tx6.vout[0] = CTxOut(10 * COIN, CScript() << OP_6 << OP_EQUAL);
+    tx6.vout[1] = CTxOut(10 * COIN, CScript() << OP_6 << OP_EQUAL);
 
     CMutableTransaction tx7 = CMutableTransaction();
     tx7.vin.resize(2);
@@ -238,10 +223,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx7.vin[1].prevout = COutPoint(tx6.GetHash(), 0);
     tx7.vin[1].scriptSig = CScript() << OP_6;
     tx7.vout.resize(2);
-    tx7.vout[0].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
-    tx7.vout[0].nValue = 10 * COIN;
-    tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
-    tx7.vout[1].nValue = 10 * COIN;
+    tx7.vout[0] = CTxOut(10 * COIN, CScript() << OP_7 << OP_EQUAL);
+    tx7.vout[1] = CTxOut(10 * COIN, CScript() << OP_7 << OP_EQUAL);
 
     TryAddToMempool(pool, entry.Fee(700LL).FromTx(tx4));
     auto usage_with_tx4_only = pool.DynamicMemoryUsage();
@@ -311,12 +294,10 @@ inline CTransactionRef make_tx(std::vector<CAmount>&& output_values, std::vector
     tx.vin.resize(inputs.size());
     tx.vout.resize(output_values.size());
     for (size_t i = 0; i < inputs.size(); ++i) {
-        tx.vin[i].prevout.hash = inputs[i]->GetHash();
-        tx.vin[i].prevout.n = input_indices.size() > i ? input_indices[i] : 0;
+        tx.vin[i].prevout = COutPoint(inputs[i]->GetHash(), input_indices.size() > i ? input_indices[i] : 0);
     }
     for (size_t i = 0; i < output_values.size(); ++i) {
-        tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        tx.vout[i].nValue = output_values[i];
+        tx.vout[i] = CTxOut(output_values[i], CScript() << OP_11 << OP_EQUAL);
     }
     return MakeTransactionRef(tx);
 }

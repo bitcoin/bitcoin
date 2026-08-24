@@ -28,8 +28,8 @@
 class COutPoint
 {
 public:
-    Txid hash;
-    uint32_t n;
+    CONSTRUCTOR_ARGUMENT(1, 2) Txid hash;
+    CONSTRUCTOR_ARGUMENT(2, 2) uint32_t n;
 
     static constexpr uint32_t NULL_INDEX = std::numeric_limits<uint32_t>::max();
 
@@ -61,9 +61,9 @@ public:
 class CTxIn
 {
 public:
-    COutPoint prevout;
-    CScript scriptSig;
-    uint32_t nSequence;
+    CONSTRUCTOR_ARGUMENT(1, 3) COutPoint prevout;
+    CONSTRUCTOR_ARGUMENT(2, 3) CScript scriptSig;
+    CONSTRUCTOR_ARGUMENT(3, 3) uint32_t nSequence;
     CScriptWitness scriptWitness; //!< Only serialized through CTransaction
 
     /**
@@ -139,8 +139,8 @@ public:
 class CTxOut
 {
 public:
-    CAmount nValue;
-    CScript scriptPubKey;
+    CONSTRUCTOR_ARGUMENT(1, 2) CAmount nValue;
+    CONSTRUCTOR_ARGUMENT(2, 2) CScript scriptPubKey;
 
     CTxOut()
     {

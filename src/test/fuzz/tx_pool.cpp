@@ -354,9 +354,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                 const auto script_sig = CScript{};
                 const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
                 CTxIn in;
-                in.prevout = outpoint;
-                in.nSequence = sequence;
-                in.scriptSig = script_sig;
+                in = CTxIn(outpoint, script_sig, sequence);
                 in.scriptWitness.stack = script_wit_stack;
 
                 tx_mut.vin.push_back(in);

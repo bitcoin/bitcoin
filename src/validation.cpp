@@ -5837,8 +5837,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
             for (size_t i = 0; i < coins_per_txid; i++) {
                 COutPoint outpoint;
                 Coin coin;
-                outpoint.n = static_cast<uint32_t>(ReadCompactSize(coins_file));
-                outpoint.hash = txid;
+                outpoint = COutPoint(txid, static_cast<uint32_t>(ReadCompactSize(coins_file)));
                 coins_file >> coin;
                 if (coin.nHeight > base_height ||
                     outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash

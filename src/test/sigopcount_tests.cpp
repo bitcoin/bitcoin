@@ -91,18 +91,15 @@ static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CM
     creationTx.vin[0].prevout.SetNull();
     creationTx.vin[0].scriptSig = CScript();
     creationTx.vout.resize(1);
-    creationTx.vout[0].nValue = 1;
-    creationTx.vout[0].scriptPubKey = scriptPubKey;
+    creationTx.vout[0] = CTxOut(1, scriptPubKey);
 
     spendingTx.version = 1;
     spendingTx.vin.resize(1);
-    spendingTx.vin[0].prevout.hash = creationTx.GetHash();
-    spendingTx.vin[0].prevout.n = 0;
+    spendingTx.vin[0].prevout = COutPoint(creationTx.GetHash(), 0);
     spendingTx.vin[0].scriptSig = scriptSig;
     spendingTx.vin[0].scriptWitness = witness;
     spendingTx.vout.resize(1);
-    spendingTx.vout[0].nValue = 1;
-    spendingTx.vout[0].scriptPubKey = CScript();
+    spendingTx.vout[0] = CTxOut(1, CScript());
 
     AddCoins(coins, CTransaction(creationTx), 0);
 }

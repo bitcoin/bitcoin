@@ -208,9 +208,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
 
         CTxIn in;
-        in.prevout = outpoint;
-        in.nSequence = sequence;
-        in.scriptSig = script_sig;
+        in = CTxIn(outpoint, script_sig, sequence);
         in.scriptWitness.stack = script_wit_stack;
         tx_mut.vin.push_back(in);
 
@@ -252,8 +250,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         coinbase_tx.vin[0].prevout.SetNull();
         coinbase_tx.vin[0].scriptSig = CScript() << height << OP_0;
         coinbase_tx.vout.resize(1);
-        coinbase_tx.vout[0].scriptPubKey = CScript() << OP_TRUE;
-        coinbase_tx.vout[0].nValue = COIN;
+        coinbase_tx.vout[0] = CTxOut(COIN, CScript() << OP_TRUE);
         block->vtx.push_back(MakeTransactionRef(coinbase_tx));
 
         const auto mempool_size = mempool.size();

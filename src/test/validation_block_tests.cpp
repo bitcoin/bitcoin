@@ -94,8 +94,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     // Another one that has the coinbase reward in a P2WSH with OP_TRUE as witness program to make it easy to spend
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
     txCoinbase.vout.resize(2);
-    txCoinbase.vout[1].scriptPubKey = P2WSH_OP_TRUE;
-    txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
+    txCoinbase.vout[1] = CTxOut(txCoinbase.vout[0].nValue, P2WSH_OP_TRUE);
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
     // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)

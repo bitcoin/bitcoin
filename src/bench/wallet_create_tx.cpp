@@ -75,11 +75,9 @@ void generateFakeBlock(const CChainParams& params,
     coinbase_tx.vin.resize(1);
     coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);
-    coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
-    coinbase_tx.vout[0].nValue = 48 * COIN;
+    coinbase_tx.vout[0] = CTxOut(48 * COIN, coinbase_out_script);
     coinbase_tx.vin[0].scriptSig = CScript() << ++tip.tip_height << OP_0;
-    coinbase_tx.vout[1].scriptPubKey = coinbase_out_script; // extra output
-    coinbase_tx.vout[1].nValue = 1 * COIN;
+    coinbase_tx.vout[1] = CTxOut(1 * COIN, coinbase_out_script);
 
     // Fill the coinbase with outputs that don't belong to the wallet in order to benchmark
     // AvailableCoins' behavior with unnecessary TXOs

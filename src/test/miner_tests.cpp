@@ -162,8 +162,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     CMutableTransaction tx;
     tx.vin.resize(1);
     tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout = COutPoint(txFirst[0]->GetHash(), 0);
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
@@ -329,12 +328,10 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     tx.vin.resize(1);
     // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
     tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_CHECKSIG << OP_1;
-    tx.vin[0].prevout.hash = first_tx->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout = COutPoint(first_tx->GetHash(), 0);
     tx.vout.resize(50);
     for (auto &out : tx.vout) {
-        out.nValue = first_tx->vout[0].nValue / 50;
-        out.scriptPubKey = CScript() << OP_1;
+        out = CTxOut(first_tx->vout[0].nValue / 50, CScript() << OP_1);
     }
 
     tx.vout[0].nValue -= CENT;
@@ -348,14 +345,12 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     for (unsigned int i = 0; i < 50; ++i) {
         auto tx2 = tx;
         tx2.vin.resize(1);
-        tx2.vin[0].prevout.hash = parent_tx->GetHash();
-        tx2.vin[0].prevout.n = i;
+        tx2.vin[0].prevout = COutPoint(parent_tx->GetHash(), i);
         tx2.vin[0].scriptSig = CScript() << OP_1;
         tx2.vout.resize(20);
         tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
         for (auto &out : tx2.vout) {
-            out.nValue = 0;
-            out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
+            out = CTxOut(0, CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1);
         }
         ret.push_back(MakeTransactionRef(tx2));
     }
@@ -450,8 +445,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         }
         tx.vin[0].scriptSig << OP_1;
         tx.vout[0].scriptPubKey << OP_1;
-        tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout = COutPoint(txFirst[0]->GetHash(), 0);
         tx.vout[0].nValue = BLOCKSUBSIDY;
         for (unsigned int i = 0; i < 63; ++i) {
             tx.vout[0].nValue -= LOWFEE;
@@ -487,8 +481,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin[0].prevout.hash = hash;
         tx.vin.resize(2);
         tx.vin[1].scriptSig = CScript() << OP_1;
-        tx.vin[1].prevout.hash = txFirst[0]->GetHash();
-        tx.vin[1].prevout.n = 0;
+        tx.vin[1].prevout = COutPoint(txFirst[0]->GetHash(), 0);
         tx.vout[0].nValue = tx.vout[0].nValue + BLOCKSUBSIDY - HIGHERFEE; // First txn output + fresh coinbase - new txn fee
         hash = tx.GetHash();
         TryAddToMempool(tx_mempool, entry.Fee(HIGHERFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
@@ -518,8 +511,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // double spend txn pair in tx_mempool, template creation fails
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
         tx.vin[0].scriptSig = CScript() << OP_1;
-        tx.vout[0].nValue = BLOCKSUBSIDY - HIGHFEE;
-        tx.vout[0].scriptPubKey = CScript() << OP_1;
+        tx.vout[0] = CTxOut(BLOCKSUBSIDY - HIGHFEE, CScript() << OP_1);
         hash = tx.GetHash();
         TryAddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
         tx.vout[0].scriptPubKey = CScript() << OP_2;
@@ -560,8 +552,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         BOOST_REQUIRE(mining->createNewBlock(options, /*cooldown=*/false));
 
         // invalid p2sh txn in tx_mempool, template creation fails
-        tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout = COutPoint(txFirst[0]->GetHash(), 0);
         tx.vin[0].scriptSig = CScript() << OP_1;
         tx.vout[0].nValue = BLOCKSUBSIDY - LOWFEE;
         CScript script = CScript() << OP_0;
@@ -598,14 +589,10 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash(); // only 1 transaction
-    tx.vin[0].prevout.n = 0;
-    tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].nSequence = m_node.chainman->ActiveChain().Tip()->nHeight + 1; // txFirst[0] is the 2nd block
+    tx.vin[0] = CTxIn(COutPoint(txFirst[0]->GetHash(), 0), CScript() << OP_1, m_node.chainman->ActiveChain().Tip()->nHeight + 1); // txFirst[0] is the 2nd block
     prevheights[0] = baseheight + 1;
     tx.vout.resize(1);
-    tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
-    tx.vout[0].scriptPubKey = CScript() << OP_1;
+    tx.vout[0] = CTxOut(BLOCKSUBSIDY-HIGHFEE, CScript() << OP_1);
     tx.nLockTime = 0;
     hash = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
@@ -719,8 +706,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     // Test that a tx below min fee but prioritised is included
     CMutableTransaction tx;
     tx.vin.resize(1);
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout = COutPoint(txFirst[0]->GetHash(), 0);
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL; // 0 fee
@@ -728,8 +714,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     TryAddToMempool(tx_mempool, entry.Fee(0).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
 
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
-    tx.vin[0].prevout.n = 0;
+    tx.vin[0].prevout = COutPoint(txFirst[1]->GetHash(), 0);
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use

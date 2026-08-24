@@ -399,14 +399,11 @@ BOOST_AUTO_TEST_CASE(test_Get)
 
     CMutableTransaction t1;
     t1.vin.resize(3);
-    t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t1.vin[0].prevout.n = 1;
+    t1.vin[0].prevout = COutPoint(dummyTransactions[0].GetHash(), 1);
     t1.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
-    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[1].prevout.n = 0;
+    t1.vin[1].prevout = COutPoint(dummyTransactions[1].GetHash(), 0);
     t1.vin[1].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
-    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[2].prevout.n = 1;
+    t1.vin[2].prevout = COutPoint(dummyTransactions[1].GetHash(), 1);
     t1.vin[2].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
     t1.vout.resize(2);
     t1.vout[0].nValue = 90*CENT;
@@ -423,8 +420,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     outputm.vin[0].prevout.SetNull();
     outputm.vin[0].scriptSig = CScript();
     outputm.vout.resize(1);
-    outputm.vout[0].nValue = 1;
-    outputm.vout[0].scriptPubKey = outscript;
+    outputm.vout[0] = CTxOut(1, outscript);
     DataStream ssout;
     ssout << TX_WITH_WITNESS(outputm);
     ssout >> TX_WITH_WITNESS(output);
@@ -436,11 +432,9 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     CMutableTransaction inputm;
     inputm.version = 1;
     inputm.vin.resize(1);
-    inputm.vin[0].prevout.hash = output->GetHash();
-    inputm.vin[0].prevout.n = 0;
+    inputm.vin[0].prevout = COutPoint(output->GetHash(), 0);
     inputm.vout.resize(1);
-    inputm.vout[0].nValue = 1;
-    inputm.vout[0].scriptPubKey = CScript();
+    inputm.vout[0] = CTxOut(1, CScript());
     SignatureData empty;
     bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL, empty);
     assert(ret == success);
@@ -517,8 +511,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
         mtx.vin[i].scriptSig = CScript();
 
         mtx.vout.resize(mtx.vout.size() + 1);
-        mtx.vout[i].nValue = 1000;
-        mtx.vout[i].scriptPubKey = CScript() << OP_1;
+        mtx.vout[i] = CTxOut(1000, CScript() << OP_1);
     }
 
     // sign all inputs
@@ -542,8 +535,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
         Coin coin;
         coin.nHeight = 1;
         coin.fCoinBase = false;
-        coin.out.nValue = 1000;
-        coin.out.scriptPubKey = scriptPubKey;
+        coin.out = CTxOut(1000, scriptPubKey);
         coins.emplace_back(std::move(coin));
     }
 
@@ -755,8 +747,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     CMutableTransaction t;
     t.vin.resize(1);
-    t.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t.vin[0].prevout.n = 1;
+    t.vin[0].prevout = COutPoint(dummyTransactions[0].GetHash(), 1);
     t.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
     t.vout.resize(1);
     t.vout[0].nValue = 90*CENT;
@@ -854,10 +845,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Multiple TxoutType::NULL_DATA are permitted
     t.vout.resize(2);
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[0].nValue = 0;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[1].nValue = 0;
+    t.vout[0] = CTxOut(0, CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex);
+    t.vout[1] = CTxOut(0, CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex);
     CheckIsStandard(t);
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
@@ -877,8 +866,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);
-    t.vout[0].nValue = MAX_MONEY;
-    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    t.vout[0] = CTxOut(MAX_MONEY, GetScriptForDestination(PKHash(key.GetPubKey())));
     // OP_PUSHDATA2 with len (3 bytes) + data (1647 bytes) = 1650 bytes
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(1647, 0); // 1650
     CheckIsStandard(t);
@@ -952,58 +940,50 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout.insert(t.vout.end(), MAX_DUST_OUTPUTS_PER_TX, {0, t.vout[0].scriptPubKey});
 
     // Check compressed P2PK outputs dust threshold (must have leading 02 or 03)
-    t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG;
-    t.vout[0].nValue = 576;
+    t.vout[0] = CTxOut(576, CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG);
     CheckIsStandard(t);
     t.vout[0].nValue = 575;
     CheckIsNotStandard(t, "dust");
 
     // Check uncompressed P2PK outputs dust threshold (must have leading 04/06/07)
-    t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(65, 0x04) << OP_CHECKSIG;
-    t.vout[0].nValue = 672;
+    t.vout[0] = CTxOut(672, CScript() << std::vector<unsigned char>(65, 0x04) << OP_CHECKSIG);
     CheckIsStandard(t);
     t.vout[0].nValue = 671;
     CheckIsNotStandard(t, "dust");
 
     // Check P2PKH outputs dust threshold
-    t.vout[0].scriptPubKey = CScript() << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUALVERIFY << OP_CHECKSIG;
-    t.vout[0].nValue = 546;
+    t.vout[0] = CTxOut(546, CScript() << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUALVERIFY << OP_CHECKSIG);
     CheckIsStandard(t);
     t.vout[0].nValue = 545;
     CheckIsNotStandard(t, "dust");
 
     // Check P2SH outputs dust threshold
-    t.vout[0].scriptPubKey = CScript() << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUAL;
-    t.vout[0].nValue = 540;
+    t.vout[0] = CTxOut(540, CScript() << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUAL);
     CheckIsStandard(t);
     t.vout[0].nValue = 539;
     CheckIsNotStandard(t, "dust");
 
     // Check P2WPKH outputs dust threshold
-    t.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(20, 0);
-    t.vout[0].nValue = 294;
+    t.vout[0] = CTxOut(294, CScript() << OP_0 << std::vector<unsigned char>(20, 0));
     CheckIsStandard(t);
     t.vout[0].nValue = 293;
     CheckIsNotStandard(t, "dust");
 
     // Check P2WSH outputs dust threshold
-    t.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(32, 0);
-    t.vout[0].nValue = 330;
+    t.vout[0] = CTxOut(330, CScript() << OP_0 << std::vector<unsigned char>(32, 0));
     CheckIsStandard(t);
     t.vout[0].nValue = 329;
     CheckIsNotStandard(t, "dust");
 
     // Check P2TR outputs dust threshold (Invalid xonly key ok!)
-    t.vout[0].scriptPubKey = CScript() << OP_1 << std::vector<unsigned char>(32, 0);
-    t.vout[0].nValue = 330;
+    t.vout[0] = CTxOut(330, CScript() << OP_1 << std::vector<unsigned char>(32, 0));
     CheckIsStandard(t);
     t.vout[0].nValue = 329;
     CheckIsNotStandard(t, "dust");
 
     // Check future Witness Program versions dust threshold (non-32-byte pushes are undefined for version 1)
     for (int op = OP_1; op <= OP_16; op += 1) {
-        t.vout[0].scriptPubKey = CScript() << (opcodetype)op << std::vector<unsigned char>(2, 0);
-        t.vout[0].nValue = 240;
+        t.vout[0] = CTxOut(240, CScript() << (opcodetype)op << std::vector<unsigned char>(2, 0));
         CheckIsStandard(t);
 
         t.vout[0].nValue = 239;
