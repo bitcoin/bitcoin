@@ -117,13 +117,13 @@ struct TxMempoolInfo
     std::chrono::seconds m_time;
 
     /** Fee of the transaction. */
-    CAmount fee;
+    CAmount fee{0};
 
     /** Virtual size of the transaction. */
     int32_t vsize;
 
     /** The fee delta. */
-    CAmount nFeeDelta;
+    CAmount nFeeDelta{0};
 };
 
 /**

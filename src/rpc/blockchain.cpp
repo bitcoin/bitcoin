@@ -2919,7 +2919,7 @@ static RPCMethod getdescriptoractivity()
 
             for (size_t vin_idx = 0; vin_idx < tx->vin.size(); ++vin_idx) {
                 CScript scriptPubKey;
-                CAmount value;
+                CAmount value{0};
                 const auto& txin = tx->vin.at(vin_idx);
                 std::optional<Coin> coin = coins_view.GetCoin(txin.prevout);
 

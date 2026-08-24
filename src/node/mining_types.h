@@ -161,7 +161,7 @@ struct CoinbaseTx {
      * Currently there are no non-zero required_outputs, so block_reward_remaining
      * is the entire block reward. See also required_outputs.
      */
-    CAmount block_reward_remaining;
+    CAmount block_reward_remaining{0};
     /*
      * To be included as the last outputs in the coinbase transaction.
      * Currently this is only the witness commitment OP_RETURN, but future

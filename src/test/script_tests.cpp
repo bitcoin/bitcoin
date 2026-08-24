@@ -234,7 +234,7 @@ private:
     std::string comment;
     script_verify_flags flags;
     int scriptError{SCRIPT_ERR_OK};
-    CAmount nValue;
+    CAmount nValue{0};
 
     void DoPush()
     {

@@ -105,8 +105,8 @@ public:
     qint64 time;
     Type type;
     std::string address;
-    CAmount debit;
-    CAmount credit;
+    CAmount debit{0};
+    CAmount credit{0};
     /**@}*/
 
     /** Subtransaction index, for sort key */

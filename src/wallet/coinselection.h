@@ -333,7 +333,7 @@ private:
     /** Set of inputs selected by the algorithm to use in the transaction */
     OutputSet m_selected_inputs;
     /** The target the algorithm selected for. Equal to the recipient amount plus non-input fees */
-    CAmount m_target;
+    CAmount m_target{0};
     /** The algorithm used to produce this result */
     SelectionAlgorithm m_algo;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
