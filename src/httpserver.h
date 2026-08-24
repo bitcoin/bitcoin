@@ -150,18 +150,6 @@ class HTTPRemoteClient;
 class HTTPRequest
 {
 public:
-    HTTPRequestMethod m_method;
-    std::string m_target;
-    HTTPVersion m_version;
-    HTTPHeaders m_headers;
-    std::string m_body;
-
-    //! Pointer to the client that made the request so we know who to respond to.
-    std::weak_ptr<HTTPRemoteClient> m_client;
-
-    //! Response headers may be set in advance before response body is known
-    HTTPHeaders m_response_headers;
-
     explicit HTTPRequest(const std::shared_ptr<HTTPRemoteClient>& client) : m_client{client} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
@@ -186,6 +174,9 @@ public:
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
 
+    const HTTPVersion& GetVersion() const { return m_version; }
+    std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client.lock(); }
+
     // These methods reimplement the API from http_libevent::HTTPRequest
     // for downstream JSONRPC and REST modules.
     std::string GetURI() const { return m_target; }
@@ -195,6 +186,8 @@ public:
     std::optional<std::string> GetHeader(std::string_view hdr) const;
     std::string ReadBody() const { return m_body; }
     void WriteHeader(std::string&& hdr, std::string&& value);
+    std::optional<uint64_t> GetChunkSize() const { return m_chunk_size; }
+    uint64_t GetChunkProgress() const { return m_chunk_read; }
 
     enum class State {
         Init,
@@ -206,6 +199,19 @@ public:
     State GetState() const { return m_state; }
     void SetState(State state) { m_state = state; }
 
+private:
+    HTTPRequestMethod m_method;
+    std::string m_target;
+    HTTPVersion m_version;
+    HTTPHeaders m_headers;
+    std::string m_body;
+
+    //! Pointer to the client that made the request so we know who to respond to.
+    std::weak_ptr<HTTPRemoteClient> m_client;
+
+    //! Response headers may be set in advance before response body is known
+    HTTPHeaders m_response_headers;
+
     // If a large request is sent with "Transfer-encoding: chunked" we may
     // read the chunk size in a separate I/O loop iteration than the chunk
     // of data itself. Store the chunk size value here until the chunk is read.
@@ -214,7 +220,6 @@ public:
     // Track the progress of the chunk here.
     uint64_t m_chunk_read{0};
 
-private:
     State m_state = State::Init;
 };
 
