@@ -6,7 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.netutil import NETWORK_ERRORS
-from test_framework.util import assert_equal, str_to_b64str
+from test_framework.util import assert_equal, assert_raises, str_to_b64str
 
 import concurrent.futures
 import http.client
@@ -278,14 +278,10 @@ class HTTPBasicsTest (BitcoinTestFramework):
         else:
             conn.post_raw('/', '{"method": "getblockcount"}')
 
-        try:
-            # The server should not respond to the second request until the first
-            # request has been handled. Since the server will not respond at all
-            # to the first request until we generate a block we expect a socket timeout.
-            conn.recv_raw()
-            assert False
-        except TimeoutError:
-            pass
+        # The server should not respond to the second request until the first
+        # request has been handled. Since the server will not respond at all
+        # to the first request until we generate a block we expect a socket timeout.
+        assert_raises(TimeoutError, lambda: conn.recv_raw())
 
         # Use a separate http connection to generate a block
         self.generate(self.node, 1, sync_fun=self.no_op)
@@ -649,11 +645,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             ):
                 conn = BitcoinHTTPConnection(self.node)
                 conn.set_timeout(5)
-                try:
-                    conn.post('/', '{"method": "never_accepted"}', connection_header='keep-alive').read()
-                    assert False, "Connection succeeded unexpectedly"
-                except TimeoutError:
-                    pass
+                assert_raises(TimeoutError, lambda: conn.post('/', '{"method": "never_accepted"}', connection_header='keep-alive').read())
 
             # All original clients are still connected
             assert_equal(len(connections), MAX_HTTP_CONNECTIONS)
