@@ -695,7 +695,7 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
             m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
             ++nTransactionsUpdated;
         }
-        if (delta == CAmount{0}) {
+        if (delta == 0*sats) {
             mapDeltas.erase(hash);
             LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
@@ -858,7 +858,7 @@ bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
     // limits would be violated. Note that the changeset will be destroyed
     // when it goes out of scope.
     auto changeset = GetChangeSet();
-    (void) changeset->StageAddition(tx, /*fee=*/CAmount{0}, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
+    (void) changeset->StageAddition(tx, /*fee=*/0*sats, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
     return changeset->CheckMemPoolPolicyLimits();
 }
 
@@ -898,7 +898,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
         if (rollingMinimumFeeRate < (double)m_opts.incremental_relay_feerate.GetFeePerK().Int() / 2) {
             rollingMinimumFeeRate = 0;
-            return CFeeRate(CAmount{0});
+            return CFeeRate(0*sats);
         }
     }
     return std::max(CFeeRate(CAmount{llround(rollingMinimumFeeRate)}), m_opts.incremental_relay_feerate);
@@ -917,7 +917,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     Assume(!m_have_changeset);
 
     unsigned nTxnRemoved = 0;
-    CFeeRate maxFeeRateRemoved(CAmount{0});
+    CFeeRate maxFeeRateRemoved(0*sats);
 
     while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
         const auto &[worst_chunk, feeperweight] = m_txgraph->GetWorstMainChunk();
@@ -959,7 +959,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         }
     }
 
-    if (maxFeeRateRemoved > CFeeRate(CAmount{0})) {
+    if (maxFeeRateRemoved > CFeeRate(0*sats)) {
         LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
@@ -1071,7 +1071,7 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
     FeePerWeight feerate(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp));
     auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
     m_pool->m_txgraph->AddTransaction(const_cast<CTxMemPoolEntry&>(*newit), feerate);
-    if (delta != CAmount{0}) {
+    if (delta != 0*sats) {
         newit->UpdateModifiedFee(delta);
         m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());
     }

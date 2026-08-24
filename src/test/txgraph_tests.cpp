@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_flower)
     refs.reserve(NUM_TOTAL_TX);
 
     // Add all transactions. They are in individual clusters.
-    graph->AddTransaction(refs.emplace_back(), {CAmount{1}, 100});
+    graph->AddTransaction(refs.emplace_back(), {1*sats, 100});
     for (unsigned int i = 0; i < NUM_TOP_TX; ++i) {
         graph->AddTransaction(refs.emplace_back(), FeePerWeight{CAmount{500 + i}, 100});
     }
@@ -337,10 +337,10 @@ BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
     std::vector<TxGraph::Ref> refs;
     refs.reserve(4);
 
-    FeePerWeight feerateA{CAmount{2}, 10};
-    FeePerWeight feerateB{CAmount{1}, 10};
-    FeePerWeight feerateC{CAmount{2}, 10};
-    FeePerWeight feerateD{CAmount{4}, 10};
+    FeePerWeight feerateA{2*sats, 10};
+    FeePerWeight feerateB{1*sats, 10};
+    FeePerWeight feerateC{2*sats, 10};
+    FeePerWeight feerateD{4*sats, 10};
 
     // everytime adding a transaction, test the chunk status
     // [A]
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(txgraph_staging)
     std::vector<TxGraph::Ref> refs;
     refs.reserve(2);
 
-    FeePerWeight feerateA{CAmount{2}, 10};
-    FeePerWeight feerateB{CAmount{1}, 10};
+    FeePerWeight feerateA{2*sats, 10};
+    FeePerWeight feerateB{1*sats, 10};
 
     // everytime adding a transaction, test the chunk status
     // [A]

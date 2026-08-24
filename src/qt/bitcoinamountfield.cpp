@@ -168,12 +168,12 @@ private:
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
-            if(val < CAmount{0} || val > BitcoinUnits::maxMoney())
+            if(val < 0*sats || val > BitcoinUnits::maxMoney())
                 valid = false;
         }
         if(valid_out)
             *valid_out = valid;
-        return valid ? val : CAmount{0};
+        return valid ? val : 0*sats;
     }
 
 protected:
