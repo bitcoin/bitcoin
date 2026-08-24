@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
                 // Inspect the connection pointed to from the request
                 client = requests.front()->GetClient();
                 BOOST_REQUIRE(client);
-                BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+                BOOST_CHECK_EQUAL(client->GetOrigin(), "5.5.5.5:6789");
 
                 // Respond to request
                 requests.front()->WriteReply(HTTP_OK, "874140\n");

@@ -659,7 +659,7 @@ void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> 
 CService HTTPRequest::GetPeer() const
 {
     if (std::shared_ptr c{m_client.lock()}) {
-        return c->m_addr;
+        return c->GetPeer();
     } else {
         return {};
     }
@@ -989,7 +989,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
 
     for (const auto& http_client : m_connected) {
         // Safely copy the shared pointer to the socket
-        std::shared_ptr<Sock> sock{WITH_LOCK(http_client->m_sock_mutex, return http_client->m_sock;)};
+        std::shared_ptr<Sock> sock{http_client->GetSock()};
 
         // Check if client is ready to send data. Don't try to receive again
         // until the send buffer is cleared (all data sent to client).
@@ -997,8 +997,7 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         // never hold m_sock_mutex and m_send_mutex at the same time here.
         // MaybeSendBytesFromBuffer() locks m_send_mutex then m_sock_mutex, so nesting
         // them in the opposite order here would risk a lock-order inversion deadlock.
-        const bool send_ready{WITH_LOCK(http_client->m_send_mutex, return http_client->m_send_ready;)};
-        Sock::Event event = (send_ready ? Sock::SendEvent : Sock::RecvEvent);
+        Sock::Event event = (http_client->ReadyToSend() ? Sock::SendEvent : Sock::RecvEvent);
         io_readiness.events_per_sock.emplace(sock, Sock::Events{event});
         io_readiness.httpclients_per_sock.emplace(sock, http_client);
     }

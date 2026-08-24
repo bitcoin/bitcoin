@@ -508,7 +508,7 @@ public:
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
     /// @{
-    Mutex m_send_mutex;
+    mutable Mutex m_send_mutex;
     std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
     /// @}
 
@@ -569,6 +569,11 @@ public:
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    const std::string& GetOrigin() const { return m_origin; }
+    const CService& GetPeer() const { return m_addr; }
+    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
+    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
 
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
