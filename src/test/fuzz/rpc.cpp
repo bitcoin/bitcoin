@@ -414,7 +414,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
         const std::string error_msg{json_rpc_error.find_value("message").get_str()};
         if (error_msg.starts_with("Internal bug detected")) {
             // Only allow the intentional internal bug
-            assert(error_msg.find("trigger_internal_bug") != std::string::npos);
+            assert(error_msg.contains("trigger_internal_bug"));
         }
     }
 }
