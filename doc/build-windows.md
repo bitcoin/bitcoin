@@ -13,7 +13,8 @@ Other options may work, but are not officially tested:
 
 * On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
-The instructions below work on Ubuntu and Debian. Make sure the distribution's `g++-mingw-w64-x86-64-posix`
+The instructions below may work on Ubuntu/Debian, but using guix or nix-shell is recommended and checked by CI.
+Make sure the distribution's `g++-mingw-w64-ucrt64`
 package meets the minimum required GCC version specified in [dependencies.md](dependencies.md).
 If compiling with the GUI (default in depends), at least GCC version 13 is required.
 
@@ -22,10 +23,10 @@ Installing Windows Subsystem for Linux
 
 Follow the upstream installation instructions, available [here](https://learn.microsoft.com/en-us/windows/wsl/install).
 
-Cross-compilation for Ubuntu and Windows Subsystem for Linux
+Cross-compilation for Debian and Windows Subsystem for Linux
 ------------------------------------------------------------
 
-The steps below can be performed on Ubuntu or WSL. The depends system
+The steps below can be performed on Debian or WSL. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
 
@@ -48,8 +49,8 @@ This means you cannot use a directory that is located directly on the host Windo
 
 Build using:
 
-    gmake -C depends HOST=x86_64-w64-mingw32  # Append "-j N" for N parallel jobs.
-    cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+    gmake -C depends HOST=x86_64-w64-mingw32ucrt  # Append "-j N" for N parallel jobs.
+    cmake -B build --toolchain depends/x86_64-w64-mingw32ucrt/toolchain.cmake
 
 Run `cmake -B build -LH` to see the full list of available options.
 
