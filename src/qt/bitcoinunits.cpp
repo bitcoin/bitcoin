@@ -142,10 +142,10 @@ QString BitcoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool 
 
 QString BitcoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
 {
-    assert(amount >= CAmount{0});
+    assert(amount >= 0*sats);
     QString value;
     if (privacy) {
-        value = format(unit, CAmount{0}, false, separators, true).replace('0', '#');
+        value = format(unit, 0*sats, false, separators, true).replace('0', '#');
     } else {
         value = format(unit, amount, false, separators, true);
     }

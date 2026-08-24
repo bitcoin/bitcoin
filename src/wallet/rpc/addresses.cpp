@@ -200,7 +200,7 @@ RPCMethod listaddressgroupings()
             UniValue addressInfo(UniValue::VARR);
             addressInfo.push_back(EncodeDestination(address));
             const auto it{balances.find(address)};
-            CAmount balance{it != balances.end() ? it->second : CAmount{0}};
+            CAmount balance{it != balances.end() ? it->second : 0*sats};
             addressInfo.push_back(ValueFromAmount(balance));
             {
                 const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
