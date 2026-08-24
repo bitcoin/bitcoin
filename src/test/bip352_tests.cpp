@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                     SpanReader(witness_str) >> txin.scriptWitness.stack;
                 }
                 vin.push_back(txin);
-                coins[outpoint] = Coin{CTxOut{{}, spk}, 0, false};
+                coins[outpoint] = Coin{CTxOut{CAmount{0}, spk}, 0, false};
             }
             auto pub_tweak_data = GetSilentPaymentsPrevoutsSummary(vin, coins);
             // If we don't get any tweak data from the transaction inputs, it is not a silent payment
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(bip352_skips_transactions_spending_unknown_segwit_versions)
     eligible_input.scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
 
     std::map<COutPoint, Coin> coins;
-    coins[eligible_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
-    coins[unknown_segwit_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessUnknown{2, std::vector<unsigned char>(32, 1)})}, 0, false};
+    coins[eligible_outpoint] = Coin{CTxOut{CAmount{0}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
+    coins[unknown_segwit_outpoint] = Coin{CTxOut{CAmount{0}, GetScriptForDestination(WitnessUnknown{2, std::vector<unsigned char>(32, 1)})}, 0, false};
 
     BOOST_REQUIRE(GetSilentPaymentsPrevoutsSummary({eligible_input}, coins).has_value());
     BOOST_CHECK(!GetSilentPaymentsPrevoutsSummary({eligible_input, CTxIn{unknown_segwit_outpoint}}, coins).has_value());
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     txin.scriptWitness.stack.emplace_back(sender_pubkey.begin(), sender_pubkey.end());
 
     std::map<COutPoint, Coin> coins;
-    coins[outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{sender_pubkey})}, 0, false};
+    coins[outpoint] = Coin{CTxOut{CAmount{0}, GetScriptForDestination(WitnessV0KeyHash{sender_pubkey})}, 0, false};
     const auto prevouts_summary = GetSilentPaymentsPrevoutsSummary({txin}, coins);
     BOOST_REQUIRE(prevouts_summary.has_value());
 
