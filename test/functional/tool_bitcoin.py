@@ -147,15 +147,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
         self.log.info(f"Ensure installed wrapper finds internal binaries in configured {libexecdir}/")
         result = run_wrapper(make_layout("found", libexecdir))
-        if libexecdir == "libexec":
-            assert_equal(result.returncode, 0)
-            assert_equal(get_exe_name(result.stdout), b"bitcoind")
-        else:
-            # Bug #35785: the old wrapper hardcodes "libexec" instead of
-            # respecting CMAKE_INSTALL_LIBEXECDIR, so it fails to find
-            # internal executables when the configured directory differs
-            # (e.g. Arch Linux, which sets CMAKE_INSTALL_LIBEXECDIR=lib).
-            assert result.returncode != 0, f"wrapper unexpectedly found bitcoind despite non-default libexecdir: {result.stdout!r}"
+        assert_equal(result.returncode, 0)
+        assert_equal(get_exe_name(result.stdout), b"bitcoind")
 
         other_dir = libexecdir + "_notfound"
         self.log.info(f"Ensure installed wrapper does not find internal binaries in unconfigured {other_dir}/")
