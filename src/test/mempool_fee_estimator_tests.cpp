@@ -105,6 +105,7 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
 
 BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
 {
+    FakeNodeClock clock{};
     MemPoolFeeRateEstimatorCache cache;
     const uint256 tip_hash{uint256::ONE};
     const uint256 next_tip_hash{uint256{2}};
@@ -122,10 +123,9 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     BOOST_CHECK(cached->m_economical == economical);
     BOOST_CHECK(!cache.GetCachedEstimate(next_tip_hash));
 
-    SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
+    clock += CACHE_LIFE + std::chrono::seconds{1};
     BOOST_CHECK(cache.IsStale());
     BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
-    SetMockTime(0);
 }
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
