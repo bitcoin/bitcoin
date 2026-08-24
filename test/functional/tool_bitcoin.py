@@ -102,6 +102,14 @@ class ToolBitcoinTest(BitcoinTestFramework):
         """
         paths = self.get_binaries().paths
         exeext = self.config["environment"]["EXEEXT"]
+        # Directory (relative to the install prefix) where the wrapper looks for
+        # internal executables, configured at build time via
+        # CMAKE_INSTALL_LIBEXECDIR. An absolute value is not relative to the
+        # prefix constructed here, so skip the check in that case.
+        libexecdir = self.config["environment"]["LIBEXECDIR"]
+        if os.path.isabs(libexecdir):
+            self.log.info("Skipping installed-layout check; CMAKE_INSTALL_LIBEXECDIR is absolute")
+            return
         prefix = self.nodes[0].datadir_path / "fake-prefix"
         datadir = self.nodes[0].datadir_path / "wrapper-datadir"
         datadir.mkdir()
@@ -130,14 +138,16 @@ class ToolBitcoinTest(BitcoinTestFramework):
             return subprocess.run([wrapper, "node", f"-datadir={datadir}", "-version"],
                                   capture_output=True, env=env, timeout=60)
 
-        self.log.info("Ensure installed wrapper finds internal binaries in libexec/")
-        result = run_wrapper(make_layout("found", "libexec"))
+        self.log.info(f"Ensure installed wrapper finds internal binaries in configured {libexecdir}/")
+        result = run_wrapper(make_layout("found", libexecdir))
         assert_equal(result.returncode, 0)
         assert_equal(get_exe_name(result.stdout), b"bitcoind")
 
-        self.log.info("Ensure installed wrapper does not find internal binaries in lib/")
-        result = run_wrapper(make_layout("notfound", "lib"))
-        assert result.returncode != 0, f"wrapper unexpectedly ran bitcoind from lib/: {result.stdout!r}"
+        # A directory that differs from the configured one must not be searched.
+        other_dir = "lib" if libexecdir != "lib" else "libexec"
+        self.log.info(f"Ensure installed wrapper does not find internal binaries in unconfigured {other_dir}/")
+        result = run_wrapper(make_layout("notfound", other_dir))
+        assert result.returncode != 0, f"wrapper unexpectedly ran bitcoind from {other_dir}/: {result.stdout!r}"
 
 
 def get_node_output(node):
