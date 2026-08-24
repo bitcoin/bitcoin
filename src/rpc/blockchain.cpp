@@ -2162,7 +2162,7 @@ static RPCMethod getblockstats()
         }
     }
 
-    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = {0, 0, 0, 0, 0};
     CalculatePercentilesByWeight(feerate_percentiles, feerate_array, total_weight);
 
     UniValue feerates_res(UniValue::VARR);
