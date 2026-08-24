@@ -312,7 +312,7 @@ void TransactionView::changedAmount()
     }
     else
     {
-        transactionProxyModel->setMinAmount(CAmount{0});
+        transactionProxyModel->setMinAmount(0*sats);
     }
 }
 

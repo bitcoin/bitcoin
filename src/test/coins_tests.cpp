@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     SpanReader{"97f23c835800816115944e077fe7c803cfa57f29b36bf87c1d35"_hex} >> cc1;
     BOOST_CHECK_EQUAL(cc1.IsCoinBase(), false);
     BOOST_CHECK_EQUAL(cc1.nHeight, 203998U);
-    BOOST_CHECK_EQUAL(cc1.out.nValue, CAmount{60000000000});
+    BOOST_CHECK_EQUAL(cc1.out.nValue, 60000000000*sats);
     BOOST_CHECK_EQUAL(HexStr(cc1.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160("816115944e077fe7c803cfa57f29b36bf87c1d35"_hex_u8)))));
 
     // Good example
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     SpanReader{"8ddf77bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4"_hex} >> cc2;
     BOOST_CHECK_EQUAL(cc2.IsCoinBase(), true);
     BOOST_CHECK_EQUAL(cc2.nHeight, 120891U);
-    BOOST_CHECK_EQUAL(cc2.out.nValue, CAmount{110397});
+    BOOST_CHECK_EQUAL(cc2.out.nValue, 110397*sats);
     BOOST_CHECK_EQUAL(HexStr(cc2.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160("8c988f1a4a4de2161e0f50aac7f17e7f9555caa4"_hex_u8)))));
 
     // Smallest possible example
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     SpanReader{"000006"_hex} >> cc3;
     BOOST_CHECK_EQUAL(cc3.IsCoinBase(), false);
     BOOST_CHECK_EQUAL(cc3.nHeight, 0U);
-    BOOST_CHECK_EQUAL(cc3.out.nValue, CAmount{0});
+    BOOST_CHECK_EQUAL(cc3.out.nValue, 0*sats);
     BOOST_CHECK_EQUAL(cc3.out.scriptPubKey.size(), 0U);
 
     // scriptPubKey that ends beyond the end of the stream

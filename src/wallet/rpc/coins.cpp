@@ -490,7 +490,7 @@ RPCMethod listunspent()
                               "See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
-                            {"minimum_amount|minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(CAmount{0})}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
+                            {"minimum_amount|minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0*sats)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximum_amount|maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximum_count|maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimum_sum_amount|minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
@@ -561,7 +561,7 @@ RPCMethod listunspent()
     const bool include_unsafe{self.Arg<bool>("include_unsafe")};
 
     CoinFilterParams filter_coins;
-    filter_coins.min_amount = CAmount{0};
+    filter_coins.min_amount = 0*sats;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();

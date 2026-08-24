@@ -96,7 +96,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
             }
 
-            if (fee_delta != CAmount{0} && opts.apply_fee_delta_priority) {
+            if (fee_delta != 0*sats && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), fee_delta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {

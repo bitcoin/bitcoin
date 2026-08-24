@@ -55,7 +55,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
 
     CMutableTransaction naughtyTx{};
     naughtyTx.vout = {
-        CTxOut{CAmount{0}, SCRIPT_PUB},
+        CTxOut{0*sats, SCRIPT_PUB},
     };
 
     uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).ComputeTotalSize() + CTransaction(naughtyTx).ComputeTotalSize())) / 41) - 100;

@@ -160,7 +160,7 @@ static RPCMethod sendrawtransaction()
             const TransactionError err = BroadcastTransaction(node,
                                                               tx,
                                                               err_string,
-                                                              /*max_tx_fee=*/CAmount{0},
+                                                              /*max_tx_fee=*/0*sats,
                                                               max_raw_tx_fee_rate,
                                                               method,
                                                               /*wait_callback=*/true);
@@ -427,7 +427,7 @@ static RPCMethod testmempoolaccept()
                     // Check that fee does not exceed maximum fee
                     const int64_t virtual_size = tx_result.m_vsize.value();
                     const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
-                    if (max_raw_tx_fee != CAmount{0} && fee > max_raw_tx_fee) {
+                    if (max_raw_tx_fee != 0*sats && fee > max_raw_tx_fee) {
                         result_inner.pushKV("allowed", false);
                         result_inner.pushKV("reject-reason", "max-fee-exceeded");
                         exit_early = true;
@@ -1433,7 +1433,7 @@ static RPCMethod submitpackage()
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
             std::optional<CFeeRate> client_maxfeerate{max_raw_tx_fee_rate};
             // 0-value is special; it's mapped to no sanity check
-            if (max_raw_tx_fee_rate == CFeeRate(CAmount{0})) {
+            if (max_raw_tx_fee_rate == CFeeRate(0*sats)) {
                 client_maxfeerate = std::nullopt;
             }
 
@@ -1506,7 +1506,7 @@ static RPCMethod submitpackage()
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
                 std::string err_string;
-                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/CAmount{0}, /*max_tx_fee_rate=*/CFeeRate(CAmount{0}), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
+                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/0*sats, /*max_tx_fee_rate=*/CFeeRate(0*sats), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
                 if (err != TransactionError::OK) {
                     throw JSONRPCTransactionError(err,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
