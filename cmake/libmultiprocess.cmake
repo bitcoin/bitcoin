@@ -19,6 +19,9 @@ function(add_libmultiprocess subdir)
   target_link_libraries(multiprocess PUBLIC $<BUILD_INTERFACE:core_interface>)
   target_link_libraries(mputil PUBLIC $<BUILD_INTERFACE:core_interface>)
   target_link_libraries(mpgen PUBLIC $<BUILD_INTERFACE:core_interface>)
+  target_compile_definitions(multiprocess PRIVATE KJ_NO_EXCEPTIONS=0)
+  target_compile_definitions(mputil PRIVATE KJ_NO_EXCEPTIONS=0)
+  target_compile_definitions(mpgen PRIVATE KJ_NO_EXCEPTIONS=0)
   # Mark capproto options as advanced to hide by default from cmake UI
   mark_as_advanced(CapnProto_DIR)
   mark_as_advanced(CapnProto_capnpc_IMPORTED_LOCATION)
@@ -35,6 +38,7 @@ function(add_libmultiprocess subdir)
   if(BUILD_TESTS)
     # Add tests to "all" target so ctest can run them
     set_target_properties(mptest PROPERTIES EXCLUDE_FROM_ALL OFF)
+    target_compile_definitions(mptest PRIVATE KJ_NO_EXCEPTIONS=0)
   endif()
   # Exclude examples from compilation database, because the examples are not
   # built by default, and they contain generated c++ code. Without this
