@@ -136,6 +136,18 @@ if [ -n "$NETBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME
   done < <(printf '%b\n' "${NETBSD_SDK_SHA512SUMS}")
 fi
 
+if [ -n "${NETBSD_GCC_SHA512SUMS:-}" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}/usr/pkg/gcc14" ]; then
+  mkdir -p "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}/usr/pkg"
+  while read -r NETBSD_GCC_SHA512 NETBSD_GCC_PACKAGE; do
+    NETBSD_GCC_PACKAGE_PATH="${DEPENDS_DIR}/sdk-sources/${NETBSD_GCC_PACKAGE}"
+    if [ ! -f "$NETBSD_GCC_PACKAGE_PATH" ]; then
+      ${CI_RETRY_EXE} curl --location --fail "${NETBSD_GCC_PACKAGE_DIR}/${NETBSD_GCC_PACKAGE}" -o "$NETBSD_GCC_PACKAGE_PATH"
+    fi
+    sha512sum -c <<<"${NETBSD_GCC_SHA512}  ${NETBSD_GCC_PACKAGE_PATH}"
+    tar -C "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}/usr/pkg" -xf "${DEPENDS_DIR}/sdk-sources/${NETBSD_GCC_PACKAGE}"
+  done < <(printf '%b\n' "${NETBSD_GCC_SHA512SUMS}")
+fi
+
 if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" ]; then
   FREEBSD_SDK_FILENAME="base-${FREEBSD_VERSION}.txz"
   FREEBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${FREEBSD_SDK_FILENAME}"
