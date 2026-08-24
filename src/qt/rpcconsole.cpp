@@ -761,7 +761,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 #ifdef ENABLE_WALLET
 void RPCConsole::addWallet(WalletModel * const walletModel)
 {
-    // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
+    // use name for text and wallet model for internal data object (to allow moving to a wallet id later)
     ui->WalletSelector->addItem(walletModel->getDisplayName(), QVariant::fromValue(walletModel));
     if (ui->WalletSelector->count() == 2) {
         // First wallet added, set to default to match wallet RPC behavior
@@ -1015,7 +1015,7 @@ void RPCConsole::on_lineEdit_returnPressed()
         return;
     }
 
-    // A special case allows to request shutdown even a long-running command is executed.
+    // A special case allows requesting shutdown even while a long-running command is executing.
     if (cmd == QLatin1String("stop")) {
         std::string dummy;
         RPCExecuteCommandLine(m_node, dummy, cmd.toStdString());

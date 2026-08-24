@@ -24,7 +24,7 @@ FUZZ_TARGET(parse_numbers)
         const auto u32{ToIntegral<uint32_t>(random_string)};
         const auto i64{ToIntegral<int64_t>(random_string)};
         const auto u64{ToIntegral<uint64_t>(random_string)};
-        // Dont check any values, just that each success result must fit into
+        // Don't check any values, just that each success result must fit into
         // the one with the largest bit-width.
         if (i8) {
             assert(i8 == i64);

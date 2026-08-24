@@ -2233,12 +2233,12 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
         if (++count % 8192 == 0) {
             interruption_point();
             if (should_abort) {
-                // allow to abort the scan via the abort reference
+                // allow aborting the scan via the abort reference
                 return false;
             }
         }
         if (count % 256 == 0) {
-            // update progress reference every 256 item
+            // update progress reference every 256 items
             uint32_t high = 0x100 * *UCharCast(key.hash.begin()) + *(UCharCast(key.hash.begin()) + 1);
             scan_progress = (int)(high * 100.0 / 65536.0 + 0.5);
         }

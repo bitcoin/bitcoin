@@ -39,7 +39,7 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
     */
     if (coin_control.m_feerate) { // 1.
         CFeeRate fee_rate{*coin_control.m_feerate};
-        // Allow to override automatic min/max check over coin control instance
+        // Allow overriding automatic min/max check on the coin control instance
         if (coin_control.fOverrideFeeRate) return {fee_rate, FeeReason::USER_SPECIFIED, std::nullopt};
 
         CFeeRate required_feerate = GetRequiredFeeRate(wallet);
@@ -52,7 +52,7 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
     unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : wallet.m_confirm_target;
     // By default estimates are economical iff we are signaling opt-in-RBF
     bool conservative_estimate = !coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf);
-    // Allow to override the default fee estimate mode over the CoinControl instance
+    // Allow overriding the default fee estimate mode on the CoinControl instance
     if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE)
         conservative_estimate = true;
     else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL)

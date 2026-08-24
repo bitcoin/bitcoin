@@ -435,7 +435,7 @@ public:
      *  + input fees are rounded individually and not collectively, which leads to small rounding errors
      *  - input counter size is always assumed to be 1vbyte
      *
-     * @param[in]  min_viable_change  Minimum amount for change output, if change would be less then we forgo change
+     * @param[in]  min_viable_change  Minimum amount for change output, if change would be less than this we forgo change
      * @param[in]  change_fee         Fees to include change output in the tx
      * @returns Amount for change output, 0 when there is no change.
      *

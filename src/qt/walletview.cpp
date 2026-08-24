@@ -84,7 +84,7 @@ WalletView::WalletView(WalletModel* wallet_model, const PlatformStyle* _platform
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, qOverload<const Txid&>(&TransactionView::focusTransaction));
 
-    // Clicking on "Export" allows to export the transaction list
+    // Clicking on "Export" allows exporting the transaction list
     connect(exportButton, &QPushButton::clicked, transactionView, &TransactionView::exportClicked);
 
     // Pass through messages from sendCoinsPage

@@ -226,7 +226,7 @@ class HTTPServer
 {
 public:
     /**
-     * Each connection is assigned an unique id of this type.
+     * Each connection is assigned a unique id of this type.
      */
     using Id = uint64_t;
 

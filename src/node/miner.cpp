@@ -583,7 +583,7 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
             return {};
         }
         // At this point TipBlock is set, so continue to wait until it is
-        // different then `current_tip` provided by caller.
+        // different from `current_tip` provided by caller.
         kernel_notifications.m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
             return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt || interrupt;
         });

@@ -331,11 +331,11 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
         [&](const std::span<const uint8_t> response) -> bool {
             if (response.size() < NATPMP_GETEXTERNAL_RESPONSE_SIZE) {
                 LogWarning("natpmp: Response too small\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             if (response[NATPMP_HDR_VERSION_OFS] != NATPMP_VERSION || response[NATPMP_HDR_OP_OFS] != (NATPMP_RESPONSE | NATPMP_OP_GETEXTERNAL)) {
                 LogWarning("natpmp: Response to wrong command\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             return true;
         },
@@ -369,16 +369,16 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
         [&](const std::span<const uint8_t> response) -> bool {
             if (response.size() < NATPMP_MAP_RESPONSE_SIZE) {
                 LogWarning("natpmp: Response too small\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             if (response[0] != NATPMP_VERSION || response[1] != (NATPMP_RESPONSE | NATPMP_OP_MAP_TCP)) {
                 LogWarning("natpmp: Response to wrong command\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             uint16_t internal_port = ReadBE16(response.data() + NATPMP_MAP_RESPONSE_INTERNAL_PORT_OFS);
             if (internal_port != port) {
                 LogWarning("natpmp: Response port doesn't match request\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             return true;
         },
@@ -495,23 +495,23 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
             }
             if (response.size() < (PCP_HDR_SIZE + PCP_MAP_SIZE)) {
                 LogWarning("pcp: Response too small\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             if (response[PCP_HDR_VERSION_OFS] != PCP_VERSION || response[PCP_HDR_OP_OFS] != (PCP_RESPONSE | PCP_OP_MAP)) {
                 LogWarning("pcp: Response to wrong command\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             // Handle MAP opcode response. See RFC6887 Figure 10.
             // Check that returned mapping nonce matches our request.
             if (!std::ranges::equal(response.subspan(PCP_HDR_SIZE + PCP_MAP_NONCE_OFS, PCP_MAP_NONCE_SIZE), nonce)) {
                 LogWarning("pcp: Mapping nonce mismatch\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             uint8_t protocol = response[PCP_HDR_SIZE + 12];
             uint16_t internal_port = ReadBE16(response.data() + PCP_HDR_SIZE + 16);
             if (protocol != PCP_PROTOCOL_TCP || internal_port != port) {
                 LogWarning("pcp: Response protocol or port doesn't match request\n");
-                return false; // Wasn't response to what we expected, try receiving next packet.
+                return false; // Not the response we expected, try receiving next packet.
             }
             return true;
         },

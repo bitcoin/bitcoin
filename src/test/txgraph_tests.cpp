@@ -229,14 +229,14 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
         // Determine the number of dependencies this transaction will have.
         int deps = std::min<int>(NUM_DEPS_PER_BOTTOM_TX, top_components.size());
         for (int dep = 0; dep < deps; ++dep) {
-            // Pick an transaction in top_components to attach to.
+            // Pick a transaction in top_components to attach to.
             auto idx = rng.randrange(top_components.size());
             // Add dependency.
             graph->AddDependency(/*parent=*/top_refs[top_components[idx]], /*child=*/bottom_tx);
             // Unless this is the last dependency being added, remove from top_components, as
             // the component will be merged with that one.
             if (dep < deps - 1) {
-                // Move entry top the back.
+                // Move entry to the back.
                 if (idx != top_components.size() - 1) std::swap(top_components.back(), top_components[idx]);
                 // And pop it.
                 top_components.pop_back();
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
     FeePerWeight feerateC{2, 10};
     FeePerWeight feerateD{4, 10};
 
-    // everytime adding a transaction, test the chunk status
+    // Every time a transaction is added, test the chunk status
     // [A]
     graph->AddTransaction(refs.emplace_back(), feerateA);
     BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(txgraph_staging)
     FeePerWeight feerateA{2, 10};
     FeePerWeight feerateB{1, 10};
 
-    // everytime adding a transaction, test the chunk status
+    // Every time a transaction is added, test the chunk status
     // [A]
     graph->AddTransaction(refs.emplace_back(), feerateA);
     BOOST_CHECK_EQUAL(graph->HaveStaging(), false);

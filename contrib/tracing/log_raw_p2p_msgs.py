@@ -81,7 +81,7 @@ int trace_inbound_message(struct pt_regs *ctx) {
     void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL, *pmsg = NULL;
 
     // lookup() does not return a NULL pointer. However, the BPF verifier
-    // requires an explicit check that that the `msg` pointer isn't a NULL
+    // requires an explicit check that the `msg` pointer isn't a NULL
     // pointer. See https://github.com/iovisor/bcc/issues/2595
     if (msg == NULL) return 1;
 
@@ -107,7 +107,7 @@ int trace_outbound_message(struct pt_regs *ctx) {
     void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL, *pmsg = NULL;
 
     // lookup() does not return a NULL pointer. However, the BPF verifier
-    // requires an explicit check that that the `msg` pointer isn't a NULL
+    // requires an explicit check that the `msg` pointer isn't a NULL
     // pointer. See https://github.com/iovisor/bcc/issues/2595
     if (msg == NULL) return 1;
 

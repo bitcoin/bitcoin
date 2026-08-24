@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
 
     // We should match the generation outpoint
     BOOST_CHECK(filter.contains(COutPoint{Txid{"147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b"}, 0}));
-    // ... but not the 4th transaction's output (its not pay-2-pubkey)
+    // ... but not the 4th transaction's output (it's not pay-to-pubkey)
     BOOST_CHECK(!filter.contains(COutPoint{Txid{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}, 0}));
 }
 
