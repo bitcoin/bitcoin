@@ -43,6 +43,7 @@ from test_framework.psbt import (
     PSBT_IN_PROPRIETARY,
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
+    PSBT_IN_TAP_LEAF_SCRIPT,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
@@ -50,7 +51,7 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
+from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -408,6 +409,66 @@ class PSBTTest(BitcoinTestFramework):
         # The same xpub under both origins would serialize as duplicate keys, making the combined PSBT unparseable
         decoded = self.nodes[0].decodepsbt(combined)
         assert_equal(decoded["global_xpubs"], [{"xpub": xpub, "master_fingerprint": "00000000", "path": "m"}])
+
+    def test_combinepsbt_tap_leaf_script_conflict(self):
+        self.log.info("Test that combining PSBTs with conflicting leaf scripts for the same control block keeps a single record")
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b"")]
+        tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+
+        def psbt_with_leaf_scripts(*records):
+            return PSBT(
+                g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}),
+                i=[PSBTMap({
+                    bytes([PSBT_IN_TAP_LEAF_SCRIPT]) + control_block: bytes(leaf_script) + bytes([LEAF_VERSION_TAPSCRIPT])
+                    for leaf_script, control_block in records
+                })],
+                o=[PSBTMap({})],
+            ).to_base64()
+
+        def combined_tap_scripts(psbts):
+            return self.nodes[0].decodepsbt(self.nodes[0].combinepsbt(psbts))["inputs"][0]["taproot_scripts"]
+
+        def tap_script(leaf_script, control_blocks):
+            return {"script": leaf_script.hex(), "leaf_ver": LEAF_VERSION_TAPSCRIPT, "control_blocks": [cb.hex() for cb in control_blocks]}
+
+        control_block = bytes([LEAF_VERSION_TAPSCRIPT]) + bytes.fromhex(H_POINT)
+        control_block_with_path = control_block + bytes(32)
+        control_block_with_longer_path = control_block + bytes(64)
+        leaf_script_a = CScript([OP_TRUE])
+        leaf_script_b = CScript([OP_TRUE, OP_TRUE])
+        leaf_script_c = CScript([OP_TRUE, OP_TRUE, OP_TRUE])
+
+        psbt_a = psbt_with_leaf_scripts((leaf_script_a, control_block))
+        psbt_b = psbt_with_leaf_scripts((leaf_script_b, control_block))
+        psbt_c = psbt_with_leaf_scripts((leaf_script_c, control_block))
+
+        # The same control block under two leaf scripts would serialize as duplicate keys
+        assert_equal(combined_tap_scripts([psbt_a, psbt_b]), [tap_script(leaf_script_a, [control_block])])
+        # Reversed, so the leaf script kept is decided by the argument order and not by its content
+        assert_equal(combined_tap_scripts([psbt_b, psbt_a]), [tap_script(leaf_script_b, [control_block])])
+        # A third PSBT conflicting with what the first merge kept is dropped the same way
+        assert_equal(combined_tap_scripts([psbt_a, psbt_b, psbt_c]), [tap_script(leaf_script_a, [control_block])])
+        # Combining a PSBT with itself leaves it untouched
+        assert_equal(self.nodes[0].combinepsbt([psbt_a, psbt_a]), psbt_a)
+
+        # Records that do not conflict are all kept, whether or not they share a leaf script
+        psbt_same_leaf = psbt_with_leaf_scripts((leaf_script_a, control_block_with_path))
+        assert_equal(combined_tap_scripts([psbt_a, psbt_same_leaf]), [tap_script(leaf_script_a, [control_block, control_block_with_path])])
+        psbt_other_leaf = psbt_with_leaf_scripts((leaf_script_b, control_block_with_path))
+        assert_equal(combined_tap_scripts([psbt_a, psbt_other_leaf]), [
+            tap_script(leaf_script_a, [control_block]),
+            tap_script(leaf_script_b, [control_block_with_path]),
+        ])
+
+        # Only the conflicting control block of an incoming leaf script is dropped, not all of them
+        psbt_leaf_a_two_blocks = psbt_with_leaf_scripts((leaf_script_a, control_block), (leaf_script_a, control_block_with_path))
+        psbt_leaf_b_two_blocks = psbt_with_leaf_scripts((leaf_script_b, control_block_with_path), (leaf_script_b, control_block_with_longer_path))
+        assert_equal(combined_tap_scripts([psbt_leaf_a_two_blocks, psbt_leaf_b_two_blocks]), [
+            tap_script(leaf_script_a, [control_block, control_block_with_path]),
+            tap_script(leaf_script_b, [control_block_with_longer_path]),
+        ])
 
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
@@ -1470,6 +1531,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.test_combinepsbt_preserves_proprietary_fields()
         self.test_combinepsbt_global_xpub_origin_conflict()
+        self.test_combinepsbt_tap_leaf_script_conflict()
 
         self.log.info("Test that combining PSBTs with different transactions fails")
         tx = CTransaction()
