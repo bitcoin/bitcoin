@@ -191,7 +191,7 @@ bool Session::Accept(Connection& conn)
             // STREAM STATUS RESULT=I2P_ERROR MESSAGE="Session was closed"
             // In that case consider the session damaged and close it right away,
             // even if the control socket is alive.
-            if (peer_dest.find("RESULT=I2P_ERROR") != std::string::npos) {
+            if (peer_dest.contains("RESULT=I2P_ERROR")) {
                 errmsg = strprintf("unexpected reply that hints the session is unusable: %s", peer_dest);
                 disconnect = true;
             } else {

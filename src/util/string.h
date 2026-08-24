@@ -122,7 +122,7 @@ std::vector<T> Split(const std::span<const char>& sp, std::string_view separator
     auto it = sp.begin();
     auto start = it;
     while (it != sp.end()) {
-        if (separators.find(*it) != std::string::npos) {
+        if (separators.contains(*it)) {
             if (include_sep) {
                 ret.emplace_back(start, it + 1);
             } else {

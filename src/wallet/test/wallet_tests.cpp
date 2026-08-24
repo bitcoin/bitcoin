@@ -575,7 +575,7 @@ BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 bool malformed_descriptor(std::ios_base::failure e)
 {
     std::string s(e.what());
-    return s.find("Missing checksum") != std::string::npos;
+    return s.contains("Missing checksum");
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)

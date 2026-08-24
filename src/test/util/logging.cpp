@@ -17,7 +17,7 @@ DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
     m_print_connection = LogInstance().PushBackCallback(
         [this](const std::string& s) {
             if (m_found) return;
-            m_found = s.find(m_message) != std::string::npos && m_match(&s);
+            m_found = s.contains(m_message) && m_match(&s);
         });
     noui_test_redirect();
 }

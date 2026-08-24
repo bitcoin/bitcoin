@@ -160,7 +160,7 @@ void AskPassphraseDialog::accept()
         try {
             if (!model->setWalletLocked(false, oldpass)) {
                 // Check if the passphrase has a null character (see #27067 for details)
-                if (oldpass.find('\0') == std::string::npos) {
+                if (!oldpass.contains('\0')) {
                     QMessageBox::critical(this, tr("Wallet unlock failed"),
                                           tr("The passphrase entered for the wallet decryption was incorrect."));
                 } else {
@@ -198,7 +198,7 @@ void AskPassphraseDialog::accept()
             else
             {
                 // Check if the old passphrase had a null character (see #27067 for details)
-                if (oldpass.find('\0') == std::string::npos) {
+                if (!oldpass.contains('\0')) {
                     QMessageBox::critical(this, tr("Passphrase change failed"),
                                           tr("The passphrase entered for the wallet decryption was incorrect."));
                 } else {

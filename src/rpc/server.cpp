@@ -100,7 +100,7 @@ std::string CRPCTable::help(std::string_view strCommand, const JSONRPCRequest& h
             std::string strHelp{e.what()};
             if (strCommand == "")
             {
-                if (strHelp.find('\n') != std::string::npos)
+                if (strHelp.contains('\n'))
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
 
                 if (category != pcmd->category)
