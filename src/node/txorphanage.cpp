@@ -231,6 +231,7 @@ public:
     bool AddTx(const CTransactionRef& tx, NodeId peer) override;
     bool AddAnnouncer(const Wtxid& wtxid, NodeId peer) override;
     CTransactionRef GetTx(const Wtxid& wtxid) const override;
+    std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid) const override;
     bool HaveTx(const Wtxid& wtxid) const override;
     bool HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const override;
     CTransactionRef GetTxToReconsider(NodeId peer) override;
@@ -592,6 +593,19 @@ CTransactionRef TxOrphanageImpl::GetTx(const Wtxid& wtxid) const
     auto it_lower = m_orphans.get<ByWtxid>().lower_bound(ByWtxidView{wtxid, MIN_PEER});
     if (it_lower != m_orphans.get<ByWtxid>().end() && it_lower->m_tx->GetWitnessHash() == wtxid) return it_lower->m_tx;
     return nullptr;
+}
+
+std::optional<std::vector<Txid>> TxOrphanageImpl::GetParentTxids(const Wtxid& wtxid) const
+{
+    auto it_lower = m_orphans.get<ByWtxid>().lower_bound(ByWtxidView{wtxid, MIN_PEER});
+    if (it_lower == m_orphans.get<ByWtxid>().end() || it_lower->m_tx->GetWitnessHash() != wtxid) return std::nullopt;
+
+    std::vector<Txid> unique_parents;
+    unique_parents.reserve(it_lower->m_tx->vin.size());
+    for (const auto& input : it_lower->m_tx->vin) unique_parents.push_back(input.prevout.hash);
+    std::sort(unique_parents.begin(), unique_parents.end());
+    unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+    return unique_parents;
 }
 
 bool TxOrphanageImpl::HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const

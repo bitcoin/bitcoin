@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <utility>
 #include <vector>
@@ -65,6 +66,10 @@ public:
 
     /** Get a transaction by its witness txid */
     virtual CTransactionRef GetTx(const Wtxid& wtxid) const = 0;
+
+    /** Get the unique parent txids (deduplicated prevout hashes, sorted) of an orphan, or std::nullopt if no tx
+     * with this wtxid exists. */
+    virtual std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid) const = 0;
 
     /** Check if we already have an orphan transaction (by wtxid only) */
     virtual bool HaveTx(const Wtxid& wtxid) const = 0;
