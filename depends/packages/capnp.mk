@@ -10,6 +10,7 @@ define $(package)_set_vars
   $(package)_config_opts += -DWITH_OPENSSL=OFF
   $(package)_config_opts += -DWITH_ZLIB=OFF
   $(package)_cxxflags += -fdebug-prefix-map=$($(package)_extract_dir)=/usr -fmacro-prefix-map=$($(package)_extract_dir)=/usr
+  $(package)_cxxflags += -DKJ_NO_EXCEPTIONS=0
 endef
 
 define $(package)_config_cmds
