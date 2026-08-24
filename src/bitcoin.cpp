@@ -18,6 +18,13 @@
 #include <tinyformat.h>
 #include <vector>
 
+// Guard against empty install dir values; they would silently break
+// ExecCommand()'s installed-layout lookup. CMakeLists.txt computes both values
+// from the configured install directories and never leaves them empty; these
+// static_asserts are a backstop.
+static_assert(BITCOIN_BINDIR_NAME[0] != '\0', "BITCOIN_BINDIR_NAME must not be empty");
+static_assert(BITCOIN_INTERNAL_LIBEXECDIR[0] != '\0', "BITCOIN_INTERNAL_LIBEXECDIR must not be empty");
+
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 static constexpr auto HELP_USAGE = R"(Usage: %s [OPTIONS] COMMAND...
@@ -173,8 +180,8 @@ bool UseMultiprocess(const CommandLine& cmd)
 }
 
 //! Execute the specified bitcoind, bitcoin-qt or other command line in `args`
-//! using src, bin and libexec directory paths relative to this executable, where
-//! the path to this executable is specified in `wrapper_argv0`.
+//! using src, bin and the configured libexec directory paths relative to this
+//! executable, where the path to this executable is specified in `wrapper_argv0`.
 //!
 //! @param args Command line arguments to execute, where first argument should
 //!             be a relative path to a bitcoind, bitcoin-qt or other executable
@@ -229,9 +236,10 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
     // (https://github.com/bitcoin/bitcoin/pull/31375#discussion_r1861814807)
     const bool fallback_os_search{!fs::PathFromString(std::string{wrapper_argv0}).has_parent_path()};
 
-    // If wrapper is installed in a bin/ directory, look for target executable
-    // in libexec/
-    (wrapper_dir.filename() == "bin" && try_exec(wrapper_dir.parent_path() / "libexec" / arg0.filename())) ||
+    // If wrapper is installed in the bindir (e.g. bin/), look for the target
+    // executable in the configured internal-executable directory (libexecdir),
+    // using the path from the bindir to the libexecdir (e.g. ../libexec).
+    (wrapper_dir.filename() == BITCOIN_BINDIR_NAME && try_exec((wrapper_dir / BITCOIN_INTERNAL_LIBEXECDIR / arg0.filename()).lexically_normal())) ||
 #ifdef WIN32
     // Otherwise check the "daemon" subdirectory in a windows install.
     (!wrapper_dir.empty() && try_exec(wrapper_dir / "daemon" / arg0.filename())) ||

@@ -655,8 +655,30 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
 endif()
 
 # Populate CMAKE_INSTALL_FULL_BINDIR, CMAKE_INSTALL_FULL_LIBEXECDIR, etc.
-# before the test subdirectory substitutes them into test/config.ini.
+# before the subdirectories below, which substitute these values into generated
+# files (test/config.ini and src/bitcoin-build-config.h).
 include(GNUInstallDirs)
+# GNUInstallDirs provides non-empty defaults; only explicit user overrides can
+# produce empty values, which would silently break the installed-layout lookup
+# in src/bitcoin.cpp. Catch that at configure time.
+if(NOT CMAKE_INSTALL_BINDIR)
+  message(FATAL_ERROR "CMAKE_INSTALL_BINDIR must not be empty")
+endif()
+if(NOT CMAKE_INSTALL_LIBEXECDIR)
+  message(FATAL_ERROR "CMAKE_INSTALL_LIBEXECDIR must not be empty")
+endif()
+# Values the bitcoin wrapper uses to find internal executables in an installed
+# layout: the name of the bindir, and the path from the bindir to the
+# libexecdir. They are computed from the absolute CMAKE_INSTALL_FULL_* values,
+# so they are right whether CMAKE_INSTALL_BINDIR and CMAKE_INSTALL_LIBEXECDIR
+# are relative to the install prefix (e.g. "bin" and "libexec") or absolute (as
+# Nix sets them), and they don't depend on the prefix when both are relative,
+# so `cmake --install --prefix` still works.
+cmake_path(GET CMAKE_INSTALL_FULL_BINDIR FILENAME BITCOIN_BINDIR_NAME)
+file(RELATIVE_PATH BITCOIN_BINDIR_TO_LIBEXECDIR "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBEXECDIR}")
+if(NOT BITCOIN_BINDIR_TO_LIBEXECDIR)
+  set(BITCOIN_BINDIR_TO_LIBEXECDIR ".")
+endif()
 
 add_subdirectory(test)
 add_subdirectory(doc)
