@@ -63,13 +63,13 @@ static void CoinSelection(benchmark::Bench& bench)
         CAmount amount{0};
         int p{det_rand.randrange(100)};
         if (p < 50) {
-            amount = 10'000 + det_rand.randrange(90'000);
+            amount = CAmount{10'000 + det_rand.randrange(90'000)};
         } else if (p < 75) {
-            amount = 100'000 + det_rand.randrange(900'000);
+            amount = CAmount{100'000 + det_rand.randrange(900'000)};
         } else if (p < 95) {
-            amount = 1'000'000 + det_rand.randrange(9'000'000);
+            amount = CAmount{1'000'000 + det_rand.randrange(9'000'000)};
         } else {
-            amount = 10'000'000 + det_rand.randrange(90'000'000);
+            amount = CAmount{10'000'000 + det_rand.randrange(90'000'000)};
         }
         addCoin(amount, wtxs);
     }
@@ -94,7 +94,7 @@ static void CoinSelection(benchmark::Bench& bench)
             outtype = OutputType::BECH32M;
             input_bytes = 58;
         }
-        CAmount fees = 20 * input_bytes;
+        CAmount fees{20 * input_bytes};
         available_coins.coins[outtype].emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, /*input_bytes=*/input_bytes, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/fees);
     }
 
@@ -104,7 +104,7 @@ static void CoinSelection(benchmark::Bench& bench)
     std::vector<CAmount> targets;
     targets.reserve(NUM_TARGETS);
     for (size_t i{0}; i < NUM_TARGETS; ++i) {
-        targets.push_back(10'000'000 + det_rand.randrange(90'000'000));
+        targets.emplace_back(10'000'000 + det_rand.randrange(90'000'000));
     }
 
     std::optional<FastRandomContext> rng;
@@ -143,7 +143,7 @@ static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputG
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/0);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/CAmount{0});
     set.emplace_back();
     set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/0, /*cluster_count=*/0);
 }
@@ -166,7 +166,7 @@ static void BnBExhaustion(benchmark::Bench& bench)
     CAmount target{0};
     bench.setup([&] { target = make_hard_case(17, utxo_pool); })
         .run([&] {
-            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
+            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/CAmount{0}, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
             ankerl::nanobench::doNotOptimizeAway(res);
         });
 }

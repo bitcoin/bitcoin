@@ -145,15 +145,15 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
                            /*relay_fee=*/CFeeRate(CAmount{0}),
                            /*txid=*/unused_txid)
                            == std::nullopt);
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee - 1, 1, CFeeRate(CAmount{0}), unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee + 1, high_fee, 1, CFeeRate(CAmount{0}), unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee - CAmount{1}, 1, CFeeRate(CAmount{0}), unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee + CAmount{1}, high_fee, 1, CFeeRate(CAmount{0}), unused_txid).has_value());
     // Additional fees must cover the replacement's vsize at incremental relay fee
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 11, incremental_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 2, 11, higher_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 4, 20, higher_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + CAmount{1}, 11, incremental_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + CAmount{1}, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + CAmount{2}, 11, higher_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + CAmount{4}, 20, higher_relay_feerate, unused_txid) == std::nullopt);
     BOOST_CHECK(PaysForRBF(low_fee, high_fee, 99999999, incremental_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(low_fee, high_fee + CAmount{99999999}, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
 }
 
 BOOST_FIXTURE_TEST_CASE(rbf_conflicts_calculator, TestChain100Setup)
@@ -284,17 +284,17 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset = pool.GetChangeSet();
     changeset->StageRemoval(entry1);
     changeset->StageRemoval(entry2);
-    changeset->StageAddition(tx1_conflict, tx1_fee+1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(tx1_conflict, tx1_fee+CAmount{1}, 0, 1, 0, false, 4, LockPoints());
     changeset->StageAddition(tx3, tx2_fee, 0, 1, 0, false, 4, LockPoints());
     BOOST_CHECK(ImprovesFeerateDiagram(*changeset) == std::nullopt);
 
     changeset.reset();
     // With prioritisation of in-mempool conflicts, it affects the results of the comparison using the same args as just above
-    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/1);
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/CAmount{1});
     changeset = pool.GetChangeSet();
     changeset->StageRemoval(entry1);
     changeset->StageRemoval(entry2);
-    changeset->StageAddition(tx1_conflict, tx1_fee+1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(tx1_conflict, tx1_fee+CAmount{1}, 0, 1, 0, false, 4, LockPoints());
     changeset->StageAddition(tx3, tx2_fee, 0, 1, 0, false, 4, LockPoints());
     const auto res2 = ImprovesFeerateDiagram(*changeset);
     BOOST_CHECK(res2.has_value());
@@ -302,7 +302,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     BOOST_CHECK(res2.value().second == "insufficient feerate: does not improve feerate diagram");
     changeset.reset();
 
-    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1);
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/CAmount{-1});
 
     // With fewer vbytes it does
     CMutableTransaction tx4{entry3.GetTx()};
@@ -326,7 +326,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset->StageRemoval(entry2);
     changeset->StageRemoval(entry5);
     changeset->StageAddition(tx1_conflict, tx1_fee, 0, 1, 0, false, 4, LockPoints());
-    changeset->StageAddition(entry4.GetSharedTx(), tx2_fee + entry5->GetModifiedFee() + 1, 0, 1, 0, false, 4, LockPoints());
+    changeset->StageAddition(entry4.GetSharedTx(), tx2_fee + entry5->GetModifiedFee() + CAmount{1}, 0, 1, 0, false, 4, LockPoints());
     const auto res3 = ImprovesFeerateDiagram(*changeset);
     BOOST_CHECK(res3 == std::nullopt);
 }
@@ -355,12 +355,12 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     {
         auto changeset = pool.GetChangeSet();
         changeset->StageRemoval(entry_low);
-        changeset->StageAddition(replacement_tx, 0, 0, 1, 0, false, 4, LockPoints());
+        changeset->StageAddition(replacement_tx, CAmount{0}, 0, 1, 0, false, 4, LockPoints());
         const auto replace_one{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_one.has_value());
         std::vector<FeeFrac> expected_old_chunks{{low_fee, low_size}};
         BOOST_CHECK(replace_one->first == expected_old_chunks);
-        std::vector<FeeFrac> expected_new_chunks{{0, entry_replacement.GetAdjustedWeight()}};
+        std::vector<FeeFrac> expected_new_chunks{{CAmount{0}, entry_replacement.GetAdjustedWeight()}};
         BOOST_CHECK(replace_one->second == expected_new_chunks);
     }
 

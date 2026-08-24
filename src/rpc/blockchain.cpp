@@ -1908,7 +1908,7 @@ static T CalculateTruncatedMedian(std::vector<T>& scores)
 {
     size_t size = scores.size();
     if (size == 0) {
-        return 0;
+        return T{0};
     }
 
     std::sort(scores.begin(), scores.end());
@@ -2153,7 +2153,7 @@ static RPCMethod getblockstats()
             totalfee += txfee;
 
             // New feerate uses satoshis per virtual byte instead of per serialized byte
-            CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0;
+            CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : CAmount{0};
             if (do_feerate_percentiles) {
                 feerate_array.emplace_back(feerate, weight);
             }
@@ -2162,7 +2162,7 @@ static RPCMethod getblockstats()
         }
     }
 
-    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = {0, 0, 0, 0, 0};
+    CAmount feerate_percentiles[NUM_GETBLOCKSTATS_PERCENTILES] = {CAmount{0}, CAmount{0}, CAmount{0}, CAmount{0}, CAmount{0}};
     CalculatePercentilesByWeight(feerate_percentiles, feerate_array, total_weight);
 
     UniValue feerates_res(UniValue::VARR);

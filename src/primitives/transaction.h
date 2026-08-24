@@ -150,13 +150,13 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = CAmount{-1};
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == CAmount{-1});
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)

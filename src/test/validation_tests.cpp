@@ -35,7 +35,7 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
         BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
         nPreviousSubsidy = nSubsidy;
     }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), CAmount{0});
 }
 
 static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
 
     // no witness commitment
     CMutableTransaction cb;
-    cb.vout.emplace_back(0, CScript{});
+    cb.vout.emplace_back(CAmount{0}, CScript{});
     block.vtx.push_back(MakeTransactionRef(cb));
     block.vtx.push_back(MakeTransactionRef(cb)); // Add dummy tx to exercise merkle root code
     BOOST_CHECK(!SignetTxs::Create(block, challenge));

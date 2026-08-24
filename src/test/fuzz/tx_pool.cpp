@@ -365,7 +365,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
             // Check sigops in mempool + block template creation
             bool add_sigops{fuzzed_data_provider.ConsumeBool()};
 
-            const CAmount amount_fee{ConsumeMoney(fuzzed_data_provider, -1000, amount_in)};
+            const CAmount amount_fee{ConsumeMoney(fuzzed_data_provider, CAmount{-1000}, amount_in)};
             const auto amount_out = (amount_in - amount_fee) / num_out;
             for (int i = 0; i < num_out; ++i) {
                 if (i == 0 && add_sigops) {

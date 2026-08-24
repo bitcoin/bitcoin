@@ -120,7 +120,7 @@ void BlockAssembler::resetBlock()
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
-    nFees = 0;
+    nFees = CAmount{0};
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
@@ -507,7 +507,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
             if (tip_changed) return new_tmpl;
 
             // Calculate the original template total fees if we haven't already
-            if (current_fees == -1) {
+            if (current_fees == CAmount{-1}) {
                 current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
             }
 

@@ -67,7 +67,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
             available_coins.pop_front();
         }
         for (uint32_t n{0}; n < num_outputs; ++n) {
-            mtx.vout.emplace_back(100, P2WSH_OP_TRUE);
+            mtx.vout.emplace_back(CAmount{100}, P2WSH_OP_TRUE);
         }
         CTransactionRef tx = MakeTransactionRef(mtx);
         TestMemPoolEntryHelper entry;
@@ -106,7 +106,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
         for (const auto& outpoint : outpoints) {
             auto it = bump_fees.find(outpoint);
             assert(it != bump_fees.end());
-            assert(it->second >= 0);
+            assert(it->second >= CAmount{0});
             sum_fees += it->second;
         }
         assert(!mini_miner.IsReadyToCalculate());

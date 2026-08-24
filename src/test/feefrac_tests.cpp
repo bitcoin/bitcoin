@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
 #include <util/feefrac.h>
 #include <random.h>
 
@@ -17,43 +18,43 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     FeeFrac empty{CAmount{0}, 0};
     FeeFrac zero_fee{CAmount{0}, 1}; // zero-fee allowed
 
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(0), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(1), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(1000000), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(0x7fffffff), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(0), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(1), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(1000000), 0);
-    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(0x7fffffff), 0);
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(0), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(1), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(1000000), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(0x7fffffff), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(0), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(1), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(1000000), CAmount{0});
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeUp(0x7fffffff), CAmount{0});
 
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(0), 0);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(1), 10);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(100000000), 1000000000);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(0x7fffffff), int64_t(0x7fffffff) * 10);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(0), 0);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(1), 10);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(100000000), 1000000000);
-    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(0x7fffffff), int64_t(0x7fffffff) * 10);
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(0), CAmount{0});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(1), CAmount{10});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(100000000), CAmount{1000000000});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeDown(0x7fffffff), CAmount{int64_t(0x7fffffff) * 10});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(0), CAmount{0});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(1), CAmount{10});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(100000000), CAmount{1000000000});
+    BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(0x7fffffff), CAmount{int64_t(0x7fffffff) * 10});
 
     FeeFrac neg{CAmount{-1001}, 100};
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(0), 0);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(1), -11);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(2), -21);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(3), -31);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100), -1001);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(101), -1012);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100000000), -1001000000);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100000001), -1001000011);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(0x7fffffff), -21496311307);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(0), 0);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(1), -10);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(2), -20);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(3), -30);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100), -1001);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(101), -1011);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100000000), -1001000000);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100000001), -1001000010);
-    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(0x7fffffff), -21496311306);
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(0), CAmount{0});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(1), CAmount{-11});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(2), CAmount{-21});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(3), CAmount{-31});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100), CAmount{-1001});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(101), CAmount{-1012});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100000000), CAmount{-1001000000});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(100000001), CAmount{-1001000011});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(0x7fffffff), CAmount{-21496311307});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(0), CAmount{0});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(1), CAmount{-10});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(2), CAmount{-20});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(3), CAmount{-30});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100), CAmount{-1001});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(101), CAmount{-1011});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100000000), CAmount{-1001000000});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(100000001), CAmount{-1001000010});
+    BOOST_CHECK_EQUAL(neg.EvaluateFeeUp(0x7fffffff), CAmount{-21496311306});
 
     BOOST_CHECK(empty == FeeFrac{}); // same as no-args
 
@@ -105,25 +106,25 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(ByRatio{oversized_1} < ByRatio{oversized_2});
     BOOST_CHECK(ByRatioNegSize{oversized_1} != ByRatioNegSize{oversized_2});
 
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(0), 0);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(1), 1152921);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(2), 2305843);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(1548031267), 1784758530396540);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(0), 0);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(1), 1152922);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(2), 2305843);
-    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(1548031267), 1784758530396541);
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(0), CAmount{0});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(1), CAmount{1152921});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(2), CAmount{2305843});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(1548031267), CAmount{1784758530396540});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(0), CAmount{0});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(1), CAmount{1152922});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(2), CAmount{2305843});
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(1548031267), CAmount{1784758530396541});
 
     // Test cases on the threshold where FeeFrac::Evaluate start using Mul/Div.
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeDown(98765432), 6871947728);
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeDown(98765432), 6871947729);
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeDown(98765432), 6871947730);
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeUp(98765432), 6871947729);
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeUp(98765432), 6871947730);
-    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeUp(98765432), 6871947731);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeDown(98765432), CAmount{6871947728});
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeDown(98765432), CAmount{6871947729});
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeDown(98765432), CAmount{6871947730});
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeUp(98765432), CAmount{6871947729});
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeUp(98765432), CAmount{6871947730});
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeUp(98765432), CAmount{6871947731});
 
     // Tests paths that use double arithmetic
-    FeeFrac busted{(static_cast<int64_t>(INT32_MAX)) + 1, INT32_MAX};
+    FeeFrac busted{CAmount{(static_cast<int64_t>(INT32_MAX)) + 1}, INT32_MAX};
     BOOST_CHECK(!(ByRatioNegSize{busted} < ByRatioNegSize{busted}));
 
     FeeFrac max_fee{CAmount{2100000000000000}, INT32_MAX};
@@ -132,24 +133,24 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(ByRatioNegSize{max_fee} <= ByRatioNegSize{max_fee});
     BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee});
 
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(0), 0);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(1), 977888);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(2), 1955777);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(3), 2933666);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(1256796054), 1229006664189047);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(INT32_MAX), 2100000000000000);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(0), 0);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(1), 977889);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(2), 1955778);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(3), 2933667);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(1256796054), 1229006664189048);
-    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(INT32_MAX), 2100000000000000);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(0), CAmount{0});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(1), CAmount{977888});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(2), CAmount{1955777});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(3), CAmount{2933666});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(1256796054), CAmount{1229006664189047});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(INT32_MAX), CAmount{2100000000000000});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(0), CAmount{0});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(1), CAmount{977889});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(2), CAmount{1955778});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(3), CAmount{2933667});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(1256796054), CAmount{1229006664189048});
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(INT32_MAX), CAmount{2100000000000000});
 
     FeeFrac max_fee2{CAmount{1}, 1};
     BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee2});
 
     // Test for integer overflow issue (https://github.com/bitcoin/bitcoin/issues/32294)
-    BOOST_CHECK_EQUAL((FeeFrac{CAmount{0x7ffffffdfffffffb}, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), 0x7fffffffffffffff);
+    BOOST_CHECK_EQUAL((FeeFrac{CAmount{0x7ffffffdfffffffb}, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), CAmount{0x7fffffffffffffff});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

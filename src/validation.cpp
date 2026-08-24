@@ -659,7 +659,7 @@ private:
         /** If we're doing package validation (i.e. m_package_feerates=true), the "effective"
          * package feerate of this transaction is the total fees divided by the total size of
          * transactions (which may include its ancestors and/or descendants). */
-        CFeeRate m_package_feerate{0};
+        CFeeRate m_package_feerate{CAmount{0}};
 
         const CTransactionRef& m_ptx;
         /** Txid. */
@@ -710,7 +710,7 @@ private:
         AssertLockHeld(::cs_main);
         AssertLockHeld(m_pool.cs);
         CAmount mempoolRejectFee = m_pool.GetMinFee().GetFee(package_size);
-        if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
+        if (mempoolRejectFee > CAmount{0} && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
@@ -1846,7 +1846,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
-        return 0;
+        return CAmount{0};
 
     CAmount nSubsidy = 50 * COIN;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
@@ -4021,7 +4021,7 @@ void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIn
         uint256 witnessroot = BlockWitnessMerkleRoot(block);
         CHash256().Write(witnessroot).Write(ret).Finalize(witnessroot);
         CTxOut out;
-        out.nValue = 0;
+        out.nValue = CAmount{0};
         out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
         out.scriptPubKey[0] = OP_RETURN;
         out.scriptPubKey[1] = 0x24;

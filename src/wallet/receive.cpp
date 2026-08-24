@@ -34,7 +34,7 @@ CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout)
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     LOCK(wallet.cs_wallet);
-    return (wallet.IsMine(txout) ? txout.nValue : 0);
+    return (wallet.IsMine(txout) ? txout.nValue : CAmount{0});
 }
 
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
@@ -81,7 +81,7 @@ CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
     AssertLockHeld(wallet.cs_wallet);
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
+    return (OutputIsChange(wallet, txout) ? txout.nValue : CAmount{0});
 }
 
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
@@ -113,7 +113,7 @@ CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, bool avoi
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (wallet.IsTxImmatureCoinBase(wtx))
-        return 0;
+        return CAmount{0};
 
     // GetBalance can assume transactions in mapWallet won't change
     return GetCachableAmount(wallet, wtx, CWalletTx::CREDIT, avoid_reuse);
@@ -122,7 +122,7 @@ CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, bool avoi
 CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, bool avoid_reuse)
 {
     if (wtx.GetTx()->vin.empty())
-        return 0;
+        return CAmount{0};
 
     return GetCachableAmount(wallet, wtx, CWalletTx::DEBIT, avoid_reuse);
 }
@@ -141,13 +141,13 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                   std::list<COutputEntry>& listSent, CAmount& nFee,
                   bool include_change)
 {
-    nFee = 0;
+    nFee = CAmount{0};
     listReceived.clear();
     listSent.clear();
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
-    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    if (nDebit > CAmount{0}) // debit>0 means we signed/sent this transaction
     {
         CAmount nValueOut = wtx.GetTx()->GetValueOut();
         nFee = nDebit - nValueOut;
@@ -162,7 +162,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         // Only need to handle txouts if AT LEAST one of these is true:
         //   1) they debit from us (sent)
         //   2) the output is to us (received)
-        if (nDebit > 0)
+        if (nDebit > CAmount{0})
         {
             if (!include_change && OutputIsChange(wallet, txout))
                 continue;
@@ -183,7 +183,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         COutputEntry output = {address, txout.nValue, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
+        if (nDebit > CAmount{0})
             listSent.push_back(output);
 
         // If we are receiving the output, add it as a "received" entry
@@ -314,7 +314,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
             Assume(wallet.IsMine(txo.GetTxOut()));
             if(!ExtractDestination(txo.GetTxOut().scriptPubKey, addr)) continue;
 
-            CAmount n = wallet.IsSpent(outpoint) ? 0 : txo.GetTxOut().nValue;
+            CAmount n = wallet.IsSpent(outpoint) ? CAmount{0} : txo.GetTxOut().nValue;
             if (auto it{balances.find(addr)}; it != balances.end()) {
                 it->second += n;
             } else {

@@ -150,7 +150,7 @@ void VerifyUseAvailableBalance(SendCoinsDialog& sendCoinsDialog, const WalletMod
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     QVERIFY(entries->count() == 1); // only one entry
     SendCoinsEntry* send_entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
-    QVERIFY(send_entry->getValue().amount == 0);
+    QVERIFY(send_entry->getValue().amount == CAmount{0});
     // Now click "useAvailableBalance", check updated balance (the entire wallet balance should be set)
     Q_EMIT send_entry->useAvailableBalance(send_entry);
     QVERIFY(send_entry->getValue().amount == walletModel.getCachedBalance().balance);

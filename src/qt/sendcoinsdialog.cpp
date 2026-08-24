@@ -336,7 +336,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     }
     question_string.append("</span>%1");
 
-    if(txFee > 0)
+    if (txFee > CAmount{0})
     {
         // append fee string if a fee is required
         question_string.append("<hr /><b>");
@@ -778,11 +778,11 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
         }
     }
 
-    if (amount > 0) {
+    if (amount > CAmount{0}) {
       entry->checkSubtractFeeFromAmount();
       entry->setAmount(amount);
     } else {
-      entry->setAmount(0);
+        entry->setAmount(CAmount{0});
     }
 }
 

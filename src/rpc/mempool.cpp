@@ -93,7 +93,7 @@ static RPCMethod sendrawtransaction()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount = request.params[2].isNull() ? CAmount{0} : AmountFromValue(request.params[2]);
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
@@ -1417,7 +1417,7 @@ static RPCMethod submitpackage()
             }
 
             // Burn sanity check is run with no context
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount = request.params[2].isNull() ? CAmount{0} : AmountFromValue(request.params[2]);
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
@@ -1488,7 +1488,7 @@ static RPCMethod submitpackage()
                 const auto err = BroadcastTransaction(node,
                                                       tx,
                                                       err_string,
-                                                      /*max_tx_fee=*/0,
+                                                      /*max_tx_fee=*/CAmount{0},
                                                       node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
                                                       /*wait_callback=*/true);
                 if (err != TransactionError::OK) {
