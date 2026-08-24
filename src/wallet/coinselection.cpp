@@ -887,7 +887,7 @@ CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_f
     } else {
         // random value between 50ksat and min (payment_value * 2, 1milsat)
         const auto upper_bound = std::min(payment_value * 2, CHANGE_UPPER);
-        return change_fee + rng.randrange(upper_bound - CHANGE_LOWER) + CHANGE_LOWER;
+        return change_fee + CAmount{rng.randrange((upper_bound - CHANGE_LOWER).Int())} + CHANGE_LOWER;
     }
 }
 
@@ -912,7 +912,7 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     // Bump fee of whole selection may diverge from sum of individual bump fees
     waste -= bump_fee_group_discount;
 
-    if (GetChange(min_viable_change, change_fee)) {
+    if (GetChange(min_viable_change, change_fee) != CAmount{0}) {
         // if we have a minimum viable amount after deducting fees, account for
         // cost of creating and spending change
         waste += change_cost;

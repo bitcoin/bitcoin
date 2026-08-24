@@ -124,7 +124,7 @@ public:
     // Updates the modified fees with descendants/ancestors.
     void UpdateModifiedFee(CAmount fee_diff) const
     {
-        m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
+        m_modified_fee = CAmount{SaturatingAdd(m_modified_fee.Int(), fee_diff.Int())};
     }
 
     // Update the LockPoints after a reorg

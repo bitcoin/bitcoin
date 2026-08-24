@@ -107,7 +107,7 @@ inline constexpr CAmount DEFAULT_FALLBACK_FEE = 0;
 //! -discardfee default
 inline constexpr CAmount DEFAULT_DISCARD_FEE{10'000};
 //! -mintxfee default
-inline constexpr CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
+inline constexpr CAmount DEFAULT_TRANSACTION_MINFEE{1000};
 //! -consolidatefeerate default
 inline constexpr CAmount DEFAULT_CONSOLIDATE_FEERATE{10'000}; // 10 sat/vbyte
 /**
@@ -121,7 +121,7 @@ inline constexpr CAmount DEFAULT_MAX_AVOIDPARTIALSPEND_FEE = 0;
 //! discourage APS fee higher than this amount
 inline constexpr CAmount HIGH_APS_FEE{COIN / 10000};
 //! minimum recommended increment for replacement txs
-inline constexpr CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
+inline constexpr CAmount WALLET_INCREMENTAL_RELAY_FEE{5000};
 //! Default for -spendzeroconfchange
 inline constexpr bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -walletrejectlongchains
