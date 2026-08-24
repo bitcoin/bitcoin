@@ -378,7 +378,7 @@ class InitTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX
         )
 
-        # Start without the HTTP server to ensure that -rpcmaxconnections is ignored
+        self.log.info("Checking -rpcmaxconnections is ignored when disabling the HTTP server")
         with node.assert_debug_log(
             expected_msgs = ["net thread start"],
             unexpected_msgs = ["Initialized HTTP server"],
@@ -406,7 +406,7 @@ class InitTest(BitcoinTestFramework):
             # Note this prints a message to the log and stderr but does not abort the process
             with node.assert_debug_log(expected_msgs=[f"Reducing -maxconnections from {soft} "]):
                 self.restart_node(1, extra_args=[f"-maxconnections={soft}"])
-            self.stop_node(1, expected_stderr=re.compile(fr"Reducing -maxconnections from {soft} "))
+            self.stop_node(1, expected_stderr=re.compile(f"Reducing -maxconnections from {soft} "))
 
             # From httpserver.h
             DEFAULT_MAX_HTTP_CONNECTIONS = 16
