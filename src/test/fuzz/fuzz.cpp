@@ -100,7 +100,7 @@ static void initialize()
     SeedRandomStateForTest(SeedRand::ZEROS);
 
     // Set time to the genesis block timestamp for deterministic initialization.
-    SetMockTime(1231006505);
+    SetMockTime(1231006505s);
 
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.

@@ -562,7 +562,7 @@ public:
         return StartWallets(m_context);
     }
     void stop() override { return UnloadWallets(m_context); }
-    void setMockTime(int64_t time) override { return SetMockTime(time); }
+    void setMockTime(int64_t time) override { return SetMockTime(std::chrono::seconds{time}); }
     void schedulerMockForward(std::chrono::seconds delta) override { Assert(m_context.scheduler)->MockForward(delta); }
 
     //! WalletLoader methods
