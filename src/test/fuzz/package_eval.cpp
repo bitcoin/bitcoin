@@ -241,7 +241,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
     std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
-        outpoints_value[outpoint] = 50 * COIN;
+        outpoints_value.insert_or_assign(outpoint, 50 * COIN);
     }
 
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
@@ -335,7 +335,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
                 }
                 // We need newly-created values for the duration of this run
                 for (size_t i = 0; i < tx->vout.size(); ++i) {
-                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                    outpoints_value.insert_or_assign(COutPoint(tx->GetHash(), i), tx->vout[i].nValue);
                 }
                 return tx;
             }());
@@ -399,7 +399,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
     std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
-        outpoints_value[outpoint] = 50 * COIN;
+        outpoints_value.insert_or_assign(outpoint, 50 * COIN);
     }
 
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
@@ -500,7 +500,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
                 }
                 // We need newly-created values for the duration of this run
                 for (size_t i = 0; i < tx->vout.size(); ++i) {
-                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                    outpoints_value.insert_or_assign(COutPoint(tx->GetHash(), i), tx->vout[i].nValue);
                 }
                 return tx;
             }());
