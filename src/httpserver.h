@@ -478,6 +478,56 @@ std::optional<std::string> GetQueryParameterFromUri(std::string_view uri, std::s
 class HTTPRemoteClient
 {
 public:
+    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
+        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
+
+    // Disable copies (should only be used as shared pointers)
+    HTTPRemoteClient(const HTTPRemoteClient&) = delete;
+    HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    const std::string& GetOrigin() const { return m_origin; }
+    const CService& GetPeer() const { return m_addr; }
+    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
+    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
+
+    void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+    void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
+
+    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+
+    /**
+     * Try to read an HTTPRequest from a client's receive buffer.
+     * Only complete requests are returned, incomplete requests are
+     * left in the buffer to wait for more data. Some read errors
+     * will mark this client for disconnection.
+     */
+    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client);
+
+    /**
+     * Push data (if there is any) from client's m_send_buffer to the connected socket.
+     * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
+     */
+    bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+
+    //! Used for tests.
+    //! @{
+    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
+    const HTTPRequest* GetRequest() const { return m_req.get(); }
+    //! @}
+
+protected:
+    //! Used for tests.
+    std::string& MutateRecvBuffer() { return m_recv_buffer; }
+
+private:
+    /**
+     * Try to read an HTTP request from the receive buffer.
+     * Updates HTTPRequest.m_state and drains buffer on error.
+     * @param[in]   req     A HTTPRequest to read into
+     * @throws std::runtime_error if request is unreadable or violates protocol
+     */
+    void ReadRequest(HTTPRequest& req);
+
     //! ID provided by HTTPServer upon connection and instantiation
     const HTTPServer::Id m_id;
 
@@ -562,55 +612,6 @@ public:
     //! Due to optimistic sends it may be updated in either a worker thread or in the
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
     std::atomic<SteadySeconds> m_idle_since;
-
-    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
-        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
-
-    // Disable copies (should only be used as shared pointers)
-    HTTPRemoteClient(const HTTPRemoteClient&) = delete;
-    HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
-
-    const std::string& GetOrigin() const { return m_origin; }
-    const CService& GetPeer() const { return m_addr; }
-    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
-    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
-
-    void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
-    void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
-
-    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
-
-    /**
-     * Try to read an HTTPRequest from a client's receive buffer.
-     * Only complete requests are returned, incomplete requests are
-     * left in the buffer to wait for more data. Some read errors
-     * will mark this client for disconnection.
-     */
-    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client);
-
-    /**
-     * Try to read an HTTP request from the receive buffer.
-     * Updates HTTPRequest.m_state and drains buffer on error.
-     * @param[in]   req     A HTTPRequest to read into
-     * @throws std::runtime_error if request is unreadable or violates protocol
-     */
-    void ReadRequest(HTTPRequest& req);
-
-    /**
-     * Push data (if there is any) from client's m_send_buffer to the connected socket.
-     * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
-     */
-    bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
-
-    //! Used for tests.
-    //! @{
-    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
-    const HTTPRequest* GetRequest() const { return m_req.get(); }
-    //! @}
-
-protected:
-    //! Used for tests.
-    std::string& MutateRecvBuffer() { return m_recv_buffer; }
 };
 
 /** Initialize HTTP server.
