@@ -818,10 +818,7 @@ private:
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
 
-    /** Send a ping message every PING_INTERVAL or if requested via RPC (peer.m_ping_queued is true).
-     *  May mark the peer to be disconnected if a ping has timed out.
-     *  We use mockable time for ping timeouts, so setmocktime may cause pings
-     *  to time out. */
+    /** Send a ping message every PING_INTERVAL or if requested via RPC (peer.m_ping_queued is true). */
     void MaybeSendPing(CNode& node_to, Peer& peer, NodeClock::time_point now);
 
     /** Send `addr` messages on a regular schedule. */
@@ -5682,17 +5679,6 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, NodeClock::time_point now)
 {
-    if (m_connman.ShouldRunInactivityChecks(node_to, now) &&
-        peer.m_ping_nonce_sent &&
-        now > peer.m_ping_start.load() + TIMEOUT_INTERVAL)
-    {
-        // The ping timeout is using mocktime. To disable the check during
-        // testing, increase -peertimeout.
-        LogDebug(BCLog::NET, "ping timeout: %fs, %s", Ticks<SecondsDouble>(now - peer.m_ping_start.load()), node_to.DisconnectMsg());
-        node_to.fDisconnect = true;
-        return;
-    }
-
     bool pingSend = false;
 
     if (peer.m_ping_queued) {
@@ -6089,9 +6075,6 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
     MaybeSendPing(node, peer, now);
 
-    // MaybeSendPing may have marked peer for disconnection
-    if (node.fDisconnect) return true;
-
     MaybeSendAddr(node, peer, current_time);
 
     MaybeSendSendHeaders(node, peer);
@@ -6452,6 +6435,17 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 node.fDisconnect = true;
                 return true;
             }
+        }
+        // If the peer failed to answer our ping in time, disconnect due to timeout.
+        if (m_connman.ShouldRunInactivityChecks(node, now) &&
+            peer.m_ping_nonce_sent &&
+            now > peer.m_ping_start.load() + TIMEOUT_INTERVAL)
+        {
+            // The ping timeout is using mocktime. To disable the check during
+            // testing, increase -peertimeout.
+            LogDebug(BCLog::NET, "ping timeout: %fs, %s", Ticks<SecondsDouble>(now - peer.m_ping_start.load()), node.DisconnectMsg());
+            node.fDisconnect = true;
+            return true;
         }
         // Check for headers sync timeouts
         if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
