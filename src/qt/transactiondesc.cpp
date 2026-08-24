@@ -176,7 +176,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         //
         // Coinbase
         //
-        CAmount nUnmatured = 0;
+        CAmount nUnmatured{0};
         for (const CTxOut& txout : wtx.tx->vout)
             nUnmatured += wallet.getCredit(txout);
         strHTML += "<b>" + tr("Credit") + ":</b> ";

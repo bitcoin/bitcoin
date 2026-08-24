@@ -11,11 +11,11 @@ BOOST_AUTO_TEST_SUITE(feefrac_tests)
 
 BOOST_AUTO_TEST_CASE(feefrac_operators)
 {
-    FeeFrac p1{1000, 100}, p2{500, 300};
-    FeeFrac sum{1500, 400};
-    FeeFrac diff{500, -200};
-    FeeFrac empty{0, 0};
-    FeeFrac zero_fee{0, 1}; // zero-fee allowed
+    FeeFrac p1{CAmount{1000}, 100}, p2{CAmount{500}, 300};
+    FeeFrac sum{CAmount{1500}, 400};
+    FeeFrac diff{CAmount{500}, -200};
+    FeeFrac empty{CAmount{0}, 0};
+    FeeFrac zero_fee{CAmount{0}, 1}; // zero-fee allowed
 
     BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(0), 0);
     BOOST_CHECK_EQUAL(zero_fee.EvaluateFeeDown(1), 0);
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(100000000), 1000000000);
     BOOST_CHECK_EQUAL(p1.EvaluateFeeUp(0x7fffffff), int64_t(0x7fffffff) * 10);
 
-    FeeFrac neg{-1001, 100};
+    FeeFrac neg{CAmount{-1001}, 100};
     BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(0), 0);
     BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(1), -11);
     BOOST_CHECK_EQUAL(neg.EvaluateFeeDown(2), -21);
@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(p1 + p2 == sum);
     BOOST_CHECK(p1 - p2 == diff);
 
-    FeeFrac p3{2000, 200};
+    FeeFrac p3{CAmount{2000}, 200};
     BOOST_CHECK(p1 != p3); // feefracs only equal if both fee and size are same
     BOOST_CHECK(p2 != p3);
 
-    FeeFrac p4{3000, 300};
+    FeeFrac p4{CAmount{3000}, 300};
     BOOST_CHECK(p1 == p4-p3);
     BOOST_CHECK(p1 + p3 == p4);
 
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(ByRatioNegSize{empty} >= ByRatioNegSize{p3});
 
     // check "max" values for comparison
-    FeeFrac oversized_1{4611686000000, 4000000};
-    FeeFrac oversized_2{184467440000000, 100000};
+    FeeFrac oversized_1{CAmount{4611686000000}, 4000000};
+    FeeFrac oversized_2{CAmount{184467440000000}, 100000};
 
     BOOST_CHECK(ByRatioNegSize{oversized_1} < ByRatioNegSize{oversized_2});
     BOOST_CHECK(ByRatioNegSize{oversized_1} <= ByRatioNegSize{oversized_2});
@@ -115,18 +115,18 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeUp(1548031267), 1784758530396541);
 
     // Test cases on the threshold where FeeFrac::Evaluate start using Mul/Div.
-    BOOST_CHECK_EQUAL(FeeFrac(0x1ffffffff, 123456789).EvaluateFeeDown(98765432), 6871947728);
-    BOOST_CHECK_EQUAL(FeeFrac(0x200000000, 123456789).EvaluateFeeDown(98765432), 6871947729);
-    BOOST_CHECK_EQUAL(FeeFrac(0x200000001, 123456789).EvaluateFeeDown(98765432), 6871947730);
-    BOOST_CHECK_EQUAL(FeeFrac(0x1ffffffff, 123456789).EvaluateFeeUp(98765432), 6871947729);
-    BOOST_CHECK_EQUAL(FeeFrac(0x200000000, 123456789).EvaluateFeeUp(98765432), 6871947730);
-    BOOST_CHECK_EQUAL(FeeFrac(0x200000001, 123456789).EvaluateFeeUp(98765432), 6871947731);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeDown(98765432), 6871947728);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeDown(98765432), 6871947729);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeDown(98765432), 6871947730);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x1ffffffff}, 123456789).EvaluateFeeUp(98765432), 6871947729);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000000}, 123456789).EvaluateFeeUp(98765432), 6871947730);
+    BOOST_CHECK_EQUAL(FeeFrac(CAmount{0x200000001}, 123456789).EvaluateFeeUp(98765432), 6871947731);
 
     // Tests paths that use double arithmetic
     FeeFrac busted{(static_cast<int64_t>(INT32_MAX)) + 1, INT32_MAX};
     BOOST_CHECK(!(ByRatioNegSize{busted} < ByRatioNegSize{busted}));
 
-    FeeFrac max_fee{2100000000000000, INT32_MAX};
+    FeeFrac max_fee{CAmount{2100000000000000}, INT32_MAX};
     BOOST_CHECK(!(ByRatioNegSize{max_fee} < ByRatioNegSize{max_fee}));
     BOOST_CHECK(!(ByRatioNegSize{max_fee} > ByRatioNegSize{max_fee}));
     BOOST_CHECK(ByRatioNegSize{max_fee} <= ByRatioNegSize{max_fee});
@@ -145,11 +145,11 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(1256796054), 1229006664189048);
     BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(INT32_MAX), 2100000000000000);
 
-    FeeFrac max_fee2{1, 1};
+    FeeFrac max_fee2{CAmount{1}, 1};
     BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee2});
 
     // Test for integer overflow issue (https://github.com/bitcoin/bitcoin/issues/32294)
-    BOOST_CHECK_EQUAL((FeeFrac{0x7ffffffdfffffffb, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), 0x7fffffffffffffff);
+    BOOST_CHECK_EQUAL((FeeFrac{CAmount{0x7ffffffdfffffffb}, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), 0x7fffffffffffffff);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

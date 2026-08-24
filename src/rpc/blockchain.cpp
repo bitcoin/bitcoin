@@ -2055,12 +2055,12 @@ static RPCMethod getblockstats()
     const bool do_calculate_weight = do_all || SetHasKeys(stats, "total_weight", "avgfeerate", "swtotal_weight", "avgfeerate", "feerate_percentiles", "minfeerate", "maxfeerate");
     const bool do_calculate_sw = do_all || SetHasKeys(stats, "swtxs", "swtotal_size", "swtotal_weight");
 
-    CAmount maxfee = 0;
-    CAmount maxfeerate = 0;
+    CAmount maxfee{0};
+    CAmount maxfeerate{0};
     CAmount minfee = MAX_MONEY;
     CAmount minfeerate = MAX_MONEY;
-    CAmount total_out = 0;
-    CAmount totalfee = 0;
+    CAmount total_out{0};
+    CAmount totalfee{0};
     int64_t inputs = 0;
     int64_t maxtxsize = 0;
     int64_t mintxsize = MAX_BLOCK_SERIALIZED_SIZE;
@@ -2081,7 +2081,7 @@ static RPCMethod getblockstats()
         const auto& tx = block.vtx.at(i);
         outputs += tx->vout.size();
 
-        CAmount tx_total_out = 0;
+        CAmount tx_total_out{0};
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
                 tx_total_out += out.nValue;
@@ -2132,7 +2132,7 @@ static RPCMethod getblockstats()
         }
 
         if (loop_inputs) {
-            CAmount tx_total_in = 0;
+            CAmount tx_total_in{0};
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
                 const CTxOut& prevoutput = coin.out;
@@ -2415,7 +2415,7 @@ static RPCMethod scantxoutset()
 
         std::set<CScript> needles;
         std::map<CScript, std::string> descriptors;
-        CAmount total_in = 0;
+        CAmount total_in{0};
 
         // loop through the scan objects
         for (const UniValue& scanobject : scanobjects->get_array().getValues()) {

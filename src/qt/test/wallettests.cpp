@@ -159,7 +159,7 @@ void VerifyUseAvailableBalance(SendCoinsDialog& sendCoinsDialog, const WalletMod
     // (only the sum of the selected coins should be set).
     int COINS_TO_SELECT = 2;
     auto coins = walletModel.wallet().listCoins();
-    CAmount sum_selected_coins = 0;
+    CAmount sum_selected_coins{0};
     int selected = 0;
     QVERIFY(coins.size() == 1); // context check, coins received only on one destination
     for (const auto& [outpoint, tx_out] : coins.begin()->second) {

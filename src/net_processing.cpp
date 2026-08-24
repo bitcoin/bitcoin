@@ -5305,7 +5305,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::FEEFILTER) {
-        CAmount newFeeFilter = 0;
+        CAmount newFeeFilter{0};
         vRecv >> newFeeFilter;
         if (MoneyRange(newFeeFilter)) {
             if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {

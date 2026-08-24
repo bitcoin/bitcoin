@@ -785,7 +785,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     for (auto& result : results) {
         std::vector<COutPoint> outpoints;
         OutputSet coins = result.GetInputSet();
-        CAmount summed_bump_fees = 0;
+        CAmount summed_bump_fees{0};
         for (auto& coin : coins) {
             if (coin->depth > 0) continue; // Bump fees only exist for unconfirmed inputs
             outpoints.push_back(coin->outpoint);
@@ -929,8 +929,8 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         FilteredOutputGroups filtered_groups = GroupOutputs(wallet, available_coins, coin_selection_params, ordered_filters, discarded_groups);
 
         // Check if we still have enough balance after applying filters (some coins might be discarded)
-        CAmount total_discarded = 0;
-        CAmount total_unconf_long_chain = 0;
+        CAmount total_discarded{0};
+        CAmount total_unconf_long_chain{0};
         for (const auto& group : discarded_groups) {
             total_discarded += group.GetSelectionAmount();
             if (group.m_ancestors >= max_ancestors || group.m_max_cluster_count >= max_cluster_count) total_unconf_long_chain += group.GetSelectionAmount();
@@ -1085,7 +1085,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
-    CAmount recipients_sum = 0;
+    CAmount recipients_sum{0};
     const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
     ReserveDestination reservedest(&wallet, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from

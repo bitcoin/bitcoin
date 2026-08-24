@@ -1710,7 +1710,7 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
 
 CAmount CWallet::GetDebit(const CTransaction& tx) const
 {
-    CAmount nDebit = 0;
+    CAmount nDebit{0};
     for (const CTxIn& txin : tx.vin)
     {
         nDebit += GetDebit(txin);

@@ -151,7 +151,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             if (!wallet.IsMine(address)) return; // exclude addresses not owned by the wallet (e.g. "send" purpose)
         }
 
-        CAmount nAmount = 0;
+        CAmount nAmount{0};
         int nConf = std::numeric_limits<int>::max();
         if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;

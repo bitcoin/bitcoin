@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         std::string strTest = test.write();
         CScriptWitness witness;
         TaprootBuilder taprootBuilder;
-        CAmount nValue = 0;
+        CAmount nValue{0};
         unsigned int pos = 0;
         if (test.size() > 0 && test[pos].isArray()) {
             unsigned int i=0;

@@ -55,7 +55,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
     const bool include_immature_coinbase{params[2].isNull() ? false : params[2].get_bool()};
 
     // Tally
-    CAmount amount = 0;
+    CAmount amount{0};
     for (const auto& [_, wtx] : wallet.mapWallet) {
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth

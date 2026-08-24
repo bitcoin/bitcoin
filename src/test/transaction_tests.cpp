@@ -423,7 +423,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     outputm.vin[0].prevout.SetNull();
     outputm.vin[0].scriptSig = CScript();
     outputm.vout.resize(1);
-    outputm.vout[0].nValue = 1;
+    outputm.vout[0].nValue = CAmount{1};
     outputm.vout[0].scriptPubKey = outscript;
     DataStream ssout;
     ssout << TX_WITH_WITNESS(outputm);
@@ -439,7 +439,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     inputm.vin[0].prevout.hash = output->GetHash();
     inputm.vin[0].prevout.n = 0;
     inputm.vout.resize(1);
-    inputm.vout[0].nValue = 1;
+    inputm.vout[0].nValue = CAmount{1};
     inputm.vout[0].scriptPubKey = CScript();
     SignatureData empty;
     bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL, empty);
@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
         mtx.vin[i].scriptSig = CScript();
 
         mtx.vout.resize(mtx.vout.size() + 1);
-        mtx.vout[i].nValue = 1000;
+        mtx.vout[i].nValue = CAmount{1000};
         mtx.vout[i].scriptPubKey = CScript() << OP_1;
     }
 
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
         Coin coin;
         coin.nHeight = 1;
         coin.fCoinBase = false;
-        coin.out.nValue = 1000;
+        coin.out.nValue = CAmount{1000};
         coin.out.scriptPubKey = scriptPubKey;
         coins.emplace_back(std::move(coin));
     }
@@ -787,7 +787,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     }
 
     // dust:
-    t.vout[0].nValue = nDustThreshold - 1;
+    t.vout[0].nValue = nDustThreshold - CAmount{1};
     CheckIsNotStandard(t, "dust");
     // not dust:
     t.vout[0].nValue = nDustThreshold;
@@ -812,12 +812,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
-    g_dust = CFeeRate(3702);
+    g_dust = CFeeRate(CAmount{3702});
     // dust:
-    t.vout[0].nValue = 674 - 1;
+    t.vout[0].nValue = CAmount{674 - 1};
     CheckIsNotStandard(t, "dust");
     // not dust:
-    t.vout[0].nValue = 674;
+    t.vout[0].nValue = CAmount{674};
     CheckIsStandard(t);
     g_dust = CFeeRate{DUST_RELAY_TX_FEE};
 
@@ -855,9 +855,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // Multiple TxoutType::NULL_DATA are permitted
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[0].nValue = 0;
+    t.vout[0].nValue = CAmount{0};
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[1].nValue = 0;
+    t.vout[1].nValue = CAmount{0};
     CheckIsStandard(t);
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
@@ -953,69 +953,69 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check compressed P2PK outputs dust threshold (must have leading 02 or 03)
     t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG;
-    t.vout[0].nValue = 576;
+    t.vout[0].nValue = CAmount{576};
     CheckIsStandard(t);
-    t.vout[0].nValue = 575;
+    t.vout[0].nValue = CAmount{575};
     CheckIsNotStandard(t, "dust");
 
     // Check uncompressed P2PK outputs dust threshold (must have leading 04/06/07)
     t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(65, 0x04) << OP_CHECKSIG;
-    t.vout[0].nValue = 672;
+    t.vout[0].nValue = CAmount{672};
     CheckIsStandard(t);
-    t.vout[0].nValue = 671;
+    t.vout[0].nValue = CAmount{671};
     CheckIsNotStandard(t, "dust");
 
     // Check P2PKH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUALVERIFY << OP_CHECKSIG;
-    t.vout[0].nValue = 546;
+    t.vout[0].nValue = CAmount{546};
     CheckIsStandard(t);
-    t.vout[0].nValue = 545;
+    t.vout[0].nValue = CAmount{545};
     CheckIsNotStandard(t, "dust");
 
     // Check P2SH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_HASH160 << std::vector<unsigned char>(20, 0) << OP_EQUAL;
-    t.vout[0].nValue = 540;
+    t.vout[0].nValue = CAmount{540};
     CheckIsStandard(t);
-    t.vout[0].nValue = 539;
+    t.vout[0].nValue = CAmount{539};
     CheckIsNotStandard(t, "dust");
 
     // Check P2WPKH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(20, 0);
-    t.vout[0].nValue = 294;
+    t.vout[0].nValue = CAmount{294};
     CheckIsStandard(t);
-    t.vout[0].nValue = 293;
+    t.vout[0].nValue = CAmount{293};
     CheckIsNotStandard(t, "dust");
 
     // Check P2WSH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(32, 0);
-    t.vout[0].nValue = 330;
+    t.vout[0].nValue = CAmount{330};
     CheckIsStandard(t);
-    t.vout[0].nValue = 329;
+    t.vout[0].nValue = CAmount{329};
     CheckIsNotStandard(t, "dust");
 
     // Check P2TR outputs dust threshold (Invalid xonly key ok!)
     t.vout[0].scriptPubKey = CScript() << OP_1 << std::vector<unsigned char>(32, 0);
-    t.vout[0].nValue = 330;
+    t.vout[0].nValue = CAmount{330};
     CheckIsStandard(t);
-    t.vout[0].nValue = 329;
+    t.vout[0].nValue = CAmount{329};
     CheckIsNotStandard(t, "dust");
 
     // Check future Witness Program versions dust threshold (non-32-byte pushes are undefined for version 1)
     for (int op = OP_1; op <= OP_16; op += 1) {
         t.vout[0].scriptPubKey = CScript() << (opcodetype)op << std::vector<unsigned char>(2, 0);
-        t.vout[0].nValue = 240;
+        t.vout[0].nValue = CAmount{240};
         CheckIsStandard(t);
 
-        t.vout[0].nValue = 239;
+        t.vout[0].nValue = CAmount{239};
         CheckIsNotStandard(t, "dust");
     }
 
     // Check anchor outputs
     t.vout[0].scriptPubKey = CScript() << OP_1 << ANCHOR_BYTES;
     BOOST_CHECK(t.vout[0].scriptPubKey.IsPayToAnchor());
-    t.vout[0].nValue = 240;
+    t.vout[0].nValue = CAmount{240};
     CheckIsStandard(t);
-    t.vout[0].nValue = 239;
+    t.vout[0].nValue = CAmount{239};
     CheckIsNotStandard(t, "dust");
 }
 

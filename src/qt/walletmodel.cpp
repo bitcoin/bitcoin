@@ -152,7 +152,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 {
     transaction.getWtx() = nullptr; // reset tx output
 
-    CAmount total = 0;
+    CAmount total{0};
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<CRecipient> vecSend;

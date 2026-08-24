@@ -444,7 +444,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
-    CAmount current_fees = -1;
+    CAmount current_fees{-1};
 
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.

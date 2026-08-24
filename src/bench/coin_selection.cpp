@@ -118,9 +118,9 @@ static void CoinSelection(benchmark::Bench& bench)
             params->change_output_size = 31;
             params->change_spend_size = 68;
             params->m_min_change_target = CHANGE_LOWER;
-            params->m_effective_feerate = CFeeRate{20'000};
-            params->m_long_term_feerate = CFeeRate{10'000};
-            params->m_discard_feerate = CFeeRate{3000};
+            params->m_effective_feerate = CFeeRate{CAmount{20'000}};
+            params->m_long_term_feerate = CFeeRate{CAmount{10'000}};
+            params->m_discard_feerate = CFeeRate{CAmount{3000}};
             params->tx_noinputs_size = 72;
             params->m_avoid_partial_spends = false;
 
@@ -151,7 +151,7 @@ static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputG
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 {
     utxo_pool.clear();
-    CAmount target = 0;
+    CAmount target{0};
     for (int i = 0; i < utxos; ++i) {
         target += CAmount{1LL << (utxos + i)};
         add_coin(CAmount{1LL << (utxos + i)}, 2 * i, utxo_pool);

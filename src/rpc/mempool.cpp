@@ -1412,7 +1412,7 @@ static RPCMethod submitpackage()
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
             std::optional<CFeeRate> client_maxfeerate{max_raw_tx_fee_rate};
             // 0-value is special; it's mapped to no sanity check
-            if (max_raw_tx_fee_rate == CFeeRate(0)) {
+            if (max_raw_tx_fee_rate == CFeeRate(CAmount{0})) {
                 client_maxfeerate = std::nullopt;
             }
 

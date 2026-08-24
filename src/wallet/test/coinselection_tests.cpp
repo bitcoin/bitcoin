@@ -45,8 +45,8 @@ static CoinSelectionParams init_cs_params(int eff_feerate = 5000)
         /*change_spend_size=*/P2WPKH_INPUT_VSIZE,
         /*min_change_target=*/50'000,
         /*effective_feerate=*/CFeeRate(eff_feerate),
-        /*long_term_feerate=*/CFeeRate(10'000),
-        /*discard_feerate=*/CFeeRate(3000),
+        /*long_term_feerate=*/CFeeRate(CAmount{10'000}),
+        /*discard_feerate=*/CFeeRate(CAmount{3000}),
         /*tx_noinputs_size=*/11 + P2WPKH_OUTPUT_VSIZE, //static header size + output size
         /*avoid_partial=*/false,
     };
@@ -116,7 +116,7 @@ static std::string InputAmountsToString(const SelectionResult& selection)
 static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, size_t expected_attempts, const CoinSelectionParams& cs_params = default_cs_params, const int custom_spending_vsize = P2WPKH_INPUT_VSIZE, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
-    CAmount expected_amount = 0;
+    CAmount expected_amount{0};
     for (CAmount input_amount : expected_input_amounts) {
         OutputGroup group = MakeCoin(input_amount, true, cs_params, custom_spending_vsize);
         expected_amount += group.m_value;

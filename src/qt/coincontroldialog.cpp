@@ -372,7 +372,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         return;
 
     // nPayAmount
-    CAmount nPayAmount = 0;
+    CAmount nPayAmount{0};
     for (const CAmount &amount : CoinControlDialog::payAmounts) {
         nPayAmount += amount;
     }
@@ -587,7 +587,7 @@ void CoinControlDialog::updateView()
             itemWalletAddress->setText(COLUMN_ADDRESS, sWalletAddress);
         }
 
-        CAmount nSum = 0;
+        CAmount nSum{0};
         int nChildren = 0;
         for (const auto& outpair : coins.second) {
             const COutPoint& output = std::get<0>(outpair);
