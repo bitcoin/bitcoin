@@ -323,7 +323,7 @@ static ProxySetting ParseProxyString(const QString& proxy)
     if (SplitHostPort(proxy.toStdString(), port, hostname) && port != 0) {
         // Valid and port within the valid range
         // Check if the hostname contains a colon, indicating an IPv6 address
-        if (hostname.find(':') != std::string::npos) {
+        if (hostname.contains(':')) {
             hostname = "[" + hostname + "]"; // Wrap IPv6 address in brackets
         }
         return {true, QString::fromStdString(hostname), QString::number(port)};
