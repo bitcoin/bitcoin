@@ -177,8 +177,8 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     // - exists in orphanage
     // - peer can be an orphan resolution candidate
     if (const auto* wtxid = std::get_if<Wtxid>(&gtxid)) {
-        if (auto orphan_tx{m_orphanage->GetTx(*wtxid)}) {
-            auto unique_parents{GetUniqueParents(*orphan_tx)};
+        if (auto unique_parents_opt{m_orphanage->GetParentTxids(*wtxid)}) {
+            auto& unique_parents{*unique_parents_opt};
             std::erase_if(unique_parents, [&](const auto& txid) {
                 return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
             });
@@ -190,7 +190,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
             }
 
             if (MaybeAddOrphanResolutionCandidate(unique_parents, *wtxid, peer, now)) {
-                m_orphanage->AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
+                m_orphanage->AddAnnouncer(*wtxid, peer);
             }
 
             // Return even if the peer isn't an orphan resolution candidate. This would be caught by AlreadyHaveTx.
