@@ -7,8 +7,12 @@
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
+#include <util/task_runner.h>
 #include <validation.h>
 
+#include <cstddef>
+#include <functional>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -18,6 +22,15 @@ class BlockManager;
 class CValidationInterface;
 class FakeNodeClock;
 struct TestingSetup;
+
+/// Runs callbacks synchronously and deterministically, while avoiding DEBUG_LOCKORDER false positives.
+class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
+{
+public:
+    void insert(std::function<void()> func) override { std::thread(std::move(func)).join(); }
+    void flush() override {}
+    size_t size() override { return 0; }
+};
 
 struct TestBlockManager : public node::BlockManager {
     /** Test-only method to clear internal state for fuzzing */

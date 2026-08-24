@@ -50,6 +50,8 @@ void initialize_process_messages()
             {}),
     };
     g_setup = testing_setup.get();
+    // Replace validation_signals before creating chainman and mempool so they use it.
+    g_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
     ResetChainmanAndMempool(*g_setup, init_clock);
 }
 
