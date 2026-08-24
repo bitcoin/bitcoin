@@ -336,7 +336,7 @@ class InitTest(BitcoinTestFramework):
         try:
             resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
         except (ValueError, OSError):
-            self.log.info(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
+            self.log.warning(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
             return
         try:
             self.restart_node(1)
@@ -348,7 +348,7 @@ class InitTest(BitcoinTestFramework):
     def init_rlimit_test(self):
         """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is RLIM_INFINITY."""
         if self.RLIM_INFINITY is None:
-            self.log.info("Skipping: resource module not available")
+            self.log.warning("Skipping: resource module not available")
             return
 
         self.log.info("Testing node startup with RLIM_INFINITY fd limit")
@@ -357,7 +357,7 @@ class InitTest(BitcoinTestFramework):
     def init_rlimit_large_test(self):
         """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is above INT_MAX."""
         if self.RLIM_INFINITY is None:
-            self.log.info("Skipping: resource module not available")
+            self.log.warning("Skipping: resource module not available")
             return
 
         self.log.info("Testing node startup with fd limit above INT_MAX")
@@ -399,7 +399,7 @@ class InitTest(BitcoinTestFramework):
             try:
                 resource.setrlimit(resource.RLIMIT_NOFILE, (soft, soft))
             except (ValueError, OSError):
-                self.log.info(f"Skipping rlimit test: cannot reduce hard limit (soft={soft}, hard={hard})")
+                self.log.warning(f"Skipping rlimit test: cannot reduce hard limit (soft={soft}, hard={hard})")
                 return
 
             self.log.info("Checking that large -maxconnections setting gets adjusted for available file descriptors")
