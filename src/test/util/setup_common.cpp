@@ -529,7 +529,7 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
     int nHashType = SIGHASH_ALL;
     std::map<int, bilingual_str> input_errors;
     assert(SignTransaction(mempool_txn, &keystore, input_coins, {.sighash_type = nHashType}, input_errors));
-    CAmount current_fee = inputs_amount - std::accumulate(outputs.begin(), outputs.end(), CAmount(0),
+    CAmount current_fee = inputs_amount - std::accumulate(outputs.begin(), outputs.end(), 0*sats,
         [](const CAmount& acc, const CTxOut& out) {
         return acc + out.nValue;
     });
@@ -539,7 +539,7 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
         assert(fee_output.value() < mempool_txn.vout.size());
         CAmount target_fee = feerate.value().GetFee(GetVirtualTransactionSize(CTransaction{mempool_txn}));
         CAmount deduction = target_fee - current_fee;
-        if (deduction > CAmount{0}) {
+        if (deduction > 0*sats) {
             // Only deduct fee if there's anything to deduct. If the caller has put more fees than
             // the target feerate, don't change the fee.
             mempool_txn.vout[fee_output.value()].nValue -= deduction;
@@ -637,7 +637,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         }
         if (success) {
             mempool_transactions.push_back(ptx);
-            if (amount_per_output > CAmount{3000}) {
+            if (amount_per_output > 3000*sats) {
                 // If the value is high enough to fund another transaction + fees, keep track of it so
                 // it can be used to build a more complex transaction graph. Insert randomly into
                 // unspent_prevouts for extra randomness in the resulting structures.

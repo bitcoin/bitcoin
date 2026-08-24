@@ -132,13 +132,13 @@ static void MempoolEviction(benchmark::Bench& bench)
     const CTransactionRef tx7_r{MakeTransactionRef(tx7)};
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        AddTx(tx1_r, CAmount{10000}, pool);
-        AddTx(tx2_r, CAmount{5000}, pool);
-        AddTx(tx3_r, CAmount{20000}, pool);
-        AddTx(tx4_r, CAmount{7000}, pool);
-        AddTx(tx5_r, CAmount{1000}, pool);
-        AddTx(tx6_r, CAmount{1100}, pool);
-        AddTx(tx7_r, CAmount{9000}, pool);
+        AddTx(tx1_r, 10000*sats, pool);
+        AddTx(tx2_r, 5000*sats, pool);
+        AddTx(tx3_r, 20000*sats, pool);
+        AddTx(tx4_r, 7000*sats, pool);
+        AddTx(tx5_r, 1000*sats, pool);
+        AddTx(tx6_r, 1100*sats, pool);
+        AddTx(tx7_r, 9000*sats, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
         pool.TrimToSize(GetVirtualTransactionSize(*tx1_r));
     });

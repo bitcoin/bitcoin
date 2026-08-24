@@ -106,10 +106,10 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
     if (calc_fee) {
         // Get the output amount
-        CAmount out_amt = std::accumulate(psbtx.outputs.begin(), psbtx.outputs.end(), CAmount(0),
+        CAmount out_amt = std::accumulate(psbtx.outputs.begin(), psbtx.outputs.end(), 0*sats,
             [](CAmount a, const PSBTOutput& b) {
                 if (!MoneyRange(a) || !MoneyRange(b.amount) || !MoneyRange(a + b.amount)) {
-                    return CAmount(-1);
+                    return -1*sats;
                 }
                 return a += b.amount;
             }

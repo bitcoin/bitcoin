@@ -43,8 +43,8 @@ bool static TestPair(CAmount dec, uint64_t enc)
 
 BOOST_AUTO_TEST_CASE(compress_amounts)
 {
-    BOOST_CHECK(TestPair(   CAmount{0},       0x0));
-    BOOST_CHECK(TestPair(   CAmount{1},       0x1));
+    BOOST_CHECK(TestPair(   0*sats,       0x0));
+    BOOST_CHECK(TestPair(   1*sats,       0x1));
     BOOST_CHECK(TestPair(         CENT,       0x7));
     BOOST_CHECK(TestPair(         COIN,       0x9));
     BOOST_CHECK(TestPair(      50*COIN,      0x32));
