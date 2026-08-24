@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
         if (bytes_read > 0) {
             actual.append(buf, bytes_read);
-            if (actual.find(strprintf("height: %d", num_requests - 1)) != std::string::npos) {
+            if (actual.contains(strprintf("height: %d", num_requests - 1))) {
                 break;
             }
         }
@@ -1041,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
         if (bytes_read > 0) {
             actual.append(buf, bytes_read);
-            if (actual.find(strprintf("height: %d", num_requests - 1)) != std::string::npos) {
+            if (actual.contains(strprintf("height: %d", num_requests - 1))) {
                 break;
             }
         }
@@ -1051,7 +1051,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
 
     // All replies were received
     for (int i = 0; i < num_requests; i++) {
-        BOOST_REQUIRE(actual.find(strprintf("height: %d", i)) != std::string::npos);
+        BOOST_REQUIRE(actual.contains(strprintf("height: %d", i)));
     }
 
     // Close the keep-alive connection

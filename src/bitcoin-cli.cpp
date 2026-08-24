@@ -994,7 +994,7 @@ HTTPResponse HTTPClient::ReadResponse()
     // must be rejected. We are more lenient: Transfer-Encoding takes precedence
     // and Content-Length is ignored.
     auto transfer_encoding = headers.FindFirst("transfer-encoding");
-    if (transfer_encoding && ToLower(*transfer_encoding).find("chunked") != std::string::npos) {
+    if (transfer_encoding && ToLower(*transfer_encoding).contains("chunked")) {
         chunked = true;
     } else {
         auto content_length_header = headers.FindFirst("content-length");
