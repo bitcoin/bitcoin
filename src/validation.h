@@ -781,8 +781,12 @@ public:
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Connect a block to the chain, updating pindex and the block undo/index files on disk.
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                      CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        CCoinsViewCache& view) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    //! Run the same validity checks as ConnectBlock() without mutating pindex or writing anything to disk.
+    bool TestConnectBlock(const CBlock& block, BlockValidationState& state, const CBlockIndex* pindex,
+        CCoinsViewCache& view) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
@@ -855,6 +859,17 @@ public:
     std::pair<int, int> GetPruneRange(int last_height_can_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 protected:
+    /**
+     * Shared implementation behind ConnectBlock() and TestConnectBlock().
+     * Performs all UTXO-set-dependent validity checks, without mutating pindex
+     * or writing anything to disk. On success, fills blockundo, nInputs and
+     * nSigOpsCost so that ConnectBlock() can use them to update the chainstate
+     * without recomputing them.
+     */
+    bool ConnectBlockChecks(const CBlock& block, BlockValidationState& state, const CBlockIndex* pindex,
+        CCoinsViewCache& view, bool fJustCheck, CBlockUndo& blockundo,
+        int& nInputs, int64_t& nSigOpsCost) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(
         BlockValidationState& state,

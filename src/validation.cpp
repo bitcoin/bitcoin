@@ -2302,8 +2302,9 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                               CCoinsViewCache& view, bool fJustCheck)
+bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& state, const CBlockIndex* pindex,
+    CCoinsViewCache& view, bool fJustCheck, CBlockUndo& blockundo,
+    int& nInputs, int64_t& nSigOpsCost)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2347,8 +2348,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block_hash == params.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
-            view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
 
@@ -2514,8 +2513,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_last_script_check_reason_logged = script_check_reason;
     }
 
-    CBlockUndo blockundo;
-
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
     // in multiple threads). Preallocate the vector size so a new allocation
@@ -2527,8 +2524,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
-    int nInputs = 0;
-    int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -2639,9 +2634,33 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_verify),
              Ticks<MillisecondsDouble>(m_chainman.time_verify) / m_chainman.num_blocks_total);
 
-    if (fJustCheck) {
+    return true;
+}
+
+bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view)
+{
+    AssertLockHeld(cs_main);
+    assert(pindex);
+
+    [[maybe_unused]] const auto time_start{SteadyClock::now()};
+
+    CBlockUndo blockundo;
+    int nInputs = 0;
+    int64_t nSigOpsCost = 0;
+    if (!ConnectBlockChecks(block, state, pindex, view, /*fJustCheck=*/false, blockundo, nInputs, nSigOpsCost)) {
+        return false;
+    }
+
+    // Special case for the genesis block: its coinbase is unspendable, so
+    // ConnectBlockChecks() skipped connecting its transactions and there is
+    // no undo data or block index validity to update.
+    if (pindex->pprev == nullptr) {
+        // add this block to the view's block chain
+        view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
+
+    const auto time_4{SteadyClock::now()};
 
     if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
         return false;
@@ -2670,7 +2689,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(m_chainman.time_index) / m_chainman.num_blocks_total);
 
     TRACEPOINT(validation, block_connected,
-        block_hash.data(),
+        block.GetHash().data(),
         pindex->nHeight,
         block.vtx.size(),
         nInputs,
@@ -2679,6 +2698,17 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     );
 
     return true;
+}
+
+bool Chainstate::TestConnectBlock(const CBlock& block, BlockValidationState& state, const CBlockIndex* pindex,
+                                   CCoinsViewCache& view)
+{
+    AssertLockHeld(cs_main);
+
+    CBlockUndo blockundo;
+    int nInputs = 0;
+    int64_t nSigOpsCost = 0;
+    return ConnectBlockChecks(block, state, pindex, view, /*fJustCheck=*/true, blockundo, nInputs, nSigOpsCost);
 }
 
 CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()
@@ -4547,8 +4577,8 @@ BlockValidationState TestBlockValidity(
     index_dummy.phashBlock = &block_hash;
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
-    // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
+    // Call TestConnectBlock(), it updates, and does not clear, validation caches.
+    if (!chainstate.TestConnectBlock(block, state, &index_dummy, view_dummy)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
