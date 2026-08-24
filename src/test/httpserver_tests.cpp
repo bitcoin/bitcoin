@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 {
     // Hard code the timestamp for the Date header in the HTTP response
     // Wed Dec 11 00:47:09 2024 UTC
-    SetMockTime(1733878029);
+    FakeNodeClock clock{1733878029s};
 
     // Prepare a request handler that just stores received requests so we can examine them.
     // Mutex is required to prevent a race between this test's main thread and the server's I/O loop.
