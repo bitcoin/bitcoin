@@ -118,9 +118,9 @@ static void CoinSelection(benchmark::Bench& bench)
             params->change_output_size = 31;
             params->change_spend_size = 68;
             params->m_min_change_target = CHANGE_LOWER;
-            params->m_effective_feerate = CFeeRate{CAmount{20'000}};
-            params->m_long_term_feerate = CFeeRate{CAmount{10'000}};
-            params->m_discard_feerate = CFeeRate{CAmount{3000}};
+            params->m_effective_feerate = CFeeRate{20'000*sats};
+            params->m_long_term_feerate = CFeeRate{10'000*sats};
+            params->m_discard_feerate = CFeeRate{3000*sats};
             params->tx_noinputs_size = 72;
             params->m_avoid_partial_spends = false;
 
@@ -143,7 +143,7 @@ static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputG
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/CAmount{0});
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/0*sats);
     set.emplace_back();
     set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/0, /*cluster_count=*/0);
 }
@@ -166,7 +166,7 @@ static void BnBExhaustion(benchmark::Bench& bench)
     CAmount target{0};
     bench.setup([&] { target = make_hard_case(17, utxo_pool); })
         .run([&] {
-            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/CAmount{0}, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
+            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0*sats, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
             ankerl::nanobench::doNotOptimizeAway(res);
         });
 }

@@ -170,20 +170,20 @@ BOOST_AUTO_TEST_CASE(psbt2_addoutput)
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 0);
 
     // Same PSBT version is required
-    PSBTOutput psbtout_v0(/*psbt_version=*/0, /*amount=*/CAmount{1}, CScript());
+    PSBTOutput psbtout_v0(/*psbt_version=*/0, /*amount=*/1*sats, CScript());
     BOOST_CHECK(!psbt.AddOutput(psbtout_v0));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 0);
-    PSBTOutput psbtout(/*psbt_version=*/2, /*amount=*/CAmount{1}, CScript());
+    PSBTOutput psbtout(/*psbt_version=*/2, /*amount=*/1*sats, CScript());
     BOOST_CHECK(psbt.AddOutput(psbtout));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 1);
 
     // Disabling outputs modifiable flag prevents adding new outputs
     psbt.m_tx_modifiable->set(1, false);
-    PSBTOutput psbtout2(/*psbt_version=*/2, /*amount=*/CAmount{1}, CScript());
+    PSBTOutput psbtout2(/*psbt_version=*/2, /*amount=*/1*sats, CScript());
     BOOST_CHECK(!psbt.AddOutput(psbtout2));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 1);
     psbt.m_tx_modifiable->set(1, true);
-    PSBTOutput psbtout3(/*psbt_version=*/2, /*amount=*/CAmount{1}, CScript());
+    PSBTOutput psbtout3(/*psbt_version=*/2, /*amount=*/1*sats, CScript());
     BOOST_CHECK(psbt.AddOutput(psbtout3));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 2);
 }
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(merge_proprietary_fields)
 {
     CMutableTransaction tx;
     tx.vin.emplace_back(COutPoint{});
-    tx.vout.emplace_back(CAmount{0}, CScript{});
+    tx.vout.emplace_back(0*sats, CScript{});
 
     PartiallySignedTransaction left(tx);
     PartiallySignedTransaction right(tx);
@@ -252,7 +252,7 @@ struct PSBTOutputTest {
     {
         CMutableTransaction tx;
         if (has_input) tx.vin.emplace_back();
-        tx.vout.emplace_back(CAmount{0}, script_pubkey);
+        tx.vout.emplace_back(0*sats, script_pubkey);
         PartiallySignedTransaction psbt{tx};
         UpdatePSBTOutput(provider, psbt, 0);
         return psbt.outputs[0];

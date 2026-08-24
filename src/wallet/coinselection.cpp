@@ -117,14 +117,14 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
-    std::vector<CAmount> lookahead(utxo_pool.size(), CAmount{0});
+    std::vector<CAmount> lookahead(utxo_pool.size(), 0*sats);
 
     // Calculate lookahead values, and check that there are sufficient funds
     CAmount total_available{0};
     for (int index = static_cast<int>(utxo_pool.size()) - 1; index >= 0; --index) {
         lookahead[index] = total_available;
         // UTXOs with non-positive effective value must have been filtered
-        Assume(utxo_pool[index].GetSelectionAmount() > CAmount{0});
+        Assume(utxo_pool[index].GetSelectionAmount() > 0*sats);
         total_available += utxo_pool[index].GetSelectionAmount();
     }
 
@@ -400,7 +400,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
-    std::vector<CAmount> lookahead(utxo_pool.size(), CAmount{0});
+    std::vector<CAmount> lookahead(utxo_pool.size(), 0*sats);
     // The minimum UTXO weight among the remaining UTXOs after this UTXO index, e.g. min_tail_weight[5] = min(UTXO[6+].weight)
     std::vector<int> min_tail_weight(utxo_pool.size());
 
@@ -412,7 +412,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
         lookahead[index] = total_available;
         min_tail_weight[index] = min_group_weight;
         // UTXOs with non-positive effective value must have been filtered
-        Assume(utxo_pool[index].GetSelectionAmount() > CAmount{0});
+        Assume(utxo_pool[index].GetSelectionAmount() > 0*sats);
         total_available += utxo_pool[index].GetSelectionAmount();
         min_group_weight = std::min(min_group_weight, utxo_pool[index].m_weight);
     }
@@ -528,7 +528,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
                 best_selection_weight = curr_weight;
                 best_selection_amount = curr_amount;
             }
-        } else if (!best_selection.empty() && curr_weight + int64_t{min_tail_weight[curr_tail]} * ((total_target - curr_amount + utxo_pool[curr_tail].GetSelectionAmount() - CAmount{1}) / utxo_pool[curr_tail].GetSelectionAmount()) > best_selection_weight) {
+        } else if (!best_selection.empty() && curr_weight + int64_t{min_tail_weight[curr_tail]} * ((total_target - curr_amount + utxo_pool[curr_tail].GetSelectionAmount() - 1*sats) / utxo_pool[curr_tail].GetSelectionAmount()) > best_selection_weight) {
             // Compare minimal tail weight and last selected amount with the amount missing to gauge whether a better weight is still possible.
             if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
                 should_cut = true;
@@ -629,7 +629,7 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
     bool max_tx_weight_exceeded = false;
     for (const size_t i : indexes) {
         const OutputGroup& group = utxo_pool.at(i);
-        Assume(group.GetSelectionAmount() > CAmount{0});
+        Assume(group.GetSelectionAmount() > 0*sats);
 
         // Add group to selection
         heap.push(group);
@@ -832,7 +832,7 @@ void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestor
 
     fee += coin.GetFee();
 
-    coin.long_term_fee = coin.input_bytes < 0 ? CAmount{0} : m_long_term_feerate.GetFee(coin.input_bytes);
+    coin.long_term_fee = coin.input_bytes < 0 ? 0*sats : m_long_term_feerate.GetFee(coin.input_bytes);
     long_term_fee += coin.long_term_fee;
 
     effective_value += coin.GetEffectiveValue();
@@ -870,7 +870,7 @@ void OutputGroupTypeMap::Push(const OutputGroup& group, OutputType type, bool in
     if (group.m_outputs.empty()) return;
 
     Groups& groups = groups_by_type[type];
-    if (insert_positive && group.GetSelectionAmount() > CAmount{0}) {
+    if (insert_positive && group.GetSelectionAmount() > 0*sats) {
         groups.positive_group.emplace_back(group);
         all_groups.positive_group.emplace_back(group);
     }
@@ -894,7 +894,7 @@ CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_f
 void SelectionResult::SetBumpFeeDiscount(const CAmount discount)
 {
     // Overlapping ancestry can only lower the fees, not increase them
-    assert (discount >= CAmount{0});
+    assert (discount >= 0*sats);
     bump_fee_group_discount = discount;
 }
 
@@ -912,7 +912,7 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     // Bump fee of whole selection may diverge from sum of individual bump fees
     waste -= bump_fee_group_discount;
 
-    if (GetChange(min_viable_change, change_fee) != CAmount{0}) {
+    if (GetChange(min_viable_change, change_fee) != 0*sats) {
         // if we have a minimum viable amount after deducting fees, account for
         // cost of creating and spending change
         waste += change_cost;
@@ -953,17 +953,17 @@ CAmount SelectionResult::GetWaste() const
 
 CAmount SelectionResult::GetSelectedValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->txout.nValue; });
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), 0*sats, [](CAmount sum, const auto& coin) { return sum + coin->txout.nValue; });
 }
 
 CAmount SelectionResult::GetSelectedEffectiveValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->GetEffectiveValue(); }) + bump_fee_group_discount;
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), 0*sats, [](CAmount sum, const auto& coin) { return sum + coin->GetEffectiveValue(); }) + bump_fee_group_discount;
 }
 
 CAmount SelectionResult::GetTotalBumpFees() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->ancestor_bump_fees; }) - bump_fee_group_discount;
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), 0*sats, [](CAmount sum, const auto& coin) { return sum + coin->ancestor_bump_fees; }) - bump_fee_group_discount;
 }
 
 void SelectionResult::Clear()
@@ -1058,7 +1058,7 @@ CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmoun
                            : GetSelectedValue() - m_target;
 
     if (change < min_viable_change) {
-        return CAmount{0};
+        return 0*sats;
     }
 
     return change;

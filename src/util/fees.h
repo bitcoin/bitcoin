@@ -78,7 +78,7 @@ struct FeeRateEstimationError {
  */
 inline util::Unexpected<FeeRateEstimationError> EstimationError(FeeRateEstimatorType estimator, int returned_target, std::string error)
 {
-    return util::Unexpected{FeeRateEstimationError{{estimator, FeePerVSize{CAmount{0}, 0}, returned_target}, std::move(error)}};
+    return util::Unexpected{FeeRateEstimationError{{estimator, FeePerVSize{0*sats, 0}, returned_target}, std::move(error)}};
 }
 
 /**

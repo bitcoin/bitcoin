@@ -29,7 +29,7 @@ FUZZ_TARGET(fee_rate)
     const CAmount another_satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
     CFeeRate larger_fee_rate{another_satoshis_per_k};
     larger_fee_rate += fee_rate;
-    if (satoshis_per_k != CAmount{0} && another_satoshis_per_k != CAmount{0}) {
+    if (satoshis_per_k != 0*sats && another_satoshis_per_k != 0*sats) {
         assert(fee_rate < larger_fee_rate);
         assert(!(fee_rate > larger_fee_rate));
         assert(!(fee_rate == larger_fee_rate));

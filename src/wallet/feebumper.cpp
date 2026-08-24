@@ -124,7 +124,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
     // result.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.GetTx()));
     CFeeRate feerate(old_fee, txSize);
-    feerate += CFeeRate(CAmount{1});
+    feerate += CFeeRate(1*sats);
 
     // The node has a configurable incremental relay fee. Increment the fee by
     // the minimum of that and the wallet's conservative

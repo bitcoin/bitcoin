@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     MemPoolFeeRateEstimatorCache cache;
     const uint256 tip_hash{uint256::ONE};
     const uint256 next_tip_hash{uint256{2}};
-    const FeePerVSize conservative{CAmount{2}, 1};
-    const FeePerVSize economical{CAmount{1}, 1};
+    const FeePerVSize conservative{2*sats, 1};
+    const FeePerVSize economical{1*sats, 1};
 
     BOOST_CHECK(cache.IsStale());
     BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));

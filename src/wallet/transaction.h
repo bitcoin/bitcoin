@@ -405,7 +405,7 @@ private:
         nTimeReceived = 0;
         nTimeSmart = 0;
         fChangeCached = false;
-        nChangeCached = CAmount{0};
+        nChangeCached = 0*sats;
         nOrderPos = -1;
     }
 

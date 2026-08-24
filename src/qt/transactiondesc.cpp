@@ -131,7 +131,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     else
     {
         // Offline transaction
-        if (nNet > CAmount{0})
+        if (nNet > 0*sats)
         {
             // Credit
             CTxDestination address = DecodeDestination(rec->address);
@@ -171,7 +171,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Amount
     //
-    if (wtx.is_coinbase && nCredit == CAmount{0})
+    if (wtx.is_coinbase && nCredit == 0*sats)
     {
         //
         // Coinbase
@@ -186,7 +186,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
             strHTML += "(" + tr("not accepted") + ")";
         strHTML += "<br>";
     }
-    else if (nNet > CAmount{0})
+    else if (nNet > 0*sats)
     {
         //
         // Credit
@@ -242,7 +242,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
             }
 
             CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
-            if (nTxFee > CAmount{0})
+            if (nTxFee > 0*sats)
                 strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
         }
         else
