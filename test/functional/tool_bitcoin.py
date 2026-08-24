@@ -63,7 +63,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
     def run_wrapper(self, *args):
         """Run the bitcoin wrapper directly and return (returncode, stdout, stderr)."""
-        result = subprocess.run([self.nodes[0].binaries.paths.bitcoin_bin, *args],
+        binaries = self.nodes[0].binaries
+        result = subprocess.run([*binaries.valgrind_cmd, binaries.paths.bitcoin_bin, *args],
                                 capture_output=True, text=True)
         return result.returncode, result.stdout, result.stderr
 
