@@ -8,6 +8,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
+#include <serialize.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <test/util/common.h>
@@ -703,6 +704,51 @@ BOOST_AUTO_TEST_CASE(too_large_orphan_tx)
     BulkTransaction(tx, MAX_STANDARD_TX_WEIGHT);
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(tx)), MAX_STANDARD_TX_WEIGHT);
     BOOST_CHECK(orphanage->AddTx(MakeTransactionRef(tx), 0));
+}
+
+BOOST_AUTO_TEST_CASE(witness_heavy_orphan_tx)
+{
+    FastRandomContext det_rand{true};
+
+    // A transaction whose witness is a stack of many 1-byte elements is of standard weight (and its witness
+    // standardness cannot be checked, since its inputs are missing). Deserialized, it would use ~28 times more
+    // memory than its weight suggests, as every element is an individually heap-allocated vector. Since orphans
+    // are stored in serialized form, its memory usage is bounded by the weight that is accounted for it.
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(Txid::FromUint256(det_rand.rand256()), 0);
+    mtx.vout.resize(1);
+    mtx.vin[0].scriptWitness.stack.assign(199'000, std::vector<unsigned char>{1});
+    const auto ptx{MakeTransactionRef(mtx)};
+    const auto weight{GetTransactionWeight(*ptx)};
+    BOOST_CHECK_LE(weight, MAX_STANDARD_TX_WEIGHT);
+    // The serialized transaction, which is what the orphanage keeps, is smaller than the accounted weight.
+    BOOST_CHECK_LT(static_cast<int64_t>(GetSerializeSize(TX_WITH_WITNESS(*ptx))), weight);
+
+    auto orphanage{node::MakeTxOrphanage()};
+
+    // It is stored and accounted its weight.
+    BOOST_CHECK(orphanage->AddTx(ptx, 0));
+    BOOST_CHECK(orphanage->HaveTx(ptx->GetWitnessHash()));
+    BOOST_CHECK_EQUAL(orphanage->UsageByPeer(0), weight);
+    BOOST_CHECK_EQUAL(orphanage->UsageByPeer(0), node::GetOrphanUsage(ptx));
+
+    // It fits within the peer's reservation alongside normal orphans, which are left in place.
+    std::vector<CTransactionRef> normal_txns;
+    for (unsigned int i{0}; i < 10; ++i) {
+        normal_txns.emplace_back(MakeTransactionSpending({}, det_rand));
+        BOOST_CHECK(orphanage->AddTx(normal_txns.back(), 0));
+    }
+    BOOST_CHECK(orphanage->HaveTx(ptx->GetWitnessHash()));
+    BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), normal_txns.size() + 1);
+    for (const auto& normal_tx : normal_txns) BOOST_CHECK(orphanage->HaveTx(normal_tx->GetWitnessHash()));
+    BOOST_CHECK_LE(orphanage->UsageByPeer(0), orphanage->ReservedPeerUsage());
+
+    // The transaction handed back out deserializes to the original.
+    const auto ptx_out{orphanage->GetTx(ptx->GetWitnessHash())};
+    BOOST_REQUIRE(ptx_out != nullptr);
+    BOOST_CHECK(ptx_out->GetWitnessHash() == ptx->GetWitnessHash());
+    BOOST_CHECK_EQUAL(ptx_out->vin[0].scriptWitness.stack.size(), 199'000);
+    orphanage->SanityCheck();
 }
 
 BOOST_AUTO_TEST_CASE(process_block)
