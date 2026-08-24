@@ -419,7 +419,7 @@ struct Peer {
     std::atomic<bool> m_provides_cmpctblocks{false};
 
     /** Whether we consider this a preferred download peer. */
-    std::atomic<bool> fPreferredDownload{false};
+    std::atomic<bool> m_preferred_download{false};
 
     explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
         : m_id{id}
@@ -1700,7 +1700,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(peer != nullptr);
         m_wtxid_relay_peers -= peer->m_wtxid_relay;
         assert(m_wtxid_relay_peers >= 0);
-        m_num_preferred_download_peers -= peer->fPreferredDownload;
+        m_num_preferred_download_peers -= peer->m_preferred_download;
         assert(m_num_preferred_download_peers >= 0);
         {
             LOCK(m_peer_mutex);
@@ -3786,8 +3786,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         MakeAndPushMessage(pfrom, NetMsgType::VERACK);
 
         // Potentially mark this peer as a preferred download peer.
-        peer.fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(peer);
-        m_num_preferred_download_peers += peer.fPreferredDownload;
+        peer.m_preferred_download = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(peer);
+        m_num_preferred_download_peers += peer.m_preferred_download;
 
         // Attempt to initialize address relay for outbound peers and use result
         // to decide whether to send GETADDR, so that we don't send it to
@@ -3925,7 +3925,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         {
             LOCK(m_tx_download_mutex);
             m_txdownloadman.ConnectedPeer(pfrom.GetId(), node::TxDownloadConnectionInfo {
-                .m_preferred = peer.fPreferredDownload,
+                .m_preferred = peer.m_preferred_download,
                 .m_relay_permissions = pfrom.HasPermission(NetPermissionFlags::Relay),
                 .m_wtxid_relay = peer.m_wtxid_relay,
             });
@@ -5861,7 +5861,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // block download from this peer -- this mostly affects behavior while
         // in IBD (once out of IBD, we sync from all peers).
         bool sync_blocks_and_headers_from_peer = false;
-        if (peer.fPreferredDownload) {
+        if (peer.m_preferred_download) {
             sync_blocks_and_headers_from_peer = true;
         } else if (CanServeBlocks(peer) && !node.IsAddrFetchConn()) {
             // Typically this is an inbound peer. If we don't have any outbound
@@ -6209,7 +6209,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
-                if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - peer.fPreferredDownload >= 1)) {
+                if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - peer.m_preferred_download >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't
