@@ -159,6 +159,11 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
             if (!is_coinbase) {
                 const auto& tx_undo{Assert(block.undo_data)->vtxundo.at(i - 1)};
 
+                if (tx_undo.vprevout.size() != tx->vin.size()) {
+                    LogError("transaction and undo data inconsistent");
+                    return false;
+                }
+
                 for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                     const Coin& coin{tx_undo.vprevout[j]};
                     const COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
@@ -371,6 +376,11 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
         // The coinbase tx has no undo data since no former output is spent
         if (!is_coinbase) {
             const auto& tx_undo{block.undo_data->vtxundo.at(i - 1)};
+
+            if (tx_undo.vprevout.size() != tx->vin.size()) {
+                LogError("transaction and undo data inconsistent");
+                return false;
+            }
 
             for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                 const Coin& coin{tx_undo.vprevout[j]};
