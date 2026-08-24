@@ -116,6 +116,7 @@
 #include <fstream>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <list>
 #include <memory>
 #include <new>
@@ -748,6 +749,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-rpcdoccheck", strprintf("Throw a non-fatal error at runtime if the documentation for an RPC is incorrect (default: %u)", DEFAULT_RPC_DOC_CHECK), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookieperms=<readable-by>", strprintf("Set permissions on the RPC auth cookie file so that it is readable by [owner|group|all] (default: owner [via umask 0077])"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-rpcmaxconnections=<n>", strprintf("The maximum number of connected HTTP clients (default: %d)", DEFAULT_MAX_HTTP_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
     argsman.AddArg("-rpcport=<port>", strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet3: %u, testnet4: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), testnet4BaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
@@ -897,7 +899,7 @@ void InitLogging(const ArgsManager& args)
 
 namespace { // Variables internal to initialization process only
 
-int nMaxConnections;
+int num_p2p_max_connections;
 int available_fds;
 ServiceFlags g_local_services = ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
 int64_t peer_connect_timeout;
@@ -1053,8 +1055,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // -bind and -whitebind can't be set when not listening
-    size_t nUserBind = args.GetArgs("-bind").size() + args.GetArgs("-whitebind").size();
-    if (nUserBind != 0 && !args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    size_t num_user_p2p_bind = args.GetArgs("-bind").size() + args.GetArgs("-whitebind").size();
+    if (num_user_p2p_bind != 0 && !args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         return InitError(Untranslated("Cannot set -bind or -whitebind together with -listen=0"));
     }
 
@@ -1067,32 +1069,76 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // plus all manual connections and all bound interfaces. Any remainder will be available for connection sockets
 
     // Number of bound interfaces (we have at least one)
-    int nBind = std::max(nUserBind, size_t(1));
+    int num_p2p_bind = std::max(num_user_p2p_bind, size_t(1));
     // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
-    int user_max_connection = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
-    if (user_max_connection < 0) {
+    int user_p2p_max_connections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    if (user_p2p_max_connections < 0) {
         return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
     }
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
-    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces
-    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind;
 
-    // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
-    available_fds = RaiseFileDescriptorLimit(user_max_connection + max_private + min_required_fds);
+    // HTTP server listen sockets: by default two (IPv4 and IPv6 loopback), or one per -rpcbind entry
+    int num_rpc_bind = std::max(args.GetArgs("-rpcbind").size(), size_t(2));
+    // HTTP server connected client sockets
+    int user_rpc_max_connections = args.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS);
+    if (user_rpc_max_connections < 1) {
+        return InitError(Untranslated("-rpcmaxconnections must be greater than zero. Use -server=0 to disable HTTP."));
+    }
+    if (!args.GetBoolArg("-server", false)) {
+        num_rpc_bind = 0;
+        user_rpc_max_connections = 0;
+    }
+
+    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces.
+    // Every element is an int >= 0 so summing in int64_t cannot overflow.
+    // RaiseFileDescriptorLimit() accepts an int so we check that limit before casting.
+    const int64_t total_fds = int64_t{MIN_CORE_FDS} +
+                              MAX_ADDNODE_CONNECTIONS +
+                              num_p2p_bind +
+                              num_rpc_bind +
+                              user_rpc_max_connections +
+                              user_p2p_max_connections +
+                              static_cast<int64_t>(max_private);
+    if (total_fds > std::numeric_limits<int>::max()) {
+        return InitError(Untranslated("Too many file descriptors requested. Try lower values for -rpcmaxconnections "
+                                      "or -maxconnections, or fewer settings of "
+                                      "-rpcbind, -bind and -whitebind"));
+    }
+
+    // Subset of total_fds must also be a safe int
+    int min_required_fds = MIN_CORE_FDS +
+                           MAX_ADDNODE_CONNECTIONS +
+                           num_p2p_bind +
+                           num_rpc_bind +
+                           user_rpc_max_connections;
+
+    // Try raising the FD limit to what the user wants (available_fds may be smaller than the requested amount if this fails)
+    available_fds = RaiseFileDescriptorLimit(static_cast<int>(total_fds));
     // If we are using select instead of poll, our actual limit may be even smaller
 #ifndef USE_POLL
     available_fds = std::min(FD_SETSIZE, available_fds);
 #endif
+    // The system can't support our bare minimum
     if (available_fds < min_required_fds)
         return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), available_fds, min_required_fds));
 
-    // Trim requested connection counts, to fit into system limitations
-    nMaxConnections = std::min(available_fds - min_required_fds, user_max_connection);
+    // The system can support our minimum but not the full amount the user requested.
+    if (available_fds < total_fds) {
+        // If the user is requesting extra HTTP connections, abort. They need to change that.
+        if (user_rpc_max_connections > DEFAULT_MAX_HTTP_CONNECTIONS) {
+            return InitError(strprintf(_("Not enough file descriptors available. "
+                                         "Try reducing -rpcmaxconnections or using the default value of %d"),
+                                         DEFAULT_MAX_HTTP_CONNECTIONS));
+        }
+    }
 
-    if (nMaxConnections < user_max_connection)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), user_max_connection, nMaxConnections));
+    // Trim requested connection counts, to fit into system limitations
+    num_p2p_max_connections = std::min(available_fds - min_required_fds, user_p2p_max_connections);
+
+    if (num_p2p_max_connections < user_p2p_max_connections)
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), user_p2p_max_connections, num_p2p_max_connections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (auto result{init::SetLoggingCategories(args)}; !result) return InitError(util::ErrorString(result));
@@ -1472,7 +1518,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return false;
     }
 
-    LogInfo("Using at most %i automatic connections (%i file descriptors available)", nMaxConnections, available_fds);
+    LogInfo("Using at most %i automatic connections (%i file descriptors available)", num_p2p_max_connections, available_fds);
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
@@ -2141,7 +2187,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     CConnman::Options connOptions;
     connOptions.m_local_services = g_local_services;
-    connOptions.m_max_automatic_connections = nMaxConnections;
+    connOptions.m_max_automatic_connections = num_p2p_max_connections;
     connOptions.m_full_relay_inbound_percent = std::clamp<int>(args.GetIntArg("-inboundrelaypercent", DEFAULT_FULL_RELAY_INBOUND_PCT), 0, 100);
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();

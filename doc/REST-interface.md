@@ -31,18 +31,6 @@ If you front `bitcoind` with a reverse proxy or CDN such as Caddy or nginx with
 the headers-more module, you can override these defaults there. Keep overrides
 scoped to responses you know are safe to cache more aggressively.
 
-Limitations
------------
-
-There is a known issue in the REST interface that can cause a node to crash if
-too many http connections are being opened at the same time because the system runs
-out of available file descriptors. To prevent this from happening you might
-want to increase the number of maximum allowed file descriptors in your system
-and try to prevent opening too many connections to your rest interface at the
-same time if this is under your control. It is hard to give general advice
-since this depends on your system but if you make several hundred requests at
-once you are definitely at risk of encountering this issue.
-
 Supported API
 -------------
 
