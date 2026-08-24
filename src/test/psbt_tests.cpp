@@ -252,7 +252,7 @@ struct PSBTOutputTest {
     {
         CMutableTransaction tx;
         if (has_input) tx.vin.emplace_back();
-        tx.vout.emplace_back(0, script_pubkey);
+        tx.vout.emplace_back(CAmount{0}, script_pubkey);
         PartiallySignedTransaction psbt{tx};
         UpdatePSBTOutput(provider, psbt, 0);
         return psbt.outputs[0];
