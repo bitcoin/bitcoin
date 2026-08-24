@@ -2,12 +2,19 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+include(CheckKjExceptions)
+
 function(add_libmultiprocess subdir)
   # Set BUILD_TESTING to match BUILD_TESTS. BUILD_TESTING is a standard cmake
   # option that controls whether enable_testing() is called, but in the bitcoin
   # build a BUILD_TESTS option is used instead.
   set(BUILD_TESTING "${BUILD_TESTS}")
   add_subdirectory(${subdir} EXCLUDE_FROM_ALL)
+  get_directory_property(_mp_capnp_inc DIRECTORY ${subdir} DEFINITION CAPNP_INCLUDE_DIRECTORY)
+  if(_mp_capnp_inc)
+    set(CAPNP_INCLUDE_DIRECTORY "${_mp_capnp_inc}")
+  endif()
+  check_kj_exception_support()
   # Apply core_interface compile options to libmultiprocess runtime library.
   target_link_libraries(multiprocess PUBLIC $<BUILD_INTERFACE:core_interface>)
   target_link_libraries(mputil PUBLIC $<BUILD_INTERFACE:core_interface>)
