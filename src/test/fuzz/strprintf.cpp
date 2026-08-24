@@ -34,7 +34,7 @@ FUZZ_TARGET(str_printf)
     // * strprintf("%.222222200000000$", 1.1);
     //
     // Upstream bug report: https://github.com/c42f/tinyformat/issues/70
-    if (format_string.find('%') != std::string::npos && digits_in_format_specifier >= 7) {
+    if (format_string.contains('%') && digits_in_format_specifier >= 7) {
         return;
     }
 
@@ -42,7 +42,7 @@ FUZZ_TARGET(str_printf)
     // * strprintf("%1$*1$*", -11111111);
     //
     // Upstream bug report: https://github.com/c42f/tinyformat/issues/70
-    if (format_string.find('%') != std::string::npos && format_string.find('$') != std::string::npos && format_string.find('*') != std::string::npos && digits_in_format_specifier > 0) {
+    if (format_string.contains('%') && format_string.contains('$') && format_string.contains('*') && digits_in_format_specifier > 0) {
         return;
     }
 
@@ -77,14 +77,14 @@ FUZZ_TARGET(str_printf)
     } catch (const tinyformat::format_error&) {
     }
 
-    if (format_string.find('%') != std::string::npos && format_string.find('c') != std::string::npos) {
+    if (format_string.contains('%') && format_string.contains('c')) {
         // Avoid triggering the following:
         // * strprintf("%c", 1.31783e+38);
         // tinyformat.h:244:36: runtime error: 1.31783e+38 is outside the range of representable values of type 'char'
         return;
     }
 
-    if (format_string.find('%') != std::string::npos && format_string.find('*') != std::string::npos) {
+    if (format_string.contains('%') && format_string.contains('*')) {
         // Avoid triggering the following:
         // * strprintf("%*", -2.33527e+38);
         // tinyformat.h:283:65: runtime error: -2.33527e+38 is outside the range of representable values of type 'int'
