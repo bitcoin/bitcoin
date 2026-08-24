@@ -128,6 +128,15 @@ inline constexpr CAmount COIN{100'000'000};
 inline constexpr CAmount MAX_MONEY{21'000'000 * COIN};
 constexpr bool MoneyRange(const CAmount& nValue) { return (nValue.Int() >= 0 && nValue <= MAX_MONEY); }
 
+static constexpr class SatsUnit
+{
+    template <non_bool_integral T>
+    friend constexpr CAmount operator*(T sats, const SatsUnit&)
+    {
+        return CAmount{sats};
+    }
+} sats;
+
 inline std::ostream& operator<<(std::ostream& o, const CAmount a)
 {
     o << a.Int();
