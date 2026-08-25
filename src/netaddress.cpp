@@ -21,7 +21,7 @@
 #include <string_view>
 #include <tuple>
 
-using util::ContainsNoNUL;
+using util::ContainsNUL;
 using util::HasPrefix;
 
 CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
@@ -211,7 +211,7 @@ static void Checksum(std::span<const uint8_t> addr_pubkey, uint8_t (&checksum)[C
 
 bool CNetAddr::SetSpecial(std::string_view addr)
 {
-    if (!ContainsNoNUL(addr)) {
+    if (ContainsNUL(addr)) {
         return false;
     }
 
