@@ -5,6 +5,7 @@
 
 import sys
 import re
+import os
 
 # Directories with header-based modules, where the assumption that .cpp files
 # define functions and variables declared in corresponding .h files is
@@ -13,24 +14,56 @@ HEADER_MODULE_PATHS = [
     'interfaces/'
 ]
 
+
+def normalize_path(path):
+    return os.path.normpath(path).replace('\\', '/').lstrip('./')
+
+
 def module_name(path):
-    if any(path.startswith(dirpath) for dirpath in HEADER_MODULE_PATHS):
-        return path
-    if path.endswith(".h"):
-        return path[:-2]
-    if path.endswith(".c"):
-        return path[:-2]
-    if path.endswith(".cpp"):
-        return path[:-4]
+    normalized = normalize_path(path)
+    if any(normalized == dirpath.rstrip('/') or normalized.startswith(dirpath.rstrip('/') + '/') for dirpath in HEADER_MODULE_PATHS):
+        return normalized
+    if normalized.endswith(".h"):
+        return normalized[:-2]
+    if normalized.endswith(".c"):
+        return normalized[:-2]
+    if normalized.endswith(".cpp"):
+        return normalized[:-4]
     return None
+
+
+def resolve_include_path(include, source_dir, include_dirs):
+    candidates = [
+        normalize_path(include),
+        normalize_path(os.path.join(source_dir, include)),
+    ]
+    for include_dir in include_dirs:
+        candidates.append(normalize_path(os.path.join(include_dir, include)))
+
+    for candidate in candidates:
+        module = module_name(candidate)
+        if module is not None:
+            return module
+    return None
+
 
 files = dict()
 deps: dict[str, set[str]] = dict()
 
 RE = re.compile("^#include <(.*)>")
 
+include_dirs = ['.']
+argv = sys.argv[1:]
+while argv and argv[0].startswith('-I'):
+    include_dir = argv[0][2:]
+    if not include_dir:
+        include_dir = argv[1]
+        argv = argv[1:]
+    include_dirs.append(include_dir)
+    argv = argv[1:]
+
 # Iterate over files, and create list of modules
-for arg in sys.argv[1:]:
+for arg in argv:
     module = module_name(arg)
     if module is None:
         print("Ignoring file %s (does not constitute module)\n" % arg)
@@ -39,7 +72,6 @@ for arg in sys.argv[1:]:
         deps[module] = set()
 
 # Iterate again, and build list of direct dependencies for each module
-# TODO: implement support for multiple include directories
 for arg in sorted(files.keys()):
     module = files[arg]
     with open(arg, 'r') as f:
@@ -47,7 +79,7 @@ for arg in sorted(files.keys()):
             match = RE.match(line)
             if match:
                 include = match.group(1)
-                included_module = module_name(include)
+                included_module = resolve_include_path(include, os.path.dirname(arg), include_dirs)
                 if included_module is not None and included_module in deps and included_module != module:
                     deps[module].add(included_module)
 
