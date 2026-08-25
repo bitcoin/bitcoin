@@ -1070,6 +1070,26 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
+        self.log.info("Re-importing existing descriptors as a multipath descriptor adds the multipath record")
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
+                              "active": True,
+                              # The existing descriptors were topped up beyond
+                              # the original import range
+                              "range": 999,
+                              "timestamp": timestamp},
+                              success=True,
+                              wallet=w_multisplit)
+
+        self.log.info("A multipath descriptor overlapping a different multipath descriptor cannot be imported")
+        stored_multipath = descsum_create(f"wpkh({extended_key.pubkey().to_string()}/<10;20>/0/*)")
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;30>/0/*)"),
+                              "range": 999,
+                              "timestamp": timestamp},
+                              success=False,
+                              error_code=-4,
+                              error_message=f"A descriptor expanded from this multipath descriptor is already part of the multipath descriptor '{stored_multipath}'",
+                              wallet=w_multipath)
+
         self.log.info("Test older() safety")
 
         for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:

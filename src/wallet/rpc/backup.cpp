@@ -161,7 +161,8 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         // Parse descriptor string
         FlatSigningProvider keys;
         std::string error;
-        auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+        std::optional<std::string> multipath_normalized;
+        auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true, &multipath_normalized);
         if (parsed_descs.empty()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
         }
@@ -231,6 +232,24 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
         }
 
+        // Refuse an import whose expanded descriptors are already part of a
+        // different multipath descriptor: it would make the multipath
+        // attribution of the shared descriptors ambiguous, and such overlap is
+        // almost certainly an accident. Re-importing the same multipath
+        // descriptor is fine.
+        if (multipath_normalized) {
+            for (const auto& parsed_desc : parsed_descs) {
+                const uint256 desc_id{DescriptorID(*parsed_desc)};
+                for (const auto& [id, record] : wallet.GetMultipathDescriptors()) {
+                    if (record.descriptor != *multipath_normalized &&
+                        std::find(record.desc_ids.begin(), record.desc_ids.end(), desc_id) != record.desc_ids.end()) {
+                        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("A descriptor expanded from this multipath descriptor is already part of the multipath descriptor '%s'", record.descriptor));
+                    }
+                }
+            }
+        }
+
+        std::vector<uint256> desc_ids;
         for (size_t j = 0; j < parsed_descs.size(); ++j) {
             auto parsed_desc = std::move(parsed_descs[j]);
             if (parsed_descs.size() == 2) {
@@ -289,6 +308,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             }
 
             auto& spk_manager = spk_manager_res.value().get();
+            desc_ids.push_back(spk_manager.GetID());
 
             // Set descriptor as active if necessary
             if (active) {
@@ -301,6 +321,15 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 if (w_desc.descriptor->GetOutputType()) {
                     wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
                 }
+            }
+        }
+
+        // For a multipath descriptor, store a record tying the expanded
+        // descriptors back to the original multipath form.
+        if (multipath_normalized) {
+            WalletBatch batch(wallet.GetDatabase());
+            if (auto res{wallet.AddMultipathDescriptor(batch, MultipathDescriptorRecord(std::move(*multipath_normalized), std::move(desc_ids)))}; !res) {
+                warnings.push_back(strprintf("Multipath descriptor record not stored: %s", util::ErrorString(res).original));
             }
         }
 

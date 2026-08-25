@@ -3851,6 +3851,36 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
     return std::reference_wrapper(*spk_man);
 }
 
+void CWallet::LoadMultipathDescriptor(MultipathDescriptorRecord multipath_desc)
+{
+    AssertLockHeld(cs_wallet);
+    uint256 id = multipath_desc.GetID();
+    m_multipath_descriptors[id] = std::move(multipath_desc);
+}
+
+util::Result<void> CWallet::AddMultipathDescriptor(WalletBatch& batch, MultipathDescriptorRecord multipath_desc)
+{
+    AssertLockHeld(cs_wallet);
+    for (const uint256& desc_id : multipath_desc.desc_ids) {
+        if (!GetScriptPubKeyMan(desc_id)) return util::Error{Untranslated("Multipath descriptor record references an unknown descriptor")};
+    }
+    // Refuse a record that shares a descriptor with a different existing
+    // record: it would make the multipath attribution of the shared
+    // descriptor ambiguous, and such overlap is almost certainly an accident.
+    const uint256 id{multipath_desc.GetID()};
+    for (const auto& [existing_id, existing] : m_multipath_descriptors) {
+        if (existing_id == id) continue;
+        for (const uint256& desc_id : multipath_desc.desc_ids) {
+            if (std::find(existing.desc_ids.begin(), existing.desc_ids.end(), desc_id) != existing.desc_ids.end()) {
+                return util::Error{Untranslated(strprintf("A descriptor is already part of the multipath descriptor '%s'", existing.descriptor))};
+            }
+        }
+    }
+    if (!batch.WriteMultipathDescriptor(multipath_desc)) return util::Error{Untranslated("Error writing multipath descriptor record to database")};
+    LoadMultipathDescriptor(std::move(multipath_desc));
+    return {};
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);

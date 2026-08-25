@@ -420,6 +420,10 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    // Records tying together the descriptors that were expanded from a
+    // multipath descriptor, indexed by MultipathDescriptorRecord::GetID.
+    std::map<uint256, MultipathDescriptorRecord> m_multipath_descriptors GUARDED_BY(cs_wallet);
+
     // Appends spk managers into the main 'm_spk_managers'.
     // Must be the only method adding data to it.
     void AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man);
@@ -1055,6 +1059,15 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Load a multipath descriptor record into memory (used by LoadWallet)
+    void LoadMultipathDescriptor(MultipathDescriptorRecord multipath_desc) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Add a multipath descriptor record to the wallet, and write it to the wallet database
+    [[nodiscard]] util::Result<void> AddMultipathDescriptor(WalletBatch& batch, MultipathDescriptorRecord multipath_desc) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Get all multipath descriptor records, by record ID
+    const std::map<uint256, MultipathDescriptorRecord>& GetMultipathDescriptors() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return m_multipath_descriptors; }
 
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.

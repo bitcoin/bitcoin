@@ -45,6 +45,7 @@ const std::string KEY{"key"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
+const std::string MULTIPATHDESCRIPTOR{"multipathdescriptor"};
 const std::string NAME{"name"};
 const std::string OLD_KEY{"wkey"};
 const std::string ORDERPOSNEXT{"orderposnext"};
@@ -239,6 +240,11 @@ bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKe
 bool WalletBatch::WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor)
 {
     return WriteIC(make_pair(DBKeys::WALLETDESCRIPTOR, desc_id), descriptor);
+}
+
+bool WalletBatch::WriteMultipathDescriptor(const MultipathDescriptorRecord& multipath_desc)
+{
+    return WriteIC(std::make_pair(DBKeys::MULTIPATHDESCRIPTOR, multipath_desc.GetID()), multipath_desc);
 }
 
 bool WalletBatch::WriteDescriptorDerivedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index, uint32_t der_index)
@@ -921,7 +927,36 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
                desc_res.m_records, num_keys, num_ckeys, num_keys + num_ckeys);
     }
 
-    return desc_res.m_result;
+    // Load multipath descriptor records. These must be loaded after the
+    // descriptor records so that the descriptors they reference are known.
+    LoadResult multipath_res = LoadRecords(pwallet, batch, DBKeys::MULTIPATHDESCRIPTOR,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        uint256 id;
+        key >> id;
+        MultipathDescriptorRecord multipath_desc;
+        try {
+            value >> multipath_desc;
+        } catch (const std::ios_base::failure&) {
+            strErr = strprintf("Error: Unrecognized multipath descriptor record found in wallet %s.", pwallet->GetName());
+            return DBErrors::CORRUPT;
+        }
+        if (id != multipath_desc.GetID()) {
+            strErr = "The multipath descriptor ID calculated by the wallet differs from the one in DB";
+            return DBErrors::CORRUPT;
+        }
+        // Wallet descriptors cannot be deleted, so a record referencing an
+        // unknown descriptor means the database is corrupted.
+        for (const uint256& desc_id : multipath_desc.desc_ids) {
+            if (!pwallet->GetScriptPubKeyMan(desc_id)) {
+                strErr = strprintf("Error: Multipath descriptor record references unknown descriptor id '%s' in wallet %s.", desc_id.ToString(), pwallet->GetName());
+                return DBErrors::CORRUPT;
+            }
+        }
+        pwallet->LoadMultipathDescriptor(std::move(multipath_desc));
+        return DBErrors::LOAD_OK;
+    });
+
+    return std::max(desc_res.m_result, multipath_res.m_result);
 }
 
 static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)

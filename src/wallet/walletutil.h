@@ -5,9 +5,13 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
+#include <crypto/sha256.h>
 #include <script/descriptor.h>
+#include <serialize.h>
+#include <span.h>
 #include <util/fs.h>
 
+#include <string>
 #include <vector>
 
 namespace wallet {
@@ -131,6 +135,36 @@ public:
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+
+/** Record tying together the single-path wallet descriptors that a multipath
+ *  descriptor was expanded to, so that the original multipath form can be
+ *  reported back to the user. */
+class MultipathDescriptorRecord
+{
+public:
+    //! The multipath descriptor string, in public form and with checksum
+    std::string descriptor;
+    //! IDs of the wallet descriptors this multipath descriptor expands to, in
+    //! multipath order.
+    std::vector<uint256> desc_ids;
+
+    MultipathDescriptorRecord() = default;
+    MultipathDescriptorRecord(std::string descriptor, std::vector<uint256> desc_ids)
+        : descriptor(std::move(descriptor)), desc_ids(std::move(desc_ids)) {}
+
+    //! ID of this record, derived from the descriptor string.
+    uint256 GetID() const
+    {
+        uint256 id;
+        CSHA256().Write(UCharCast(descriptor.data()), descriptor.size()).Finalize(id.begin());
+        return id;
+    }
+
+    SERIALIZE_METHODS(MultipathDescriptorRecord, obj)
+    {
+        READWRITE(obj.descriptor, obj.desc_ids);
+    }
+};
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H
