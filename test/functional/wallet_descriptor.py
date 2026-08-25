@@ -35,7 +35,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.skip_if_no_py_sqlite3()
 
     def test_multipath_descriptor(self):
-        self.log.info("Check that getaddressinfo reports the multipath descriptor")
+        self.log.info("Check that getaddressinfo and listdescriptors report the multipath descriptor")
         self.nodes[0].createwallet(wallet_name="multipath", blank=True)
         wallet = self.nodes[0].get_wallet_rpc("multipath")
 
@@ -53,6 +53,20 @@ class WalletDescriptorTest(BitcoinTestFramework):
             info = wallet.getaddressinfo(addr)
             assert_equal(info["multipath"], pub_desc)
             assert_not_equal(info["parent_desc"], pub_desc)
+
+        # listdescriptors reports it for both expanded descriptors, in public
+        # form even when the private descriptors are listed
+        for private in [False, True]:
+            descriptors = wallet.listdescriptors(private)["descriptors"]
+            assert_equal(len(descriptors), 2)
+            for entry in descriptors:
+                assert_equal(entry["multipath"], pub_desc)
+
+        # The record survives a wallet reload
+        wallet.unloadwallet()
+        self.nodes[0].loadwallet("multipath")
+        for entry in wallet.listdescriptors()["descriptors"]:
+            assert_equal(entry["multipath"], pub_desc)
 
     def test_parent_descriptors(self):
         self.log.info("Check that parent_descs is the same for all RPCs and is normalized")

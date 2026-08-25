@@ -1105,7 +1105,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         for _ in range(0, 10):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
-        assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+        multipath_descs = sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"])
+        multisplit_descs = sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"])
+        # The multipath_split wallet does not have a multipath field
+        assert all("multipath" not in desc for desc in multisplit_descs)
+        for desc in multipath_descs:
+            desc.pop("multipath")
+        assert_equal(multipath_descs, multisplit_descs)
 
         self.log.info("Re-importing existing descriptors as a multipath descriptor adds the multipath record")
         self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
@@ -1116,6 +1122,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": timestamp},
                               success=True,
                               wallet=w_multisplit)
+        # The re-import added the multipath record to both entries
+        assert_equal([d.get("multipath") for d in w_multisplit.listdescriptors()["descriptors"]],
+                     [descsum_create(f"wpkh({extended_key.pubkey().to_string()}/<10;20>/0/*)")] * 2)
 
         self.log.info("A multipath descriptor overlapping a different multipath descriptor cannot be imported")
         stored_multipath = descsum_create(f"wpkh({extended_key.pubkey().to_string()}/<10;20>/0/*)")
@@ -1142,6 +1151,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=True, wallet=w_canonical)
         canonical_descs = w_canonical.listdescriptors()
         assert_equal(len(canonical_descs["descriptors"]), 2)
+        assert_equal([d["multipath"] for d in canonical_descs["descriptors"]], [descsum_create(canonical_multipath)] * 2)
         self.nodes[1].unloadwallet("multipath_canonical")
         self.nodes[1].loadwallet("multipath_canonical")
         self.test_importdesc({"desc": descsum_create(f"wsh(pk([deadbeef/0h]{canonical_xpub}/<2;0>/*))"),
@@ -1150,6 +1160,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              error_message=f"A descriptor expanded from this multipath descriptor is already part of the multipath descriptor '{descsum_create(canonical_multipath)}'",
                              wallet=w_canonical)
         assert_equal(w_canonical.listdescriptors(), canonical_descs)
+
+        self.log.info("Multipath records can reference more than two wallet descriptors")
+        three_path_multipath = descsum_create(f"wpkh({extended_key.pubkey().to_string()}/<30;40;50>/0/*)")
+        self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<30;40;50>/0/*)"),
+                              "range": 10,
+                              "timestamp": timestamp},
+                              success=True,
+                              wallet=w_multipath)
+        assert_equal(sum(d.get("multipath") == three_path_multipath for d in w_multipath.listdescriptors()["descriptors"]), 3)
 
         self.log.info("Test older() safety")
 
