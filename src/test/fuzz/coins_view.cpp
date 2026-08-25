@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
@@ -22,7 +23,6 @@
 #include <util/hasher.h>
 #include <util/threadpool.h>
 
-#include <cassert>
 #include <algorithm>
 #include <cstdint>
 #include <functional>

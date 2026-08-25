@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <common/args.h>
@@ -28,7 +29,6 @@
 #include <util/string.h>
 #include <util/translation.h>
 
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <ios>

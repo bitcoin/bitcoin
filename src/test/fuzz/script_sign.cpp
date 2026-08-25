@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <chainparams.h>
 #include <key.h>
 #include <psbt.h>
@@ -17,7 +18,6 @@
 #include <util/chaintype.h>
 #include <util/translation.h>
 
-#include <cassert>
 #include <cstdint>
 #include <iostream>
 #include <map>

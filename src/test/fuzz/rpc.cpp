@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <base58.h>
 #include <key.h>
 #include <key_io.h>
@@ -25,7 +26,6 @@
 #include <util/time.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>

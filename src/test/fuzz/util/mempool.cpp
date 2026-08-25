@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <kernel/mempool_entry.h>
@@ -10,7 +11,6 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 
-#include <cassert>
 #include <cstdint>
 #include <limits>
 

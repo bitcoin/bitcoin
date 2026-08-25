@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <core_io.h>
 #include <primitives/block.h>
 #include <primitives/transaction_identifier.h>
@@ -13,7 +14,6 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>

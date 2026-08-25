@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
+#include <util/check.h>
 #include <txrequest.h>
 #include <uint256.h>
 
