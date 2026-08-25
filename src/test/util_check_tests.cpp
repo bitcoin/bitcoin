@@ -18,16 +18,18 @@ BOOST_AUTO_TEST_CASE(check_pass)
 
 BOOST_AUTO_TEST_CASE(check_fail)
 {
+    constexpr int zero{};
     // Disable aborts for easier testing here
     test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
 
     if constexpr (G_ABORT_ON_FAILED_ASSUME) {
-        BOOST_CHECK_EXCEPTION(Assume(false), NonFatalCheckError, HasReason{"Internal bug detected: false"});
+        BOOST_CHECK_EXCEPTION(Assume(zero), NonFatalCheckError, HasReason{"Internal bug detected: zero"});
     } else {
-        BOOST_CHECK_NO_THROW(Assume(false));
+        BOOST_CHECK_NO_THROW(Assume(zero));
     }
-    BOOST_CHECK_EXCEPTION(Assert(false), NonFatalCheckError, HasReason{"Internal bug detected: false"});
-    BOOST_CHECK_EXCEPTION(CHECK_NONFATAL(false), NonFatalCheckError, HasReason{"Internal bug detected: false"});
+    BOOST_CHECK_EXCEPTION(Assert(zero), NonFatalCheckError, HasReason{"Internal bug detected: zero"});
+    BOOST_CHECK_EXCEPTION(AssertUnreachable(), NonFatalCheckError, HasReason{"Internal bug detected: Unreachable"});
+    BOOST_CHECK_EXCEPTION(CHECK_NONFATAL(zero), NonFatalCheckError, HasReason{"Internal bug detected: zero"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

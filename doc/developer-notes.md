@@ -926,14 +926,14 @@ int GetInt(Tabs tab)
         case Tabs::info: return 0;
         case Tabs::console: return 1;
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }();
     LogInfo("Tab %s", ret);
     return ret;
 }
 ```
 
-*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
+*Rationale*: The comment documents skipping the `default:` case, and it complies with `clang-format` rules. `AssertUnreachable()` prevents `-Wreturn-type` warnings on some compilers.
 
 ## Strings and formatting
 
