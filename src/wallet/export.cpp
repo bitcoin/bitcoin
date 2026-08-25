@@ -33,6 +33,7 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
         const bool is_range = wallet_descriptor.descriptor->IsRange();
         wallet_descriptors.emplace_back(
             descriptor,
+            wallet.GetMultipathDescriptor(desc_spk_man->GetID()),
             wallet_descriptor.creation_time,
             wallet.IsActiveScriptPubKeyMan(*desc_spk_man),
             wallet.IsInternalScriptPubKeyMan(desc_spk_man),
