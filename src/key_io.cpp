@@ -212,8 +212,18 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     // Try Bech32(m) first: checking the prefix before decoding would misroute valid
     // Bech32 addresses for other networks to the Base58 decoder, producing the
     // misleading "Invalid or unsupported Segwit (Bech32) or Base58 encoding." error.
-    const auto dec = bech32::Decode(str);
+    // Decode a lowercased copy so that mixed-case input (which is invalid) can be
+    // diagnosed without decoding twice; all-lowercase and all-uppercase are both valid.
+    const std::string lower_str{ToLower(str)};
+    const auto dec = bech32::Decode(lower_str);
     if (dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) {
+        const bool has_upper{std::ranges::any_of(str, [](char c) { return c >= 'A' && c <= 'Z'; })};
+        const bool has_lower{std::ranges::any_of(str, [](char c) { return c >= 'a' && c <= 'z'; })};
+        if (has_upper && has_lower) {
+            error_str = "Bech32 address is mixed case";
+            if (error_locations) *error_locations = bech32::LocateErrors(str).locations;
+            return CNoDestination();
+        }
         return DecodeBech32Destination(dec, params, error_str);
     }
 
