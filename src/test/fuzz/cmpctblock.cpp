@@ -25,6 +25,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/fuzz/util/reachability.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/script.h>
@@ -55,6 +56,8 @@
 namespace {
 
 TestingSetup* g_setup;
+constexpr ReachabilityGoal CMPCTBLOCK_CHANGES_MEMPOOL{"cmpctblock changes the mempool"};
+constexpr ReachabilityGoal CMPCTBLOCK_CHANGES_BLOCK_INDEX{"cmpctblock changes the block index"};
 
 //! Fee each created tx will pay.
 const CAmount AMOUNT_FEE{1000};
@@ -119,6 +122,8 @@ extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
 void initialize_cmpctblock()
 {
+    RegisterReachabilityGoal(CMPCTBLOCK_CHANGES_MEMPOOL);
+    RegisterReachabilityGoal(CMPCTBLOCK_CHANGES_BLOCK_INDEX);
     FakeNodeClock init_clock{}; // Uses the existing mock time
     static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
     g_setup = testing_setup.get();
@@ -477,6 +482,8 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     const size_t end_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     const uint64_t end_sequence{WITH_LOCK(mempool.cs, return mempool.GetSequence())};
 
+    ObserveReachabilityGoal(initial_sequence != end_sequence, CMPCTBLOCK_CHANGES_MEMPOOL);
+    ObserveReachabilityGoal(initial_index_size != end_index_size, CMPCTBLOCK_CHANGES_BLOCK_INDEX);
     if (initial_index_size != end_index_size || initial_sequence != end_sequence) {
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
         g_mature_coinbase = ResetChainmanAndMempool(*g_setup, node_clock);
