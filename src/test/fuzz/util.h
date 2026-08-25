@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_H
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
+#include <util/check.h>
 #include <addresstype.h>
 #include <arith_uint256.h>
 #include <coins.h>
