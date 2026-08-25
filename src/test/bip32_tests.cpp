@@ -8,6 +8,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
@@ -135,11 +136,11 @@ void RunTest(const TestVector& test)
 
         // Test private key
         BOOST_CHECK(EncodeExtKey(key) == derive.prv);
-        BOOST_CHECK(DecodeExtKey(derive.prv) == key); //ensure a base58 decoded key also matches
+        BOOST_CHECK_EQUAL(DecodeExtKey(derive.prv), key); //ensure a base58 decoded key also matches
 
         // Test public key
         BOOST_CHECK(EncodeExtPubKey(pubkey) == derive.pub);
-        BOOST_CHECK(DecodeExtPubKey(derive.pub) == pubkey); //ensure a base58 decoded pubkey also matches
+        BOOST_CHECK_EQUAL(DecodeExtPubKey(derive.pub), pubkey); //ensure a base58 decoded pubkey also matches
 
         // Derive new keys
         CExtKey keyNew;
@@ -149,7 +150,7 @@ void RunTest(const TestVector& test)
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
             BOOST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
-            BOOST_CHECK(pubkeyNew == pubkeyNew2);
+            BOOST_CHECK_EQUAL(pubkeyNew, pubkeyNew2);
         }
         key = keyNew;
         pubkey = pubkeyNew;
@@ -196,13 +197,13 @@ BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
     KeyOriginInfo expected_origin;
     expected_origin.fingerprint = master.id_key_fingerprint();
     expected_origin.path = path;
-    BOOST_CHECK(derived->second == expected_origin);
+    BOOST_CHECK_EQUAL(derived->second, expected_origin);
 
     const auto root{DeriveExtKey(master, {})};
     BOOST_REQUIRE(root);
-    BOOST_CHECK(root->first == master);
+    BOOST_CHECK_EQUAL(root->first, master);
     expected_origin.path.clear();
-    BOOST_CHECK(root->second == expected_origin);
+    BOOST_CHECK_EQUAL(root->second, expected_origin);
 
     CExtKey max_depth{master};
     for (auto i{0}; i++ < 255;) {
