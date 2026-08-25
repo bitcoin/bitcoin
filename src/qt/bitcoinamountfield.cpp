@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/bitcoinamountfield.h>
 
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/qvaluecombobox.h>
+#include <util/check.h>
 
-#include <QApplication>
 #include <QAbstractSpinBox>
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLineEdit>

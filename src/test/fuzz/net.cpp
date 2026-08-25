@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <chainparams.h>
 #include <net.h>
+
+#include <chainparams.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <protocol.h>
@@ -18,6 +18,7 @@
 #include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <cstdint>

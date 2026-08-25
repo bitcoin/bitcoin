@@ -2,18 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/peertablemodel.h>
 
+#include <interfaces/node.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-
-#include <interfaces/node.h>
-
-#include <utility>
+#include <util/check.h>
 
 #include <QList>
 #include <QTimer>
+
+#include <utility>
 
 PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent)
     : QAbstractTableModel(parent),

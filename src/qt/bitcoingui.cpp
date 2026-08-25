@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoingui.h>
@@ -21,6 +20,7 @@
 #include <qt/platformstyle.h>
 #include <qt/rpcconsole.h>
 #include <qt/utilitydialog.h>
+#include <util/check.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/walletcontroller.h>

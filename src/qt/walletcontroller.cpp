@@ -2,26 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/walletcontroller.h>
 
+#include <external_signer.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
-
-#include <external_signer.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
-
-#include <algorithm>
-#include <chrono>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -31,6 +27,9 @@
 #include <QThread>
 #include <QTimer>
 #include <QWindow>
+
+#include <algorithm>
+#include <chrono>
 
 using util::Join;
 using wallet::WALLET_FLAG_BLANK_WALLET;

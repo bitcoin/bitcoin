@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <chainparams.h>
 #include <key.h>
+
+#include <chainparams.h>
 #include <key_io.h>
 #include <outputtype.h>
 #include <policy/policy.h>
@@ -21,6 +21,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <array>

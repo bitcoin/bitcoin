@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <arith_uint256.h>
 
 #include <crypto/common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/overflow.h>
 
 

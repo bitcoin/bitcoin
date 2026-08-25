@@ -2,11 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <test/data/tx_invalid.json.h>
-#include <test/data/tx_valid.json.h>
-#include <test/util/setup_common.h>
-
 #include <checkqueue.h>
 #include <clientversion.h>
 #include <consensus/amount.h>
@@ -27,22 +22,25 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <streams.h>
+#include <test/data/tx_invalid.json.h>
+#include <test/data/tx_valid.json.h>
 #include <test/util/common.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
 #include <test/util/script.h>
+#include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
+#include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <functional>
 #include <map>
 #include <string>
-
-#include <boost/test/unit_test.hpp>
-
-#include <univalue.h>
 
 using namespace util::hex_literals;
 using util::SplitString;

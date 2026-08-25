@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <dbwrapper.h>
 
 #include <leveldb/cache.h>
@@ -20,6 +19,7 @@
 #include <span.h>
 #include <streams.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/log.h>

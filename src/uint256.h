@@ -6,10 +6,10 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
-#include <util/check.h>
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <span.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 

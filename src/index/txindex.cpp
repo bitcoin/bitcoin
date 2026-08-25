@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <index/txindex.h>
 
 #include <chain.h>
@@ -22,6 +21,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <validation.h>

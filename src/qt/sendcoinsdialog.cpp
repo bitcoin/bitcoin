@@ -2,43 +2,42 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/sendcoinsdialog.h>
-#include <qt/forms/ui_sendcoinsdialog.h>
-
-#include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
-#include <qt/clientmodel.h>
-#include <qt/coincontroldialog.h>
-#include <qt/guiutil.h>
-#include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
-#include <qt/sendcoinsentry.h>
 
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <node/types.h>
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
+#include <qt/coincontroldialog.h>
+#include <qt/forms/ui_sendcoinsdialog.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/sendcoinsentry.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
 
+#include <QFontMetrics>
+#include <QScrollBar>
+#include <QSettings>
+#include <QTextDocument>
+
 #include <array>
 #include <chrono>
 #include <fstream>
 #include <memory>
 #include <optional>
-
-#include <QFontMetrics>
-#include <QScrollBar>
-#include <QSettings>
-#include <QTextDocument>
 
 using common::PSBTError;
 using wallet::CCoinControl;

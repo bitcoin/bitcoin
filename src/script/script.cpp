@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <script/script.h>
 
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
 #include <compare>

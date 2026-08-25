@@ -3,18 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
-#include <util/check.h>
-#include <txrequest.h>
-#include <uint256.h>
-
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <txrequest.h>
+#include <uint256.h>
+#include <util/check.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 namespace {
 

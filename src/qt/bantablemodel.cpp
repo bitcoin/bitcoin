@@ -2,19 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/bantablemodel.h>
 
 #include <interfaces/node.h>
 #include <net_types.h>
-
-#include <utility>
+#include <util/check.h>
 
 #include <QDateTime>
 #include <QList>
 #include <QLocale>
 #include <QModelIndex>
 #include <QVariant>
+
+#include <utility>
 
 bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan& right) const
 {

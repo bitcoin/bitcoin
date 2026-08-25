@@ -5,13 +5,13 @@
 #ifndef BITCOIN_NETADDRESS_H
 #define BITCOIN_NETADDRESS_H
 
-#include <util/check.h>
 #include <compat/compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>
 #include <random.h>
 #include <serialize.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 

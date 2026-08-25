@@ -5,10 +5,11 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include <util/check.h>
-#include <crypto/common.h>
 #include <crypto/chacha20.h>
+
+#include <crypto/common.h>
 #include <support/cleanse.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <bit>

@@ -6,7 +6,6 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
-#include <util/check.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
@@ -21,6 +20,7 @@
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <txgraph.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>

@@ -6,6 +6,7 @@
 #define BITCOIN_PREVECTOR_H
 
 #include <util/check.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>

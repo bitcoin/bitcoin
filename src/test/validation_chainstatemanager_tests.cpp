@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
-#include <util/check.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
@@ -18,18 +17,18 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/result.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <tinyformat.h>
+#include <boost/test/unit_test.hpp>
 
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using node::BlockManager;
 using node::KernelNotifications;

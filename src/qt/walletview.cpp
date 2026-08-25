@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/walletview.h>
 
+#include <interfaces/node.h>
+#include <node/interface_ui.h>
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
@@ -18,9 +19,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
-
-#include <interfaces/node.h>
-#include <node/interface_ui.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <QAction>

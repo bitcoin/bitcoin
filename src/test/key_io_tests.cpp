@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <test/data/key_io_invalid.json.h>
-#include <test/data/key_io_valid.json.h>
-
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
+#include <test/data/key_io_invalid.json.h>
+#include <test/data/key_io_valid.json.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>

@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <addresstype.h>
 #include <chain.h>
 #include <consensus/amount.h>
@@ -24,6 +23,7 @@
 #include <test/util/time.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 

@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <arith_uint256.h>
@@ -17,6 +16,7 @@
 #include <core_io.h>
 #include <streams.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/translation.h>

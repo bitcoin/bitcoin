@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <txdb.h>
 
 #include <coins.h>
@@ -14,6 +13,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/threadnames.h>
 #include <util/vector.h>

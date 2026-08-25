@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CRYPTO_POLY1305_H
 #define BITCOIN_CRYPTO_POLY1305_H
 
-#include <util/check.h>
 #include <span.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>

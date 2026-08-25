@@ -6,7 +6,6 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
-#include <util/check.h>
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <flatfile.h>
@@ -15,6 +14,7 @@
 #include <serialize.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <algorithm>

@@ -5,7 +5,6 @@
 
 // NOTE: This file is intended to be customised by the end user, and includes only local node policy logic
 
-#include <util/check.h>
 #include <policy/policy.h>
 
 #include <coins.h>
@@ -20,6 +19,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <tinyformat.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstddef>

@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/transactiontablemodel.h>
 
+#include <core_io.h>
+#include <interfaces/handler.h>
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
@@ -15,14 +16,9 @@
 #include <qt/transactiondesc.h>
 #include <qt/transactionrecord.h>
 #include <qt/walletmodel.h>
-
-#include <core_io.h>
-#include <interfaces/handler.h>
 #include <tinyformat.h>
 #include <uint256.h>
-
-#include <algorithm>
-#include <functional>
+#include <util/check.h>
 
 #include <QColor>
 #include <QDateTime>
@@ -31,6 +27,9 @@
 #include <QLatin1Char>
 #include <QLatin1String>
 #include <QList>
+
+#include <algorithm>
+#include <functional>
 
 
 // Amount column is right-aligned it contains numbers

@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <net.h>
@@ -29,6 +28,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/overflow.h>
 #include <util/sock.h>

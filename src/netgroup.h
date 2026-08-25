@@ -5,9 +5,9 @@
 #ifndef BITCOIN_NETGROUP_H
 #define BITCOIN_NETGROUP_H
 
-#include <util/check.h>
 #include <netaddress.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <vector>

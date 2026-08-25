@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <wallet/export.h>
 
 #include <key_io.h>
-#include <util/fs.h>
+#include <util/check.h>
 #include <util/expected.h>
-#include <wallet/scriptpubkeyman.h>
+#include <util/fs.h>
 #include <wallet/context.h>
+#include <wallet/scriptpubkeyman.h>
 #include <wallet/sqlite.h>
 #include <wallet/wallet.h>
 

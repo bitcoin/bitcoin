@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <rpc/server.h>
@@ -16,6 +15,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/overloaded.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>

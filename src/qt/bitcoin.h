@@ -5,16 +5,16 @@
 #ifndef BITCOIN_QT_BITCOIN_H
 #define BITCOIN_QT_BITCOIN_H
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
+#include <util/check.h>
+
+#include <QApplication>
 
 #include <memory>
 #include <optional>
-
-#include <QApplication>
 
 class BitcoinGUI;
 class ClientModel;

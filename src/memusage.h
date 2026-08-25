@@ -5,10 +5,10 @@
 #ifndef BITCOIN_MEMUSAGE_H
 #define BITCOIN_MEMUSAGE_H
 
-#include <util/check.h>
 #include <indirectmap.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
+#include <util/check.h>
 
 #include <cstdlib>
 #include <list>
@@ -16,9 +16,9 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 
 namespace memusage

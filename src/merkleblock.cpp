@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <merkleblock.h>
 
 #include <consensus/consensus.h>
 #include <hash.h>
+#include <util/check.h>
 #include <util/overflow.h>
 
 

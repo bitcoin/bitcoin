@@ -2,20 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/addresstablemodel.h>
 
+#include <key_io.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
-
-#include <key_io.h>
+#include <util/check.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
 
-#include <algorithm>
-
-#include <QFont>
 #include <QDebug>
+#include <QFont>
+
+#include <algorithm>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";

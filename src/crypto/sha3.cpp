@@ -5,9 +5,10 @@
 // Based on https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
 // by Markku-Juhani O. Saarinen <mjos@iki.fi>
 
-#include <util/check.h>
 #include <crypto/sha3.h>
+
 #include <crypto/common.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <bit>

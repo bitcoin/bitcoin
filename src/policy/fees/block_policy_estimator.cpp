@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <policy/fees/block_policy_estimator.h>
 
 #include <common/system.h>
@@ -17,6 +16,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/serfloat.h>

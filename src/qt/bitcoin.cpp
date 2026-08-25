@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoin.h>
@@ -32,6 +31,7 @@
 #include <qt/winshutdownmonitor.h>
 #include <uint256.h>
 #include <util/btcsignals.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/log.h>
 #include <util/string.h>

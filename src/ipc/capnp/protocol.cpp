@@ -2,18 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
+#include <ipc/capnp/protocol.h>
+
 #include <interfaces/init.h>
 #include <ipc/capnp/context.h>
 #include <ipc/capnp/init.capnp.h>
 #include <ipc/capnp/init.capnp.proxy.h>
-#include <ipc/capnp/protocol.h>
 #include <ipc/exception.h>
 #include <ipc/protocol.h>
 #include <kj/async.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy-types.h>
 #include <mp/util.h>
+#include <sys/socket.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/threadnames.h>
 
@@ -23,7 +25,6 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <sys/socket.h>
 #include <system_error>
 #include <thread>
 

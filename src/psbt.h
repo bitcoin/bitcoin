@@ -5,7 +5,6 @@
 #ifndef BITCOIN_PSBT_H
 #define BITCOIN_PSBT_H
 
-#include <util/check.h>
 #include <common/types.h>
 #include <musig.h>
 #include <node/transaction.h>
@@ -18,11 +17,12 @@
 #include <span.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/result.h>
+#include <util/check.h>
 #include <util/expected.h>
+#include <util/result.h>
 
-#include <optional>
 #include <bitset>
+#include <optional>
 
 namespace node {
 enum class TransactionError;

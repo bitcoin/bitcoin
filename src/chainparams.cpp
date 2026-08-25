@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <chainparams.h>
 
 #include <chainparamsbase.h>
@@ -12,6 +11,7 @@
 #include <deploymentinfo.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/strencodings.h>
 #include <util/string.h>

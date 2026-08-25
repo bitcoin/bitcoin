@@ -2,14 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/guiutil.h>
-
-#include <qt/bitcoinaddressvalidator.h>
-#include <qt/bitcoinunits.h>
-#include <qt/platformstyle.h>
-#include <qt/qvalidatedlineedit.h>
-#include <qt/sendcoinsrecipient.h>
 
 #include <addresstype.h>
 #include <base58.h>
@@ -21,8 +14,14 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
+#include <qt/bitcoinaddressvalidator.h>
+#include <qt/bitcoinunits.h>
+#include <qt/platformstyle.h>
+#include <qt/qvalidatedlineedit.h>
+#include <qt/sendcoinsrecipient.h>
 #include <script/script.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>

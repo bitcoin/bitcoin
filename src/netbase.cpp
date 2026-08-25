@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <netbase.h>
@@ -11,6 +10,7 @@
 #include <compat/compat.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/sock.h>
 #include <util/strencodings.h>

@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
-#include <util/check.h>
 #include <kernel/mempool_removal_reason.h>
+
+#include <util/check.h>
 
 #include <string>
 

@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/transactionrecord.h>
 
 #include <chain.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-
-#include <cstdint>
+#include <util/check.h>
 
 #include <QDateTime>
+
+#include <cstdint>
 
 /* Return positive answer if transaction should be shown in list.
  */

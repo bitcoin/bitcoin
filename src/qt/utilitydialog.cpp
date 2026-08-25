@@ -2,22 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/utilitydialog.h>
-
-#include <qt/forms/ui_helpmessagedialog.h>
-
-#include <qt/guiutil.h>
 
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/license_info.h>
 #include <init.h>
+#include <qt/forms/ui_helpmessagedialog.h>
+#include <qt/guiutil.h>
+#include <util/check.h>
 #include <util/strencodings.h>
-
-#include <cstdio>
 
 #include <QCloseEvent>
 #include <QLabel>
@@ -27,6 +23,8 @@
 #include <QTextCursor>
 #include <QTextTable>
 #include <QVBoxLayout>
+
+#include <cstdio>
 
 /** "Help message" or "About" dialog box */
 HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :

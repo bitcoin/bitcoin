@@ -2,13 +2,13 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <policy/fees/estimator_man.h>
 
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/mempool_estimator.h>
+#include <util/check.h>
 #include <util/fees.h>
 
 FeeRateEstimatorManager::~FeeRateEstimatorManager() = default;

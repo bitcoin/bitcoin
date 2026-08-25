@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <script/solver.h>
 
 #include <prevector.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <util/check.h>
 
 #include <string>
 

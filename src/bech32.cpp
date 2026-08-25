@@ -3,8 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bech32.h>
+
+#include <util/check.h>
 #include <util/vector.h>
 
 #include <array>

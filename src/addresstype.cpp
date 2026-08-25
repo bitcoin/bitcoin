@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <addresstype.h>
 
 #include <crypto/sha256.h>
@@ -11,6 +10,7 @@
 #include <script/script.h>
 #include <script/solver.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
 #include <vector>

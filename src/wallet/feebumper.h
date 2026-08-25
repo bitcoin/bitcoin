@@ -5,10 +5,10 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
-#include <util/check.h>
 #include <consensus/consensus.h>
-#include <script/interpreter.h>
 #include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <util/check.h>
 
 class uint256;
 enum class FeeEstimateMode;

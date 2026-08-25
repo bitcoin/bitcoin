@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <wallet/coincontrol.h>
 
 #include <common/args.h>
+#include <util/check.h>
 
 namespace wallet {
 CCoinControl::CCoinControl()

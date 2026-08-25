@@ -5,8 +5,8 @@
 #ifndef BITCOIN_DEPLOYMENTINFO_H
 #define BITCOIN_DEPLOYMENTINFO_H
 
-#include <util/check.h>
 #include <consensus/params.h>
+#include <util/check.h>
 
 #include <array>
 #include <optional>

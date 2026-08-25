@@ -2,15 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <qt/askpassphrasedialog.h>
-#include <qt/forms/ui_askpassphrasedialog.h>
 
+#include <qt/forms/ui_askpassphrasedialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
-
 #include <support/allocators/secure.h>
+#include <util/check.h>
 
 #include <QKeyEvent>
 #include <QMessageBox>

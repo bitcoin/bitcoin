@@ -2,14 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/optionsmodel.h>
-
-#include <qt/bitcoinunits.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
 
 #include <common/args.h>
 #include <interfaces/node.h>
@@ -18,7 +13,11 @@
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <validation.h>
 #include <wallet/wallet.h>
