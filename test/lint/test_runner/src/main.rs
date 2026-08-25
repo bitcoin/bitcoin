@@ -15,7 +15,7 @@ use std::process::{Command, ExitCode};
 
 use lint_cpp::{
     lint_assert_falsy, lint_boost_assert, lint_includes_build_config, lint_remove_all,
-    lint_rpc_assert, lint_std_filesystem,
+    lint_rpc_assert, lint_std_filesystem, lint_std_unreachable,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
 use lint_py::{lint_py_lint, lint_rmtree};
@@ -77,6 +77,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that assertions with falsy literal values are not used",
             name: "assert_falsy",
             lint_fn: lint_assert_falsy
+        },
+        &Linter {
+            description: "Check that std::unreachable() is not used",
+            name: "std_unreachable",
+            lint_fn: lint_std_unreachable
         },
         &Linter {
             description: "Check that boost assertions are not used",

@@ -208,6 +208,33 @@ Assertions with a falsy literal value should be replaced with AssertUnreachable(
     }
 }
 
+pub fn lint_std_unreachable() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--fixed-string",
+            "std::unreachable()",
+            "--",
+            "src/",
+        ])
+        .args(get_pathspecs_default_excludes())
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        // Reject all for now, but if there is an optimization use case in the future, an exclusion
+        // can be added, or this linter can be removed.
+        Err(r#"
+std::unreachable() invokes UB and should be replaced with AssertUnreachable().
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
 pub fn lint_boost_assert() -> LintResult {
     let found = git()
         .args([
