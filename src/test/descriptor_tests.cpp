@@ -5,6 +5,7 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -326,7 +327,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             BOOST_CHECK(spks == spks_cached);
             BOOST_CHECK(GetKeyData(script_provider, flags) == GetKeyData(script_provider_cached, flags));
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
-            BOOST_CHECK(GetKeyOriginData(script_provider, flags) == GetKeyOriginData(script_provider_cached, flags));
+            const auto origins{GetKeyOriginData(script_provider, flags)};
+            const auto origins_cached{GetKeyOriginData(script_provider_cached, flags)};
+            BOOST_CHECK_EQUAL_COLLECTIONS(origins.begin(), origins.end(), origins_cached.begin(), origins_cached.end());
 
             // Check whether keys are in the cache
             const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
@@ -433,7 +436,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 BOOST_CHECK(spks1 == spk1_from_cache);
                 BOOST_CHECK(GetKeyData(script_provider1, flags) == GetKeyData(script_provider_cached1, flags));
                 BOOST_CHECK(script_provider1.scripts == script_provider_cached1.scripts);
-                BOOST_CHECK(GetKeyOriginData(script_provider1, flags) == GetKeyOriginData(script_provider_cached1, flags));
+                const auto origins1{GetKeyOriginData(script_provider1, flags)};
+                const auto origins_cached1{GetKeyOriginData(script_provider_cached1, flags)};
+                BOOST_CHECK_EQUAL_COLLECTIONS(origins1.begin(), origins1.end(), origins_cached1.begin(), origins_cached1.end());
             }
 
             // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
@@ -469,7 +474,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 BOOST_CHECK_EQUAL(spks_inferred.size(), 1U);
                 BOOST_CHECK(spks_inferred[0] == spks[n]);
                 BOOST_CHECK_EQUAL(InferDescriptor(spks_inferred[0], provider_inferred)->IsSolvable(), !(flags & UNSOLVABLE));
-                BOOST_CHECK(GetKeyOriginData(provider_inferred, flags) == GetKeyOriginData(script_provider, flags));
+                const auto origins_inferred{GetKeyOriginData(provider_inferred, flags)};
+                const auto origins_script{GetKeyOriginData(script_provider, flags)};
+                BOOST_CHECK_EQUAL_COLLECTIONS(origins_inferred.begin(), origins_inferred.end(), origins_script.begin(), origins_script.end());
             }
 
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),

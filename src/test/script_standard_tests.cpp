@@ -236,20 +236,20 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
     BOOST_CHECK(!ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PubKeyDestination>(address) == PubKeyDestination(pubkey));
+    BOOST_CHECK_EQUAL(std::get<PubKeyDestination>(address), PubKeyDestination(pubkey));
 
     // TxoutType::PUBKEYHASH
     s.clear();
     s << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PKHash>(address) == PKHash(pubkey));
+    BOOST_CHECK_EQUAL(std::get<PKHash>(address), PKHash(pubkey));
 
     // TxoutType::SCRIPTHASH
     CScript redeemScript(s); // initialize with leftover P2PKH script
     s.clear();
     s << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<ScriptHash>(address) == ScriptHash(redeemScript));
+    BOOST_CHECK_EQUAL(std::get<ScriptHash>(address), ScriptHash(redeemScript));
 
     // TxoutType::MULTISIG
     s.clear();
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessV0KeyHash keyhash;
     CHash160().Write(pubkey).Finalize(keyhash);
-    BOOST_CHECK(std::get<WitnessV0KeyHash>(address) == keyhash);
+    BOOST_CHECK_EQUAL(std::get<WitnessV0KeyHash>(address), keyhash);
 
     // TxoutType::WITNESS_V0_SCRIPTHASH
     s.clear();
@@ -275,20 +275,20 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     CSHA256().Write(redeemScript.data(), redeemScript.size()).Finalize(scripthash.begin());
     s << OP_0 << ToByteVector(scripthash);
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<WitnessV0ScriptHash>(address) == scripthash);
+    BOOST_CHECK_EQUAL(std::get<WitnessV0ScriptHash>(address), scripthash);
 
     // TxoutType::WITNESS_V1_TAPROOT
     s.clear();
     auto xpk = XOnlyPubKey(pubkey);
     s << OP_1 << ToByteVector(xpk);
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<WitnessV1Taproot>(address) == WitnessV1Taproot(xpk));
+    BOOST_CHECK_EQUAL(std::get<WitnessV1Taproot>(address), WitnessV1Taproot(xpk));
 
     // TxoutType::ANCHOR
     s.clear();
     s << OP_1 << ANCHOR_BYTES;
     BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PayToAnchor>(address) == PayToAnchor());
+    BOOST_CHECK_EQUAL(std::get<PayToAnchor>(address), PayToAnchor());
 
     // TxoutType::WITNESS_UNKNOWN with unknown version
     // -> segwit version 1 with an undefined program size (33 bytes in this test case)
@@ -296,13 +296,13 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s << OP_1 << ToByteVector(pubkey);
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessUnknown unk_v1{1, ToByteVector(pubkey)};
-    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v1);
+    BOOST_CHECK_EQUAL(std::get<WitnessUnknown>(address), unk_v1);
     s.clear();
     // -> segwit versions 2+ are not specified yet
     s << OP_2 << ToByteVector(xpk);
     BOOST_CHECK(ExtractDestination(s, address));
     WitnessUnknown unk_v2{2, ToByteVector(xpk)};
-    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2);
+    BOOST_CHECK_EQUAL(std::get<WitnessUnknown>(address), unk_v2);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
