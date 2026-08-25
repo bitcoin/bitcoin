@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/bitcoinunits.h>
 
 #include <consensus/amount.h>
 
 #include <QStringList>
 
-#include <cassert>
 
 static constexpr auto MAX_DIGITS_BTC = 16;
 

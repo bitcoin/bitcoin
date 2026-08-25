@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_RESULT_H
 #define BITCOIN_UTIL_RESULT_H
 
+#include <util/check.h>
 #include <attributes.h>
 #include <util/translation.h>
 

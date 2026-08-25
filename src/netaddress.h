@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NETADDRESS_H
 #define BITCOIN_NETADDRESS_H
 
+#include <util/check.h>
 #include <compat/compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>

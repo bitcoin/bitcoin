@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <script/solver.h>
 
 #include <prevector.h>
@@ -10,7 +11,6 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 
-#include <cassert>
 #include <string>
 
 typedef std::vector<unsigned char> valtype;

@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <rpc/server.h>
@@ -23,7 +24,6 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <memory>
 #include <mutex>

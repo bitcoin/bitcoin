@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/walletframe.h>
 
 #include <node/interface_ui.h>
@@ -14,7 +15,6 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 
-#include <cassert>
 #include <fstream>
 #include <string>
 

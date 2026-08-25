@@ -13,7 +13,6 @@
 #include <util/check.h>
 
 #include <bit>
-#include <cassert>
 #include <chrono>
 #include <concepts>
 #include <cstdint>

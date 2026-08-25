@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <txdb.h>
 
 #include <coins.h>
@@ -17,7 +18,6 @@
 #include <util/threadnames.h>
 #include <util/vector.h>
 
-#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <exception>

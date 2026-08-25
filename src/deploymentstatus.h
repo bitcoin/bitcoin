@@ -5,6 +5,7 @@
 #ifndef BITCOIN_DEPLOYMENTSTATUS_H
 #define BITCOIN_DEPLOYMENTSTATUS_H
 
+#include <util/check.h>
 #include <chain.h>
 #include <versionbits.h>
 

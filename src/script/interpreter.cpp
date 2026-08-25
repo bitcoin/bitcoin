@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <script/interpreter.h>
 
 #include <crypto/ripemd160.h>
@@ -17,7 +18,6 @@
 #include <uint256.h>
 
 #include <algorithm>
-#include <cassert>
 #include <compare>
 #include <cstring>
 #include <limits>

@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <primitives/transaction.h>
 
 #include <consensus/amount.h>
@@ -14,7 +15,6 @@
 #include <tinyformat.h>
 
 #include <algorithm>
-#include <cassert>
 #include <span>
 #include <stdexcept>
 

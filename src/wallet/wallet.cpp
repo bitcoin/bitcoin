@@ -73,7 +73,6 @@
 #include <wallet/walletutil.h>
 
 #include <algorithm>
-#include <cassert>
 #include <condition_variable>
 #include <exception>
 #include <limits>

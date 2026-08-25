@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <policy/fees/block_policy_estimator.h>
 
 #include <common/system.h>
@@ -23,7 +24,6 @@
 #include <util/time.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstddef>

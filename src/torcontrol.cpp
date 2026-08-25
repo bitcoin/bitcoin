@@ -25,7 +25,6 @@
 #include <util/time.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>

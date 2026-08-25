@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <node/chainstate.h>
 
 #include <arith_uint256.h>
@@ -23,7 +24,6 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <cassert>
 #include <vector>
 
 using kernel::CacheSizes;

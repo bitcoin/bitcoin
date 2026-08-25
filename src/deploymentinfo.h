@@ -5,10 +5,10 @@
 #ifndef BITCOIN_DEPLOYMENTINFO_H
 #define BITCOIN_DEPLOYMENTINFO_H
 
+#include <util/check.h>
 #include <consensus/params.h>
 
 #include <array>
-#include <cassert>
 #include <optional>
 #include <string>
 #include <string_view>

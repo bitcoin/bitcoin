@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/bitcoinamountfield.h>
 
 #include <qt/bitcoinunits.h>
@@ -16,7 +17,6 @@
 #include <QLineEdit>
 #include <QVariant>
 
-#include <cassert>
 
 /** QSpinBox that uses fixed-point numbers internally and uses our own
  * formatting/parsing functions.

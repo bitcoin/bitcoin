@@ -6,6 +6,7 @@
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
+#include <util/check.h>
 #include <kernel/messagestartchars.h> // IWYU pragma: export
 #include <netaddress.h>
 #include <primitives/transaction.h>

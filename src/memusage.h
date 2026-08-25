@@ -5,11 +5,11 @@
 #ifndef BITCOIN_MEMUSAGE_H
 #define BITCOIN_MEMUSAGE_H
 
+#include <util/check.h>
 #include <indirectmap.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>

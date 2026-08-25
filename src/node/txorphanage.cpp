@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <node/txorphanage.h>
 
 #include <consensus/validation.h>
@@ -17,7 +18,6 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
-#include <cassert>
 #include <cmath>
 #include <unordered_map>
 

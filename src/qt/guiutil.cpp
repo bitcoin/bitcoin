@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/guiutil.h>
 
 #include <qt/bitcoinaddressvalidator.h>
@@ -69,7 +70,6 @@
 #include <QUrlQuery>
 #include <QtGlobal>
 
-#include <cassert>
 #include <chrono>
 #include <exception>
 #include <fstream>

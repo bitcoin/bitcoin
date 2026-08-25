@@ -13,7 +13,6 @@
 #include <QAbstractListModel>
 #include <QFont>
 
-#include <cassert>
 #include <variant>
 
 struct bilingual_str;

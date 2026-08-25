@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <kernel/disconnected_transactions.h>
 
-#include <cassert>
 #include <core_memusage.h>
 #include <memusage.h>
 #include <primitives/transaction.h>

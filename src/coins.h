@@ -20,7 +20,6 @@
 #include <util/log.h>
 #include <util/overflow.h>
 
-#include <cassert>
 #include <cstdint>
 
 #include <atomic>

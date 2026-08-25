@@ -2,6 +2,7 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <policy/fees/estimator_man.h>
 
 #include <logging.h>

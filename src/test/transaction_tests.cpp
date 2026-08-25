@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <test/data/tx_invalid.json.h>
 #include <test/data/tx_valid.json.h>
 #include <test/util/setup_common.h>

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <util/check.h>
 #include <addresstype.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
@@ -39,7 +40,6 @@
 #include <wallet/walletutil.h>
 
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>

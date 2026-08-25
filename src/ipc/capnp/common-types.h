@@ -5,6 +5,7 @@
 #ifndef BITCOIN_IPC_CAPNP_COMMON_TYPES_H
 #define BITCOIN_IPC_CAPNP_COMMON_TYPES_H
 
+#include <util/check.h>
 #include <clientversion.h>
 #include <interfaces/types.h>
 #include <primitives/transaction.h>

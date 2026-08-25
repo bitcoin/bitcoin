@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_H
 #define BITCOIN_SCRIPT_SCRIPT_H
 
+#include <util/check.h>
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h>
@@ -13,7 +14,6 @@
 #include <uint256.h>
 #include <util/hash_type.h>
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>

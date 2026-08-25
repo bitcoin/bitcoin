@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <key_io.h>
 
 #include <base58.h>
@@ -13,7 +14,6 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
 
 /// Maximum witness length for Bech32 addresses.

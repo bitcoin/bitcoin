@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_OBFUSCATION_H
 #define BITCOIN_UTIL_OBFUSCATION_H
 
+#include <util/check.h>
 #include <crypto/hex_base.h>
 #include <span.h>
 #include <tinyformat.h>

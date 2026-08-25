@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <crypto/chacha20poly1305.h>
 
 #include <crypto/chacha20.h>
@@ -10,7 +11,6 @@
 #include <span.h>
 #include <support/cleanse.h>
 
-#include <cassert>
 #include <cstddef>
 
 AEADChaCha20Poly1305::AEADChaCha20Poly1305(std::span<const std::byte> key) noexcept : m_chacha20(key)

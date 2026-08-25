@@ -9,7 +9,6 @@
 #include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <iterator>
 #include <memory>
 #include <numeric>
