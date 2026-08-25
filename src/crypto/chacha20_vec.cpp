@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/chacha20.h>
 #include <crypto/chacha20_vec.h>
 
 #ifdef ENABLE_CHACHA20_VEC
@@ -22,11 +21,11 @@ static constexpr bool target_arm64 = true;
 static constexpr bool target_arm64 = false;
 #endif
 
-static_assert(ChaCha20Aligned::BLOCKLEN == CHACHA20_VEC_BLOCKLEN);
-
 static constexpr bool use_vectorized = target_x86_64 || target_arm64;
 
 namespace chacha20_vec {
+
+static_assert(BLOCKLEN == chacha20_vec128::BLOCKLEN);
 
 void chacha20_crypt_vectorized(std::span<const std::byte>& in_bytes, std::span<std::byte>& out_bytes, const std::array<uint32_t, 12>& input) noexcept
 {
@@ -34,10 +33,10 @@ void chacha20_crypt_vectorized(std::span<const std::byte>& in_bytes, std::span<s
         return;
     }
     assert(in_bytes.size() == out_bytes.size());
-    ChaCha20Vectorized128 crypter(input);
+    chacha20_vec128::ChaCha20Vectorized crypter(input);
 
-    while(in_bytes.size() >= CHACHA20_VEC_BLOCKLEN) {
-        size_t blocks = out_bytes.size() / CHACHA20_VEC_BLOCKLEN;
+    while(in_bytes.size() >= BLOCKLEN) {
+        size_t blocks = out_bytes.size() / BLOCKLEN;
         if constexpr(target_x86_64) {
                 // 4 is faster than 3 + 1
                 // 4 + 4 is faster than 3 + 3 + 2

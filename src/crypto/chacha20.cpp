@@ -15,6 +15,10 @@
 #include <cassert>
 #include <limits>
 
+#ifdef ENABLE_CHACHA20_VEC
+static_assert(ChaCha20Aligned::BLOCKLEN == chacha20_vec::BLOCKLEN);
+#endif
+
 #define QUARTERROUND(a,b,c,d) \
   a += b; d = std::rotl(d ^ a, 16); \
   c += d; b = std::rotl(b ^ c, 12); \

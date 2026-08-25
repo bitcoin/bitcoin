@@ -20,6 +20,7 @@
 
 namespace chacha20_vec
 {
+    static constexpr size_t BLOCKLEN = 64;
     void chacha20_crypt_vectorized(std::span<const std::byte>& in_bytes, std::span<std::byte>& out_bytes, const std::array<uint32_t, 12>& input) noexcept;
 }
 

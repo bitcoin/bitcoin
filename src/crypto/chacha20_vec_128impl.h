@@ -23,9 +23,9 @@
 #  define ALWAYS_INLINE inline
 #endif
 
-namespace {
+namespace  chacha20_vec128 {
 
-static constexpr size_t CHACHA20_VEC_BLOCKLEN = 64;
+static constexpr size_t BLOCKLEN = 64;
 
 using vec128 = uint32_t __attribute__((__vector_size__(16)));
 
@@ -254,15 +254,13 @@ ALWAYS_INLINE void multi_block_crypt(std::span<const std::byte> in_bytes, std::s
     arr_read_xor_write(in_bytes, out_bytes, arr0, arr1, arr2, arr3);
 }
 
-} // anonymous namespace
-
-class ChaCha20Vectorized128
+class ChaCha20Vectorized
 {
     const vec128 state0;
     const vec128 state1;
     vec128 state2;
 public:
-    ALWAYS_INLINE ChaCha20Vectorized128(const std::array<uint32_t, 12>& input) noexcept
+    ALWAYS_INLINE ChaCha20Vectorized(const std::array<uint32_t, 12>& input) noexcept
         : state0((vec128){input[0], input[1], input[2], input[3]})
         , state1((vec128){input[4], input[5], input[6], input[7]})
         , state2((vec128){input[8], input[9], input[10], input[11]})
@@ -273,9 +271,11 @@ public:
     {
         multi_block_crypt<STATES>(in_bytes, out_bytes, state0, state1, state2);
         state2 += (vec128){STATES, 0, 0, 0};
-        in_bytes = in_bytes.subspan(CHACHA20_VEC_BLOCKLEN * STATES);
-        out_bytes = out_bytes.subspan(CHACHA20_VEC_BLOCKLEN * STATES);
+        in_bytes = in_bytes.subspan(BLOCKLEN * STATES);
+        out_bytes = out_bytes.subspan(BLOCKLEN * STATES);
     }
 };
+
+} // namespace chacha20_vec128
 
 #endif // BITCOIN_CRYPTO_CHACHA20_VEC_128IMPL_H
