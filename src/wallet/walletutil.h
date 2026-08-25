@@ -128,6 +128,8 @@ public:
       descriptor(descriptor),
       id(DescriptorID(*descriptor)),
       creation_time(creation_time) {}
+
+    void UpdateFrom(const WalletDescriptor& other);
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);

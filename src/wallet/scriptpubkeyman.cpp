@@ -1634,7 +1634,7 @@ util::Result<void> DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescr
     m_map_pubkeys.clear();
     m_map_script_pub_keys.clear();
     m_max_cached_index = -1;
-    m_wallet_descriptor = descriptor;
+    m_wallet_descriptor.UpdateFrom(descriptor);
 
     WalletBatch batch(m_storage.GetDatabase());
     UpdateWithSigningProvider(batch, provider);

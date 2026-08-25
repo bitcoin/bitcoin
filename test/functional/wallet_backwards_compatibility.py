@@ -328,9 +328,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         node_master.createwallet(wallet_name="miniscript")
         wallet = node_master.get_wallet_rpc("miniscript")
-        miniscript_desc = descsum_create("wsh(or_b(pk([deadbeef/0h/1h/2h]tprv8ZgxMBicQKsPerQj6m35no46amfKQdjY7AhLnmatHYXs8S4MTgeZYkWAn4edSGwwL3vkSiiGqSZQrmy5D3P5gBoqgvYP2fCUpBwbKTMTAkL/3h/*),s:pk([beefdead/4h/5h]tpubD6NzVbkrYhZ4YU9vM1s53UhD75UyJatx8EMzMZ3VUjR2FciNfLLkAw6a4pWACChzobTseNqdWk4G7ZdBqRDLtLSACKykTScmqibb1ZrCvJu/6/7/*)))")
-        res = wallet.importdescriptors([{"desc": miniscript_desc, "timestamp":"now"}])
-        assert_equal(res[0]["success"], True)
+        miniscript_desc = "wsh(or_b(pk([deadbeef/0h/1h/2h]tprv8ZgxMBicQKsPerQj6m35no46amfKQdjY7AhLnmatHYXs8S4MTgeZYkWAn4edSGwwL3vkSiiGqSZQrmy5D3P5gBoqgvYP2fCUpBwbKTMTAkL/3h/*),s:pk([beefdead/4h/5h]tpubD6NzVbkrYhZ4YU9vM1s53UhD75UyJatx8EMzMZ3VUjR2FciNfLLkAw6a4pWACChzobTseNqdWk4G7ZdBqRDLtLSACKykTScmqibb1ZrCvJu/6/7/*)))"
+        miniscript_apos = miniscript_desc.replace("[beefdead/4h/5h]", "[beefdead/4'/5']")
+        assert miniscript_apos != miniscript_desc
+        for desc in [miniscript_desc, miniscript_apos]:
+            res = wallet.importdescriptors([{"desc": descsum_create(desc), "timestamp":"now"}])
+            assert_equal(res[0]["success"], True)
 
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = node_master.wallets_path
@@ -425,7 +428,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             pubkey = addr_info["pubkey"]
 
             if self.major_version_at_least(node, 24):
-                res = wallet_prev.importdescriptors([{"desc": miniscript_desc, "timestamp":"now"}])
+                res = wallet_prev.importdescriptors([{"desc": descsum_create(miniscript_desc), "timestamp":"now"}])
                 assert_equal(res[0]["success"], True)
 
             # Make a backup of the wallet file
