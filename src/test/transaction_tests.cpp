@@ -1167,6 +1167,29 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
                   TxValidationResult::TX_PREMATURE_SPEND, /*expected_reason=*/"bad-txns-premature-spend-of-coinbase");
 }
 
+BOOST_AUTO_TEST_CASE(isfinaltx_sequences_test)
+{
+    constexpr int height{100};
+
+    // Every transaction here has the same unsatisfied nLockTime, so only the
+    // sequences decide the outcome.
+    auto check_final{[](const std::vector<uint32_t>& sequences, bool expected_final) {
+        CMutableTransaction mtx;
+        mtx.nLockTime = height;
+        for (const uint32_t sequence : sequences) {
+            mtx.vin.emplace_back(COutPoint{}, CScript{}, sequence);
+        }
+
+        BOOST_CHECK_EQUAL(IsFinalTx(CTransaction{mtx}, /*nBlockHeight=*/height, /*nBlockTime=*/0), expected_final);
+    }};
+
+    check_final(/*sequences=*/{CTxIn::SEQUENCE_FINAL, CTxIn::SEQUENCE_FINAL}, /*expected_final=*/true);
+
+    // nLockTime is only ignored when every input is SEQUENCE_FINAL
+    check_final(/*sequences=*/{CTxIn::SEQUENCE_FINAL, CTxIn::MAX_SEQUENCE_NONFINAL}, /*expected_final=*/false);
+    check_final(/*sequences=*/{CTxIn::MAX_SEQUENCE_NONFINAL, CTxIn::SEQUENCE_FINAL}, /*expected_final=*/false);
+}
+
 BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
 {
     CMutableTransaction mtx;
