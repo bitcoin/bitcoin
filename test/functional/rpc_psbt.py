@@ -557,6 +557,34 @@ class PSBTTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_combinepsbt_sighash_type(self):
+        self.log.info("Test that combining PSBTs preserves the sighash type field regardless of order")
+        node = self.nodes[0]
+        node.createwallet("combine_sighash")
+        wallet = node.get_wallet_rpc("combine_sighash")
+        def_wallet = node.get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.send([{wallet.getnewaddress(address_type="bech32"): 1}])
+        self.generate(node, 1)
+        psbt = wallet.walletcreatefundedpsbt(wallet.listunspent(), [{def_wallet.getnewaddress(): 0.5}])["psbt"]
+
+        signed = wallet.walletprocesspsbt(psbt=psbt, sighashtype="ALL|ANYONECANPAY", finalize=False)["psbt"]
+        assert_equal(node.decodepsbt(signed)["inputs"][0].get("sighash"), "ALL|ANYONECANPAY")
+        updated = wallet.walletprocesspsbt(psbt=psbt, sign=False)["psbt"]
+        assert "sighash" not in node.decodepsbt(updated)["inputs"][0]
+
+        finalized = []
+        for psbts in [[signed, updated], [updated, signed]]:
+            combined = node.combinepsbt(psbts)
+            assert_equal(node.decodepsbt(combined)["inputs"][0].get("sighash"), "ALL|ANYONECANPAY")
+            fin_res = node.finalizepsbt(combined)
+            assert_equal(fin_res["complete"], True)
+            assert_equal(node.testmempoolaccept([fin_res["hex"]])[0]["allowed"], True)
+            finalized.append(fin_res["hex"])
+        assert_equal(finalized[0], finalized[1])
+
+        wallet.unloadwallet()
+
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
 
@@ -1619,6 +1647,7 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_combinepsbt_sighash_type()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
