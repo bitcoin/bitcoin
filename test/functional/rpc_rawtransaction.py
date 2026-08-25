@@ -142,6 +142,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Make a tx by sending, then generate 2 blocks; block1 has the tx in it
         tx = self.wallet.send_self_transfer(from_node=self.nodes[2])['txid']
         block1, block2 = self.generate(self.nodes[2], 2)
+        stale_coinbase = self.nodes[0].getblock(block1)['tx'][0]
         for node, txindex_enabled in [(self.nodes[0], True), (self.nodes[2], False)]:
             self.log.info(f"Test getrawtransaction {'with' if txindex_enabled else 'without'} -txindex, with blockhash")
             # We should be able to get the raw transaction by providing the correct block
@@ -171,6 +172,12 @@ class RawTransactionsTest(BitcoinTestFramework):
             node.invalidateblock(block1)
             gottx = node.getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['in_active_chain'], False)
+            self.log.info(f"Test getrawtransaction {'with' if txindex_enabled else 'without'} -txindex on a stale block, without blockhash")
+            if txindex_enabled:
+                gottx = node.getrawtransaction(txid=stale_coinbase, verbose=True)
+                assert_equal({key: gottx[key] for key in gottx.keys() & {'blockhash', 'confirmations', 'time', 'blocktime'}}, {'blockhash': block1, 'confirmations': 0})
+            else:
+                assert_raises_rpc_error(-5, err_msg, node.getrawtransaction, txid=stale_coinbase, verbose=True)
             node.reconsiderblock(block1)
             assert_equal(node.getbestblockhash(), block2)
 
