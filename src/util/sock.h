@@ -79,6 +79,12 @@ public:
     [[nodiscard]] virtual ssize_t Recv(void* buf, size_t len, int flags) const;
 
     /**
+     * Half-close the send side while leaving the receive side open.
+     * Equivalent to `shutdown(m_socket, SHUT_WR)` or `shutdown(m_socket, SD_SEND)`.
+     */
+    [[nodiscard]] virtual int ShutdownSend() const;
+
+    /**
      * connect(2) wrapper. Equivalent to `connect(m_socket, addr, addrlen)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
