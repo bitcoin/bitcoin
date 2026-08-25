@@ -67,7 +67,7 @@ std::string BlockFilterThreadName(BlockFilterType filter_type)
     case BlockFilterType::BASIC: return "blkfltbscidx";
     case BlockFilterType::INVALID: return "";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 struct DBVal {

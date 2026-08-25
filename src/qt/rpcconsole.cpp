@@ -1365,7 +1365,7 @@ QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
     case TabTypes::PEERS: return QKeySequence(tr("Ctrl+P"));
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }
 
 void RPCConsole::updateAlerts(const QString& warnings)

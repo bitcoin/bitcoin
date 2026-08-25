@@ -442,7 +442,7 @@ private:
         case ChainType::MAIN:
             return "";
         }
-        assert(false);
+        AssertUnreachable();
     }
     std::string PingTimeToString(double seconds) const
     {

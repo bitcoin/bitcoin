@@ -426,7 +426,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     case QMessageBox::Discard:
         break;
     default:
-        assert(false);
+        AssertUnreachable();
     } // msgBox.exec()
 }
 

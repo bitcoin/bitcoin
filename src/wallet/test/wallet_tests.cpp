@@ -558,7 +558,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
     if (!ProduceSignature(keystore, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
         // We're hand-feeding it correct arguments; shouldn't happen
-        assert(false);
+        AssertUnreachable();
     }
 
     CTxIn tx_in;

@@ -1042,7 +1042,7 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::CG: return "cg";
     case SelectionAlgorithm::MANUAL: return "manual";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmount change_fee) const

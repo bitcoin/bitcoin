@@ -446,7 +446,7 @@ static bool rest_block(const std::any& context,
             assert(block_part);
             return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Bad block part offset/size %d/%d for %s", block_part->first, block_part->second, hashStr));
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }
 
     switch (rf) {

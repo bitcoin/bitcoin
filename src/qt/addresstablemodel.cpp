@@ -61,7 +61,7 @@ constexpr AddressTableEntry::Type translateTransactionType(wallet::AddressPurpos
     case wallet::AddressPurpose::RECEIVE: return AddressTableEntry::Receiving;
     case wallet::AddressPurpose::REFUND: return AddressTableEntry::Hidden;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 // Private implementation
@@ -209,7 +209,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return rec->address;
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     } else if (role == Qt::FontRole) {
         switch (column) {
         case Label:
@@ -217,7 +217,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return GUIUtil::fixedPitchFont();
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     } else if (role == TypeRole) {
         switch(rec->type)
         {
@@ -228,7 +228,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case AddressTableEntry::Hidden:
             return {};
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }
     return QVariant();
 }

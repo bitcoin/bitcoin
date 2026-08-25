@@ -21,7 +21,7 @@ std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
     case PrivateBroadcast::AddResult::AlreadyPresent: return os << "AlreadyPresent";
     case PrivateBroadcast::AddResult::QueueFull: return os << "QueueFull";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)

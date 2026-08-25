@@ -184,7 +184,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     case AddressTableModel::EditStatus::INVALID_ADDRESS:
     case AddressTableModel::EditStatus::DUPLICATE_ADDRESS:
     case AddressTableModel::EditStatus::NO_CHANGES:
-        assert(false);
+        AssertUnreachable();
     }
     clear();
 }

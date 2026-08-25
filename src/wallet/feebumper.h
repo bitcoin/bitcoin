@@ -93,7 +93,7 @@ public:
             break;
         case SigVersion::TAPROOT:
         case SigVersion::TAPSCRIPT:
-            assert(false);
+            AssertUnreachable();
         }
     }
 

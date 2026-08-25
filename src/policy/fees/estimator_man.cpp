@@ -54,7 +54,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     case FeeRateEstimatorType::MEMPOOL_POLICY:
         return m_mempool_estimator->EstimateFeeRate(conservative);
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void FeeRateEstimatorManager::IntervalFlush()

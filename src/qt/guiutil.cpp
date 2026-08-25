@@ -693,9 +693,9 @@ QString NetworkToQString(Network net)
     //: Name of CJDNS network in peer info
     case NET_CJDNS: return QObject::tr("CJDNS", "network name");
     case NET_INTERNAL: return "Internal";  // should never actually happen
-    case NET_MAX: assert(false);
+    case NET_MAX: AssertUnreachable();
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)
@@ -726,7 +726,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     //: Short-lived peer connection type that is used for broadcasting privacy-sensitive data.
     case ConnectionType::PRIVATE_BROADCAST: return prefix + QObject::tr("Private Broadcast");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString formatDurationStr(std::chrono::nanoseconds dur)

@@ -393,7 +393,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogInfo(util::log::NO_RATE_LIMIT, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 /**

@@ -122,10 +122,10 @@ std::string GetNetworkName(enum Network net)
     case NET_I2P: return "i2p";
     case NET_CJDNS: return "cjdns";
     case NET_INTERNAL: return "internal";
-    case NET_MAX: assert(false);
+    case NET_MAX: AssertUnreachable();
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }
 
 std::vector<std::string> GetNetworkNames(bool append_unroutable)

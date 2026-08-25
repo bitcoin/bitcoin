@@ -60,7 +60,7 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
         case FeeEstimateMode::CONSERVATIVE:
             return strprintf("%s potentially returns a higher fee rate estimate.\n", mode.first);
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 std::string FeeModesDetail(std::string default_info)
@@ -112,7 +112,7 @@ bilingual_str PSBTErrorString(PSBTError err)
         case PSBTError::INVALID_TX:
             return Untranslated("The transaction cannot be valid");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 bilingual_str TransactionErrorString(const TransactionError err)
@@ -137,7 +137,7 @@ bilingual_str TransactionErrorString(const TransactionError err)
         case TransactionError::PRIVATE_BROADCAST_FULL:
             return Untranslated("Private broadcast queue is full");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind)

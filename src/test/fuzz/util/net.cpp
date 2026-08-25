@@ -130,7 +130,7 @@ FuzzedSock::~FuzzedSock()
 
 FuzzedSock& FuzzedSock::operator=(Sock&& other)
 {
-    assert(false && "Move of Sock into FuzzedSock not allowed.");
+    AssertUnreachable(); // Move of Sock into FuzzedSock not allowed.
     return *this;
 }
 

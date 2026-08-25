@@ -712,7 +712,7 @@ public:
         if (tx_count >= GenericClusterImpl::MIN_INTENDED_TX_COUNT && tx_count <= GenericClusterImpl::MAX_TX_COUNT) {
             return CreateEmptyGenericCluster();
         }
-        assert(false);
+        AssertUnreachable();
         return {};
     }
 
@@ -1006,7 +1006,7 @@ int GenericClusterImpl::GetLevel(const TxGraphImpl& graph) const noexcept
     }
     // Given that we started with an Entry that occurs in this Cluster, one of its Locators must
     // point back to it.
-    assert(false);
+    AssertUnreachable();
     return -1;
 }
 
@@ -1023,7 +1023,7 @@ int SingletonClusterImpl::GetLevel(const TxGraphImpl& graph) const noexcept
     }
     // Given that we started with an Entry that occurs in this Cluster, one of its Locators must
     // point back to it.
-    assert(false);
+    AssertUnreachable();
     return -1;
 }
 
@@ -2200,7 +2200,7 @@ std::pair<uint64_t, bool> SingletonClusterImpl::Relinearize(TxGraphImpl& graph, 
 {
     // All singletons are optimal, oversized, or need splitting. Each of these precludes
     // Relinearize from being called.
-    assert(false);
+    AssertUnreachable();
     return {0, false};
 }
 

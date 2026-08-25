@@ -237,7 +237,7 @@ bool ZeroSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events
 
 ZeroSock& ZeroSock::operator=(Sock&& other)
 {
-    assert(false && "Move of Sock into ZeroSock not allowed.");
+    AssertUnreachable(); // Move of Sock into ZeroSock not allowed.
     return *this;
 }
 
@@ -258,7 +258,7 @@ ssize_t StaticContentsSock::Recv(void* buf, size_t len, int flags) const
 
 StaticContentsSock& StaticContentsSock::operator=(Sock&& other)
 {
-    assert(false && "Move of Sock into StaticContentsSock not allowed.");
+    AssertUnreachable(); // Move of Sock into StaticContentsSock not allowed.
     return *this;
 }
 
@@ -429,6 +429,6 @@ bool DynSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_
 
 DynSock& DynSock::operator=(Sock&&)
 {
-    assert(false && "Move of Sock into DynSock not allowed.");
+    AssertUnreachable(); // Move of Sock into DynSock not allowed.
     return *this;
 }

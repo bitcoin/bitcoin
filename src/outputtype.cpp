@@ -43,7 +43,7 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::BECH32M: return OUTPUT_TYPE_STRING_BECH32M;
     case OutputType::UNKNOWN: return OUTPUT_TYPE_STRING_UNKNOWN;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 std::string FormatAllOutputTypes()
@@ -74,7 +74,7 @@ CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, cons
     case OutputType::BECH32M:
     case OutputType::UNKNOWN: {} // This function should not be used for BECH32M or UNKNOWN, so let it assert
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) {

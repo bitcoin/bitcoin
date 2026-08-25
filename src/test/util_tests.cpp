@@ -1033,7 +1033,7 @@ enum : char {
                 case util::LockResult::ErrorWrite: return ResErrorWrite;
                 case util::LockResult::ErrorLock: return ResErrorLock;
                 } // no default case, so the compiler can warn about missing cases
-                assert(false);
+                AssertUnreachable();
             }();
             rv = write(fd, &ch, 1);
             assert(rv == 1);
@@ -1048,7 +1048,7 @@ enum : char {
             close(fd);
             exit(0);
         default:
-            assert(0);
+            AssertUnreachable();
         }
     }
 }

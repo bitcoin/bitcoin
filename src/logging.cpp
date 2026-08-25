@@ -253,7 +253,7 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
     case BCLog::Level::Error:
         return "error";
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 static std::string LogCategoryToStr(BCLog::LogFlags category)

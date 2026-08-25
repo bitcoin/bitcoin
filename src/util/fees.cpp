@@ -20,7 +20,7 @@ std::string_view FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estim
         return "mempool_policy";
     }
     // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type)

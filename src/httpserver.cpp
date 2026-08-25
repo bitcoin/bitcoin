@@ -124,7 +124,7 @@ std::string_view RequestMethodString(HTTPRequestMethod m)
     case PUT: return "PUT";
     case UNKNOWN: return "unknown";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 static void WriteNoStoreErrorReply(HTTPRequest& req, HTTPStatusCode status, std::string_view reply = {})

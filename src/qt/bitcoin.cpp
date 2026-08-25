@@ -167,7 +167,7 @@ static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std:
     case QMessageBox::Abort:
         return true;
     default:
-        assert(false);
+        AssertUnreachable();
     }
 }
 

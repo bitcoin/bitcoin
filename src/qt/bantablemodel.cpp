@@ -30,7 +30,7 @@ bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan
     case BanTableModel::Bantime:
         return pLeft->banEntry.nBanUntil < pRight->banEntry.nBanUntil;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 // private implementation
@@ -125,7 +125,7 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
             date = date.addSecs(rec->banEntry.nBanUntil);
             return QLocale::system().toString(date, QLocale::LongFormat);
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }
 
     return QVariant();

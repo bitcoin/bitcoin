@@ -421,7 +421,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             if (offset == 0) return i;
             --offset;
         }
-        assert(false);
+        AssertUnreachable();
         return DepGraphIndex(-1);
     };
 

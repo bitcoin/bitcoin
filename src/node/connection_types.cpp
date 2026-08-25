@@ -25,7 +25,7 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "private-broadcast";
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }
 
 std::string TransportTypeAsString(TransportProtocolType transport_type)
@@ -39,5 +39,5 @@ std::string TransportTypeAsString(TransportProtocolType transport_type)
         return "v2";
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }

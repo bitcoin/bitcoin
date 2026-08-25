@@ -30,7 +30,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
