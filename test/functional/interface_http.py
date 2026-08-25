@@ -612,9 +612,10 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Disable timeout so the initial batch of clients stays connected
         # until the end of the test.
-        for comment,                   extra_args,                                                 limit in [
-            ("default (16)",           ["-rpcservertimeout=0", "-rest"],                           16),
-            ("-rpcmaxconnections=128", ["-rpcservertimeout=0", "-rest", "-rpcmaxconnections=128"], 128)
+        for comment,                  extra_args,                                      limit in [
+            ("default (16)",          ["-rpcservertimeout=0", "-rest"],                16),
+            ("-rpcmaxconnections=64", ["-rpcservertimeout=0", "-rest",
+                                       "-rpcmaxconnections=64", "-maxconnections=16"], 64)
         ]:
             self.log.info(f"Using connection limit: {comment}")
             self.restart_node(0, extra_args=extra_args)
