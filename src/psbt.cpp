@@ -464,6 +464,7 @@ bool PSBTInput::Merge(const PSBTInput& input)
     for (const auto& [agg_key_lh, psigs] : input.m_musig2_partial_sigs) {
         m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+    if (sighash_type == std::nullopt && input.sighash_type != std::nullopt) sighash_type = input.sighash_type;
     if (sequence == std::nullopt && input.sequence != std::nullopt) sequence = input.sequence;
     if (time_locktime == std::nullopt && input.time_locktime != std::nullopt) time_locktime = input.time_locktime;
     if (height_locktime == std::nullopt && input.height_locktime != std::nullopt) height_locktime = input.height_locktime;
