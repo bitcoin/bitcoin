@@ -336,7 +336,7 @@ class InitTest(BitcoinTestFramework):
         try:
             resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
         except (ValueError, OSError):
-            self.log.info(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
+            self.log.warning(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
             return
         try:
             self.restart_node(1)
@@ -348,7 +348,7 @@ class InitTest(BitcoinTestFramework):
     def init_rlimit_test(self):
         """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is RLIM_INFINITY."""
         if self.RLIM_INFINITY is None:
-            self.log.info("Skipping: resource module not available")
+            self.log.warning("Skipping: resource module not available")
             return
 
         self.log.info("Testing node startup with RLIM_INFINITY fd limit")
@@ -357,7 +357,7 @@ class InitTest(BitcoinTestFramework):
     def init_rlimit_large_test(self):
         """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is above INT_MAX."""
         if self.RLIM_INFINITY is None:
-            self.log.info("Skipping: resource module not available")
+            self.log.warning("Skipping: resource module not available")
             return
 
         self.log.info("Testing node startup with fd limit above INT_MAX")
@@ -378,6 +378,16 @@ class InitTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX
         )
 
+        self.log.info("Checking -rpcmaxconnections is ignored when disabling the HTTP server")
+        with node.assert_debug_log(
+            expected_msgs = ["net thread start"],
+            unexpected_msgs = ["Initialized HTTP server"],
+            timeout = 10
+        ):
+            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"])
+        # No HTTP server, no RPC `stop`
+        node.kill_process()
+
         if self.RLIM_INFINITY is not None:
             # Get the platform's file descriptor limit, if possible
             import resource
@@ -389,14 +399,14 @@ class InitTest(BitcoinTestFramework):
             try:
                 resource.setrlimit(resource.RLIMIT_NOFILE, (soft, soft))
             except (ValueError, OSError):
-                self.log.info(f"Skipping rlimit test: cannot reduce hard limit (soft={soft}, hard={hard})")
+                self.log.warning(f"Skipping rlimit test: cannot reduce hard limit (soft={soft}, hard={hard})")
                 return
 
             self.log.info("Checking that large -maxconnections setting gets adjusted for available file descriptors")
             # Note this prints a message to the log and stderr but does not abort the process
             with node.assert_debug_log(expected_msgs=[f"Reducing -maxconnections from {soft} "]):
                 self.restart_node(1, extra_args=[f"-maxconnections={soft}"])
-            self.stop_node(1, expected_stderr=re.compile(fr"Reducing -maxconnections from {soft} "))
+            self.stop_node(1, expected_stderr=re.compile(f"Reducing -maxconnections from {soft} "))
 
             # From httpserver.h
             DEFAULT_MAX_HTTP_CONNECTIONS = 16
@@ -407,16 +417,6 @@ class InitTest(BitcoinTestFramework):
                 expected_msg="Not enough file descriptors available. Try reducing -rpcmaxconnections",
                 match=ErrorMatch.PARTIAL_REGEX
             )
-
-        # Start without the HTTP server to ensure that -rpcmaxconnections is ignored
-        with node.assert_debug_log(
-            expected_msgs = ["net thread start"],
-            unexpected_msgs = ["Initialized HTTP server"],
-            timeout = 10
-        ):
-            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"])
-        # No HTTP server, no RPC `stop`
-        node.kill_process()
 
     def run_test(self):
         self.init_pid_test()
