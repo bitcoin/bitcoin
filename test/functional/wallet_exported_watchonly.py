@@ -175,6 +175,8 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
                 {"desc": descsum_create(f"tr({H_POINT},{{pk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/*),pk(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/0h/*)}})"), "timestamp": "now", "active": True},
                 # miniscript
                 {"desc": descsum_create(f"tr({H_POINT},or_b(pk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/2/*),s:pk(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/1h/2/*)))"), "timestamp": "now", "active": True, "internal": True},
+                # multipath, with hardened derivation so the exported descriptors get a different ID
+                {"desc": descsum_create("wpkh(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/84h/2h/0h/<0;1>/*)"), "timestamp": "now"},
             ]
         )
         assert_equal(all([r["success"] for r in import_res]), True)
@@ -182,8 +184,9 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         # Export the watchonly wallet file and load onto online node
         online_wallet = self.export_and_restore(offline_wallet, "imports_watchonly")
 
-        # Verify public descriptors are the same
+        # Verify public descriptors are the same, including the multipath record
         assert_equal(offline_wallet.listdescriptors()["descriptors"], online_wallet.listdescriptors()["descriptors"])
+        assert any("/84h/2h/0h]" in desc.get("multipath", "") for desc in online_wallet.listdescriptors()["descriptors"])
 
         # Verify all the addresses are the same
         for address_type in ["legacy", "p2sh-segwit", "bech32", "bech32m"]:

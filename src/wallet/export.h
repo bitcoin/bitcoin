@@ -13,11 +13,12 @@
 #include <vector>
 
 namespace wallet {
-// Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
-// and without its ID.
+// Struct containing all of the info from WalletDescriptor, with the descriptor as a string.
 // Used when exporting descriptors from the wallet.
 struct WalletDescInfo {
     std::string descriptor;
+    //! The descriptor's ID in the wallet it was exported from
+    uint256 desc_id;
     //! The multipath descriptor that this descriptor was expanded from, if any
     std::optional<std::string> multipath;
     uint64_t creation_time;
