@@ -11,6 +11,8 @@
 #include <tinyformat.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
+#include <util/string.h>
+#include <util/vector.h>
 
 #include <algorithm>
 #include <cassert>
@@ -125,7 +127,11 @@ CTxDestination DecodeBase58Destination(const std::vector<unsigned char>& data, c
          std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()))) {
         error_str = "Invalid length for Base58 address (P2PKH or P2SH)";
     } else {
-        error_str = "Invalid or unsupported Base58-encoded address.";
+        auto prefixes{Cat(params.Base58PrefixText(CChainParams::SCRIPT_ADDRESS),
+                          params.Base58PrefixText(CChainParams::PUBKEY_ADDRESS))};
+        const std::string last{std::move(prefixes.back())};
+        prefixes.pop_back();
+        error_str = strprintf("Invalid Base58 address. Expected prefix %s or %s", util::Join(prefixes, ", "), last);
     }
     return CNoDestination();
 }

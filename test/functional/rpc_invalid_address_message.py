@@ -87,7 +87,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_valid(BECH32_VALID_MULTISIG)
 
         # Invalid Base58
-        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid or unsupported Base58-encoded address.')
+        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid Base58 address. Expected prefix 2, m or n')
         self.check_invalid(BASE58_INVALID_CHECKSUM, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
         self.check_invalid(BASE58_INVALID_LENGTH, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
         self.check_invalid(BASE58_OVER_BECH32_LIMIT, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
@@ -113,7 +113,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-5, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
         assert_raises_rpc_error(-5, "Invalid or unsupported prefix for Segwit (Bech32) address (expected bcrt, got bc)", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, "Invalid Base58 address. Expected prefix 2, m or n", node.getaddressinfo, BASE58_INVALID_PREFIX)
         assert_raises_rpc_error(-5, "Bech32 address decoded with error: Invalid separator position", node.getaddressinfo, INVALID_ADDRESS)
         assert "isscript" not in node.getaddressinfo(BECH32_VALID_UNKNOWN_WITNESS)
 
