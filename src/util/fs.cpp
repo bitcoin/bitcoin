@@ -78,7 +78,7 @@ bool FileLock::TryLock()
 #else
 
 static std::string GetErrorReason() {
-    return Win32ErrorString(GetLastError());
+    return SysErrorString(GetLastError());
 }
 
 FileLock::FileLock(const fs::path& file)
