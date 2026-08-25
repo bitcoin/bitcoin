@@ -910,7 +910,11 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         // This executes for every client whether or not reading or writing
         // took place because it also (might) parse a request we have already
         // received and pass it to a worker thread.
-        MaybeDispatchRequestsFromClient(client);
+        if (std::unique_ptr<HTTPRequest> request{HTTPRemoteClient::TryReadRequest(client)})
+        {
+            LOCK(m_request_dispatcher_mutex);
+            m_request_dispatcher(std::move(request));
+        }
     }
 }
 
@@ -1029,12 +1033,12 @@ void HTTPServer::ThreadSocketHandler()
     }
 }
 
-void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
+std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client)
 {
     // If we are already handling a request from
     // this client, do nothing. We'll check again on the next I/O
     // loop iteration.
-    if (client->m_req_busy) return;
+    if (client->m_req_busy) return nullptr;
 
     if (!client->m_req) {
         client->m_req = std::make_unique<HTTPRequest>(client);
@@ -1053,7 +1057,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 
         WriteNoStoreErrorReply(*client->m_req, HTTP_CONTENT_TOO_LARGE);
         client->m_disconnect = true;
-        return;
+        return nullptr;
     } catch (const std::runtime_error& e) {
         LogDebug(
             BCLog::HTTP,
@@ -1065,7 +1069,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
         // We failed to read a complete request from the buffer
         WriteNoStoreErrorReply(*client->m_req, HTTP_BAD_REQUEST);
         client->m_disconnect = true;
-        return;
+        return nullptr;
     }
 
     // If the request is ready, hand it to a worker.
@@ -1078,10 +1082,11 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
             client->m_origin,
             client->m_id);
 
-        LOCK(m_request_dispatcher_mutex);
         client->m_req_busy = true;
-        m_request_dispatcher(std::move(client->m_req));
+        return std::move(client->m_req);
     }
+
+    return nullptr;
 }
 
 void HTTPServer::DisconnectClients()

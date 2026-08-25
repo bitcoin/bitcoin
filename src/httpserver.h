@@ -465,16 +465,6 @@ private:
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
-     * Try to read HTTPRequests from a client's receive buffer.
-     * Complete requests are dispatched, incomplete requests are
-     * left in the buffer to wait for more data. Some read errors
-     * will mark this client for disconnection.
-     * @param[in] client The HTTPRemoteClient to read requests from
-     */
-    void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
-        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
-
-    /**
      * Close underlying socket connections for flagged clients
      * by removing their shared pointer from m_connected. If an HTTPRemoteClient
      * is busy in a worker thread, its connection will be closed once that
@@ -584,6 +574,14 @@ public:
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
     bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+
+    /**
+     * Try to read an HTTPRequest from a client's receive buffer.
+     * Only complete requests are returned, incomplete requests are
+     * left in the buffer to wait for more data. Some read errors
+     * will mark this client for disconnection.
+     */
+    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client);
 
     /**
      * Try to read an HTTP request from the receive buffer.
