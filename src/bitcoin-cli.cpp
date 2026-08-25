@@ -25,6 +25,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
@@ -441,7 +442,7 @@ private:
         case ChainType::MAIN:
             return "";
         }
-        assert(false);
+        AssertUnreachable();
     }
     std::string PingTimeToString(double seconds) const
     {

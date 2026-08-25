@@ -23,7 +23,7 @@ std::string ChainTypeToString(ChainType chain)
     case ChainType::REGTEST:
         return "regtest";
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain)

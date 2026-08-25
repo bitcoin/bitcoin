@@ -2505,7 +2505,7 @@ node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransa
         LogDebug(BCLog::PRIVBROADCAST, "Rejecting private broadcast, queue full (cap=%u): %s", PrivateBroadcast::MAX_TRANSACTIONS, txstr);
         return node::TransactionError::PRIVATE_BROADCAST_FULL;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,

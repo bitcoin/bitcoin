@@ -210,7 +210,7 @@ bool LegacyDataSPKM::IsMine(const CScript& script) const
     case IsMineResult::SPENDABLE:
         return true;
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)

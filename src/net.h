@@ -794,7 +794,7 @@ public:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
-        assert(false);
+        AssertUnreachable();
     }
 
     bool IsFullOutboundConn() const {
@@ -819,7 +819,7 @@ public:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
-        assert(false);
+        AssertUnreachable();
     }
 
     bool IsBlockOnlyConn() const {
@@ -863,7 +863,7 @@ public:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
-        assert(false);
+        AssertUnreachable();
     }
 
     /**

@@ -258,7 +258,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                    acc_tl; // timelock info
             }
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs,
@@ -292,7 +292,7 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::WRAP_J: return subsize + 4;
         case Fragment::THRESH: return subsize + n_subs + BuildScript(k).size();
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 InputStack& InputStack::SetAvailable(Availability avail) {

@@ -16,6 +16,7 @@
 #include <test/util/time.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
@@ -1026,7 +1027,7 @@ enum : char {
                 case util::LockResult::ErrorWrite: return ResErrorWrite;
                 case util::LockResult::ErrorLock: return ResErrorLock;
                 } // no default case, so the compiler can warn about missing cases
-                assert(false);
+                AssertUnreachable();
             }();
             rv = write(fd, &ch, 1);
             assert(rv == 1);
@@ -1041,7 +1042,7 @@ enum : char {
             close(fd);
             exit(0);
         default:
-            assert(0);
+            AssertUnreachable();
         }
     }
 }
