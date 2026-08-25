@@ -82,6 +82,23 @@ public:
     std::string operator()(const PubKeyDestination& pk) const { return {}; }
 };
 
+/** Translate a Bech32 decoding error code into a user-facing message. */
+std::string Bech32ErrorMessage(bech32::Error error)
+{
+    switch (error) {
+    case bech32::Error::NONE: return "";
+    case bech32::Error::TOO_LONG: return "Bech32 string too long";
+    case bech32::Error::INVALID_CHARS_OR_MIXED_CASE: return "Invalid character or mixed case";
+    case bech32::Error::MISSING_SEPARATOR: return "Missing separator";
+    case bech32::Error::INVALID_SEPARATOR_POSITION: return "Invalid separator position";
+    case bech32::Error::INVALID_BASE32_CHAR: return "Invalid Base 32 character";
+    case bech32::Error::INVALID_CHECKSUM: return "Invalid checksum";
+    case bech32::Error::INVALID_BECH32_CHECKSUM: return "Invalid Bech32 checksum";
+    case bech32::Error::INVALID_BECH32M_CHECKSUM: return "Invalid Bech32m checksum";
+    }
+    assert(false);
+}
+
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
     std::vector<unsigned char> data;
@@ -204,9 +221,9 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     }
 
     // Perform Bech32 error location
-    auto res = bech32::LocateErrors(str);
-    error_str = res.first;
-    if (error_locations) *error_locations = std::move(res.second);
+    auto [error, locations] = bech32::LocateErrors(str);
+    error_str = Bech32ErrorMessage(error);
+    if (error_locations) *error_locations = std::move(locations);
     return CNoDestination();
 }
 } // namespace

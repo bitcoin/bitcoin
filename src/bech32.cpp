@@ -399,27 +399,28 @@ DecodeResult Decode(const std::string& str, CharLimit limit) {
     return {result, std::move(hrp), data(values.begin(), values.end() - CHECKSUM_SIZE)};
 }
 
-/** Find index of an incorrect character in a Bech32 string. */
-std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, CharLimit limit) {
+/** Classify and locate errors in a Bech32(m) string. */
+LocateErrorsResult LocateErrors(const std::string& str, CharLimit limit)
+{
     std::vector<int> error_locations{};
 
     if (str.size() > limit) {
         error_locations.resize(str.size() - limit);
         std::iota(error_locations.begin(), error_locations.end(), static_cast<int>(limit));
-        return std::make_pair("Bech32 string too long", std::move(error_locations));
+        return {Error::TOO_LONG, std::move(error_locations)};
     }
 
-    if (!CheckCharacters(str, error_locations)){
-        return std::make_pair("Invalid character or mixed case", std::move(error_locations));
+    if (!CheckCharacters(str, error_locations)) {
+        return {Error::INVALID_CHARS_OR_MIXED_CASE, std::move(error_locations)};
     }
 
     size_t pos = str.rfind(SEPARATOR);
     if (pos == str.npos) {
-        return std::make_pair("Missing separator", std::vector<int>{});
+        return {Error::MISSING_SEPARATOR, {}};
     }
     if (pos == 0 || pos + CHECKSUM_SIZE >= str.size()) {
         error_locations.push_back(pos);
-        return std::make_pair("Invalid separator position", std::move(error_locations));
+        return {Error::INVALID_SEPARATOR_POSITION, std::move(error_locations)};
     }
 
     std::string hrp;
@@ -435,7 +436,7 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, Ch
         int8_t rev = CHARSET_REV[c];
         if (rev == -1) {
             error_locations.push_back(i);
-            return std::make_pair("Invalid Base 32 character", std::move(error_locations));
+            return {Error::INVALID_BASE32_CHAR, std::move(error_locations)};
         }
         values[i - pos - 1] = rev;
     }
@@ -556,7 +557,7 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, Ch
             }
         } else {
             // No errors
-            return std::make_pair("", std::vector<int>{});
+            return {Error::NONE, {}};
         }
 
         if (error_locations.empty() || (!possible_errors.empty() && possible_errors.size() < error_locations.size())) {
@@ -564,11 +565,11 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, Ch
             if (!error_locations.empty()) error_encoding = encoding;
         }
     }
-    std::string error_message = error_encoding == Encoding::BECH32M ? "Invalid Bech32m checksum"
-                              : error_encoding == Encoding::BECH32 ? "Invalid Bech32 checksum"
-                              : "Invalid checksum";
+    const Error error{error_encoding == Encoding::BECH32M ? Error::INVALID_BECH32M_CHECKSUM :
+                      error_encoding == Encoding::BECH32  ? Error::INVALID_BECH32_CHECKSUM :
+                                                            Error::INVALID_CHECKSUM};
 
-    return std::make_pair(error_message, std::move(error_locations));
+    return {error, std::move(error_locations)};
 }
 
 } // namespace bech32

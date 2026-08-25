@@ -58,8 +58,26 @@ struct DecodeResult
 /** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str, CharLimit limit = CharLimit::BECH32);
 
-/** Return the positions of errors in a Bech32 string. */
-std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, CharLimit limit = CharLimit::BECH32);
+/** Error codes describing how a Bech32(m) string is invalid, as detected by LocateErrors. */
+enum class Error {
+    NONE,                        //!< No error
+    TOO_LONG,                    //!< String exceeds the character limit
+    INVALID_CHARS_OR_MIXED_CASE, //!< Invalid character(s), or mixed uppercase and lowercase
+    MISSING_SEPARATOR,           //!< No separator character present
+    INVALID_SEPARATOR_POSITION,  //!< Separator at the start, or too close to the end
+    INVALID_BASE32_CHAR,         //!< Character in the data section not in the Bech32 character set
+    INVALID_CHECKSUM,            //!< Checksum invalid under both Bech32 and Bech32m rules
+    INVALID_BECH32_CHECKSUM,     //!< Checksum invalid, fewest errors found under Bech32 rules
+    INVALID_BECH32M_CHECKSUM,    //!< Checksum invalid, fewest errors found under Bech32m rules
+};
+
+struct LocateErrorsResult {
+    Error error;                //!< The detected error; Error::NONE if there is none.
+    std::vector<int> locations; //!< Character positions of the error(s); may be empty.
+};
+
+/** Classify and locate errors in a Bech32(m) string. The caller decides how to present the error. */
+LocateErrorsResult LocateErrors(const std::string& str, CharLimit limit = CharLimit::BECH32);
 
 } // namespace bech32
 
