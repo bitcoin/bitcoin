@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <netaddress.h>
 #include <util/asmap.h>
 #include <test/fuzz/fuzz.h>
@@ -10,7 +11,6 @@
 #include <optional>
 #include <vector>
 
-#include <cassert>
 
 std::vector<std::byte> BitsToBytes(std::span<const uint8_t> bits) noexcept
 {
