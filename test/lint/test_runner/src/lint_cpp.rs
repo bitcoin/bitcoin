@@ -155,7 +155,7 @@ pub fn lint_rpc_assert() -> LintResult {
             "grep",
             "--line-number",
             "--extended-regexp",
-            r"\<(A|a)ss(ume|ert)\(",
+            r"\<(A|a)ss(ume|ert)(Unreachable)?\(",
             "--",
             "src/rpc/",
             "src/wallet/rpc*",
@@ -167,7 +167,8 @@ pub fn lint_rpc_assert() -> LintResult {
         .success();
     if found {
         Err(r#"
-CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.
+CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of Assert, Assume, or
+AssertUnreachable for RPC code.
 
 Aborting the whole process is undesirable for RPC code. So nonfatal
 checks should be used over assert. See: src/util/check.h
