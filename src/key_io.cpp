@@ -140,7 +140,7 @@ CTxDestination DecodeBech32Destination(const bech32::DecodeResult& dec, const CC
     }
     // Bech32 decoding
     if (dec.hrp != params.Bech32HRP()) {
-        error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s).", params.Bech32HRP(), dec.hrp);
+        error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s)", params.Bech32HRP(), dec.hrp);
         return CNoDestination();
     }
     int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
@@ -173,7 +173,7 @@ CTxDestination DecodeBech32Destination(const bech32::DecodeResult& dec, const CC
                 }
             }
 
-            error_str = strprintf("Invalid Bech32 v0 address program size (%d %s), per BIP141", data.size(), byte_str);
+            error_str = strprintf("Invalid SegWit v0 address program size (%d %s), per BIP141", data.size(), byte_str);
             return CNoDestination();
         }
 
@@ -233,18 +233,23 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     }
 
     // Neither Bech32 nor Base58Check decoding succeeded. Unless the input already rules
-    // out Bech32 (invalid character or mixed case), report the specific Bech32 error.
-    // Otherwise, try Base58 decoding without the checksum, using a much larger max length.
-    // Strings beyond the 90-character BIP173 limit cannot be Bech32 addresses, so if one
-    // still raw-decodes as Base58 (e.g. an extended key), report the Base58 error.
+    // out Bech32 (invalid character or mixed case), report the specific Bech32 error and
+    // its locations. Otherwise, the Base58 checksum or length must be wrong if the string
+    // still raw-decodes as Base58; if not, the format is ambiguous. Strings beyond the
+    // 90-character BIP173 limit cannot be Bech32 addresses, so one that still raw-decodes
+    // as Base58 (e.g. an extended key) is diagnosed as Base58 even though LocateErrors
+    // reports it as too long.
     auto [error, locations] = bech32::LocateErrors(str);
     const bool is_base58{DecodeBase58(str, data, 100)};
     const bool maybe_bech32{error != bech32::Error::INVALID_CHARS_OR_MIXED_CASE &&
                             !(error == bech32::Error::TOO_LONG && is_base58)};
-    if (!maybe_bech32 && is_base58) {
+    if (maybe_bech32) {
+        error_str = "Bech32 address decoded with error: " + Bech32ErrorMessage(error);
+        if (error_locations) *error_locations = std::move(locations);
+    } else if (is_base58) {
         error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
     } else {
-        error_str = Bech32ErrorMessage(error);
+        error_str = "Address is not valid Base58 or Bech32";
         if (error_locations) *error_locations = std::move(locations);
     }
     return CNoDestination();
