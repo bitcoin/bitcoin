@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_NET_H
 #define BITCOIN_TEST_UTIL_NET_H
 
+#include <util/check.h>
 #include <attributes.h>
 #include <compat/compat.h>
 #include <netmessagemaker.h>
@@ -20,7 +21,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
