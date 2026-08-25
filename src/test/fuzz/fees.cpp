@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <common/messages.h>
 #include <consensus/amount.h>
 #include <policy/fees/block_policy_estimator.h>

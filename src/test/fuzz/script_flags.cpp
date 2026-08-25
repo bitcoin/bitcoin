@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -10,7 +11,6 @@
 #include <test/fuzz/fuzz.h>
 #include <test/util/script.h>
 
-#include <cassert>
 #include <ios>
 #include <utility>
 #include <vector>

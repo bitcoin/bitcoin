@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_CLUSTER_LINEARIZE_H
 #define BITCOIN_TEST_UTIL_CLUSTER_LINEARIZE_H
 
+#include <util/check.h>
 #include <cluster_linearize.h>
 #include <serialize.h>
 #include <span.h>
