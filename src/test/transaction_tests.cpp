@@ -1129,6 +1129,22 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
 }
 
+BOOST_AUTO_TEST_CASE(getlegacysigopcount_inaccurate_test)
+{
+    // Legacy sigops are counted inaccurately in both the scriptSig and the
+    // scriptPubKey: a CHECKMULTISIG counts as MAX_PUBKEYS_PER_MULTISIG even when the
+    // preceding OP_N says it takes fewer keys. Counting it accurately would
+    // undercount, letting a block over the sigop limit through.
+    const CScript multisig{CScript() << OP_1 << OP_CHECKMULTISIG};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{}, multisig);
+    BOOST_CHECK_EQUAL(GetLegacySigOpCount(CTransaction{mtx}), MAX_PUBKEYS_PER_MULTISIG);
+
+    mtx.vout.emplace_back(0, multisig);
+    BOOST_CHECK_EQUAL(GetLegacySigOpCount(CTransaction{mtx}), 2 * MAX_PUBKEYS_PER_MULTISIG);
+}
+
 BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
 {
     auto check_invalid{[](CAmount input_value, CAmount output_value, bool coinbase, int spend_height, TxValidationResult expected_result, std::string_view expected_reason) {
