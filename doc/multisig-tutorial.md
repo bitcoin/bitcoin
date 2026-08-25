@@ -20,13 +20,25 @@ This tutorial also uses the default PKH derivation path to get the xpubs and doe
 
 For a 2-of-3 multisig, create 3 wallets. These wallets contain HD seed and private keys, which will be used to sign the PSBTs and derive the xpub.
 
-These three wallets should not be used directly for privacy reasons (public key reuse). They should only be used to sign transactions for the (watch-only) multisig wallet.
+These three wallets should not be used directly for privacy reasons (public key reuse). They should only be used to sign transactions for the (watch-only) multisig wallet. To make that less likely to happen by accident, participant wallets only have singlesig legacy addresses, and no singlesig Bech32 addresses.
+
+`addhdkey` adds an HD key to the blank wallet, which `createwalletdescriptor` then uses:
 
 ```bash
 for ((n=1;n<=3;n++))
 do
- ./build/bin/bitcoin rpc -signet createwallet "participant_${n}"
+ ./build/bin/bitcoin rpc -signet -named createwallet wallet_name="participant_${n}" blank=true
+ ./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" addhdkey
+ ./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" createwalletdescriptor legacy
 done
+```
+
+The `legacy` descriptor is only there to hold the private keys: it derives from `m/44h/1h/0h/<0;1>/*`, the same paths as the multisig descriptor defined below, and a wallet can only sign for a derivation path that one of its descriptors uses.
+
+A later step spends from the multisig wallet, so create one more wallet to receive that payment. This one is an ordinary singlesig wallet, standing in for whoever is being paid:
+
+```bash
+./build/bin/bitcoin rpc -signet createwallet "recipient"
 ```
 
 Extract the xpub of each wallet. To do this, the `derivehdkey` RPC is used.
@@ -100,6 +112,7 @@ Once the wallets have already been created and this tutorial needs to be repeate
 ```bash
 for ((n=1;n<=3;n++)); do ./build/bin/bitcoin rpc -signet loadwallet "participant_${n}"; done
 ./build/bin/bitcoin rpc -signet loadwallet "multisig_wallet_01"
+./build/bin/bitcoin rpc -signet loadwallet "recipient"
 ```
 
 ### 1.4 Fund the wallet
@@ -138,7 +151,7 @@ PSBT is a data format that allows wallets and other tools to exchange informatio
 
 The current PSBT version (v0) is defined in [BIP 174](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki).
 
-For simplicity, the destination address is taken from the `participant_1` wallet in the code above, but it can be any valid bitcoin address.
+The destination address is taken from the `recipient` wallet.
 
 The `walletcreatefundedpsbt` RPC is used to create and fund a transaction in the PSBT format. It is the first step in creating the PSBT.
 
@@ -147,7 +160,7 @@ balance=$(./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" getbal
 
 amount=$(echo "$balance * 0.8" | bc -l | sed -e 's/^\./0./' -e 's/^-\./-0./')
 
-destination_addr=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_1" getnewaddress)
+destination_addr=$(./build/bin/bitcoin rpc -signet -rpcwallet="recipient" getnewaddress "" bech32m)
 
 funded_psbt=$(./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" walletcreatefundedpsbt outputs="{\"$destination_addr\": $amount}" | jq -r '.psbt')
 ```
