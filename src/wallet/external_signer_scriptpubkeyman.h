@@ -5,10 +5,11 @@
 #ifndef BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H
 
+#include <external_signer.h>
+#include <util/result.h>
 #include <wallet/scriptpubkeyman.h>
 
 #include <memory>
-#include <util/result.h>
 
 struct bilingual_str;
 
