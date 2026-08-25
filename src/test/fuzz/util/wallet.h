@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_WALLET_H
 #define BITCOIN_TEST_FUZZ_UTIL_WALLET_H
 
+#include <util/check.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>

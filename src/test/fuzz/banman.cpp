@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <banman.h>
 #include <common/args.h>
 #include <netaddress.h>
@@ -14,7 +15,6 @@
 #include <util/fs.h>
 #include <util/readwritefile.h>
 
-#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <string>

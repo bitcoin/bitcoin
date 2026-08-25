@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
+#include <util/check.h>
 #include <arith_uint256.h>
 #include <chain.h>
 #include <chainparams.h>
