@@ -8,17 +8,17 @@
 #include <indirectmap.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 
 namespace memusage
@@ -59,7 +59,7 @@ static inline size_t MallocUsage(size_t alloc)
     } else if (sizeof(void*) == 4) {
         return ((alloc + 15) >> 3) << 3;
     } else {
-        assert(0);
+        AssertUnreachable();
     }
 }
 

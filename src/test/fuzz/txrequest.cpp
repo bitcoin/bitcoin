@@ -384,7 +384,7 @@ FUZZ_TARGET(txrequest)
             tester.ReceivedResponse(peer, txidnum % MAX_TXHASHES);
             break;
         default:
-            assert(false);
+            AssertUnreachable();
         }
     }
     tester.Check();

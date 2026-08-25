@@ -10,6 +10,7 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/string.h>
@@ -440,7 +441,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogInfo(util::log::NO_RATE_LIMIT, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 /**

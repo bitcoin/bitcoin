@@ -2332,7 +2332,7 @@ struct KeyParser {
             case miniscript::MiniscriptContext::P2WSH: return ParseScriptContext::P2WSH;
             case miniscript::MiniscriptContext::TAPSCRIPT: return ParseScriptContext::P2TR;
         }
-        assert(false);
+        AssertUnreachable();
     }
 
     std::optional<Key> FromString(std::span<const char>& in) const

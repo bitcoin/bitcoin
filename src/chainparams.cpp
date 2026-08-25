@@ -11,11 +11,11 @@
 #include <deploymentinfo.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -159,7 +159,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return CChainParams::RegTest(opts);
     }
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 void SelectParams(const ChainType chain)

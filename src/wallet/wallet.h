@@ -25,6 +25,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/btcsignals.h>
+#include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
@@ -41,7 +42,6 @@
 #include <wallet/walletutil.h>
 
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -292,7 +292,7 @@ inline std::string PurposeToString(AddressPurpose p)
     case AddressPurpose::SEND: return "send";
     case AddressPurpose::REFUND: return "refund";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)

@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/wallet.h>
-
 #include <bitcoin-build-config.h> // IWYU pragma: keep
+
+#include <wallet/wallet.h>
 
 #include <addresstype.h>
 #include <blockfilter.h>
@@ -75,7 +75,6 @@
 #include <wallet/walletutil.h>
 
 #include <algorithm>
-#include <cassert>
 #include <condition_variable>
 #include <exception>
 #include <limits>
@@ -3831,7 +3830,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
             batch->TxnAbort();
             m_database->Close();
             fs::remove(m_database->Filename());
-            assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+            AssertUnreachable(); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
         }
     }
     bool committed = batch->TxnCommit();
