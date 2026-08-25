@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/data/key_io_invalid.json.h>
-#include <test/data/key_io_valid.json.h>
-
+#include <kernel/chainparams.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
+#include <test/data/key_io_invalid.json.h>
+#include <test/data/key_io_valid.json.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
@@ -17,6 +17,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <array>
+#include <utility>
 
 BOOST_FIXTURE_TEST_SUITE(key_io_tests, BasicTestingSetup)
 
@@ -145,6 +147,38 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
             BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid privkey in mainnet:" + strTest);
         }
     }
+}
+
+// Goal: check that each network's human-readable base58 prefixes match what
+// user-facing error messages (e.g. in DecodeDestination) will reference.
+BOOST_AUTO_TEST_CASE(base58_prefix_text)
+{
+    using Entry = std::pair<CChainParams::Base58Type, std::vector<std::string>>;
+    using Prefixes = std::array<Entry, CChainParams::MAX_BASE58_TYPES>;
+
+    const Prefixes mainnet{{{CChainParams::PUBKEY_ADDRESS, {"1"}},
+                            {CChainParams::SCRIPT_ADDRESS, {"3"}},
+                            {CChainParams::SECRET_KEY, {"5", "K", "L"}},
+                            {CChainParams::EXT_PUBLIC_KEY, {"xpub"}},
+                            {CChainParams::EXT_SECRET_KEY, {"xprv"}}}};
+    const Prefixes testnet{{{CChainParams::PUBKEY_ADDRESS, {"m", "n"}},
+                            {CChainParams::SCRIPT_ADDRESS, {"2"}},
+                            {CChainParams::SECRET_KEY, {"9", "c"}},
+                            {CChainParams::EXT_PUBLIC_KEY, {"tpub"}},
+                            {CChainParams::EXT_SECRET_KEY, {"tprv"}}}};
+
+    const auto check{[](const CChainParams& params, const Prefixes& expected) {
+        for (const auto& [type, values] : expected) {
+            const auto& actual{params.Base58PrefixText(type)};
+            BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), values.begin(), values.end());
+        }
+    }};
+
+    check(*CChainParams::Main(), mainnet);
+    check(*CChainParams::TestNet(), testnet);
+    check(*CChainParams::TestNet4(), testnet);
+    check(*CChainParams::SigNet(), testnet);
+    check(*CChainParams::RegTest(), testnet);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
