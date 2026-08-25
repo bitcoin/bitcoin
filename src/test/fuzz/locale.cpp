@@ -45,7 +45,6 @@ FUZZ_TARGET(locale)
     const char* c_locale = std::setlocale(LC_ALL, "C");
     assert(c_locale != nullptr);
 
-    const std::string random_string = fuzzed_data_provider.ConsumeRandomLengthString(5);
     const int64_t random_int64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const std::string tostring_without_locale = util::ToString(random_int64);
     const std::string strprintf_int_without_locale = strprintf("%d", random_int64);

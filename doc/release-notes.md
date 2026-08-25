@@ -70,6 +70,12 @@ Notable changes
 - #35691 chainparams: delete my DNS seed
 - #35766 p2p: Assume v2transport for addresses from seeds
 
+### Test
+
+- #35914 test, fuzz: Remove unused variables
+- #35937 test: Append print_suppressions=0 to LSAN_OPTIONS, and suppress bitcoin-qt
+- #36045 test: avoid undersized Boost.Test signal stacks
+
 ### Fuzz
 
 - #35679 fuzz: Remove unused DeserializeFromFuzzingInput params overload
@@ -78,15 +84,27 @@ Notable changes
 
 - #35769 depends, zeromq: Apply upstream patch
 
+### Doc
+
+- #35908 doc: Update NetBSD Build Guide
+- #35928 doc: mention -DWITH_ZMQ=ON in macOS build guide
+
+### Misc
+
+- #35978 contrib/init: fix unused variables in openrc script
+
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
 - ajtowns
+- cyb3ralbert
 - darosior
 - Greg Sanders
 - hebasto
+- jpk68
+- Lőrinc
 - Martin Zumsande
 - Mccalabrese
 - sipa
