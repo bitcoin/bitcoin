@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <script/solver.h>
 
 #include <prevector.h>
@@ -10,7 +11,6 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 
-#include <cassert>
 #include <string>
 
 typedef std::vector<unsigned char> valtype;
@@ -30,7 +30,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)

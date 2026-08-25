@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <addresstype.h>
 
 #include <crypto/sha256.h>
@@ -12,7 +13,6 @@
 #include <uint256.h>
 #include <util/hash_type.h>
 
-#include <cassert>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
@@ -100,7 +100,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CNoDestination(scriptPubKey);
         return false;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 namespace {

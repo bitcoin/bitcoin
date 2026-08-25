@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <wallet/wallet.h>
 
 #include <qt/receivecoinsdialog.h>
@@ -184,7 +185,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     case AddressTableModel::EditStatus::INVALID_ADDRESS:
     case AddressTableModel::EditStatus::DUPLICATE_ADDRESS:
     case AddressTableModel::EditStatus::NO_CHANGES:
-        assert(false);
+        AssertUnreachable();
     }
     clear();
 }

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <policy/fees/estimator_man.h>
 
 #include <logging.h>
@@ -51,7 +52,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     case FeeRateEstimatorType::MEMPOOL_POLICY:
         return m_mempool_estimator->EstimateFeeRate(conservative);
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void FeeRateEstimatorManager::IntervalFlush()

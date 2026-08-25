@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoin.h>
@@ -166,7 +167,7 @@ static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std:
     case QMessageBox::Abort:
         return true;
     default:
-        assert(false);
+        AssertUnreachable();
     }
 }
 

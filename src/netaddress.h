@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NETADDRESS_H
 #define BITCOIN_NETADDRESS_H
 
+#include <util/check.h>
 #include <compat/compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>
@@ -349,7 +350,7 @@ private:
             break;
         case NET_UNROUTABLE:
         case NET_MAX:
-            assert(false);
+            AssertUnreachable();
         } // no default case, so the compiler can warn about missing cases
 
         // Serialize ONION, I2P and CJDNS as all-zeros.

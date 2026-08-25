@@ -836,7 +836,7 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
         }
     }
 
-    assert(false);
+    AssertUnreachable();
 }
 
 /**

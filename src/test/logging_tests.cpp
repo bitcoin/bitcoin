@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -440,7 +441,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogInfo(util::log::NO_RATE_LIMIT, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 /**

@@ -5,11 +5,11 @@
 #ifndef BITCOIN_MEMUSAGE_H
 #define BITCOIN_MEMUSAGE_H
 
+#include <util/check.h>
 #include <indirectmap.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>
@@ -59,7 +59,7 @@ static inline size_t MallocUsage(size_t alloc)
     } else if (sizeof(void*) == 4) {
         return ((alloc + 15) >> 3) << 3;
     } else {
-        assert(0);
+        AssertUnreachable();
     }
 }
 

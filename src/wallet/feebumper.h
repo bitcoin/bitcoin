@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <util/check.h>
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
 #include <primitives/transaction.h>
@@ -92,7 +93,7 @@ public:
             break;
         case SigVersion::TAPROOT:
         case SigVersion::TAPSCRIPT:
-            assert(false);
+            AssertUnreachable();
         }
     }
 

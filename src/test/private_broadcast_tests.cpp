@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <primitives/transaction.h>
 #include <private_broadcast.h>
 #include <test/util/setup_common.h>
@@ -19,7 +20,7 @@ std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
     case PrivateBroadcast::AddResult::AlreadyPresent: return os << "AlreadyPresent";
     case PrivateBroadcast::AddResult::QueueFull: return os << "QueueFull";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)
