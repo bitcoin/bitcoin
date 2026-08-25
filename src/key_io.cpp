@@ -209,20 +209,12 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 {
     error_str = "";
 
-    // Note this will be false if it is a valid Bech32 address for a different network
-    const bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
-
-    if (is_bech32) {
-        const auto dec = bech32::Decode(str);
-        if (dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) {
-            return DecodeBech32Destination(dec, params, error_str);
-        }
-
-        // Perform Bech32 error location
-        auto [error, locations] = bech32::LocateErrors(str);
-        error_str = Bech32ErrorMessage(error);
-        if (error_locations) *error_locations = std::move(locations);
-        return CNoDestination();
+    // Try Bech32(m) first: checking the prefix before decoding would misroute valid
+    // Bech32 addresses for other networks to the Base58 decoder, producing the
+    // misleading "Invalid or unsupported Segwit (Bech32) or Base58 encoding." error.
+    const auto dec = bech32::Decode(str);
+    if (dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) {
+        return DecodeBech32Destination(dec, params, error_str);
     }
 
     std::vector<unsigned char> data;
@@ -230,11 +222,20 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         return DecodeBase58Destination(data, params, error_str);
     }
 
-    // Try Base58 decoding without the checksum, using a much larger max length
-    if (!DecodeBase58(str, data, 100)) {
-        error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
-    } else {
+    // Neither Bech32 nor Base58Check decoding succeeded. Unless the input already rules
+    // out Bech32 (invalid character or mixed case), report the specific Bech32 error.
+    // Otherwise, try Base58 decoding without the checksum, using a much larger max length.
+    // Strings beyond the 90-character BIP173 limit cannot be Bech32 addresses, so if one
+    // still raw-decodes as Base58 (e.g. an extended key), report the Base58 error.
+    auto [error, locations] = bech32::LocateErrors(str);
+    const bool is_base58{DecodeBase58(str, data, 100)};
+    const bool maybe_bech32{error != bech32::Error::INVALID_CHARS_OR_MIXED_CASE &&
+                            !(error == bech32::Error::TOO_LONG && is_base58)};
+    if (!maybe_bech32 && is_base58) {
         error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
+    } else {
+        error_str = Bech32ErrorMessage(error);
+        if (error_locations) *error_locations = std::move(locations);
     }
     return CNoDestination();
 }
