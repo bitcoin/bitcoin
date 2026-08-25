@@ -180,6 +180,34 @@ checks should be used over assert. See: src/util/check.h
     }
 }
 
+pub fn lint_assert_falsy() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"\<(a|A)ssert\s*\(\s*(0|false)\s*(&&|\))",
+            "--",
+            "src/",
+            // Temporary exclusions, which are not linking the util lib:
+            ":(exclude)src/univalue/",
+            ":(exclude)src/tinyformat.h", // Uses exceptions, not the assert error handling
+        ])
+        .args(get_pathspecs_default_excludes())
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Assertions with a falsy literal value should be replaced with AssertUnreachable().
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
 pub fn lint_boost_assert() -> LintResult {
     let found = git()
         .args([
