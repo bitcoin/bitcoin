@@ -452,6 +452,13 @@ void univalue_readwrite()
     BOOST_CHECK(!v.read("[]{}"));
     BOOST_CHECK(!v.read("{}[]"));
     BOOST_CHECK(!v.read("{} 42"));
+
+    // Failed read clears value
+    {
+        UniValue val{"previous value"};
+        BOOST_CHECK(!val.read(R"({"key":)"));
+        BOOST_CHECK(val.isNull());
+    }
 }
 
 int main(int argc, char* argv[])
