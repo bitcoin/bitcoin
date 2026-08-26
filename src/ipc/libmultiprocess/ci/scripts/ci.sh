@@ -24,6 +24,7 @@ ver_ge() { [ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]; }
 src_dir=$PWD
 mkdir -p "$CI_DIR"
 cd "$CI_DIR"
+export CMAKE_BUILD_PARALLEL_LEVEL="$(nproc)"
 cmake "$src_dir" "${CMAKE_ARGS[@]+"${CMAKE_ARGS[@]}"}"
 if ver_ge "$cmake_ver" "3.15"; then
   cmake --build . -t "${BUILD_TARGETS[@]}" -- "${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"}"
