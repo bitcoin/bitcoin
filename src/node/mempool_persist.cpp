@@ -6,6 +6,7 @@
 
 #include <clientversion.h>
 #include <consensus/amount.h>
+#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
@@ -30,7 +31,6 @@
 #include <memory>
 #include <set>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 using fsbridge::FopenFn;
@@ -40,14 +40,14 @@ namespace node {
 static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
 static const uint64_t MEMPOOL_DUMP_VERSION{2};
 
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
+MempoolLoadResult LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
-    if (load_path.empty()) return false;
+    if (load_path.empty()) return util::Unexpected{MempoolLoadError::NO_LOAD_PATH};
 
     AutoFile file{opts.mockable_fopen_function(load_path, "rb")};
     if (file.IsNull()) {
         LogInfo("Failed to open mempool file. Continuing anyway.\n");
-        return false;
+        return util::Unexpected{MempoolLoadError::FILE_OPEN_FAILED};
     }
 
     int64_t count = 0;
@@ -56,6 +56,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     int64_t already_there = 0;
     int64_t unbroadcast = 0;
     const auto now{NodeClock::now()};
+    uint64_t snapshot_weight{0};
 
     try {
         uint64_t version;
@@ -68,7 +69,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             file >> obfuscation;
             file.SetObfuscation(obfuscation);
         } else {
-            return false;
+            return util::Unexpected{MempoolLoadError::UNSUPPORTED_VERSION};
         }
 
         uint64_t total_txns_to_load;
@@ -91,6 +92,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             file >> TX_WITH_WITNESS(tx);
             file >> nTime;
             file >> nFeeDelta;
+            snapshot_weight += static_cast<uint64_t>(GetTransactionWeight(*tx));
 
             if (opts.use_current_time) {
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
@@ -119,8 +121,9 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             } else {
                 ++expired;
             }
-            if (active_chainstate.m_chainman.m_interrupt)
-                return false;
+            if (active_chainstate.m_chainman.m_interrupt) {
+                return util::Unexpected{MempoolLoadError::INTERRUPTED};
+            }
         }
         std::map<Txid, CAmount> mapDeltas;
         file >> mapDeltas;
@@ -143,11 +146,11 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         }
     } catch (const std::exception& e) {
         LogInfo("Failed to deserialize mempool data on file: %s. Continuing anyway.\n", e.what());
-        return false;
+        return util::Unexpected{MempoolLoadError::DESERIALIZATION_FAILED};
     }
 
     LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
-    return true;
+    return snapshot_weight;
 }
 
 bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mockable_fopen_function, bool skip_file_commit)
