@@ -12,8 +12,12 @@ from test_framework.util import (
     assert_equal,
 )
 
+import os
 import platform
 import re
+import shutil
+import subprocess
+from pathlib import Path
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -85,6 +89,59 @@ class ToolBitcoinTest(BitcoinTestFramework):
             self.log.info("Ensure bitcoin recognizes -ipcbind in config file")
             append_config(node.datadir_path, ["ipcbind=unix"])
             self.test_args([], [], expect_exe="bitcoin-node")
+
+        self.test_install_dirs()
+
+    def test_install_dirs(self):
+        """Check that an installed wrapper uses CMAKE_INSTALL_BINDIR and CMAKE_INSTALL_LIBEXECDIR.
+
+        The tests above cannot detect where the wrapper searches, because every
+        executable is installed next to it in the build tree. Emulate an install
+        tree instead, so the bindir -> libexecdir lookup is the only way to find
+        the executable being invoked.
+        """
+        libexecdir = self.config["environment"]["LIBEXECDIR"]
+        if os.path.isabs(libexecdir):
+            # An absolute CMAKE_INSTALL_LIBEXECDIR is not looked up relative to
+            # the wrapper, so it cannot be emulated below.
+            self.log.info(f"Skipping install dir test, CMAKE_INSTALL_LIBEXECDIR '{libexecdir}' is absolute")
+            return
+        # The wrapper only compares the last component of CMAKE_INSTALL_BINDIR
+        # with the directory it is in, so that is all that needs emulating.
+        bindir = Path(self.config["environment"]["BINDIR"]).name
+
+        exeext = self.config["environment"]["EXEEXT"]
+        paths = self.get_binaries().paths
+
+        def run_wrapper(prefix_name, bin_dir, libexec_dir):
+            """Run `bitcoin node -version` from bin_dir in a prefix providing bitcoind in libexec_dir."""
+            prefix = Path(self.options.tmpdir) / prefix_name
+            (prefix / bin_dir).mkdir(parents=True)
+            (prefix / libexec_dir).mkdir(parents=True, exist_ok=True)
+            # The wrapper resolves symlinks to determine its own directory, so it
+            # needs to be copied, while bitcoind can just be symlinked.
+            wrapper = prefix / bin_dir / f"bitcoin{exeext}"
+            shutil.copy2(paths.bitcoin_bin, wrapper)
+            os.symlink(os.path.abspath(paths.bitcoind), prefix / libexec_dir / f"bitcoind{exeext}")
+            return subprocess.run([wrapper, "node", "-version"], capture_output=True, timeout=60)
+
+        self.log.info(f"Ensure bitcoin node command in {bindir}/ invokes bitcoind in {libexecdir}/")
+        result = run_wrapper("install", bindir, libexecdir)
+        assert_equal(result.stderr, b"")
+        assert_equal(result.returncode, 0)
+        assert_equal(get_exe_name(result.stdout), b"bitcoind")
+
+        unused_libexecdir = "libexec" if libexecdir != "libexec" else "lib"
+        self.log.info(f"Ensure bitcoin node command in {bindir}/ does not invoke bitcoind in {unused_libexecdir}/")
+        result = run_wrapper("unused-libexecdir", bindir, unused_libexecdir)
+        assert_equal(result.returncode, 1)
+        assert b"No such file or directory" in result.stderr
+
+        unused_bindir = "bin" if bindir != "bin" else "sbin"
+        self.log.info(f"Ensure bitcoin node command in {unused_bindir}/ does not invoke bitcoind in {libexecdir}/")
+        result = run_wrapper("unused-bindir", unused_bindir, libexecdir)
+        assert_equal(result.returncode, 1)
+        assert b"No such file or directory" in result.stderr
 
 
 def get_node_output(node):

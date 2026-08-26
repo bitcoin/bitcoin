@@ -2,6 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+# For CMAKE_INSTALL_BINDIR and CMAKE_INSTALL_LIBEXECDIR, which are substituted
+# into config.ini.
+include(GNUInstallDirs)
+
 function(create_test_config)
   set(abs_top_srcdir ${PROJECT_SOURCE_DIR})
   set(abs_top_builddir ${PROJECT_BINARY_DIR})
