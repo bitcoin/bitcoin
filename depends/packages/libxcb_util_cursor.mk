@@ -8,6 +8,7 @@ $(package)_dependencies=libxcb libxcb_util_render libxcb_util_image
 define $(package)_set_vars
 $(package)_config_opts = --disable-shared
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
+$(package)_config_opts += --with-cursorpath="~/.local/share/icons:~/.icons:/usr/share/icons:/usr/share/pixmaps"
 endef
 
 define $(package)_preprocess_cmds
