@@ -484,50 +484,51 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
     public:
         DummyClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
 
-        void receive(std::string_view s)
+        void Receive(std::string_view s)
         {
             MutateRecvBuffer().append(s);
         }
     };
+    using enum HTTPRequest::State;
 
     {
         // Step through state machine
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
-        client->receive("POST / HTTP/1.0\n");
+        client->Receive("POST / HTTP/1.0\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
 
-        client->receive("Host: 127.0.0.1\n"
+        client->Receive("Host: 127.0.0.1\n"
                         "Content-Length: 10\n\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
-        client->receive("I miss you\n");
+        client->Receive("I miss you\n");
         auto req{HTTPRemoteClient::TryReadRequest(client)};
         BOOST_REQUIRE(req);
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
     }
     {
         // Read body over multiple data pushes, multiple requests in same push
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
-        client->receive("POST / HTTP/1.0\n"
+        client->Receive("POST / HTTP/1.0\n"
                         "Host: 127.0.0.1\n"
                         "Content-Length: 10\n\n"
                         "I miss");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         // Because of the Content-Length header we know the body is not complete
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Finish sending first request and include second request in the same buffer
-        client->receive(" you"
+        client->Receive(" you"
                         "GET /endpoint HTTP/1.0\n\n");
         auto req{HTTPRemoteClient::TryReadRequest(client)};
         BOOST_REQUIRE(req);
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
         BOOST_CHECK_EQUAL(req->GetURI(), "/");
         BOOST_CHECK(!client->GetRequest());
         BOOST_CHECK_EQUAL(req->ReadBody(), "I miss you");
@@ -539,7 +540,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         req = HTTPRemoteClient::TryReadRequest(client);
         BOOST_REQUIRE(req);
         BOOST_CHECK(!client->GetRequest());
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
         BOOST_CHECK_EQUAL(req->GetURI(), "/endpoint");
         BOOST_CHECK_EQUAL(req->ReadBody().size(), 0);
         // Buffer is cleared
@@ -552,15 +553,15 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
-        client->receive("POST / HTTP/1.0\n"
+        client->Receive("POST / HTTP/1.0\n"
                         "Content-Length: 30000\n\n");
         HTTPRemoteClient::TryReadRequest(client);
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Body arrives in 10kB pieces. Each one is copied onto m_body and
         // erased from the receive buffer, which never holds more than one piece.
         for (int i = 1; i <= 3; ++i) {
-            client->receive(std::string(10000, 'x'));
+            client->Receive(std::string(10000, 'x'));
             BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 10000);
             auto req{HTTPRemoteClient::TryReadRequest(client)};
             if (i < 3) {
@@ -569,7 +570,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
             } else {
                 BOOST_CHECK(req.get());
                 BOOST_CHECK_EQUAL(req->ReadBody().size(), 10000 * i);
-                BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+                BOOST_CHECK_EQUAL(req->GetState(), Complete);
                 BOOST_CHECK(!client->GetRequest());
             }
             BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 0);
@@ -580,12 +581,12 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
-        client->receive("POST / HTTP/1.0\n"
+        client->Receive("POST / HTTP/1.0\n"
                         "Content-Length: 4\n\n"
                         "body"
                         "GET /next HTTP/1.0\n\n");
         auto req{HTTPRemoteClient::TryReadRequest(client)};
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
         BOOST_CHECK_EQUAL(req->ReadBody(), "body");
         // Only the second request is left over
         BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 20);
@@ -596,7 +597,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK(!client->GetRequest());
 
         // First chunk is incomplete
-        client->receive("GET / HTTP/1.0\n"
+        client->Receive("GET / HTTP/1.0\n"
                         "Transfer-Encoding: chunked\n"
                         "\n"
                         "10\n"
@@ -606,35 +607,35 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(*client->GetRequest()->GetChunkSize(), 16);
         BOOST_CHECK_EQUAL(client->GetRequest()->GetChunkProgress(), 8);
         BOOST_CHECK_EQUAL(client->GetRequest()->ReadBody().size(), 8);
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // More data arrives, chunk is completed.
-        client->receive(R"(":"getbl)""\n");
+        client->Receive(R"(":"getbl)""\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         // State is reset
         BOOST_CHECK(!client->GetRequest()->GetChunkSize());
         BOOST_CHECK_EQUAL(client->GetRequest()->GetChunkProgress(), 0);
         // New data is added to body but body is still incomplete
         BOOST_CHECK_EQUAL(client->GetRequest()->ReadBody().size(), 16);
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Next chunk arrives without terminal CRLF
-        client->receive("a\n"
+        client->Receive("a\n"
                         R"(ockcount"})");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         BOOST_CHECK(client->GetRequest()->GetChunkSize());
         BOOST_CHECK_EQUAL(*client->GetRequest()->GetChunkSize(), 10);
         BOOST_CHECK_EQUAL(client->GetRequest()->GetChunkProgress(), 10);
         BOOST_CHECK_EQUAL(client->GetRequest()->ReadBody().size(), 26);
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Chunk terminal CRLF arrives with final (size 0) chunk
-        client->receive("\n0\n\n");
+        client->Receive("\n0\n\n");
         auto req{HTTPRemoteClient::TryReadRequest(client)};
         // Body size hasn't changed
         BOOST_CHECK_EQUAL(req->ReadBody().size(), 26);
         // We're done
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
         BOOST_CHECK_EQUAL(req->ReadBody(), R"({"method":"getblockcount"})");
     }
     {
@@ -642,17 +643,17 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
 
         // Request is in the buffer
-        client->receive("POST / HTTP/1.0\n"
+        client->Receive("POST / HTTP/1.0\n"
                         "Host: 127.0.0.1\n");
         BOOST_CHECK(!client->GetRecvBuffer().empty());
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
-        client->receive("Invalid header with no colon\n"
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
+        client->Receive("Invalid header with no colon\n"
                         "\n"
                         "body is not read");
         // Reading throws an error, sets state
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Error);
 
         // We read up to the invalid line
         BOOST_CHECK_EQUAL(client->GetRequest()->GetHeader("Host"), "127.0.0.1");
@@ -660,7 +661,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK(client->GetRecvBuffer().empty());
 
         // Even if more data comes in, trying to read again in error state is a no-op
-        client->receive("Content-Length: 2\n\nok");
+        client->Receive("Content-Length: 2\n\nok");
         BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 21);
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 21);
@@ -670,55 +671,55 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Init);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Init);
 
-        client->receive("POST /huge HTTP/1.0\n");
+        client->Receive("POST /huge HTTP/1.0\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
 
         for (int i = 0; i < 410; ++i) {
-            client->receive("key:value\n");
+            client->Receive("key:value\n");
         }
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
 
         for (int i = 0; i < 409; ++i) {
-            client->receive("key:value\n");
+            client->Receive("key:value\n");
         }
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
 
         // We're at 819 x 10-byte headers
         // The limit is 8192, three more bytes should throw.
-        client->receive("k:\n");
+        client->Receive("k:\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Error);
     }
     {
         // Client sends chunks that are below the limit but the total is excessive
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Init);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Init);
 
-        client->receive("POST /huge HTTP/1.0\n");
+        client->Receive("POST /huge HTTP/1.0\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsHeaders);
 
-        client->receive("Transfer-Encoding: chunked\n\n");
+        client->Receive("Transfer-Encoding: chunked\n\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Send 16-byte chunk
-        client->receive("10\nno auto updates!\n");
+        client->Receive("10\nno auto updates!\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // The next chunk will be of size 32MiB - 16 + 1, below the limit
         // on its own but not if it were added to the total cumulative body so far.
         // We don't need to actually send or prepare this amount of data.
-        client->receive("1fffff1\n");
+        client->Receive("1fffff1\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Error);
     }
     {
         // Ensure chunk trailer is parsed over state lines
@@ -726,7 +727,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK(!client->GetRequest());
 
         // Send a 1-byte chunk then send the 0-chunk with a trailer but no terminal CRLF
-        client->receive("GET / HTTP/1.0\n"
+        client->Receive("GET / HTTP/1.0\n"
                         "Transfer-Encoding: chunked\n"
                         "\n"
                         "1\n"
@@ -734,22 +735,22 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
                         "0\n"
                         "Digest: sha-4=deadbeef\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Send first part of another trailer line
-        client->receive("Expires:");
+        client->Receive("Expires:");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Finish the trailer line
-        client->receive("never\n");
+        client->Receive("never\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // Terminate
-        client->receive("\n");
+        client->Receive("\n");
         auto req{HTTPRemoteClient::TryReadRequest(client)};
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
         BOOST_CHECK_EQUAL(req->ReadBody(), "x");
     }
     {
@@ -757,23 +758,23 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
-        client->receive("POST /huge HTTP/1.0\n"
+        client->Receive("POST /huge HTTP/1.0\n"
                         "Transfer-Encoding: chunked\n"); //   27 bytes
         for (int i = 0; i < 816; ++i) {
-            client->receive("key:value\n");              // 8160
+            client->Receive("key:value\n");              // 8160
         }
-        client->receive("\n"                             //    1
+        client->Receive("\n"                             //    1
                         "1\n"
                         "x\n"
                         "0\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), NeedsBody);
 
         // We're in the trailer section with a total of 8188 bytes of headers.
         // The limit is 8192, five more bytes should throw.
-        client->receive("k:vv\n");
+        client->Receive("k:vv\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), Error);
     }
 }
 
