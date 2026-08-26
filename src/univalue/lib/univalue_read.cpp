@@ -1,4 +1,5 @@
 // Copyright 2014 BitPay Inc.
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
@@ -9,6 +10,7 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 /*
@@ -259,7 +261,18 @@ enum expect_bits : unsigned {
 #define setExpect(bit) (expectMask |= EXP_##bit)
 #define clearExpect(bit) (expectMask &= ~EXP_##bit)
 
-bool UniValue::read(std::string_view str_in)
+bool UniValue::read(std::string_view json)
+{
+    UniValue parsed;
+    if (!parsed.read_impl(json)) {
+        setNull();
+        return false;
+    }
+    *this = std::move(parsed);
+    return true;
+}
+
+bool UniValue::read_impl(std::string_view str_in)
 {
     clear();
 
@@ -461,4 +474,3 @@ bool UniValue::read(std::string_view str_in)
 
     return true;
 }
-

@@ -457,10 +457,7 @@ void univalue_readwrite()
     {
         UniValue val{"previous value"};
         BOOST_CHECK(!val.read(R"({"key":)"));
-        // This should be null (XXX, TODO, FIXME):
-        BOOST_CHECK(val.isObject());
-        BOOST_CHECK_EQUAL(val.getKeys().size(), 1);
-        BOOST_CHECK_EQUAL(val.getValues().size(), 0);
+        BOOST_CHECK(val.isNull());
     }
 }
 

@@ -1,5 +1,5 @@
 // Copyright 2014 BitPay Inc.
-// Copyright 2015 Bitcoin Core Developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
@@ -99,7 +99,8 @@ public:
     std::string write(unsigned int prettyIndent = 0,
                       unsigned int indentLevel = 0) const;
 
-    bool read(std::string_view raw);
+    /// Parse JSON; set value to null on failure.
+    [[nodiscard]] bool read(std::string_view json);
 
 private:
     UniValue::VType typ;
@@ -111,6 +112,8 @@ private:
     bool findKey(const std::string& key, size_t& retIdx) const;
     void writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
     void writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
+    /// Internal parser: May leave this value in an invalid state on failure.
+    [[nodiscard]] bool read_impl(std::string_view str_in);
 
 public:
     // Strict type-specific getters, these throw std::runtime_error if the
