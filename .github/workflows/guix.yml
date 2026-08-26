@@ -124,7 +124,6 @@ jobs:
           ./contrib/guix/guix-build
 
       - name: Save Guix bootstrap cache
-        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.guix-bootstrap-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/cache/save/internal
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
@@ -134,7 +133,6 @@ jobs:
           key: ${{ steps.guix-bootstrap-cache.outputs.cache-primary-key }}
 
       - name: Save depends sources cache
-        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.depends-sources-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/cache/save/internal
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
@@ -142,7 +140,6 @@ jobs:
           key: ${{ steps.depends-sources-cache.outputs.cache-primary-key }}
 
       - name: Save macOS SDK cache
-        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && matrix.host == 'arm64-apple-darwin' && steps.macos-sdk-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/cache/save/internal
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
@@ -150,7 +147,6 @@ jobs:
           key: ${{ steps.macos-sdk-cache.outputs.cache-primary-key }}
 
       - name: Save built depends cache
-        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.built-depends-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/cache/save/internal
         with:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
