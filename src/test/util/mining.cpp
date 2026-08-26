@@ -75,6 +75,19 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
+void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time)
+{
+    block.hashPrevBlock = parent.GetBlockHash();
+    block.nTime = time;
+    {
+        CMutableTransaction tx_coinbase{*block.vtx.at(0)};
+        tx_coinbase.nLockTime = static_cast<uint32_t>(parent.nHeight);
+        tx_coinbase.vin.at(0).scriptSig = CScript{} << parent.nHeight + 1;
+        block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+    }
+}
+
 bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
     const CScript& coinbase_script_pub_key,
     size_t length,
@@ -93,15 +106,7 @@ bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
 
         // The template is built on the active tip, so repoint it at pindex and
         // redo the fields that depend on the predecessor.
-        block.hashPrevBlock = pindex->GetBlockHash();
-        block.nTime = pindex->nTime + 1;
-        {
-            CMutableTransaction tx_coinbase{*block.vtx.at(0)};
-            tx_coinbase.nLockTime = static_cast<uint32_t>(pindex->nHeight);
-            tx_coinbase.vin.at(0).scriptSig = CScript{} << pindex->nHeight + 1;
-            block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
-            block.hashMerkleRoot = BlockMerkleRoot(block);
-        }
+        RebuildBlockForParent(block, *pindex, /*time=*/pindex->nTime + 1);
 
         while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) ++block.nNonce;
 
