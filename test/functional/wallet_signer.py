@@ -132,6 +132,10 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
         assert_equal(address_info['hdkeypath'], "m/86h/1h/0h/0/0")
 
+        hww.setwalletflag("external_signer", False)
+        assert_raises_rpc_error(-1, "There is no ScriptPubKeyManager for this address", hww.walletdisplayaddress, address1)
+        hww.setwalletflag("external_signer", True)
+
         self.log.info('Test walletdisplayaddress')
         for address in [address1, address2, address3]:
             result = hww.walletdisplayaddress(address)

@@ -15,6 +15,7 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/bip32.h>
+#include <util/string.h>
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/export.h>
@@ -267,6 +268,15 @@ static std::vector<bilingual_str> UnloadWallet(WalletContext& context, std::shar
     return warnings;
 }
 
+static std::vector<bilingual_str> ReloadWallet(WalletContext& context, std::shared_ptr<CWallet> wallet, std::unique_ptr<WalletRescanReserver> reserver)
+{
+    const std::string wallet_name{wallet->GetName()};
+    std::vector<bilingual_str> warnings{UnloadWallet(context, std::move(wallet), /*load_on_start=*/std::nullopt, std::move(reserver))};
+    WalletLoadResult load_result{LoadWalletForRPC(context, wallet_name, /*load_on_start=*/std::nullopt)};
+    warnings.insert(warnings.end(), load_result.warnings.begin(), load_result.warnings.end());
+    return warnings;
+}
+
 static RPCMethod loadwallet()
 {
     return RPCMethod{
@@ -323,9 +333,16 @@ static RPCMethod setwalletflag()
                 if (it.second & MUTABLE_WALLET_FLAGS)
                     flags += (flags == "" ? "" : ", ") + it.first;
 
+            std::string reload_flags;
+            for (auto& it : STRING_TO_WALLET_FLAG)
+                if (it.second & WALLET_FLAGS_REQUIRING_RELOAD)
+                    reload_flags += (reload_flags == "" ? "" : ", ") + it.first;
+
     return RPCMethod{
         "setwalletflag",
-        "Change the state of the given wallet flag for a wallet.\n",
+        "Change the state of the given wallet flag for a wallet.\n"
+        "The following flags trigger a wallet reload: " + reload_flags + ".\n"
+        "Make sure no other RPC clients are using the wallet when changing these flags.\n",
                 {
                     {"flag", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the flag to change. Current available flags: " + flags},
                     {"value", RPCArg::Type::BOOL, RPCArg::Default{true}, "The new state."},
@@ -344,7 +361,7 @@ static RPCMethod setwalletflag()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
     std::string flag_str = request.params[0].get_str();
@@ -372,18 +389,35 @@ static RPCMethod setwalletflag()
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is already set to %s: %s", value ? "true" : "false", flag_str));
     }
 
+    std::unique_ptr<WalletRescanReserver> rescan_reserver;
+    if (flag & WALLET_FLAGS_REQUIRING_RELOAD) {
+        rescan_reserver = std::make_unique<WalletRescanReserver>(*pwallet);
+        if (!rescan_reserver->reserve()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
+    }
+
     res.pushKV("flag_name", flag_str);
     res.pushKV("flag_state", value);
 
+    bool reload_wallet;
     if (value) {
-        pwallet->SetWalletFlag(flag);
+        reload_wallet = pwallet->SetWalletFlag(flag);
     } else {
-        pwallet->UnsetWalletFlag(flag);
+        reload_wallet = pwallet->UnsetWalletFlag(flag);
     }
 
+    std::vector<std::string> warnings;
     if (flag && value && WALLET_FLAG_CAVEATS.contains(flag)) {
-        res.pushKV("warnings", WALLET_FLAG_CAVEATS.at(flag));
+        warnings.push_back(WALLET_FLAG_CAVEATS.at(flag));
     }
+    if (reload_wallet) {
+        WalletContext& context{EnsureWalletContext(request.context)};
+        for (const bilingual_str& reload_warning : ReloadWallet(context, std::move(pwallet), std::move(rescan_reserver))) {
+            warnings.push_back(reload_warning.original);
+        }
+    }
+    if (!warnings.empty()) res.pushKV("warnings", util::Join(warnings, "\n"));
 
     return res;
 },
