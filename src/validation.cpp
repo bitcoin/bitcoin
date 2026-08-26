@@ -29,6 +29,7 @@
 #include <kernel/types.h>
 #include <kernel/warning.h>
 #include <logging/timer.h>
+#include <node/blockfetcher.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <policy/ephemeral_policy.h>
@@ -1864,11 +1865,16 @@ Chainstate::Chainstate(
     BlockManager& blockman,
     ChainstateManager& chainman,
     std::optional<uint256> from_snapshot_blockhash)
-    : m_mempool(mempool),
+    : m_block_fetcher{std::make_unique<node::BlockFetcher>([blockman = &blockman](CBlock& block, const FlatFilePos& pos, const uint256& hash) {
+          return blockman->ReadBlock(block, pos, hash);
+      })},
+      m_mempool(mempool),
       m_blockman(blockman),
       m_chainman(chainman),
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
+
+Chainstate::~Chainstate() = default;
 
 fs::path Chainstate::StoragePath() const
 {
@@ -3013,6 +3019,7 @@ bool Chainstate::ConnectTip(
     BlockValidationState& state,
     CBlockIndex* pindexNew,
     std::shared_ptr<const CBlock> block_to_connect,
+    SteadyClock::time_point load_start,
     std::vector<ConnectedBlock>& connected_blocks,
     DisconnectedBlockTransactions& disconnectpool)
 {
@@ -3021,7 +3028,6 @@ bool Chainstate::ConnectTip(
 
     assert(pindexNew->pprev == m_chain.Tip());
     // Read block from disk.
-    const auto time_1{SteadyClock::now()};
     if (!block_to_connect) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlock(*pblockNew, *pindexNew)) {
@@ -3037,7 +3043,7 @@ bool Chainstate::ConnectTip(
     // When adding aggregate statistics in the future, keep in mind that
     // num_blocks_total may be zero until the ConnectBlock() call below.
     LogDebug(BCLog::BENCH, "  - Load block from disk: %.2fms\n",
-             Ticks<MillisecondsDouble>(time_2 - time_1));
+             Ticks<MillisecondsDouble>(time_2 - load_start));
     {
         CoinsViewOverlay& view{*m_coins_views->m_connect_block_view};
         const auto reset_guard{view.StartFetching(*block_to_connect)};
@@ -3093,13 +3099,13 @@ bool Chainstate::ConnectTip(
 
     const auto time_6{SteadyClock::now()};
     m_chainman.time_post_connect += time_6 - time_5;
-    m_chainman.time_total += time_6 - time_1;
+    m_chainman.time_total += time_6 - load_start;
     LogDebug(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_6 - time_5),
              Ticks<SecondsDouble>(m_chainman.time_post_connect),
              Ticks<MillisecondsDouble>(m_chainman.time_post_connect) / m_chainman.num_blocks_total);
     LogDebug(BCLog::BENCH, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n",
-             Ticks<MillisecondsDouble>(time_6 - time_1),
+             Ticks<MillisecondsDouble>(time_6 - load_start),
              Ticks<SecondsDouble>(m_chainman.time_total),
              Ticks<MillisecondsDouble>(m_chainman.time_total) / m_chainman.num_blocks_total);
 
@@ -3203,6 +3209,8 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
     const CBlockIndex* pindexOldTip = m_chain.Tip();
     const CBlockIndex* pindexFork = m_chain.FindFork(index_most_work);
+    // Stop before a block supplied by the caller, which does not need to be read from disk.
+    const CBlockIndex* read_ahead_tip{provided_block ? index_most_work.pprev : &index_most_work};
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;
@@ -3241,9 +3249,11 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
+            const auto load_start{SteadyClock::now()};
             const bool is_provided_block{provided_block && pindexConnect == &index_most_work};
-            auto block_to_connect{is_provided_block ? provided_block : std::shared_ptr<const CBlock>()};
-            if (!ConnectTip(state, pindexConnect, std::move(block_to_connect), connected_blocks, disconnectpool)) {
+            auto block_to_connect{is_provided_block ? provided_block : m_block_fetcher->Load(pindexConnect->GetBlockHash())};
+            if (read_ahead_tip) m_block_fetcher->FillQueue(*read_ahead_tip, pindexConnect->nHeight + 1);
+            if (!ConnectTip(state, pindexConnect, std::move(block_to_connect), load_start, connected_blocks, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
