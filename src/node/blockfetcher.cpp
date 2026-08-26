@@ -39,9 +39,12 @@ bool BlockFetcher::Enqueue(const CBlockIndex& index)
     return !!followup;
 }
 
+void BlockFetcher::Clear() { m_followups.clear(); }
+
 std::shared_ptr<const CBlock> BlockFetcher::Load(const uint256& hash)
 {
     if (auto block{PopFollowup()}; block && block->GetHash() == hash) return block;
+    Clear();
     return nullptr;
 }
 

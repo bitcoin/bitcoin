@@ -43,6 +43,7 @@ public:
         m_pool.Start(worker_count);
     }
 
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     std::shared_ptr<const CBlock> Load(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void FillQueue(const CBlockIndex& last_index, int next_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
