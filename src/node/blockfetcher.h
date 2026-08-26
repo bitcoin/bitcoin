@@ -10,6 +10,7 @@
 #include <util/threadpool.h>
 
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <future>
 #include <memory>
@@ -27,17 +28,20 @@ class BlockFetcher
 {
     using ReadBlockFn = std::function<bool(CBlock&, const FlatFilePos&, const uint256&)>;
 
-    static constexpr uint32_t WORKER_COUNT{1};
-
     const ReadBlockFn m_read_block;
     ThreadPool m_pool{"blockread"};
-    std::future<std::shared_ptr<const CBlock>> m_followup GUARDED_BY(::cs_main);
+    const uint32_t m_queue_size;
+    std::deque<std::future<std::shared_ptr<const CBlock>>> m_followups GUARDED_BY(::cs_main);
 
     static bool ShouldEnqueue(const CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    std::shared_ptr<const CBlock> PopFollowup() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool Enqueue(const CBlockIndex& index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 public:
-    explicit BlockFetcher(ReadBlockFn read_block) : m_read_block{std::move(read_block)} {}
+    explicit BlockFetcher(ReadBlockFn read_block, int worker_count = 2, uint32_t queue_size = 4) : m_read_block{std::move(read_block)}, m_queue_size{queue_size}
+    {
+        m_pool.Start(worker_count);
+    }
 
     std::shared_ptr<const CBlock> Load(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void FillQueue(const CBlockIndex& last_index, int next_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
