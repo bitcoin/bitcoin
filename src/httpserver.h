@@ -54,11 +54,10 @@ enum class HTTPRequestMethod {
     PUT
 };
 
-namespace http_bitcoin {
-    class HTTPRequest;
-}
+class HTTPRequest;
+
 /** Handler for requests to a certain HTTP path */
-using HTTPRequestHandler = std::function<void(http_bitcoin::HTTPRequest* req, const std::string&)>;
+using HTTPRequestHandler = std::function<void(HTTPRequest* req, const std::string&)>;
 
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
@@ -68,9 +67,7 @@ void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPR
 /** Unregister handler for prefix */
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
-namespace http_bitcoin {
-using util::LineReader;
-
+namespace bitcoin_http {
 //! Shortest valid request line, used by libevent in evhttp_parse_request_line()
 inline constexpr size_t MIN_REQUEST_LINE_LENGTH = std::string_view("GET / HTTP/1.0").size();
 
@@ -88,6 +85,7 @@ inline constexpr uint64_t MAX_BODY_SIZE{32_MiB};
 struct ContentTooLargeError : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+} // namespace bitcoin_http
 
 class HTTPHeaders
 {
@@ -142,14 +140,10 @@ struct HTTPVersion {
     /// @}
 };
 
-
-class HTTPResponse
-{
-public:
-    HTTPVersion m_version;
-
-    HTTPStatusCode m_status{HTTP_INTERNAL_SERVER_ERROR};
-    HTTPHeaders m_headers;
+struct HTTPResponse {
+    HTTPVersion version;
+    HTTPStatusCode status{HTTP_INTERNAL_SERVER_ERROR};
+    HTTPHeaders headers;
 
     std::string StringifyHeaders() const;
 };
@@ -159,18 +153,6 @@ class HTTPRemoteClient;
 class HTTPRequest
 {
 public:
-    HTTPRequestMethod m_method;
-    std::string m_target;
-    HTTPVersion m_version;
-    HTTPHeaders m_headers;
-    std::string m_body;
-
-    //! Pointer to the client that made the request so we know who to respond to.
-    std::weak_ptr<HTTPRemoteClient> m_client;
-
-    //! Response headers may be set in advance before response body is known
-    HTTPHeaders m_response_headers;
-
     explicit HTTPRequest(const std::shared_ptr<HTTPRemoteClient>& client) : m_client{client} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
@@ -184,9 +166,9 @@ public:
      * @throws      std::runtime_error if data is invalid.
      */
     /// @{
-    bool LoadControlData(LineReader& reader);
-    bool LoadHeaders(LineReader& reader);
-    bool LoadBody(LineReader& reader);
+    bool LoadControlData(util::LineReader& reader);
+    bool LoadHeaders(util::LineReader& reader);
+    bool LoadBody(util::LineReader& reader);
     /// @}
 
     void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
@@ -195,15 +177,20 @@ public:
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
 
+    const HTTPVersion& GetVersion() const { return m_version; }
+    std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client.lock(); }
+
     // These methods reimplement the API from http_libevent::HTTPRequest
     // for downstream JSONRPC and REST modules.
     std::string GetURI() const { return m_target; }
     CService GetPeer() const;
     HTTPRequestMethod GetRequestMethod() const { return m_method; }
     std::optional<std::string> GetQueryParameter(std::string_view key) const;
-    std::pair<bool, std::string> GetHeader(std::string_view hdr) const;
+    std::optional<std::string> GetHeader(std::string_view hdr) const;
     std::string ReadBody() const { return m_body; }
     void WriteHeader(std::string&& hdr, std::string&& value);
+    std::optional<uint64_t> GetChunkSize() const { return m_chunk_size; }
+    uint64_t GetChunkProgress() const { return m_chunk_read; }
 
     enum class State {
         Init,
@@ -215,6 +202,19 @@ public:
     State GetState() const { return m_state; }
     void SetState(State state) { m_state = state; }
 
+private:
+    HTTPRequestMethod m_method;
+    std::string m_target;
+    HTTPVersion m_version;
+    HTTPHeaders m_headers;
+    std::string m_body;
+
+    //! Pointer to the client that made the request so we know who to respond to.
+    std::weak_ptr<HTTPRemoteClient> m_client;
+
+    //! Response headers may be set in advance before response body is known
+    HTTPHeaders m_response_headers;
+
     // If a large request is sent with "Transfer-encoding: chunked" we may
     // read the chunk size in a separate I/O loop iteration than the chunk
     // of data itself. Store the chunk size value here until the chunk is read.
@@ -223,7 +223,6 @@ public:
     // Track the progress of the chunk here.
     uint64_t m_chunk_read{0};
 
-private:
     State m_state = State::Init;
 };
 
@@ -479,16 +478,6 @@ private:
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
-     * Try to read HTTPRequests from a client's receive buffer.
-     * Complete requests are dispatched, incomplete requests are
-     * left in the buffer to wait for more data. Some read errors
-     * will mark this client for disconnection.
-     * @param[in] client The HTTPRemoteClient to read requests from
-     */
-    void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
-        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
-
-    /**
      * Close underlying socket connections for flagged clients
      * by removing their shared pointer from m_connected. If an HTTPRemoteClient
      * is busy in a worker thread, its connection will be closed once that
@@ -502,6 +491,56 @@ std::optional<std::string> GetQueryParameterFromUri(std::string_view uri, std::s
 class HTTPRemoteClient
 {
 public:
+    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
+        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
+
+    // Disable copies (should only be used as shared pointers)
+    HTTPRemoteClient(const HTTPRemoteClient&) = delete;
+    HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+
+    const std::string& GetOrigin() const { return m_origin; }
+    const CService& GetPeer() const { return m_addr; }
+    std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
+    bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
+
+    void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+    void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
+
+    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+
+    /**
+     * Try to read an HTTPRequest from a client's receive buffer.
+     * Only complete requests are returned, incomplete requests are
+     * left in the buffer to wait for more data. Some read errors
+     * will mark this client for disconnection.
+     */
+    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client);
+
+    /**
+     * Push data (if there is any) from client's m_send_buffer to the connected socket.
+     * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
+     */
+    bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+
+    //! Used for tests.
+    //! @{
+    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
+    const HTTPRequest* GetRequest() const { return m_req.get(); }
+    //! @}
+
+protected:
+    //! Used for tests.
+    std::string& MutateRecvBuffer() { return m_recv_buffer; }
+
+private:
+    /**
+     * Try to read an HTTP request from the receive buffer.
+     * Updates HTTPRequest.m_state and drains buffer on error.
+     * @param[in]   req     A HTTPRequest to read into
+     * @throws std::runtime_error if request is unreadable or violates protocol
+     */
+    void ReadRequest(HTTPRequest& req);
+
     //! ID provided by HTTPServer upon connection and instantiation
     const HTTPServer::Id m_id;
 
@@ -532,7 +571,7 @@ public:
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
     /// @{
-    Mutex m_send_mutex;
+    mutable Mutex m_send_mutex;
     std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
     /// @}
 
@@ -586,27 +625,6 @@ public:
     //! Due to optimistic sends it may be updated in either a worker thread or in the
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
     std::atomic<SteadySeconds> m_idle_since;
-
-    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
-        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
-
-    // Disable copies (should only be used as shared pointers)
-    HTTPRemoteClient(const HTTPRemoteClient&) = delete;
-    HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
-
-    /**
-     * Try to read an HTTP request from the receive buffer.
-     * Updates HTTPRequest.m_state and drains buffer on error.
-     * @param[in]   req     A HTTPRequest to read into
-     * @throws std::runtime_error if request is unreadable or violates protocol
-     */
-    void ReadRequest(HTTPRequest& req);
-
-    /**
-     * Push data (if there is any) from client's m_send_buffer to the connected socket.
-     * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
-     */
-    bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
 };
 
 /** Initialize HTTP server.
@@ -625,6 +643,5 @@ void InterruptHTTPServer();
 
 /** Stop HTTP server */
 void StopHTTPServer();
-} // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H
