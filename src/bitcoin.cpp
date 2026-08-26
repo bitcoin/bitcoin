@@ -226,9 +226,13 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
     // (https://github.com/bitcoin/bitcoin/pull/31375#discussion_r1861814807)
     const bool fallback_os_search{!fs::PathFromString(std::string{wrapper_argv0}).has_parent_path()};
 
-    // If wrapper is installed in a bin/ directory, look for target executable
-    // in libexec/
-    (wrapper_dir.filename() == "bin" && try_exec(wrapper_dir.parent_path() / "libexec" / arg0.filename())) ||
+    // If wrapper is installed in the configured bin directory
+    // (CMAKE_INSTALL_BINDIR), look for target executable in the configured
+    // libexec directory (CMAKE_INSTALL_LIBEXECDIR). Only the last component of
+    // the bin directory is compared, since that is all the wrapper can see of
+    // the directory it was installed to.
+    (wrapper_dir.filename() == fs::PathFromString(BITCOIN_BINDIR).filename() &&
+     try_exec(wrapper_dir.parent_path() / BITCOIN_LIBEXECDIR / arg0.filename())) ||
 #ifdef WIN32
     // Otherwise check the "daemon" subdirectory in a windows install.
     (!wrapper_dir.empty() && try_exec(wrapper_dir / "daemon" / arg0.filename())) ||
