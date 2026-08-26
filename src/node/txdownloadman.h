@@ -39,8 +39,6 @@ inline constexpr auto GETDATA_TX_INTERVAL{60s};
 struct TxDownloadOptions {
     /** Read-only reference to mempool. */
     const CTxMemPool& m_mempool;
-    /** RNG provided by caller. */
-    FastRandomContext& m_rng;
     /** Instantiate TxRequestTracker as deterministic (used for tests). */
     bool m_deterministic_txrequest{false};
 };
