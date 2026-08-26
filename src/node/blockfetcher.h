@@ -7,9 +7,13 @@
 
 #include <kernel/cs_main.h>
 #include <sync.h>
+#include <util/threadpool.h>
 
+#include <cstdint>
 #include <functional>
+#include <future>
 #include <memory>
+#include <string>
 #include <utility>
 
 class CBlock;
@@ -18,13 +22,16 @@ struct FlatFilePos;
 class uint256;
 
 namespace node {
-/** Supplies blocks to validation. */
+/** Supplies blocks to validation. Destruction waits for any queued reads. */
 class BlockFetcher
 {
     using ReadBlockFn = std::function<bool(CBlock&, const FlatFilePos&, const uint256&)>;
 
+    static constexpr uint32_t WORKER_COUNT{1};
+
     const ReadBlockFn m_read_block;
-    std::shared_ptr<const CBlock> m_followup GUARDED_BY(::cs_main);
+    ThreadPool m_pool{"blockread"};
+    std::future<std::shared_ptr<const CBlock>> m_followup GUARDED_BY(::cs_main);
 
     static bool ShouldEnqueue(const CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool Enqueue(const CBlockIndex& index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
