@@ -13,11 +13,11 @@ import re
 
 FOLDER_GREP = 'src'
 FOLDER_TEST = 'src/test/'
-REGEX_ARG = r'\b(?:GetArg|GetArgs|GetBoolArg|GetIntArg|GetPathArg|IsArgSet|get_net)\("(-[^"]+)"'
-REGEX_DOC = r'AddArg\("(-[^"=]+?)(?:=|")'
+REGEX_ARG = r'(\w+Setting)::Get'
+REGEX_DOC = r'(\w+Setting)::Register'
 CMD_ROOT_DIR = '$(git rev-parse --show-toplevel)/{}'.format(FOLDER_GREP)
 CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)
-CMD_GREP_WALLET_ARGS = r"git grep --function-context 'void WalletInit::AddWalletOptions' -- {} | grep AddArg".format(CMD_ROOT_DIR)
+CMD_GREP_WALLET_ARGS = r"git grep --function-context 'void WalletInit::AddWalletOptions' -- {} | grep 'Setting::Register'".format(CMD_ROOT_DIR)
 CMD_GREP_WALLET_HIDDEN_ARGS = r"git grep --function-context 'void DummyWalletInit::AddWalletOptions' -- {}".format(CMD_ROOT_DIR)
 CMD_GREP_DOCS = r"git grep --perl-regexp '{}' {}".format(REGEX_DOC, CMD_ROOT_DIR)
 # list unsupported, deprecated and duplicate args as they need no documentation
@@ -48,7 +48,7 @@ def lint_missing_hidden_wallet_args():
     wallet_hidden_args = check_output(CMD_GREP_WALLET_HIDDEN_ARGS, shell=True, text=True).strip()
 
     wallet_args = set(re.findall(re.compile(REGEX_DOC), wallet_args))
-    wallet_hidden_args = set(re.findall(re.compile(r'    "([^"=]+)'), wallet_hidden_args))
+    wallet_hidden_args = set(re.findall(re.compile(r'([A-Za-z0-9]+Setting)Hidden::Register'), wallet_hidden_args))
 
     hidden_missing = wallet_args.difference(wallet_hidden_args)
     if hidden_missing:

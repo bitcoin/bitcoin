@@ -7,6 +7,7 @@
 #include <common/system.h>
 #include <external_signer.h>
 #include <node/types.h>
+#include <wallet/init_settings.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <iostream>
@@ -53,7 +54,7 @@ std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::Cr
 }
 
  util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner() {
-    const std::string command = gArgs.GetArg("-signer", "");
+    const std::string command = SignerSetting::Get(gArgs);
     if (command == "") return util::Error{Untranslated("restart bitcoind with -signer=<cmd>")};
     std::vector<ExternalSigner> signers;
     ExternalSigner::Enumerate(command, signers, Params().GetChainTypeString());

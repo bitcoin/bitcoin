@@ -5,6 +5,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <arith_uint256.h>
+#include <bitcoin-util_settings.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -34,7 +35,7 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 {
     SetupHelpOptions(argsman);
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    VersionSetting::Register(argsman);
 
     argsman.AddCommand("grind", "Perform proof of work on hex header string");
     argsman.AddCommand("getchainparams", "Get hardcoded parameters for the selected chain");
@@ -53,11 +54,11 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (HelpRequested(args) || args.GetBoolArg("-version", false)) {
+    if (HelpRequested(args) || VersionSetting::Get(args)) {
         // First part of help message is specific to this utility
         std::string strUsage = CLIENT_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
 
-        if (args.GetBoolArg("-version", false)) {
+        if (VersionSetting::Get(args)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
