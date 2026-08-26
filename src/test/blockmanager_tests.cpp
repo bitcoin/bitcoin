@@ -5,6 +5,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <node/blockfetcher.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
@@ -17,6 +18,8 @@
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+
+#include <stdexcept>
 
 using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
@@ -230,6 +233,27 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
     ASSERT_DEBUG_LOG("GetHash() doesn't match index");
     CBlock block;
     BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlock(block, index));
+}
+
+BOOST_AUTO_TEST_CASE(block_read_ahead_retry)
+{
+    CBlock block;
+    const auto hash{block.GetHash()};
+    CBlockIndex index{block};
+    index.phashBlock = &hash;
+    LOCK(::cs_main);
+    index.nStatus |= BLOCK_HAVE_DATA;
+    int reads{0};
+    node::BlockFetcher fetcher{[&](CBlock& result, FlatFilePos, uint256) {
+        if (++reads == 1) throw std::runtime_error("transient read failure");
+        result = block;
+        return true;
+    }};
+
+    fetcher.FillQueue(&index, 0);
+    BOOST_CHECK(!fetcher.Load(hash));
+    fetcher.FillQueue(&index, 0);
+    BOOST_CHECK(Assert(fetcher.Load(hash))->GetHash() == hash);
 }
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
