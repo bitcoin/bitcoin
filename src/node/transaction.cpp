@@ -69,6 +69,9 @@ TransactionError BroadcastTransaction(NodeContext& node,
             // The mempool transaction may have the same or different witness (and
             // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
             wtxid = mempool_tx->GetWitnessHash();
+            if (broadcast_method == TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL) {
+                node.mempool->AddUnbroadcastTx(txid);
+            }
         } else {
             // Transaction is not already in the mempool.
             const bool check_max_fee{max_tx_fee > 0};

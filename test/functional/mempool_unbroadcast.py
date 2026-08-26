@@ -88,9 +88,15 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         self.disconnect_nodes(0, 1)
         node.disconnect_p2ps()
 
-        self.log.info("Rebroadcast transaction and ensure it is not added to unbroadcast set when already in mempool")
+        self.log.info("Rebroadcast transaction and ensure it is added to unbroadcast set even when already in mempool")
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
+        assert node.getmempoolentry(rpc_tx_hsh)['unbroadcast']
+
+        conn2 = node.add_p2p_connection(P2PTxInvStore())
+        node.mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
+        conn2.wait_for_broadcast([txFS["wtxid"]])
         assert not node.getmempoolentry(rpc_tx_hsh)['unbroadcast']
+        node.disconnect_p2ps()
 
     def test_txn_removal(self):
         self.log.info("Test that transactions removed from mempool are removed from unbroadcast set")
