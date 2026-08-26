@@ -329,7 +329,7 @@ public:
     /** setup initializes the container to store no more than new_size
      * elements and no less than 2 elements.
      *
-     * setup should only be called once.
+     * setup should only be called once. TestOnlyReset() is the exception.
      *
      * @param new_size the desired number of elements to store
      * @returns the maximum number of elements storable
@@ -482,6 +482,14 @@ public:
                 return true;
             }
         return false;
+    }
+
+    /** Empty the cache and re-run setup(). */
+    void TestOnlyReset()
+    {
+        table.clear();
+        epoch_flags.clear();
+        setup(0);
     }
 };
 } // namespace CuckooCache
