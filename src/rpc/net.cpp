@@ -1017,6 +1017,7 @@ static RPCMethod addpeeraddress()
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
             {"port", RPCArg::Type::NUM, RPCArg::Optional::NO, "The port of the peer"},
             {"tried", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, attempt to add the peer to the tried addresses table"},
+            {"services", RPCArg::Type::NUM, RPCArg::Default{(uint64_t)(NODE_NETWORK | NODE_WITNESS)}, "The service flags to record for the address"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1036,6 +1037,9 @@ static RPCMethod addpeeraddress()
     const std::string& addr_string{request.params[0].get_str()};
     const auto port{request.params[1].getInt<uint16_t>()};
     const bool tried{request.params[2].isNull() ? false : request.params[2].get_bool()};
+    const ServiceFlags services{request.params[3].isNull()
+        ? ServiceFlags{NODE_NETWORK | NODE_WITNESS}
+        : static_cast<ServiceFlags>(request.params[3].getInt<uint64_t>())};
 
     UniValue obj(UniValue::VOBJ);
     std::optional<CNetAddr> net_addr{LookupHost(addr_string, false)};
@@ -1046,7 +1050,7 @@ static RPCMethod addpeeraddress()
     bool success{false};
 
     CService service{net_addr.value(), port};
-    CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
+    CAddress address{MaybeFlipIPv6toCJDNS(service), services};
     address.nTime = Now<NodeSeconds>();
     // The source address is set equal to the address. This is equivalent to the peer
     // announcing itself.

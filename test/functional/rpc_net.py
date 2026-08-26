@@ -13,6 +13,11 @@ import platform
 import time
 
 import test_framework.messages
+from test_framework.messages import (
+    NODE_NETWORK,
+    NODE_NONE,
+    NODE_WITNESS,
+)
 from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
@@ -342,6 +347,13 @@ class NetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
         assert_raises_rpc_error(-8, "Network not recognized: Foo", self.nodes[0].getnodeaddresses, 1, "Foo")
 
+    @staticmethod
+    def find_addrman_entry(table, address):
+        for entry in table.values():
+            if entry["address"] == address:
+                return entry
+        raise AssertionError(f"{address} not found in addrman table")
+
     def test_addpeeraddress(self):
         self.log.info("Test addpeeraddress")
         # The node has an existing, non-deterministic addrman from a previous test.
@@ -382,6 +394,7 @@ class NetTest(BitcoinTestFramework):
             assert_equal(node.addpeeraddress(address="1.0.0.0", tried=value, port=8333), {"success": False, "error": "failed-adding-to-new"})
         assert_equal(len(node.getnodeaddresses(count=0)), 1)
 
+
         self.log.debug("Test that adding a valid address to the tried table succeeds")
         assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), {"success": True})
         addrman = node.getrawaddrman()
@@ -412,6 +425,20 @@ class NetTest(BitcoinTestFramework):
         assert_equal(addrman_info["all_networks"]["tried"], 1)
         assert_equal(addrman_info["all_networks"]["new"], 3)
         node.getnodeaddresses(count=0)  # getnodeaddresses re-runs the addrman checks
+
+        self.log.debug("Test that the default service flags are recorded")
+        assert_equal(self.find_addrman_entry(node.getrawaddrman()["new"], "1.0.0.0")["services"], NODE_NETWORK | NODE_WITNESS)
+
+        self.log.debug("Test that service flags can be set explicitly")
+        assert_equal(node.addpeeraddress(address="3.0.0.0", port=8333, services=NODE_NETWORK), {"success": True})
+        assert_equal(self.find_addrman_entry(node.getrawaddrman()["new"], "3.0.0.0")["services"], NODE_NETWORK)
+
+        self.log.debug("Test that an address lacking desirable service flags can be recorded")
+        assert_equal(node.addpeeraddress(address="4.0.0.0", port=8333, services=NODE_NONE), {"success": True})
+        assert_equal(self.find_addrman_entry(node.getrawaddrman()["new"], "4.0.0.0")["services"], NODE_NONE)
+
+        self.log.debug("Test that non-integer services fails")
+        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.addpeeraddress, address="5.0.0.0", port=8333, services="NODE_NETWORK")
 
     def test_sendmsgtopeer(self):
         node = self.nodes[0]
