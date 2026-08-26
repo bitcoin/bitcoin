@@ -18,6 +18,7 @@
 #include <util/feefrac.h>
 #include <util/fees.h>
 #include <util/fs.h>
+#include <util/overflow.h>
 #include <util/syserror.h>
 #include <validation.h>
 
@@ -207,10 +208,11 @@ bool MemPoolFeeRateEstimator::Read(AutoFile& file)
             return false;
         }
         for (size_t i = 1; i < blocks.size(); ++i) {
-            if (blocks[i].m_height != blocks[i - 1].m_height + 1) {
+            const uint64_t expected_height{SaturatingAdd(blocks[i - 1].m_height, uint64_t{1})};
+            if (blocks[i].m_height != expected_height) {
                 LogWarning("%s: Non-consecutive block heights read, expected height %s but found %s; ignoring file",
                            FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
-                           blocks[i - 1].m_height + 1, blocks[i].m_height);
+                           expected_height, blocks[i].m_height);
                 return false;
             }
         }
