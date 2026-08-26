@@ -263,20 +263,20 @@ struct Peer {
     /** Common state for a parked compact filter request (see PendingRequest):
      *  enough to re-check whether the request is still racing the filter
      *  index. */
-    struct PendingCFRequest {
+    struct PendingCFRequestBase {
         BlockFilterType filter_type;
         uint256 stop_hash;
     };
     //! Parked getcfilters request; see PendingRequest.
-    struct PendingGetCFilters : PendingCFRequest {
+    struct PendingGetCFilters : PendingCFRequestBase {
         uint32_t start_height;
     };
     //! Parked getcfheaders request; see PendingRequest.
-    struct PendingGetCFHeaders : PendingCFRequest {
+    struct PendingGetCFHeaders : PendingCFRequestBase {
         uint32_t start_height;
     };
     //! Parked getcfcheckpt request; see PendingRequest.
-    struct PendingGetCFCheckPt : PendingCFRequest {
+    struct PendingGetCFCheckPt : PendingCFRequestBase {
     };
 
     /** A received message that could not be answered when it was processed.
@@ -3565,6 +3565,10 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 
 bool PeerManagerImpl::CFilterIndexMayBeRacing(BlockFilterType filter_type, const uint256& stop_hash)
 {
+    // The index stays "synced" throughout IBD (it indexes live from genesis),
+    // so a large IBD-induced gap would park request for a long period of time.
+    if (m_chainman.IsInitialBlockDownload()) return false;
+
     const BlockFilterIndex* filter_index{GetBlockFilterIndex(filter_type)};
     if (!filter_index) return false;
     const IndexSummary summary{filter_index->GetSummary()};
@@ -3791,26 +3795,26 @@ bool PeerManagerImpl::AttemptPendingRequest(CNode& node, Peer& peer)
 {
     Assume(peer.m_pending_request);
     const auto ready_check{util::Overloaded{
-        [&](const Peer::PendingCFRequest& base) {
+        [&](const Peer::PendingCFRequestBase& base) {
             // Ready unless still racing the filter index.
             return !CFilterIndexMayBeRacing(base.filter_type, base.stop_hash);
         },
     }};
     if (!std::visit(ready_check, *peer.m_pending_request)) return false;
 
-    auto pending{std::move(peer.m_pending_request)};
+    auto pending_request{std::move(peer.m_pending_request)};
     const auto serve{util::Overloaded{
-        [&](const Peer::PendingGetCFilters& req) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
-            ServeGetCFilters(node, peer, req.filter_type, req.start_height, req.stop_hash);
+        [&](const Peer::PendingGetCFilters& request) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
+            ServeGetCFilters(node, peer, request.filter_type, request.start_height, request.stop_hash);
         },
-        [&](const Peer::PendingGetCFHeaders& req) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
-            ServeGetCFHeaders(node, peer, req.filter_type, req.start_height, req.stop_hash);
+        [&](const Peer::PendingGetCFHeaders& request) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
+            ServeGetCFHeaders(node, peer, request.filter_type, request.start_height, request.stop_hash);
         },
-        [&](const Peer::PendingGetCFCheckPt& req) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
-            ServeGetCFCheckPt(node, peer, req.filter_type, req.stop_hash);
+        [&](const Peer::PendingGetCFCheckPt& request) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
+            ServeGetCFCheckPt(node, peer, request.filter_type, request.stop_hash);
         },
     }};
-    std::visit(serve, *pending);
+    std::visit(serve, *pending_request);
     return true;
 }
 
