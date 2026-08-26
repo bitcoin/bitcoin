@@ -279,6 +279,10 @@ def check_ELF_ABI(binary) -> bool:
     assert note.abi == lief.ELF.NoteAbi.ABI.LINUX
     return note.version == expected_abi
 
+def check_no_depends(binary) -> bool:
+    strings = binary.get_strings()
+    return not any('/bitcoin/depends/' in s for s in strings)
+
 CHECKS = {
 lief.Binary.FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -287,6 +291,7 @@ lief.Binary.FORMATS.ELF: [
     ('INTERPRETER_NAME', check_ELF_interpreter),
     ('ABI', check_ELF_ABI),
     ('RUNPATH', check_RUNPATH),
+    ('DEPENDS_PATHS', check_no_depends),
 ],
 lief.Binary.FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
