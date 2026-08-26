@@ -4,9 +4,11 @@
 
 #include <core_io.h>
 #include <interfaces/chain.h>
+#include <key_io.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <test/util/common.h>
@@ -674,6 +676,23 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
         };
     CheckRpc(params, UniValue{JSON(R"([5, "hello", null, null, null, null, null])")}, check_positional);
     CheckRpc(params, UniValue{JSON(R"([5, "hello", 4, "test", true, 1.23, "world"])")}, check_positional);
+}
+
+BOOST_AUTO_TEST_CASE(parse_outputs_invalid)
+{
+    UniValue mismatched;
+    BOOST_REQUIRE(!mismatched.read(R"({"":)"));
+    BOOST_CHECK_EXCEPTION(ParseOutputs(mismatched), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Invalid parameter, output key and value counts do not match"})"));
+
+    const auto address{EncodeDestination(WitnessV0ScriptHash{CScript{}})};
+    const auto duplicate_address{JSON(strprintf(R"({"%s":1,"%s":1})", address, address))};
+    BOOST_CHECK_EXCEPTION(ParseOutputs(duplicate_address), UniValue,
+                          HasJSON(strprintf(R"({"code":-8,"message":"Invalid parameter, duplicated address: %s"})", address)));
+
+    const auto duplicate_data{JSON(R"({"data":"aa","data":"bb"})")};
+    BOOST_CHECK_EXCEPTION(ParseOutputs(duplicate_data), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Invalid parameter, duplicate key: data"})"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

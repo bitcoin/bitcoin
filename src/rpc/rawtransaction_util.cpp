@@ -107,6 +107,7 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
     bool has_data{false};
     const auto& keys{outputs.getKeys()};
     const auto& values{outputs.getValues()};
+    if (keys.size() != values.size()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output key and value counts do not match");
     for (size_t i{0}; i < keys.size(); ++i) {
         const auto& name_{keys[i]};
         const auto& value{values[i]};
