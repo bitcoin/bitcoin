@@ -27,7 +27,7 @@ struct NodeContext;
 /** Create a blockchain, starting from genesis */
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
-/** Rebuild a block template for a different parent and timestamp */
+/** Rebuild a coinbase-only block template for a different parent and timestamp */
 void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time, const Consensus::Params& params);
 
 /**

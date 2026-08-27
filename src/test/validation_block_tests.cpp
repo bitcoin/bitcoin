@@ -84,12 +84,13 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
     auto& block_template_manager{*Assert(m_node.block_template_manager)};
     auto block_template{block_template_manager.CreateNewTemplate({
+        .use_mempool = false,
         .coinbase_output_script = CScript{} << i++ << OP_TRUE,
     })};
     BOOST_REQUIRE(block_template);
     auto pblock = std::make_shared<CBlock>(block_template->block);
-    pblock->hashPrevBlock = prev_hash;
-    pblock->nTime = ++time;
+    const auto& parent{*Assert(WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)))};
+    RebuildBlockForParent(*pblock, parent, /*time=*/++time, Params().GetConsensus());
 
     // Make the coinbase transaction with two outputs:
     // One zero-value one that has a unique pubkey to make sure that blocks at the same height can have a different hash
@@ -103,7 +104,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
     const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
     txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
-    txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     return pblock;
