@@ -418,6 +418,31 @@ static void PushTxDecoded(const CWallet& wallet, const CWalletTx& wtx, UniValue&
     entry.pushKV("decoded", std::move(decoded));
 }
 
+/**
+ * Append a raw transaction entry for the given wallet transaction to ret.
+ *
+ * @param  wallet         The wallet.
+ * @param  wtx            The wallet transaction.
+ * @param  ret            Output vector to append the entry to.
+ * @param  verbose        If true, include a decoded transaction object.
+ */
+static void ListRawTransaction(const CWallet& wallet, const CWalletTx& wtx, std::vector<UniValue>& ret, bool verbose)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    UniValue entry(UniValue::VOBJ);
+
+    PushTxAmountAndFee(wallet, wtx, entry);
+
+    WalletTxToJSON(wallet, wtx, entry);
+    entry.pushKV("abandoned", wtx.isAbandoned());
+    entry.pushKV("hex", EncodeHexTx(*wtx.GetTx()));
+
+    if (verbose) {
+        PushTxDecoded(wallet, wtx, entry);
+    }
+
+    ret.push_back(std::move(entry));
+}
 
 static std::vector<RPCResult> TransactionDescriptionString(bool include_parent_descs = true)
 {
@@ -440,8 +465,8 @@ static std::vector<RPCResult> TransactionDescriptionString(bool include_parent_d
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            }},
-           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx was replaced."},
-           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx replaces another."},
+           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "The txid of the transaction that replaced this one."},
+           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "The txid of the transaction that this one replaces."},
            {RPCResult::Type::ARR, "mempoolconflicts", "Transactions in the mempool that directly conflict with either this transaction or an ancestor transaction",
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
@@ -564,6 +589,90 @@ RPCMethod listtransactions()
     auto txs_rev_it{std::make_move_iterator(ret.rend())};
     UniValue result{UniValue::VARR};
     result.push_backV(txs_rev_it - nFrom - nCount, txs_rev_it - nFrom); // Return oldest to newest
+    return result;
+},
+    };
+}
+
+RPCMethod listrawtransactions()
+{
+    return RPCMethod{
+        "listrawtransactions",
+        "Returns up to 'count' most recent wallet transactions ordered from oldest to newest, "
+        "skipping the first 'skip' transactions. Unlike `listtransactions`, each wallet transaction "
+        "appears exactly once with its net wallet balance change excluding fee, without logical "
+        "interpretation (no category assignment, no change suppression). This means consolidation "
+        "and self-transfer transactions that are invisible in `listtransactions` are included here.\n",
+        {
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return."},
+            {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
+                {
+                    {RPCResult::Type::STR_AMOUNT, "amount", "The net change to the wallet balance caused by this transaction "
+                        "(excluding fee). Positive means the wallet gained funds, negative means it lost funds, "
+                        "zero means a pure self-transfer (e.g. consolidation)."},
+                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The fee paid in " + CURRENCY_UNIT + ". "
+                        "This is negative and only present when the wallet funded the transaction."},
+                },
+                Cat(TransactionDescriptionString(/*include_parent_descs=*/false),
+                {
+                    {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                    {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
+                    {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
+                    {
+                        TxDoc({.wallet = true}),
+                    }},
+                }))},
+            }
+        },
+        RPCExamples{
+            "\nList the most recent 10 transactions\n"
+            + HelpExampleCli("listrawtransactions", "") +
+            "\nList transactions 100 to 120\n"
+            + HelpExampleCli("listrawtransactions", "20 100") +
+            "\nList the most recent 10 transactions with decoded transaction data\n"
+            + HelpExampleCli("listrawtransactions", "10 0 true") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("listrawtransactions", "20, 100")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    int count = self.Arg<int>("count");
+    int skip = self.Arg<int>("skip");
+    bool verbose = self.Arg<bool>("verbose");
+
+    if (count < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (skip < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
+
+    std::vector<UniValue> ret;
+    {
+        LOCK(pwallet->cs_wallet);
+
+        const CWallet::TxItems& tx_ordered = pwallet->wtxOrdered;
+
+        int skipped = 0;
+        for (CWallet::TxItems::const_reverse_iterator it = tx_ordered.rbegin(); it != tx_ordered.rend(); ++it) {
+            if ((int)ret.size() >= count) break;
+            if (skipped++ < skip) continue;
+            CWalletTx* const pwtx = (*it).second;
+            ListRawTransaction(*pwallet, *pwtx, ret, verbose);
+        }
+    }
+
+    UniValue result{UniValue::VARR};
+    result.push_backV(std::make_move_iterator(ret.rbegin()), std::make_move_iterator(ret.rend()));
     return result;
 },
     };
