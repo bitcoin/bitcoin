@@ -17,8 +17,8 @@ source "${SCRIPT_DIR}/ci_helpers.sh"
 [ "${CI_CONFIG+x}" ] && source "$CI_CONFIG"
 
 # Resolve the nixpkgs channel to a specific revision for use in cache keys.
-if [[ -n "${NIXPKGS_CHANNEL:-}" ]]; then
-  rev="$(curl --fail --location --silent --show-error "https://channels.nixos.org/${NIXPKGS_CHANNEL}/git-revision")"
+if [[ -n "${CI_NIXPKGS_CHANNEL:-}" ]]; then
+  rev="$(curl --fail --location --silent --show-error "https://channels.nixos.org/${CI_NIXPKGS_CHANNEL}/git-revision")"
   test -n "${rev}"
   write_output_var nixpkgs_rev "${rev}"
 fi
