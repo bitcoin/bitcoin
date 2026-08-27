@@ -177,6 +177,15 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 
 typedef std::vector<uint32_t> KeyPath;
 
+/** Index of the last hardened derivation step in path, if any. */
+static std::optional<size_t> LastHardenedIndex(const KeyPath& path)
+{
+    for (size_t i = path.size(); i > 0; --i) {
+        if (path[i - 1] >> 31) return i - 1;
+    }
+    return std::nullopt;
+}
+
 /** A source-text replacement used by Parse() to construct the public form of a
  *  multipath descriptor string. */
 struct KeyReplacement {
@@ -552,31 +561,18 @@ public:
 
             return true;
         }
-        // Step backwards to find the last hardened step in the path
-        int i = (int)m_path.size() - 1;
-        for (; i >= 0; --i) {
-            if (m_path.at(i) >> 31) {
-                break;
-            }
-        }
+        const auto last_hardened{LastHardenedIndex(m_path)};
         // Either no derivation or all unhardened derivation
-        if (i == -1) {
+        if (!last_hardened) {
             out = ToString();
             return true;
         }
-        // Get the path to the last hardened stup
+        // The origin is the path up to and including the last hardened step
         KeyOriginInfo origin;
-        int k = 0;
-        for (; k <= i; ++k) {
-            // Add to the path
-            origin.path.push_back(m_path.at(k));
-        }
-        // Build the remaining path
-        KeyPath end_path;
-        for (; k < (int)m_path.size(); ++k) {
-            end_path.push_back(m_path.at(k));
-        }
+        origin.path.assign(m_path.begin(), m_path.begin() + *last_hardened + 1);
         origin.fingerprint = m_root_extkey.id_key_fingerprint();
+        // Build the remaining path
+        const KeyPath end_path{m_path.begin() + *last_hardened + 1, m_path.end()};
 
         CExtPubKey xpub;
         CExtKey lh_xprv;
