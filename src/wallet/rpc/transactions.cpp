@@ -387,6 +387,37 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     }
 }
 
+static void PushTxAmountAndFee(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    CAmount credit = CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
+    CAmount net = credit - debit;
+    bool is_from_me = CachedTxIsFromMe(wallet, wtx);
+    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : 0);
+
+    entry.pushKV("amount", ValueFromAmount(net - fee));
+    if (is_from_me)
+        entry.pushKV("fee", ValueFromAmount(fee));
+}
+
+static void PushTxDecoded(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    UniValue decoded(UniValue::VOBJ);
+    TxToUniv(*wtx.GetTx(),
+            /*block_hash=*/uint256(),
+            /*entry=*/decoded,
+            /*include_hex=*/false,
+            /*txundo=*/nullptr,
+            /*verbosity=*/TxVerbosity::SHOW_DETAILS,
+            /*is_change_func=*/[&wallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) {
+                                    AssertLockHeld(wallet.cs_wallet);
+                                    return OutputIsChange(wallet, txout);
+                                });
+    entry.pushKV("decoded", std::move(decoded));
+}
+
 
 static std::vector<RPCResult> TransactionDescriptionString()
 {
@@ -762,14 +793,7 @@ RPCMethod gettransaction()
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
-    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
-    CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.GetTx()->GetValueOut() - nDebit : 0);
-
-    entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (CachedTxIsFromMe(*pwallet, wtx))
-        entry.pushKV("fee", ValueFromAmount(nFee));
+    PushTxAmountAndFee(*pwallet, wtx, entry);
 
     WalletTxToJSON(*pwallet, wtx, entry);
 
@@ -780,18 +804,7 @@ RPCMethod gettransaction()
     entry.pushKV("hex", EncodeHexTx(*wtx.GetTx()));
 
     if (verbose) {
-        UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.GetTx(),
-                /*block_hash=*/uint256(),
-                /*entry=*/decoded,
-                /*include_hex=*/false,
-                /*txundo=*/nullptr,
-                /*verbosity=*/TxVerbosity::SHOW_DETAILS,
-                /*is_change_func=*/[&pwallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
-                                        AssertLockHeld(pwallet->cs_wallet);
-                                        return OutputIsChange(*pwallet, txout);
-                                    });
-        entry.pushKV("decoded", std::move(decoded));
+        PushTxDecoded(*pwallet, wtx, entry);
     }
 
     AppendLastProcessedBlock(entry, *pwallet);
