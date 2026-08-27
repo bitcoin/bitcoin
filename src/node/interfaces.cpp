@@ -925,17 +925,17 @@ public:
         return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
-    std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
+    std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options, interfaces::CancelArg cancel) override
     {
+        interfaces::CancelGuard cancel_guard;
+        if (cancel) {
+            cancel_guard = cancel([this] { block_template_manager().InterruptWait(m_interrupt_wait); });
+        }
+        
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
             m_block_template, options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
-    }
-
-    void interruptWait() override
-    {
-        block_template_manager().InterruptWait(m_interrupt_wait);
     }
 
     const BlockCreateOptions m_create_options;
@@ -967,15 +967,25 @@ public:
         return block_template_manager().GetTip();
     }
 
-    std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
+    std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout, interfaces::CancelArg cancel) override
     {
+        interfaces::CancelGuard cancel_guard;
+        if (cancel) {
+            cancel_guard = cancel([this] { block_template_manager().InterruptWait(m_interrupt_mining); });
+        }        
+
         return block_template_manager().WaitTipChanged(current_tip, timeout, m_interrupt_mining);
     }
 
-    std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
+    std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown, interfaces::CancelArg cancel) override
     {
+        interfaces::CancelGuard cancel_guard;
+        if (cancel) {
+            cancel_guard = cancel([this] {  block_template_manager().InterruptWait(m_interrupt_mining); });
+        }
+
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
-        std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max())};
+        std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max(), /*cancel=*/{})};
 
         if (!maybe_tip) return {};
 
@@ -986,7 +996,7 @@ public:
             // because on regtest and single miner signets this would wait
             // forever if no block was mined in the past day.
             while (chainman().IsInitialBlockDownload()) {
-                maybe_tip = waitTipChanged(maybe_tip->hash, MillisecondsDouble{1000});
+                maybe_tip = waitTipChanged(maybe_tip->hash, MillisecondsDouble{1000}, /*cancel=*/{});
                 if (!maybe_tip || chainman().m_interrupt || WITH_LOCK(notifications().m_tip_block_mutex, return m_interrupt_mining)) return {};
             }
 
@@ -995,11 +1005,6 @@ public:
         }
         auto new_template = block_template_manager().CreateNewTemplate(options);
         return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), m_node);
-    }
-
-    void interrupt() override
-    {
-        block_template_manager().InterruptWait(m_interrupt_mining);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
