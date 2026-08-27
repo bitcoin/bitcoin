@@ -3617,14 +3617,20 @@ std::vector<std::string> CWallet::SetupDescriptorScriptPubKeyManPair(WalletBatch
         throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
     }
     // Both the receive and change descriptor derive from a single multipath
-    // descriptor, which Parse below expands.
-    const std::string multipath_desc{GenerateMultipathDescriptorString(EncodeExtPubKey(master_key.Neuter()), output_type)};
+    // descriptor, which Parse below expands and returns in normalized form
+    // (which requires the master xprv).
+    const std::string multipath_desc{GenerateMultipathDescriptorString(EncodeExtKey(master_key), output_type)};
     FlatSigningProvider keys;
     std::string error;
-    auto descs{Parse(multipath_desc, keys, error, /*require_checksum=*/false)};
-    Assert(descs.size() == 2);
+    std::optional<std::string> multipath_normalized;
+    auto descs{Parse(multipath_desc, keys, error, /*require_checksum=*/false, /*multipath=*/&multipath_normalized)};
+    Assert(descs.size() == 2 && multipath_normalized);
 
     // The expanded descriptors are ordered by chain: receive, then change
+    // Take their IDs before they are moved below.
+    const uint256 receive_id{DescriptorID(*descs.at(0))};
+    const uint256 change_id{DescriptorID(*descs.at(1))};
+
     std::vector<std::pair<std::unique_ptr<Descriptor>, /*internal=*/bool>> requested_descs;
     if (receive) requested_descs.emplace_back(std::move(descs.at(0)), false);
     if (change) requested_descs.emplace_back(std::move(descs.at(1)), true);
@@ -3640,6 +3646,15 @@ std::vector<std::string> CWallet::SetupDescriptorScriptPubKeyManPair(WalletBatch
         new_descs.push_back(std::move(desc_str));
         AddScriptPubKeyMan(id, std::move(spk_manager));
         AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
+    }
+
+    // Store a record with the multipath descriptor, once the whole pair
+    // exists and if this call created at least one of its members
+    const bool pair_complete{GetScriptPubKeyMan(receive_id) && GetScriptPubKeyMan(change_id)};
+    if (!new_descs.empty() && pair_complete) {
+        if (auto res{AddMultipathDescriptor(batch, MultipathDescriptorRecord(std::move(*multipath_normalized), {receive_id, change_id}))}; !res) {
+            throw std::runtime_error(strprintf("%s: Failed to store multipath descriptor record: %s", __func__, util::ErrorString(res).original));
+        }
     }
     return new_descs;
 }

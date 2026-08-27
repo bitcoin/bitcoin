@@ -59,6 +59,10 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         assert_equal(addr, online_wallet2.getnewaddress())
         assert_equal(offline_wallet.listdescriptors()["descriptors"], online_wallet.listdescriptors()["descriptors"])
         assert_equal(offline_wallet.listdescriptors()["descriptors"], online_wallet2.listdescriptors()["descriptors"])
+        # The multipath records are exported too; the equality checks above
+        # ensure they match the originals
+        for entry in online_wallet.listdescriptors()["descriptors"]:
+            assert "multipath" in entry
 
         # Verify that online wallet cannot spend, but offline can
         self.funder.sendtoaddress(online_wallet.getnewaddress(), 10)

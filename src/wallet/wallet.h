@@ -1038,7 +1038,8 @@ public:
     void DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
     //! Create the receive and change DescriptorScriptPubKeyMan if they don't
-    //! exist yet.
+    //! exist yet. A record of the multipath descriptor is stored by the call
+    //! that completes the pair.
     //! @param[in] batch Batch to write the new descriptors with
     //! @param[in] master_key Master key to derive the descriptors from
     //! @param[in] output_type The OutputType of the descriptor pair
