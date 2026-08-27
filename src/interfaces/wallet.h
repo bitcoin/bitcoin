@@ -11,10 +11,13 @@
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <support/allocators/secure.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
+#include <wallet/types.h>
 
 #include <compare>
 #include <cstddef>
@@ -30,19 +33,17 @@
 #include <vector>
 
 class ArgsManager;
-class CKeyID;
-class CPubKey;
 class CScript;
 class PartiallySignedTransaction;
 class uint256;
 enum class FeeReason;
 enum class OutputType;
 struct bilingual_str;
+struct CExtKey;
+
 namespace wallet {
-struct CreatedTransactionResult;
 class CCoinControl;
 class CWallet;
-enum class AddressPurpose;
 struct CRecipient;
 struct WalletContext;
 } // namespace wallet
@@ -96,6 +97,13 @@ public:
 
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
+
+    //! Generate and add a new HD key to the wallet.
+    //! Requires the wallet to be unlocked. Returns a `WalletError` with code
+    //! `WalletErrorCode::UnlockNeeded` if the wallet is locked.
+    //!
+    //! Return the master xpub for the added HD key, or a `WalletError` on failure.
+    virtual util::Expected<CExtPubKey, wallet::WalletError> addHDKey(const std::optional<CExtKey>& key) = 0;
 
     //! Sign message
     virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
