@@ -1165,7 +1165,7 @@ static RPCMethod decodepsbt()
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
     for (auto entry : psbtx.unknown) {
-        unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+        unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
     }
     result.pushKV("unknown", std::move(unknowns));
 
@@ -1272,7 +1272,7 @@ static RPCMethod decodepsbt()
         if (!input.ripemd160_preimages.empty()) {
             UniValue ripemd160_preimages(UniValue::VOBJ);
             for (const auto& [hash, preimage] : input.ripemd160_preimages) {
-                ripemd160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+                ripemd160_preimages.pushKVEnd(HexStr(hash), HexStr(preimage));
             }
             in.pushKV("ripemd160_preimages", std::move(ripemd160_preimages));
         }
@@ -1281,7 +1281,7 @@ static RPCMethod decodepsbt()
         if (!input.sha256_preimages.empty()) {
             UniValue sha256_preimages(UniValue::VOBJ);
             for (const auto& [hash, preimage] : input.sha256_preimages) {
-                sha256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+                sha256_preimages.pushKVEnd(HexStr(hash), HexStr(preimage));
             }
             in.pushKV("sha256_preimages", std::move(sha256_preimages));
         }
@@ -1290,7 +1290,7 @@ static RPCMethod decodepsbt()
         if (!input.hash160_preimages.empty()) {
             UniValue hash160_preimages(UniValue::VOBJ);
             for (const auto& [hash, preimage] : input.hash160_preimages) {
-                hash160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+                hash160_preimages.pushKVEnd(HexStr(hash), HexStr(preimage));
             }
             in.pushKV("hash160_preimages", std::move(hash160_preimages));
         }
@@ -1299,7 +1299,7 @@ static RPCMethod decodepsbt()
         if (!input.hash256_preimages.empty()) {
             UniValue hash256_preimages(UniValue::VOBJ);
             for (const auto& [hash, preimage] : input.hash256_preimages) {
-                hash256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+                hash256_preimages.pushKVEnd(HexStr(hash), HexStr(preimage));
             }
             in.pushKV("hash256_preimages", std::move(hash256_preimages));
         }
@@ -1449,7 +1449,7 @@ static RPCMethod decodepsbt()
         if (input.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
             for (auto entry : input.unknown) {
-                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+                unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
             }
             in.pushKV("unknown", std::move(unknowns));
         }
@@ -1568,7 +1568,7 @@ static RPCMethod decodepsbt()
         if (output.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
             for (auto entry : output.unknown) {
-                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+                unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
             }
             out.pushKV("unknown", std::move(unknowns));
         }
