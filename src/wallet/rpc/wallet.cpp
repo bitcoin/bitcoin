@@ -1109,6 +1109,7 @@ RPCMethod signmessage();
 RPCMethod listreceivedbyaddress();
 RPCMethod listreceivedbylabel();
 RPCMethod listtransactions();
+RPCMethod listrawtransactions();
 RPCMethod listsinceblock();
 RPCMethod gettransaction();
 RPCMethod abandontransaction();
@@ -1153,6 +1154,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &listreceivedbylabel},
         {"wallet", &listsinceblock},
         {"wallet", &listtransactions},
+        {"wallet", &listrawtransactions},
         {"wallet", &listunspent},
         {"wallet", &listwalletdir},
         {"wallet", &listwallets},
