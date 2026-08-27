@@ -100,11 +100,9 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
-    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
-    const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
-    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
     BOOST_REQUIRE_EQUAL(pblock->vtx[0]->nLockTime, static_cast<uint32_t>(parent.nHeight));
+    BOOST_REQUIRE(pblock->vtx[0]->vin[0].scriptSig == (CScript{} << parent.nHeight + 1 << OP_0));
     BOOST_REQUIRE_EQUAL(pblock->vtx[0]->vout[1].nValue, GetBlockSubsidy(parent.nHeight + 1, params));
 
     return pblock;
