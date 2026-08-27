@@ -1069,6 +1069,10 @@ public:
     //! Get all multipath descriptor records, by record ID
     const std::map<uint256, MultipathDescriptorRecord>& GetMultipathDescriptors() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return m_multipath_descriptors; }
 
+    //! Get the multipath descriptor that the given wallet descriptor was
+    //! expanded from, if any
+    std::optional<std::string> GetMultipathDescriptor(const uint256& desc_id) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.
      * A backup is not created.

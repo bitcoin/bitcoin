@@ -3858,6 +3858,17 @@ void CWallet::LoadMultipathDescriptor(MultipathDescriptorRecord multipath_desc)
     m_multipath_descriptors[id] = std::move(multipath_desc);
 }
 
+std::optional<std::string> CWallet::GetMultipathDescriptor(const uint256& desc_id) const
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& [id, multipath_desc] : m_multipath_descriptors) {
+        if (std::find(multipath_desc.desc_ids.begin(), multipath_desc.desc_ids.end(), desc_id) != multipath_desc.desc_ids.end()) {
+            return multipath_desc.descriptor;
+        }
+    }
+    return std::nullopt;
+}
+
 util::Result<void> CWallet::AddMultipathDescriptor(WalletBatch& batch, MultipathDescriptorRecord multipath_desc)
 {
     AssertLockHeld(cs_wallet);
