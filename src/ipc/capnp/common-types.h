@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <mp/proxy-types.h>
+#include <mp/type-cancel.h>
 #include <mp/type-chrono.h>
 #include <mp/type-context.h>
 #include <mp/type-data.h>

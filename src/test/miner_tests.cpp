@@ -42,12 +42,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace util::hex_literals;
@@ -146,6 +148,19 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_REQUIRE(block_template);
     CBlock block{block_template->getBlock()};
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 1U);
+
+    // waitNext() can be canceled from another thread through its cancellation
+    // argument. Returns nullptr.
+    {
+        std::promise<interfaces::CancelFn> cancel_promise;
+        std::thread canceler{[&] {
+            interfaces::CancelFn cancel{cancel_promise.get_future().get()};
+            cancel();
+        }};
+        BOOST_REQUIRE(block_template->waitNext({.timeout = MillisecondsDouble::max()},
+                          [&](interfaces::CancelFn fn) { cancel_promise.set_value(std::move(fn)); }) == nullptr);
+        canceler.join();
+    }
 
     // waitNext() on an empty mempool should return nullptr because there is no better template
     auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
