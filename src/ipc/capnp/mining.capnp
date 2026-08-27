@@ -6,6 +6,7 @@
 
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ipc::capnp::messages");
+$Cxx.allowCancellation;
 
 using Common = import "common.capnp";
 using Proxy = import "/mp/proxy.capnp";
@@ -21,13 +22,16 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     isTestChain @0 (context :Proxy.Context) -> (result: Bool);
     isInitialBlockDownload @1 (context :Proxy.Context) -> (result: Bool);
     getTip @2 (context :Proxy.Context) -> (result: Common.BlockRef, hasResult: Bool);
-    waitTipChanged @3 (context :Proxy.Context, currentTip: Data, timeout: Float64 = .maxDouble) -> (result: Common.BlockRef);
-    createNewBlock @4 (context :Proxy.Context, options: BlockCreateOptions, cooldown: Bool = true) -> (result: BlockTemplate);
+    waitTipChanged @3 (context :Proxy.Context, currentTip: Data, timeout: Float64 = .maxDouble) -> (result: Common.BlockRef) $Proxy.extraParam("cancel");
+    createNewBlock @4 (context :Proxy.Context, options: BlockCreateOptions, cooldown: Bool = true) -> (result: BlockTemplate) $Proxy.extraParam("cancel");
     checkBlock @5 (context :Proxy.Context, block: Data, options: BlockCheckOptions) -> (reason: Text, debug: Text, result: Bool);
-    interrupt @6 () -> ();
     submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
     getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
     getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
+
+    # DEPRECATED: This is no longer needed. Any long-running server process can
+    #             be stopped by dropping its promise.
+    interruptOld6 @6 () -> ();
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
@@ -39,11 +43,13 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getCoinbaseTx @5 (context: Proxy.Context) -> (result: CoinbaseTx);
     getCoinbaseMerklePath @6 (context: Proxy.Context) -> (result: List(Data));
     submitSolution @10 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (reason: Text, debug: Text, result: Bool);
-    waitNext @8 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate);
-    interruptWait @9() -> ();
+    waitNext @8 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate) $Proxy.extraParam("cancel");
 
     # DEPRECATED: older version of submitSolution which returns an error.
     submitSolutionOld7 @7 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
+    # DEPRECATED: This is no longer needed. Any long-running server process can
+    #             be stopped by dropping its promise.
+    interruptWaitOld9 @9() -> ();
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
