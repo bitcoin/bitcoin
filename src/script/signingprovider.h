@@ -25,7 +25,6 @@
 #include <span>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 class MuSig2SecNonce;
