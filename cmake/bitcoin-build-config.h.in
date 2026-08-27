@@ -76,6 +76,9 @@
 /* Define this symbol if you have posix_fallocate */
 #cmakedefine HAVE_POSIX_FALLOCATE 1
 
+/* Define this symbol if you have SetThreadDescription */
+#cmakedefine HAVE_SETTHREADDESCRIPTION 1
+
 /* Define this symbol if platform supports unix domain sockets */
 #cmakedefine HAVE_SOCKADDR_UN 1
 
