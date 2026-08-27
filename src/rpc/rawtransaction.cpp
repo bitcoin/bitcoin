@@ -1164,8 +1164,8 @@ static RPCMethod decodepsbt()
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
-    for (auto entry : psbtx.unknown) {
-        unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
+    for (auto [key, value] : psbtx.unknown) {
+        unknowns.pushKVEnd(HexStr(key), HexStr(value));
     }
     result.pushKV("unknown", std::move(unknowns));
 
@@ -1448,8 +1448,8 @@ static RPCMethod decodepsbt()
         // Unknown data
         if (input.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
-            for (auto entry : input.unknown) {
-                unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
+            for (auto [key, value] : input.unknown) {
+                unknowns.pushKVEnd(HexStr(key), HexStr(value));
             }
             in.pushKV("unknown", std::move(unknowns));
         }
@@ -1567,8 +1567,8 @@ static RPCMethod decodepsbt()
         // Unknown data
         if (output.unknown.size() > 0) {
             UniValue unknowns(UniValue::VOBJ);
-            for (auto entry : output.unknown) {
-                unknowns.pushKVEnd(HexStr(entry.first), HexStr(entry.second));
+            for (auto [key, value] : output.unknown) {
+                unknowns.pushKVEnd(HexStr(key), HexStr(value));
             }
             out.pushKV("unknown", std::move(unknowns));
         }

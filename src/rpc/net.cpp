@@ -293,16 +293,18 @@ static RPCMethod getpeerinfo()
         obj.pushKV("minfeefilter", ValueFromAmount(statestats.m_fee_filter_received));
 
         UniValue sendPerMsgType(UniValue::VOBJ);
-        for (const auto& i : stats.mapSendBytesPerMsgType) {
-            if (i.second > 0)
-                sendPerMsgType.pushKVEnd(i.first, i.second);
+        for (const auto& [message_type, total_bytes] : stats.mapSendBytesPerMsgType) {
+            if (total_bytes > 0) {
+                sendPerMsgType.pushKVEnd(message_type, total_bytes);
+            }
         }
         obj.pushKV("bytessent_per_msg", std::move(sendPerMsgType));
 
         UniValue recvPerMsgType(UniValue::VOBJ);
-        for (const auto& i : stats.mapRecvBytesPerMsgType) {
-            if (i.second > 0)
-                recvPerMsgType.pushKVEnd(i.first, i.second);
+        for (const auto& [message_type, total_bytes] : stats.mapRecvBytesPerMsgType) {
+            if (total_bytes > 0) {
+                recvPerMsgType.pushKVEnd(message_type, total_bytes);
+            }
         }
         obj.pushKV("bytesrecv_per_msg", std::move(recvPerMsgType));
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
