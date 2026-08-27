@@ -237,6 +237,12 @@ public:
     /** Return the extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 
+    /** Collect the extended public keys this provider contributes, each with the origin
+     *  of the key itself, in the form BIP 174's PSBT_GLOBAL_XPUB expects: the key at the
+     *  deepest hardened derivation step, so that the unhardened children used in the
+     *  transaction can be derived from it. */
+    virtual void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const = 0;
+
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 
@@ -322,6 +328,17 @@ public:
     {
         return m_provider->GetRootExtPubKey();
     }
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        std::map<KeyOriginInfo, std::set<CExtPubKey>> sub;
+        m_provider->GetExtPubKeysWithOrigins(arg, cache, sub);
+        for (auto& [suborigin, xpubs] : sub) {
+            KeyOriginInfo origin{suborigin};
+            origin.fingerprint = m_origin.fingerprint;
+            origin.path.insert(origin.path.begin(), m_origin.path.begin(), m_origin.path.end());
+            out[origin].insert(xpubs.begin(), xpubs.end());
+        }
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
@@ -387,6 +404,7 @@ public:
     {
         return std::nullopt;
     }
+    void GetExtPubKeysWithOrigins(const SigningProvider&, const DescriptorCache*, std::map<KeyOriginInfo, std::set<CExtPubKey>>&) const override {}
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
@@ -615,6 +633,28 @@ public:
     {
         return m_root_extkey;
     }
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        // A hardened ranged key expression derives children the receiver cannot reach from
+        // any parent we could publish, so there is nothing useful to contribute.
+        if (m_derive == DeriveType::HARDENED_RANGED) return;
+
+        KeyOriginInfo origin;
+        CExtPubKey xpub;
+        const int last_hardened{LastHardenedIndex()};
+        if (last_hardened == -1) {
+            // No hardened derivation, so the root itself is what the children come from
+            origin.fingerprint = m_root_extkey.id_key_fingerprint();
+            xpub = m_root_extkey;
+        } else if (!GetLastHardenedExtPubKey(last_hardened, arg, cache, origin, xpub)) {
+            return;
+        }
+        if (!xpub.pubkey.IsValid()) return;
+        // The key is about to be serialized with its version bytes, which a key parsed
+        // from a descriptor does not carry.
+        SetExtPubKeyVersion(xpub);
+        out[origin].insert(xpub);
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
@@ -809,6 +849,11 @@ public:
     {
         return std::nullopt;
     }
+    // Derivation here is applied to the aggregate key, not to the participants, so a
+    // participant's extended key does not derive the key that ends up in the script.
+    // BIP 174 asks for keys the receiver can derive the transaction's keys from, so
+    // there is nothing here that fits.
+    void GetExtPubKeysWithOrigins(const SigningProvider&, const DescriptorCache*, std::map<KeyOriginInfo, std::set<CExtPubKey>>&) const override {}
 
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
@@ -1073,6 +1118,17 @@ public:
         }
         for (const auto& arg : m_subdescriptor_args) {
             arg->GetPubKeys(pubkeys, ext_pubs);
+        }
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        for (const auto& p : m_pubkey_args) {
+            p->GetExtPubKeysWithOrigins(arg, cache, out);
+        }
+        for (const auto& sub : m_subdescriptor_args) {
+            sub->GetExtPubKeysWithOrigins(arg, cache, out);
         }
     }
 

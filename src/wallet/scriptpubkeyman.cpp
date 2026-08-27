@@ -1393,6 +1393,10 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
     if (n_signed) {
         *n_signed = 0;
     }
+    // Whether any input or output of this transaction is ours, which is what decides
+    // if this descriptor's extended keys belong in the PSBT at all. The change output
+    // counts: it is what a co-signer checks to see the change comes back to us.
+    bool contributes_to_psbt = false;
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
@@ -1417,8 +1421,12 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         std::unique_ptr<FlatSigningProvider> keys = std::make_unique<FlatSigningProvider>();
         std::unique_ptr<FlatSigningProvider> script_keys = GetSigningProvider(script, /*include_private=*/options.sign);
         if (script_keys) {
+            contributes_to_psbt = true;
             keys->Merge(std::move(*script_keys));
         } else {
+            // Deliberately not counted as contributing: reaching here means the script is
+            // not ours, we just happen to hold one of the keys it lists. Our descriptor's
+            // extended keys describe a different policy and do not belong in this PSBT.
             // Maybe there are pubkeys listed that we can sign for
             std::vector<CPubKey> pubkeys;
             pubkeys.reserve(input.hd_keypaths.size() + 2);
@@ -1477,10 +1485,39 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         if (!keys) {
             continue;
         }
+        contributes_to_psbt = true;
         UpdatePSBTOutput(HidingSigningProvider(keys.get(), /*hide_secret=*/true, /*hide_origin=*/!options.bip32_derivs), psbtx, i);
     }
 
+    if (contributes_to_psbt && options.bip32_derivs) {
+        AddGlobalXpubs(psbtx);
+    }
+
     return {};
+}
+
+void DescriptorScriptPubKeyMan::AddGlobalXpubs(PartiallySignedTransaction& psbtx) const
+{
+    LOCK(cs_desc_man);
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs;
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+    m_wallet_descriptor.descriptor->GetExtPubKeysWithOrigins(provider, &m_wallet_descriptor.cache, xpubs);
+
+    // Only a descriptor with several extended keys needs this: a co-signer has to be
+    // able to tell which of the keys in the script is its own, and there is no one else
+    // to tell in the single key case. Publishing there would hand the wallet's extended
+    // key to whoever receives the PSBT for nothing in return. Count the keys rather than
+    // the origins, since two key expressions can share one origin.
+    size_t count{0};
+    for (const auto& [_, keys] : xpubs) {
+        count += keys.size();
+    }
+    if (count < 2) return;
+
+    for (const auto& [origin, keys] : xpubs) {
+        psbtx.m_xpubs[origin].insert(keys.begin(), keys.end());
+    }
 }
 
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const

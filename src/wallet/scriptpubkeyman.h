@@ -312,6 +312,10 @@ private:
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    //! Put this descriptor's extended keys in the PSBT, so that a co-signer that only has
+    //! the file can tell which key in the script is its own. BIP 174 PSBT_GLOBAL_XPUB.
+    void AddGlobalXpubs(PartiallySignedTransaction& psbtx) const;
+
     // Cached FlatSigningProviders to avoid regenerating them each time they are needed.
     mutable std::map<int32_t, FlatSigningProvider> m_map_signing_providers;
     // Fetch the SigningProvider for the given script and optionally include private keys
