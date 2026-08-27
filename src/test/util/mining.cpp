@@ -75,10 +75,11 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
-void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time)
+void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time, const Consensus::Params& params)
 {
     block.hashPrevBlock = parent.GetBlockHash();
     block.nTime = time;
+    block.nBits = GetNextWorkRequired(&parent, &block, params);
     {
         CMutableTransaction tx_coinbase{*block.vtx.at(0)};
         tx_coinbase.nLockTime = static_cast<uint32_t>(parent.nHeight);
@@ -106,7 +107,7 @@ bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
 
         // The template is built on the active tip, so repoint it at pindex and
         // redo the fields that depend on the predecessor.
-        RebuildBlockForParent(block, *pindex, /*time=*/pindex->nTime + 1);
+        RebuildBlockForParent(block, *pindex, /*time=*/pindex->nTime + 1, consensus);
 
         while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) ++block.nNonce;
 
