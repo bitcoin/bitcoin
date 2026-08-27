@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/init.h> // IWYU pragma: associated
+
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
-#include <interfaces/init.h>
 #include <interfaces/ipc.h>
+#include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/wallet.h>
