@@ -435,6 +435,41 @@ class BIP32PubkeyProvider final : public PubkeyProvider
         return true;
     }
 
+    //! Index of the last hardened step in the path, or -1 when there is none.
+    int LastHardenedIndex() const
+    {
+        int i = (int)m_path.size() - 1;
+        for (; i >= 0; --i) {
+            if (m_path.at(i) >> 31) break;
+        }
+        return i;
+    }
+
+    //! The extended public key at the last hardened step, with the origin that leads to
+    //! it. Takes the index from LastHardenedIndex(), which must not be -1. Uses the cache
+    //! when it has the key, and falls back to deriving it, which needs the private key.
+    bool GetLastHardenedExtPubKey(int last_hardened, const SigningProvider& arg, const DescriptorCache* cache, KeyOriginInfo& origin, CExtPubKey& xpub) const
+    {
+        Assume(last_hardened >= 0);
+        for (int k = 0; k <= last_hardened; ++k) {
+            origin.path.push_back(m_path.at(k));
+        }
+        origin.fingerprint = m_root_extkey.id_key_fingerprint();
+
+        if (cache != nullptr) {
+            cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub);
+        }
+        if (!xpub.pubkey.IsValid()) {
+            // Cache miss, or no cache, so derive it
+            CExtKey xprv;
+            CExtKey lh_xprv;
+            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
+            xpub = lh_xprv.Neuter();
+        }
+        assert(xpub.pubkey.IsValid());
+        return true;
+    }
+
     bool IsHardened() const
     {
         if (m_derive == DeriveType::HARDENED_RANGED) return true;
@@ -542,45 +577,17 @@ public:
 
             return true;
         }
-        // Step backwards to find the last hardened step in the path
-        int i = (int)m_path.size() - 1;
-        for (; i >= 0; --i) {
-            if (m_path.at(i) >> 31) {
-                break;
-            }
-        }
+        const int last_hardened{LastHardenedIndex()};
         // Either no derivation or all unhardened derivation
-        if (i == -1) {
+        if (last_hardened == -1) {
             out = ToString();
             return true;
         }
-        // Get the path to the last hardened stup
         KeyOriginInfo origin;
-        int k = 0;
-        for (; k <= i; ++k) {
-            // Add to the path
-            origin.path.push_back(m_path.at(k));
-        }
-        // Build the remaining path
-        KeyPath end_path;
-        for (; k < (int)m_path.size(); ++k) {
-            end_path.push_back(m_path.at(k));
-        }
-        origin.fingerprint = m_root_extkey.id_key_fingerprint();
-
         CExtPubKey xpub;
-        CExtKey lh_xprv;
-        // If we have the cache, just get the parent xpub
-        if (cache != nullptr) {
-            cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub);
-        }
-        if (!xpub.pubkey.IsValid()) {
-            // Cache miss, or nor cache, or need privkey
-            CExtKey xprv;
-            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
-            xpub = lh_xprv.Neuter();
-        }
-        assert(xpub.pubkey.IsValid());
+        if (!GetLastHardenedExtPubKey(last_hardened, arg, cache, origin, xpub)) return false;
+        // The remaining path is whatever comes after the origin the key sits at
+        KeyPath end_path(m_path.begin() + origin.path.size(), m_path.end());
 
         // Build the string
         std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
