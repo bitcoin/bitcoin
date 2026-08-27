@@ -18,6 +18,8 @@
 #include <condition_variable>
 #include <cstdlib>
 #include <functional>
+#include <kj/async.h>
+#include <kj/exception.h>
 #include <kj/function.h>
 #include <kj/io.h>
 #include <map>
@@ -40,6 +42,17 @@ struct InvokeContext
 struct ClientInvokeContext : InvokeContext
 {
     ThreadContext& thread_context;
+    //! Callback that overloads can set while building a parameter to make a
+    //! function call cancelable. If set, clientInvoke calls it on the event loop
+    //! thread with the kj::Canceler object wrapping the request when the request is
+    //! sent, and with null when the request finishes and the canceler is destroyed.
+    std::function<void(kj::Canceler*)> set_canceler;
+    //! Callback that lets clients set a custom error handler for kj::Exception.
+    //! For example, a canceled request fails the same way a disconnect does,
+    //! and this is where the cancellation parameter can throw its own
+    //! exception instead. If set, clientInvoke calls it and rethrows anything
+    //! it throws.
+    std::function<void(const kj::Exception&)> handle_error;
     ClientInvokeContext(Connection& conn, ThreadContext& thread_context)
         : InvokeContext{conn}, thread_context{thread_context}
     {
@@ -59,14 +72,22 @@ struct ServerInvokeContext : InvokeContext
     //! results structs if the request is canceled while the worker thread is
     //! reading params (`call_context.getParams()`) or writing results
     //! (`call_context.getResults()`).
-    Lock* cancel_lock{nullptr};
+    Lock* request_lock{nullptr};
+    //! For IPC methods that execute asynchronously, not on the event-loop
+    //! thread: mutex request_lock refers to, set together with it. Null for
+    //! methods executing on the event-loop thread.
+    Mutex* request_mutex{nullptr};
     //! For IPC methods that execute asynchronously, not on the event-loop
     //! thread, this is set to true if the IPC call was canceled by the client
     //! or canceled by a disconnection. If the call runs on the event-loop
-    //! thread, it can't be canceled. This should be accessed with cancel_lock
+    //! thread, it can't be canceled. This should be accessed with request_lock
     //! held if it is not null, since in the asynchronous case it is accessed
     //! from multiple threads.
     bool request_canceled{false};
+    //! For IPC methods that execute asynchronously, not on the event-loop
+    //! thread: callback registered by a wrapped method. Runs when request
+    //! cancellation is detected.
+    std::function<void()> cancel_fn;
 
     ServerInvokeContext(ProxyServer& proxy_server, CallContext& call_context, int req)
         : InvokeContext{*proxy_server.m_context.connection}, proxy_server{proxy_server}, call_context{call_context}, req{req}
@@ -263,12 +284,17 @@ public:
     ~EventLoop();
 
     //! Run event loop. Does not return until shutdown. This should only be
-    //! called once from the m_thread_id thread. This will block until
-    //! the m_num_refs reference count is 0.
+    //! called once from the m_thread_id thread. This will block until the
+    //! m_num_refs reference count drops to 0 and there are no pending async
+    //! cleanup functions. This only happens once and loop() returns right
+    //! after, so new EventLoopRef instances should only be created by code
+    //! that already holds a reference, or is kept alive by one.
     void loop();
 
     //! Run function on event loop thread. Does not return until function completes.
-    //! Must be called while the loop() function is active.
+    //! Must be called while the loop() function is active, and the caller must
+    //! prevent loop() from returning until sync() returns, normally by holding
+    //! an EventLoopRef.
     void sync(kj::FunctionParam<void()> fn);
 
     //! Register cleanup function to run on asynchronous worker thread without
@@ -308,34 +334,33 @@ public:
     //! method has not been called.
     std::thread m_async_thread;
 
-    //! Callback function to run on event loop thread during sync() call.
-    kj::FunctionParam<void()>* m_sync_fn MP_GUARDED_BY(m_mutex) = nullptr;
-
     //! Callback functions to run on async thread.
     std::optional<CleanupList> m_async_fns MP_GUARDED_BY(m_mutex);
 
-    //! Socket pair used to post and wait for wakeups to the event loop thread.
-    kj::Own<kj::AsyncIoStream> m_wait_stream;
-    kj::Own<kj::AsyncIoStream> m_post_stream;
-
-    //! Synchronous writer used to write to m_post_stream.
-    kj::Own<kj::OutputStream> m_post_writer;
-
     //! Number of EventLoopRef instances referencing this event loop. This is a
     //! sum of the number of client and server objects (Connection, ProxyClient,
-    //! ProxyServer) using the loop, plus temporary references held while
-    //! posting functions to the loop, plus any references held by external code
-    //! to keep the loop running. The loop() method exits when this count drops
-    //! to 0 (and m_async_fns is empty).
+    //! ProxyServer) using the loop, plus a temporary reference held by the
+    //! async thread while it runs each cleanup function, plus any references
+    //! held by external code to keep the loop running. The loop() method exits
+    //! when this count drops to 0 (and m_async_fns is empty).
     int m_num_refs MP_GUARDED_BY(m_mutex) = 0;
 
-    //! Mutex and condition variable used to post tasks to event loop and async
-    //! thread.
+    //! Mutex guarding the reference count and async cleanup list.
     Mutex m_mutex;
+    //! Condition variable used to wake up the async thread when a cleanup
+    //! function is added or when loop() returns.
     std::condition_variable m_cv;
 
     //! Capnp IO context.
     kj::AsyncIoContext m_io_context;
+
+    //! Executor for the event loop thread. sync() uses it to run functions on
+    //! the event loop thread when called from other threads.
+    const kj::Executor& m_executor;
+
+    //! Promise that loop() waits on before returning. EventLoopRef::reset()
+    //! fulfills it when done() becomes true.
+    kj::PromiseCrossThreadFulfillerPair<void> m_stop_promise_fulfiller_pair;
 
     //! Capnp error handler. Needs to outlive m_task_set.
     LoggingErrorHandler m_error_handler{*this};
@@ -699,10 +724,23 @@ ProxyServerBase<Interface, Impl>::~ProxyServerBase()
 //! Context.thread parameter was passed, this method will run on the worker
 //! thread specified by the client. Otherwise it will run on the EventLoop
 //! thread, like other server methods without an assigned thread.
+//!
+//! Non-libmultiprocess clients can send destroy while other requests are
+//! running, so it is rejected in that case.
 template <typename Interface, typename Impl>
 void ProxyServerBase<Interface, Impl>::invokeDestroy()
 {
-    m_impl.reset();
+    // A destroy request with an mp.Context runs on a worker thread and is
+    // counted in m_active_calls itself.
+    const int self_count{std::this_thread::get_id() == m_context.loop->m_thread_id ? 0 : 1};
+    // Move m_impl out on the event loop thread, where serverInvoke checks it,
+    // and destroy it after returning to this thread.
+    std::shared_ptr<Impl> impl;
+    m_context.loop->sync([&] {
+        if (m_active_calls == self_count) impl = std::move(m_impl);
+    });
+    if (!impl) throw std::runtime_error("destroy called while other calls are in progress");
+    impl.reset();
     CleanupRun(m_context.cleanup_fns);
 }
 
@@ -981,6 +1019,10 @@ std::pair<ProxyServer<InitInterface>*, EventLoop::Connections::iterator> ServeSt
 
 //! Given listening socket identifier and an init object, handle incoming
 //! connections and requests by calling methods on the Init object.
+//!
+//! The listener does not hold an EventLoopRef, so the caller needs to hold
+//! one for as long as connections should be accepted. Otherwise the event
+//! loop exits after the last accepted connection is closed.
 template <typename InitInterface, typename InitImpl>
 void ListenConnections(EventLoop& loop, SocketId fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
 {

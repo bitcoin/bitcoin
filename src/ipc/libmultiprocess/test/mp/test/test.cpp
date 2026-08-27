@@ -27,6 +27,7 @@
 #include <list> // IWYU pragma: keep
 #include <map>
 #include <memory>
+#include <mutex>
 #include <mp/config.h>
 #include <mp/proxy.h>
 #include <mp/proxy.capnp.h>
@@ -265,6 +266,15 @@ KJ_TEST("Call FooInterface methods")
     KJ_EXPECT(foo->passDouble(1.25) == 1.25);
 
     KJ_EXPECT(foo->passFn([]{ return 10; }) == 10);
+
+    // The `CustomReadExtraParam` overload in `foo-types.h` builds the
+    // server-side value, hardcoded to 1. As a result this always returns
+    // arg + 1 regardless of the value passed for extra.
+    int client_extra{0};
+    foo->m_context.loop->testing_hook_misc = [&](std::any value) { client_extra = std::any_cast<int>(value); };
+    KJ_EXPECT(foo->passExtra(1, 999) == 2);
+    KJ_EXPECT(client_extra == 999);
+    foo->m_context.loop->testing_hook_misc = nullptr;
 
     // Recursive async IPC calls
     KJ_EXPECT(foo->passFn([foo]{
@@ -528,7 +538,7 @@ KJ_TEST("Calling async IPC method, with server disconnect after cleanup")
     // Use testing_hook_async_request_done to trigger a disconnect from the
     // worker thread after it executes an async request but before it returns.
     // Without the bugfix, the m_on_cancel callback would be called at this
-    // point, accessing the cancel_mutex stack variable that had gone out of
+    // point, accessing the request_mutex stack variable that had gone out of
     // scope.
     TestSetup setup;
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
@@ -755,6 +765,223 @@ KJ_TEST("Call async IPC method without thread or pool errors correctly")
     });
     done.get_future().get();
     KJ_EXPECT(error_thrown);
+}
+
+KJ_TEST("Calling IPC method after destroy and destroy during a call")
+{
+    // Regression test for bitcoin-core/libmultiprocess#378 where a
+    // non-libmultiprocess client could:
+    //
+    // 1. Call a method after destroy, making the server call it through a
+    //    null m_impl pointer.
+    // 2. Call destroy while another call on the same object was running,
+    //    making the server free m_impl under that call.
+    //
+    // This test builds requests directly through Cap'n Proto, mimicking the
+    // behavior of a buggy client.
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    EventLoop& loop = *foo->m_context.loop;
+    foo->initThreadMap();
+
+    // Create two pool threads, so the destroy() and value() calls run on
+    // different threads.
+    std::promise<void> pool_ready;
+    loop.sync([&] {
+        auto pool_req = foo->m_context.connection->m_thread_map.makePoolRequest();
+        pool_req.setCount(2);
+        loop.m_task_set->add(pool_req.send().then([&](auto&&) { pool_ready.set_value(); }));
+    });
+    pool_ready.get_future().get();
+
+    // Create two Bar objects, one for each case below. BarInterface declares a
+    // destroy method, unlike FooInterface.
+    std::optional<messages::BarInterface::Client> bar1;
+    std::optional<messages::BarInterface::Client> bar2;
+    std::promise<void> bars_ready;
+    loop.sync([&] {
+        auto request{foo->m_client.listBarsRequest()};
+        request.initContext();
+        request.setN(2);
+        loop.m_task_set->add(request.send().then([&](auto&& results) {
+            bar1.emplace(results.getResult()[0]);
+            bar2.emplace(results.getResult()[1]);
+            bars_ready.set_value();
+        }));
+    });
+    bars_ready.get_future().get();
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 1: method called after destroy.
+    ////////////////////////////////////////////////////////////////////////////
+
+    std::promise<void> destroyed;
+    loop.sync([&] {
+        auto request{bar1->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&&) { destroyed.set_value(); }));
+    });
+    destroyed.get_future().get();
+
+    // Calls after destroy are rejected.
+    std::promise<std::string> value_error;
+    loop.sync([&] {
+        auto request{bar1->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { value_error.set_value(""); },
+            [&](kj::Exception&& e) { value_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(value_error.get_future().get().find("method called after destroy") != std::string::npos);
+
+    // Release bar1.
+    loop.sync([&] { bar1.reset(); });
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 2: destroy called while another call is running.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Block the next async request, the value() call, before it calls m_impl.
+    std::promise<void> value_started;
+    std::promise<void> value_release;
+    std::atomic<bool> blocked{false};
+    loop.testing_hook_async_request_start = [&] {
+        if (blocked.exchange(true)) return;
+        value_started.set_value();
+        value_release.get_future().wait();
+    };
+    std::promise<int> value;
+    loop.sync([&] {
+        auto request{bar2->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&& results) { value.set_value(results.getResult()); }));
+    });
+    value_started.get_future().get();
+
+    // Destroy fails if value() request is being executed.
+    std::promise<std::string> destroy_error;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_error.set_value(""); },
+            [&](kj::Exception&& e) { destroy_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_error.get_future().get().find("destroy called while other calls are in progress") != std::string::npos);
+
+    value_release.set_value();
+    KJ_EXPECT(value.get_future().get() == 1);
+
+    // Destroy succeeds after the value() call has finished.
+    std::promise<std::string> destroy_result;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_result.set_value(""); },
+            [&](kj::Exception&& e) { destroy_result.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_result.get_future().get() == "");
+
+    // Release bar2.
+    loop.sync([&] { bar2.reset(); });
+}
+
+KJ_TEST("Cancel an in-flight IPC call")
+{
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    std::promise<void> waiting;
+    std::promise<void> done;
+
+    // Install a function that blocks until its `CancelArg` fires, so
+    // cancellation is the only way out.
+    setup.server->m_impl->m_cancel_fn = [&](CancelArg cancel) {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool canceled = false;
+        const CancelGuard guard{cancel([&] {
+            const std::scoped_lock<std::mutex> lock{mutex};
+            canceled = true;
+            cv.notify_all();
+        })};
+        std::unique_lock<std::mutex> lock{mutex};
+        waiting.set_value();
+        cv.wait(lock, [&] { return canceled; });
+        done.set_value();
+    };
+
+    std::promise<CancelFn> cancel_fn;
+    std::thread canceler([&] {
+        CancelFn fire{cancel_fn.get_future().get()};
+        waiting.get_future().wait();
+        fire();
+    });
+    bool interrupted = false;
+    try {
+        foo->callCancelFnAsync([&](CancelFn fn) {
+            cancel_fn.set_value(std::move(fn));
+            return CancelGuard{};
+        });
+    } catch (const InterruptException&) {
+        interrupted = true;
+    }
+    canceler.join();
+    KJ_EXPECT(interrupted);
+    KJ_EXPECT(done.get_future().wait_for(std::chrono::minutes{5}) == std::future_status::ready);
+
+    // Connection should be unaffected.
+    KJ_EXPECT(foo->add(1, 2) == 3);
+}
+
+KJ_TEST("Dropping the client promise cancels an executing method")
+{
+    TestSetup setup;
+    constexpr std::chrono::seconds timeout{30};
+    std::promise<void> waiting;
+    std::promise<void> done;
+
+    // Install a function that blocks until its `CancelArg` fires, so
+    // cancellation is the only way out.
+    setup.server->m_impl->m_cancel_fn = [&](CancelArg cancel) {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool canceled = false;
+        const CancelGuard guard{cancel([&] {
+            const std::scoped_lock<std::mutex> lock{mutex};
+            canceled = true;
+            cv.notify_all();
+        })};
+        std::unique_lock<std::mutex> lock{mutex};
+        waiting.set_value();
+        cv.wait(lock, [&] { return canceled; });
+        done.set_value();
+    };
+    ProxyClient<messages::FooInterface>* foo{setup.client.get()};
+    foo->initThreadMap();
+
+    // Build the request by hand, the way a non-C++ client would. A normal
+    // proxy call cannot be abandoned because `clientInvoke` blocks on it.
+    std::optional<capnp::RemotePromise<messages::FooInterface::CallCancelFnAsyncResults>> remote;
+    foo->m_context.loop->sync([&] {
+        auto request{foo->m_client.callCancelFnAsyncRequest()};
+        request.initContext().setThread(
+            foo->m_context.connection->m_thread_map.makeThreadRequest().send().getResult());
+        remote.emplace(request.send());
+    });
+    KJ_REQUIRE(waiting.get_future().wait_for(timeout) == std::future_status::ready);
+
+    auto done_future{done.get_future()};
+    KJ_EXPECT(done_future.wait_for(std::chrono::seconds{0}) == std::future_status::timeout);
+
+    // Abandon the call without disconnecting.
+    foo->m_context.loop->sync([&] { remote.reset(); });
+
+    KJ_EXPECT(done_future.wait_for(timeout) == std::future_status::ready);
+
+    // Connection should be unaffected.
+    KJ_EXPECT(foo->add(1, 2) == 3);
 }
 
 } // namespace test

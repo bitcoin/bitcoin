@@ -8,6 +8,9 @@
 #include <mp/proxy-io.h>
 
 #include <exception>
+#include <kj/async.h>
+#include <kj/common.h>
+#include <kj/memory.h>
 #include <optional>
 #include <set>
 #include <typeindex>
@@ -540,28 +543,84 @@ ClientParam<Accessor, Types...> MakeClientParam(Types&&... values)
     return {std::forward<Types>(values)...};
 }
 
+//! Client parameter with no capnp field, generated for method parameters
+//! declared with `$Proxy.extraParam`. Its value is handed to a
+//! CustomBuildExtraParam overload instead of being built into the request.
+template <typename... Types>
+struct ClientParam<void, Types...>
+{
+    ClientParam(Types&&... values) : m_values{std::forward<Types>(values)...} {}
+
+    struct BuildParams : IterateFieldsHelper<BuildParams, sizeof...(Types)>
+    {
+        template <typename Params, typename ParamList>
+        void handleField(ClientInvokeContext& invoke_context, Params&, ParamList)
+        {
+            static_assert((requires(ClientInvokeContext& context, Types&& value) {
+                              CustomBuildExtraParam(TypeList<RemoveCvRef<Types>>(), context, std::forward<Types>(value));
+                          } && ...),
+                          "Wrapped C++ method has more parameters than its corresponding Cap'n Proto method has fields. "
+                          "Declare extra parameters with $Proxy.extraParam in the Cap'n Proto schema and add a matching "
+                          "`CustomBuildExtraParam` overload.");
+            auto const fun = [&](Types&&... values) {
+                (CustomBuildExtraParam(TypeList<RemoveCvRef<Types>>(), invoke_context, std::forward<Types>(values)), ...);
+            };
+            std::apply(fun, std::move(m_client_param->m_values));
+        }
+        BuildParams(ClientParam* client_param) : m_client_param(client_param) {}
+        ClientParam* m_client_param;
+    };
+
+    struct ReadResults : IterateFieldsHelper<ReadResults, sizeof...(Types)>
+    {
+        template <typename Results, typename ParamList>
+        void handleField(ClientInvokeContext&, Results&, ParamList)
+        {
+        }
+        ReadResults(ClientParam*) {}
+    };
+
+    std::tuple<Types&&...> m_values;
+};
+
 struct ServerCall
 {
     // FIXME: maybe call call_context.releaseParams()
-    template <typename ServerContext, typename... Args>
-    decltype(auto) invoke(ServerContext& server_context, TypeList<>, Args&&... args) const
+    template <typename ServerContext, typename... Extra, typename... Args>
+    decltype(auto) invoke(ServerContext& server_context, TypeList<Extra...>, Args&&... args) const
     {
-        // If cancel_lock is set, release it while executing the method, and
+        // Construct the extra parameters before request_lock is released below.
+        // CustomReadExtraParam overloads build values from the request being
+        // executed, so they need the same protection as normal capnp fields
+        // from the event loop deleting request state on cancellation.
+        static_assert((requires { CustomReadExtraParam(TypeList<RemoveCvRef<Extra>>(), server_context); } && ...),
+                      "Wrapped C++ method has more parameters than its corresponding Cap'n Proto method has fields. "
+                      "Declare extra parameters with $Proxy.extraParam in the Cap'n Proto schema and add a matching "
+                      "`CustomReadExtraParam` overload.");
+        std::tuple<RemoveCvRef<Extra>...> extra{CustomReadExtraParam(TypeList<RemoveCvRef<Extra>>(), server_context)...};
+        // If request_lock is set, release it while executing the method, and
         // reacquire it afterwards. The lock is needed to prevent params and
         // response structs from being deleted by the event loop thread if the
         // request is canceled, so it is only needed before and after method
         // execution. It is important to release the lock during execution
         // because the method can take arbitrarily long to return and the event
         // loop will need the lock itself in on_cancel if the call is canceled.
-        if (server_context.cancel_lock) server_context.cancel_lock->m_lock.unlock();
+        if (server_context.request_lock) server_context.request_lock->m_lock.unlock();
         return TryFinally(
             [&]() -> decltype(auto) {
-                return ProxyServerMethodTraits<
-                    typename decltype(server_context.call_context.getParams())::Reads
-                >::invoke(server_context, std::forward<Args>(args)...);
+                return std::apply(
+                    [&](RemoveCvRef<Extra>&... extra_args) -> decltype(auto) {
+                        return ProxyServerMethodTraits<
+                            typename decltype(server_context.call_context.getParams())::Reads
+                        >::invoke(server_context, std::forward<Args>(args)..., std::move(extra_args)...);
+                    },
+                    extra);
             },
             [&] {
-                if (server_context.cancel_lock) server_context.cancel_lock->m_lock.lock();
+                if (server_context.request_lock) server_context.request_lock->m_lock.lock();
+                // The method returned, so destroy the callback it registered
+                // through its cancellation argument, if any.
+                server_context.cancel_fn = nullptr;
                 // If the IPC request was canceled, throw InterruptException
                 // because there is no point continuing and trying to fill the
                 // call_context.getResults() struct. It's also important to stop
@@ -593,10 +652,10 @@ struct ServerRet : Parent
 {
     ServerRet(Parent parent) : Parent(parent) {}
 
-    template <typename ServerContext, typename... Args>
-    void invoke(ServerContext& server_context, TypeList<>, Args&&... args) const
+    template <typename ServerContext, typename ArgTypes, typename... Args>
+    void invoke(ServerContext& server_context, ArgTypes arg_types, Args&&... args) const
     {
-        auto&& result = Parent::invoke(server_context, TypeList<>(), std::forward<Args>(args)...);
+        auto&& result = Parent::invoke(server_context, arg_types, std::forward<Args>(args)...);
         auto&& results = server_context.call_context.getResults();
         InvokeContext& invoke_context = server_context;
         BuildField(TypeList<decltype(result)>(), invoke_context, Make<StructField, Accessor>(results),
@@ -609,11 +668,11 @@ struct ServerExcept : Parent
 {
     ServerExcept(Parent parent) : Parent(parent) {}
 
-    template <typename ServerContext, typename... Args>
-    void invoke(ServerContext& server_context, TypeList<>, Args&&... args) const
+    template <typename ServerContext, typename ArgTypes, typename... Args>
+    void invoke(ServerContext& server_context, ArgTypes arg_types, Args&&... args) const
     {
         try {
-            return Parent::invoke(server_context, TypeList<>(), std::forward<Args>(args)...);
+            return Parent::invoke(server_context, arg_types, std::forward<Args>(args)...);
         } catch (const Exception& exception) {
             auto&& results = server_context.call_context.getResults();
             BuildField(TypeList<Exception>(), server_context, Make<StructField, Accessor>(results), exception);
@@ -760,7 +819,18 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
         MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Trace)
             << "send data: " << LogEscape(request.toString(), proxy_client.m_context.loop->m_log_opts.max_chars);
 
-        proxy_client.m_context.loop->m_task_set->add(request.send().then(
+        kj::Promise<::capnp::Response<typename Request::Results>> promise{request.send()};
+
+        // If `set_canceler` was set, construct a kj::Canceler object and wrap
+        // the request promise with it.
+        kj::Own<kj::Canceler> canceler;
+        if (invoke_context->set_canceler) {
+            canceler = kj::heap<kj::Canceler>();
+            promise = canceler->wrap(kj::mv(promise));
+            invoke_context->set_canceler(canceler.get());
+        }
+
+        proxy_client.m_context.loop->m_task_set->add(promise.then(
             [&](::capnp::Response<typename Request::Results>&& response) {
                 MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Debug)
                     << "{" << thread_context.thread_name << "} IPC client recv "
@@ -778,7 +848,16 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
                 thread_context.waiter->m_cv.notify_all();
             },
             [&](const ::kj::Exception& e) {
-                if (e.getType() == ::kj::Exception::Type::DISCONNECTED) {
+                if (invoke_context->handle_error) {
+                    try {
+                        invoke_context->handle_error(e);
+                    } catch (...) {
+                        exception = std::current_exception();
+                    }
+                }
+                if (exception) {
+                    // Rethrown below.
+                } else if (e.getType() == ::kj::Exception::Type::DISCONNECTED) {
                     disconnected = "IPC client method call interrupted by disconnect.";
                 } else {
                     kj_exception = kj::str("kj::Exception: ", e).cStr();
@@ -788,7 +867,12 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
                 const Lock lock(thread_context.waiter->m_mutex);
                 done = true;
                 thread_context.waiter->m_cv.notify_all();
-            }));
+            }).attach(kj::defer([canceler = kj::mv(canceler), set_canceler = invoke_context->set_canceler] {
+                // Runs on the event loop thread when the request promise is
+                // destroyed. Tell the cancellation parameter the canceler is
+                // about to go away.
+                if (set_canceler) set_canceler(nullptr);
+            })));
     });
 
     Lock lock(thread_context.waiter->m_mutex);
@@ -835,6 +919,10 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
     MP_LOG(loop, Log::Trace) << "request data: "
         << LogEscape(params.toString(), server.m_context.loop->m_log_opts.max_chars);
 
+    if (!server.m_impl) {
+        MP_LOG(loop, Log::Error) << "IPC server error request #" << req << ", method called after destroy";
+        throw std::runtime_error("method called after destroy");
+    }
     try {
         using ServerContext = ServerInvokeContext<Server, CallContext>;
         using ArgList = typename ProxyClientMethodTraits<typename Params::Reads>::Params;

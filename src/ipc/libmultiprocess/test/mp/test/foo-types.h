@@ -33,6 +33,10 @@
 #include <type_traits>
 // IWYU pragma: end_exports
 
+#include <kj/async.h>
+#include <kj/exception.h>
+#include <memory>
+
 namespace mp {
 namespace test {
 namespace messages {
@@ -42,6 +46,46 @@ struct FooFn; // IWYU pragma: export
 struct FooInterface; // IWYU pragma: export
 struct BarInterface; // IWYU pragma: export
 } // namespace messages
+
+class CancelFnState
+{
+public:
+    explicit CancelFnState(EventLoop& loop) : m_loop(loop) {}
+
+    void setCanceler(kj::Canceler* canceler)
+    {
+        const Lock lock{m_mutex};
+        m_canceler = canceler;
+        if (m_canceler && m_canceled) m_canceler->cancel("canceled by client");
+    }
+
+    //! Cancel the request. Callable from any thread.
+    void cancel()
+    {
+        {
+            const Lock lock{m_mutex};
+            if (m_canceled) return;
+            m_canceled = true;
+            if (!m_canceler) return;
+        }
+        m_loop->sync([&] {
+            const Lock lock{m_mutex};
+            if (m_canceler) m_canceler->cancel("canceled by client");
+        });
+    }
+
+    bool canceled()
+    {
+        const Lock lock{m_mutex};
+        return m_canceled;
+    }
+
+private:
+    EventLoopRef m_loop;
+    Mutex m_mutex;
+    bool m_canceled MP_GUARDED_BY(m_mutex){false};
+    kj::Canceler* m_canceler MP_GUARDED_BY(m_mutex){nullptr};
+};
 
 template <typename Output>
 void CustomBuildField(TypeList<FooCustom>, Priority<1>, InvokeContext& invoke_context, const FooCustom& value, Output&& output)
@@ -111,6 +155,54 @@ inline void CustomPassMessage(InvokeContext&,
     mut.message = std::string{reader.getMessage()} + " pass";
     fn(mut);
     builder.setMessage(mut.message + " return");
+}
+
+inline void CustomBuildExtraParam(TypeList<int>, ClientInvokeContext& invoke_context, int&& value)
+{
+    auto& loop = *invoke_context.connection.m_loop;
+    if (loop.testing_hook_misc) loop.testing_hook_misc(value);
+}
+
+template <typename ServerContext>
+int CustomReadExtraParam(TypeList<int>, ServerContext&)
+{
+    return 1;
+}
+
+inline void CustomBuildExtraParam(TypeList<test::CancelArg>, ClientInvokeContext& invoke_context, test::CancelArg&& value)
+{
+    if (!value) return;
+    auto state{std::make_shared<test::CancelFnState>(*invoke_context.connection.m_loop)};
+    invoke_context.set_canceler = [state](kj::Canceler* canceler) { state->setCanceler(canceler); };
+    invoke_context.handle_error = [state](const kj::Exception&) {
+        if (state->canceled()) throw InterruptException{"canceled"};
+    };
+    // The `CancelGuard` object returned on the client side has nothing to unregister.
+    static_cast<void>(value([state] { state->cancel(); }));
+}
+
+template <typename ServerContext>
+test::CancelArg CustomReadExtraParam(TypeList<test::CancelArg>, ServerContext& server_context)
+{
+    if (!server_context.request_mutex) {
+        // Not an async method means this method will run on the event loop
+        // thread which fires cancellations, just return a dummy function.
+        return [](test::CancelFn) { return test::CancelGuard{}; };
+    }
+    return [&server_context](test::CancelFn fn) {
+        {
+            const Lock lock{*server_context.request_mutex};
+            if (!server_context.request_canceled) {
+                server_context.cancel_fn = std::move(fn);
+                return test::CancelGuard{[&server_context] {
+                    const Lock lock{*server_context.request_mutex};
+                    server_context.cancel_fn = nullptr;
+                }};
+            }
+        }
+        fn();
+        return test::CancelGuard{};
+    };
 }
 } // namespace mp
 

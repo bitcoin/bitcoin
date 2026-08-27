@@ -64,6 +64,8 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
     auto& server = server_context.proxy_server;
     EventLoop& loop = *server.m_context.loop;
     int req = server_context.req;
+    ++server.m_active_calls;
+    auto active_call = std::shared_ptr<void>{nullptr, [&server](void*) { --server.m_active_calls; }};
     // Keep a reference to the ProxyServer instance by assigning it to the self
     // variable. ProxyServer instances are reference-counted and if the client
     // drops its reference and the IPC call is canceled, this variable keeps the
@@ -71,7 +73,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
     // needs to be destroyed on the event loop thread so it is freed in a sync()
     // call below.
     auto self = server.thisCap();
-    auto invoke = [self = kj::mv(self), call_context = kj::mv(server_context.call_context), &server, &loop, req, fn, args...](CancelMonitor& cancel_monitor) mutable {
+    auto invoke = [self = kj::mv(self), active_call = kj::mv(active_call), call_context = kj::mv(server_context.call_context), &server, &loop, req, fn, args...](CancelMonitor& cancel_monitor) mutable {
         MP_LOG(loop, Log::Debug) << "IPC server executing request #" << req;
         if (loop.testing_hook_async_request_start) loop.testing_hook_async_request_start();
         KJ_DEFER(if (loop.testing_hook_async_request_done) loop.testing_hook_async_request_done());
@@ -97,9 +99,10 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
         auto& request_threads = thread_context.request_threads;
         ConnThread request_thread;
         bool inserted{false};
-        Mutex cancel_mutex;
-        Lock cancel_lock{cancel_mutex};
-        server_context.cancel_lock = &cancel_lock;
+        Mutex request_mutex;
+        Lock request_lock{request_mutex};
+        server_context.request_lock = &request_lock;
+        server_context.request_mutex = &request_mutex;
         loop.sync([&] {
             // Detect request being canceled before it executes.
             if (cancel_monitor.m_canceled) {
@@ -108,9 +111,9 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
             }
             // Detect request being canceled while it executes.
             assert(!cancel_monitor.m_on_cancel);
-            cancel_monitor.m_on_cancel = [&loop, &server_context, &cancel_mutex, req]() {
+            cancel_monitor.m_on_cancel = [&loop, &server_context, &request_mutex, req]() {
                 MP_LOG(loop, Log::Info) << "IPC server request #" << req << " canceled while executing.";
-                // Lock cancel_mutex here to block the event loop
+                // Lock request_mutex here to block the event loop
                 // thread and prevent it from deleting the request's
                 // params and response structs while the execution
                 // thread is accessing them. Because this lock is
@@ -121,8 +124,9 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                 // it. So in addition to locking the mutex, the
                 // execution thread always checks request_canceled
                 // as well before accessing the structs.
-                Lock cancel_lock{cancel_mutex};
+                Lock request_lock{request_mutex};
                 server_context.request_canceled = true;
+                if (server_context.cancel_fn) server_context.cancel_fn();
             };
             // Update requests_threads map if not canceled. We know
             // the request is not canceled currently because
@@ -152,14 +156,14 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
         // makes another IPC call), so avoid modifying the map.
         const bool erase_thread{inserted};
         KJ_DEFER(
-            // Release the cancel lock before calling loop->sync and
+            // Release the request lock before calling loop->sync and
             // waiting for the event loop thread, because if a
             // cancellation happened, it needs to run the on_cancel
-            // callback above. It's safe to release cancel_lock at
+            // callback above. It's safe to release request_lock at
             // this point because the fn.invoke() call below will be
             // finished and no longer accessing the params or
             // results structs.
-            cancel_lock.m_lock.unlock();
+            request_lock.m_lock.unlock();
             // Erase the request_threads entry on the event loop
             // thread with loop->sync(), so if the connection is
             // broken there is not a race between this thread and
@@ -172,10 +176,11 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                 // cancellation happened. So we do not need to be
                 // notified of cancellations after this point. Also
                 // we do not want to be notified because
-                // cancel_mutex and server_context could be out of
+                // request_mutex and server_context could be out of
                 // scope when it happens.
                 cancel_monitor.m_on_cancel = nullptr;
                 auto self_dispose{kj::mv(self)};
+                auto active_call_dispose{kj::mv(active_call)};
                 if (erase_thread) {
                     // Look up the thread again without using existing
                     // iterator since entry may no longer be there after

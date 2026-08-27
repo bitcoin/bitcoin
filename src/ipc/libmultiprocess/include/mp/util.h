@@ -359,12 +359,10 @@ struct InterruptException final : std::exception {
 
 class CancelProbe;
 
-//! Helper class that detects when a promise is canceled. Used to detect
-//! canceled requests and prevent potential crashes on unclean disconnects.
-//!
-//! In the future, this could also be used to support a way for wrapped C++
-//! methods to detect cancellation (like approach #4 in
-//! https://github.com/bitcoin/bitcoin/issues/33575).
+//! Helper class that reports request cancellation when the promise executing
+//! its IPC method is destroyed. Cap'n Proto abandons a call by destroying
+//! that promise so the paired `CancelProbe` is attached to it, and its
+//! destructor notifies this class.
 class CancelMonitor
 {
 public:

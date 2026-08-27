@@ -15,6 +15,7 @@
 #include <string>
 #include <set>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace mp {
@@ -101,6 +102,36 @@ public:
     int value() override { return m_value; }
     int m_value;
 };
+
+using CancelFn = std::function<void()>;
+
+class [[nodiscard]] CancelGuard
+{
+public:
+    CancelGuard() = default;
+    explicit CancelGuard(std::function<void()> unregister) : m_unregister(std::move(unregister)) {}
+    CancelGuard(CancelGuard&& other) noexcept : m_unregister(std::exchange(other.m_unregister, nullptr)) {}
+    CancelGuard(const CancelGuard&) = delete;
+    CancelGuard& operator=(const CancelGuard&) = delete;
+    CancelGuard& operator=(CancelGuard&& other) noexcept
+    {
+        if (this != &other) {
+            if (m_unregister) m_unregister();
+            m_unregister = std::exchange(other.m_unregister, nullptr);
+        }
+        return *this;
+    }
+    ~CancelGuard()
+    {
+        if (m_unregister) m_unregister();
+    }
+
+private:
+    std::function<void()> m_unregister;
+};
+
+using CancelArg = std::function<CancelGuard(CancelFn)>;
+
 class FooImplementation
 {
 public:
@@ -125,6 +156,7 @@ public:
     FooEnum passEnum(FooEnum foo) { return foo; }
     double passDouble(double value) { return value; }
     int passFn(std::function<int()> fn) { return fn(); }
+    int passExtra(int arg, int extra) { return arg + extra; }
     std::vector<FooDataRef> passDataPointers(std::vector<FooDataRef> values) { return values; }
     std::vector<std::unique_ptr<Bar>> listBars(int n)
     {
@@ -138,8 +170,14 @@ public:
     void callFnAsync() { assert(m_fn); m_fn(); }
     int callIntFnAsync(int arg) { assert(m_int_fn); return m_int_fn(arg); }
     FooMessage callMessageAsync() { assert(m_fn); m_fn(); return {}; }
+    void callCancelFnAsync(CancelArg cancel)
+    {
+        assert(m_cancel_fn);
+        m_cancel_fn(std::move(cancel));
+    }
     std::function<void()> m_fn;
     std::function<int(int)> m_int_fn;
+    std::function<void(CancelArg)> m_cancel_fn;
 };
 
 } // namespace test

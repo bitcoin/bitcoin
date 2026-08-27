@@ -60,7 +60,7 @@ public:
     ~EventLoopRef() { reset(); }
     EventLoop& operator*() const { assert(m_loop); return *m_loop; }
     EventLoop* operator->() const { assert(m_loop); return m_loop; }
-    void reset(bool relock=false);
+    void reset();
 
     EventLoop* m_loop{nullptr};
     Lock* m_lock{nullptr};
@@ -172,6 +172,12 @@ public:
      * wrapped. */
     std::shared_ptr<Impl> m_impl;
     ProxyContext m_context;
+    //! Number of requests queued or executing on worker threads.
+    //! Incremented in the mp.Context PassField overload before being posted and
+    //! decremented when completed or dropped. Requests executing on the
+    //! event-loop thread are excluded because they run to completion without
+    //! allowing another request to run.
+    int m_active_calls{0};
 };
 
 //! Customizable (through template specialization) base class which ProxyServer
