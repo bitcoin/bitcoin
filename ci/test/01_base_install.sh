@@ -93,18 +93,10 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
 fi
 
 if [[ ${BARE_METAL_RISCV} == "true" ]]; then
-    # Use a mirror for these submodules as sourceware blocks too many requests combating AI.
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2026.06.06 /riscv/gcc
-    ( cd /riscv/gcc;
-      export GIT_CONFIG_COUNT=3
-      export GIT_CONFIG_KEY_0=url.https://git.fish.foo/mirrors/binutils-gdb.git.insteadOf
-      export GIT_CONFIG_VALUE_0=https://sourceware.org/git/binutils-gdb.git
-      export GIT_CONFIG_KEY_1=url.https://git.fish.foo/mirrors/glibc.git.insteadOf
-      export GIT_CONFIG_VALUE_1=https://sourceware.org/git/glibc.git
-      export GIT_CONFIG_KEY_2=url.https://git.fish.foo/mirrors/newlib-cygwin.git.insteadOf
-      export GIT_CONFIG_VALUE_2=https://sourceware.org/git/newlib-cygwin.git
-      ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32 --disable-gdb;
-      make "$MAKEJOBS"; )
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2026.08.25 /riscv/gcc
+    ( cd /riscv/gcc
+      ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32 --disable-gdb
+      make "$MAKEJOBS" )
     rm -rf /riscv/gcc
 fi
 
