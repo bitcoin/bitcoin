@@ -51,6 +51,7 @@ from test_framework.ipc_util import (
     mining_get_coinbase_tx,
     mining_wait_next_template,
     wait_and_do,
+    drop_promise,
 )
 
 # Test may be skipped and not have capnp installed
@@ -68,6 +69,8 @@ class IPCMiningTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 3
+        # -debug=ipc for the request cancellation log messages checked below.
+        self.extra_args = [["-debug=ipc"], [], ["-debug=ipc"]]
 
     def setup_nodes(self):
         self.extra_init = [{"ipcbind": True}, {}, {"ipcbind": True}]
@@ -159,13 +162,11 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
 
-            self.log.debug("interrupt() should abort waitTipChanged()")
-            async def wait_for_tip():
-                long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
-                result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
-                # Unlike a timeout, interrupt() returns an empty BlockRef.
-                assert_equal(len(result.hash), 0)
-            await wait_and_do(wait_for_tip(), mining.interrupt())
+            self.log.debug("Dropping the response promise should cancel waitTipChanged()")
+            long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
+            promise = mining.waitTipChanged(ctx, newblockref.hash, long_timeout)
+            with self.nodes[0].assert_debug_log(["canceled"], timeout=10):
+                await drop_promise(promise)
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -243,13 +244,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 else:
                     self.log.debug("Skipping strict wake-up duration check because timeout_factor > 1")
 
-                self.log.debug("interrupt() should abort createNewBlock() during cooldown")
-                async def create_block():
-                    result = await mining.createNewBlock(ctx, self.default_block_create_options)
-                    # interrupt() causes createNewBlock to return nullptr
-                    assert_equal(result._has("result"), False)
-
-                await wait_and_do(create_block(), mining.interrupt())
+                self.log.debug("Dropping the response promise should cancel createNewBlock() during cooldown")
+                promise = mining.createNewBlock(ctx, self.default_block_create_options)
+                with self.nodes[0].assert_debug_log(["canceled"], timeout=10):
+                    await drop_promise(promise)
 
                 header_only_peer.peer_disconnect()
                 self.connect_nodes(0, 1)
@@ -331,14 +329,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template7 is None
                 waitoptions.timeout = self.default_ipc_timeout
 
-                self.log.debug("interruptWait should abort the current wait")
-                async def wait_for_block():
-                    new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                    new_waitoptions.timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
-                    new_waitoptions.feeThreshold = 1
-                    template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
-                    assert template7 is None
-                await wait_and_do(wait_for_block(), template6.interruptWait())
+                self.log.debug("Dropping the response promise should cancel the current wait")
+                new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                new_waitoptions.timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
+                new_waitoptions.feeThreshold = 1
+                promise = template6.waitNext(ctx, new_waitoptions)
+                with self.nodes[0].assert_debug_log(["canceled"], timeout=10):
+                    await drop_promise(promise)
 
         asyncio.run(capnp.run(async_routine()))
 
