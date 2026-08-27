@@ -527,9 +527,6 @@ static void Generate(kj::StringPtr src_prefix,
             server << "    using ProxyServerCustom::ProxyServerCustom;\n";
             server << "    ~ProxyServer();\n";
 
-            const std::ostringstream client_construct;
-            const std::ostringstream client_destroy;
-
             int method_ordinal = 0;
             ForEachMethod(interface, [&] (const capnp::InterfaceSchema& method_interface, const capnp::InterfaceSchema::Method& method) {
                 const kj::StringPtr method_name = method.getProto().getName();
@@ -669,7 +666,7 @@ static void Generate(kj::StringPtr src_prefix,
               int_client << "ProxyTypeRegister t" << node_nested.getId() << "{TypeList<" << proxied_class_type << ">{}};\n";
             }
             def_types << "ProxyClient<" << message_namespace << "::" << node_name
-                      << ">::~ProxyClient() { clientDestroy(*this); " << client_destroy.str() << " }\n";
+                      << ">::~ProxyClient() { clientDestroy(*this); }\n";
             def_types << "ProxyServer<" << message_namespace << "::" << node_name
                       << ">::~ProxyServer() { serverDestroy(*this); }\n";
         }
