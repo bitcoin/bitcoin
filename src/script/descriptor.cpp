@@ -193,6 +193,17 @@ static std::string OriginKeyString(const KeyOriginInfo& origin, const CExtPubKey
     return "[" + HexStr(origin.fingerprint) + FormatHDKeypath(origin.path) + "]" + EncodeExtPubKey(xpub);
 }
 
+/** Prefix the normalized public form of a key with an outer key origin,
+ *  formatted as origin_str (the fingerprint and derivation path). If the key
+ *  carries an origin of its own, its fingerprint is dropped and its path is
+ *  appended to the outer origin's path. */
+static std::string MergeNormalizedOrigin(const std::string& origin_str, const std::string& key_str)
+{
+    // A leading origin starts with '[' followed by an 8-character fingerprint
+    if (key_str.starts_with('[')) return "[" + origin_str + key_str.substr(9);
+    return "[" + origin_str + "]" + key_str;
+}
+
 /** A source-text replacement used by Parse() to construct the public form of a
  *  multipath descriptor string. */
 struct KeyReplacement {
@@ -325,15 +336,8 @@ public:
     {
         std::string sub;
         if (!m_provider->ToNormalizedString(arg, sub, cache)) return false;
-        // If m_provider is a BIP32PubkeyProvider, we may get a string formatted like a OriginPubkeyProvider
-        // In that case, we need to strip out the leading square bracket and fingerprint from the substring,
-        // and append that to our own origin string.
-        if (sub[0] == '[') {
-            sub = sub.substr(9);
-            ret = "[" + OriginString(StringType::PUBLIC, /*normalized=*/true) + std::move(sub);
-        } else {
-            ret = "[" + OriginString(StringType::PUBLIC, /*normalized=*/true) + "]" + std::move(sub);
-        }
+        // If m_provider is a BIP32PubkeyProvider, sub may carry an origin of its own to merge with ours.
+        ret = MergeNormalizedOrigin(OriginString(StringType::PUBLIC, /*normalized=*/true), sub);
         return true;
     }
     void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const override
