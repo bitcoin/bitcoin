@@ -17,7 +17,7 @@
 #include <util/translation.h>
 
 #include <algorithm>
-#include <filesystem>
+#include <ranges>
 #include <string>
 #include <vector>
 

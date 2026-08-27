@@ -13,6 +13,7 @@
 #include <interfaces/wallet.h>
 
 #include <memory>
+#include <stdexcept>
 
 namespace node {
 struct NodeContext;

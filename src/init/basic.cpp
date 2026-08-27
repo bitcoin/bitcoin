@@ -5,6 +5,8 @@
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 
+#include <memory>
+
 namespace init {
 namespace {
 class BitcoinBasicInit : public interfaces::Init
