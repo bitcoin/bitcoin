@@ -16,6 +16,9 @@ class CBlockIndex;
 class CChainParams;
 class COutPoint;
 class CScript;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 namespace node {
 struct BlockCreateOptions;
 struct NodeContext;
@@ -25,7 +28,7 @@ struct NodeContext;
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
 /** Rebuild a block template for a different parent and timestamp */
-void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time);
+void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time, const Consensus::Params& params);
 
 /**
  * Build a chain of `length` coinbase-only blocks on top of `pindex` (which need
