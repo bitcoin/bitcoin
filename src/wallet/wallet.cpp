@@ -3610,27 +3610,45 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
     AddScriptPubKeyMan(id, std::move(spk_manager));
 }
 
-DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
+std::vector<std::string> CWallet::SetupDescriptorScriptPubKeyManPair(WalletBatch& batch, const CExtKey& master_key, OutputType output_type, bool receive, bool change)
 {
     AssertLockHeld(cs_wallet);
     if (IsLocked()) {
         throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
     }
-    auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, output_type, internal);
-    DescriptorScriptPubKeyMan* out = spk_manager.get();
-    uint256 id = spk_manager->GetID();
-    AddScriptPubKeyMan(id, std::move(spk_manager));
-    AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
-    return *out;
+    // Both the receive and change descriptor derive from a single multipath
+    // descriptor, which Parse below expands.
+    const std::string multipath_desc{GenerateMultipathDescriptorString(EncodeExtPubKey(master_key.Neuter()), output_type)};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descs{Parse(multipath_desc, keys, error, /*require_checksum=*/false)};
+    Assert(descs.size() == 2);
+
+    // The expanded descriptors are ordered by chain: receive, then change
+    std::vector<std::pair<std::unique_ptr<Descriptor>, /*internal=*/bool>> requested_descs;
+    if (receive) requested_descs.emplace_back(std::move(descs.at(0)), false);
+    if (change) requested_descs.emplace_back(std::move(descs.at(1)), true);
+
+    std::vector<std::string> new_descs;
+    for (auto& [desc, internal] : requested_descs) {
+        if (GetScriptPubKeyMan(DescriptorID(*desc))) continue;
+        WalletDescriptor w_desc(std::move(desc), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+        auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, std::move(w_desc));
+        uint256 id = spk_manager->GetID();
+        std::string desc_str;
+        Assert(spk_manager->GetDescriptorString(desc_str, /*priv=*/false));
+        new_descs.push_back(std::move(desc_str));
+        AddScriptPubKeyMan(id, std::move(spk_manager));
+        AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
+    }
+    return new_descs;
 }
 
 void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-    for (bool internal : {false, true}) {
-        for (OutputType t : OUTPUT_TYPES) {
-            SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
-        }
+    for (OutputType t : OUTPUT_TYPES) {
+        SetupDescriptorScriptPubKeyManPair(batch, master_key, t);
     }
 }
 

@@ -1037,8 +1037,15 @@ public:
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
     void DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
-    //! Create new DescriptorScriptPubKeyMan and add it to the wallet
-    DescriptorScriptPubKeyMan& SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Create the receive and change DescriptorScriptPubKeyMan if they don't
+    //! exist yet.
+    //! @param[in] batch Batch to write the new descriptors with
+    //! @param[in] master_key Master key to derive the descriptors from
+    //! @param[in] output_type The OutputType of the descriptor pair
+    //! @param[in] receive Whether to create the receive descriptor
+    //! @param[in] change Whether to create the change descriptor
+    //! @return The public descriptor strings of the newly created descriptors
+    std::vector<std::string> SetupDescriptorScriptPubKeyManPair(WalletBatch& batch, const CExtKey& master_key, OutputType output_type, bool receive = true, bool change = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void SetupDescriptorScriptPubKeyMans() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

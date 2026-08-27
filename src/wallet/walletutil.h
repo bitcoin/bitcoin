@@ -134,7 +134,11 @@ public:
       creation_time(creation_time) {}
 };
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+//! Build the multipath descriptor string, with a /<0;1> element covering
+//! the receive and change chain.
+//! @param[in] key       encoded master key, private or public
+//! @param[in] addr_type output type of the descriptor
+std::string GenerateMultipathDescriptorString(const std::string& key, OutputType addr_type);
 
 /** Record tying together the single-path wallet descriptors that a multipath
  *  descriptor was expanded to, so that the original multipath form can be

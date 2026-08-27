@@ -32,31 +32,28 @@ fs::path GetWalletDir()
     return path;
 }
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& addr_type, bool internal)
+std::string GenerateMultipathDescriptorString(const std::string& key, OutputType addr_type)
 {
-    int64_t creation_time = GetTime();
-
-    std::string xpub = EncodeExtPubKey(master_key);
 
     // Build descriptor string
     std::string desc_prefix;
     std::string desc_suffix = "/*)";
     switch (addr_type) {
     case OutputType::LEGACY: {
-        desc_prefix = "pkh(" + xpub + "/44h";
+        desc_prefix = "pkh(" + key + "/44h";
         break;
     }
     case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpkh(" + xpub + "/49h";
+        desc_prefix = "sh(wpkh(" + key + "/49h";
         desc_suffix += ")";
         break;
     }
     case OutputType::BECH32: {
-        desc_prefix = "wpkh(" + xpub + "/84h";
+        desc_prefix = "wpkh(" + key + "/84h";
         break;
     }
     case OutputType::BECH32M: {
-        desc_prefix = "tr(" + xpub + "/86h";
+        desc_prefix = "tr(" + key + "/86h";
         break;
     }
     case OutputType::UNKNOWN: {
@@ -74,15 +71,7 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
         desc_prefix += "/0h";
     }
 
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
-
-    // Make the descriptor
-    FlatSigningProvider keys;
-    std::string error;
-    std::vector<std::unique_ptr<Descriptor>> desc = Parse(desc_str, keys, error, false);
-    WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, 0, 0, 0);
-    return w_desc;
+    return desc_prefix + "/0h/<0;1>" + desc_suffix;
 }
 
 } // namespace wallet
