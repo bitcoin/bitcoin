@@ -214,10 +214,13 @@ struct Descriptor {
  * @param[out] out Signing provider populated with private keys included in `descriptor`.
  * @param[out] error Error message if parsing fails.
  * @param[in] require_checksum Whether a checksum is required.
- * @param[out] multipath If provided, set to the public form of the multipath
- * descriptor string before expansion, with a checksum, or `std::nullopt` if
- * `descriptor` is not multipath. Private keys are replaced by their public
- * forms.
+ * @param[out] multipath If provided, set to the publicly derivable form of the
+ * multipath descriptor string before expansion, with a checksum. It is set to
+ * `std::nullopt` if `descriptor` is not multipath or contains a key expression
+ * that cannot be made publicly derivable. Private keys are replaced by their
+ * public forms. Private extended keys followed by a fixed hardened prefix are
+ * normalized by replacing them with their key origin and the extended public
+ * key at the last hardened step.
  * @return Parsed descriptors, or an empty vector on error.
  */
 std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false, std::optional<std::string>* multipath = nullptr);

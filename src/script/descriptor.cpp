@@ -224,6 +224,8 @@ struct KeyReplacement {
     std::span<const char> text;
     //! The replacement text
     std::string replacement;
+    //! Whether the replacement keeps the multipath descriptor publicly derivable
+    bool publicly_derivable{true};
 };
 
 /** Interface for public key objects in descriptors. */
@@ -442,6 +444,71 @@ enum class DeriveType {
     UNHARDENED_RANGED,
     HARDENED_RANGED,
 };
+
+/** Find the derivation prefix needed to normalize a private extended key in a
+ *  multipath descriptor to one public extended key covering every expanded path.
+ *
+ *  A hardened wildcard prevents normalization. For multipath derivation, a
+ *  hardened step at or after the multipath element prevents a single public
+ *  key from covering every path.
+ *
+ *  @param[in] paths Parsed derivation paths, after multipath expansion.
+ *  @param[in] type Derivation type of the key expression.
+ *  @return `std::nullopt` if the key cannot be normalized to a publicly
+ *  derivable form; otherwise the prefix through the last hardened step, empty
+ *  if there is no hardened step.
+ */
+static std::optional<KeyPath> MultipathExtKeyNormalizationPrefix(const std::vector<KeyPath>& paths, DeriveType type)
+{
+    if (type == DeriveType::HARDENED_RANGED) return std::nullopt;
+    if (paths.size() > 1) {
+        size_t common_prefix_size{0};
+        while (common_prefix_size < paths.front().size() &&
+               std::ranges::all_of(paths, [&](const KeyPath& path) { return path[common_prefix_size] == paths.front()[common_prefix_size]; })) {
+            ++common_prefix_size;
+        }
+        if (std::ranges::any_of(paths, [common_prefix_size](const KeyPath& path) {
+                const auto last_hardened{LastHardenedIndex(path)};
+                return last_hardened && common_prefix_size <= *last_hardened;
+            })) {
+            return std::nullopt;
+        }
+    }
+    return HardenedPrefix(paths.front());
+}
+
+/** Construct the source-text replacement for a parsed private extended key.
+ *
+ * When possible, normalize through the last hardened derivation step, matching
+ * Descriptor::ToNormalizedString(). A hardened multipath element or wildcard
+ * prevents producing a publicly derivable replacement.
+ *
+ * @param[in] split Key expression split at path separators, with the wildcard removed.
+ * @param[in] paths Parsed derivation paths, after multipath expansion.
+ * @param[in] type Derivation type of the key expression.
+ * @param[in] extkey Private extended key.
+ * @param[in] extpubkey Public form of `extkey`.
+ * @return Source span, its public replacement, and whether the replacement is
+ * publicly derivable.
+ */
+static KeyReplacement NormalizedExtKeyReplacement(const std::vector<std::span<const char>>& split, const std::vector<KeyPath>& paths, DeriveType type, const CExtKey& extkey, const CExtPubKey& extpubkey)
+{
+    KeyReplacement plain{split[0], EncodeExtPubKey(extpubkey)};
+    const auto prefix{MultipathExtKeyNormalizationPrefix(paths, type)};
+    if (!prefix) {
+        plain.publicly_derivable = false;
+        return plain;
+    }
+    if (prefix->empty()) return plain;
+    const auto derived{DeriveExtKey(extkey, *prefix)};
+    if (!derived) {
+        plain.publicly_derivable = false;
+        return plain;
+    }
+    // Replace from the key through the last hardened path element
+    const std::span<const char> text{split[0].data(), split[prefix->size()].data() + split[prefix->size()].size()};
+    return {text, OriginKeyString(derived->second, derived->first.Neuter())};
+}
 
 /** An object representing a parsed extended public key in a descriptor. */
 class BIP32PubkeyProvider final : public PubkeyProvider
@@ -1954,7 +2021,9 @@ static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, boo
     return type;
 }
 
-using ParsePubkeyInnerResult = std::vector<std::unique_ptr<PubkeyProvider>>;
+/** Parsed providers and an optional replacement for ParsePubkey to collect
+ * after processing explicit key origin information. */
+using ParsePubkeyInnerResult = std::pair<std::vector<std::unique_ptr<PubkeyProvider>>, std::optional<KeyReplacement>>;
 using ParsePubkeyResult = std::vector<std::unique_ptr<PubkeyProvider>>;
 
 /** Mutable state shared by recursive descriptor parser calls. */
@@ -1968,6 +2037,9 @@ struct ParseState {
 util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState& state, const std::span<const char>& sp, ParseScriptContext ctx, bool& apostrophe)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
+    // Return the replacement separately so ParsePubkey can incorporate an explicit
+    // origin before adding it to the parse state.
+    std::optional<KeyReplacement> key_replacement;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
@@ -1979,6 +2051,8 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
     }
     if (split.size() == 1) {
         if (IsHex(str)) {
+            // Hex keys need no public replacement, but normalize their case.
+            if (state.key_replacements) key_replacement = KeyReplacement{split[0], ToLower(str)};
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
             if (pubkey.IsValid() && !pubkey.IsValidNonHybrid()) {
@@ -1988,7 +2062,7 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
                 if (permit_uncompressed || pubkey.IsCompressed()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, false));
                     ++state.key_exp_index;
-                    return ParsePubkeyInnerResult{std::move(ret)};
+                    return ParsePubkeyInnerResult{std::move(ret), std::move(key_replacement)};
                 } else {
                     return util::Unexpected{"Uncompressed keys are not allowed"};
                 }
@@ -1999,7 +2073,7 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
                 if (pubkey.IsFullyValid()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, true));
                     ++state.key_exp_index;
-                    return ParsePubkeyInnerResult{std::move(ret)};
+                    return ParsePubkeyInnerResult{std::move(ret), std::move(key_replacement)};
                 }
             }
             return util::Unexpected{strprintf("Pubkey '%s' is invalid", str)};
@@ -2011,11 +2085,11 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
                 state.out.keys.emplace(pubkey.GetID(), key);
                 if (state.key_replacements) {
                     std::string replacement{ctx == ParseScriptContext::P2TR ? HexStr(XOnlyPubKey{pubkey}) : HexStr(pubkey)};
-                    state.key_replacements->push_back(KeyReplacement{split[0], std::move(replacement)});
+                    key_replacement = KeyReplacement{split[0], std::move(replacement)};
                 }
                 ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
                 ++state.key_exp_index;
-                return ParsePubkeyInnerResult{std::move(ret)};
+                return ParsePubkeyInnerResult{std::move(ret), std::move(key_replacement)};
             } else {
                 return util::Unexpected{"Uncompressed keys are not allowed"};
             }
@@ -2028,18 +2102,22 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
     }
     std::vector<KeyPath> paths;
     DeriveType type = ParseDeriveType(split, apostrophe);
+    bool has_hardened_path{false};
     std::string error;
-    if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return util::Unexpected{std::move(error)};
+    if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true, has_hardened_path)) return util::Unexpected{std::move(error)};
+    const bool has_hardened_derivation{type == DeriveType::HARDENED_RANGED || has_hardened_path};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         state.out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
-        if (state.key_replacements) state.key_replacements->push_back(KeyReplacement{split[0], EncodeExtPubKey(extpubkey)});
+        if (state.key_replacements) key_replacement = NormalizedExtKeyReplacement(split, paths, type, extkey, extpubkey);
+    } else if (state.key_replacements && has_hardened_derivation) {
+        key_replacement = KeyReplacement{split[0], str, /*publicly_derivable=*/false};
     }
     for (auto& path : paths) {
         ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(state.key_exp_index, extpubkey, std::move(path), type, apostrophe));
     }
     ++state.key_exp_index;
-    return ParsePubkeyInnerResult{std::move(ret)};
+    return ParsePubkeyInnerResult{std::move(ret), std::move(key_replacement)};
 }
 
 /** Parse a public key including origin information (if enabled). */
@@ -2177,6 +2255,7 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(ParseState& state, co
         return ret;
     }
 
+    // Split the optional "[fingerprint/path]" origin from the key.
     auto origin_split = Split(sp, ']');
     if (origin_split.size() > 2) {
         return util::Unexpected{"Multiple ']' characters found for a single pubkey"};
@@ -2184,8 +2263,16 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(ParseState& state, co
     // This is set if either the origin or path suffix contains a hardened derivation.
     bool apostrophe = false;
     if (origin_split.size() == 1) {
-        return ParsePubkeyInner(state, origin_split[0], ctx, apostrophe);
+        // With no closing ']', there is no complete origin to apply. Parse the
+        // entire expression as a key and collect its replacement unchanged.
+        auto result = ParsePubkeyInner(state, origin_split[0], ctx, apostrophe);
+        if (!result) return util::Unexpected{std::move(result.error())};
+        auto [providers, key_replacement] = std::move(*result);
+        if (key_replacement) state.key_replacements->push_back(std::move(*key_replacement));
+        return std::move(providers);
     }
+    // The only remaining case has one closing ']', whose prefix must start with '['.
+    Assume(origin_split.size() == 2);
     if (origin_split[0].empty() || origin_split[0][0] != '[') {
         const std::string error{strprintf("Key origin start '[ character expected but not found, got '%c' instead",
                                           origin_split[0].empty() ? /** empty, implies split char */ ']' : origin_split[0][0])};
@@ -2210,8 +2297,22 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(ParseState& state, co
     info.path = path.at(0);
     auto result = ParsePubkeyInner(state, origin_split[1], ctx, apostrophe);
     if (!result) return util::Unexpected{std::move(result.error())};
-    ret.reserve(result->size());
-    for (auto& prov : *result) {
+    auto [providers, key_replacement] = std::move(*result);
+    if (key_replacement) {
+        // Include the explicit origin in the replacement, merging it with any
+        // origin produced by normalization, like OriginPubkeyProvider does.
+        key_replacement->replacement = MergeNormalizedOrigin(HexStr(info.fingerprint) + FormatHDKeypath(info.path), key_replacement->replacement);
+        key_replacement->text = std::span<const char>{sp.data(), key_replacement->text.data() + key_replacement->text.size()};
+        state.key_replacements->push_back(std::move(*key_replacement));
+    } else if (state.key_replacements) {
+        // The key needs no replacement, but the explicit origin may use
+        // apostrophe hardened markers or uppercase fingerprint hex. Replace it
+        // with its normalized form, like OriginPubkeyProvider does.
+        const std::span<const char> origin_text{sp.data(), origin_split[0].size() + 1};
+        state.key_replacements->push_back({origin_text, "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path) + "]"});
+    }
+    ret.reserve(providers.size());
+    for (auto& prov : providers) {
         ret.emplace_back(std::make_unique<OriginPubkeyProvider>(prov->m_expr_index, info, std::move(prov), apostrophe));
     }
     return ret;
@@ -2979,9 +3080,10 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
         for (auto& r : ret) {
             descs.emplace_back(std::unique_ptr<Descriptor>(std::move(r)));
         }
-        if (multipath && descs.size() > 1) {
-            // Return the multipath descriptor string in public form: the
-            // parsed string with each private key replaced by its public form.
+        const bool publicly_derivable{std::ranges::all_of(key_replacements, &KeyReplacement::publicly_derivable)};
+        if (multipath && descs.size() > 1 && publicly_derivable) {
+            // Return the normalized multipath descriptor string: the parsed
+            // string with each private key replaced by its normalized public form.
             // Sort spans by their position in the input descriptor.
             std::sort(key_replacements.begin(), key_replacements.end(), [](const auto& a, const auto& b) { return a.text.data() < b.text.data(); });
             std::string multipath_str{no_checksum};
