@@ -419,9 +419,9 @@ static void PushTxDecoded(const CWallet& wallet, const CWalletTx& wtx, UniValue&
 }
 
 
-static std::vector<RPCResult> TransactionDescriptionString()
+static std::vector<RPCResult> TransactionDescriptionString(bool include_parent_descs = true)
 {
-    return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
+    std::vector<RPCResult> result{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
            {RPCResult::Type::BOOL, "generated", /*optional=*/true, "Only present if the transaction's only input is a coinbase one."},
            {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
@@ -452,10 +452,13 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", /*optional=*/true, "(\"yes|no|unknown\") (DEPRECATED) Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability.\n"
                "May be unknown for unconfirmed transactions not in the mempool because their unconfirmed ancestors are unknown."},
-           {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the output script of this coin.", {
-               {RPCResult::Type::STR, "desc", "The descriptor string."},
-           }},
            };
+    if (include_parent_descs) {
+        result.push_back({RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the output script of this coin.", {
+            {RPCResult::Type::STR, "desc", "The descriptor string."},
+        }});
+    }
+    return result;
 }
 
 RPCMethod listtransactions()
