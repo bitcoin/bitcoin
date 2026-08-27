@@ -186,6 +186,13 @@ static std::optional<size_t> LastHardenedIndex(const KeyPath& path)
     return std::nullopt;
 }
 
+/** Format the normalized public form of a derived key: its origin followed by
+ *  the extended public key at the last hardened derivation step. */
+static std::string OriginKeyString(const KeyOriginInfo& origin, const CExtPubKey& xpub)
+{
+    return "[" + HexStr(origin.fingerprint) + FormatHDKeypath(origin.path) + "]" + EncodeExtPubKey(xpub);
+}
+
 /** A source-text replacement used by Parse() to construct the public form of a
  *  multipath descriptor string. */
 struct KeyReplacement {
@@ -589,8 +596,7 @@ public:
         assert(xpub.pubkey.IsValid());
 
         // Build the string
-        std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
-        out = "[" + origin_str + "]" + EncodeExtPubKey(xpub) + FormatHDKeypath(end_path);
+        out = OriginKeyString(origin, xpub) + FormatHDKeypath(end_path);
         if (IsRange()) {
             out += "/*";
             assert(m_derive == DeriveType::UNHARDENED_RANGED);
