@@ -112,6 +112,8 @@ public:
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    /** Human-readable leading characters (e.g. "1", "xpub") of base58-encoded strings for this role on this network. */
+    const std::vector<std::string>& Base58PrefixText(Base58Type type) const { return base58PrefixText[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
@@ -189,6 +191,7 @@ protected:
     uint64_t m_assumed_chain_state_size;
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    std::vector<std::string> base58PrefixText[MAX_BASE58_TYPES];
     std::string bech32_hrp;
     ChainType m_chain_type;
     CBlock genesis;

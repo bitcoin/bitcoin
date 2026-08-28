@@ -179,6 +179,12 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
+        base58PrefixText[PUBKEY_ADDRESS] = {"1"};
+        base58PrefixText[SCRIPT_ADDRESS] = {"3"};
+        base58PrefixText[SECRET_KEY] = {"5", "K", "L"};
+        base58PrefixText[EXT_PUBLIC_KEY] = {"xpub"};
+        base58PrefixText[EXT_SECRET_KEY] = {"xprv"};
+
         bech32_hrp = "bc";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
@@ -293,6 +299,12 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
+        base58PrefixText[PUBKEY_ADDRESS] = {"m", "n"};
+        base58PrefixText[SCRIPT_ADDRESS] = {"2"};
+        base58PrefixText[SECRET_KEY] = {"9", "c"};
+        base58PrefixText[EXT_PUBLIC_KEY] = {"tpub"};
+        base58PrefixText[EXT_SECRET_KEY] = {"tprv"};
+
         bech32_hrp = "tb";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
@@ -399,6 +411,12 @@ public:
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+
+        base58PrefixText[PUBKEY_ADDRESS] = {"m", "n"};
+        base58PrefixText[SCRIPT_ADDRESS] = {"2"};
+        base58PrefixText[SECRET_KEY] = {"9", "c"};
+        base58PrefixText[EXT_PUBLIC_KEY] = {"tpub"};
+        base58PrefixText[EXT_SECRET_KEY] = {"tprv"};
 
         bech32_hrp = "tb";
 
@@ -543,6 +561,12 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
+        base58PrefixText[PUBKEY_ADDRESS] = {"m", "n"};
+        base58PrefixText[SCRIPT_ADDRESS] = {"2"};
+        base58PrefixText[SECRET_KEY] = {"9", "c"};
+        base58PrefixText[EXT_PUBLIC_KEY] = {"tpub"};
+        base58PrefixText[EXT_SECRET_KEY] = {"tprv"};
+
         bech32_hrp = "tb";
 
         fDefaultConsistencyChecks = false;
@@ -650,6 +674,12 @@ public:
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+
+        base58PrefixText[PUBKEY_ADDRESS] = {"m", "n"};
+        base58PrefixText[SCRIPT_ADDRESS] = {"2"};
+        base58PrefixText[SECRET_KEY] = {"9", "c"};
+        base58PrefixText[EXT_PUBLIC_KEY] = {"tpub"};
+        base58PrefixText[EXT_SECRET_KEY] = {"tprv"};
 
         bech32_hrp = "bcrt";
 
