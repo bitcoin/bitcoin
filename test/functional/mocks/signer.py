@@ -14,6 +14,7 @@ from test_framework.authproxy import AuthServiceProxy, JSONRPCException
 from test_framework.psbt import (
     PSBT,
     PSBT_IN_PARTIAL_SIG,
+    PSBT_IN_SIGHASH_TYPE,
     PSBT_IN_TAP_KEY_SIG,
     PSBT_OUT_AMOUNT,
     PSBT_OUT_SCRIPT,
@@ -128,10 +129,23 @@ def signtx(args):
     if mode in ("change_amount", "change_script", "remove_output"):
         psbt = tamper(psbt, mode)
 
-    result = get_mock_wallet().walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False)
+    sign_options = {}
+    if mode in ("sighash_none", "sighash_none_hidden"):
+        sign_options["sighashtype"] = "NONE"
+    elif mode == "sighash_all_anyonecanpay":
+        sign_options["sighashtype"] = "ALL|ANYONECANPAY"
+
+    result = get_mock_wallet().walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False, **sign_options)
     reply = result["psbt"]
 
-    if mode == "strip":
+    if mode == "sighash_none_hidden":
+        # Drop the declared sighash type, leaving only the signatures
+        # themselves to reveal it
+        signed = PSBT.from_base64(reply)
+        for psbt_in in signed.i:
+            psbt_in.map.pop(PSBT_IN_SIGHASH_TYPE, None)
+        reply = signed.to_base64()
+    elif mode == "strip":
         # Return only the signatures, plus the fields required to describe
         # the same transaction
         signed = PSBT.from_base64(reply)
