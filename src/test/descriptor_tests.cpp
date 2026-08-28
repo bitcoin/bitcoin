@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
@@ -179,6 +180,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     FlatSigningProvider keys_priv, keys_pub;
     std::set<std::vector<uint32_t>> left_paths = paths;
     std::string error;
+    std::optional<std::string> multipath_prv{"stale"}, multipath_pub{"stale"};
 
     std::vector<std::unique_ptr<Descriptor>> parse_privs;
     std::vector<std::unique_ptr<Descriptor>> parse_pubs;
@@ -186,16 +188,22 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     if (replace_apostrophe_with_h_in_prv) {
         prv = UseHInsteadOfApostrophe(prv);
     }
-    parse_privs = Parse(prv, keys_priv, error);
+    parse_privs = Parse(prv, keys_priv, error, /*require_checksum=*/false, &multipath_prv);
     BOOST_CHECK_MESSAGE(!parse_privs.empty(), error);
     if (replace_apostrophe_with_h_in_pub) {
         pub = UseHInsteadOfApostrophe(pub);
     }
-    parse_pubs = Parse(pub, keys_pub, error);
+    parse_pubs = Parse(pub, keys_pub, error, /*require_checksum=*/false, &multipath_pub);
     BOOST_CHECK_MESSAGE(!parse_pubs.empty(), error);
 
-    BOOST_REQUIRE_EQUAL(parse_privs.size() > 1, (flags & MULTIPATH) != 0);
-    BOOST_REQUIRE_EQUAL(parse_pubs.size() > 1, (flags & MULTIPATH) != 0);
+    BOOST_REQUIRE_EQUAL(parse_privs.size() > 1 && multipath_prv, (flags & MULTIPATH) != 0);
+    BOOST_REQUIRE_EQUAL(parse_pubs.size() > 1 && multipath_pub, (flags & MULTIPATH) != 0);
+
+    if (flags & MULTIPATH) {
+        const std::string expected{pub + "#" + GetDescriptorChecksum(pub)};
+        BOOST_CHECK_EQUAL(*multipath_prv, expected);
+        BOOST_CHECK_EQUAL(*multipath_pub, expected);
+    }
 
     auto& parse_priv = parse_privs.at(desc_index);
     auto& parse_pub = parse_pubs.at(desc_index);
@@ -1437,6 +1445,37 @@ BOOST_AUTO_TEST_CASE(unused_descriptor_test)
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)");
     CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0h/0h/1)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0h/0h/1)");
+}
+
+BOOST_AUTO_TEST_CASE(parse_multipath_string_test)
+{
+    // Master extended key from BIP32 test vector 2
+    const std::string xprv{"xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U"};
+    const CExtKey master{DecodeExtKey(xprv)};
+    const std::string xpub{EncodeExtPubKey(master.Neuter())};
+    const std::string wif{"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"};
+    const CPubKey pubkey{DecodeSecret(wif).GetPubKey()};
+
+    // Parse a descriptor and check the multipath string reported alongside the expansion
+    const auto check{[](const std::string& desc_str, const std::string& expected_multipath, size_t num_descs) {
+        FlatSigningProvider keys;
+        std::string error;
+        std::optional<std::string> multipath;
+        auto descs = Parse(desc_str, keys, error, /*require_checksum=*/false, &multipath);
+        BOOST_REQUIRE_MESSAGE(descs.size() == num_descs, desc_str + ": " + error);
+        BOOST_REQUIRE(multipath);
+        BOOST_CHECK_EQUAL(*multipath, expected_multipath + "#" + GetDescriptorChecksum(expected_multipath));
+    }};
+
+    // Private keys are replaced with their public form; the text around them,
+    // e.g. an origin with apostrophes, is unchanged
+    check("wpkh(" + xprv + "/84h/0h/0h/<0;1>/*)", "wpkh(" + xpub + "/84h/0h/0h/<0;1>/*)", 2);
+    check("wpkh(" + xprv + "/84h/0h/0h/2/<0;1>/*)", "wpkh(" + xpub + "/84h/0h/0h/2/<0;1>/*)", 2);
+    check("wpkh([deadbeef/49']" + xprv + "/0h/<0;1>/*)", "wpkh([deadbeef/49']" + xpub + "/0h/<0;1>/*)", 2);
+    // An x-only key is replaced by its x-only public form
+    check("tr(" + wif + ",pk(" + xprv + "/<0;1>/*))", "tr(" + HexStr(XOnlyPubKey{pubkey}) + ",pk(" + xpub + "/<0;1>/*))", 2);
+    // Also within miniscript
+    check("wsh(or_b(pk(" + wif + "),s:pk(" + xprv + "/<0;1>/*)))", "wsh(or_b(pk(" + HexStr(pubkey) + "),s:pk(" + xpub + "/<0;1>/*)))", 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

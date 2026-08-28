@@ -205,15 +205,22 @@ struct Descriptor {
     virtual size_t GetKeyCount() const = 0;
 };
 
-/** Parse a `descriptor` string. Included private keys are put in `out`.
+/** Parse a descriptor string.
  *
- * If the descriptor has a checksum, it must be valid. If `require_checksum`
- * is set, the checksum is mandatory - otherwise it is optional.
+ * If `descriptor` has a checksum, it must be valid. If `require_checksum`
+ * is set, a checksum is mandatory.
  *
- * If a parse error occurs, or the checksum is missing/invalid, or anything
- * else is wrong, an empty vector is returned.
+ * @param[in] descriptor Descriptor string to parse.
+ * @param[out] out Signing provider populated with private keys included in `descriptor`.
+ * @param[out] error Error message if parsing fails.
+ * @param[in] require_checksum Whether a checksum is required.
+ * @param[out] multipath If provided, set to the public form of the multipath
+ * descriptor string before expansion, with a checksum, or `std::nullopt` if
+ * `descriptor` is not multipath. Private keys are replaced by their public
+ * forms.
+ * @return Parsed descriptors, or an empty vector on error.
  */
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false, std::optional<std::string>* multipath = nullptr);
 
 /** Get the checksum for a `descriptor`.
  *
