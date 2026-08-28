@@ -72,7 +72,9 @@ void SingleShotParse(const std::string& http_buffer, FuzzedDataProvider& provide
 FUZZ_TARGET(http_request)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(4096)};
+    // MAX_HEADERS_SIZE is 8192: leave room for a headers section that can
+    // reach the limit, plus a body.
+    const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(2 * MAX_HEADERS_SIZE)};
 
     SingleShotParse(http_buffer, fuzzed_data_provider);
 }
