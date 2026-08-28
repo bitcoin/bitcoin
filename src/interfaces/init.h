@@ -5,14 +5,21 @@
 #ifndef BITCOIN_INTERFACES_INIT_H
 #define BITCOIN_INTERFACES_INIT_H
 
+// This header is associated with several source files, and IWYU
+// reaches different conclusions across them about whether these
+// headers should be included or their classes forward-declared.
+// Keep the includes so the result is the same for every file.
+// IWYU pragma: begin_keep
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/wallet.h>
+// IWYU pragma: end_keep
 
 #include <memory>
+#include <stdexcept>
 
 namespace node {
 struct NodeContext;
