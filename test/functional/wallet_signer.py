@@ -66,6 +66,13 @@ class WalletSignerTest(BitcoinTestFramework):
     def clear_mock_result(self, node):
         os.remove(os.path.join(node.cwd, "mock_result"))
 
+    def set_mock_sign_mode(self, node, mode):
+        with open(os.path.join(node.cwd, "mock_sign_mode"), "w") as f:
+            f.write(mode)
+
+    def clear_mock_sign_mode(self, node):
+        os.remove(os.path.join(node.cwd, "mock_sign_mode"))
+
     def init_mock_node(self):
         """Hand the signer mock its dedicated offline node, on which it
         creates the wallet it signs with."""
@@ -77,6 +84,8 @@ class WalletSignerTest(BitcoinTestFramework):
     def run_test(self):
         self.init_mock_node()
         self.test_valid_signer()
+        self.test_unusual_signer()
+        self.test_misbehaving_signer()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
         self.test_invalid_signer()
@@ -202,6 +211,54 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_greater_than(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
 
+
+    def test_unusual_signer(self):
+        self.log.info('Test unusual but acceptable external signer behavior')
+        hww = self.nodes[1].get_wallet_rpc('hww')
+
+        # Spend a segwit and a taproot UTXO, to cover both ECDSA and schnorr
+        # signatures
+        addresses = [hww.getnewaddress(address_type="bech32"), hww.getnewaddress(address_type="bech32m")]
+        for address in addresses:
+            self.nodes[0].sendtoaddress(address, 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+        inputs = [{"txid": utxo["txid"], "vout": utxo["vout"]} for utxo in hww.listunspent(addresses=addresses)]
+        assert_equal(len(inputs), 2)
+        dest = self.nodes[0].getnewaddress()
+
+        self.log.info('The signer may strip fields it does not need')
+        self.set_mock_sign_mode(self.nodes[1], "strip")
+        res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
+        assert res["complete"]
+        assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
+
+        self.clear_mock_sign_mode(self.nodes[1])
+
+    def test_misbehaving_signer(self):
+        self.log.info('Test misbehaving external signer')
+        hww = self.nodes[1].get_wallet_rpc('hww')
+
+        # Spend a segwit and a taproot UTXO, to cover both ECDSA and schnorr
+        # signatures
+        addresses = [hww.getnewaddress(address_type="bech32"), hww.getnewaddress(address_type="bech32m")]
+        for address in addresses:
+            self.nodes[0].sendtoaddress(address, 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+        inputs = [{"txid": utxo["txid"], "vout": utxo["vout"]} for utxo in hww.listunspent(addresses=addresses)]
+        assert_equal(len(inputs), 2)
+        dest = self.nodes[0].getnewaddress()
+
+        self.log.info('The signer must not tamper with the transaction')
+        for mode in ["change_amount", "change_script", "remove_output"]:
+            self.set_mock_sign_mode(self.nodes[1], mode)
+            with self.nodes[1].assert_debug_log(["Signer returned a PSBT for a different transaction"]):
+                assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 1.5}, inputs=inputs, add_inputs=False)
+
+        self.clear_mock_sign_mode(self.nodes[1])
+
+        # The same transaction is accepted from a well-behaved signer
+        res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
+        assert res["complete"]
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')
