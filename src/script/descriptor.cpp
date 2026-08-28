@@ -186,6 +186,19 @@ static std::optional<size_t> LastHardenedIndex(const KeyPath& path)
     return std::nullopt;
 }
 
+/** Return the prefix through the last hardened derivation step.
+ *
+ *  @param[in] path Derivation path.
+ *  @return Prefix through the last hardened step, or an empty path if there is
+ *  no hardened step.
+ */
+static KeyPath HardenedPrefix(const KeyPath& path)
+{
+    const auto last_hardened{LastHardenedIndex(path)};
+    if (!last_hardened) return {};
+    return {path.begin(), path.begin() + *last_hardened + 1};
+}
+
 /** Format the normalized public form of a derived key: its origin followed by
  *  the extended public key at the last hardened derivation step. */
 static std::string OriginKeyString(const KeyOriginInfo& origin, const CExtPubKey& xpub)
@@ -572,18 +585,18 @@ public:
 
             return true;
         }
-        const auto last_hardened{LastHardenedIndex(m_path)};
+        const KeyPath prefix{HardenedPrefix(m_path)};
         // Either no derivation or all unhardened derivation
-        if (!last_hardened) {
+        if (prefix.empty()) {
             out = ToString();
             return true;
         }
         // The origin is the path up to and including the last hardened step
         KeyOriginInfo origin;
-        origin.path.assign(m_path.begin(), m_path.begin() + *last_hardened + 1);
+        origin.path = prefix;
         origin.fingerprint = m_root_extkey.id_key_fingerprint();
         // Build the remaining path
-        const KeyPath end_path{m_path.begin() + *last_hardened + 1, m_path.end()};
+        const KeyPath end_path{m_path.begin() + prefix.size(), m_path.end()};
 
         CExtPubKey xpub;
         CExtKey lh_xprv;
