@@ -234,10 +234,6 @@ void secp256k1_context_set_sha256_compression(secp256k1_context *ctx, secp256k1_
     ctx->hash_ctx.fn_sha256_compression = fn_compression;
 }
 
-static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(const secp256k1_context *ctx) {
-    return &ctx->hash_ctx;
-}
-
 static secp256k1_scratch_space* secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
@@ -272,7 +268,7 @@ int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pu
     ARG_CHECK(pubkey != NULL);
     memset(pubkey, 0, sizeof(*pubkey));
     ARG_CHECK(input != NULL);
-    if (!secp256k1_eckey_pubkey_parse(&Q, input, inputlen)) {
+    if (!secp256k1_ge_parse(&Q, input, inputlen)) {
         return 0;
     }
     if (!secp256k1_ge_is_in_correct_subgroup(&Q)) {
@@ -298,10 +294,10 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
     ARG_CHECK((flags & SECP256K1_FLAGS_TYPE_MASK) == SECP256K1_FLAGS_TYPE_COMPRESSION);
     if (secp256k1_pubkey_load(ctx, &Q, pubkey)) {
         if (flags & SECP256K1_FLAGS_BIT_COMPRESSION) {
-            secp256k1_eckey_pubkey_serialize33(&Q, output);
+            secp256k1_ge_serialize33(&Q, output);
             *outputlen = 33;
         } else {
-            secp256k1_eckey_pubkey_serialize65(&Q, output);
+            secp256k1_ge_serialize65(&Q, output);
             *outputlen = 65;
         }
         return 1;
@@ -532,7 +528,7 @@ static int nonce_function_rfc6979_impl(const secp256k1_hash_ctx *hash_ctx, unsig
 }
 
 static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
-    return nonce_function_rfc6979_impl(secp256k1_get_hash_context(secp256k1_context_static), nonce32, msg32, key32, algo16, data, counter);
+    return nonce_function_rfc6979_impl(&secp256k1_context_static->hash_ctx, nonce32, msg32, key32, algo16, data, counter);
 }
 
 const secp256k1_nonce_function secp256k1_nonce_function_rfc6979 = nonce_function_rfc6979;
@@ -560,7 +556,7 @@ static int secp256k1_ecdsa_sign_inner(const secp256k1_context* ctx, secp256k1_sc
 
         if (noncefp == NULL || noncefp == secp256k1_nonce_function_rfc6979) {
             /* Use ctx-aware function by default */
-            ret = nonce_function_rfc6979_impl(secp256k1_get_hash_context(ctx), nonce32, msg32, seckey, NULL, (void*)noncedata, count);
+            ret = nonce_function_rfc6979_impl(&ctx->hash_ctx, nonce32, msg32, seckey, NULL, (void*)noncedata, count);
         } else {
             ret = !!noncefp(nonce32, msg32, seckey, NULL, (void*)noncedata, count);
         }
@@ -681,14 +677,13 @@ int secp256k1_ec_pubkey_negate(const secp256k1_context* ctx, secp256k1_pubkey *p
     return ret;
 }
 
-
 static int secp256k1_ec_seckey_tweak_add_helper(secp256k1_scalar *sec, const unsigned char *tweak32) {
     secp256k1_scalar term;
     int overflow = 0;
     int ret = 0;
 
     secp256k1_scalar_set_b32(&term, tweak32, &overflow);
-    ret = (!overflow) & secp256k1_eckey_privkey_tweak_add(sec, &term);
+    ret = (!overflow) & secp256k1_eckey_seckey_tweak_add(sec, &term);
     secp256k1_scalar_clear(&term);
     return ret;
 }
@@ -744,7 +739,7 @@ int secp256k1_ec_seckey_tweak_mul(const secp256k1_context* ctx, unsigned char *s
 
     secp256k1_scalar_set_b32(&factor, tweak32, &overflow);
     ret = secp256k1_scalar_set_b32_seckey(&sec, seckey);
-    ret &= (!overflow) & secp256k1_eckey_privkey_tweak_mul(&sec, &factor);
+    ret &= (!overflow) & secp256k1_eckey_seckey_tweak_mul(&sec, &factor);
     secp256k1_scalar_cmov(&sec, &secp256k1_scalar_zero, !ret);
     secp256k1_scalar_get_b32(seckey, &sec);
 
@@ -781,7 +776,7 @@ int secp256k1_context_randomize(secp256k1_context* ctx, const unsigned char *see
     ARG_CHECK(secp256k1_context_is_proper(ctx));
 
     if (secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx)) {
-        secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, secp256k1_get_hash_context(ctx), seed32);
+        secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, &ctx->hash_ctx, seed32);
     }
     return 1;
 }
@@ -819,9 +814,9 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
     ARG_CHECK(tag != NULL);
     ARG_CHECK(msg != NULL);
 
-    secp256k1_sha256_initialize_tagged(secp256k1_get_hash_context(ctx), &sha, tag, taglen);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &sha, msg, msglen);
-    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &sha, hash32);
+    secp256k1_sha256_initialize_tagged(&ctx->hash_ctx, &sha, tag, taglen);
+    secp256k1_sha256_write(&ctx->hash_ctx, &sha, msg, msglen);
+    secp256k1_sha256_finalize(&ctx->hash_ctx, &sha, hash32);
     secp256k1_sha256_clear(&sha);
     return 1;
 }
@@ -840,6 +835,18 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
 # include "modules/schnorrsig/main_impl.h"
+#endif
+
+#if defined(ENABLE_MODULE_FULLAGG) || defined(ENABLE_MODULE_MUSIG)
+# include "modules/nonce_common_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_FULLAGG
+# include "modules/fullagg/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+# include "modules/schnorrsig_halfagg/main_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_MUSIG

@@ -1011,4 +1011,65 @@ static void secp256k1_ge_from_bytes_ext(secp256k1_ge *ge, const unsigned char *d
     }
 }
 
+static int secp256k1_ge_parse(secp256k1_ge *elem, const unsigned char *pub, size_t size) {
+    if (size == 33 && (pub[0] == SECP256K1_TAG_PUBKEY_EVEN || pub[0] == SECP256K1_TAG_PUBKEY_ODD)) {
+        secp256k1_fe x;
+        return secp256k1_fe_set_b32_limit(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == SECP256K1_TAG_PUBKEY_ODD);
+    } else if (size == 65 && (pub[0] == SECP256K1_TAG_PUBKEY_UNCOMPRESSED || pub[0] == SECP256K1_TAG_PUBKEY_HYBRID_EVEN || pub[0] == SECP256K1_TAG_PUBKEY_HYBRID_ODD)) {
+        secp256k1_fe x, y;
+        if (!secp256k1_fe_set_b32_limit(&x, pub+1) || !secp256k1_fe_set_b32_limit(&y, pub+33)) {
+            return 0;
+        }
+        secp256k1_ge_set_xy(elem, &x, &y);
+        if ((pub[0] == SECP256K1_TAG_PUBKEY_HYBRID_EVEN || pub[0] == SECP256K1_TAG_PUBKEY_HYBRID_ODD) &&
+            secp256k1_fe_is_odd(&y) != (pub[0] == SECP256K1_TAG_PUBKEY_HYBRID_ODD)) {
+            return 0;
+        }
+        return secp256k1_ge_is_valid_var(elem);
+    } else {
+        return 0;
+    }
+}
+
+static void secp256k1_ge_serialize33(secp256k1_ge *elem, unsigned char *pub33) {
+    VERIFY_CHECK(!secp256k1_ge_is_infinity(elem));
+
+    secp256k1_fe_normalize_var(&elem->x);
+    secp256k1_fe_normalize_var(&elem->y);
+    pub33[0] = secp256k1_fe_is_odd(&elem->y) ? SECP256K1_TAG_PUBKEY_ODD : SECP256K1_TAG_PUBKEY_EVEN;
+    secp256k1_fe_get_b32(&pub33[1], &elem->x);
+}
+
+static void secp256k1_ge_serialize65(secp256k1_ge *elem, unsigned char *pub65) {
+    VERIFY_CHECK(!secp256k1_ge_is_infinity(elem));
+
+    secp256k1_fe_normalize_var(&elem->x);
+    secp256k1_fe_normalize_var(&elem->y);
+    pub65[0] = SECP256K1_TAG_PUBKEY_UNCOMPRESSED;
+    secp256k1_fe_get_b32(&pub65[1], &elem->x);
+    secp256k1_fe_get_b32(&pub65[33], &elem->y);
+}
+
+static void secp256k1_ge_serialize_ext33(unsigned char *out33, secp256k1_ge *ge) {
+    if (secp256k1_ge_is_infinity(ge)) {
+        memset(out33, 0, 33);
+    } else {
+        /* Serialize must succeed because the point is not at infinity */
+        secp256k1_ge_serialize33(ge, out33);
+    }
+}
+
+static int secp256k1_ge_parse_ext33(secp256k1_ge *ge, const unsigned char *in33) {
+    unsigned char zeros[33] = { 0 };
+
+    if (secp256k1_memcmp_var(in33, zeros, sizeof(zeros)) == 0) {
+        secp256k1_ge_set_infinity(ge);
+        return 1;
+    }
+    if (!secp256k1_ge_parse(ge, in33, 33)) {
+        return 0;
+    }
+    return secp256k1_ge_is_in_correct_subgroup(ge);
+}
+
 #endif /* SECP256K1_GROUP_IMPL_H */

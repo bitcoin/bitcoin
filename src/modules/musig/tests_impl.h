@@ -526,7 +526,7 @@ static void musig_nonce_test(void) {
     int i, j;
     secp256k1_scalar k[6][2];
 
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     testrand_bytes_test(session_secrand, sizeof(session_secrand));
     testrand_bytes_test(sk, sizeof(sk));
     testrand_bytes_test(pk, sizeof(pk));
@@ -575,7 +575,7 @@ static void musig_nonce_test(void) {
  * state. */
 static void sha256_tag_test(void) {
     secp256k1_sha256 sha;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     {
         /* "KeyAgg list" */
         static const unsigned char tag[] = {'K', 'e', 'y', 'A', 'g', 'g', ' ', 'l', 'i', 's', 't'};
