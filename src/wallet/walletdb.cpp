@@ -42,6 +42,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string KEYLABEL{"keylabel"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -84,6 +85,16 @@ bool WalletBatch::EraseName(const std::string& strAddress)
     // This should only be used for sending addresses, never for receiving addresses,
     // receiving addresses must always have an address book entry if they're not change return.
     return EraseIC(std::make_pair(DBKeys::NAME, strAddress));
+}
+
+bool WalletBatch::WriteKeyLabel(const KeyFingerprint& fingerprint, const std::string& label)
+{
+    return WriteIC(std::make_pair(DBKeys::KEYLABEL, fingerprint), label);
+}
+
+bool WalletBatch::EraseKeyLabel(const KeyFingerprint& fingerprint)
+{
+    return EraseIC(std::make_pair(DBKeys::KEYLABEL, fingerprint));
 }
 
 bool WalletBatch::WritePurpose(const std::string& strAddress, const std::string& strPurpose)
