@@ -5,13 +5,15 @@
 #include <crypto/hex_base.h>
 
 #include <array>
+#include <bit>
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <string>
 
 namespace {
 
-using ByteAsHex = std::array<char, 2>;
+using ByteAsHex = uint16_t;
 
 constexpr std::array<ByteAsHex, 256> CreateByteToHexMap()
 {
@@ -19,8 +21,13 @@ constexpr std::array<ByteAsHex, 256> CreateByteToHexMap()
 
     std::array<ByteAsHex, 256> byte_to_hex{};
     for (size_t i = 0; i < byte_to_hex.size(); ++i) {
-        byte_to_hex[i][0] = hexmap[i >> 4];
-        byte_to_hex[i][1] = hexmap[i & 15];
+        if constexpr (std::endian::native == std::endian::little) {
+            byte_to_hex[i] = (uint8_t(hexmap[i >> 4])) | (uint16_t(hexmap[i & 15]) << 8);
+        } else if constexpr (std::endian::native == std::endian::big) {
+            byte_to_hex[i] = (uint8_t(hexmap[i & 15])) | (uint16_t(hexmap[i >> 4]) << 8);
+        } else {
+            static_assert(std::endian::native == std::endian::little || std::endian::native == std::endian::big, "Unsupported endianness");
+        }
     }
     return byte_to_hex;
 }
@@ -35,7 +42,8 @@ std::string HexStr(const std::span<const uint8_t> s)
 
     char* it = rv.data();
     for (uint8_t v : s) {
-        std::memcpy(it, byte_to_hex[v].data(), 2);
+        uint16_t val = byte_to_hex[v];
+        std::memcpy(it, &val, 2);
         it += 2;
     }
 
