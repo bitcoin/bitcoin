@@ -8,6 +8,17 @@ import sys
 import argparse
 import json
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from test_framework.authproxy import AuthServiceProxy, JSONRPCException
+
+# Master private key for the tpub in getdescriptors below. Used by signtx,
+# which imports the keys into a wallet on the offline node provided by the
+# test and lets it do the actual signing.
+tprv = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK"
+
+MOCK_WALLET = "mock"
+
 def perform_pre_checks():
     mock_result_path = os.path.join(os.getcwd(), "mock_result")
     if os.path.isfile(mock_result_path):
@@ -56,20 +67,37 @@ def displayaddress(args):
 
     return sys.stdout.write(json.dumps({"address": expected_desc[args.desc]}))
 
+def get_mock_wallet():
+    """RPC connection to the wallet holding our private keys, created on
+    first use. The test provides a dedicated offline node for it and passes
+    the node's RPC URL via a file in our working directory."""
+    with open(os.path.join(os.getcwd(), "mock_rpc_url"), "r", encoding="utf8") as f:
+        node_url = f.read().strip()
+    node = AuthServiceProxy(node_url)
+    wallet = AuthServiceProxy(f"{node_url}/wallet/{MOCK_WALLET}")
+    try:
+        node.loadwallet(filename=MOCK_WALLET)
+        return wallet
+    except JSONRPCException as e:
+        if e.error["code"] == -35:  # RPC_WALLET_ALREADY_LOADED
+            return wallet
+        if e.error["code"] != -18:  # RPC_WALLET_NOT_FOUND
+            raise
+    node.createwallet(wallet_name=MOCK_WALLET, blank=True)
+    requests = []
+    for desc in [f"pkh({tprv}/<0;1>/*)", f"sh(wpkh({tprv}/<0;1>/*))", f"wpkh({tprv}/<0;1>/*)", f"tr({tprv}/<0;1>/*)"]:
+        checksum = node.getdescriptorinfo(descriptor=desc)["checksum"]
+        requests.append({"desc": f"{desc}#{checksum}", "timestamp": "now", "range": [0, 99]})
+    result = wallet.importdescriptors(requests=requests)
+    assert all(r["success"] for r in result)
+    return wallet
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
-    with open(os.path.join(os.getcwd(), "mock_psbt"), "r") as f:
-        mock_psbt = f.read()
-
-    if args.fingerprint == "00000001" :
-        sys.stdout.write(json.dumps({
-            "psbt": mock_psbt,
-            "complete": True
-        }))
-    else:
-        sys.stdout.write(json.dumps({"psbt": args.psbt}))
+    result = get_mock_wallet().walletprocesspsbt(psbt=args.psbt, sign=True, bip32derivs=False, finalize=False)
+    sys.stdout.write(json.dumps({"psbt": result["psbt"]}))
 
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
