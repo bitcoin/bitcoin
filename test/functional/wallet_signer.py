@@ -10,6 +10,7 @@ See also rpc_signer.py for tests without wallet context.
 import os
 
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -41,6 +42,7 @@ class WalletSignerTest(BitcoinTestFramework):
     def run_test(self):
         self.test_valid_signer()
         self.test_import_descriptor()
+        self.test_hot_key()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_signer_path('invalid_signer.py')}", "-keypool=10"])
         self.test_invalid_signer()
@@ -242,6 +244,29 @@ class WalletSignerTest(BitcoinTestFramework):
         address = hww_import.getnewaddress(address_type="bech32")
         assert_equal(hww_import.walletdisplayaddress(address), {"address": address})
         self.nodes[1].unloadwallet('hww_import')
+
+    def test_hot_key(self):
+        self.log.info('Test spending a hot key coin in an external signer wallet')
+
+        self.nodes[1].createwallet(wallet_name='hww_hot_key', external_signer=True, disable_private_keys=False)
+        hww_hot_key = self.nodes[1].get_wallet_rpc('hww_hot_key')
+        hot_desc = descsum_create(f"wpkh({ExtendedPrivateKey.generate().to_string()}/<0;1>/*)")
+        result = hww_hot_key.importdescriptors([{
+            "desc": hot_desc,
+            "active": True,
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]["success"], True)
+
+        hot_address = hww_hot_key.getnewaddress(address_type="bech32")
+        self.nodes[0].sendtoaddress(hot_address, 1)
+        self.generate(self.nodes[0], 1)
+        hot_utxo = hww_hot_key.listunspent(addresses=[hot_address])[0]
+
+        dest = self.nodes[0].getnewaddress()
+        res = hww_hot_key.send(outputs={dest: 0.5}, inputs=[hot_utxo], add_inputs=False, add_to_wallet=False)
+        assert res["complete"]
+        assert self.nodes[1].testmempoolaccept([res["hex"]])[0]["allowed"]
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')
