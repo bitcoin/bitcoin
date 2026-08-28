@@ -232,6 +232,12 @@ class WalletSignerTest(BitcoinTestFramework):
         assert res["complete"]
         assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
 
+        self.log.info('The signer may use SIGHASH_ANYONECANPAY, which still commits to all outputs')
+        self.set_mock_sign_mode(self.nodes[1], "sighash_all_anyonecanpay")
+        res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
+        assert res["complete"]
+        assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
+
         self.clear_mock_sign_mode(self.nodes[1])
 
     def test_misbehaving_signer(self):
@@ -252,6 +258,14 @@ class WalletSignerTest(BitcoinTestFramework):
         for mode in ["change_amount", "change_script", "remove_output"]:
             self.set_mock_sign_mode(self.nodes[1], mode)
             with self.nodes[1].assert_debug_log(["Signer returned a PSBT for a different transaction"]):
+                assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 1.5}, inputs=inputs, add_inputs=False)
+
+        self.log.info('The signer must not use unsafe sighash types')
+        # The first mode declares the sighash type in the PSBT, the second
+        # leaves it out, so only the signatures themselves reveal it
+        for mode in ["sighash_none", "sighash_none_hidden"]:
+            self.set_mock_sign_mode(self.nodes[1], mode)
+            with self.nodes[1].assert_debug_log(["Signer used an unsafe sighash type: NONE"]):
                 assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 1.5}, inputs=inputs, add_inputs=False)
 
         self.clear_mock_sign_mode(self.nodes[1])
