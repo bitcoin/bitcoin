@@ -614,6 +614,40 @@ RPCMethod setkeylabel()
     };
 }
 
+RPCMethod getkeylabel()
+{
+    return RPCMethod{
+        "getkeylabel",
+        "Returns the label associated with a master key fingerprint, if any.\n",
+                {
+                    {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "The master key fingerprint as 8 hex characters."},
+                },
+                {
+                    RPCResult{"if a label is set for the fingerprint",
+                        RPCResult::Type::STR, "label", "The label associated with the fingerprint."},
+                    RPCResult{"if no label is set for the fingerprint",
+                        RPCResult::Type::NONE, "", "JSON null."},
+                },
+                RPCExamples{
+                    HelpExampleCli("getkeylabel", "\"deadbeef\"")
+            + HelpExampleRpc("getkeylabel", "\"deadbeef\"")
+                },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    const KeyFingerprint fingerprint = DecodeKeyFingerprint(request.params[0].get_str());
+
+    LOCK(pwallet->cs_wallet);
+
+    const std::optional<std::string> label{pwallet->GetKeyLabel(fingerprint)};
+
+    return label.has_value() ? UniValue{label.value()} : UniValue::VNULL;
+},
+    };
+}
+
 RPCMethod getaddressesbylabel()
 {
     return RPCMethod{
