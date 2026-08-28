@@ -36,12 +36,24 @@ class WalletSignerTest(BitcoinTestFramework):
         return sys.executable + " " + path
 
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
 
         self.extra_args = [
             [],
             [f"-signer={self.mock_signer_path()}", '-keypool=10'],
+            # Node for the signer mock's wallet, kept offline so the mock
+            # can't cheat by e.g. inspecting the UTXO set
+            ["-maxconnections=0"],
         ]
+
+    def setup_network(self):
+        self.setup_nodes()
+        # Leave the signer mock's node disconnected
+        self.connect_nodes(0, 1)
+
+    def sync_except_mock(self):
+        """Sync all nodes except the signer mock's, which never receives blocks."""
+        self.sync_all(self.nodes[0:2])
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_external_signer()
@@ -54,7 +66,16 @@ class WalletSignerTest(BitcoinTestFramework):
     def clear_mock_result(self, node):
         os.remove(os.path.join(node.cwd, "mock_result"))
 
+    def init_mock_node(self):
+        """Hand the signer mock its dedicated offline node, on which it
+        creates the wallet it signs with."""
+        signer_node = self.nodes[2]
+        assert_equal(signer_node.getconnectioncount(), 0)
+        with open(os.path.join(self.nodes[1].cwd, "mock_rpc_url"), "w") as f:
+            f.write(signer_node.url)
+
     def run_test(self):
+        self.init_mock_node()
         self.test_valid_signer()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
@@ -149,73 +170,34 @@ class WalletSignerTest(BitcoinTestFramework):
             hww.walletdisplayaddress, address_fail
         )
 
-        self.log.info('Prepare mock PSBT')
-        self.nodes[0].sendtoaddress(address4, 1)
-        self.generate(self.nodes[0], 1)
+        self.log.info('Fund hww wallet')
+        for address in [address1, address2, address3, address4]:
+            self.nodes[0].sendtoaddress(address, 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+        assert_equal(hww.getwalletinfo()["txcount"], 4)
 
-        # Load private key into wallet to generate a signed PSBT for the mock
-        self.nodes[1].createwallet(wallet_name="mock", disable_private_keys=False, blank=True)
-        mock_wallet = self.nodes[1].get_wallet_rpc("mock")
-        assert mock_wallet.getwalletinfo()['private_keys_enabled']
-
-        result = mock_wallet.importdescriptors([{
-            "desc": "tr([00000001/86h/1h/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#7ew68cn8",
-            "timestamp": 0,
-            "range": [0,1],
-            "internal": False,
-            "active": True
-        },
-        {
-            "desc": "tr([00000001/86h/1h/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#0dtm6drl",
-            "timestamp": 0,
-            "range": [0, 0],
-            "internal": True,
-            "active": True
-        }])
-        assert_equal(result[0], {'success': True})
-        assert_equal(result[1], {'success': True})
-        assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
         dest = self.nodes[0].getnewaddress(address_type='bech32')
-        mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {'replaceable': True}, True)['psbt']
-        mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
-        mock_tx = mock_psbt_signed["hex"]
-        assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
-
-        assert_equal(hww.getwalletinfo()["txcount"], 1)
-
-        assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
-
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w") as f:
-            f.write(mock_psbt_signed["psbt"])
 
         self.log.info('Test send using hww1')
 
-        # Don't broadcast transaction yet so the RPC returns the raw hex
-        res = hww.send(outputs={dest:0.5},add_to_wallet=False)
+        # Spend all four address types at once. Don't broadcast the transaction
+        # yet so the RPC returns the raw hex.
+        res = hww.send(outputs={dest:3.5}, add_to_wallet=False)
         assert res["complete"]
-        assert_equal(res["hex"], mock_tx)
+        assert_equal(len(hww.decoderawtransaction(res["hex"])["vin"]), 4)
+        assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
 
         self.log.info('Test sendall using hww1')
 
-        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()], add_to_wallet=False)
+        res = hww.sendall(recipients=[{dest:3.5}, hww.getrawchangeaddress()], add_to_wallet=False)
         assert res["complete"]
-        assert_equal(res["hex"], mock_tx)
+        assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
         # Broadcast transaction so we can bump the fee
         hww.sendrawtransaction(res["hex"])
 
-        self.log.info('Prepare fee bumped mock PSBT')
-
-        # Now that the transaction is broadcast, bump fee in mock wallet:
-        orig_tx_id = res["txid"]
-        mock_psbt_bumped = mock_wallet.psbtbumpfee(orig_tx_id)["psbt"]
-        mock_psbt_bumped_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
-
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w") as f:
-            f.write(mock_psbt_bumped_signed["psbt"])
-
         self.log.info('Test bumpfee using hww1')
 
-        # Bump fee
+        orig_tx_id = res["txid"]
         res = hww.bumpfee(orig_tx_id)
         assert_greater_than(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
@@ -231,7 +213,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Fund wallet
         self.nodes[0].sendtoaddress(hww.getnewaddress(address_type="bech32m"), 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
 
         # Restart node with no signer connected
         self.log.debug(f"-signer={self.mock_no_connected_signer_path()}")
