@@ -420,6 +420,12 @@ static void run_scratch_tests(void) {
     CHECK(secp256k1_scratch_alloc(&CTX->error_callback, scratch, SIZE_MAX) == NULL);
     secp256k1_scratch_space_destroy(CTX, scratch);
 
+    /* Creating a scratch space whose size would wrap around when the aligned
+     * header size is added to it fails, both for SIZE_MAX and for the smallest
+     * size that still wraps. */
+    CHECK(secp256k1_scratch_space_create(CTX, SIZE_MAX) == NULL);
+    CHECK(secp256k1_scratch_space_create(CTX, SIZE_MAX - ROUND_TO_ALIGN(sizeof(secp256k1_scratch)) + 1) == NULL);
+
     /* cleanup */
     secp256k1_scratch_space_destroy(CTX, NULL); /* no-op */
 }
@@ -474,8 +480,8 @@ static void run_plug_sha256_compression_tests(void) {
     /* 5) A hash operation should invoke the installed callback */
     own_transform_called = 0;
     secp256k1_sha256_initialize(&sha);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &sha, (const unsigned char*)"a", 1);
-    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &sha, sha_out);
+    secp256k1_sha256_write(&ctx->hash_ctx, &sha, (const unsigned char*)"a", 1);
+    secp256k1_sha256_finalize(&ctx->hash_ctx, &sha, sha_out);
     CHECK(own_transform_called);
 
     /* 6) Unset sha256 and verify the default one is set again */
@@ -674,7 +680,7 @@ static void run_ctz_tests(void) {
 /***** HASH TESTS *****/
 
 static void run_sha256_known_output_tests(void) {
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     static const char *inputs[] = {
         "", "abc", "message digest", "secure hash algorithm", "SHA256 is considered to be safe",
         "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
@@ -823,7 +829,7 @@ static void run_sha256_counter_tests(void) {
         {0x2c, 0xf3, 0xa9, 0xf6, 0x15, 0x25, 0x80, 0x70, 0x76, 0x99, 0x7d, 0xf1, 0xc3, 0x2f, 0xa3, 0x31, 0xff, 0x92, 0x35, 0x2e, 0x8d, 0x04, 0x13, 0x33, 0xd8, 0x0d, 0xdb, 0x4a, 0xf6, 0x8c, 0x03, 0x34},
         {0xec, 0x12, 0x24, 0x9f, 0x35, 0xa4, 0x29, 0x8b, 0x9e, 0x4a, 0x95, 0xf8, 0x61, 0xaf, 0x61, 0xc5, 0x66, 0x55, 0x3e, 0x3f, 0x2a, 0x98, 0xea, 0x71, 0x16, 0x6b, 0x1c, 0xd9, 0xe4, 0x09, 0xd2, 0x8e},
     };
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     unsigned int i;
     for (i = 0; i < ARRAY_SIZE(midstates); i++) {
         unsigned char out[32];
@@ -878,7 +884,7 @@ static void run_hmac_sha256_tests(void) {
         {0x9b, 0x09, 0xff, 0xa7, 0x1b, 0x94, 0x2f, 0xcb, 0x27, 0x63, 0x5f, 0xbc, 0xd5, 0xb0, 0xe9, 0x44, 0xbf, 0xdc, 0x63, 0x64, 0x4f, 0x07, 0x13, 0x93, 0x8a, 0x7f, 0x51, 0x53, 0x5c, 0x3a, 0x35, 0xe2}
     };
     int i;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     for (i = 0; i < 6; i++) {
         secp256k1_hmac_sha256 hasher;
         unsigned char out[32];
@@ -912,7 +918,7 @@ static void run_rfc6979_hmac_sha256_tests(void) {
         {0x75, 0x97, 0x88, 0x7c, 0xbd, 0x76, 0x32, 0x1f, 0x32, 0xe3, 0x04, 0x40, 0x67, 0x9a, 0x22, 0xcf, 0x7f, 0x8d, 0x9d, 0x2e, 0xac, 0x39, 0x0e, 0x58, 0x1f, 0xea, 0x09, 0x1c, 0xe2, 0x02, 0xba, 0x94}
     };
 
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     secp256k1_rfc6979_hmac_sha256 rng;
     unsigned char out[32];
     int i;
@@ -970,7 +976,7 @@ static void run_sha256_initialize_midstate_tests(void) {
         0xa9ec59eaul, 0x9b4c2ffful, 0x400821e2ul, 0x0dcf3847ul,
         0xbe7ea179ul, 0xa5772bdcul, 0x7d29bfe3ul, 0xa486b855ul
     };
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     secp256k1_sha256 sha;
 
     secp256k1_sha256_initialize_midstate(&sha, 64, midstate);
@@ -991,7 +997,6 @@ static uint64_t modinv2p64(uint64_t x) {
     for (l = 0; l < 6; ++l) w *= (2 - w*x);
     return w;
 }
-
 
 /* compute out = (a*b) mod m; if b=NULL, treat b=1; if m=NULL, treat m=infinity.
  *
@@ -3889,7 +3894,6 @@ struct test_hsort_cmp_data {
     size_t element_len;
 };
 
-
 static int test_hsort_cmp(const void *ele1, const void *ele2, void *data) {
   struct test_hsort_cmp_data *d = (struct test_hsort_cmp_data *) data;
     d->counter += 1;
@@ -3925,7 +3929,6 @@ static void test_hsort(size_t element_len) {
 }
 #undef NUM
 #undef MAX_ELEMENT_LEN
-
 
 static void run_hsort_tests(void) {
     test_heap_swap();
@@ -4243,7 +4246,6 @@ static void test_initialized_inf(void) {
     CHECK(secp256k1_fe_is_zero(&infj3.x));
     CHECK(secp256k1_fe_is_zero(&infj3.y));
     CHECK(secp256k1_fe_is_zero(&infj3.z));
-
 
 }
 
@@ -5744,11 +5746,11 @@ static void test_ecmult_accumulate(secp256k1_sha256* acc, const secp256k1_scalar
     if (secp256k1_ge_is_infinity(&r)) {
         /* Store infinity as 0x00 */
         const unsigned char zerobyte[1] = {0};
-        secp256k1_sha256_write(secp256k1_get_hash_context(CTX), acc, zerobyte, 1);
+        secp256k1_sha256_write(&CTX->hash_ctx, acc, zerobyte, 1);
     } else {
         /* Store other points using their uncompressed serialization. */
-        secp256k1_eckey_pubkey_serialize65(&r, bytes);
-        secp256k1_sha256_write(secp256k1_get_hash_context(CTX), acc, bytes, sizeof(bytes));
+        secp256k1_ge_serialize65(&r, bytes);
+        secp256k1_sha256_write(&CTX->hash_ctx, acc, bytes, sizeof(bytes));
     }
 }
 
@@ -5790,7 +5792,7 @@ static void test_ecmult_constants_2bit(void) {
             test_ecmult_accumulate(&acc, &x, scratch);
         }
     }
-    secp256k1_sha256_finalize(secp256k1_get_hash_context(CTX), &acc, b32);
+    secp256k1_sha256_finalize(&CTX->hash_ctx, &acc, b32);
     CHECK(secp256k1_memcmp_var(b32, expected32, 32) == 0);
 
     secp256k1_scratch_space_destroy(CTX, scratch);
@@ -5809,7 +5811,7 @@ static void test_ecmult_constants_sha(uint32_t prefix, size_t iter, const unsign
     unsigned char b32[32];
     unsigned char inp[6];
     size_t i;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     secp256k1_scratch_space *scratch = secp256k1_scratch_space_create(CTX, 65536);
 
     inp[0] = prefix & 0xFF;
@@ -5907,7 +5909,7 @@ static void test_ecmult_gen_blind(void) {
     testrand256(seed32);
     b = CTX->ecmult_gen_ctx.scalar_offset;
     p = CTX->ecmult_gen_ctx.ge_offset;
-    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, secp256k1_get_hash_context(CTX), seed32);
+    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, &CTX->hash_ctx, seed32);
     CHECK(!secp256k1_scalar_eq(&b, &CTX->ecmult_gen_ctx.scalar_offset));
     secp256k1_ecmult_gen_gej(&CTX->ecmult_gen_ctx, &pgej2, &key);
     CHECK(!gej_xyz_equals_gej(&pgej, &pgej2));
@@ -5920,10 +5922,10 @@ static void test_ecmult_gen_blind_reset(void) {
     /* Test ecmult_gen() blinding reset and confirm that the blinding is consistent. */
     secp256k1_scalar b;
     secp256k1_ge p1, p2;
-    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, secp256k1_get_hash_context(CTX), 0);
+    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, &CTX->hash_ctx, 0);
     b = CTX->ecmult_gen_ctx.scalar_offset;
     p1 = CTX->ecmult_gen_ctx.ge_offset;
-    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, secp256k1_get_hash_context(CTX), 0);
+    secp256k1_ecmult_gen_blind(&CTX->ecmult_gen_ctx, &CTX->hash_ctx, 0);
     CHECK(secp256k1_scalar_eq(&b, &CTX->ecmult_gen_ctx.scalar_offset));
     p2 = CTX->ecmult_gen_ctx.ge_offset;
     CHECK(secp256k1_ge_eq_var(&p1, &p2));
@@ -5983,7 +5985,6 @@ static void test_scalar_split(const secp256k1_scalar* full) {
     secp256k1_scalar_get_b32(tmp, &slam);
     CHECK(secp256k1_memcmp_var(zero, tmp, 16) == 0);
 }
-
 
 static void run_endomorphism_tests(void) {
     unsigned i;
@@ -6853,7 +6854,7 @@ static void test_random_pubkeys(void) {
     if (len > 33) {
         testrand256(&in[33]);
     }
-    if (secp256k1_eckey_pubkey_parse(&elem, in, len)) {
+    if (secp256k1_ge_parse(&elem, in, len)) {
         unsigned char out[65];
         unsigned char firstb;
         int res;
@@ -6861,9 +6862,9 @@ static void test_random_pubkeys(void) {
         firstb = in[0];
         /* If the pubkey can be parsed, it should round-trip... */
         if (len == 33) {
-            secp256k1_eckey_pubkey_serialize33(&elem, out);
+            secp256k1_ge_serialize33(&elem, out);
         } else {
-            secp256k1_eckey_pubkey_serialize65(&elem, out);
+            secp256k1_ge_serialize65(&elem, out);
         }
         CHECK(secp256k1_memcmp_var(&in[1], &out[1], len-1) == 0);
         /* ... except for the type of hybrid inputs. */
@@ -6871,12 +6872,12 @@ static void test_random_pubkeys(void) {
             CHECK(in[0] == out[0]);
         }
         size = 65;
-        secp256k1_eckey_pubkey_serialize65(&elem, in);
-        CHECK(secp256k1_eckey_pubkey_parse(&elem2, in, size));
+        secp256k1_ge_serialize65(&elem, in);
+        CHECK(secp256k1_ge_parse(&elem2, in, size));
         CHECK(secp256k1_ge_eq_var(&elem2, &elem));
         /* Check that the X9.62 hybrid type is checked. */
         in[0] = testrand_bits(1) ? 6 : 7;
-        res = secp256k1_eckey_pubkey_parse(&elem2, in, size);
+        res = secp256k1_ge_parse(&elem2, in, size);
         if (firstb == 2 || firstb == 3) {
             if (in[0] == firstb + 4) {
               CHECK(res);
@@ -6886,7 +6887,7 @@ static void test_random_pubkeys(void) {
         }
         if (res) {
             CHECK(secp256k1_ge_eq_var(&elem, &elem2));
-            secp256k1_eckey_pubkey_serialize65(&elem, out);
+            secp256k1_ge_serialize65(&elem, out);
             CHECK(secp256k1_memcmp_var(&in[1], &out[1], 64) == 0);
         }
     }
@@ -7090,7 +7091,6 @@ static void run_pubkey_sort(void) {
     test_sort();
     test_sort_vectors();
 }
-
 
 static void run_random_pubkeys(void) {
     int i;
@@ -7416,7 +7416,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 0);
-        CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey_mods_zero, 33));
+        CHECK(secp256k1_ge_parse(&key, pubkey_mods_zero, 33));
         CHECK(secp256k1_ecdsa_sig_verify( &sr, &ss, &key, &msg) == 0);
     }
 
@@ -7435,7 +7435,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 0);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 1);
-        CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 0);
     }
 
@@ -7462,8 +7462,8 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 2);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 2);
-        CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
-        CHECK(secp256k1_eckey_pubkey_parse(&key2, pubkey2, 33));
+        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse(&key2, pubkey2, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key2, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
@@ -7503,8 +7503,8 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 1);
         secp256k1_scalar_set_b32(&sr, csr, NULL);
-        CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
-        CHECK(secp256k1_eckey_pubkey_parse(&key2, pubkey2, 33));
+        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse(&key2, pubkey2, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key2, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
@@ -7538,7 +7538,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&msg, 1);
         secp256k1_scalar_negate(&msg, &msg);
         secp256k1_scalar_set_b32(&sr, csr, NULL);
-        CHECK(secp256k1_eckey_pubkey_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
@@ -7702,7 +7702,6 @@ static void run_ecdsa_edge_cases(void) {
         CHECK(secp256k1_memcmp_var(nonce3, nonce4, 32) != 0);
     }
 
-
     /* Privkey export where pubkey is the point at infinity. */
     {
         unsigned char privkey[300];
@@ -7743,7 +7742,7 @@ static void test_ecdsa_wycheproof(void) {
     #include "wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h"
 
     int t;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     for (t = 0; t < SECP256K1_ECDSA_WYCHEPROOF_NUMBER_TESTVECTORS; t++) {
         secp256k1_ecdsa_signature signature;
         secp256k1_sha256 hasher;
@@ -7790,6 +7789,14 @@ static void run_ecdsa_wycheproof(void) {
 # include "modules/schnorrsig/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_FULLAGG
+# include "modules/fullagg/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+# include "modules/schnorrsig_halfagg/tests_impl.h"
+#endif
+
 #ifdef ENABLE_MODULE_MUSIG
 # include "modules/musig/tests_impl.h"
 #endif
@@ -7816,7 +7823,6 @@ static void run_secp256k1_memczero_test(void) {
     secp256k1_memczero(buf1, sizeof(buf1) , 1);
     CHECK(secp256k1_memcmp_var(buf1, buf2, sizeof(buf1)) == 0);
 }
-
 
 static void run_secp256k1_is_zero_array_test(void) {
     unsigned char buf1[3] = {0, 1};
@@ -8137,6 +8143,13 @@ static const struct tf_test_module registry_modules[] = {
 #endif
 #ifdef ENABLE_MODULE_SCHNORRSIG
     MAKE_TEST_MODULE(schnorrsig),
+#endif
+#ifdef ENABLE_MODULE_FULLAGG
+    MAKE_TEST_MODULE(fullagg),
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+    MAKE_TEST_MODULE(schnorrsig_halfagg),
 #endif
 #ifdef ENABLE_MODULE_MUSIG
     MAKE_TEST_MODULE(musig),

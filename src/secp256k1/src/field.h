@@ -323,8 +323,8 @@ static void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag);
 
 /** Halve the value of a field element modulo the field prime in constant-time.
  *
- * On input, r must be a valid field element.
- * On output, r will be normalized and have magnitude floor(m/2) + 1 where m is
+ * On input, r must be a valid field element with magnitude not exceeding 31.
+ * On output, r will not be normalized, and have magnitude floor(m/2) + 1 where m is
  * the magnitude of r on input.
  */
 static void secp256k1_fe_half(secp256k1_fe *r);

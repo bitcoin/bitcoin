@@ -269,8 +269,8 @@ static void generate_scalar(const secp256k1_context *ctx, uint32_t num, secp256k
     c[8] = num >> 16;
     c[9] = num >> 24;
     secp256k1_sha256_initialize(&sha256);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &sha256, c, sizeof(c));
-    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &sha256, buf);
+    secp256k1_sha256_write(&ctx->hash_ctx, &sha256, c, sizeof(c));
+    secp256k1_sha256_finalize(&ctx->hash_ctx, &sha256, buf);
     secp256k1_scalar_set_b32(scalar, buf, &overflow);
     CHECK(!overflow);
 }
