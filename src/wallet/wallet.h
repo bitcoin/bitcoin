@@ -504,6 +504,17 @@ public:
     std::map<CTxDestination, CAddressBookData> m_address_book GUARDED_BY(cs_wallet);
     const CAddressBookData* FindAddressBookEntry(const CTxDestination&, bool allow_change = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+private:
+    /** Per-key labels keyed by the key's master fingerprint.
+     * A single fingerprint covers every key/address derived from the same master key
+     * across all descriptor types, which makes it a natural unit for labelling
+     * e.g. a hardware wallet or a multisig participant.
+     * These labels augment, do not replace, the per-address labels in m_address_book
+     * and never affect the change/receive heuristic in CAddressBookData::IsChange().
+     */
+    std::map<KeyFingerprint, std::string> m_key_labels GUARDED_BY(cs_wallet);
+
+public:
     /** Set of Coins owned by this wallet that we won't try to spend from. A
      * Coin may be locked if it has already been used to fund a transaction
      * that hasn't confirmed yet. We wouldn't consider the Coin spent already,
@@ -813,6 +824,15 @@ public:
 
     bool DelAddressBook(const CTxDestination& address);
     bool DelAddressBookWithDB(WalletBatch& batch, const CTxDestination& address);
+
+    //! Per-key label accessors (keyed by master fingerprint). See m_key_labels.
+    bool SetKeyLabel(const KeyFingerprint& fingerprint, const std::string& label) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool DelKeyLabel(const KeyFingerprint& fingerprint) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::optional<std::string> GetKeyLabel(const KeyFingerprint& fingerprint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Map the destination back to the master fingerprint of the corresponding key.
+    std::optional<std::string> GetKeyLabelForDest(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    const std::map<KeyFingerprint, std::string>& GetKeyLabels() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadKeyLabel(const KeyFingerprint& fingerprint, const std::string& label) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool IsAddressPreviouslySpent(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool SetAddressPreviouslySpent(WalletBatch& batch, const CTxDestination& dest, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

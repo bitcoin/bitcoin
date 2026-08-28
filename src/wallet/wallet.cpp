@@ -2535,6 +2535,45 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
     return SetAddressBookWithDB(batch, address, strName, purpose);
 }
 
+bool CWallet::SetKeyLabel(const KeyFingerprint& fingerprint, const std::string& label)
+{
+    WalletBatch batch(GetDatabase());
+    if (!batch.WriteKeyLabel(fingerprint, label)) {
+        WalletLogPrintf("Error: failed to write per-key label for fingerprint %s\n", HexStr(fingerprint));
+        return false;
+    }
+    m_key_labels[fingerprint] = label;
+    return true;
+}
+
+bool CWallet::DelKeyLabel(const KeyFingerprint& fingerprint)
+{
+    WalletBatch batch(GetDatabase());
+    if (!batch.EraseKeyLabel(fingerprint)) {
+        WalletLogPrintf("Error: failed to erase per-key label for fingerprint %s\n", HexStr(fingerprint));
+        return false;
+    }
+    m_key_labels.erase(fingerprint);
+    return true;
+}
+
+std::optional<std::string> CWallet::GetKeyLabel(const KeyFingerprint& fingerprint) const
+{
+    const auto it = m_key_labels.find(fingerprint);
+    if (it == m_key_labels.end()) return std::nullopt;
+    return it->second;
+}
+
+const std::map<KeyFingerprint, std::string>& CWallet::GetKeyLabels() const
+{
+    return m_key_labels;
+}
+
+void CWallet::LoadKeyLabel(const KeyFingerprint& fingerprint, const std::string& label)
+{
+    m_key_labels[fingerprint] = label;
+}
+
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     return RunWithinTxn(GetDatabase(), /*process_desc=*/"address book entry removal", [&](WalletBatch& batch){

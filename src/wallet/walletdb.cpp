@@ -968,6 +968,21 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
     });
     result = std::max(result, purpose_res.m_result);
 
+    // Load per-key label record (keyed by the key's master fingerprint).
+    // One fingerprint covers every address derived from the same root, so these
+    // labels are shared across script/descriptor types and augment the per-address
+    // labels loaded above (see CWallet::m_key_labels).
+    LoadResult key_label_res = LoadRecords(pwallet, batch, DBKeys::KEYLABEL,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        KeyFingerprint fingerprint;
+        key >> fingerprint;
+        std::string label;
+        value >> label;
+        pwallet->LoadKeyLabel(fingerprint, label);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, key_label_res.m_result);
+
     // Load destination data record
     LoadResult dest_res = LoadRecords(pwallet, batch, DBKeys::DESTDATA,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
