@@ -11,6 +11,13 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from test_framework.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework.psbt import (
+    PSBT,
+    PSBT_IN_PARTIAL_SIG,
+    PSBT_IN_TAP_KEY_SIG,
+    PSBT_OUT_AMOUNT,
+    PSBT_OUT_SCRIPT,
+)
 
 # Master private key for the tpub in getdescriptors below. Used by signtx,
 # which imports the keys into a wallet on the offline node provided by the
@@ -100,12 +107,29 @@ def get_mock_sign_mode():
             return f.read().strip()
     return None
 
+def tamper(psbt_b64, mode):
+    """Alter the transaction described by the (version 2) PSBT before signing
+    it, like a rogue or broken signer might."""
+    psbt = PSBT.from_base64(psbt_b64)
+    if mode == "change_amount":
+        # Steal from the output by redirecting the value to fees
+        amount = int.from_bytes(psbt.o[0].map[PSBT_OUT_AMOUNT], "little", signed=True)
+        psbt.o[0].map[PSBT_OUT_AMOUNT] = (amount - 1).to_bytes(8, "little", signed=True)
+    elif mode == "change_script":
+        psbt.o[0].map[PSBT_OUT_SCRIPT] = bytes([0x51])  # OP_TRUE
+    elif mode == "remove_output":
+        psbt.o.pop()
+    return psbt.to_base64()
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
     mode = get_mock_sign_mode()
     psbt = args.psbt
+    if mode in ("change_amount", "change_script", "remove_output"):
+        psbt = tamper(psbt, mode)
+
     wallet = get_mock_wallet()
     result = wallet.walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False)
     reply = result["psbt"]
@@ -115,6 +139,17 @@ def signtx(args):
         tx = wallet.finalizepsbt(reply)["hex"]
         # The conversion discards signatures; the version check runs first.
         reply = wallet.converttopsbt(tx, permitsigdata=True, psbt_version=0)
+    elif mode == "strip":
+        # Return only the signatures, plus the fields required to describe
+        # the same transaction
+        signed = PSBT.from_base64(reply)
+        stripped = PSBT.from_base64(reply)
+        stripped.make_blank()
+        for signed_in, stripped_in in zip(signed.i, stripped.i):
+            for key, value in signed_in.map.items():
+                if key == PSBT_IN_TAP_KEY_SIG or (isinstance(key, bytes) and key[0] == PSBT_IN_PARTIAL_SIG):
+                    stripped_in.map[key] = value
+        reply = stripped.to_base64()
 
     sys.stdout.write(json.dumps({"psbt": reply}))
 
