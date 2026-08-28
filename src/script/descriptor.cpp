@@ -34,11 +34,11 @@
 
 #include <algorithm>
 #include <compare>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -175,6 +175,15 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 ////////////////////////////////////////////////////////////////////////////
 
 typedef std::vector<uint32_t> KeyPath;
+
+/** A source-text replacement used by Parse() to construct the public form of a
+ *  multipath descriptor string. */
+struct KeyReplacement {
+    //! The text within the string being parsed
+    std::span<const char> text;
+    //! The replacement text
+    std::string replacement;
+};
 
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider
@@ -1951,6 +1960,7 @@ using ParsePubkeyResult = std::vector<std::unique_ptr<PubkeyProvider>>;
 struct ParseState {
     uint32_t& key_exp_index;
     FlatSigningProvider& out;
+    std::vector<KeyReplacement>* key_replacements{nullptr};
 };
 
 /** Parse a public key that excludes origin information. */
@@ -1977,7 +1987,7 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
                 if (permit_uncompressed || pubkey.IsCompressed()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, false));
                     ++state.key_exp_index;
-                    return ret;
+                    return ParsePubkeyInnerResult{std::move(ret)};
                 } else {
                     return util::Unexpected{"Uncompressed keys are not allowed"};
                 }
@@ -1988,7 +1998,7 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
                 if (pubkey.IsFullyValid()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, true));
                     ++state.key_exp_index;
-                    return ret;
+                    return ParsePubkeyInnerResult{std::move(ret)};
                 }
             }
             return util::Unexpected{strprintf("Pubkey '%s' is invalid", str)};
@@ -1998,9 +2008,13 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
                 state.out.keys.emplace(pubkey.GetID(), key);
+                if (state.key_replacements) {
+                    std::string replacement{ctx == ParseScriptContext::P2TR ? HexStr(XOnlyPubKey{pubkey}) : HexStr(pubkey)};
+                    state.key_replacements->push_back(KeyReplacement{split[0], std::move(replacement)});
+                }
                 ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
                 ++state.key_exp_index;
-                return ret;
+                return ParsePubkeyInnerResult{std::move(ret)};
             } else {
                 return util::Unexpected{"Uncompressed keys are not allowed"};
             }
@@ -2018,12 +2032,13 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState&
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         state.out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
+        if (state.key_replacements) state.key_replacements->push_back(KeyReplacement{split[0], EncodeExtPubKey(extpubkey)});
     }
     for (auto& path : paths) {
         ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(state.key_exp_index, extpubkey, std::move(path), type, apostrophe));
     }
     ++state.key_exp_index;
-    return ret;
+    return ParsePubkeyInnerResult{std::move(ret)};
 }
 
 /** Parse a public key including origin information (if enabled). */
@@ -2248,10 +2263,13 @@ struct KeyParser {
     const miniscript::MiniscriptContext m_script_ctx;
     //! The current key expression index
     uint32_t& m_expr_index;
+    //! Source-text replacements collected while parsing Miniscript keys, if requested.
+    std::vector<KeyReplacement>* m_key_replacements;
 
     KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND,
-              miniscript::MiniscriptContext ctx, uint32_t& key_exp_index LIFETIMEBOUND)
-        : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index) {}
+              miniscript::MiniscriptContext ctx, uint32_t& key_exp_index LIFETIMEBOUND,
+              std::vector<KeyReplacement>* key_replacements = nullptr)
+        : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index), m_key_replacements(key_replacements) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         // Deriving a hardened step needs the private key, so use the provider that was filled
@@ -2281,7 +2299,7 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        ParseState state{m_expr_index, *m_out};
+        ParseState state{m_expr_index, *m_out, m_key_replacements};
         auto result = ParsePubkey(state, in, ParseContext());
         if (!result) {
             m_key_parsing_error = std::move(result.error());
@@ -2540,7 +2558,8 @@ util::Expected<ParseScriptResult, std::string> ParseScript(ParseState& state, st
                 auto sarg = Expr(expr);
                 auto subscript_result = ParseScript(state, sarg, ParseScriptContext::P2TR);
                 if (!subscript_result) return util::Unexpected{std::move(subscript_result.error())};
-                subscripts.emplace_back(std::move(*subscript_result));
+                auto subscript = std::move(*subscript_result);
+                subscripts.emplace_back(std::move(subscript));
                 max_providers_len = std::max(max_providers_len, subscripts.back().size());
                 depths.push_back(branches.size());
                 // Process closing braces; one is expected for every right branch we were in.
@@ -2648,7 +2667,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(ParseState& state, st
     // Process miniscript expressions.
     {
         const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
-        KeyParser parser(/*out = */&state.out, /* in = */nullptr, /* ctx = */script_ctx, state.key_exp_index);
+        KeyParser parser(/*out = */&state.out, /* in = */nullptr, /* ctx = */script_ctx, state.key_exp_index, state.key_replacements);
         auto node = miniscript::FromString(std::string_view{expr.data(), expr.size()}, parser);
         if (parser.m_key_parsing_error != "") {
             return util::Unexpected{std::move(parser.m_key_parsing_error)};
@@ -2919,13 +2938,15 @@ bool CheckChecksum(std::span<const char>& sp, bool require_checksum, std::string
     return true;
 }
 
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
+std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum, std::optional<std::string>* multipath)
 {
+    if (multipath) multipath->reset();
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     const std::string_view no_checksum{sp.data(), sp.size()};
     uint32_t key_exp_index = 0;
-    ParseState state{key_exp_index, out};
+    std::vector<KeyReplacement> key_replacements;
+    ParseState state{key_exp_index, out, multipath ? &key_replacements : nullptr};
     auto result = ParseScript(state, sp, ParseScriptContext::TOP);
     if (!result) {
         error = std::move(result.error());
@@ -2956,6 +2977,22 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
         descs.reserve(ret.size());
         for (auto& r : ret) {
             descs.emplace_back(std::unique_ptr<Descriptor>(std::move(r)));
+        }
+        if (multipath && descs.size() > 1) {
+            // Return the multipath descriptor string in public form: the
+            // parsed string with each private key replaced by its public form.
+            // Sort spans by their position in the input descriptor.
+            std::sort(key_replacements.begin(), key_replacements.end(), [](const auto& a, const auto& b) { return a.text.data() < b.text.data(); });
+            std::string multipath_str{no_checksum};
+            size_t next_pos{no_checksum.size()};
+            for (const KeyReplacement& kr : key_replacements | std::views::reverse) {
+                const size_t pos{static_cast<size_t>(kr.text.data() - no_checksum.data())};
+                Assume(pos <= next_pos);
+                Assume(kr.text.size() <= next_pos - pos);
+                multipath_str.replace(pos, kr.text.size(), kr.replacement);
+                next_pos = pos;
+            }
+            *multipath = AddChecksum(multipath_str);
         }
         return descs;
     }
