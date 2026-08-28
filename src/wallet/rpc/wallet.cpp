@@ -1061,6 +1061,7 @@ RPCMethod getrawchangeaddress();
 RPCMethod setlabel();
 RPCMethod setkeylabel();
 RPCMethod getkeylabel();
+RPCMethod listkeylabels();
 RPCMethod listaddressgroupings();
 RPCMethod keypoolrefill();
 RPCMethod getaddressesbylabel();
@@ -1150,6 +1151,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &keypoolrefill},
         {"wallet", &listaddressgroupings},
         {"wallet", &listdescriptors},
+        {"wallet", &listkeylabels},
         {"wallet", &listlabels},
         {"wallet", &listlockunspent},
         {"wallet", &listreceivedbyaddress},

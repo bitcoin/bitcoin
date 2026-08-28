@@ -648,6 +648,38 @@ RPCMethod getkeylabel()
     };
 }
 
+RPCMethod listkeylabels()
+{
+    return RPCMethod{
+        "listkeylabels",
+        "Lists all per-key labels set on this wallet, keyed by master fingerprint.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ_DYN, "", "json object with fingerprints (8 hex characters) as keys and labels as values",
+                    {
+                        {RPCResult::Type::STR, "fingerprint", "The label associated with the fingerprint."},
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("listkeylabels", "")
+            + HelpExampleRpc("listkeylabels", "")
+                },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+    for (const auto& [fingerprint, label] : pwallet->GetKeyLabels()) {
+        ret.pushKV(HexStr(fingerprint), label);
+    }
+    return ret;
+},
+    };
+}
+
 RPCMethod getaddressesbylabel()
 {
     return RPCMethod{
