@@ -206,3 +206,13 @@ The `sequence` topic refers specifically to the mempool sequence
 number, which is also published along with all mempool events. This
 is a different sequence value than in ZMQ itself in order to allow a total
 ordering of mempool events to be constructed.
+
+ZMQ notifications are dispatched asynchronously from a background thread,
+after the block or mempool change has already been applied to the node's
+state. A subscriber may therefore observe the node ahead of a notification
+it just received. For example, `getbestblockhash` may already return a block
+later than the one announced by `hashblock`. Notifications should be treated
+as a trigger to re-query the node rather than as a synchronous snapshot of its
+current state. Message ordering is preserved within a topic, but there is no
+ordering guarantee across the ZMQ, `-*notify`, and RPC interfaces, which
+operate independently.
