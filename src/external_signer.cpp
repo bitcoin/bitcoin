@@ -121,7 +121,10 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    psbtx = *signer_psbtx;
+    if (!psbtx.Merge(*signer_psbtx)) {
+        error = "Signer returned a PSBT for a different transaction";
+        return false;
+    }
 
     return true;
 }
