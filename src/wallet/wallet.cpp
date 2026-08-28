@@ -52,6 +52,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/bip32.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -4666,6 +4667,37 @@ util::Expected<CExtKey, WalletError> CWallet::SelectHDKey(const std::optional<CE
         }};
     }
     return *xprv;
+}
+
+util::Expected<std::pair<CExtKey, KeyOriginInfo>, WalletError> CWallet::DeriveHDKey(const std::vector<uint32_t>& path, const std::optional<CExtPubKey>& hdkey) const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::GenericError,
+            _("Deriving HD keys is not available for watch-only wallets")
+        }};
+    }
+
+    if (!HasHardenedDerivation(path)) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::GenericError,
+            _("Derivation path requires at least one hardened step")
+        }};
+    }
+
+    util::Expected<CExtKey, WalletError> xprv{SelectHDKey(hdkey)};
+    if (!xprv) return util::Unexpected{xprv.error()};
+
+    std::optional<std::pair<CExtKey, KeyOriginInfo>> child{DeriveExtKey(*xprv, path)};
+    if (!child) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::GenericError,
+            _("Unable to derive HD key at the requested path")
+        }};
+    }
+    return *child;
 }
 
 void CWallet::WriteBestBlock() const

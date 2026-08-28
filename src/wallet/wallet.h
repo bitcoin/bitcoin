@@ -1100,6 +1100,10 @@ public:
     //! hdkey, unused(KEY) descriptors are preferred over active ones.
     util::Expected<CExtKey, WalletError> SelectHDKey(const std::optional<CExtPubKey>& hdkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Derive the selected HD key at the given path. The path must contain at
+    //! least one hardened step, so that sibling keys are not exposed.
+    util::Expected<std::pair<CExtKey, KeyOriginInfo>, WalletError> DeriveHDKey(const std::vector<uint32_t>& path, const std::optional<CExtPubKey>& hdkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
 };
