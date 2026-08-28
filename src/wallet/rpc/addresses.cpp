@@ -7,7 +7,9 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
 #include <script/script.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
@@ -462,6 +464,12 @@ RPCMethod getaddressinfo()
                         {
                             {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
+                        {RPCResult::Type::OBJ_DYN, "key_labels", "Per-key labels keyed by master fingerprint (see setkeylabel) for the keys securing\n"
+                            "this address. Multisig addresses report one entry per participant. Empty when no securing\n"
+                            "key has a per-key label set.",
+                        {
+                            {RPCResult::Type::STR, "fingerprint", "The label associated with this 8-hex-character master key fingerprint."},
+                        }},
                     }
                 },
                 RPCExamples{
@@ -499,8 +507,9 @@ RPCMethod getaddressinfo()
     bool mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", mine);
 
+    std::unique_ptr<Descriptor> inferred;
     if (provider) {
-        auto inferred = InferDescriptor(scriptPubKey, *provider);
+        inferred = InferDescriptor(scriptPubKey, *provider);
         bool solvable = inferred->IsSolvable();
         ret.pushKV("solvable", solvable);
         if (solvable) {
@@ -554,6 +563,28 @@ RPCMethod getaddressinfo()
         labels.push_back(address_book_entry->GetLabel());
     }
     ret.pushKV("labels", std::move(labels));
+
+    // Per-key labels keyed by master fingerprint for every key corresponding to this address.
+    // Expanding the inferred descriptor yields the origins of all securing keys,
+    // so multisig addresses report one entry per multisig participant.
+    UniValue key_labels(UniValue::VOBJ);
+    if (inferred) {
+        FlatSigningProvider out;
+        std::vector<CScript> scripts;
+        inferred->Expand(0, *provider, scripts, out);
+        std::map<KeyFingerprint, std::string> labels_by_fingerprint;
+        for (const auto& origin : out.origins) {
+            const KeyFingerprint& fingerprint = origin.second.second.fingerprint;
+            if (labels_by_fingerprint.contains(fingerprint)) continue;
+            if (const std::optional<std::string> label = pwallet->GetKeyLabel(fingerprint)) {
+                labels_by_fingerprint.emplace(fingerprint, label.value());
+            }
+        }
+        for (const auto& [fingerprint, label] : labels_by_fingerprint) {
+            key_labels.pushKV(HexStr(fingerprint), label);
+        }
+    }
+    ret.pushKV("key_labels", std::move(key_labels));
 
     return ret;
 },
