@@ -6,3 +6,5 @@ RPC
 - A new RPC, `getkeylabel` allows to get the label associated to a master key by its fingerprint.
 
 - A new RPC, `listkeylabels` allows to list all labels from all master key fingerprints that have a label.
+
+- The RPC `getaddressinfo` now reports per-key labels (set with `setkeylabel`) under a new `key_labels` object, keyed by master fingerprint. Addresses with multiple keys report one entry per participant key.
