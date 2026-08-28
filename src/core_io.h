@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <util/result.h>
 
+#include <cstdint>
 #include <functional>
 #include <string>
 
@@ -42,7 +43,7 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 UniValue ValueFromAmount(CAmount amount);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
-std::string SighashToStr(unsigned char sighash_type);
+std::string SighashToStr(int32_t sighash_type);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true, bool include_address = false, const SigningProvider* provider = nullptr);
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, std::function<bool(const CTxOut&)> is_change_func = {});
 
