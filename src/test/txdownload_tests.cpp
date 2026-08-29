@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <addresstype.h>
 #include <consensus/validation.h>
 #include <net_processing.h>
@@ -12,11 +11,12 @@
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <array>
-
 #include <boost/test/unit_test.hpp>
+
+#include <array>
 
 BOOST_AUTO_TEST_SUITE(txdownload_tests)
 

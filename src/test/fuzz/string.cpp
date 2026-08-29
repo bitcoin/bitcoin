@@ -2,7 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
+#include <util/string.h>
+
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <common/args.h>
@@ -24,9 +25,9 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/check.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
-#include <util/string.h>
 #include <util/translation.h>
 
 #include <cstdint>

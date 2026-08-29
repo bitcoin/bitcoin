@@ -2,17 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
+#include <primitives/block.h>
+
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <core_memusage.h>
-#include <primitives/block.h>
 #include <pubkey.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <string>

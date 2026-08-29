@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
+#include <node/txdownloadman.h>
+
 #include <consensus/validation.h>
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
-#include <node/txdownloadman.h>
 #include <node/txdownloadman_impl.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -19,6 +19,7 @@
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/hasher.h>
 #include <util/rbf.h>
 #include <util/time.h>

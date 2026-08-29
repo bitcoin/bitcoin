@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <addrdb.h>
 #include <addrman.h>
 #include <addrman_impl.h>
@@ -30,6 +29,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <exception>

@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <cuckoocache.h>
 #include <random.h>
 #include <script/sigcache.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 
 #include <boost/test/unit_test.hpp>
 
