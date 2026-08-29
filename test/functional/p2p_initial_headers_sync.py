@@ -33,6 +33,7 @@ import time
 # Constants from net_processing
 HEADERS_DOWNLOAD_TIMEOUT_BASE_SEC = 15 * 60
 HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER_MS = 1
+HEADERS_RESPONSE_TIME_SEC = 2 * 60
 POW_TARGET_SPACING_SEC = 10 * 60
 
 
@@ -68,6 +69,7 @@ class HeadersSyncTest(BitcoinTestFramework):
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
+        self.nodes[0].setmocktime(int(time.time()))
 
         self.log.info("Adding a peer to node0")
         peer1 = self.nodes[0].add_p2p_connection(P2PInterface())
@@ -75,11 +77,6 @@ class HeadersSyncTest(BitcoinTestFramework):
 
         # Wait for peer1 to receive a getheaders
         peer1.wait_for_getheaders(block_hash=best_block_hash)
-        # An empty reply will clear the outstanding getheaders request,
-        # allowing additional getheaders requests to be sent to this peer in
-        # the future.
-        peer1.send_without_ping(msg_headers())
-
         self.log.info("Connecting two more peers to node0")
         # Connect 2 more peers; they should not receive a getheaders yet
         peer2 = self.nodes[0].add_p2p_connection(P2PInterface())
@@ -94,17 +91,19 @@ class HeadersSyncTest(BitcoinTestFramework):
             assert "getheaders" not in peer2.last_message
             assert "getheaders" not in peer3.last_message
 
+        # Let peer1's request expire so the announcement can trigger another
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
         self.log.info("Have all peers announce a new block")
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
         peer1.wait_for_getheaders(block_hash=best_block_hash)
-        peer1.send_without_ping(msg_headers()) # Send empty response, see above
 
         self.log.info("Check that exactly 1 of {peer2, peer3} received a getheaders in response")
         peer_receiving_getheaders = self.assert_single_getheaders_recipient([peer2, peer3])
-        peer_receiving_getheaders.send_without_ping(msg_headers()) # Send empty response, see above
 
+        # Let the previous requests expire so the next announcement can trigger new ones
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
         self.log.info("Announce another new block, from all peers")
         self.announce_random_block(all_peers)
 
