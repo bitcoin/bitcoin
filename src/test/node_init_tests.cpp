@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <init.h>
 #include <interfaces/init.h>
 #include <logging.h>
 #include <rpc/server.h>
-
-#include <boost/test/unit_test.hpp>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
+
+#include <boost/test/unit_test.hpp>
 
 using node::NodeContext;
 

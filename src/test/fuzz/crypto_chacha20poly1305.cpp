@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <crypto/chacha20poly1305.h>
 #include <random.h>
 #include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>

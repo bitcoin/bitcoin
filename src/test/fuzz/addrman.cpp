@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <addrdb.h>
 #include <addrman.h>
+
+#include <addrdb.h>
 #include <addrman_impl.h>
 #include <chainparams.h>
 #include <common/args.h>
@@ -18,6 +18,7 @@
 #include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <ctime>

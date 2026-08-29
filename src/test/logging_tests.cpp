@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -11,9 +10,12 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/string.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -25,8 +27,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using util::SplitString;
 using util::TrimString;

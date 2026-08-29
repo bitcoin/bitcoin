@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <base58.h>
 #include <key.h>
 #include <key_io.h>
@@ -21,6 +20,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
