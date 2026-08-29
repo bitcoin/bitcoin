@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <common/system.h>
 #include <logging.h>
 #include <random.h>
 #include <test/util/common.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 #include <util/time.h>
