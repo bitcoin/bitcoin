@@ -395,7 +395,7 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    /** Time of the last getheaders message to this peer */
+    /** Time used to limit getheaders requests to this peer */
     NodeClock::time_point m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){};
 
     /** Protects m_headers_sync **/
@@ -3223,15 +3223,32 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         // If we were in the middle of headers sync, receiving an empty headers
         // message suggests that the peer suddenly has nothing to give us
         // (perhaps it reorged to our chain). Clear download state for this peer.
+        // A headers message with no headers cannot be an announcement, so assume
+        // it is a response to our last getheaders request, if there is one.
+        const bool is_response{peer.m_last_getheaders_timestamp != NodeClock::time_point{}};
+        peer.m_last_getheaders_timestamp = {};
+
+        // Automatic outbound peers retain headers timeouts and old-chain eviction (see ConsiderEviction())
+        if (is_response && pfrom.IsInboundConn()) {
+            LOCK(cs_main);
+            const auto now{NodeClock::now()};
+            CNodeState& state{*Assert(State(pfrom.GetId()))};
+            // Match SendMessages()'s one-day limit for initial sync with one peer
+            if (state.fSyncStarted && m_chainman.m_best_header->Time() <= now - 24h) {
+                // Restart the retry delay so this peer cannot retake the slot yet
+                peer.m_last_getheaders_timestamp = now;
+                state.fSyncStarted = false;
+                --nSyncStarted;
+                peer.m_headers_sync_timeout = 0us;
+            }
+        }
+
         LOCK(peer.m_headers_sync_mutex);
         if (peer.m_headers_sync) {
             peer.m_headers_sync.reset(nullptr);
             LOCK(m_headers_presync_mutex);
             m_headers_presync_stats.erase(pfrom.GetId());
         }
-        // A headers message with no headers cannot be an announcement, so assume
-        // it is a response to our last getheaders request, if there is one.
-        peer.m_last_getheaders_timestamp = {};
         return;
     }
 
@@ -3295,6 +3312,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // If headers connect, assume that this is in response to any outstanding getheaders
     // request we may have sent, and clear out the time of our last request. Non-connecting
     // headers cannot be a response to a getheaders request.
+    // An already-known connecting header can end the retry delay
     peer.m_last_getheaders_timestamp = {};
 
     // If the headers we received are already in memory and an ancestor of
@@ -4412,14 +4430,17 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // consider sending a getheaders now. On initial startup, there's a
             // reliability vs bandwidth tradeoff, where we are only trying to do
             // initial headers sync with one peer at a time, with a long
-            // timeout (at which point, if the sync hasn't completed, we will
-            // disconnect the peer and then choose another). In the meantime,
+            // timeout. If another preferred download peer is available, we
+            // disconnect the sync peer or release its slot if it has noban
+            // permission. In the meantime,
             // as new blocks are found, we are willing to add one new peer per
             // block to sync with as well, to sync quicker in the case where
             // our initial peer is unresponsive (but less bandwidth than we'd
             // use if we turned on sync with all peers).
             CNodeState& state{*Assert(State(pfrom.GetId()))};
             if (state.fSyncStarted || (!peer.m_inv_triggered_getheaders_before_sync && *best_block != m_last_block_inv_triggering_headers_sync)) {
+                // Keep the sync peer's in-flight limit, but let announcements bypass the retry delay
+                if (!state.fSyncStarted) peer.m_last_getheaders_timestamp = {};
                 if (MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), peer)) {
                     LogDebug(BCLog::NET, "getheaders (%d) %s to peer=%d\n",
                             m_chainman.m_best_header->nHeight, best_block->ToString(),
