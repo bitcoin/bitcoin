@@ -2,7 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
+#include <script/script.h>
+
 #include <chainparams.h>
 #include <compressor.h>
 #include <core_io.h>
@@ -13,7 +14,6 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
-#include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -24,6 +24,7 @@
 #include <test/fuzz/util.h>
 #include <univalue.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstdint>

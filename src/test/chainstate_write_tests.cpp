@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <node/blockstorage.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <txdb.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>

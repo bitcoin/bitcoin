@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <common/system.h>
 #include <compat/compat.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
