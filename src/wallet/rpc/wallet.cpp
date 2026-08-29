@@ -249,7 +249,7 @@ static RPCMethod loadwallet()
                     + HelpExampleRpc("loadwallet", "\"/path/to/walletname/\"")
                     + "\nLoad wallet using absolute path (Windows):\n"
                     + HelpExampleCli("loadwallet", "\"DriveLetter:\\path\\to\\walletname\\\"")
-                    + HelpExampleRpc("loadwallet", "\"DriveLetter:\\path\\to\\walletname\\\"")
+                    + HelpExampleRpc("loadwallet", R"("DriveLetter:\\path\\to\\walletname")")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -457,7 +457,7 @@ static RPCMethod unloadwallet()
                 }},
                 RPCExamples{
                     HelpExampleCli("unloadwallet", "wallet_name")
-            + HelpExampleRpc("unloadwallet", "wallet_name")
+            + HelpExampleRpc("unloadwallet", R"("wallet_name")")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -761,7 +761,7 @@ static RPCMethod createwalletdescriptor()
         },
         RPCExamples{
             HelpExampleCli("createwalletdescriptor", "bech32m")
-            + HelpExampleRpc("createwalletdescriptor", "bech32m")
+            + HelpExampleRpc("createwalletdescriptor", R"("bech32m")")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
@@ -851,7 +851,7 @@ RPCMethod addhdkey()
             },
         },
         RPCExamples{
-            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", "xprv")
+            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", R"("xprv")")
         },
         [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
