@@ -117,6 +117,19 @@ class HeadersSyncTest(BitcoinTestFramework):
 
         expected_peer.wait_for_getheaders(block_hash=best_block_hash)
 
+        self.log.info("Test empty headers response from inbound peer")
+        # Disconnect the announcement peers so peer4 is the only eligible replacement
+        peer2.peer_disconnect()
+        peer3.peer_disconnect()
+        self.nodes[0].wait_until(lambda: self.nodes[0].num_test_p2p_connections() == 1)
+
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
+        peer1.send_and_ping(msg_headers())
+        peer4 = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer4.sync_with_ping()
+        with p2p_lock:
+            assert_equal("getheaders" in peer4.last_message, False)  # TODO: Release peer1's initial-sync slot after its empty response
+
     def setup_timeout_test_peers(self):
         self.log.info("Add peer1 and check it receives an initial getheaders request")
         node = self.nodes[0]
