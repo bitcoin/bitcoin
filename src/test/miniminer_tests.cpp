@@ -1,16 +1,16 @@
 // Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <util/check.h>
 #include <node/mini_miner.h>
 #include <random.h>
-#include <txmempool.h>
-#include <util/time.h>
-
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <txmempool.h>
+#include <util/check.h>
+#include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
+
 #include <optional>
 #include <vector>
 

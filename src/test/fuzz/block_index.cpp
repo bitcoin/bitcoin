@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <node/blockstorage.h>
@@ -12,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <validation.h>
 
 using kernel::CBlockFileInfo;

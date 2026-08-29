@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <test/util/net.h>
 
 #include <net.h>
@@ -16,6 +15,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 
 #include <chrono>
 #include <optional>
