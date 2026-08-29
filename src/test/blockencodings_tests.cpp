@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <pow.h>
 #include <streams.h>
-#include <test/util/random.h>
-#include <test/util/txmempool.h>
-
 #include <test/util/common.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
+#include <util/check.h>
 
 #include <boost/test/unit_test.hpp>
 

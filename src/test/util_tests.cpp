@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <clientversion.h>
 #include <common/signmessage.h>
 #include <compat/compat.h>
@@ -11,6 +10,7 @@
 #include <script/parsing.h>
 #include <span.h>
 #include <sync.h>
+#include <sys/types.h>
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
@@ -43,8 +44,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <sys/types.h>
 
 #ifndef WIN32
 #include <sys/wait.h>
