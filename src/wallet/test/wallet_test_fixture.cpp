@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
 #include <scheduler.h>
 #include <util/chaintype.h>
+#include <util/check.h>
+#include <wallet/test/util.h>
 
 namespace wallet {
 WalletTestingSetup::WalletTestingSetup(const ChainType chainType)

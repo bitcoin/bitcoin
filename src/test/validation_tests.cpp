@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
@@ -10,15 +9,15 @@
 #include <hash.h>
 #include <net.h>
 #include <signet.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <string>
-
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
+
+#include <string>
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
 

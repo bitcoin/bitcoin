@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
-#include <test/data/blockfilters.json.h>
-#include <test/util/common.h>
-
 #include <blockfilter.h>
 #include <core_io.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/data/blockfilters.json.h>
+#include <test/util/common.h>
 #include <undo.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>

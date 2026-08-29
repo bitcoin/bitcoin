@@ -5,11 +5,11 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_WALLET_H
 #define BITCOIN_TEST_FUZZ_UTIL_WALLET_H
 
-#include <util/check.h>
+#include <policy/policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <policy/policy.h>
+#include <util/check.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/spend.h>

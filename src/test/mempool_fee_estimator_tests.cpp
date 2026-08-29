@@ -2,7 +2,6 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <kernel/mempool_entry.h>
 #include <policy/fees/estimator_args.h>
 #include <policy/fees/mempool_estimator.h>
@@ -13,6 +12,7 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
 #include <util/time.h>

@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
@@ -20,6 +19,7 @@
 #include <test/util/coins.h>
 #include <test/util/setup_common.h>
 #include <txdb.h>
+#include <util/check.h>
 #include <util/hasher.h>
 #include <util/threadpool.h>
 

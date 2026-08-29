@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <random.h>
 #include <span.h>
 #include <support/allocators/pool.h>
@@ -11,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/poolresourcetester.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <tuple>

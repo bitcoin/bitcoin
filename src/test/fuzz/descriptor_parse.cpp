@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <chainparams.h>
 #include <key_io.h>
 #include <pubkey.h>
@@ -10,6 +9,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util/descriptor.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 //! The converter of mocked descriptors, needs to be initialized when the target is.
