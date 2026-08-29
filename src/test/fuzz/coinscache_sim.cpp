@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <coins.h>
 #include <crypto/sha256.h>
 #include <kernel/chainstatemanager_opts.h>
@@ -12,6 +11,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/threadpool.h>
 
 #include <cstdint>

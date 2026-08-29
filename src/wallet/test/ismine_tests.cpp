@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/check.h>
 #include <key.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <script/script.h>
-#include <script/solver.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
+#include <wallet/test/util.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
-#include <wallet/test/util.h>
 
 #include <boost/test/unit_test.hpp>
 
