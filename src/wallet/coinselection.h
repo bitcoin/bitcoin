@@ -98,8 +98,6 @@ public:
         effective_value = txout.nValue - fee.value();
     }
 
-    std::string ToString() const;
-
     bool operator<(const COutput& rhs) const
     {
         return outpoint < rhs.outpoint;
