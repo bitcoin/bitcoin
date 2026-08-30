@@ -321,7 +321,6 @@ private:
 
     void Load();
 
-    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     //! Setup descriptors based on the given CExtKey
