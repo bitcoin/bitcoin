@@ -99,8 +99,6 @@ public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
     CKeyID seed_id; //!< seed hash160
-    int64_t m_next_external_index{0}; // Next index in the keypool to be used. Memory only.
-    int64_t m_next_internal_index{0}; // Next index in the keypool to be used. Memory only.
 
     static constexpr int VERSION_HD_BASE{1};
     static constexpr int VERSION_HD_CHAIN_SPLIT{2};
