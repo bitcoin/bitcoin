@@ -11,7 +11,6 @@
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 
-#include <atomic>
 #include <memory>
 #include <optional>
 #include <string>
@@ -135,9 +134,6 @@ public:
 
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
-
-    //! Counts the number of active database users to be sure that the database is not closed while someone is using it
-    std::atomic<int> m_refcount{0};
 
     /** Rewrite the entire database on disk
      */
