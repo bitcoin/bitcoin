@@ -267,6 +267,9 @@ public:
     // Remove label from master key fingerprint
     virtual bool delKeyLabel(KeyFingerprint fingerprint) = 0;
 
+    // Get label from master key fingerprint.
+    virtual std::optional<std::string> getKeyLabel(KeyFingerprint fingerprint) = 0;
+
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
