@@ -15,12 +15,14 @@ from test_framework.messages import (
 )
 
 from test_framework.blocktools import (
+    MAX_FUTURE_BLOCK_TIME,
     NORMAL_GBT_REQUEST_PARAMS,
     create_block,
 )
 
 from test_framework.util import assert_equal
 
+import re
 import time
 
 NODE1_BLOCKS_REQUIRED = 15
@@ -143,6 +145,16 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         # getpeerinfo should show a sync in progress
         assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
+
+        self.log.info("Test whether a lagging clock aborts low-work headers sync")
+        node.disconnect_p2ps()
+        node.setmocktime(node.getblockheader(node.getblockhash(0))['mediantime'] - MAX_FUTURE_BLOCK_TIME - 1)
+        p2p = node.add_p2p_connection(P2PInterface())
+        p2p.send_without_ping(headers_message)
+        node.wait_until_stopped(expect_error=True, expected_ret_code=[-6,          # Unix
+                                                                      3,           # Windows native
+                                                                      0xC0000409], # Windows cross builds
+                                expected_stderr=re.compile("Failure when attempting to initiate headers sync: System clock"))
 
     def test_large_reorgs_can_succeed(self):
         self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")

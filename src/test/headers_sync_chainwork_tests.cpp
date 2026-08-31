@@ -10,6 +10,7 @@
 #include <pow.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <validation.h>
 
 #include <cstddef>
@@ -250,6 +251,15 @@ BOOST_AUTO_TEST_CASE(too_little_work)
         /*exp_request_more=*/false,
         /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
         /*exp_locator_hash=*/std::nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(system_clock_lagging_behind_chain_start)
+{
+    FakeNodeClock clock{(chain_start.GetBlockTime() - MAX_FUTURE_BLOCK_TIME) * 1s};
+    BOOST_CHECK_NO_THROW(CreateState());
+
+    clock -= 1s;
+    BOOST_CHECK_THROW(CreateState(), HeadersSyncState::SystemClockError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
