@@ -3034,10 +3034,10 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
                 peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
                     m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
             } catch (const HeadersSyncState::SystemClockError& e) {
-                // Typically we would expect the chain state loading logic to
-                // already have verified that the tip of the locally stored
-                // chain is <= system clock + MAX_FUTURE_BLOCK_TIME. Getting
-                // here is really unexpected.
+                // The chain state loading logic performs an earlier check to
+                // verify that the tip of the locally stored chain is <=
+                // system clock + MAX_FUTURE_BLOCK_TIME.
+                // But if we have no pre-existing chain state we might get here.
                 const auto msg{strprintf("Failure when attempting to initiate headers sync: %s", e.what())};
                 std::cerr << msg << std::endl;
                 LogError("%s", msg);
