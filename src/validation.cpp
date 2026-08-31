@@ -5384,11 +5384,15 @@ void ChainstateManager::CheckBlockIndex() const
                 foundInUnlinked = true;
             }
         }
-        if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed != nullptr && pindexFirstInvalid == nullptr) {
-            // If this block has block data available, some parent was never received, and has no invalid parents, it must be in m_blocks_unlinked.
+        if (foundInUnlinked) assert(pindex->nTx > 0); // Only blocks whose transactions were received belong in m_blocks_unlinked
+        if (pindex->pprev && pindex->nTx > 0 && pindexFirstNeverProcessed != nullptr && pindexFirstInvalid == nullptr) {
+            // If the transactions of this block were received, some parent was never received, and it has no
+            // invalid parents, it must be in m_blocks_unlinked. Note that this holds whether or not the block
+            // data is still available, because pruning does not remove entries.
             assert(foundInUnlinked);
         }
-        if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in m_blocks_unlinked if we don't HAVE_DATA
+        // Can't be in m_blocks_unlinked if we don't HAVE_DATA, unless our own data was pruned after being added there.
+        if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(m_blockman.IsBlockPruned(*pindex) || !foundInUnlinked);
         if (pindexFirstMissing == nullptr) assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in m_blocks_unlinked.
         if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed == nullptr && pindexFirstMissing != nullptr) {
             // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently missing data for some parent.
