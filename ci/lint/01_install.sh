@@ -11,16 +11,13 @@ set -o errexit -o pipefail -o xtrace
 export DEBIAN_FRONTEND=noninteractive
 export CI_RETRY_EXE="/ci_retry"
 
-pushd "/"
-
 ${CI_RETRY_EXE} apt-get update
-# Lint dependencies:
-# - cargo (used to run the lint tests)
-# - curl/xz-utils (to install shellcheck)
-# - git (used in many lint scripts)
-# - gpg (used by verify-commits)
-# - moreutils (used by scripted-diff)
-${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg moreutils
+${CI_RETRY_EXE} apt-get install -y \
+  cargo  `# to run the lint tests` \
+  curl xz-utils  `# to install shellcheck` \
+  git  `# used in many lint scripts` \
+  gpg  `# used by verify-commits` \
+  moreutils clang-format  `# used by scripted-diff`
 
 # Install Python and create venv using uv (reads version from .python-version)
 uv venv /python_env
@@ -39,5 +36,3 @@ mv "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/bin/
 MLC_VERSION=v1.2.0
 curl --fail -L "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/mlc-$(uname --machine)-linux" -o "/usr/bin/mlc"
 chmod +x /usr/bin/mlc
-
-popd || exit
