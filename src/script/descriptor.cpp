@@ -1982,8 +1982,14 @@ static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, boo
 using ParsePubkeyInnerResult = std::vector<std::unique_ptr<PubkeyProvider>>;
 using ParsePubkeyResult = std::vector<std::unique_ptr<PubkeyProvider>>;
 
+/** Mutable state shared by recursive descriptor parser calls. */
+struct ParseState {
+    uint32_t& key_exp_index;
+    FlatSigningProvider& out;
+};
+
 /** Parse a public key that excludes origin information. */
-util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe)
+util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(ParseState& state, const std::span<const char>& sp, ParseScriptContext ctx, bool& apostrophe)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
@@ -2004,8 +2010,8 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& k
             }
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
-                    ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, false));
-                    ++key_exp_index;
+                    ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, false));
+                    ++state.key_exp_index;
                     return ret;
                 } else {
                     return util::Unexpected{"Uncompressed keys are not allowed"};
@@ -2015,8 +2021,8 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& k
                 std::copy(data.begin(), data.end(), fullkey + 1);
                 pubkey.Set(std::begin(fullkey), std::end(fullkey));
                 if (pubkey.IsFullyValid()) {
-                    ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, true));
-                    ++key_exp_index;
+                    ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, true));
+                    ++state.key_exp_index;
                     return ret;
                 }
             }
@@ -2026,9 +2032,9 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& k
         if (key.IsValid()) {
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
-                out.keys.emplace(pubkey.GetID(), key);
-                ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
-                ++key_exp_index;
+                state.out.keys.emplace(pubkey.GetID(), key);
+                ret.emplace_back(std::make_unique<ConstPubkeyProvider>(state.key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
+                ++state.key_exp_index;
                 return ret;
             } else {
                 return util::Unexpected{"Uncompressed keys are not allowed"};
@@ -2046,18 +2052,18 @@ util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& k
     if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return util::Unexpected{std::move(error)};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
-        out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
+        state.out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
     for (auto& path : paths) {
-        ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, apostrophe));
+        ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(state.key_exp_index, extpubkey, std::move(path), type, apostrophe));
     }
-    ++key_exp_index;
+    ++state.key_exp_index;
     return ret;
 }
 
 /** Parse a public key including origin information (if enabled). */
 // NOLINTNEXTLINE(misc-no-recursion)
-util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+util::Expected<ParsePubkeyResult, std::string> ParsePubkey(ParseState& state, const std::span<const char>& sp, ParseScriptContext ctx)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
 
@@ -2092,7 +2098,7 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_ind
                 return util::Unexpected{strprintf("musig(): expected ',', got '%c'", expr[0])};
             }
             auto arg = Expr(expr);
-            auto result = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out);
+            auto result = ParsePubkey(state, arg, ParseScriptContext::MUSIG);
             if (!result) return util::Unexpected{strprintf("musig(): %s", result.error())};
             auto pk = std::move(*result);
             any_key_parsed = true;
@@ -2153,14 +2159,14 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_ind
 
         // Emplace the final MuSigPubkeyProvider into ret with the pubkey providers from the specified provider vectors index
         // and the path from the specified path index
-        const auto& emplace_final_provider = [&ret, &key_exp_index, &deriv_type, &derivation_multipaths, &providers](size_t vec_idx, size_t path_idx) -> void {
+        const auto& emplace_final_provider = [&ret, &state, &deriv_type, &derivation_multipaths, &providers](size_t vec_idx, size_t path_idx) -> void {
             KeyPath& path = derivation_multipaths.at(path_idx);
             std::vector<std::unique_ptr<PubkeyProvider>> pubs;
             pubs.reserve(providers.size());
             for (auto& vec : providers) {
                 pubs.emplace_back(std::move(vec.at(vec_idx)));
             }
-            ret.emplace_back(std::make_unique<MuSigPubkeyProvider>(key_exp_index, std::move(pubs), path, deriv_type));
+            ret.emplace_back(std::make_unique<MuSigPubkeyProvider>(state.key_exp_index, std::move(pubs), path, deriv_type));
         };
 
         if (max_multipath_len > 1 && derivation_multipaths.size() > 1) {
@@ -2186,7 +2192,7 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_ind
             // No multipath derivation, MuSigPubkeyProvider uses the first (and only) participant pubkey providers, and the first (and only) path
             emplace_final_provider(0, 0);
         }
-        ++key_exp_index; // Increment key expression index for the MuSigPubkeyProvider too
+        ++state.key_exp_index; // Increment key expression index for the MuSigPubkeyProvider too
         return ret;
     }
 
@@ -2197,7 +2203,7 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_ind
     // This is set if either the origin or path suffix contains a hardened derivation.
     bool apostrophe = false;
     if (origin_split.size() == 1) {
-        return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, apostrophe);
+        return ParsePubkeyInner(state, origin_split[0], ctx, apostrophe);
     }
     if (origin_split[0].empty() || origin_split[0][0] != '[') {
         const std::string error{strprintf("Key origin start '[ character expected but not found, got '%c' instead",
@@ -2221,7 +2227,7 @@ util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_ind
     std::string error;
     if (!ParseKeyPath(slash_split, path, apostrophe, error, /*allow_multipath=*/false)) return util::Unexpected{std::move(error)};
     info.path = path.at(0);
-    auto result = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe);
+    auto result = ParsePubkeyInner(state, origin_split[1], ctx, apostrophe);
     if (!result) return util::Unexpected{std::move(result.error())};
     ret.reserve(result->size());
     for (auto& prov : *result) {
@@ -2310,7 +2316,8 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto result = ParsePubkey(m_expr_index, in, ParseContext(), *m_out);
+        ParseState state{m_expr_index, *m_out};
+        auto result = ParsePubkey(state, in, ParseContext());
         if (!result) {
             m_key_parsing_error = std::move(result.error());
             return {};
@@ -2375,14 +2382,14 @@ struct KeyParser {
 using ParseScriptResult = std::vector<std::unique_ptr<DescriptorImpl>>;
 
 // NOLINTNEXTLINE(misc-no-recursion)
-util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+util::Expected<ParseScriptResult, std::string> ParseScript(ParseState& state, std::span<const char>& sp, ParseScriptContext ctx)
 {
     using namespace script;
     Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR);
     std::vector<std::unique_ptr<DescriptorImpl>> ret;
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
-        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        auto result = ParsePubkey(state, expr, ctx);
         if (!result) return util::Unexpected{strprintf("pk(): %s", result.error())};
         auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
@@ -2391,7 +2398,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         return ret;
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && Func("pkh", expr)) {
-        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        auto result = ParsePubkey(state, expr, ctx);
         if (!result) return util::Unexpected{strprintf("pkh(): %s", result.error())};
         auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
@@ -2400,7 +2407,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         return ret;
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
-        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        auto result = ParsePubkey(state, expr, ctx);
         if (!result) return util::Unexpected{strprintf("combo(): %s", result.error())};
         auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
@@ -2431,7 +2438,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
                 return util::Unexpected{strprintf("Multi: expected ',', got '%c'", expr[0])};
             }
             auto arg = Expr(expr);
-            auto result = ParsePubkey(key_exp_index, arg, ctx, out);
+            auto result = ParsePubkey(state, arg, ctx);
             if (!result) return util::Unexpected{strprintf("Multi: %s", result.error())};
             auto pks = std::move(*result);
             script_size += pks.at(0)->GetSize() + 1;
@@ -2492,7 +2499,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         return util::Unexpected{"Can only have multi_a/sortedmulti_a inside tr()"};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpkh", expr)) {
-        auto result = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPKH, out);
+        auto result = ParsePubkey(state, expr, ParseScriptContext::P2WPKH);
         if (!result) return util::Unexpected{strprintf("wpkh(): %s", result.error())};
         auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
@@ -2503,7 +2510,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         return util::Unexpected{"Can only have wpkh() at top level or inside sh()"};
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto result = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out);
+        auto result = ParseScript(state, expr, ParseScriptContext::P2SH);
         if (!result) return util::Unexpected{std::move(result.error())};
         if (expr.size()) return util::Unexpected{""};
         auto descs = std::move(*result);
@@ -2517,7 +2524,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         return util::Unexpected{"Can only have sh() at top level"};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
-        auto result = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out);
+        auto result = ParseScript(state, expr, ParseScriptContext::P2WSH);
         if (!result) return util::Unexpected{std::move(result.error())};
         if (expr.size()) return util::Unexpected{""};
         auto descs = std::move(*result);
@@ -2540,7 +2547,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
     }
     if (ctx == ParseScriptContext::TOP && Func("tr", expr)) {
         auto arg = Expr(expr);
-        auto result = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out);
+        auto result = ParsePubkey(state, arg, ParseScriptContext::P2TR);
         if (!result) return util::Unexpected{strprintf("tr(): %s", result.error())};
         auto internal_keys = std::move(*result);
         size_t max_providers_len = internal_keys.size();
@@ -2566,7 +2573,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
                 }
                 // Process the actual script expression.
                 auto sarg = Expr(expr);
-                auto subscript_result = ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out);
+                auto subscript_result = ParseScript(state, sarg, ParseScriptContext::P2TR);
                 if (!subscript_result) return util::Unexpected{std::move(subscript_result.error())};
                 subscripts.emplace_back(std::move(*subscript_result));
                 max_providers_len = std::max(max_providers_len, subscripts.back().size());
@@ -2634,7 +2641,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         if (expr.size()) {
             return util::Unexpected{"rawtr(): only one key expected."};
         }
-        auto output_keys = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out);
+        auto output_keys = ParsePubkey(state, arg, ParseScriptContext::P2TR);
         if (!output_keys) return util::Unexpected{strprintf("rawtr(): %s", output_keys.error())};
         for (auto& pubkey : *output_keys) {
             ret.emplace_back(std::make_unique<RawTRDescriptor>(std::move(pubkey)));
@@ -2649,7 +2656,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
         if (expr.size()) {
             return util::Unexpected{"unused(): only one key expected"};
         }
-        auto result = ParsePubkey(key_exp_index, arg, ctx, out);
+        auto result = ParsePubkey(state, arg, ctx);
         if (!result) return util::Unexpected{std::move(result.error())};
         auto keys = std::move(*result);
         for (auto& pubkey : keys) {
@@ -2676,7 +2683,7 @@ util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_ind
     // Process miniscript expressions.
     {
         const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
-        KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
+        KeyParser parser(/*out = */&state.out, /* in = */nullptr, /* ctx = */script_ctx, state.key_exp_index);
         auto node = miniscript::FromString(std::string_view{expr.data(), expr.size()}, parser);
         if (parser.m_key_parsing_error != "") {
             return util::Unexpected{std::move(parser.m_key_parsing_error)};
@@ -2953,7 +2960,8 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     const std::string_view no_checksum{sp.data(), sp.size()};
     uint32_t key_exp_index = 0;
-    auto result = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out);
+    ParseState state{key_exp_index, out};
+    auto result = ParseScript(state, sp, ParseScriptContext::TOP);
     if (!result) {
         error = std::move(result.error());
         return {};
@@ -2968,7 +2976,8 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
         std::ranges::replace(canonical, '\'', 'h');
         std::span<const char> sp_canonical{canonical};
         key_exp_index = 0;
-        auto canonical_result = ParseScript(key_exp_index, sp_canonical, ParseScriptContext::TOP, out);
+        ParseState canonical_state{key_exp_index, out};
+        auto canonical_result = ParseScript(canonical_state, sp_canonical, ParseScriptContext::TOP);
         // Only the marker stored in the pubkey providers differs, so this
         // parse cannot fail.
         if (!Assume(canonical_result && sp_canonical.empty())) {
