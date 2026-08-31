@@ -546,6 +546,8 @@ protected:
     std::string& MutateRecvBuffer() { return m_recv_buffer; }
 
 private:
+    std::unique_ptr<HTTPRequest> TryReadRequestInternal() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+
     /**
      * Try to read an HTTP request from the receive buffer.
      * Updates HTTPRequest.m_state and drains buffer on error.
