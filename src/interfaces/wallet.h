@@ -269,6 +269,12 @@ public:
     // Return whether wallet uses an external signer.
     virtual bool hasExternalSigner() = 0;
 
+    // Set label for master key fingerprint
+    virtual bool setKeyLabel(KeyFingerprint fingerprint, std::string label) = 0;
+
+    // Remove label from master key fingerprint
+    virtual bool delKeyLabel(KeyFingerprint fingerprint) = 0;
+
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
