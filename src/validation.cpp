@@ -2356,7 +2356,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (m_chainman.AssumedValidBlock().IsNull()) {
         script_check_reason = "assumevalid=0 (always verify)";
     } else {
-        constexpr int64_t TWO_WEEKS_IN_SECONDS{60 * 60 * 24 * 7 * 2};
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
         // A suitable default value is included with the software and updated from time to time.  Because validity
         //  relative to a piece of software is an objective fact these defaults can be easily reviewed.
@@ -2371,7 +2370,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             script_check_reason = "block not in best header chain";
         } else if (m_chainman.m_best_header->nChainWork < m_chainman.MinimumChainWork()) {
             script_check_reason = "best header chainwork below minimumchainwork";
-        } else if (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= TWO_WEEKS_IN_SECONDS) {
+        } else if (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= (std::chrono::weeks{2} / 1s)) {
             script_check_reason = "block too recent relative to best header";
         } else {
             // This block is a member of the assumed verified chain and an ancestor of the best header.
@@ -4124,7 +4123,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     }
 
     // Check timestamp
-    if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
+    if (block.Time() > NodeClock::now() + MAX_FUTURE_BLOCK_TIME) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 

@@ -243,7 +243,7 @@ namespace GUIUtil
     /** Format a CNodeStateStats.time_offset into a user-readable string */
     QString formatTimeOffset(int64_t time_offset);
 
-    QString formatNiceTimeOffset(qint64 secs);
+    QString formatNiceTimeOffset(std::chrono::seconds secs);
 
     QString formatBytes(uint64_t bytes);
 
