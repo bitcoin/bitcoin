@@ -3229,7 +3229,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         peer.m_last_getheaders_timestamp = {};
 
         // Automatic outbound peers retain headers timeouts and old-chain eviction (see ConsiderEviction())
-        if (is_response && pfrom.IsInboundConn()) {
+        if (is_response && (pfrom.IsInboundConn() || pfrom.IsManualConn())) {
             LOCK(cs_main);
             const auto now{NodeClock::now()};
             CNodeState& state{*Assert(State(pfrom.GetId()))};
