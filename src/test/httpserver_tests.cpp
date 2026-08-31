@@ -822,6 +822,9 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     // Create a mock client with pre-loaded request data and add it to the local CreateSock queue.
     // Keep a handle for the mock client's send and receive pipes so we can examine
     // the data it "receives".
+    // No keep-alive, so the server closes once the reply is flushed, and says so.
+    DebugLogHelper find_close{"Done sending to client without keep-alive"};
+
     std::shared_ptr<DynSock::Pipes> mock_client_socket_pipes{ConnectClient(std::as_bytes(std::span(full_request)))};
 
     // Wait up to a minute to find and connect the client in the I/O loop

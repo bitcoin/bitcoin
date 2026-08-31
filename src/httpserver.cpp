@@ -1278,6 +1278,11 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
 
             // Our work is done here
             if (!m_keep_alive) {
+                LogDebug(
+                    BCLog::HTTP,
+                    "Done sending to client without keep-alive %s (id=%llu)",
+                    m_origin,
+                    m_id);
                 m_disconnect = true;
                 // Do not attempt to read from this client.
                 return false;
