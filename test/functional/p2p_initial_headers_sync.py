@@ -130,6 +130,26 @@ class HeadersSyncTest(BitcoinTestFramework):
         with p2p_lock:
             assert_equal("getheaders" in peer4.last_message, True)  # Release peer1's initial-sync slot after its empty response
 
+        self.log.info("Test empty headers response from manual peer")
+        node = self.nodes[0]
+        node.disconnect_p2ps()
+        manual_peer = P2PInterface()
+        manual_peer.peer_accept_connection(
+            connect_id=1, connect_cb=lambda address, port: node.addnode(f"{address}:{port}", "onetry"),
+            net=self.chain, timeout_factor=node.timeout_factor, supports_v2_p2p=node.use_v2transport, reconnect=False,
+        )()
+        manual_peer.wait_for_connect()
+        node.p2ps.append(manual_peer)
+        manual_peer.wait_for_getheaders(block_hash=best_block_hash)
+        assert_equal(node.getpeerinfo()[0]["connection_type"], "manual")
+
+        node.bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
+        manual_peer.send_and_ping(msg_headers())
+        replacement_peer = node.add_p2p_connection(P2PInterface())
+        replacement_peer.sync_with_ping()
+        with p2p_lock:
+            assert_equal("getheaders" in replacement_peer.last_message, False)  # TODO: Release the manual peer's initial-sync slot after its empty response
+
     def setup_timeout_test_peers(self):
         self.log.info("Add peer1 and check it receives an initial getheaders request")
         node = self.nodes[0]
