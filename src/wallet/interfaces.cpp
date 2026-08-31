@@ -498,6 +498,10 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetKeyLabel(fingerprint);
     }
+    std::map<KeyFingerprint, std::string> getKeyLabels() override {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->GetKeyLabels();
+    }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override

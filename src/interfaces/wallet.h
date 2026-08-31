@@ -270,6 +270,8 @@ public:
     // Get label from master key fingerprint.
     virtual std::optional<std::string> getKeyLabel(KeyFingerprint fingerprint) = 0;
 
+    // List key labels.
+    virtual std::map<KeyFingerprint, std::string> getKeyLabels() = 0;
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
