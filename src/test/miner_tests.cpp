@@ -103,12 +103,12 @@ BOOST_FIXTURE_TEST_CASE(transaction_lookups_without_mempool, BasicTestingSetup)
 
     const std::vector txids{Txid::FromUint256(uint256::ZERO), Txid::FromUint256(uint256::ONE)};
     const auto tx_results{mining->getTransactionsByTxID(txids)};
-    BOOST_REQUIRE_EQUAL(tx_results.size(), 0U); // TODO: Return one result per requested txid
+    BOOST_REQUIRE_EQUAL(tx_results.size(), txids.size());
     for (auto& tx : tx_results) BOOST_CHECK(!tx);
 
     const std::vector wtxids{Wtxid::FromUint256(uint256::ZERO), Wtxid::FromUint256(uint256::ONE)};
     const auto wtx_results{mining->getTransactionsByWitnessID(wtxids)};
-    BOOST_REQUIRE_EQUAL(wtx_results.size(), 0U); // TODO: Return one result per requested wtxid
+    BOOST_REQUIRE_EQUAL(wtx_results.size(), wtxids.size());
     for (auto& tx : wtx_results) BOOST_CHECK(!tx);
 }
 
