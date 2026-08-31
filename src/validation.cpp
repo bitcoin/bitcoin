@@ -3825,6 +3825,13 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
                    pindex->nHeight, pindex->m_chain_tx_count, prev_tx_sum(*pindex), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
             }
             pindex->m_chain_tx_count = prev_tx_sum(*pindex);
+            // nSequenceId is one of the sort keys of setBlockIndexCandidates, so pindex must
+            // not be in any of them while it is changed - doing so would corrupt their
+            // ordering. pindex can be a candidate here if we receive the block data of a block
+            // that already is one, which happens when it is downloaded again after being pruned.
+            for (const auto& c : m_chainstates) {
+                c->setBlockIndexCandidates.erase(pindex);
+            }
             pindex->nSequenceId = nBlockSequenceId++;
             for (const auto& c : m_chainstates) {
                 c->TryAddBlockIndexCandidate(pindex);
