@@ -580,7 +580,7 @@ RPCMethod setkeylabel()
         "setkeylabel",
         "Sets the label associated with a master key fingerprint.\n"
                 "Every address corresponding to a key derived from that master key inherits the label.\n"
-                "This augments does not replace per-address labels set with setlabel.\n"
+                "This augments, does not replace, per-address labels set with setlabel.\n"
                 "Passing an empty string clears the label.\n",
                 {
                     {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "The master key fingerprint as 8 hex characters."},
