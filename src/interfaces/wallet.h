@@ -11,6 +11,7 @@
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 #include <util/result.h>
@@ -30,14 +31,13 @@
 #include <vector>
 
 class ArgsManager;
-class CKeyID;
-class CPubKey;
 class CScript;
 class PartiallySignedTransaction;
 class uint256;
 enum class FeeReason;
 enum class OutputType;
 struct bilingual_str;
+
 namespace wallet {
 struct CreatedTransactionResult;
 class CCoinControl;
@@ -260,6 +260,12 @@ public:
 
     // Return whether wallet uses an external signer.
     virtual bool hasExternalSigner() = 0;
+
+    // Set label for master key fingerprint
+    virtual bool setKeyLabel(KeyFingerprint fingerprint, std::string label) = 0;
+
+    // Remove label from master key fingerprint
+    virtual bool delKeyLabel(KeyFingerprint fingerprint) = 0;
 
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;

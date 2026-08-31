@@ -486,6 +486,14 @@ public:
         auto spk_man = m_wallet->GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/false);
         return spk_man != nullptr;
     }
+    bool setKeyLabel(KeyFingerprint fingerprint, std::string label) override {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->SetKeyLabel(fingerprint, label);
+    }
+    bool delKeyLabel(KeyFingerprint fingerprint) override {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->DelKeyLabel(fingerprint);
+    }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
