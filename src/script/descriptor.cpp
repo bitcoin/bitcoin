@@ -1925,28 +1925,28 @@ static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, boo
     return type;
 }
 
+using ParsePubkeyInnerResult = std::vector<std::unique_ptr<PubkeyProvider>>;
+using ParsePubkeyResult = std::vector<std::unique_ptr<PubkeyProvider>>;
+
 /** Parse a public key that excludes origin information. */
-std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
+util::Expected<ParsePubkeyInnerResult, std::string> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
     if (str.size() == 0) {
-        error = "No key provided";
-        return {};
+        return util::Unexpected{"No key provided"};
     }
     if (IsSpace(str.front()) || IsSpace(str.back())) {
-        error = strprintf("Key '%s' is invalid due to whitespace", str);
-        return {};
+        return util::Unexpected{strprintf("Key '%s' is invalid due to whitespace", str)};
     }
     if (split.size() == 1) {
         if (IsHex(str)) {
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
             if (pubkey.IsValid() && !pubkey.IsValidNonHybrid()) {
-                error = "Hybrid public keys are not allowed";
-                return {};
+                return util::Unexpected{"Hybrid public keys are not allowed"};
             }
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
@@ -1954,8 +1954,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
                     ++key_exp_index;
                     return ret;
                 } else {
-                    error = "Uncompressed keys are not allowed";
-                    return {};
+                    return util::Unexpected{"Uncompressed keys are not allowed"};
                 }
             } else if (data.size() == 32 && ctx == ParseScriptContext::P2TR) {
                 unsigned char fullkey[33] = {0x02};
@@ -1967,8 +1966,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
                     return ret;
                 }
             }
-            error = strprintf("Pubkey '%s' is invalid", str);
-            return {};
+            return util::Unexpected{strprintf("Pubkey '%s' is invalid", str)};
         }
         CKey key = DecodeSecret(str);
         if (key.IsValid()) {
@@ -1979,20 +1977,19 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
                 ++key_exp_index;
                 return ret;
             } else {
-                error = "Uncompressed keys are not allowed";
-                return {};
+                return util::Unexpected{"Uncompressed keys are not allowed"};
             }
         }
     }
     CExtKey extkey = DecodeExtKey(str);
     CExtPubKey extpubkey = DecodeExtPubKey(str);
     if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) {
-        error = strprintf("key '%s' is not valid", str);
-        return {};
+        return util::Unexpected{strprintf("key '%s' is not valid", str)};
     }
     std::vector<KeyPath> paths;
     DeriveType type = ParseDeriveType(split, apostrophe);
-    if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return {};
+    std::string error;
+    if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return util::Unexpected{std::move(error)};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
@@ -2006,7 +2003,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
 
 /** Parse a public key including origin information (if enabled). */
 // NOLINTNEXTLINE(misc-no-recursion)
-std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+util::Expected<ParsePubkeyResult, std::string> ParsePubkey(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
 
@@ -2016,21 +2013,18 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     std::span<const char> span = sp;
     if (Const("musig(", span, /*skip=*/false)) {
         if (ctx != ParseScriptContext::P2TR) {
-            error = "musig() is only allowed in tr() and rawtr()";
-            return {};
+            return util::Unexpected{"musig() is only allowed in tr() and rawtr()"};
         }
 
         // Split the span on the end parentheses. The end parentheses must
         // be included in the resulting span so that Expr is happy.
         auto split = Split(sp, ')', /*include_sep=*/true);
         if (split.size() > 2) {
-            error = "Too many ')' in musig() expression";
-            return {};
+            return util::Unexpected{"Too many ')' in musig() expression"};
         }
         std::span<const char> expr(split.at(0).begin(), split.at(0).end());
         if (!Func("musig", expr)) {
-            error = "Invalid musig() expression";
-            return {};
+            return util::Unexpected{"Invalid musig() expression"};
         }
 
         // Parse the participant pubkeys
@@ -2041,15 +2035,12 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         size_t max_multipath_len = 0;
         while (expr.size()) {
             if (any_key_parsed && !Const(",", expr)) {
-                error = strprintf("musig(): expected ',', got '%c'", expr[0]);
-                return {};
+                return util::Unexpected{strprintf("musig(): expected ',', got '%c'", expr[0])};
             }
             auto arg = Expr(expr);
-            auto pk = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out, error);
-            if (pk.empty()) {
-                error = strprintf("musig(): %s", error);
-                return {};
-            }
+            auto result = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out);
+            if (!result) return util::Unexpected{strprintf("musig(): %s", result.error())};
+            auto pk = std::move(*result);
             any_key_parsed = true;
 
             any_ranged = any_ranged || pk.at(0)->IsRange();
@@ -2060,8 +2051,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             providers.emplace_back(std::move(pk));
         }
         if (!any_key_parsed) {
-            error = "musig(): Must contain key expressions";
-            return {};
+            return util::Unexpected{"musig(): Must contain key expressions"};
         }
 
         // Parse any derivation
@@ -2069,28 +2059,24 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         std::vector<KeyPath> derivation_multipaths;
         if (split.size() == 2 && Const("/", split.at(1), /*skip=*/false)) {
             if (!all_bip32) {
-                error = "musig(): derivation requires all participants to be xpubs or xprvs";
-                return {};
+                return util::Unexpected{"musig(): derivation requires all participants to be xpubs or xprvs"};
             }
             if (any_ranged) {
-                error = "musig(): Cannot have ranged participant keys if musig() also has derivation";
-                return {};
+                return util::Unexpected{"musig(): Cannot have ranged participant keys if musig() also has derivation"};
             }
             bool dummy = false;
             auto deriv_split = Split(split.at(1), '/');
             deriv_type = ParseDeriveType(deriv_split, dummy);
             if (deriv_type == DeriveType::HARDENED_RANGED) {
-                error = "musig(): Cannot have hardened child derivation";
-                return {};
+                return util::Unexpected{"musig(): Cannot have hardened child derivation"};
             }
             bool has_hardened = false;
+            std::string error;
             if (!ParseKeyPath(deriv_split, derivation_multipaths, dummy, error, /*allow_multipath=*/true, has_hardened)) {
-                error = "musig(): " + error;
-                return {};
+                return util::Unexpected{"musig(): " + error};
             }
             if (has_hardened) {
-                error = "musig(): cannot have hardened derivation steps";
-                return {};
+                return util::Unexpected{"musig(): cannot have hardened derivation steps"};
             }
         } else {
             derivation_multipaths.emplace_back();
@@ -2124,12 +2110,10 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         };
 
         if (max_multipath_len > 1 && derivation_multipaths.size() > 1) {
-            error = "musig(): Cannot have multipath participant keys if musig() is also multipath";
-            return {};
+            return util::Unexpected{"musig(): Cannot have multipath participant keys if musig() is also multipath"};
         } else if (max_multipath_len > 1) {
             if (!clone_providers(max_multipath_len)) {
-                error = strprintf("musig(): Multipath derivation paths have mismatched lengths");
-                return {};
+                return util::Unexpected{"musig(): Multipath derivation paths have mismatched lengths"};
             }
             for (size_t i = 0; i < max_multipath_len; ++i) {
                 // Final MuSigPubkeyProvider uses participant pubkey providers at each multipath position, and the first (and only) path
@@ -2138,8 +2122,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         } else if (derivation_multipaths.size() > 1) {
             // All key provider vectors should be length 1. Clone them until they have the same length as paths
             if (!Assume(clone_providers(derivation_multipaths.size()))) {
-                error = "musig(): Multipath derivation path with multipath participants is disallowed"; // This error is unreachable due to earlier check
-                return {};
+                return util::Unexpected{"musig(): Multipath derivation path with multipath participants is disallowed"}; // This error is unreachable due to earlier check
             }
             for (size_t i = 0; i < derivation_multipaths.size(); ++i) {
                 // Final MuSigPubkeyProvider uses cloned participant pubkey providers, and the multipath derivation paths
@@ -2155,28 +2138,25 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
 
     auto origin_split = Split(sp, ']');
     if (origin_split.size() > 2) {
-        error = "Multiple ']' characters found for a single pubkey";
-        return {};
+        return util::Unexpected{"Multiple ']' characters found for a single pubkey"};
     }
     // This is set if either the origin or path suffix contains a hardened derivation.
     bool apostrophe = false;
     if (origin_split.size() == 1) {
-        return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, apostrophe, error);
+        return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, apostrophe);
     }
     if (origin_split[0].empty() || origin_split[0][0] != '[') {
-        error = strprintf("Key origin start '[ character expected but not found, got '%c' instead",
-                          origin_split[0].empty() ? /** empty, implies split char */ ']' : origin_split[0][0]);
-        return {};
+        const std::string error{strprintf("Key origin start '[ character expected but not found, got '%c' instead",
+                                          origin_split[0].empty() ? /** empty, implies split char */ ']' : origin_split[0][0])};
+        return util::Unexpected{error};
     }
     auto slash_split = Split(origin_split[0].subspan(1), '/');
     if (slash_split[0].size() != 8) {
-        error = strprintf("Fingerprint is not 4 bytes (%u characters instead of 8 characters)", slash_split[0].size());
-        return {};
+        return util::Unexpected{strprintf("Fingerprint is not 4 bytes (%u characters instead of 8 characters)", slash_split[0].size())};
     }
     std::string fpr_hex = std::string(slash_split[0].begin(), slash_split[0].end());
     if (!IsHex(fpr_hex)) {
-        error = strprintf("Fingerprint '%s' is not hex", fpr_hex);
-        return {};
+        return util::Unexpected{strprintf("Fingerprint '%s' is not hex", fpr_hex)};
     }
     auto fpr_bytes = ParseHex(fpr_hex);
     KeyOriginInfo info;
@@ -2184,12 +2164,13 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     assert(fpr_bytes.size() == 4);
     std::copy_n(fpr_bytes.begin(), info.fingerprint.size(), info.fingerprint.begin());
     std::vector<KeyPath> path;
-    if (!ParseKeyPath(slash_split, path, apostrophe, error, /*allow_multipath=*/false)) return {};
+    std::string error;
+    if (!ParseKeyPath(slash_split, path, apostrophe, error, /*allow_multipath=*/false)) return util::Unexpected{std::move(error)};
     info.path = path.at(0);
-    auto providers = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe, error);
-    if (providers.empty()) return {};
-    ret.reserve(providers.size());
-    for (auto& prov : providers) {
+    auto result = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe);
+    if (!result) return util::Unexpected{std::move(result.error())};
+    ret.reserve(result->size());
+    for (auto& prov : *result) {
         ret.emplace_back(std::make_unique<OriginPubkeyProvider>(prov->m_expr_index, info, std::move(prov), apostrophe));
     }
     return ret;
@@ -2275,9 +2256,12 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto pk = ParsePubkey(m_expr_index, in, ParseContext(), *m_out, m_key_parsing_error);
-        if (pk.empty()) return {};
-        m_keys.emplace_back(std::move(pk));
+        auto result = ParsePubkey(m_expr_index, in, ParseContext(), *m_out);
+        if (!result) {
+            m_key_parsing_error = std::move(result.error());
+            return {};
+        }
+        m_keys.emplace_back(std::move(*result));
         return key;
     }
 
@@ -2334,48 +2318,43 @@ struct KeyParser {
 };
 
 /** Parse a script in a particular context. */
+using ParseScriptResult = std::vector<std::unique_ptr<DescriptorImpl>>;
+
 // NOLINTNEXTLINE(misc-no-recursion)
-std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+util::Expected<ParseScriptResult, std::string> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
 {
     using namespace script;
     Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR);
     std::vector<std::unique_ptr<DescriptorImpl>> ret;
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
-        auto pubkeys = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (pubkeys.empty()) {
-            error = strprintf("pk(): %s", error);
-            return {};
-        }
+        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        if (!result) return util::Unexpected{strprintf("pk(): %s", result.error())};
+        auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<PKDescriptor>(std::move(pubkey), ctx == ParseScriptContext::P2TR));
         }
         return ret;
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && Func("pkh", expr)) {
-        auto pubkeys = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (pubkeys.empty()) {
-            error = strprintf("pkh(): %s", error);
-            return {};
-        }
+        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        if (!result) return util::Unexpected{strprintf("pkh(): %s", result.error())};
+        auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<PKHDescriptor>(std::move(pubkey)));
         }
         return ret;
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
-        auto pubkeys = ParsePubkey(key_exp_index, expr, ctx, out, error);
-        if (pubkeys.empty()) {
-            error = strprintf("combo(): %s", error);
-            return {};
-        }
+        auto result = ParsePubkey(key_exp_index, expr, ctx, out);
+        if (!result) return util::Unexpected{strprintf("combo(): %s", result.error())};
+        auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<ComboDescriptor>(std::move(pubkey)));
         }
         return ret;
     } else if (Func("combo", expr)) {
-        error = "Can only have combo() at top level";
-        return {};
+        return util::Unexpected{"Can only have combo() at top level"};
     }
     const bool multi = Func("multi", expr);
     const bool sortedmulti = !multi && Func("sortedmulti", expr);
@@ -2389,50 +2368,40 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
             thres = *maybe_thres;
         } else {
-            error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
-            return {};
+            return util::Unexpected{strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()))};
         }
         size_t script_size = 0;
         size_t max_providers_len = 0;
         while (expr.size()) {
             if (!Const(",", expr)) {
-                error = strprintf("Multi: expected ',', got '%c'", expr[0]);
-                return {};
+                return util::Unexpected{strprintf("Multi: expected ',', got '%c'", expr[0])};
             }
             auto arg = Expr(expr);
-            auto pks = ParsePubkey(key_exp_index, arg, ctx, out, error);
-            if (pks.empty()) {
-                error = strprintf("Multi: %s", error);
-                return {};
-            }
+            auto result = ParsePubkey(key_exp_index, arg, ctx, out);
+            if (!result) return util::Unexpected{strprintf("Multi: %s", result.error())};
+            auto pks = std::move(*result);
             script_size += pks.at(0)->GetSize() + 1;
             max_providers_len = std::max(max_providers_len, pks.size());
             providers.emplace_back(std::move(pks));
         }
         if ((multi || sortedmulti) && (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTISIG)) {
-            error = strprintf("Cannot have %u keys in multisig; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTISIG);
-            return {};
+            return util::Unexpected{strprintf("Cannot have %u keys in multisig; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTISIG)};
         } else if ((multi_a || sortedmulti_a) && (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTI_A)) {
-            error = strprintf("Cannot have %u keys in multi_a; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTI_A);
-            return {};
+            return util::Unexpected{strprintf("Cannot have %u keys in multi_a; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTI_A)};
         } else if (thres < 1) {
-            error = strprintf("Multisig threshold cannot be %d, must be at least 1", thres);
-            return {};
+            return util::Unexpected{strprintf("Multisig threshold cannot be %d, must be at least 1", thres)};
         } else if (thres > providers.size()) {
-            error = strprintf("Multisig threshold cannot be larger than the number of keys; threshold is %d but only %u keys specified", thres, providers.size());
-            return {};
+            return util::Unexpected{strprintf("Multisig threshold cannot be larger than the number of keys; threshold is %d but only %u keys specified", thres, providers.size())};
         }
         if (ctx == ParseScriptContext::TOP) {
             if (providers.size() > 3) {
-                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size());
-                return {};
+                return util::Unexpected{strprintf("Cannot have %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size())};
             }
         }
         if (ctx == ParseScriptContext::P2SH) {
             // This limits the maximum number of compressed pubkeys to 15.
             if (script_size + 3 > MAX_SCRIPT_ELEMENT_SIZE) {
-                error = strprintf("P2SH script is too large, %d bytes is larger than %d bytes", script_size + 3, MAX_SCRIPT_ELEMENT_SIZE);
-                return {};
+                return util::Unexpected{strprintf("P2SH script is too large, %d bytes is larger than %d bytes", script_size + 3, MAX_SCRIPT_ELEMENT_SIZE)};
             }
         }
 
@@ -2444,8 +2413,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                     vec.emplace_back(vec.at(0)->Clone());
                 }
             } else if (vec.size() != max_providers_len) {
-                error = strprintf("multi(): Multipath derivation paths have mismatched lengths");
-                return {};
+                return util::Unexpected{"multi(): Multipath derivation paths have mismatched lengths"};
             }
         }
 
@@ -2465,29 +2433,26 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         }
         return ret;
     } else if (multi || sortedmulti) {
-        error = "Can only have multi/sortedmulti at top level, in sh(), or in wsh()";
-        return {};
+        return util::Unexpected{"Can only have multi/sortedmulti at top level, in sh(), or in wsh()"};
     } else if (multi_a || sortedmulti_a) {
-        error = "Can only have multi_a/sortedmulti_a inside tr()";
-        return {};
+        return util::Unexpected{"Can only have multi_a/sortedmulti_a inside tr()"};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpkh", expr)) {
-        auto pubkeys = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPKH, out, error);
-        if (pubkeys.empty()) {
-            error = strprintf("wpkh(): %s", error);
-            return {};
-        }
+        auto result = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPKH, out);
+        if (!result) return util::Unexpected{strprintf("wpkh(): %s", result.error())};
+        auto pubkeys = std::move(*result);
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<WPKHDescriptor>(std::move(pubkey)));
         }
         return ret;
     } else if (Func("wpkh", expr)) {
-        error = "Can only have wpkh() at top level or inside sh()";
-        return {};
+        return util::Unexpected{"Can only have wpkh() at top level or inside sh()"};
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
-        if (descs.empty() || expr.size()) return {};
+        auto result = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out);
+        if (!result) return util::Unexpected{std::move(result.error())};
+        if (expr.size()) return util::Unexpected{""};
+        auto descs = std::move(*result);
         std::vector<std::unique_ptr<DescriptorImpl>> ret;
         ret.reserve(descs.size());
         for (auto& desc : descs) {
@@ -2495,46 +2460,41 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         }
         return ret;
     } else if (Func("sh", expr)) {
-        error = "Can only have sh() at top level";
-        return {};
+        return util::Unexpected{"Can only have sh() at top level"};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
-        if (descs.empty() || expr.size()) return {};
+        auto result = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out);
+        if (!result) return util::Unexpected{std::move(result.error())};
+        if (expr.size()) return util::Unexpected{""};
+        auto descs = std::move(*result);
         for (auto& desc : descs) {
             ret.emplace_back(std::make_unique<WSHDescriptor>(std::move(desc)));
         }
         return ret;
     } else if (Func("wsh", expr)) {
-        error = "Can only have wsh() at top level or inside sh()";
-        return {};
+        return util::Unexpected{"Can only have wsh() at top level or inside sh()"};
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
         if (!IsValidDestination(dest)) {
-            error = "Address is not valid";
-            return {};
+            return util::Unexpected{"Address is not valid"};
         }
         ret.emplace_back(std::make_unique<AddressDescriptor>(std::move(dest)));
         return ret;
     } else if (Func("addr", expr)) {
-        error = "Can only have addr() at top level";
-        return {};
+        return util::Unexpected{"Can only have addr() at top level"};
     }
     if (ctx == ParseScriptContext::TOP && Func("tr", expr)) {
         auto arg = Expr(expr);
-        auto internal_keys = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
-        if (internal_keys.empty()) {
-            error = strprintf("tr(): %s", error);
-            return {};
-        }
+        auto result = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out);
+        if (!result) return util::Unexpected{strprintf("tr(): %s", result.error())};
+        auto internal_keys = std::move(*result);
         size_t max_providers_len = internal_keys.size();
         std::vector<std::vector<std::unique_ptr<DescriptorImpl>>> subscripts; //!< list of multipath expanded script subexpressions
         std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
         if (expr.size()) {
             if (!Const(",", expr)) {
-                error = strprintf("tr: expected ',', got '%c'", expr[0]);
-                return {};
+                return util::Unexpected{strprintf("tr: expected ',', got '%c'", expr[0])};
             }
             /** The path from the top of the tree to what we're currently processing.
              * branches[i] == false: left branch in the i'th step from the top; true: right branch.
@@ -2547,37 +2507,34 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 while (Const("{", expr)) {
                     branches.push_back(false); // new left branch
                     if (branches.size() > TAPROOT_CONTROL_MAX_NODE_COUNT) {
-                        error = strprintf("tr() supports at most %i nesting levels", TAPROOT_CONTROL_MAX_NODE_COUNT);
-                        return {};
+                        return util::Unexpected{strprintf("tr() supports at most %i nesting levels", TAPROOT_CONTROL_MAX_NODE_COUNT)};
                     }
                 }
                 // Process the actual script expression.
                 auto sarg = Expr(expr);
-                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error));
-                if (subscripts.back().empty()) return {};
+                auto subscript_result = ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out);
+                if (!subscript_result) return util::Unexpected{std::move(subscript_result.error())};
+                subscripts.emplace_back(std::move(*subscript_result));
                 max_providers_len = std::max(max_providers_len, subscripts.back().size());
                 depths.push_back(branches.size());
                 // Process closing braces; one is expected for every right branch we were in.
                 while (branches.size() && branches.back()) {
                     if (!Const("}", expr)) {
-                        error = strprintf("tr(): expected '}' after script expression");
-                        return {};
+                        return util::Unexpected{"tr(): expected '}' after script expression"};
                     }
                     branches.pop_back(); // move up one level after encountering '}'
                 }
                 // If after that, we're at the end of a left branch, expect a comma.
                 if (branches.size() && !branches.back()) {
                     if (!Const(",", expr)) {
-                        error = strprintf("tr(): expected ',' after script expression");
-                        return {};
+                        return util::Unexpected{"tr(): expected ',' after script expression"};
                     }
                     branches.back() = true; // And now we're in a right branch.
                 }
             } while (branches.size());
             // After we've explored a whole tree, we must be at the end of the expression.
             if (expr.size()) {
-                error = strprintf("tr(): expected ')' after script expression");
-                return {};
+                return util::Unexpected{"tr(): expected ')' after script expression"};
             }
         }
         assert(TaprootBuilder::ValidDepths(depths));
@@ -2590,14 +2547,12 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                     vec.emplace_back(vec.at(0)->Clone());
                 }
             } else if (vec.size() != max_providers_len) {
-                error = strprintf("tr(): Multipath subscripts have mismatched lengths");
-                return {};
+                return util::Unexpected{"tr(): Multipath subscripts have mismatched lengths"};
             }
         }
 
         if (internal_keys.size() > 1 && internal_keys.size() != max_providers_len) {
-            error = strprintf("tr(): Multipath internal key mismatches multipath subscripts lengths");
-            return {};
+            return util::Unexpected{"tr(): Multipath internal key mismatches multipath subscripts lengths"};
         }
 
         while (internal_keys.size() < max_providers_len) {
@@ -2618,61 +2573,51 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
 
 
     } else if (Func("tr", expr)) {
-        error = "Can only have tr at top level";
-        return {};
+        return util::Unexpected{"Can only have tr at top level"};
     }
     if (ctx == ParseScriptContext::TOP && Func("rawtr", expr)) {
         auto arg = Expr(expr);
         if (expr.size()) {
-            error = strprintf("rawtr(): only one key expected.");
-            return {};
+            return util::Unexpected{"rawtr(): only one key expected."};
         }
-        auto output_keys = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
-        if (output_keys.empty()) {
-            error = strprintf("rawtr(): %s", error);
-            return {};
-        }
-        for (auto& pubkey : output_keys) {
+        auto output_keys = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out);
+        if (!output_keys) return util::Unexpected{strprintf("rawtr(): %s", output_keys.error())};
+        for (auto& pubkey : *output_keys) {
             ret.emplace_back(std::make_unique<RawTRDescriptor>(std::move(pubkey)));
         }
         return ret;
     } else if (Func("rawtr", expr)) {
-        error = "Can only have rawtr at top level";
-        return {};
+        return util::Unexpected{"Can only have rawtr at top level"};
     }
     if (ctx == ParseScriptContext::TOP && Func("unused", expr)) {
         // Check for only one expression, should not find commas, brackets, or parentheses
         auto arg = Expr(expr);
         if (expr.size()) {
-            error = strprintf("unused(): only one key expected");
-            return {};
+            return util::Unexpected{"unused(): only one key expected"};
         }
-        auto keys = ParsePubkey(key_exp_index, arg, ctx, out, error);
-        if (keys.empty()) return {};
+        auto result = ParsePubkey(key_exp_index, arg, ctx, out);
+        if (!result) return util::Unexpected{std::move(result.error())};
+        auto keys = std::move(*result);
         for (auto& pubkey : keys) {
             if (pubkey->IsRange()) {
-                error = "unused(): key cannot be ranged";
-                return {};
+                return util::Unexpected{"unused(): key cannot be ranged"};
             }
             ret.emplace_back(std::make_unique<UnusedDescriptor>(std::move(pubkey)));
         }
         return ret;
     } else if (Func("unused", expr)) {
-        error = "Can only have unused at top level";
-        return {};
+        return util::Unexpected{"Can only have unused at top level"};
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
         if (!IsHex(str)) {
-            error = "Raw script is not hex";
-            return {};
+            return util::Unexpected{"Raw script is not hex"};
         }
         auto bytes = ParseHex(str);
         ret.emplace_back(std::make_unique<RawDescriptor>(CScript(bytes.begin(), bytes.end())));
         return ret;
     } else if (Func("raw", expr)) {
-        error = "Can only have raw() at top level";
-        return {};
+        return util::Unexpected{"Can only have raw() at top level"};
     }
     // Process miniscript expressions.
     {
@@ -2680,19 +2625,17 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromString(std::string_view{expr.data(), expr.size()}, parser);
         if (parser.m_key_parsing_error != "") {
-            error = std::move(parser.m_key_parsing_error);
-            return {};
+            return util::Unexpected{std::move(parser.m_key_parsing_error)};
         }
         if (node) {
             if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR) {
-                error = "Miniscript expressions can only be used in wsh or tr.";
-                return {};
+                return util::Unexpected{"Miniscript expressions can only be used in wsh or tr."};
             }
             if (!node->IsSane() || node->IsNotSatisfiable()) {
                 // Try to find the first insane sub for better error reporting.
                 const auto* insane_node = &node.value();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
-                error = *insane_node->ToString(parser);
+                std::string error{*insane_node->ToString(parser)};
                 if (!insane_node->IsValid()) {
                     error += " is invalid";
                 } else if (!node->IsSane()) {
@@ -2711,7 +2654,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 } else {
                     error += " is not satisfiable";
                 }
-                return {};
+                return util::Unexpected{std::move(error)};
             }
             // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
             // may have an empty list of public keys.
@@ -2729,8 +2672,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                         vec.emplace_back(vec.at(0)->Clone());
                     }
                 } else if (vec.size() != num_multipath) {
-                    error = strprintf("Miniscript: Multipath derivation paths have mismatched lengths");
-                    return {};
+                    return util::Unexpected{"Miniscript: Multipath derivation paths have mismatched lengths"};
                 }
             }
 
@@ -2748,14 +2690,11 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         }
     }
     if (ctx == ParseScriptContext::P2SH) {
-        error = "A function is needed within P2SH";
-        return {};
+        return util::Unexpected{"A function is needed within P2SH"};
     } else if (ctx == ParseScriptContext::P2WSH) {
-        error = "A function is needed within P2WSH";
-        return {};
+        return util::Unexpected{"A function is needed within P2WSH"};
     }
-    error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
-    return {};
+    return util::Unexpected{strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()))};
 }
 
 std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
@@ -2960,7 +2899,12 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     const std::string_view no_checksum{sp.data(), sp.size()};
     uint32_t key_exp_index = 0;
-    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
+    auto result = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out);
+    if (!result) {
+        error = std::move(result.error());
+        return {};
+    }
+    auto ret = std::move(*result);
     if (sp.empty() && ret.size() > 1 && no_checksum.find('\'') != std::string_view::npos) {
         // The descriptors that a multipath descriptor expands to always use
         // 'h' as hardened marker, regardless of the marker in the input. In a
@@ -2970,11 +2914,14 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
         std::ranges::replace(canonical, '\'', 'h');
         std::span<const char> sp_canonical{canonical};
         key_exp_index = 0;
-        auto canonical_result = ParseScript(key_exp_index, sp_canonical, ParseScriptContext::TOP, out, error);
+        auto canonical_result = ParseScript(key_exp_index, sp_canonical, ParseScriptContext::TOP, out);
         // Only the marker stored in the pubkey providers differs, so this
         // parse cannot fail.
-        if (!Assume(!canonical_result.empty() && sp_canonical.empty())) return {};
-        ret = std::move(canonical_result);
+        if (!Assume(canonical_result && sp_canonical.empty())) {
+            if (!canonical_result) error = std::move(canonical_result.error());
+            return {};
+        }
+        ret = std::move(*canonical_result);
     }
     if (sp.empty() && !ret.empty()) {
         std::vector<std::unique_ptr<Descriptor>> descs;

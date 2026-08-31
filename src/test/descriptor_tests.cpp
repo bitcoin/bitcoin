@@ -1323,6 +1323,15 @@ BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
     BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_parse_clears_stale_error)
+{
+    FlatSigningProvider keys;
+    std::string error{"stale error"};
+    const auto descs{Parse("sh(wpkh(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),wpkh(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798))", keys, error)};
+    BOOST_CHECK(descs.empty());
+    BOOST_CHECK(error.empty());
+}
+
 BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
 {
     // A safe boundary value should yield no warnings.
