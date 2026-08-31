@@ -7,12 +7,17 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/net.h>
+#include <test/util/time.h>
+#include <util/check.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 std::string_view RequestMethodString(HTTPRequestMethod m);
@@ -67,6 +72,98 @@ void SingleShotParse(const std::string& http_buffer, FuzzedDataProvider& provide
     CheckBodyMatchesFraming(http_request);
 }
 
+//! Expose HTTPRemoteClient with the receive buffer.
+class FuzzClient : public HTTPRemoteClient
+{
+public:
+    FuzzClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/std::make_unique<ZeroSock>()} {}
+    void Receive(std::string_view s) { MutateRecvBuffer().append(s); }
+};
+
+int StateRank(HTTPRequest::State s)
+{
+    switch (s) {
+    case HTTPRequest::State::Init: return 0;
+    case HTTPRequest::State::NeedsHeaders: return 1;
+    case HTTPRequest::State::NeedsBody: return 2;
+    case HTTPRequest::State::Complete: return 3;
+    case HTTPRequest::State::Error: return 4;
+    }
+    assert(false);
+}
+
+struct RunResult {
+    bool errored{false};
+    HTTPRequest::State last_state{HTTPRequest::State::Init};
+};
+
+//! Take every request the client can parse right now, checking what must hold
+//! at each I/O cycle boundary.
+void Drain(const std::shared_ptr<FuzzClient>& client, RunResult& out)
+{
+    while (true) {
+        // A failed request is inert: further reads consume nothing.
+        if (const HTTPRequest* cur{client->GetRequest()};
+            cur && cur->GetState() == HTTPRequest::State::Error) {
+            const size_t buffered{client->GetRecvBuffer().size()};
+            Assert(HTTPRemoteClient::TryReadRequest(client) == nullptr);
+            assert(client->GetRecvBuffer().size() == buffered);
+            out.errored = true;
+            break;
+        }
+
+        std::unique_ptr<HTTPRequest> req{HTTPRemoteClient::TryReadRequest(client)};
+
+        if (!req) {
+            if (const HTTPRequest* cur{client->GetRequest()}) {
+                // Complete is always handed back, never left behind.
+                assert(cur->GetState() != HTTPRequest::State::Complete);
+                assert(StateRank(cur->GetState()) >= StateRank(out.last_state));
+                out.last_state = cur->GetState();
+                if (cur->GetState() == HTTPRequest::State::Error) out.errored = true;
+                if (const auto chunk_size{cur->GetChunkSize()}) {
+                    assert(cur->GetChunkProgress() <= *chunk_size);
+                }
+                assert(cur->ReadBody().size() <= MAX_BODY_SIZE);
+            }
+            break;
+        }
+
+        assert(req->GetState() == HTTPRequest::State::Complete);
+        CheckBodyMatchesFraming(*req);
+
+        // While a request is with a worker, nothing new is parsed or consumed.
+        const size_t buffered{client->GetRecvBuffer().size()};
+        Assert(HTTPRemoteClient::TryReadRequest(client) == nullptr);
+        assert(client->GetRecvBuffer().size() == buffered);
+
+        req->WriteReply(HTTP_OK, ""); // clears m_req_busy
+        out.last_state = HTTPRequest::State::Init;
+    }
+}
+
+//! Feed the same bytes through the resumable parser, a slice at a time, as they
+//! would arrive over several I/O cycles. SingleShotParse() above builds one
+//! LineReader over the whole input and calls each Load* once, so it cannot
+//! reach any of the resume paths.
+void IncrementalParse(const std::string& input, FuzzedDataProvider& provider)
+{
+    // WriteReply() stamps a wall-clock Date header and the client stamps a
+    // steady-clock idle time, both of which the fuzz determinism check rejects.
+    FakeNodeClock clock{1610000000s};
+    FakeSteadyClock steady_clock;
+
+    RunResult result;
+    auto client{std::make_shared<FuzzClient>()};
+    size_t pos{0};
+    while (pos < input.size()) {
+        const size_t n{provider.ConsumeIntegralInRange<size_t>(1, input.size() - pos)};
+        client->Receive(std::string_view{input}.substr(pos, n));
+        pos += n;
+        Drain(client, result);
+    }
+}
+
 } // namespace
 
 FUZZ_TARGET(http_request)
@@ -77,4 +174,5 @@ FUZZ_TARGET(http_request)
     const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(2 * MAX_HEADERS_SIZE)};
 
     SingleShotParse(http_buffer, fuzzed_data_provider);
+    IncrementalParse(http_buffer, fuzzed_data_provider);
 }
