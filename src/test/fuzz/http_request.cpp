@@ -92,8 +92,18 @@ int StateRank(HTTPRequest::State s)
     assert(false);
 }
 
+struct ParsedRequest {
+    HTTPRequestMethod method;
+    std::string uri;
+    std::string host;
+    std::string body;
+    bool operator==(const ParsedRequest&) const = default;
+};
+
 struct RunResult {
+    std::vector<ParsedRequest> requests;
     bool errored{false};
+    std::string remainder;
     HTTPRequest::State last_state{HTTPRequest::State::Init};
 };
 
@@ -131,6 +141,8 @@ void Drain(const std::shared_ptr<FuzzClient>& client, RunResult& out)
 
         assert(req->GetState() == HTTPRequest::State::Complete);
         CheckBodyMatchesFraming(*req);
+        out.requests.emplace_back(req->GetRequestMethod(), req->GetURI(),
+                                  req->GetHeader("Host").value_or(""), req->ReadBody());
 
         // While a request is with a worker, nothing new is parsed or consumed.
         const size_t buffered{client->GetRecvBuffer().size()};
@@ -142,26 +154,47 @@ void Drain(const std::shared_ptr<FuzzClient>& client, RunResult& out)
     }
 }
 
-//! Feed the same bytes through the resumable parser, a slice at a time, as they
-//! would arrive over several I/O cycles. SingleShotParse() above builds one
-//! LineReader over the whole input and calls each Load* once, so it cannot
-//! reach any of the resume paths.
-void IncrementalParse(const std::string& input, FuzzedDataProvider& provider)
+//! HTTP framing is defined by the byte stream, not by how TCP happened to split
+//! it, so parsing the same bytes whole and in pieces must give the same result.
+//! Only the piecewise run reaches the resumable parse paths.
+void CheckSegmentationIndependence(const std::string& input, FuzzedDataProvider& provider)
 {
     // WriteReply() stamps a wall-clock Date header and the client stamps a
     // steady-clock idle time, both of which the fuzz determinism check rejects.
     FakeNodeClock clock{1610000000s};
     FakeSteadyClock steady_clock;
 
-    RunResult result;
-    auto client{std::make_shared<FuzzClient>()};
-    size_t pos{0};
-    while (pos < input.size()) {
-        const size_t n{provider.ConsumeIntegralInRange<size_t>(1, input.size() - pos)};
-        client->Receive(std::string_view{input}.substr(pos, n));
-        pos += n;
-        Drain(client, result);
+    // The whole stream arrives in one I/O cycle. This is similar to
+    // SingleShotParse(), although here we pipe it through the client and also
+    // parse multiple requests.
+    RunResult one_shot;
+    {
+        auto client{std::make_shared<FuzzClient>()};
+        client->Receive(input);
+        Drain(client, one_shot);
+        one_shot.remainder = client->GetRecvBuffer();
     }
+
+    // The same stream arrives in arbitrary pieces. Once the provider runs dry
+    // this becomes one byte per cycle, the maximally fragmented case.
+    RunResult sliced;
+    {
+        auto client{std::make_shared<FuzzClient>()};
+        std::string_view remaining{input};
+        while (!remaining.empty()) {
+            const size_t n{provider.ConsumeIntegralInRange<size_t>(1, remaining.size())};
+            client->Receive(remaining.substr(0, n));
+            remaining = remaining.substr(n);
+            Drain(client, sliced);
+        }
+        sliced.remainder = client->GetRecvBuffer();
+    }
+
+    assert(one_shot.requests == sliced.requests);
+    assert(one_shot.errored == sliced.errored);
+    // The whole receive buffer is discarded on a parse error, so in the sliced case
+    // what is left over depends on how much had arrived when the error fired.
+    if (!one_shot.errored) assert(one_shot.remainder == sliced.remainder);
 }
 
 } // namespace
@@ -174,5 +207,5 @@ FUZZ_TARGET(http_request)
     const std::string http_buffer{fuzzed_data_provider.ConsumeRandomLengthString(2 * MAX_HEADERS_SIZE)};
 
     SingleShotParse(http_buffer, fuzzed_data_provider);
-    IncrementalParse(http_buffer, fuzzed_data_provider);
+    CheckSegmentationIndependence(http_buffer, fuzzed_data_provider);
 }
