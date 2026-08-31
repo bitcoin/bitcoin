@@ -18,10 +18,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 class AddrMan;
@@ -109,6 +111,9 @@ public:
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
         //! Maximum per-second rate for sending transaction inventory to peers.
         unsigned int tx_send_rate{DEFAULT_TX_SEND_RATE};
+        //! Precomputed headers-sync parameters, as {commitment period, redownload buffer size};
+        //! when unset, they are computed at construction time (this is a test-only option).
+        std::optional<std::pair<size_t, size_t>> headers_sync_params{std::nullopt};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
