@@ -1049,46 +1049,51 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
         client->m_req = std::make_unique<HTTPRequest>(client);
     }
 
+    return client->TryReadRequestInternal();
+}
+
+std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequestInternal()
+{
     try {
         // Read data from the buffer into the current request
-        client->ReadRequest(*client->m_req);
+        ReadRequest(*m_req);
     } catch (const ContentTooLargeError& e) {
         LogDebug(
             BCLog::HTTP,
             "HTTP request body too large from client %s (id=%llu): %s",
-            client->m_origin,
-            client->m_id,
+            m_origin,
+            m_id,
             e.what());
 
-        WriteNoStoreErrorReply(*client->m_req, HTTP_CONTENT_TOO_LARGE);
-        client->m_disconnect = true;
+        WriteNoStoreErrorReply(*m_req, HTTP_CONTENT_TOO_LARGE);
+        m_disconnect = true;
         return nullptr;
     } catch (const std::runtime_error& e) {
         LogDebug(
             BCLog::HTTP,
             "Error reading HTTP request from client %s (id=%llu): %s",
-            client->m_origin,
-            client->m_id,
+            m_origin,
+            m_id,
             e.what());
 
         // We failed to read a complete request from the buffer
-        WriteNoStoreErrorReply(*client->m_req, HTTP_BAD_REQUEST);
-        client->m_disconnect = true;
+        WriteNoStoreErrorReply(*m_req, HTTP_BAD_REQUEST);
+        m_disconnect = true;
         return nullptr;
     }
 
     // If the request is ready, hand it to a worker.
-    if (client->m_req->GetState() == HTTPRequest::State::Complete) {
+    if (m_req->GetState() == HTTPRequest::State::Complete) {
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%llu)",
-            RequestMethodString(client->m_req->GetRequestMethod()),
-            client->m_req->GetURI(),
-            client->m_origin,
-            client->m_id);
+            RequestMethodString(m_req->GetRequestMethod()),
+            m_req->GetURI(),
+            m_origin,
+            m_id);
 
-        client->m_req_busy = true;
-        return std::move(client->m_req);
+        m_req_busy = true;
+        return std::move(m_req);
     }
 
     return nullptr;
