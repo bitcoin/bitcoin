@@ -64,6 +64,21 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
+/* Test that the largest permitted difficulty increase is not itself rejected
+ * when the new target is not exactly representable in compact form. */
+BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_rounding)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 68543;
+    pindexLast.nTime = 1279297671;
+    pindexLast.nBits = 0x1c05a3f5; // Mantissa is not a multiple of four
+    int64_t nLastRetargetTime = pindexLast.nTime - consensus.nPowTargetTimespan/4;
+    unsigned int expected_nbits = 0x1c0168fdU;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), expected_nbits);
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, pindexLast.nHeight+1, pindexLast.nBits, expected_nbits));
+}
+
 /* Test the lower bound for a negative actual time taken, which is possible
  * because timestamps only have to exceed the median of the previous eleven. */
 BOOST_AUTO_TEST_CASE(get_next_work_negative_actual)
