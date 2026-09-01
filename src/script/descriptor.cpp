@@ -30,6 +30,7 @@
 #include <util/expected.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/translation.h>
 #include <util/vector.h>
 
 #include <algorithm>
@@ -2991,6 +2992,101 @@ uint256 DescriptorID(const Descriptor& desc)
     uint256 id;
     CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
     return id;
+}
+
+util::Result<std::string> CreateMultisigDescriptor(
+    int threshold,
+    const std::vector<std::string>& keys,
+    OutputType output_type)
+{
+    switch (output_type) {
+    case OutputType::BECH32:
+        break;
+    case OutputType::BECH32M:
+        return util::Error{_("Taproot multisig is not yet supported")};
+    case OutputType::LEGACY:
+    case OutputType::P2SH_SEGWIT:
+    case OutputType::UNKNOWN:
+        return util::Error{_("Unsupported address type")};
+    }
+    const int n{int(keys.size())};
+    if (n < 2) {
+        return util::Error{_("A multisig requires at least 2 keys")};
+    }
+    if (n > MAX_PUBKEYS_PER_MULTISIG) {
+        return util::Error{strprintf(
+            _("A multisig cannot have more than %d keys, %d were provided"),
+            MAX_PUBKEYS_PER_MULTISIG, n)};
+    }
+    if (threshold < 1 || threshold > n) {
+        return util::Error{strprintf(
+            _("The threshold must be between 1 and %d, %d was provided"),
+            n, threshold)};
+    }
+
+    std::vector<std::string> canonical_keys;
+    canonical_keys.reserve(keys.size());
+    std::set<std::string> seen;
+    uint32_t key_exp_index{0};
+
+    for (const auto& key : keys) {
+        FlatSigningProvider provider;
+        std::string error;
+        std::span<const char> sp{key};
+        auto parsed{ParsePubkey(key_exp_index, sp,
+            ParseScriptContext::P2WSH, provider, error)};
+
+        if (parsed.empty()) {
+            return util::Error{strprintf(
+                _("Invalid key '%s': %s"), key, error)};
+        }
+        if (!provider.keys.empty()) {
+            return util::Error{strprintf(
+                _("Key '%s' contains private key; only public keys may be shared with cosigners"), key)};
+        }
+        // This function produces a single-spending-path multisig.
+        if (parsed.size() != 1) {
+            return util::Error{strprintf(_("Key '%s' must not specify a multipath derivation"), key)};
+        }
+
+        const auto xpub{parsed[0]->GetRootExtPubKey()};
+        if (!xpub) {
+            return util::Error{strprintf(_("Key '%s' must be an extended public key"), key)};
+        }
+
+        const std::string canonical{parsed[0]->ToString()};
+        if (!canonical.starts_with('[')) {
+            return util::Error{strprintf(_("Key '%s' must include key origin information, formatted [fingerprint/path]xpub"), key)};
+        }
+        if (!canonical.ends_with(EncodeExtPubKey(*xpub))) {
+            return util::Error{strprintf(_("Key '%s' must not specify a derivation path"), key)};
+        }
+
+        if (!seen.insert(EncodeExtPubKey(*xpub)).second) {
+            return util::Error{strprintf(_("Duplicate key: %s"), key)};
+        }
+
+        canonical_keys.emplace_back(canonical);
+    }
+
+    std::string descriptor{"wsh(sortedmulti(" + util::ToString(threshold)};
+    for (const auto& key : canonical_keys) {
+        descriptor += "," + key + "/<0;1>/*";
+    }
+    descriptor += "))";
+
+    FlatSigningProvider provider;
+    std::string error;
+    const auto descs{Parse(descriptor, provider, error)};
+    if (descs.empty()) {
+        return util::Error{strprintf(_("Invalid descriptor: %s"), error)};
+    }
+    if (!Assume(descs.size() == 2)) {
+        return util::Error{_(
+            "Internal error: descriptor did not expand to a receive and a change path")};
+    }
+
+    return AddChecksum(descriptor);
 }
 
 void DescriptorCache::CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)

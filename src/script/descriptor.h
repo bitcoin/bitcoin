@@ -6,6 +6,7 @@
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
 #include <outputtype.h>
+#include <util/result.h>
 #include <pubkey.h>
 #include <uint256.h>
 
@@ -243,5 +244,17 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
 *   This is not part of BIP 380, not guaranteed to be interoperable and should not be exposed to the user.
 */
 uint256 DescriptorID(const Descriptor& desc);
+
+/** Assemble and validate a Multisig descriptor during the multisig wallet setup process.
+ * The descriptor uses sortedmulti(k, ...), so key order doesn't matter for the resulting addresses.
+ * Key origin is mandatory and formatted [fingerprint/path]xpub.
+ *
+ * @param[in] threshold    Signatures required, 1 <= threshold <= keys.size().
+ * @param[in] keys         Key placeholders, formatted [fingerprint/path]xpub.
+ * @param[in] output_type  The address type. BECH32 (P2WSH) is currently supported;
+ *                         other types return an error.
+ * @return The ranged, multipath descriptor with checksum, or an error describing what was rejected.
+ */
+util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vector<std::string>& keys, OutputType output_type);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H
