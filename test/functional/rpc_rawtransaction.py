@@ -101,78 +101,78 @@ class RawTransactionsTest(BitcoinTestFramework):
             " blockchain transaction queries. Use gettransaction for wallet transactions."
         )
 
-        for n in [0, 2]:
-            self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex")
+        for node, txindex_enabled in [(self.nodes[0], True), (self.nodes[2], False)]:
+            self.log.info(f"Test getrawtransaction {'with' if txindex_enabled else 'without'} -txindex")
 
-            if n == 0:
-                sync_txindex(self, self.nodes[n])
+            if txindex_enabled:
+                sync_txindex(self, node)
                 # With -txindex.
                 # 1. valid parameters - only supply txid
-                assert_equal(self.nodes[n].getrawtransaction(txId), tx['hex'])
+                assert_equal(node.getrawtransaction(txId), tx['hex'])
 
                 # 2. valid parameters - supply txid and 0 for non-verbose
-                assert_equal(self.nodes[n].getrawtransaction(txId, 0), tx['hex'])
+                assert_equal(node.getrawtransaction(txId, 0), tx['hex'])
 
                 # 3. valid parameters - supply txid and False for non-verbose
-                assert_equal(self.nodes[n].getrawtransaction(txId, False), tx['hex'])
+                assert_equal(node.getrawtransaction(txId, False), tx['hex'])
 
                 # 4. valid parameters - supply txid and 1 for verbose.
                 # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
-                assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], tx['hex'])
-                assert_equal(self.nodes[n].getrawtransaction(txId, 2)["hex"], tx['hex'])
+                assert_equal(node.getrawtransaction(txId, 1)["hex"], tx['hex'])
+                assert_equal(node.getrawtransaction(txId, 2)["hex"], tx['hex'])
 
                 # 5. valid parameters - supply txid and True for non-verbose
-                assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], tx['hex'])
+                assert_equal(node.getrawtransaction(txId, True)["hex"], tx['hex'])
             else:
                 # Without -txindex, expect to raise.
                 for verbose in [None, 0, False, 1, True]:
-                    assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txId, verbose)
+                    assert_raises_rpc_error(-5, err_msg, node.getrawtransaction, txId, verbose)
 
             # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbose
             for value in ["True", "False"]:
-                assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbose=value)
-                assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbosity=value)
+                assert_raises_rpc_error(-3, "not of expected type number", node.getrawtransaction, txid=txId, verbose=value)
+                assert_raises_rpc_error(-3, "not of expected type number", node.getrawtransaction, txid=txId, verbosity=value)
 
             # 7. invalid parameters - supply txid and empty array
-            assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txId, [])
+            assert_raises_rpc_error(-3, "not of expected type number", node.getrawtransaction, txId, [])
 
             # 8. invalid parameters - supply txid and empty dict
-            assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txId, {})
+            assert_raises_rpc_error(-3, "not of expected type number", node.getrawtransaction, txId, {})
 
         # Make a tx by sending, then generate 2 blocks; block1 has the tx in it
         tx = self.wallet.send_self_transfer(from_node=self.nodes[2])['txid']
         block1, block2 = self.generate(self.nodes[2], 2)
-        for n in [0, 2]:
-            self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex, with blockhash")
+        for node, txindex_enabled in [(self.nodes[0], True), (self.nodes[2], False)]:
+            self.log.info(f"Test getrawtransaction {'with' if txindex_enabled else 'without'} -txindex, with blockhash")
             # We should be able to get the raw transaction by providing the correct block
-            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            gottx = node.getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['txid'], tx)
             assert_equal(gottx['in_active_chain'], True)
-            if n == 0:
+            if txindex_enabled:
                 self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
                 for v in [1,2]:
-                    gottx = self.nodes[n].getrawtransaction(txid=tx, verbosity=v)
+                    gottx = node.getrawtransaction(txid=tx, verbosity=v)
                     assert_equal(gottx['txid'], tx)
                     assert 'in_active_chain' not in gottx
             else:
                 self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
-                assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
+                assert_raises_rpc_error(-5, err_msg, node.getrawtransaction, txid=tx, verbose=True)
             # We should not get the tx if we provide an unrelated block
-            assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
+            assert_raises_rpc_error(-5, "No such transaction found", node.getrawtransaction, txid=tx, blockhash=block2)
             # An invalid block hash should raise the correct errors
-            assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type string", self.nodes[n].getrawtransaction, txid=tx, blockhash=True)
-            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 6, for 'foobar')", self.nodes[n].getrawtransaction, txid=tx, blockhash="foobar")
-            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 8, for 'abcd1234')", self.nodes[n].getrawtransaction, txid=tx, blockhash="abcd1234")
+            assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type string", node.getrawtransaction, txid=tx, blockhash=True)
+            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 6, for 'foobar')", node.getrawtransaction, txid=tx, blockhash="foobar")
+            assert_raises_rpc_error(-8, "parameter 3 must be of length 64 (not 8, for 'abcd1234')", node.getrawtransaction, txid=tx, blockhash="abcd1234")
             foo = "ZZZ0000000000000000000000000000000000000000000000000000000000000"
-            assert_raises_rpc_error(-8, f"parameter 3 must be hexadecimal string (not '{foo}')", self.nodes[n].getrawtransaction, txid=tx, blockhash=foo)
+            assert_raises_rpc_error(-8, f"parameter 3 must be hexadecimal string (not '{foo}')", node.getrawtransaction, txid=tx, blockhash=foo)
             bar = "0000000000000000000000000000000000000000000000000000000000000000"
-            assert_raises_rpc_error(-5, "Block hash not found", self.nodes[n].getrawtransaction, txid=tx, blockhash=bar)
+            assert_raises_rpc_error(-5, "Block hash not found", node.getrawtransaction, txid=tx, blockhash=bar)
             # Undo the blocks and verify that "in_active_chain" is false.
-            self.nodes[n].invalidateblock(block1)
-            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            node.invalidateblock(block1)
+            gottx = node.getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['in_active_chain'], False)
-            self.nodes[n].reconsiderblock(block1)
-            assert_equal(self.nodes[n].getbestblockhash(), block2)
+            node.reconsiderblock(block1)
+            assert_equal(node.getbestblockhash(), block2)
 
         self.log.info("Test getrawtransaction on genesis block coinbase returns an error")
         block = self.nodes[0].getblock(self.nodes[0].getblockhash(0))
@@ -210,9 +210,9 @@ class RawTransactionsTest(BitcoinTestFramework):
             'type',
         ]
         # node 0 & 2 with verbosity 1 & 2
-        for n, v in product([0, 2], [1, 2]):
-            self.log.info(f"Test getrawtransaction_verbosity {v} {'with' if n == 0 else 'without'} -txindex, with blockhash")
-            gottx = self.nodes[n].getrawtransaction(txid=tx, verbosity=v, blockhash=block1)
+        for (node, txindex_enabled), v in product([(self.nodes[0], True), (self.nodes[2], False)], [1, 2]):
+            self.log.info(f"Test getrawtransaction_verbosity {v} {'with' if txindex_enabled else 'without'} -txindex, with blockhash")
+            gottx = node.getrawtransaction(txid=tx, verbosity=v, blockhash=block1)
             missing_fields = set(fields).difference(gottx.keys())
             if missing_fields:
                 raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
