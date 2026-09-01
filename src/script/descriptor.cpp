@@ -2958,8 +2958,24 @@ std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, Flat
 {
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return {};
+    const std::string_view no_checksum{sp.data(), sp.size()};
     uint32_t key_exp_index = 0;
     auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
+    if (sp.empty() && ret.size() > 1 && no_checksum.find('\'') != std::string_view::npos) {
+        // The descriptors that a multipath descriptor expands to always use
+        // 'h' as hardened marker, regardless of the marker in the input. In a
+        // valid descriptor an apostrophe can only appear as a hardened marker,
+        // so replace them all and parse again.
+        std::string canonical{no_checksum};
+        std::ranges::replace(canonical, '\'', 'h');
+        std::span<const char> sp_canonical{canonical};
+        key_exp_index = 0;
+        auto canonical_result = ParseScript(key_exp_index, sp_canonical, ParseScriptContext::TOP, out, error);
+        // Only the marker stored in the pubkey providers differs, so this
+        // parse cannot fail.
+        if (!Assume(!canonical_result.empty() && sp_canonical.empty())) return {};
+        ret = std::move(canonical_result);
+    }
     if (sp.empty() && !ret.empty()) {
         std::vector<std::unique_ptr<Descriptor>> descs;
         descs.reserve(ret.size());
