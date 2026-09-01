@@ -175,8 +175,6 @@ struct DatabaseOptions {
     // Specialized options. Not every option is supported by every backend.
     bool verify = true;             //!< Check data integrity on load.
     bool use_unsafe_sync = false;   //!< Disable file sync for faster performance.
-    bool use_shared_memory = false; //!< Let other processes access the database.
-    int64_t max_log_mb = 100;       //!< Max log size to allow before consolidating.
 };
 
 enum class DatabaseStatus {
