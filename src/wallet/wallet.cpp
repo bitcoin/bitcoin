@@ -3914,23 +3914,21 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     DatabaseStatus db_status;
     std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
     assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
-    m_database.reset();
-    m_database = std::move(new_db);
 
     // Write existing records into the new DB
-    batch = m_database->MakeBatch();
-    bool began = batch->TxnBegin();
-    assert(began); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
-    for (const auto& [key, value] : records) {
-        if (!batch->Write(std::span{key}, std::span{value})) {
-            batch->TxnAbort();
-            m_database->Close();
-            fs::remove(m_database->Filename());
-            assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+    const bool written = RunWithinTxn(*new_db, "migration: write records to new db", [&records](DatabaseBatch& in_batch) {
+        for (const auto& [key, value] : records) {
+            if (!in_batch.Write(std::span{key}, std::span{value})) return false;
         }
+        return true;
+    });
+    if (!written) {
+        fs::remove(new_db->Filename());
+        assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
     }
-    bool committed = batch->TxnCommit();
-    assert(committed); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+
+    m_database.reset();
+    m_database = std::move(new_db);
     return true;
 }
 
