@@ -3831,12 +3831,24 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
 
 bool CConnman::AddNode(const AddedNodeParams& add)
 {
-    const CService resolved(LookupNumeric(add.m_added_node, GetDefaultPort(add.m_added_node)));
+    uint16_t port{GetDefaultPort(add.m_added_node)};
+    const CService resolved(LookupNumeric(add.m_added_node, port));
     const bool resolved_is_valid{resolved.IsValid()};
+    std::string host;
+    const bool host_port_is_valid{SplitHostPort(add.m_added_node, port, host)};
 
     LOCK(m_added_nodes_mutex);
     for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node || (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, GetDefaultPort(it.m_added_node)))) return false;
+        if (add.m_added_node == it.m_added_node) return false;
+
+        uint16_t existing_port{GetDefaultPort(it.m_added_node)};
+        if (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, existing_port)) return false;
+
+        std::string existing_host;
+        if (host_port_is_valid && SplitHostPort(it.m_added_node, existing_port, existing_host) &&
+            host == existing_host && port == existing_port) {
+            return false;
+        }
     }
 
     m_added_node_params.push_back(add);
