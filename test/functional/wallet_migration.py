@@ -199,9 +199,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         if is_dir_writable(wallet_path):
             self.log.warning("Skipping migration non-writable directory test: unable to enforce read-only permissions")
         else:
-            assert_raises_rpc_error(-4, "Error: Wallet db cannot be updated. Adjust directory or file permissions to proceed with migration.", self.master_node.migratewallet, wallet_name)
+            assert_raises_rpc_error(-4, f'Error: Wallet db cannot be updated. Path: {wallet_path}/wallet.dat', self.master_node.migratewallet, wallet_name)
         # Reset directory permissions
         wallet_path.chmod(original_dir_perms)
+        assert not [f for f in os.listdir(self.master_node.wallets_path) if "_sqlite_" in f]  # tmp db cleaned up
 
         # Check the wallet we tried to migrate is still BDB
         self.assert_is_bdb(wallet_name)
