@@ -62,7 +62,7 @@ def parseline(line: str) -> Union[dict, None]:
         # Ignore line that starts with comment
         return None
     sline = line.split()
-    if len(sline) < 11:
+    if len(sline) < 12:
         # line too short to be valid, skip it.
         return None
     # Skip bad results.
@@ -285,9 +285,7 @@ class TestParseLine(unittest.TestCase):
         for count in range(11):
             with self.subTest(fields=count):
                 self.assertIsNone(parseline(' '.join(fields[:count])))
-        # TODO: the user agent is the 12th field, so a line with 11 fields should be skipped rather than aborting the run
-        with self.assertRaises(IndexError):
-            parseline(' '.join(fields[:11]))
+        self.assertIsNone(parseline(' '.join(fields[:11])))  # The user agent is the 12th field, so 11 fields is still too short
 
 if __name__ == '__main__':
     main()
