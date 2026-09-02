@@ -2994,16 +2994,21 @@ uint256 DescriptorID(const Descriptor& desc)
     return id;
 }
 
-util::Result<std::string> CreateMultisigDescriptor(
-    int threshold,
-    const std::vector<std::string>& keys,
-    OutputType output_type)
+util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vector<std::string>& keys, OutputType output_type)
 {
+    std::string multisig_fn;
+    std::string internal_key;
     switch (output_type) {
     case OutputType::BECH32:
+        multisig_fn = "sortedmulti";
         break;
     case OutputType::BECH32M:
-        return util::Error{_("Taproot multisig is not yet supported")};
+        // NUMS_H is accepted by most hardware signers that support taproot multisig.
+        // One limitation to using a fixed point would be the possibility of fingerprinting
+        // as script-path spends reveal a recognizable internal key.
+        multisig_fn = "sortedmulti_a";
+        internal_key = "xpub661MyMwAqRbcEYS8w7XLSVeEsBXy79zSzH1J8vCdxAZningWLdN3zgtU6QgnecKFpJFPpdzxKrwoaZoV44qAJewsc4kX9vGaCaBExuvJH57"; //HexStr(XOnlyPubKey::NUMS_H);
+        break;
     case OutputType::LEGACY:
     case OutputType::P2SH_SEGWIT:
     case OutputType::UNKNOWN:
@@ -3029,12 +3034,15 @@ util::Result<std::string> CreateMultisigDescriptor(
     std::set<std::string> seen;
     uint32_t key_exp_index{0};
 
+    const ParseScriptContext ctx{output_type == OutputType::BECH32M
+        ? ParseScriptContext::P2TR
+        : ParseScriptContext::P2WSH};
+
     for (const auto& key : keys) {
         FlatSigningProvider provider;
         std::string error;
         std::span<const char> sp{key};
-        auto parsed{ParsePubkey(key_exp_index, sp,
-            ParseScriptContext::P2WSH, provider, error)};
+        auto parsed{ParsePubkey(key_exp_index, sp, ctx, provider, error)};
 
         if (parsed.empty()) {
             return util::Error{strprintf(
@@ -3069,11 +3077,18 @@ util::Result<std::string> CreateMultisigDescriptor(
         canonical_keys.emplace_back(canonical);
     }
 
-    std::string descriptor{"wsh(sortedmulti(" + util::ToString(threshold)};
+    std::string inner{multisig_fn + "(" + util::ToString(threshold)};
     for (const auto& key : canonical_keys) {
-        descriptor += "," + key + "/<0;1>/*";
+        inner += "," + key + "/<0;1>/*";
     }
-    descriptor += "))";
+    inner += ")";
+
+    std::string descriptor;
+    if (output_type == OutputType::BECH32M) {
+        descriptor = "tr(" + internal_key + "," + inner + ")";
+    } else {
+        descriptor = "wsh(" + inner + ")";
+    }
 
     FlatSigningProvider provider;
     std::string error;

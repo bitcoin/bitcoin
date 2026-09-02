@@ -1458,9 +1458,25 @@ BOOST_AUTO_TEST_CASE(descriptor_create_multisig_valid)
     BOOST_CHECK(CreateMultisigDescriptor(3, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32));
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_create_multisig_valid_p2tr)
+{
+    const auto res{CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32M)};
+    BOOST_REQUIRE(res);
+    // NUMS_H as internal key
+    BOOST_CHECK(res->starts_with("tr(xpub661MyMwAqRbcEYS8w7XLSVeEsBXy79zSzH1J8vCdxAZningWLdN3zgtU6QgnecKFpJFPpdzxKrwoaZoV44qAJewsc4kX9vGaCaBExuvJH57,"));
+    BOOST_CHECK(res->find("sortedmulti_a(2,") != std::string::npos);
+    BOOST_CHECK(res->find("/<0;1>/*") != std::string::npos);
+
+    FlatSigningProvider provider;
+    std::string error;
+    const auto descs{Parse(*res, provider, error)};
+    BOOST_REQUIRE_EQUAL(descs.size(), 2U);
+    BOOST_CHECK(descs[0]->ToString().find("/0/*") != std::string::npos);
+    BOOST_CHECK(descs[1]->ToString().find("/1/*") != std::string::npos);
+}
+
 BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_policy)
 {
-    CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32M), "Taproot");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::LEGACY), "Unsupported address type");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::P2SH_SEGWIT), "Unsupported address type");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::UNKNOWN), "Unsupported address type");

@@ -6,9 +6,9 @@
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
 #include <outputtype.h>
-#include <util/result.h>
 #include <pubkey.h>
 #include <uint256.h>
+#include <util/result.h>
 
 #include <cstddef>
 #include <cstdint>
