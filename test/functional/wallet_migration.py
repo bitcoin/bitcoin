@@ -11,6 +11,7 @@ import random
 import shutil
 import stat
 import struct
+import tempfile
 import time
 from decimal import Decimal
 
@@ -206,6 +207,25 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Check the wallet we tried to migrate is still BDB
         self.assert_is_bdb(wallet_name)
+
+    def test_other_filesystem(self):
+        self.log.info("Test migration of a wallet located on a different filesystem than the wallets directory")
+        wallets_dev = os.stat(self.master_node.wallets_path).st_dev
+        other_fs = next((p for p in [Path("/dev/shm"), Path(tempfile.gettempdir())] if p.is_dir() and os.stat(p).st_dev != wallets_dev), None)
+        if other_fs is None:
+            self.log.warning("Skipping migration on other filesystem test: no other filesystem available")
+            return
+
+        with tempfile.TemporaryDirectory(prefix="wallet_migration_", dir=other_fs) as parent_dir:
+            wallet_name = str(Path(parent_dir) / "wallet")
+            wallet = self.create_legacy_wallet(wallet_name)
+            addr = wallet.getnewaddress()
+
+            migrate_res, wallet = self.migrate_and_get_rpc(wallet_name)
+            assert_equal(wallet.getaddressinfo(addr)["ismine"], True)
+            assert not [f for f in os.listdir(self.master_node.wallets_path) if "_sqlite_" in f]  # tmp db cleaned up
+            wallet.unloadwallet()
+        os.remove(migrate_res["backup_path"])
 
     def test_basic(self):
         # Update listtransctions' output from old nodes to be compatible
@@ -1783,6 +1803,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # TODO: Test the actual records in the wallet for these tests too. The behavior may be correct, but the data written may not be what we actually want
         self.test_unwritable_dir_failure()
+        self.test_other_filesystem()
         self.test_basic()
         self.test_multisig()
         self.test_other_watchonly()
