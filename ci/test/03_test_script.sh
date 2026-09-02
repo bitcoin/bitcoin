@@ -13,6 +13,10 @@ if [ "${DANGER_RUN_CI_ON_HOST}" != "1" ]; then
   exit 1
 fi
 
+if [ -n "${CI_LIMIT_NOFILE}" ]; then
+  ulimit -n "${CI_LIMIT_NOFILE}"
+fi
+
 cd "${BASE_ROOT_DIR}"
 
 export PATH="/path_with space:${PATH}"
@@ -21,9 +25,13 @@ export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/l
 export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:second_deadlock_stack=1"
 export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 
-echo "Number of available processing units: $(nproc)"
+echo "Number of available processing units: $MAKEJOBS"
 if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
+elif [[ "$CI_OS_NAME" == *bsd ]]; then
+  echo "System info: $(uname -srm)"
+  sysctl hw.ncpu || true
+  sysctl hw.physmem || true
 else
   free -m -h
   echo "System info: $(uname --kernel-name --kernel-release)"
@@ -90,13 +98,15 @@ fi
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $CI_IMAGE_NAME_TAG == *alpine* ]]; then
     SHELL_OPTS="CONFIG_SHELL=/usr/bin/dash"
+  elif [[ "$CI_OS_NAME" == *bsd ]]; then
+    SHELL_OPTS="CONFIG_SHELL=/bin/sh"
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
-  bash -c "$SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS LOG=1"
+  bash -c "$SHELL_OPTS ${MAKE:-make} $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS LOG=1"
 fi
 if [ "$DOWNLOAD_PREVIOUS_RELEASES" = "true" ]; then
-  test/get_previous_releases.py --target-dir "$PREVIOUS_RELEASES_DIR"
+  "$PYTHON" test/get_previous_releases.py --target-dir "$PREVIOUS_RELEASES_DIR"
 fi
 
 BITCOIN_CONFIG_ALL="-DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON"
@@ -136,7 +146,7 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
 )
 
 ccache --version | head -n 1 && ccache --show-stats --verbose
-ccache --print-stats | python3 -c '
+ccache --print-stats | "$PYTHON" -c '
 import os
 import sys
 
@@ -202,7 +212,7 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
+  "$PYTHON" "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
     "${MAKEJOBS}" \
     --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
     --ansi \
@@ -277,7 +287,7 @@ fi
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   # shellcheck disable=SC2086
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  "${BASE_BUILD_DIR}/test/fuzz/test_runner.py" \
+  "$PYTHON" "${BASE_BUILD_DIR}/test/fuzz/test_runner.py" \
     ${FUZZ_TESTS_CONFIG} \
     "${MAKEJOBS}" \
     -l DEBUG \
