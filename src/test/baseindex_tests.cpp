@@ -84,6 +84,10 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
             // Reload index to see which block data was actually committed.
             BOOST_REQUIRE(index->Init());
             BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, expected_commit_height);
+
+            // Drain in-flight validation callbacks before destroying the index.
+            m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+            // shutdown sequence (c.f. Shutdown() in init.cpp)
             index->Stop();
         };
 
