@@ -247,10 +247,10 @@ bool BlockAssembler::TestChunkBlockLimits(int64_t chunk_weight, int64_t chunk_si
 {
     // block_max_weight has been flattened before block assembly limit checks.
     Assert(m_options.block_max_weight);
-    if (nBlockWeight + chunk_weight >= m_options.block_max_weight) {
+    if (nBlockWeight + chunk_weight > m_options.block_max_weight) {
         return false;
     }
-    if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
+    if (nBlockSigOpsCost + chunk_sigops_cost > MAX_BLOCK_SIGOPS_COST) {
         return false;
     }
     return true;

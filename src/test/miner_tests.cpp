@@ -394,11 +394,11 @@ void MinerTestingSetup::TestChunkLimits(const CScript& scriptPubKey, const std::
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 
     options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight();
-    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1U); // TODO: A chunk that reaches the weight limit should be mined
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 2U);
 
     options.block_max_weight = MAX_BLOCK_WEIGHT;
     options.coinbase_output_max_additional_sigops = MAX_BLOCK_SIGOPS_COST - sigops_cost;
-    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1U); // TODO: A chunk that reaches the sigops limit should be mined
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 2U);
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
