@@ -7,4 +7,4 @@
 export LC_ALL=C.UTF-8
 
 source ./ci/test/00_setup_env.sh
-"./ci/test/02_run_container.py"
+"$PYTHON" "./ci/test/02_run_container.py"
