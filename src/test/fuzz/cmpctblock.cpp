@@ -126,6 +126,8 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     FakeSteadyClock steady_clock;
 
     auto setup = g_setup;
+    auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
+    connman.Reset();
     auto& mempool = *setup->m_node.mempool;
     auto& chainman = static_cast<TestChainstateManager&>(*setup->m_node.chainman);
     chainman.ResetIbd();
@@ -133,7 +135,6 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     const size_t initial_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
 
     AddrMan addrman{*setup->m_node.netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
-    auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
     auto peerman = PeerManager::make(connman, addrman,
                                      /*banman=*/nullptr, chainman,
                                      mempool, *setup->m_node.warnings,

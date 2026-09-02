@@ -40,6 +40,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
 
     auto& node{g_setup->m_node};
     auto& connman{static_cast<ConnmanTestMsg&>(*node.connman)};
+    connman.Reset();
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     FakeNodeClock clock{1610000000s}; // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
