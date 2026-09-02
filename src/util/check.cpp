@@ -46,4 +46,12 @@ void internal_abort_helper(const std::source_location& loc, std::string_view err
     std::abort();
 }
 
+void check_non_fatal_fail(const std::source_location& loc, std::string_view error_msg)
+{
+    if constexpr (G_ABORT_ON_FAILED_ASSUME) {
+        internal_abort_helper(loc, error_msg);
+    }
+    throw NonFatalCheckError{error_msg, loc};
+}
+
 std::atomic<bool> g_enable_dynamic_fuzz_determinism{false};
