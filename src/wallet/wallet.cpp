@@ -4318,7 +4318,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     //             migrating only watch-only scripts.
     bool empty_local_wallet = false;
 
-    {
+    try {
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
@@ -4333,6 +4333,8 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
             local_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
             success = true;
         }
+    } catch (const std::exception& e) {
+        error = Untranslated(strprintf("Unexpected exception during migration: %s", e.what()));
     }
 
     // In case of loading failure, we need to remember the wallet files we have created to remove.
