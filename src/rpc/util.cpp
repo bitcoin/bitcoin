@@ -2,19 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/util.h>
+
+#include <arith_uint256.h>
 #include <chain.h>
 #include <common/args.h>
 #include <common/messages.h>
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <core_io.h>
-#include <key_io.h>
+#include <crypto/hex_base.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <pow.h>
-#include <rpc/util.h>
 #include <script/descriptor.h>
-#include <script/interpreter.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
@@ -29,6 +30,9 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
+#include <set>
+#include <span>
 #include <string_view>
 #include <tuple>
 #include <utility>

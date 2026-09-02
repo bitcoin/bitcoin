@@ -3,38 +3,70 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/blockchain.h>
+#include <rpc/mempool.h>
+#include <rpc/register.h> // IWYU pragma: associated
 
-#include <node/mempool_persist.h>
-
-#include <chainparams.h>
 #include <common/args.h>
+#include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txospenderindex.h>
-#include <kernel/mempool_entry.h>
+#include <net.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netbase.h>
+#include <node/mempool_persist.h>
 #include <node/mempool_persist_args.h>
+#include <node/transaction.h>
+#include <node/txorphanage.h>
 #include <node/types.h>
+#include <policy/feerate.h>
+#include <policy/packages.h>
+#include <policy/policy.h>
 #include <policy/rbf.h>
-#include <policy/settings.h>
 #include <primitives/transaction.h>
+#include <private_broadcast.h>
+#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <script/script.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txgraph.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <univalue.h>
+#include <util/check.h>
+#include <util/expected.h>
+#include <util/feefrac.h>
 #include <util/fs.h>
 #include <util/moneystr.h>
-#include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/vector.h>
+#include <validation.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <list>
 #include <map>
+#include <memory>
+#include <optional>
 #include <ranges>
+#include <set>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
+#include <vector>
+
+namespace node {
+struct NodeContext;
+} // namespace node
 
 using node::DumpMempool;
 
