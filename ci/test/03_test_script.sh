@@ -21,8 +21,12 @@ echo "Number of available processing units: $(nproc)"
 if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
 else
-  free -m -h
-  echo "System info: $(uname --kernel-name --kernel-release)"
+  if [ "$CI_OS_NAME" == "freebsd" ]; then
+    sysctl hw.physmem
+  else
+    free --human
+  fi
+  echo "System info: $(uname -sr)"
   lscpu
 fi
 echo "Free disk space:"
@@ -87,9 +91,9 @@ if [ -z "$NO_DEPENDS" ]; then
   if [[ $CI_IMAGE_NAME_TAG == *alpine* ]]; then
     SHELL_OPTS="CONFIG_SHELL=/usr/bin/dash"
   else
-    SHELL_OPTS="CONFIG_SHELL="
+    SHELL_OPTS=""
   fi
-  bash -c "$SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS LOG=1"
+  bash -c "$SHELL_OPTS ${MAKE:-make} $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS LOG=1"
 fi
 if [ "$DOWNLOAD_PREVIOUS_RELEASES" = "true" ]; then
   test/get_previous_releases.py
