@@ -51,12 +51,16 @@ venv/bin/pip3 install ./pycapnp -C force-bundled-libcapnp=True
 venv/bin/python3 build/test/functional/interface_ipc.py
 ```
 
+#### UTF-8 mode
+
 The functional tests assume Python UTF-8 Mode, which is the default on most
 systems.
-On Windows the `PYTHONUTF8` environment variable must be set to 1:
 
-```cmd
-set PYTHONUTF8=1
+On Windows, when using Python < 3.15, the `PYTHONUTF8` environment variable must be set to 1.
+For example, in PowerShell:
+
+```powershell
+$env:PYTHONUTF8 = 1
 ```
 
 ### Running the tests
