@@ -20,7 +20,6 @@ from test_framework.script import (
     OP_RETURN,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -472,15 +471,9 @@ class PruneTest(BitcoinTestFramework):
         self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
 
         self.log.info("Test prune with a new index")
-        self.stop_node(0)
+        self.restart_node(0, extra_args=["-prune=550", "-blockfilterindex=1"])
         node = self.nodes[0]
-        # TODO: Starting prune with a new index must sync the index before pruning.
-        node.assert_start_raises_init_error(
-            extra_args=["-prune=550", "-blockfilterindex=1"],
-            expected_msg="basic block filter index best block of the index goes beyond pruned data",
-            match=ErrorMatch.PARTIAL_REGEX,
-        )
-        self.start_node(0, extra_args=["-prune=550"])
+        self.wait_until(lambda: node.getindexinfo()["basic block filter index"]["best_block_height"] >= 10, timeout=300)
 
         if self.is_wallet_compiled():
             self.log.info("Test wallet re-scan")
