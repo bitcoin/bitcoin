@@ -136,17 +136,6 @@ if [ -n "$NETBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME
   done < <(printf '%b\n' "${NETBSD_SDK_SHA512SUMS}")
 fi
 
-if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" ]; then
-  FREEBSD_SDK_FILENAME="base-${FREEBSD_VERSION}.txz"
-  FREEBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${FREEBSD_SDK_FILENAME}"
-  if [ ! -f "$FREEBSD_SDK_PATH" ]; then
-    ${CI_RETRY_EXE} curl --location --fail "https://download.freebsd.org/releases/amd64/${FREEBSD_VERSION}-RELEASE/base.txz" -o "$FREEBSD_SDK_PATH"
-  fi
-  sha256sum -c <<<"${FREEBSD_SDK_SHA256} ${FREEBSD_SDK_PATH}"
-  mkdir -p "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}"
-  tar -C "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" -xf "$FREEBSD_SDK_PATH"
-fi
-
 if [ -n "$OPENBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}" ]; then
   mkdir -p "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}"
   while read -r OPENBSD_SDK_SHA256 OPENBSD_SDK_FILENAME; do
