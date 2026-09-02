@@ -230,6 +230,10 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
     promise.set_value();
     // Wait for the index to reach the new tip
     func_wait_until(blocking_height + 2, 5s);
+
+    // Drain unused BlockConnected events, to avoid unsafe memory races during destruction
+    m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+    // shutdown sequence (c.f. Shutdown() in init.cpp)
     index.Stop();
 }
 
