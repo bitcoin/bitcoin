@@ -29,27 +29,24 @@ See [/doc/fuzzing.md](/doc/fuzzing.md)
 
 ### Dependencies and prerequisites
 
-The ZMQ functional test requires a python ZMQ library. To install it:
+The functional tests require Python to be installed. For the minimum required Python version, refer to [Dependencies](/doc/dependencies.md#build-1).
 
-- on Unix, run `sudo apt-get install python3-zmq`
-- on mac OS, run `pip3 install pyzmq`
+Some tests require optional dependencies: Python modules and system utilities.
+They can be installed with any suitable tool, like the system package manager, `pip` in a virtual environment, or `uv`.
 
-The IPC functional test requires a python IPC library. `pip3 install pycapnp` may work, but if not, install it from source:
+If an optional dependency is not installed, the corresponding tests will be skipped rather than failed.
 
-```sh
-git clone -b v2.2.1 https://github.com/capnproto/pycapnp
-pip3 install ./pycapnp
-```
+| Package manager | Python | sqlite3<br>(wallet tests) | zmq<br>(ZMQ tests) | capnp<br>(IPC tests) | lsof <sup><a href="#note1">[1]</a></sup><br>(network tests) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **pip** | n/a | n/a | `pyzmq` | `pycapnp` | n/a |
+| **Debian/Ubuntu**<br>(`apt`) | `python3` | included | `python3-zmq` | n/a | n/a |
+| **macOS**<br>(`brew`) | `python3` | included | n/a | n/a | n/a |
+| **Windows**<br>(`winget`) | `python3` | included | n/a | n/a | n/a |
+| **FreeBSD**<br>(`pkg`) | `python3` | `databases/py-sqlite3` | `net/py-pyzmq` | n/a | `sysutils/lsof` |
+| **NetBSD**<br>(`pkgin`) | `python313` | included | `py313-zmq` | n/a | `lsof` |
+| **OpenBSD**<br>(`pkg_add`) | `python` | included | `py3-zmq` | n/a | n/a |
 
-If that does not work, try adding `-C force-bundled-libcapnp=True` to the `pip` command.
-Depending on the system, it may be necessary to install and run in a venv:
-
-```sh
-python -m venv venv
-git clone -b v2.2.1 https://github.com/capnproto/pycapnp
-venv/bin/pip3 install ./pycapnp -C force-bundled-libcapnp=True
-venv/bin/python3 build/test/functional/interface_ipc.py
-```
+<a id="note1"></a>1. Only used on non-Linux systems. macOS ships `lsof` in the base system. OpenBSD and Windows do not provide it, and the tests requiring it are always skipped there.
 
 #### UTF-8 mode
 
