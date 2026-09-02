@@ -40,7 +40,10 @@ BOOST_AUTO_TEST_CASE(check_fail)
 
 BOOST_AUTO_TEST_CASE(unreachable_diagnostics)
 {
-    BOOST_CHECK_EXCEPTION(TriggerNonFatalUnreachable(), NonFatalCheckError, HasReason{"Internal bug detected: Unreachable code reached (non-fatal)"});
+    // Disable aborts for easier testing here
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+
+    BOOST_CHECK_EXCEPTION(TriggerNonFatalUnreachable(), NonFatalCheckError, HasReason{"Internal bug detected: unreachable"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
