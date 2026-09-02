@@ -3851,6 +3851,15 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
     return std::reference_wrapper(*spk_man);
 }
 
+// Returns wallet prefix for migration.
+// Used to name the backup file and newly created wallets.
+// E.g. a watch-only wallet is named "<prefix>_watchonly".
+static std::string MigrationPrefixName(CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    return name.empty() ? "default_wallet" : name;
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
@@ -3889,31 +3898,40 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         return false;
     }
 
-    // Close this database and delete the file
-    fs::path db_path = fs::PathFromString(m_database->Filename());
+    // Close this database. It is replaced once the new one is fully built.
+    const fs::path origin_db_path = fs::PathFromString(m_database->Filename());
     m_database->Close();
 
-    std::error_code err_db;
-    fs::remove(db_path, err_db);
-    if (err_db) {
-        std::string err_help;
-        const bool perm_issue = err_db.value() == EACCES || err_db.value() == EPERM  || err_db.value() == EROFS;
-        if (perm_issue) err_help = "Adjust directory or file permissions to proceed with migration.";
-        error = strprintf(_("Error: Wallet db cannot be updated. %s"), err_help);
+    // Create a temporary database in the wallets directory. The process will replace the
+    // real one upon completion.
+    const std::string name_prefix = m_name.empty() ? MigrationPrefixName(*this) : [&] {
+        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(m_name));
+        return fs::PathToString(legacy_wallet_path.filename());
+    }();
+    const std::string new_db_name = strprintf("%s_sqlite_%d.tmp", name_prefix, GetTime());
+    const fs::path tmp_wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(new_db_name));
+    if (fs::exists(fs::symlink_status(tmp_wallet_path))) {
+        error = strprintf(_("Error: Unable to create new database for wallet '%s': temporary path '%s' already exists"), GetName(), fs::PathToString(tmp_wallet_path));
         return false;
     }
 
-    // Generate the path for the location of the migrated wallet
-    // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name));
+    // Temporary dir did not exist before, it is safe to remove it entirely. It only ever contains the new db file.
+    const auto remove_tmp{[&tmp_wallet_path] {
+        std::error_code ec;
+        fs::remove(SQLiteDataFile(tmp_wallet_path), ec);
+        fs::remove(tmp_wallet_path, ec);
+    }};
+    const auto fail = [&](bilingual_str err) { error = std::move(err); remove_tmp(); return false; };
 
     // Make new DB
     DatabaseOptions opts;
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
     DatabaseStatus db_status;
-    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
-    assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
+    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(tmp_wallet_path, opts, db_status, error);
+    if (!new_db) {
+        return fail(strprintf(_("Error: Unable to create the new database for wallet '%s'."), GetName()) + Untranslated(" ") + error);
+    }
 
     // Write existing records into the new DB
     const bool written = RunWithinTxn(*new_db, "migration: write records to new db", [&records](DatabaseBatch& in_batch) {
@@ -3923,12 +3941,38 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         return true;
     });
     if (!written) {
-        fs::remove(new_db->Filename());
-        assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+        return fail(strprintf(_("Error: Unable to write records into the new database for wallet '%s'"), GetName()));
     }
 
-    m_database.reset();
-    m_database = std::move(new_db);
+    // ######################################################################
+    // At this point, the new database has all records.                     #
+    // We can remove the old db file and move the new db inside the wallet  #
+    // ######################################################################
+    std::error_code err_db;
+    fs::remove(origin_db_path, err_db);
+    if (err_db) {
+        std::string err_help;
+        const bool perm_issue = err_db.value() == EACCES || err_db.value() == EPERM  || err_db.value() == EROFS;
+        if (perm_issue) err_help = " Adjust directory or file permissions to proceed with migration.";
+        return fail(strprintf(_("Error: Wallet db cannot be updated. Path: %s, Error: %s.%s"), fs::PathToString(origin_db_path), err_db.message(), err_help));
+    }
+
+    // Move the new sqlite database into the original location
+    const fs::path tmp_db = fs::PathFromString(new_db->Filename());
+    new_db.reset(); // reset sqlite connection so it can be moved to the new folder
+
+    // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
+    const fs::path dst_wallet_dir = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name));
+    TryCreateDirectories(dst_wallet_dir);
+    fs::copy_file(tmp_db, dst_wallet_dir / "wallet.dat", fs::copy_options::none, err_db);
+    if (err_db) {
+        return fail(strprintf(_("Error: Wallet db cannot be updated. Path: %s, Error: %s."), fs::PathToString(dst_wallet_dir), err_db.message()));
+    }
+    remove_tmp();
+
+    // Reload db connection
+    opts.require_create = false;
+    m_database = Assert(MakeDatabase(dst_wallet_dir, opts, db_status, error));
     return true;
 }
 
@@ -4163,15 +4207,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 bool CWallet::CanGrindR() const
 {
     return !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-}
-
-// Returns wallet prefix for migration.
-// Used to name the backup file and newly created wallets.
-// E.g. a watch-only wallet is named "<prefix>_watchonly".
-static std::string MigrationPrefixName(CWallet& wallet)
-{
-    const std::string& name{wallet.GetName()};
-    return name.empty() ? "default_wallet" : name;
 }
 
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)

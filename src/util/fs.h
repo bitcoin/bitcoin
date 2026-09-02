@@ -17,6 +17,7 @@
 #include <ios>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -139,6 +140,10 @@ template<typename T> static inline path operator+(path p1, T p2) = delete;
 static inline bool copy_file(const path& from, const path& to, copy_options options)
 {
     return std::filesystem::copy_file(from, to, options);
+}
+static inline bool copy_file(const path& from, const path& to, copy_options options, std::error_code& ec)
+{
+    return std::filesystem::copy_file(from, to, options, ec);
 }
 
 /**
