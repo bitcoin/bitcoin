@@ -223,6 +223,9 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
         BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
     }
 
+    // The index thread is blocked and not done
+    BOOST_CHECK(!index.GetSummary().synced);
+
     // Unblock the index thread so it can process the reorg
     promise.set_value();
     // Wait for the index to reach the new tip
