@@ -61,7 +61,7 @@ struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void TestChunkLimits(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
@@ -368,7 +368,7 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     return ret;
 }
 
-void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+void MinerTestingSetup::TestChunkLimits(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
@@ -378,19 +378,27 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
     TestMemPoolEntryHelper entry;
 
     const auto tx{CreateBigSigOpsTx(COutPoint{txFirst[0]->GetHash(), 0}, /*num_outputs=*/50)};
-    const auto sigop_entry{entry.Fee(COIN).SpendsCoinbase(true).SigOpsCost(GetLegacySigOpCount(CTransaction(tx)) * WITNESS_SCALE_FACTOR).FromTx(tx)};
+    const auto sigops_cost{GetLegacySigOpCount(CTransaction{tx}) * WITNESS_SCALE_FACTOR};
+    const auto sigop_entry{entry.Fee(COIN).SpendsCoinbase(true).SigOpsCost(sigops_cost).FromTx(tx)};
     BOOST_REQUIRE(sigop_entry.GetAdjustedWeight() > sigop_entry.GetTxWeight());
-    BOOST_REQUIRE(sigop_entry.GetSigOpCost() < MAX_BLOCK_SIGOPS_COST);
+    BOOST_REQUIRE(sigops_cost < MAX_BLOCK_SIGOPS_COST);
     TryAddToMempool(tx_mempool, sigop_entry);
 
     BlockCreateOptions options{
-        // +1 because TestChunkBlockLimits rejects on >= (exact fit doesn't count).
+        // Keep the adjusted-weight check independent of exact-limit behavior.
         .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
         .coinbase_output_script = scriptPubKey,
     };
     const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
     BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
+
+    options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight();
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1U); // TODO: A chunk that reaches the weight limit should be mined
+
+    options.block_max_weight = MAX_BLOCK_WEIGHT;
+    options.coinbase_output_max_additional_sigops = MAX_BLOCK_SIGOPS_COST - sigops_cost;
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1U); // TODO: A chunk that reaches the sigops limit should be mined
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
@@ -965,7 +973,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     TestPrioritisedMining(scriptPubKey, txFirst);
 
-    TestSigOpsAdjustedWeightChunkLimit(scriptPubKey, txFirst);
+    TestChunkLimits(scriptPubKey, txFirst);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
