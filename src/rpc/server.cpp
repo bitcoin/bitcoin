@@ -555,7 +555,8 @@ static RPCResult OpenRPCDocResult()
                         {RPCResult::Type::OBJ, "result", "Method result.",
                             {
                                 {RPCResult::Type::STR, "name", "Result name."},
-                                {RPCResult::Type::ANY, "schema", "JSON Schema for the result."},
+                                {RPCResult::Type::ANY, "schema", "JSON Schema for the result. Numeric schemas may include "
+                                    "\"x-bitcoin-unit\" property: \"amount\" which denotes a Bitcoin amount in BTC."},
                             }},
                         {RPCResult::Type::STR, "x-bitcoin-category", "RPC category."},
                     }}}},
