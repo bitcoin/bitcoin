@@ -133,6 +133,18 @@ BOOST_AUTO_TEST_CASE(get_next_work_first_block_time)
     BOOST_CHECK(PermittedDifficultyTransition(consensus, last.nHeight+1, last.nBits, expected_nbits));
 }
 
+/* Test that nbits is only permitted to change at a difficulty adjustment. */
+BOOST_AUTO_TEST_CASE(permitted_difficulty_transition_no_retarget)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+    const int64_t height{consensus.DifficultyAdjustmentInterval() + 1}; // Not a retarget height
+
+    const unsigned int nbits{0x1c05a3f4};
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, height, nbits, nbits));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, height, nbits, nbits - 1));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, height, nbits, nbits + 1));
+}
+
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
