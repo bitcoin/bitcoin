@@ -203,6 +203,14 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& path
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
+/**
+ * Move 'db' into the 'dst_path' directory by renaming its data file, and reopen it from there.
+ * 'dst_path' must be on the same filesystem as the database. An existing data file at the
+ * destination is replaced, and a leftover journal there is removed first. On failure, 'db'
+ * is left closed, and a moved data file that can't be reopened is erased.
+ */
+util::Result<void> MoveDatabase(std::unique_ptr<WalletDatabase>& db, const fs::path& dst_path, DatabaseOptions& opts);
+
 fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);
 bool IsBDBFile(const fs::path& path);
