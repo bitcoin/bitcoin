@@ -84,6 +84,10 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
             // Reload index to see which block data was actually committed.
             BOOST_REQUIRE(index->Init());
             BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, expected_commit_height);
+
+            // Drain in-flight validation callbacks before destroying the index.
+            m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+            // shutdown sequence (c.f. Shutdown() in init.cpp)
             index->Stop();
         };
 
@@ -223,10 +227,17 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
         BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
     }
 
+    // The index thread is blocked and not done
+    BOOST_CHECK(!index.GetSummary().synced);
+
     // Unblock the index thread so it can process the reorg
     promise.set_value();
     // Wait for the index to reach the new tip
     func_wait_until(blocking_height + 2, 5s);
+
+    // Drain unused BlockConnected events, to avoid unsafe memory races during destruction
+    m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
+    // shutdown sequence (c.f. Shutdown() in init.cpp)
     index.Stop();
 }
 
