@@ -428,8 +428,8 @@ KJ_TEST("Calling async IPC method with a remote disconnect while results are bui
     // throw InterruptException instead of proceeding into getResults().
     // Keeping it alive matches the window in the original report, where the
     // worker races with capnp's own internal teardown, which runs before any
-    // onDisconnect notification. The connection is destroyed explicitly at the
-    // end of the test instead.
+    // TwoPartyVatNetwork::onDisconnect notification. The connection is
+    // destroyed explicitly at the end of the test instead.
 
     TestSetup setup{/*client_owns_connection=*/false, /*server_owns_connection=*/false};
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
