@@ -2304,7 +2304,7 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
  *  can fail if those validity checks fail (among other reasons). */
 bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
     CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
-    ConnectBlockUpdates& updates, bool fJustCheck)
+    ConnectBlockUpdates& updates, bool fJustCheck) const
 {
     AssertLockHeld(cs_main);
     assert(pindex);
