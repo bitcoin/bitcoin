@@ -988,6 +988,12 @@ private:
         BlockValidationState& state,
         CBlockIndex** ppindex,
         bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Determine whether already-indexed block data should proceed to checks and
+     * persistence under the current requested/unrequested anti-DoS policy.
+     */
+    bool ShouldMaybeWrite(const CBlockIndex* pindex, bool fRequested) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */
