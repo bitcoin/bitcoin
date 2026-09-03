@@ -2304,11 +2304,11 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
  *  can fail if those validity checks fail (among other reasons). */
 bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
     CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
-    std::optional<const char*>& last_script_check_reason_update, bool fJustCheck)
+    ConnectBlockUpdates& updates, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
-    last_script_check_reason_update = std::nullopt;
+    updates.last_script_check_reason = std::nullopt;
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
@@ -2513,7 +2513,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
             LogInfo("Disabling script verification at block #%d (%s).",
                     pindex->nHeight, block_hash.ToString());
         }
-        last_script_check_reason_update = script_check_reason;
+        updates.last_script_check_reason = script_check_reason;
     }
 
     CBlockUndo blockundo;
@@ -2689,11 +2689,11 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
 bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                                CCoinsViewCache& view, bool fJustCheck) {
     AssertLockHeld(cs_main);
-    std::optional<const char*> last_script_check_reason_update;
+    ConnectBlockUpdates updates{};
     bool ret{Chainstate::ConnectBlockChecks(m_blockman, block, state, pindex, view, m_last_script_check_reason_logged,
-        last_script_check_reason_update, fJustCheck)};
-    if (last_script_check_reason_update.has_value()) {
-        m_last_script_check_reason_logged = last_script_check_reason_update;
+        updates, fJustCheck)};
+    if (updates.last_script_check_reason.has_value()) {
+        m_last_script_check_reason_logged = updates.last_script_check_reason;
     }
     return ret;
 }
