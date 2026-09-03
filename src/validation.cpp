@@ -2302,11 +2302,13 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                               CCoinsViewCache& view, bool fJustCheck)
+bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+    CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
+    std::optional<const char*>& last_script_check_reason_update, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
+    last_script_check_reason_update = std::nullopt;
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
@@ -2503,7 +2505,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     const bool fScriptChecks{!!script_check_reason};
     const kernel::ChainstateRole role{GetRole()};
-    if (script_check_reason != m_last_script_check_reason_logged && role.validated && !role.historical) {
+    if (script_check_reason != last_script_check_reason && role.validated && !role.historical) {
         if (fScriptChecks) {
             LogInfo("Enabling script verification at block #%d (%s): %s.",
                     pindex->nHeight, block_hash.ToString(), script_check_reason);
@@ -2511,7 +2513,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             LogInfo("Disabling script verification at block #%d (%s).",
                     pindex->nHeight, block_hash.ToString());
         }
-        m_last_script_check_reason_logged = script_check_reason;
+        last_script_check_reason_update = script_check_reason;
     }
 
     CBlockUndo blockundo;
@@ -2679,6 +2681,21 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     );
 
     return true;
+}
+
+/** Apply the effects of this block (with given index) on the UTXO set represented by coins.
+ *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
+ *  can fail if those validity checks fail (among other reasons). */
+bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+                               CCoinsViewCache& view, bool fJustCheck) {
+    AssertLockHeld(cs_main);
+    std::optional<const char*> last_script_check_reason_update;
+    bool ret{Chainstate::ConnectBlockChecks(block, state, pindex, view, m_last_script_check_reason_logged,
+        last_script_check_reason_update, fJustCheck)};
+    if (last_script_check_reason_update.has_value()) {
+        m_last_script_check_reason_logged = last_script_check_reason_update;
+    }
+    return ret;
 }
 
 CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()
