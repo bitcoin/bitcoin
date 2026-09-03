@@ -117,7 +117,7 @@ void ReplaceAll(std::string& in_out, std::string_view search, std::string_view s
  *  - 3)
  */
 template <typename T = std::span<const char>>
-std::vector<T> Split(const std::span<const char>& sp, std::string_view separators, bool include_sep = false)
+std::vector<T> Split(std::span<const char> sp LIFETIMEBOUND, std::string_view separators, bool include_sep = false)
 {
     std::vector<T> ret;
     auto it = sp.begin();
@@ -145,7 +145,7 @@ std::vector<T> Split(const std::span<const char>& sp, std::string_view separator
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
 template <typename T = std::span<const char>>
-std::vector<T> Split(const std::span<const char>& sp, char sep, bool include_sep = false)
+std::vector<T> Split(std::span<const char> sp LIFETIMEBOUND, char sep, bool include_sep = false)
 {
     return Split<T>(sp, std::string_view{&sep, 1}, include_sep);
 }
