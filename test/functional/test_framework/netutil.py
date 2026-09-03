@@ -257,15 +257,16 @@ def format_sock(sock, *, local):
 
 
 def set_ephemeral_port_range(sock):
-    '''On FreeBSD, set socket to use the high ephemeral port range (49152-65535).
+    '''On FreeBSD and OpenBSD, set socket to use the high ephemeral port range (49152-65535).
 
-    FreeBSD's default ephemeral port range (10000-65535) overlaps with the test
-    framework's static port range starting at TEST_RUNNER_PORT_MIN (default=11000).
+    The default ephemeral port ranges on FreeBSD (10000-65535) and
+    OpenBSD (1024-49151) overlap with the test framework's static port
+    range starting at TEST_RUNNER_PORT_MIN (default=11000).
     Using IP_PORTRANGE_HIGH avoids this overlap when binding to port 0 for dynamic
     port allocation.
     '''
-    if sys.platform.startswith('freebsd'):
-        # Constants from FreeBSD's netinet/in.h and netinet6/in6.h
+    if sys.platform.startswith(("freebsd", "openbsd")):
+        # Constants from FreeBSD/OpenBSD's netinet/in.h and netinet6/in6.h
         IP_PORTRANGE = 19
         IPV6_PORTRANGE = 14
         IP_PORTRANGE_HIGH = 1  # Same value for both IPv4 and IPv6
