@@ -168,19 +168,19 @@ class SigningProvider
 {
 public:
     virtual ~SigningProvider() = default;
-    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
-    virtual bool HaveCScript(const CScriptID &scriptid) const { return false; }
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
-    virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
-    virtual bool HaveKey(const CKeyID &address) const { return false; }
-    virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
-    virtual bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const { return false; }
-    virtual bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const { return false; }
-    virtual std::vector<CPubKey> GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const { return {}; }
+    virtual bool GetCScript(const CScriptID&, CScript&) const { return false; }
+    virtual bool HaveCScript(const CScriptID&) const { return false; }
+    virtual bool GetPubKey(const CKeyID&, CPubKey&) const { return false; }
+    virtual bool GetKey(const CKeyID&, CKey&) const { return false; }
+    virtual bool HaveKey(const CKeyID&) const { return false; }
+    virtual bool GetKeyOrigin(const CKeyID&, KeyOriginInfo&) const { return false; }
+    virtual bool GetTaprootSpendData(const XOnlyPubKey&, TaprootSpendData&) const { return false; }
+    virtual bool GetTaprootBuilder(const XOnlyPubKey&, TaprootBuilder&) const { return false; }
+    virtual std::vector<CPubKey> GetMuSig2ParticipantPubkeys(const CPubKey&) const { return {}; }
     virtual std::map<CPubKey, std::vector<CPubKey>> GetAllMuSig2ParticipantPubkeys() const {return {}; }
-    virtual void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const {}
-    virtual std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256& session_id) const { return std::nullopt; }
-    virtual void DeleteMuSig2Session(const uint256& session_id) const {}
+    virtual void SetMuSig2SecNonce(const uint256&, MuSig2SecNonce&&) const {}
+    virtual std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256&) const { return std::nullopt; }
+    virtual void DeleteMuSig2Session(const uint256&) const {}
 
     bool GetKeyByXOnly(const XOnlyPubKey& pubkey, CKey& key) const
     {

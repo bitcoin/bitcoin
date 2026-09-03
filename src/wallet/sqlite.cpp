@@ -43,7 +43,7 @@ static void ErrorLogCallback(void* arg, int code, const char* msg)
     LogWarning("SQLite Error. Code: %d. Message: %s", code, msg);
 }
 
-static int TraceSqlCallback(unsigned code, void* context, void* param1, void* param2)
+static int TraceSqlCallback(unsigned code, void* context, void* param1, void* /*param2*/)
 {
     auto* db = static_cast<SQLiteDatabase*>(context);
     if (code == SQLITE_TRACE_STMT) {
