@@ -14,6 +14,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/log.h>
@@ -39,6 +40,24 @@ namespace node {
 
 static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
 static const uint64_t MEMPOOL_DUMP_VERSION{2};
+
+std::string_view MempoolLoadErrorString(MempoolLoadError error)
+{
+    switch (error) {
+    case MempoolLoadError::NO_LOAD_PATH:
+        return "NO_LOAD_PATH";
+    case MempoolLoadError::FILE_OPEN_FAILED:
+        return "FILE_OPEN_FAILED";
+    case MempoolLoadError::UNSUPPORTED_VERSION:
+        return "UNSUPPORTED_VERSION";
+    case MempoolLoadError::INTERRUPTED:
+        return "INTERRUPTED";
+    case MempoolLoadError::DESERIALIZATION_FAILED:
+        return "DESERIALIZATION_FAILED";
+    }
+    Assume(false);
+    return "UNKNOWN";
+}
 
 MempoolLoadResult LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {

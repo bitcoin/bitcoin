@@ -9,6 +9,7 @@
 #include <util/fs.h>
 
 #include <cstdint>
+#include <string_view>
 
 class Chainstate;
 class CTxMemPool;
@@ -34,6 +35,9 @@ enum class MempoolLoadError {
     INTERRUPTED,
     DESERIALIZATION_FAILED,
 };
+
+/** Return a string representation for diagnostics. */
+std::string_view MempoolLoadErrorString(MempoolLoadError error);
 
 //! On success, contains the total weight of transactions in the persisted snapshot.
 using MempoolLoadResult = util::Expected<uint64_t, MempoolLoadError>;
