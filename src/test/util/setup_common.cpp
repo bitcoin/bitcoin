@@ -426,7 +426,7 @@ TestingSetup::TestingSetup(
 }
 
 TestChain100Setup::TestChain100Setup(
-    const ChainType chain_type,
+    const ChainType /*chain_type*/,
     TestOpts opts)
     : TestingSetup{ChainType::REGTEST, opts}
 {

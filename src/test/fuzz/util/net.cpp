@@ -128,12 +128,12 @@ FuzzedSock::~FuzzedSock()
     m_socket = INVALID_SOCKET;
 }
 
-FuzzedSock& FuzzedSock::operator=(Sock&& other)
+FuzzedSock& FuzzedSock::operator=(Sock&&)
 {
     AssertUnreachable(); // Move of Sock into FuzzedSock not allowed.
 }
 
-ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
+ssize_t FuzzedSock::Send(const void* /*data*/, size_t len, int /*flags*/) const
 {
     constexpr std::array send_errnos{
         EACCES,
@@ -335,7 +335,7 @@ std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) co
     return std::make_unique<FuzzedSock>(m_fuzzed_data_provider, m_clock);
 }
 
-int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
+int FuzzedSock::GetSockOpt(int /*level*/, int /*opt_name*/, void* opt_val, socklen_t* opt_len) const
 {
     constexpr std::array getsockopt_errnos{
         ENOMEM,

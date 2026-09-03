@@ -121,17 +121,17 @@ protected:
     void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
-    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
+    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>&) { return true; }
 
     /// Write update index entries for a newly connected block.
-    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
+    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo&) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.
-    virtual bool CustomCommit(CDBBatch& batch) { return true; }
+    virtual bool CustomCommit(CDBBatch&) { return true; }
 
     /// Rewind index by one block during a chain reorg.
-    [[nodiscard]] virtual bool CustomRemove(const interfaces::BlockInfo& block) { return true; }
+    [[nodiscard]] virtual bool CustomRemove(const interfaces::BlockInfo&) { return true; }
 
     virtual DB& GetDB() const = 0;
 

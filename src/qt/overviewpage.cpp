@@ -109,7 +109,7 @@ public:
         painter->restore();
     }
 
-    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    inline QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &index) const override
     {
         const auto search = m_minimum_width.find(index.row());
         const int minimum_text_width = search == m_minimum_width.end() ? 0 : search->second;

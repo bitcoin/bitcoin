@@ -124,7 +124,7 @@ struct TestDirectory {
 class TestKernelNotifications : public KernelNotifications
 {
 public:
-    void HeaderTipHandler(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override
+    void HeaderTipHandler(SynchronizationState /*state*/, int64_t /*height*/, int64_t timestamp, bool /*presync*/) override
     {
         BOOST_CHECK_GT(timestamp, 0);
     }
@@ -199,17 +199,17 @@ public:
         }
     }
 
-    void BlockConnected(Block block, BlockTreeEntry entry) override
+    void BlockConnected(Block /*block*/, BlockTreeEntry /*entry*/) override
     {
         std::cout << "Block connected." << std::endl;
     }
 
-    void PowValidBlock(BlockTreeEntry entry, Block block) override
+    void PowValidBlock(BlockTreeEntry /*entry*/, Block /*block*/) override
     {
         std::cout << "Block passed pow verification" << std::endl;
     }
 
-    void BlockDisconnected(Block block, BlockTreeEntry entry) override
+    void BlockDisconnected(Block /*block*/, BlockTreeEntry /*entry*/) override
     {
         std::cout << "Block disconnected." << std::endl;
     }
