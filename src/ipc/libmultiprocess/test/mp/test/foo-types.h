@@ -61,42 +61,42 @@ decltype(auto) CustomReadField(TypeList<FooCustom>, Priority<1>, InvokeContext& 
 } // namespace test
 
 template <typename Input>
-bool CustomHasField(TypeList<test::FooData>, InvokeContext& invoke_context, const Input& input)
+bool CustomHasField(TypeList<test::FooData>, InvokeContext&, const Input& input)
 {
     // Cap'n Proto C++ cannot distinguish null vs empty Data in List(Data), so
     // interpret empty Data as null for this specific type.
     return input.get().size() != 0;
 }
 
-inline void CustomBuildMessage(InvokeContext& invoke_context,
+inline void CustomBuildMessage(InvokeContext&,
                         const test::FooMessage& src,
                         test::messages::FooMessage::Builder&& builder)
 {
     builder.setMessage(src.message + " build");
 }
 
-inline void CustomReadMessage(InvokeContext& invoke_context,
+inline void CustomReadMessage(InvokeContext&,
                        const test::messages::FooMessage::Reader& reader,
                        test::FooMessage& dest)
 {
     dest.message = std::string{reader.getMessage()} + " read";
 }
 
-inline void CustomBuildMessage(InvokeContext& invoke_context,
+inline void CustomBuildMessage(InvokeContext&,
                         const test::FooMutable& src,
                         test::messages::FooMutable::Builder&& builder)
 {
     builder.setMessage(src.message + " build");
 }
 
-inline void CustomReadMessage(InvokeContext& invoke_context,
+inline void CustomReadMessage(InvokeContext&,
                        const test::messages::FooMutable::Reader& reader,
                        test::FooMutable& dest)
 {
     dest.message = std::string{reader.getMessage()} + " read";
 }
 
-inline void CustomPassMessage(InvokeContext& invoke_context,
+inline void CustomPassMessage(InvokeContext&,
                        const test::messages::FooMutable::Reader& reader,
                        test::messages::FooMutable::Builder builder,
                        std::function<void(test::FooMutable&)>&& fn)
