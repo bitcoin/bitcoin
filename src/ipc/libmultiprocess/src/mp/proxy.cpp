@@ -220,7 +220,8 @@ CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
     // order should not be significant because the cleanup callbacks run
     // synchronously in a single batch when the connection is broken, and they
     // only reset the connection pointers in the client objects without actually
-    // deleting the client objects.
+    // deleting the client objects, or update ListenConnections max_connections
+    // bookkeeping.
     return m_sync_cleanup_fns.emplace(m_sync_cleanup_fns.begin(), std::move(fn));
 }
 

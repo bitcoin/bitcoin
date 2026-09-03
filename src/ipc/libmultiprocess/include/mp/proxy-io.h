@@ -905,10 +905,17 @@ void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init
     auto it = loop.m_incoming_connections.begin();
     MP_LOG(loop, Log::Info) << "IPC server: socket connected.";
     if (loop.testing_hook_connected) loop.testing_hook_connected();
-    it->onDisconnect([&loop, it, on_disconnect = std::forward<OnDisconnect>(on_disconnect)]() mutable {
+    // Run on_disconnect (e.g. the listener's active-connection counter
+    // decrement) on any disconnect. It is registered with addSyncCleanup rather
+    // than placed in the onDisconnect handler below because that handler
+    // only fires on a remote disconnect and is canceled when a connection is
+    // closed locally; if on_disconnect lived there, closing a connection
+    // locally would leave the listener's slot count stuck and stop it from
+    // accepting again.
+    it->addSyncCleanup(std::forward<OnDisconnect>(on_disconnect));
+    it->onDisconnect([&loop, it]() mutable {
         MP_LOG(loop, Log::Info) << "IPC server: socket disconnected.";
         loop.m_incoming_connections.erase(it);
-        on_disconnect();
         if (loop.testing_hook_disconnected) loop.testing_hook_disconnected();
     });
 }
