@@ -172,6 +172,7 @@ MemPoolFeeRateEstimator::MemPoolFeeRateEstimator(fs::path mempool_estimator_file
 
 void MemPoolFeeRateEstimator::ReadFromDisk()
 {
+    if (m_mempool_estimator_file_path.empty()) return;
     AutoFile file{fsbridge::fopen(m_mempool_estimator_file_path, "rb")};
     if (file.IsNull()) {
         LogDebug(BCLog::ESTIMATEFEE, "%s: %s does not exist. Continuing anyway",
@@ -260,6 +261,7 @@ bool MemPoolFeeRateEstimator::Write(AutoFile& file) const
 
 void MemPoolFeeRateEstimator::FlushMinedBlockStats()
 {
+    if (m_mempool_estimator_file_path.empty()) return;
     if (!m_mempool_estimator_file_path.parent_path().empty()) {
         std::error_code error;
         fs::create_directories(m_mempool_estimator_file_path.parent_path(), error);
