@@ -2302,7 +2302,7 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
     CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
     std::optional<const char*>& last_script_check_reason_update, bool fJustCheck)
 {
@@ -2364,8 +2364,8 @@ bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& s
         //  relative to a piece of software is an objective fact these defaults can be easily reviewed.
         // This setting doesn't force the selection of any particular chain but makes validating some faster by
         //  effectively caching the result of part of the verification.
-        BlockMap::const_iterator it{m_blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
-        if (it == m_blockman.m_block_index.end()) {
+        BlockMap::const_iterator it{blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
+        if (it == blockman.m_block_index.end()) {
             script_check_reason = "assumevalid hash not in headers";
         } else if (it->second.GetAncestor(pindex->nHeight) != pindex) {
             script_check_reason = (pindex->nHeight > it->second.nHeight) ? "block height above assumevalid height" : "block not in assumevalid chain";
@@ -2645,7 +2645,7 @@ bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& s
         return true;
     }
 
-    if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
+    if (!blockman.WriteBlockUndo(blockundo, state, *pindex)) {
         return false;
     }
 
@@ -2658,7 +2658,7 @@ bool Chainstate::ConnectBlockChecks(const CBlock& block, BlockValidationState& s
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
-        m_blockman.m_dirty_blockindex.insert(pindex);
+        blockman.m_dirty_blockindex.insert(pindex);
     }
 
     // add this block to the view's block chain
@@ -2690,7 +2690,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                                CCoinsViewCache& view, bool fJustCheck) {
     AssertLockHeld(cs_main);
     std::optional<const char*> last_script_check_reason_update;
-    bool ret{Chainstate::ConnectBlockChecks(block, state, pindex, view, m_last_script_check_reason_logged,
+    bool ret{Chainstate::ConnectBlockChecks(m_blockman, block, state, pindex, view, m_last_script_check_reason_logged,
         last_script_check_reason_update, fJustCheck)};
     if (last_script_check_reason_update.has_value()) {
         m_last_script_check_reason_logged = last_script_check_reason_update;
