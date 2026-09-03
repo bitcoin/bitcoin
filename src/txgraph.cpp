@@ -1426,7 +1426,7 @@ uint64_t GenericClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::v
     return size;
 }
 
-uint64_t SingletonClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept
+uint64_t SingletonClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& /*deps*/) const noexcept
 {
     if (!GetTxCount()) return 0;
     auto& entry = ret.emplace_back();
@@ -2196,7 +2196,7 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     return {cost, improved};
 }
 
-std::pair<uint64_t, bool> SingletonClusterImpl::Relinearize(TxGraphImpl& graph, int level, uint64_t max_cost) noexcept
+std::pair<uint64_t, bool> SingletonClusterImpl::Relinearize(TxGraphImpl& /*graph*/, int /*level*/, uint64_t /*max_cost*/) noexcept
 {
     // All singletons are optimal, oversized, or need splitting. Each of these precludes
     // Relinearize from being called.

@@ -285,7 +285,7 @@ static RPCMethod generatetodescriptor()
 
 static RPCMethod generate()
 {
-    return RPCMethod{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+    return RPCMethod{"generate", "has been replaced by the -generate cli option. Refer to -help for more information.", {}, {}, RPCExamples{""}, [](const RPCMethod& self, const JSONRPCRequest&) -> UniValue {
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, self.ToString());
     }};
 }
@@ -483,7 +483,7 @@ static RPCMethod getmininginfo()
                     HelpExampleCli("getmininginfo", "")
             + HelpExampleRpc("getmininginfo", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CTxMemPool& mempool = EnsureMemPool(node);
@@ -594,7 +594,7 @@ static RPCMethod getprioritisedtransactions()
             HelpExampleCli("getprioritisedtransactions", "")
             + HelpExampleRpc("getprioritisedtransactions", "")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
@@ -735,7 +735,7 @@ static RPCMethod getblocktemplate()
                     HelpExampleCli("getblocktemplate", "'{\"rules\": [\"segwit\"]}'")
             + HelpExampleRpc("getblocktemplate", "{\"rules\": [\"segwit\"]}")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -1104,7 +1104,7 @@ static RPCMethod submitblock()
                     HelpExampleCli("submitblock", "\"mydata\"")
             + HelpExampleRpc("submitblock", "\"mydata\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CBlock> blockptr = std::make_shared<CBlock>();
     CBlock& block = *blockptr;
@@ -1152,7 +1152,7 @@ static RPCMethod submitheader()
                     HelpExampleCli("submitheader", "\"aabbcc\"") +
                     HelpExampleRpc("submitheader", "\"aabbcc\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     CBlockHeader h;
     if (!DecodeHexBlockHeader(h, request.params[0].get_str())) {

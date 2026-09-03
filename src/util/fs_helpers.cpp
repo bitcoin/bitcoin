@@ -136,7 +136,7 @@ bool FileCommit(FILE* file)
     return true;
 }
 
-void DirectoryCommit(const fs::path& dirname)
+void DirectoryCommit([[maybe_unused]] const fs::path& dirname)
 {
 #ifndef WIN32
     FILE* file = fsbridge::fopen(dirname, "r");

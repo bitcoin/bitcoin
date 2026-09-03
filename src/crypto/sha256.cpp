@@ -582,7 +582,7 @@ bool AVXEnabled()
 } // namespace
 
 
-std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implementation)
+std::string SHA256AutoDetect([[maybe_unused]] sha256_implementation::UseImplementation use_implementation)
 {
     std::string ret = "standard";
     Transform = sha256::Transform;
