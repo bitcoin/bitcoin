@@ -1059,7 +1059,7 @@ struct IterState {
       : mu(mutex), version(version), mem(mem), imm(imm) {}
 };
 
-static void CleanupIteratorState(void* arg1, void* arg2) {
+static void CleanupIteratorState(void* arg1, void*) {
   IterState* state = reinterpret_cast<IterState*>(arg1);
   state->mu->Lock();
   state->mem->Unref();
