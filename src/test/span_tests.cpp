@@ -15,7 +15,7 @@ struct Ignore
     template<typename T> Ignore(T&&) {}
 };
 template<typename T>
-bool Spannable(T&& value, decltype(std::span{value})* enable = nullptr)
+bool Spannable(T&& value, decltype(std::span{value})* = nullptr)
 {
     return true;
 }

@@ -85,7 +85,7 @@ struct MemoryCheck {
     {
         return std::nullopt;
     }
-    MemoryCheck(const MemoryCheck& x)
+    MemoryCheck(const MemoryCheck&)
     {
         // We have to do this to make sure that destructor calls are paired
         //
