@@ -66,7 +66,7 @@ public:
 };
 
 /// Internal helper. The noreturn enables optimizers to discard invalid paths.
-[[noreturn]] void assertion_fail(const std::source_location& loc, std::string_view assertion);
+[[noreturn]] void internal_abort_helper(const std::source_location& loc, std::string_view error_msg);
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
@@ -74,7 +74,7 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& lo
 {
     if (!val) {
         if constexpr (G_ABORT_ON_FAILED_ASSUME) {
-            assertion_fail(loc, StrFormatFailedCheck(assertion));
+            internal_abort_helper(loc, StrFormatFailedCheck(assertion));
         }
         throw NonFatalCheckError{StrFormatFailedCheck(assertion), loc};
     }
@@ -91,7 +91,7 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 {
     if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
-            assertion_fail(loc, StrFormatFailedCheck(assertion));
+            internal_abort_helper(loc, StrFormatFailedCheck(assertion));
         }
     }
     return std::forward<T>(val);

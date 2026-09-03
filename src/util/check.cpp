@@ -36,12 +36,12 @@ NonFatalCheckError::NonFatalCheckError(std::string_view msg, const std::source_l
 
 bool g_detail_test_only_CheckFailuresAreExceptionsNotAborts{false};
 
-void assertion_fail(const std::source_location& loc, std::string_view assertion)
+void internal_abort_helper(const std::source_location& loc, std::string_view error_msg)
 {
     if (g_detail_test_only_CheckFailuresAreExceptionsNotAborts) {
-        throw NonFatalCheckError{assertion, loc};
+        throw NonFatalCheckError{error_msg, loc};
     }
-    auto str = strprintf("%s:%s %s: Assertion: %s.\n", loc.file_name(), loc.line(), loc.function_name(), assertion);
+    auto str = strprintf("%s:%s %s: Assertion: %s.\n", loc.file_name(), loc.line(), loc.function_name(), error_msg);
     fwrite(str.data(), 1, str.size(), stderr);
     std::abort();
 }
