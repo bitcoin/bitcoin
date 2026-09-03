@@ -52,6 +52,7 @@ def main():
         print("Create missing folders")
         for create_dir in [
                 os.environ["CCACHE_DIR"],
+                os.environ["CCACHE_TEMPDIR"],
                 os.environ["PREVIOUS_RELEASES_DIR"],
         ]:
             Path(create_dir).mkdir(parents=True, exist_ok=True)
@@ -182,7 +183,8 @@ def main():
         f"{os.environ['BASE_READ_ONLY_DIR']}/",
         f"{os.environ['BASE_ROOT_DIR']}",
     ])
-    ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_base_install.sh"])
+    if not (os.getenv("DANGER_RUN_CI_ON_HOST") and os.environ["CI_OS_NAME"].endswith("bsd")):
+        ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_base_install.sh"])
     test_script = f"{os.environ['BASE_ROOT_DIR']}/ci/test/03_test_script.sh"
     if os.environ.get("HOST", "").startswith("x86_64-w64-mingw32"):
         ci_exec([

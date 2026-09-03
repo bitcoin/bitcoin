@@ -468,24 +468,6 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
-          - name: 'NetBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_netbsd_cross.sh'
-
-          - name: 'FreeBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_freebsd_cross.sh'
-
-          - name: 'OpenBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_openbsd_cross.sh'
-
           - name: 'No wallet'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
             fallback-runner: 'ubuntu-latest'
@@ -587,6 +569,123 @@ jobs:
         uses: ./.github/actions/cache/save
         with:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+
+  bsd:
+    name: ${{ matrix.name }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-latest' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_RUN_CI_ON_HOST: 1
+      FILE_ENV: ${{ matrix.file-env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: NetBSD
+            os: netbsd
+            file-env: './ci/test/00_setup_env_netbsd_native.sh'
+            prepare: |
+              echo "CHECK_OSABI=no" >> /etc/pkg_install.conf
+              pkg_add -u $PACKAGES
+              CXXFLAGS="-DKJ_NO_EXCEPTIONS=0" pip-3.13 install pycapnp
+          - name: FreeBSD
+            os: freebsd
+            file-env: './ci/test/00_setup_env_freebsd_native.sh'
+            prepare: |
+              pkg update
+              pkg install -y $PACKAGES
+              pip install $PIP_PACKAGES
+          - name: OpenBSD
+            os: openbsd
+            file-env: './ci/test/00_setup_env_openbsd_native.sh'
+            prepare: |
+              pkg_add -U -v $PACKAGES
+              command -v gtar
+              pip install $PIP_PACKAGES
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Move caches into synchronized workspace
+        run: |
+          # shellcheck disable=SC1090
+          source "$FILE_ENV"
+          workspace_parent="${GITHUB_WORKSPACE%/*}"
+          {
+            echo "BSD_RELEASE=${BSD_RELEASE}"
+            echo "BASE_ROOT_DIR=${GITHUB_WORKSPACE}"
+            echo "BASE_BUILD_DIR=${workspace_parent}/build_ ₿🧪_"
+            echo "BASE_SCRATCH_DIR=${workspace_parent}/scratch_ ₿🧪_"
+            echo "CCACHE_DIR=${GITHUB_WORKSPACE}/ci/scratch/ccache"
+            echo "DEPENDS_DIR=${GITHUB_WORKSPACE}/depends"
+            echo "BASE_CACHE=${GITHUB_WORKSPACE}/depends/built"
+            echo "SOURCES_PATH=${GITHUB_WORKSPACE}/depends/sources"
+            echo "PREVIOUS_RELEASES_DIR=${GITHUB_WORKSPACE}/releases"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore caches
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Start NetBSD VM
+        if: ${{ matrix.os == 'netbsd' }}
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: ${{ env.BSD_RELEASE }}
+          custom-shell-name: bsd
+          envs: DANGER_RUN_CI_ON_HOST FILE_ENV BASE_ROOT_DIR BASE_BUILD_DIR BASE_SCRATCH_DIR CCACHE_DIR DEPENDS_DIR PREVIOUS_RELEASES_DIR
+          cache-after-prepare: true
+          # Keep prepared BSD images fresh when shared CI or depends inputs change.
+          prepare: |
+            echo "BSD CI cache epoch: ${{ hashFiles('ci/test/00_setup_env_*bsd_native.sh') }}" >/dev/null
+            . "${{ matrix.file-env }}"
+            ${{ matrix.prepare }}
+
+      - name: Start FreeBSD VM
+        if: ${{ matrix.os == 'freebsd' }}
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: ${{ env.BSD_RELEASE }}
+          custom-shell-name: bsd
+          envs: DANGER_RUN_CI_ON_HOST FILE_ENV BASE_ROOT_DIR BASE_BUILD_DIR BASE_SCRATCH_DIR CCACHE_DIR DEPENDS_DIR PREVIOUS_RELEASES_DIR
+          cache-after-prepare: true
+          # Keep prepared BSD images fresh when shared CI or depends inputs change.
+          prepare: |
+            echo "BSD CI cache epoch: ${{ hashFiles('ci/test/00_setup_env_*bsd_native.sh') }}" >/dev/null
+            . "${{ matrix.file-env }}"
+            ${{ matrix.prepare }}
+
+      - name: Start OpenBSD VM
+        if: ${{ matrix.os == 'openbsd' }}
+        uses: vmactions/openbsd-vm@v1
+        with:
+          release: ${{ env.BSD_RELEASE }}
+          custom-shell-name: bsd
+          envs: DANGER_RUN_CI_ON_HOST FILE_ENV BASE_ROOT_DIR BASE_BUILD_DIR BASE_SCRATCH_DIR CCACHE_DIR DEPENDS_DIR PREVIOUS_RELEASES_DIR
+          cache-after-prepare: true
+          # Keep prepared BSD images fresh when shared CI or depends inputs change.
+          prepare: |
+            echo "BSD CI cache epoch: ${{ hashFiles('ci/test/00_setup_env_*bsd_native.sh') }}" >/dev/null
+            . "${{ matrix.file-env }}"
+            ${{ matrix.prepare }}
+
+      - name: CI script
+        shell: bsd {0}
+        run: ./ci/test_run_all.sh
+
+      - name: Save caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
   lint:
     name: 'lint'

@@ -46,6 +46,18 @@ To run the test stage with a specific configuration:
 env -i HOME="$HOME" PATH="$PATH" USER="$USER" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
+Native BSD jobs can also run directly on the host after installing the
+`PACKAGES` and `PIP_PACKAGES` listed in their environment file. For example,
+on FreeBSD:
+
+```
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" \
+  DANGER_RUN_CI_ON_HOST=1 \
+  BASE_ROOT_DIR="$PWD" \
+  FILE_ENV="./ci/test/00_setup_env_freebsd_native.sh" \
+  ./ci/test_run_all.sh
+```
+
 ## Configurations
 
 The test files (`FILE_ENV`) are constructed to test a wide range of

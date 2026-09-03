@@ -111,7 +111,7 @@ def get_bind_addrs(pid):
         import subprocess
         output = subprocess.check_output(["lsof",
             *(["-Di"] if sys.platform.startswith(("freebsd", "netbsd", "sunos5")) else []), # Ignore device cache to avoid stderr warnings.
-            *(["-w"] if sys.platform.startswith("netbsd") else []), # Ignore point release mismatch warnings.
+            *(["-w"] if sys.platform.startswith(("freebsd", "netbsd")) else []), # Ignore lsof warnings.
             "-nP",          # Keep hosts and ports numeric.
             "-a",           # Require all filters to match.
             "-p", str(pid), # Limit results to the target pid.
