@@ -39,7 +39,7 @@ static int64_t ExpandedCompactionByteSizeLimit(const Options* options) {
   return 25 * TargetFileSize(options);
 }
 
-static double MaxBytesForLevel(const Options* options, int level) {
+static double MaxBytesForLevel(const Options*, int level) {
   // Note: the result for level zero is not really used since we set
   // the level-0 compaction threshold based on number of files.
 
@@ -52,7 +52,7 @@ static double MaxBytesForLevel(const Options* options, int level) {
   return result;
 }
 
-static uint64_t MaxFileSizeForLevel(const Options* options, int level) {
+static uint64_t MaxFileSizeForLevel(const Options* options, int) {
   // We could vary per level to reduce number of files?
   return TargetFileSize(options);
 }
@@ -860,7 +860,7 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
 Status VersionSet::Recover(bool* save_manifest) {
   struct LogReporter : public log::Reader::Reporter {
     Status* status;
-    void Corruption(size_t bytes, const Status& s) override {
+    void Corruption(size_t, const Status& s) override {
       if (this->status->ok()) *this->status = s;
     }
   };
