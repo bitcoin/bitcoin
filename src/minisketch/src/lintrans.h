@@ -145,6 +145,6 @@ public:
 };
 
 /** A singleton for the identity transformation. */
-constexpr IdTrans ID_TRANS{};
+inline constexpr IdTrans ID_TRANS{};
 
 #endif
