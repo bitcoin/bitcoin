@@ -9,6 +9,7 @@
 #include <atomic>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
+#include <capnp/rpc-twoparty.h>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
@@ -735,6 +736,85 @@ KJ_TEST("Async cleanup thread has OS thread name")
     KJ_EXPECT(name.find("/capnp-async-") != std::string::npos, name);
 }
 #endif // HAVE_PTHREAD_GETNAME_NP
+
+KJ_TEST("onDisconnect handler does not run after the connection is destroyed")
+{
+    // Regression test for a race condition where an onDisconnect handler
+    // could fire even after the connection had already been disconnected
+    // locally. Local disconnects are supposed to preempt onDisconnect
+    // handlers so they are able to free Connection objects without risking double
+    // deletions.
+    //
+    // To hit the previous race window deterministically without relying on
+    // socket timing, this test exploits two ordering facts:
+    // m_network.onDisconnect() hands out branches of a forked promise that fire
+    // in the order they were added, and kj::evalLater tasks queued during one
+    // event loop turn run on the next turn in FIFO order. A "destroyer" branch
+    // is registered before the handler under test, so when the peer disconnects
+    // the destroyer fires first and queues an evalLater task that destroys the
+    // Connection ahead of the handler. The handler records whether it ran after
+    // the Connection was destroyed, reading only test-owned flags (never the
+    // freed Connection), so a violation is a deterministic wrong result rather
+    // than a flaky crash.
+    //
+    // The Connection must be destroyed from that separate task, not from inside
+    // an onDisconnect continuation: destroying it there tears down m_network
+    // while a continuation of m_network's promise is still running, and crashes.
+
+    std::atomic<bool> connection_destroyed{false};
+    std::atomic<bool> handler_ran{false};
+    std::atomic<bool> handler_ran_after_destroy{false};
+
+    std::thread thread{[&] {
+        EventLoop loop("mptest", [](mp::LogMessage log) {
+            KJ_LOG(INFO, log.level, log.message);
+            if (log.level == mp::Log::Raise) throw std::runtime_error(log.message);
+        });
+        auto pipe = loop.m_io_context.provider->newTwoWayPipe();
+
+        // Server-side connection whose onDisconnect handler is under test.
+        auto server_conn = std::make_unique<Connection>(
+            loop, kj::mv(pipe.ends[0]), [&](Connection& connection) {
+                return ::capnp::Capability::Client(kj::heap<ProxyServer<messages::FooInterface>>(
+                    std::make_shared<FooImplementation>(), connection));
+            });
+
+        // Raw peer end of the pipe. Closing it makes the server connection's
+        // m_network.onDisconnect() resolve, i.e. a real remote disconnect.
+        kj::Own<kj::AsyncIoStream> peer_end = kj::mv(pipe.ends[1]);
+
+        // Destroyer branch, registered BEFORE the handler under test so it
+        // fires first and its destroy task E_d is queued before the buggy
+        // bounced handler task E_f. It schedules the destroy on a *separate*
+        // task, so the connection is not torn down from inside an onDisconnect
+        // continuation.
+        loop.m_task_set->add(server_conn->m_network.onDisconnect().then([&] {
+            loop.m_task_set->add(kj::evalLater([&] {
+                server_conn.reset();
+                connection_destroyed = true;
+            }));
+        }));
+
+        // Handler under test. It intentionally does not dereference the
+        // Connection; it only records whether it ran after the connection was
+        // destroyed, so the result is deterministic.
+        server_conn->onDisconnect([&] {
+            handler_ran = true;
+            handler_ran_after_destroy = connection_destroyed.load();
+        });
+
+        // Trigger the remote disconnect once the loop is running.
+        loop.m_task_set->add(kj::evalLater([&] { peer_end = nullptr; }));
+
+        loop.loop();
+    }};
+    thread.join();
+
+    // The handler must have run (both versions schedule it), but it must never
+    // run after the connection was destroyed.
+    KJ_EXPECT(handler_ran);
+    KJ_EXPECT(!handler_ran_after_destroy);
+}
 
 KJ_TEST("Call async IPC method without thread or pool errors correctly")
 {
