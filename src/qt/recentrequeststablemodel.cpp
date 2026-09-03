@@ -103,6 +103,10 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
 
 bool RecentRequestsTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    Q_UNUSED(index);
+    Q_UNUSED(value);
+    Q_UNUSED(role);
+
     return true;
 }
 
@@ -166,6 +170,8 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
 
 Qt::ItemFlags RecentRequestsTableModel::flags(const QModelIndex &index) const
 {
+    Q_UNUSED(index);
+
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 

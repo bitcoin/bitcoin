@@ -48,7 +48,7 @@ public:
     FuzzedFeeEstimatorMan(FuzzedDataProvider& provider, const CTxMemPool& mempool, ChainstateManager& chainman)
         : FeeRateEstimatorManager(fs::path{}, false, fs::path{}, mempool, chainman), fuzzed_data_provider(provider) {}
 
-    util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int confTarget, bool conservative) const override
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int /*confTarget*/, bool /*conservative*/) const override
     {
         FeePerVSize feerate(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
         return FeeRateEstimation{FeeRateEstimatorType::BLOCK_POLICY, feerate, fuzzed_data_provider.ConsumeIntegralInRange<int>(2, 1004)};
