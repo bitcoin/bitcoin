@@ -23,7 +23,7 @@ void CustomBuildField(TypeList<>,
     Priority<1>,
     InvokeContext& invoke_context,
     Output&& output,
-    typename std::enable_if<std::is_same<decltype(output.get()), ThreadMap::Client>::value>::type* enable = nullptr)
+    typename std::enable_if<std::is_same<decltype(output.get()), ThreadMap::Client>::value>::type* = nullptr)
 {
     output.set(kj::heap<ProxyServer<ThreadMap>>(invoke_context.connection));
 }
@@ -33,7 +33,7 @@ decltype(auto) CustomReadField(TypeList<>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    typename std::enable_if<std::is_same<decltype(input.get()), ThreadMap::Client>::value>::type* enable = nullptr)
+    typename std::enable_if<std::is_same<decltype(input.get()), ThreadMap::Client>::value>::type* = nullptr)
 {
     invoke_context.connection.m_thread_map = input.get();
 }
