@@ -19,7 +19,7 @@ void CustomBuildField(TypeList<std::vector<LocalType>>,
     BuildList(TypeList<LocalType>(), invoke_context, output, value);
 }
 
-inline static bool BuildPrimitive(InvokeContext& invoke_context, std::vector<bool>::const_reference value, TypeList<bool>)
+inline static bool BuildPrimitive(InvokeContext&, std::vector<bool>::const_reference value, TypeList<bool>)
 {
     return value;
 }
