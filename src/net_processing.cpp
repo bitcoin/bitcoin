@@ -102,10 +102,14 @@ static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{2min};
-/** Protect at least this many outbound peers from disconnection due to slow/
- * behind headers chain.
+/** Protect at least this many OUTBOUND_FULL_RELAY peers from disconnection due to
+ * slow/behind headers chain.
  */
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
+/** Protect at least this many outbound reconciliation peers from disconnection due to
+ * slow/behind headers chain.
+ */
+static constexpr int32_t MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT = 2;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork */
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
@@ -469,7 +473,9 @@ struct CNodeState {
       * marked as protected if all of these are true:
       *   - its connection type is IsBlockOnlyConn() == false
       *   - it gave us a valid connecting header
-      *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
+      *   - we haven't reached the protection budget for its connection type yet
+      *     (MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT for OUTBOUND_FULL_RELAY peers,
+      *     MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT for reconciliation ones)
       *   - its chain tip has at least as much work as ours
       *
       * CHAIN_SYNC_TIMEOUT: if a peer's best known block has less work than our tip,
@@ -934,8 +940,11 @@ private:
     /** Number of inbound reconciliation peers. */
     std::atomic<int> m_inbound_reconciliation_peers{0};
 
-    /** Number of outbound peers with m_chain_sync.m_protect. */
+    /** Number of OUTBOUND_FULL_RELAY peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
+
+    /** Number of outbound reconciliation peers with m_chain_sync.m_protect. */
+    int m_recon_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
     /** Number of preferable block download peers. */
     int m_num_preferred_download_peers GUARDED_BY(cs_main){0};
@@ -1828,8 +1837,13 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
-    m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
-    assert(m_outbound_peers_with_protect_from_disconnect >= 0);
+    if (node.IsOutboundReconciliationConn()) {
+        m_recon_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
+        assert(m_recon_peers_with_protect_from_disconnect >= 0);
+    } else {
+        m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
+        assert(m_outbound_peers_with_protect_from_disconnect >= 0);
+    }
 
     m_node_states.erase(nodeid);
 
@@ -1839,6 +1853,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_num_preferred_download_peers == 0);
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
+        assert(m_recon_peers_with_protect_from_disconnect == 0);
         assert(m_wtxid_relay_peers == 0);
         assert(m_inbound_reconciliation_peers == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
@@ -3208,16 +3223,23 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
         }
     }
 
-    // If this is an outbound full-relay peer, check to see if we should protect
-    // it from the bad/lagging chain logic.
+    // If this is a full outbound peer (fanout or reconciliation), check to see if we
+    // should protect it from the bad/lagging chain logic.
     // Note that outbound block-relay peers are excluded from this protection, and
     // thus always subject to eviction under the bad/lagging chain logic.
+    // Reconciliation peers are protected out of their own budget, so that they cannot
+    // use up the protection our OUTBOUND_FULL_RELAY peers rely on.
     // See ChainSyncTimeoutState.
     if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
-        if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
+        const bool is_recon{pfrom.IsOutboundReconciliationConn()};
+        int& protected_peers{is_recon ? m_recon_peers_with_protect_from_disconnect : m_outbound_peers_with_protect_from_disconnect};
+        const int32_t max_protected_peers{is_recon ? MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT : MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT};
+        // For a reconciliation peer to be eligible for protection, it must be registered with the reconciliation manager.
+        const bool eligible{!is_recon || (m_txreconciliation && m_txreconciliation->IsPeerRegistered(pfrom.GetId()))};
+        if (eligible && protected_peers < max_protected_peers && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
             LogDebug(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
             nodestate->m_chain_sync.m_protect = true;
-            ++m_outbound_peers_with_protect_from_disconnect;
+            ++protected_peers;
         }
     }
 }
@@ -5636,12 +5658,10 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
             AssertLockHeld(::cs_main);
 
-            // Only consider outbound-full-relay peers that are not already
-            // marked for disconnection
-            // TODO: reconciliation peers are neither evicted here nor protected below, unlike every
-            // other outbound type. Pending to decide when we decide is reconciliation a full outbound peer or not.
-            // Without eviction, the overshoot flagged in ThreadOpenConnections is never corrected.
-            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
+            // Only consider OUTBOUND_FULL_RELAY peers that are not already marked for
+            // disconnection. Reconciliation peers are full outbound peers too, but this
+            // round is about the OUTBOUND_FULL_RELAY budget, which they do not draw from.
+            if (pnode->m_conn_type != ConnectionType::OUTBOUND_FULL_RELAY || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers

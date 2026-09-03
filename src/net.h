@@ -794,8 +794,10 @@ public:
         assert(false);
     }
 
+    /** Check is this a full outbound connection. Both fanout and reconciliation count */
     bool IsFullOutboundConn() const {
-        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
+        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY ||
+            m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION;
     }
 
     bool IsOutboundReconciliationConn() const
@@ -815,10 +817,9 @@ public:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
         case ConnectionType::PRIVATE_BROADCAST:
-        //FIXME: Should this be flagged as fulloutbound?
-        case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
             return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
         case ConnectionType::MANUAL:
                 return true;
         } // no default case, so the compiler can warn about missing cases
@@ -1138,7 +1139,7 @@ public:
         m_max_outbound_full_recon = std::min(connOptions.m_max_outbound_full_recon, m_max_automatic_connections - m_max_outbound_block_relay - m_max_outbound_full_relay);
         m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_full_recon + m_max_outbound_block_relay + m_max_feeler;
         // TODO: reconciliation slots are subtracted here like any other outbound, shrinking our
-        // inbound budget. We should raise the inbound count to account for the recon-only ones.
+        // inbound budget. Should we increase the inbound budget to compensate?
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_max_inbound_full_relay = std::max(0, static_cast<int>(connOptions.m_full_relay_inbound_percent / 100.0 * m_max_inbound));
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
@@ -1351,12 +1352,13 @@ public:
 
     void StartExtraBlockRelayPeers();
 
-    // Count the number of full-relay peer we have.
+    // Count the number of full outbound peers we have, both OUTBOUND_FULL_RELAY and
+    // OUTBOUND_FULL_RECONCILIATION.
     int GetFullOutboundConnCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
-    // Return the number of outbound peers we have in excess of our target (eg,
-    // if we previously called SetTryNewOutboundPeer(true), and have since set
-    // to false, we may have extra peers that we wish to disconnect). This may
-    // return a value less than (num_outbound_connections - num_outbound_slots)
+    // Return the number of outbound-full-relay peers we have in excess of our
+    // target (eg, if we previously called SetTryNewOutboundPeer(true), and have
+    // since set to false, we may have extra peers that we wish to disconnect).
+    // This may return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
     int GetExtraFullOutboundCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);

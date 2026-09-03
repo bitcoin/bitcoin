@@ -2486,6 +2486,7 @@ void CConnman::StartExtraBlockRelayPeers()
 }
 
 // Return the number of outbound connections that are full relay (not blocks only)
+// this includes both OUTBOUND_FULL_RELAY and OUTBOUND_FULL_RECONCILIATION connections
 int CConnman::GetFullOutboundConnCount() const
 {
     AssertLockNotHeld(m_nodes_mutex);
@@ -2514,7 +2515,10 @@ int CConnman::GetExtraFullOutboundCount() const
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsFullOutboundConn()) {
+            // Note this is about the OUTBOUND_FULL_RELAY slots only. Reconciliation peers
+            // are full outbound peers too, but they have their own budget.
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect &&
+                pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) {
                 ++full_outbound_peers;
             }
         }
@@ -2731,7 +2735,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         {
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
-                if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
+                // Count the slots per connection type, so IsFullOutboundConn() (which
+                // covers both full-relay and reconciliation peers) is not what we want here.
+                if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) nOutboundFullRelay++;
                 if (pnode->IsOutboundReconciliationConn()) nOutboundFullRecon++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
