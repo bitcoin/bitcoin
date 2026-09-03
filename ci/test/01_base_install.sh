@@ -67,7 +67,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-22.1.7" /llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-23.1.0" /llvm-project
 
 # LLVM is configured with LIBCXXABI_USE_LLVM_UNWINDER=OFF,
 # because libunwind doesn't handle exceptions under MSAN.
@@ -83,6 +83,7 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
     -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
     -DLIBCXX_ABI_DEFINES="_LIBCPP_ABI_BOUNDED_ITERATORS;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR;_LIBCPP_ABI_BOUNDED_UNIQUE_PTR" \
     -DLIBCXX_HARDENING_MODE=debug \
+    -DLIBCXX_INCLUDE_TESTS=OFF \
     -S /llvm-project/runtimes
 
   ninja -C /cxx_build/ "$MAKEJOBS"
