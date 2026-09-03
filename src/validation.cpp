@@ -2309,8 +2309,14 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     AssertLockHeld(cs_main);
     assert(pindex);
 
-    updates.last_script_check_reason = std::nullopt;
-    updates.num_blocks_total_increment = 0;
+    // updates.last_script_check_reason = std::nullopt;
+    // updates.num_blocks_total_increment = 0;
+    // updates.time_check = 0;
+    // updates.time_forks = 0;
+    // updates.time_connect = 0;
+    // updates.time_verify = 0;
+    // updates.time_undo = 0;
+    // updates.time_index = 0;
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
@@ -2398,7 +2404,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     }
 
     const auto time_1{SteadyClock::now()};
-    m_chainman.time_check += time_1 - time_start;
+    updates.time_check = time_1 - time_start;
     LogDebug(BCLog::BENCH, "    - Sanity checks: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_1 - time_start),
              Ticks<SecondsDouble>(m_chainman.time_check),
@@ -2500,7 +2506,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     script_verify_flags flags{GetBlockScriptFlags(*pindex, m_chainman)};
 
     const auto time_2{SteadyClock::now()};
-    m_chainman.time_forks += time_2 - time_1;
+    updates.time_forks = time_2 - time_1;
     LogDebug(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<SecondsDouble>(m_chainman.time_forks),
@@ -2614,7 +2620,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
     const auto time_3{SteadyClock::now()};
-    m_chainman.time_connect += time_3 - time_2;
+    updates.time_connect = time_3 - time_2;
     LogDebug(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
              Ticks<MillisecondsDouble>(time_3 - time_2), Ticks<MillisecondsDouble>(time_3 - time_2) / block.vtx.size(),
              nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_3 - time_2) / (nInputs - 1),
@@ -2637,7 +2643,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
         return false;
     }
     const auto time_4{SteadyClock::now()};
-    m_chainman.time_verify += time_4 - time_2;
+    updates.time_verify = time_4 - time_2;
     LogDebug(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1,
              Ticks<MillisecondsDouble>(time_4 - time_2),
              nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_4 - time_2) / (nInputs - 1),
@@ -2653,7 +2659,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     }
 
     const auto time_5{SteadyClock::now()};
-    m_chainman.time_undo += time_5 - time_4;
+    updates.time_undo = time_5 - time_4;
     LogDebug(BCLog::BENCH, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_5 - time_4),
              Ticks<SecondsDouble>(m_chainman.time_undo),
@@ -2668,7 +2674,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     view.SetBestBlock(pindex->GetBlockHash());
 
     const auto time_6{SteadyClock::now()};
-    m_chainman.time_index += time_6 - time_5;
+    updates.time_index = time_6 - time_5;
     LogDebug(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_6 - time_5),
              Ticks<SecondsDouble>(m_chainman.time_index),
@@ -2700,6 +2706,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_last_script_check_reason_logged = updates.last_script_check_reason;
     }
     m_chainman.num_blocks_total += updates.num_blocks_total_increment;
+    m_chainman.time_check   += updates.time_check;
+    m_chainman.time_forks   += updates.time_forks;
+    m_chainman.time_connect += updates.time_connect;
+    m_chainman.time_verify  += updates.time_verify;
+    m_chainman.time_undo    += updates.time_undo;
+    m_chainman.time_index   += updates.time_index;
 
     return ret;
 }

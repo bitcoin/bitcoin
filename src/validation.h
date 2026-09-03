@@ -785,6 +785,12 @@ public:
     struct ConnectBlockUpdates {
         std::optional<const char*> last_script_check_reason;
         int64_t num_blocks_total_increment;
+        SteadyClock::duration time_check;
+        SteadyClock::duration time_forks;
+        SteadyClock::duration time_connect;
+        SteadyClock::duration time_verify;
+        SteadyClock::duration time_undo;
+        SteadyClock::duration time_index;
     };
     bool ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                             CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
