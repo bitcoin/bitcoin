@@ -104,6 +104,26 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.setup_nodes()
         self.node = self.nodes[0]
 
+    def send_bad_and_tolerate_disconnect(self, conn, predicate_fn):
+        '''
+        Tolerate a race condition when sending a malformed request that should result
+        in the server disconnecting the client. The server *should* be sending an error
+        response as well but in some conditions on some platforms (Windows) the python
+        client might encounter the socket error before processing the response.
+        '''
+        with self.node.assert_debug_log([f"HTTPResponse (status code: {http.client.BAD_REQUEST}"]):
+            try:
+                response = predicate_fn()
+                assert_equal(response.status, http.client.BAD_REQUEST)
+                self.log.info(f"Client received expected {http.client.BAD_REQUEST} response before connection was terminated")
+                # Drain server response
+                response.read()
+                conn.set_timeout(2)
+            except NETWORK_ERRORS:
+                self.log.info(f"Client did not receive expected {http.client.BAD_REQUEST} response before connection was terminated")
+        assert conn.sock_closed()
+
+
     def run_test(self):
         # The test framework typically reuses a single persistent HTTP connection
         # for all RPCs to a TestNode. Because we are setting -rpcservertimeout
@@ -192,8 +212,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Excessive URI size plus default headers breaks the limit.
         conn = BitcoinHTTPConnection(self.node)
-        response2 = conn.get(f'/{"x" * MAX_HEADERS_SIZE}')
-        assert_equal(response2.status, http.client.BAD_REQUEST)
+        self.send_bad_and_tolerate_disconnect(conn, lambda: conn.get(f'/{"x" * MAX_HEADERS_SIZE}'))
 
         # Compute how many short header lines need to be added to http.client
         # default headers to make / break the total limit in a single request.
@@ -212,8 +231,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn = BitcoinHTTPConnection(self.node)
         for i in range(headers_above_limit):
             conn.add_header(f"header_{i:04}", "foo")
-        response3 = conn.get('/x')
-        assert_equal(response3.status, http.client.BAD_REQUEST)
+        self.send_bad_and_tolerate_disconnect(conn, lambda: conn.get('/x'))
 
         # Compute how much data we can add to a request message body
         # to make / break the limit.
@@ -593,8 +611,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Extra whitespace before colon in header.
         conn = BitcoinHTTPConnection(self.node)
         conn.headers = {"Authorization ": f"Basic {str_to_b64str(conn.authpair)}"}
-        response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.BAD_REQUEST)
+        self.send_bad_and_tolerate_disconnect(conn, lambda: conn.post('/', '{"method": "getbestblockhash"}'))
 
         # Extra whitespace at start of new line.
         # "line folding" as defined in
@@ -603,8 +620,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
         conn = BitcoinHTTPConnection(self.node)
         conn.headers = {"Authorization": f"Basic \n {str_to_b64str(conn.authpair)}"}
-        response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.BAD_REQUEST)
+        self.send_bad_and_tolerate_disconnect(conn, lambda: conn.post('/', '{"method": "getbestblockhash"}'))
 
 
     def check_connection_limit(self):
