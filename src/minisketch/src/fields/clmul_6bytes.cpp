@@ -18,6 +18,7 @@
 #endif
 
 #include "../sketch.h"
+#include "../util.h"
 
 namespace {
 #ifdef ENABLE_FIELD_INT_41
@@ -121,7 +122,7 @@ typedef Field<uint64_t, 48, 45, StatTable48, &SQR_TABLE_48, &SQR2_TABLE_48, &SQR
 #endif
 }
 
-Sketch* ConstructClMul6Bytes(int bits, int implementation) {
+Sketch* ConstructClMul6Bytes(int bits, MAYBE_UNUSED int implementation) {
     switch (bits) {
 #ifdef ENABLE_FIELD_INT_41
     case 41: return new SketchImpl<Field41>(implementation, 41);
@@ -148,7 +149,7 @@ Sketch* ConstructClMul6Bytes(int bits, int implementation) {
     return nullptr;
 }
 
-Sketch* ConstructClMulTri6Bytes(int bits, int implementation) {
+Sketch* ConstructClMulTri6Bytes(int bits, MAYBE_UNUSED int implementation) {
     switch (bits) {
 #ifdef ENABLE_FIELD_INT_41
     case 41: return new SketchImpl<FieldTri41>(implementation, 41);
