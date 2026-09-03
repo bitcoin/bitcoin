@@ -792,10 +792,10 @@ public:
         SteadyClock::duration time_undo;
         SteadyClock::duration time_index;
     };
-    bool ConnectBlockChecks(node::BlockManager& blockman, const ChainstateManager& chainman, ValidationCache& validation_cache, CCheckQueue<CScriptCheck>& check_queue,
+    static bool ConnectBlockChecks(node::BlockManager& blockman, const ChainstateManager& chainman, const kernel::ChainstateRole& role, ValidationCache& validation_cache, CCheckQueue<CScriptCheck>& check_queue,
                             const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                             CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
-                            ConnectBlockUpdates& updates, bool fJustCheck = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                            ConnectBlockUpdates& updates, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                       CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 

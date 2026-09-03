@@ -2302,10 +2302,10 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const ChainstateManager& chainman, ValidationCache& validation_cache, CCheckQueue<CScriptCheck>& check_queue,
+bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const ChainstateManager& chainman, const kernel::ChainstateRole& role, ValidationCache& validation_cache, CCheckQueue<CScriptCheck>& check_queue,
     const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
     CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
-    ConnectBlockUpdates& updates, bool fJustCheck) const
+    ConnectBlockUpdates& updates, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2514,7 +2514,6 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const Chainsta
              Ticks<MillisecondsDouble>(chainman.time_forks) / num_block_total_post);
 
     const bool fScriptChecks{!!script_check_reason};
-    const kernel::ChainstateRole role{this->GetRole()};
     if (script_check_reason != last_script_check_reason && role.validated && !role.historical) {
         if (fScriptChecks) {
             LogInfo("Enabling script verification at block #%d (%s): %s.",
@@ -2700,7 +2699,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                                CCoinsViewCache& view, bool fJustCheck) {
     AssertLockHeld(cs_main);
     ConnectBlockUpdates updates{};
-    bool ret{Chainstate::ConnectBlockChecks(m_blockman, m_chainman, m_chainman.m_validation_cache, m_chainman.GetCheckQueue(),
+    bool ret{Chainstate::ConnectBlockChecks(m_blockman, m_chainman, GetRole(), m_chainman.m_validation_cache, m_chainman.GetCheckQueue(),
         block, state, pindex, view, m_last_script_check_reason_logged,
         updates, fJustCheck)};
 
