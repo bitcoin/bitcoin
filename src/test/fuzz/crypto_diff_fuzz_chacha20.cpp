@@ -92,7 +92,7 @@ void ECRYPT_keystream_bytes(
 static const char sigma[] = "expand 32-byte k";
 static const char tau[] = "expand 16-byte k";
 
-void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 ivbits)
+void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 /*ivbits*/)
 {
     const char* constants;
 

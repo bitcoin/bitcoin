@@ -461,7 +461,7 @@ void univalue_readwrite()
     }
 }
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     univalue_constructor();
     univalue_push_throw();

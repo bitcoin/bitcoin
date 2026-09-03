@@ -508,7 +508,7 @@ public:
          m_cost += 48 * num_txns + 4 * num_deps;
     }
     inline void GetLinearizationBegin() noexcept {}
-    inline void GetLinearizationEnd(int num_txns, int num_deps) noexcept
+    inline void GetLinearizationEnd(int, int) noexcept
     {
         // Note that we account for the cost of the final linearization at the beginning (see
         // InitializeEnd), because the cost budget decision needs to be made before calling
