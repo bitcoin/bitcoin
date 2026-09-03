@@ -186,7 +186,7 @@ void no_nul_test()
     assert(val.read({buf + 3, 7}));
 }
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     for (const auto& [file, json] : tests) {
         runtest(std::string{file}, std::string{json});

@@ -61,12 +61,12 @@ void noui_connect()
     noui_InitMessageConn = uiInterface.InitMessage.connect(noui_InitMessage);
 }
 
-void noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, unsigned int style)
+void noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, unsigned int /*style*/)
 {
     LogInfo("%s", message.original);
 }
 
-bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int style)
+bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int /*style*/)
 {
     LogInfo("%s", message);
     return false;
