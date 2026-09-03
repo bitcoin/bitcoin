@@ -2302,7 +2302,8 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, ValidationCache& validation_cache,
+    const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
     CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,
     ConnectBlockUpdates& updates, bool fJustCheck) const
 {
@@ -2600,10 +2601,10 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
             // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
             if (control) {
                 std::vector<CScriptCheck> vChecks;
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
+                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], validation_cache, &vChecks);
                 if (tx_ok) control->Add(std::move(vChecks));
             } else {
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
+                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], validation_cache);
             }
             if (!tx_ok) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
@@ -2699,7 +2700,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                                CCoinsViewCache& view, bool fJustCheck) {
     AssertLockHeld(cs_main);
     ConnectBlockUpdates updates{};
-    bool ret{Chainstate::ConnectBlockChecks(m_blockman, block, state, pindex, view, m_last_script_check_reason_logged,
+    bool ret{Chainstate::ConnectBlockChecks(m_blockman, m_chainman.m_validation_cache, block, state, pindex, view, m_last_script_check_reason_logged,
         updates, fJustCheck)};
 
     if (updates.last_script_check_reason.has_value()) {
