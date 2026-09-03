@@ -14,7 +14,7 @@ namespace mp {
 //! function, not a template function, but less flexible.
 template <typename LocalType, typename Value, typename Output>
 void CustomBuildField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Value&& value, Output&& output,
-                      decltype(CustomBuildMessage(invoke_context, value, std::move(output.get())))* enable = nullptr)
+                      decltype(CustomBuildMessage(invoke_context, value, std::move(output.get())))* = nullptr)
 {
     CustomBuildMessage(invoke_context, value, std::move(output.init()));
 }
@@ -27,7 +27,7 @@ template <typename LocalType, typename Input, typename ReadDest>
 decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Input&& input,
                                ReadDest&& read_dest,
                                decltype(CustomReadMessage(invoke_context, input.get(),
-                                                          std::declval<LocalType&>()))* enable = nullptr)
+                                                          std::declval<LocalType&>()))* = nullptr)
 {
     return read_dest.update([&](auto& value) { if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) CustomReadMessage(invoke_context, input.get(), value); });
 }
@@ -35,7 +35,7 @@ decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext& 
 //! Helper for CustomPassField below. Call Accessor::init method if it has one,
 //! otherwise do nothing.
 template <typename Accessor, typename Message>
-decltype(auto) MaybeInit(Message&& message, decltype(Accessor::get(message))* enable = nullptr)
+decltype(auto) MaybeInit(Message&& message, decltype(Accessor::get(message))* = nullptr)
 {
     return Accessor::init(message);
 }

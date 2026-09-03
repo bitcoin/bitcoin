@@ -29,7 +29,7 @@ concept IsByteSpan =
 //! blob types like uint256 or PKHash with data() and size() methods pointing to
 //! bytes.
 template <typename LocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Value&& value, Output&& output)
+void CustomBuildField(TypeList<LocalType>, Priority<2>, InvokeContext&, Value&& value, Output&& output)
 requires (std::is_same_v<decltype(output.get()), ::capnp::Data::Builder> && IsByteSpan<LocalType>)
 {
     auto data = std::span{value};
@@ -38,7 +38,7 @@ requires (std::is_same_v<decltype(output.get()), ::capnp::Data::Builder> && IsBy
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest)
+decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext&, Input&& input, ReadDest&& read_dest)
 requires (std::is_same_v<decltype(input.get()), ::capnp::Data::Reader> && IsByteSpan<LocalType>)
 {
     using ByteType = decltype(std::span{std::declval<LocalType>().begin(), std::declval<LocalType>().end()})::element_type;
