@@ -4182,6 +4182,13 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                     --m_inbound_reconciliation_peers;
                     assert(m_inbound_reconciliation_peers >= 0);
                 }
+
+                // If the peer is an outbound reconciliation connection, we disconnect it if it did
+                // not negotiate reconciliation.
+                if (pfrom.IsOutboundReconciliationConn()) {
+                    LogDebug(BCLog::NET, "reconciliation was not negotiated, %s", pfrom.DisconnectMsg());
+                    pfrom.fDisconnect = true;
+                }
             }
         }
 

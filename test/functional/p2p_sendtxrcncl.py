@@ -54,6 +54,14 @@ class SendTxrcnclNegotiator(SendTxrcnclReceiver):
         self.send_without_ping(msg_verack())
 
 
+class SendTxrcnclOutboundNegotiator(SendTxrcnclReceiver):
+    def on_version(self, message):
+        self.send_version()
+        self.send_without_ping(msg_wtxidrelay())
+        self.send_without_ping(create_sendtxrcncl_msg())
+        self.send_without_ping(msg_verack())
+
+
 class P2PFeelerReceiver(SendTxrcnclReceiver):
     def on_version(self, message):
         # feeler connections can not send any message other than their own version
@@ -153,10 +161,19 @@ class SendTxRcnclTest(BitcoinTestFramework):
         # Now, *sending* to *outbound*.
         self.log.info('SENDTXRCNCL sent to an outbound reconciliation peer')
         peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-recon")
+            SendTxrcnclOutboundNegotiator(), wait_for_verack=True, p2p_idx=0,
+            connection_type="outbound-full-recon")
         assert peer.sendtxrcncl_msg_received
         assert_equal(peer.sendtxrcncl_msg_received.version, 1)
         self.nodes[0].disconnect_p2ps()
+
+        self.log.info('an outbound reconciliation peer that does not negotiate is disconnected')
+        # The slot exists only to reconcile, so it is freed up for another peer.
+        with self.nodes[0].assert_debug_log(["reconciliation was not negotiated"]):
+            peer = self.nodes[0].add_outbound_p2p_connection(
+                SendTxrcnclReceiver(), wait_for_verack=False, wait_for_disconnect=True,
+                p2p_idx=1, connection_type="outbound-full-recon")
+        assert peer.sendtxrcncl_msg_received
 
         self.log.info('SENDTXRCNCL should not be sent if outbound-full-relay')
         peer = self.nodes[0].add_outbound_p2p_connection(
