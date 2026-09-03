@@ -4343,6 +4343,33 @@ bool ChainstateManager::ShouldMaybeWrite(const CBlockIndex* pindex, bool fReques
     return true;
 }
 
+bool ChainstateManager::PreWriteCheckBlock(const CBlock& block, BlockValidationState& state, CBlockIndex*& pindex, bool fRequested, bool& should_write, bool min_pow_checked)
+{
+    AssertLockHeld(cs_main);
+    should_write = false;
+
+    bool accepted_header{AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
+    CheckBlockIndex();
+
+    if (!accepted_header)
+        return false;
+
+    if (!ShouldMaybeWrite(pindex, fRequested)) return true;
+
+    const CChainParams& params{GetParams()};
+    if (!CheckBlock(block, state, params.GetConsensus()) ||
+        !ContextualCheckBlock(block, state, *this, pindex->pprev)) {
+        if (Assume(state.IsInvalid())) {
+            ActiveChainstate().InvalidBlockFound(pindex, state);
+        }
+        LogError("%s: %s\n", __func__, state.ToString());
+        return false;
+    }
+
+    should_write = true;
+    return true;
+}
+
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
@@ -4354,24 +4381,9 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    bool accepted_header{AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
-    CheckBlockIndex();
-
-    if (!accepted_header)
-        return false;
-
-    if (!ShouldMaybeWrite(pindex, fRequested)) return true;
-
-    const CChainParams& params{GetParams()};
-
-    if (!CheckBlock(block, state, params.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, *this, pindex->pprev)) {
-        if (Assume(state.IsInvalid())) {
-            ActiveChainstate().InvalidBlockFound(pindex, state);
-        }
-        LogError("%s: %s\n", __func__, state.ToString());
-        return false;
-    }
+    bool should_write{false};
+    if (!PreWriteCheckBlock(block, state, pindex, fRequested, should_write, min_pow_checked)) return false;
+    if (!should_write) return true;
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)

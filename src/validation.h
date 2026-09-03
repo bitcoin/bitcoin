@@ -994,6 +994,22 @@ private:
      * persistence under the current requested/unrequested anti-DoS policy.
      */
     bool ShouldMaybeWrite(const CBlockIndex* pindex, bool fRequested) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Accept the header and apply storage policy and block/contextual checks.
+     * May update the block index, but does not store block data or activate a chain.
+     *
+     * @param[out] pindex Index of the accepted header, if header acceptance succeeds.
+     * @param[out] should_write True only when initial checks pass and storage is needed.
+     * @return False on failed checks; true for both storage candidates and successful no-ops.
+     */
+    bool PreWriteCheckBlock(
+        const CBlock& block,
+        BlockValidationState& state,
+        CBlockIndex*& pindex,
+        bool fRequested,
+        bool& should_write,
+        bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */
