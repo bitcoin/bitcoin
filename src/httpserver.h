@@ -542,14 +542,6 @@ protected:
 private:
     std::unique_ptr<HTTPRequest> TryReadRequestInternal();
 
-    /**
-     * Try to read an HTTP request from the receive buffer.
-     * Updates HTTPRequest.m_state and drains buffer on error.
-     * @param[in]   req     A HTTPRequest to read into
-     * @throws std::runtime_error if request is unreadable or violates protocol
-     */
-    void ReadRequest(HTTPRequest& req);
-
     //! ID provided by HTTPServer upon connection and instantiation
     const HTTPServer::Id m_id;
 
