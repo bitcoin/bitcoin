@@ -78,7 +78,7 @@ static RPCMethod getwalletinfo()
                     HelpExampleCli("getwalletinfo", "")
             + HelpExampleRpc("getwalletinfo", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -167,7 +167,7 @@ static RPCMethod listwalletdir()
                     HelpExampleCli("listwalletdir", "")
             + HelpExampleRpc("listwalletdir", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
     for (const auto& [path, db_type] : ListDatabases(GetWalletDir())) {
@@ -204,7 +204,7 @@ static RPCMethod listwallets()
                     HelpExampleCli("listwallets", "")
             + HelpExampleRpc("listwallets", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     UniValue obj(UniValue::VARR);
 
@@ -251,7 +251,7 @@ static RPCMethod loadwallet()
                     + HelpExampleCli("loadwallet", "\"DriveLetter:\\path\\to\\walletname\\\"")
                     + HelpExampleRpc("loadwallet", R"("DriveLetter:\\path\\to\\walletname")")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     WalletContext& context = EnsureWalletContext(request.context);
     const std::string name(request.params[0].get_str());
@@ -310,7 +310,7 @@ static RPCMethod setwalletflag()
                     HelpExampleCli("setwalletflag", "avoid_reuse")
                   + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -522,7 +522,7 @@ RPCMethod simulaterawtransaction()
             HelpExampleCli("simulaterawtransaction", "[\"myhex\"]")
             + HelpExampleRpc("simulaterawtransaction", "[\"myhex\"]")
         },
-    [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+    [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!rpc_wallet) return UniValue::VNULL;
@@ -681,7 +681,7 @@ RPCMethod gethdkeys()
             HelpExampleCli("gethdkeys", "") + HelpExampleRpc("gethdkeys", "")
             + HelpExampleCliNamed("gethdkeys", {{"active_only", "true"}, {"private", "true"}}) + HelpExampleRpcNamed("gethdkeys", {{"active_only", "true"}, {"private", "true"}})
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;
@@ -763,7 +763,7 @@ static RPCMethod createwalletdescriptor()
             HelpExampleCli("createwalletdescriptor", "bech32m")
             + HelpExampleRpc("createwalletdescriptor", R"("bech32m")")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
@@ -853,7 +853,7 @@ RPCMethod addhdkey()
         RPCExamples{
             HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", R"("xprv")")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;
@@ -934,7 +934,7 @@ static RPCMethod exportwatchonlywallet()
             HelpExampleCli("exportwatchonlywallet", "\"/path/to/export.dat\"")
             + HelpExampleRpc("exportwatchonlywallet", "\"/path/to/export.dat\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
@@ -981,7 +981,7 @@ RPCMethod derivehdkey()
             + HelpExampleCliNamed("derivehdkey", {{"path", "m/87h/0h/0h"}, {"private", "true"}})
             + HelpExampleRpcNamed("derivehdkey", {{"path", "m/87h/0h/0h"}, {"private", "true"}})
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;

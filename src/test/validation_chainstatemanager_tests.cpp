@@ -296,22 +296,22 @@ struct SnapshotTestSetup : TestChain100Setup {
         BOOST_CHECK(!node::FindAssumeutxoChainstateDir(chainman.m_options.datadir));
 
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile&, SnapshotMetadata& metadata) {
                 // Coins count is larger than coins in file
                 metadata.m_coins_count += 1;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile&, SnapshotMetadata& metadata) {
                 // Coins count is smaller than coins in file
                 metadata.m_coins_count -= 1;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile&, SnapshotMetadata& metadata) {
                 // Wrong hash
                 metadata.m_base_blockhash = uint256::ZERO;
         }));
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-            this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
+            this, [](AutoFile&, SnapshotMetadata& metadata) {
                 // Wrong hash
                 metadata.m_base_blockhash = uint256::ONE;
         }));

@@ -163,7 +163,7 @@ static RPCMethod stop()
                 },
                 RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
-        [](const RPCMethod& self, const JSONRPCRequest& jsonRequest) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& jsonRequest) -> UniValue
 {
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
@@ -189,7 +189,7 @@ static RPCMethod uptime()
                     HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
 {
     return TicksSeconds(GetUptime());
 }
@@ -219,7 +219,7 @@ static RPCMethod getrpcinfo()
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")
                 + HelpExampleRpc("getrpcinfo", "")},
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
 {
     LOCK(g_rpc_server_info.mutex);
     UniValue active_commands(UniValue::VARR);
@@ -577,7 +577,7 @@ static RPCMethod getopenrpcinfo()
             HelpExampleCli("getopenrpcinfo", "")
             + HelpExampleRpc("getopenrpcinfo", "")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest&) -> UniValue
         {
             const bool include_hidden{self.Arg<bool>("show_hidden")};
             return tableRPC.buildOpenRPCDoc(include_hidden);

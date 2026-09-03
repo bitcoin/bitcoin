@@ -2345,7 +2345,7 @@ void CWallet::CommitTransaction(
 
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
-    CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
+    CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool /*new_tx*/) {
         if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
         if (comment) wtx.m_comment = comment;
         if (comment_to) wtx.m_comment_to = comment_to;
@@ -2669,7 +2669,7 @@ std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<A
     AssertLockHeld(cs_wallet);
     std::vector<CTxDestination> result;
     AddrBookFilter filter = _filter ? *_filter : AddrBookFilter();
-    ForEachAddrBookEntry([&result, &filter](const CTxDestination& dest, const std::string& label, bool is_change, const std::optional<AddressPurpose>& purpose) {
+    ForEachAddrBookEntry([&result, &filter](const CTxDestination& dest, const std::string& label, bool is_change, const std::optional<AddressPurpose>&) {
         // Filter by change
         if (filter.ignore_change && is_change) return;
         // Filter by label
@@ -2684,7 +2684,7 @@ std::set<std::string> CWallet::ListAddrBookLabels(const std::optional<AddressPur
 {
     AssertLockHeld(cs_wallet);
     std::set<std::string> label_set;
-    ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label,
+    ForEachAddrBookEntry([&](const CTxDestination&, const std::string& _label,
                              bool _is_change, const std::optional<AddressPurpose>& _purpose) {
         if (_is_change) return;
         if (!purpose || purpose == _purpose) {
@@ -3206,7 +3206,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
 }
 
 
-bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings)
+bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>&)
 {
     LOCK(walletInstance->cs_wallet);
     // allow setting the chain if it hasn't been set already but prevent changing it

@@ -101,7 +101,7 @@ static inline uint256 TxStateSerializedBlockHash(const TxState& state)
 {
     return std::visit(util::Overloaded{
         [](const TxStateInactive& inactive) { return inactive.abandoned ? uint256::ONE : uint256::ZERO; },
-        [](const TxStateInMempool& in_mempool) { return uint256::ZERO; },
+        [](const TxStateInMempool&) { return uint256::ZERO; },
         [](const TxStateConfirmed& confirmed) { return confirmed.confirmed_block_hash; },
         [](const TxStateBlockConflicted& conflicted) { return conflicted.conflicting_block_hash; },
         [](const TxStateUnrecognized& unrecognized) { return unrecognized.block_hash; }
@@ -113,9 +113,9 @@ static inline int TxStateSerializedIndex(const TxState& state)
 {
     return std::visit(util::Overloaded{
         [](const TxStateInactive& inactive) { return inactive.abandoned ? -1 : 0; },
-        [](const TxStateInMempool& in_mempool) { return 0; },
+        [](const TxStateInMempool&) { return 0; },
         [](const TxStateConfirmed& confirmed) { return confirmed.position_in_block; },
-        [](const TxStateBlockConflicted& conflicted) { return -1; },
+        [](const TxStateBlockConflicted&) { return -1; },
         [](const TxStateUnrecognized& unrecognized) { return unrecognized.index; }
     }, state);
 }

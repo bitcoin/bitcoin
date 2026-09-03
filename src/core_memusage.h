@@ -13,7 +13,7 @@ static inline size_t RecursiveDynamicUsage(const CScript& script) {
     return memusage::DynamicUsage(script);
 }
 
-static inline size_t RecursiveDynamicUsage(const COutPoint& out) {
+static inline size_t RecursiveDynamicUsage(const COutPoint&) {
     return 0;
 }
 

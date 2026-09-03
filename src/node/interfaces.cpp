@@ -471,11 +471,11 @@ public:
     explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications)
         : m_notifications(std::move(notifications)) {}
     virtual ~NotificationsProxy() = default;
-    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t) override
     {
         m_notifications->transactionAddedToMempool(tx.info.m_tx);
     }
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t) override
     {
         m_notifications->transactionRemovedFromMempool(tx, reason);
     }
@@ -487,7 +487,7 @@ public:
     {
         m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
     }
-    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
+    void UpdatedBlockTip(const CBlockIndex*, const CBlockIndex*, bool) override
     {
         m_notifications->updatedBlockTip();
     }

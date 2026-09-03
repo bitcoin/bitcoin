@@ -252,7 +252,7 @@ bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
     return true;
 }
 
-std::unique_ptr<SigningProvider> LegacyDataSPKM::GetSolvingProvider(const CScript& script) const
+std::unique_ptr<SigningProvider> LegacyDataSPKM::GetSolvingProvider(const CScript&) const
 {
     return std::make_unique<LegacySigningProvider>(*this);
 }
@@ -1007,7 +1007,7 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     return true;
 }
 
-util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index)
+util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool /*internal*/, int64_t& index)
 {
     LOCK(cs_desc_man);
     auto op_dest = GetNewDestination(type);
@@ -1015,7 +1015,7 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(c
     return op_dest;
 }
 
-void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
+void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool /*internal*/, const CTxDestination& /*addr*/)
 {
     LOCK(cs_desc_man);
     // Only return when the index was the most recent
@@ -1238,7 +1238,7 @@ bool DescriptorScriptPubKeyMan::IsHDEnabled() const
     return m_wallet_descriptor.descriptor->IsRange();
 }
 
-bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
+bool DescriptorScriptPubKeyMan::CanGetAddresses(bool /*internal*/) const
 {
     // We can only give out addresses from descriptors that are single type (not combo), ranged,
     // and either have cached keys or can generate more keys (ignoring encryption)
@@ -1342,7 +1342,7 @@ std::unique_ptr<SigningProvider> DescriptorScriptPubKeyMan::GetSolvingProvider(c
     return GetSigningProvider(script, false);
 }
 
-bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
+bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& /*sigdata*/)
 {
     return IsMine(script);
 }

@@ -31,12 +31,12 @@ bool CZMQAbstractNotifier::NotifyBlockDisconnect(const CBlockIndex * /*CBlockInd
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyTransactionAcceptance(const CTransaction &/*transaction*/, uint64_t mempool_sequence)
+bool CZMQAbstractNotifier::NotifyTransactionAcceptance(const CTransaction &/*transaction*/, uint64_t /*mempool_sequence*/)
 {
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyTransactionRemoval(const CTransaction &/*transaction*/, uint64_t mempool_sequence)
+bool CZMQAbstractNotifier::NotifyTransactionRemoval(const CTransaction &/*transaction*/, uint64_t /*mempool_sequence*/)
 {
     return true;
 }

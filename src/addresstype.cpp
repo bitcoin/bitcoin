@@ -152,14 +152,14 @@ public:
 class ValidDestinationVisitor
 {
 public:
-    bool operator()(const CNoDestination& dest) const { return false; }
-    bool operator()(const PubKeyDestination& dest) const { return false; }
-    bool operator()(const PKHash& dest) const { return true; }
-    bool operator()(const ScriptHash& dest) const { return true; }
-    bool operator()(const WitnessV0KeyHash& dest) const { return true; }
-    bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
-    bool operator()(const WitnessV1Taproot& dest) const { return true; }
-    bool operator()(const WitnessUnknown& dest) const { return true; }
+    bool operator()(const CNoDestination&) const { return false; }
+    bool operator()(const PubKeyDestination&) const { return false; }
+    bool operator()(const PKHash&) const { return true; }
+    bool operator()(const ScriptHash&) const { return true; }
+    bool operator()(const WitnessV0KeyHash&) const { return true; }
+    bool operator()(const WitnessV0ScriptHash&) const { return true; }
+    bool operator()(const WitnessV1Taproot&) const { return true; }
+    bool operator()(const WitnessUnknown&) const { return true; }
 };
 } // namespace
 
