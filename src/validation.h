@@ -784,6 +784,7 @@ public:
 
     struct ConnectBlockUpdates {
         std::optional<const char*> last_script_check_reason;
+        int64_t num_blocks_total_increment;
     };
     bool ConnectBlockChecks(node::BlockManager& blockman, const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                             CCoinsViewCache& view, const std::optional<const char*>& last_script_check_reason,

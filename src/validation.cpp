@@ -2308,7 +2308,9 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
 {
     AssertLockHeld(cs_main);
     assert(pindex);
+
     updates.last_script_check_reason = std::nullopt;
+    updates.num_blocks_total_increment = 0;
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
@@ -2344,7 +2346,8 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
 
-    m_chainman.num_blocks_total++;
+    updates.num_blocks_total_increment = 1;
+    auto num_block_total_post = m_chainman.num_blocks_total + updates.num_blocks_total_increment;
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
@@ -2399,7 +2402,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     LogDebug(BCLog::BENCH, "    - Sanity checks: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_1 - time_start),
              Ticks<SecondsDouble>(m_chainman.time_check),
-             Ticks<MillisecondsDouble>(m_chainman.time_check) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_check) / num_block_total_post);
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
@@ -2501,7 +2504,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     LogDebug(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<SecondsDouble>(m_chainman.time_forks),
-             Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_forks) / num_block_total_post);
 
     const bool fScriptChecks{!!script_check_reason};
     const kernel::ChainstateRole role{GetRole()};
@@ -2616,7 +2619,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
              Ticks<MillisecondsDouble>(time_3 - time_2), Ticks<MillisecondsDouble>(time_3 - time_2) / block.vtx.size(),
              nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_3 - time_2) / (nInputs - 1),
              Ticks<SecondsDouble>(m_chainman.time_connect),
-             Ticks<MillisecondsDouble>(m_chainman.time_connect) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_connect) / num_block_total_post);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
     if (block.vtx[0]->GetValueOut() > blockReward && state.IsValid()) {
@@ -2639,7 +2642,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
              Ticks<MillisecondsDouble>(time_4 - time_2),
              nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_4 - time_2) / (nInputs - 1),
              Ticks<SecondsDouble>(m_chainman.time_verify),
-             Ticks<MillisecondsDouble>(m_chainman.time_verify) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_verify) / num_block_total_post);
 
     if (fJustCheck) {
         return true;
@@ -2654,7 +2657,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     LogDebug(BCLog::BENCH, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_5 - time_4),
              Ticks<SecondsDouble>(m_chainman.time_undo),
-             Ticks<MillisecondsDouble>(m_chainman.time_undo) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_undo) / num_block_total_post);
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
@@ -2669,7 +2672,7 @@ bool Chainstate::ConnectBlockChecks(node::BlockManager& blockman, const CBlock& 
     LogDebug(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n",
              Ticks<MillisecondsDouble>(time_6 - time_5),
              Ticks<SecondsDouble>(m_chainman.time_index),
-             Ticks<MillisecondsDouble>(m_chainman.time_index) / m_chainman.num_blocks_total);
+             Ticks<MillisecondsDouble>(m_chainman.time_index) / num_block_total_post);
 
     TRACEPOINT(validation, block_connected,
         block_hash.data(),
@@ -2692,9 +2695,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     ConnectBlockUpdates updates{};
     bool ret{Chainstate::ConnectBlockChecks(m_blockman, block, state, pindex, view, m_last_script_check_reason_logged,
         updates, fJustCheck)};
+
     if (updates.last_script_check_reason.has_value()) {
         m_last_script_check_reason_logged = updates.last_script_check_reason;
     }
+    m_chainman.num_blocks_total += updates.num_blocks_total_increment;
+
     return ret;
 }
 
