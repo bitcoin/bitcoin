@@ -53,7 +53,7 @@ struct AddressTableEntryLessThan
 };
 
 /* Determine address type from address purpose */
-constexpr AddressTableEntry::Type translateTransactionType(wallet::AddressPurpose purpose, bool isMine)
+constexpr AddressTableEntry::Type translateTransactionType(wallet::AddressPurpose purpose, bool /*isMine*/)
 {
     // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
     switch (purpose) {

@@ -21,7 +21,7 @@ public:
     bool HasWalletSupport() const override {return false;}
     void AddWalletOptions(ArgsManager& argsman) const override;
     bool ParameterInteraction() const override {return true;}
-    void Construct(node::NodeContext& node) const override { LogInfo("No wallet support compiled in!"); }
+    void Construct(node::NodeContext&) const override { LogInfo("No wallet support compiled in!"); }
 };
 
 void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
@@ -56,7 +56,7 @@ const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
 namespace interfaces {
 
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args)
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain&, ArgsManager&)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

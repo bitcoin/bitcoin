@@ -656,7 +656,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 #else
 
 bool GetStartOnSystemStartup() { return false; }
-bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
+bool SetStartOnSystemStartup(bool /*fAutoStart*/) { return false; }
 
 #endif
 

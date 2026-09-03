@@ -305,12 +305,12 @@ public:
     {
     public:
         virtual ~Notifications() = default;
-        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
-        virtual void blockDisconnected(const BlockInfo& block) {}
+        virtual void transactionAddedToMempool(const CTransactionRef&) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason) {}
+        virtual void blockConnected(const kernel::ChainstateRole&, const BlockInfo&) {}
+        virtual void blockDisconnected(const BlockInfo&) {}
         virtual void updatedBlockTip() {}
-        virtual void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+        virtual void chainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&) {}
     };
 
     //! Options specifying which chain notifications are required.

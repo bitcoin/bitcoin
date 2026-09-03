@@ -21,7 +21,7 @@ public:
     explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor) {};
     ~DummyDescriptor() = default;
 
-    std::string ToString(bool compat_format) const override { return desc; }
+    std::string ToString(bool) const override { return desc; }
     std::string ToCanonicalString() const override { return desc; }
     std::optional<OutputType> GetOutputType() const override { return OutputType::UNKNOWN; }
 
@@ -29,15 +29,15 @@ public:
     bool IsSolvable() const override { return false; }
     bool IsSingleType() const override { return true; }
     bool HavePrivateKeys(const SigningProvider&) const override { return false; }
-    bool ToPrivateString(const SigningProvider& provider, std::string& out) const override { return false; }
-    bool ToNormalizedString(const SigningProvider& provider, std::string& out, const DescriptorCache* cache = nullptr) const override { return false; }
-    bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const override { return false; };
-    bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override { return false; }
-    void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override {}
+    bool ToPrivateString(const SigningProvider&, std::string&) const override { return false; }
+    bool ToNormalizedString(const SigningProvider&, std::string&, const DescriptorCache* = nullptr) const override { return false; }
+    bool Expand(int, const SigningProvider&, std::vector<CScript>&, FlatSigningProvider&, DescriptorCache* = nullptr) const override { return false; };
+    bool ExpandFromCache(int, const DescriptorCache&, std::vector<CScript>&, FlatSigningProvider&) const override { return false; }
+    void ExpandPrivate(int, const SigningProvider&, FlatSigningProvider&) const override {}
     std::optional<int64_t> ScriptSize() const override { return {}; }
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
-    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override {}
+    void GetPubKeys(std::set<CPubKey>&, std::set<CExtPubKey>&) const override {}
     bool HasScripts() const override { return true; }
     std::vector<std::string> Warnings() const override { return {}; }
     uint32_t GetMaxKeyExpr() const override { return 0; }

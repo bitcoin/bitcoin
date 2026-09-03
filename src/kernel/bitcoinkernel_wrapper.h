@@ -1008,19 +1008,19 @@ class KernelNotifications
 public:
     virtual ~KernelNotifications() = default;
 
-    virtual void BlockTipHandler(SynchronizationState state, BlockTreeEntry entry, double verification_progress) {}
+    virtual void BlockTipHandler(SynchronizationState, BlockTreeEntry, double) {}
 
-    virtual void HeaderTipHandler(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}
+    virtual void HeaderTipHandler(SynchronizationState, int64_t, int64_t, bool) {}
 
-    virtual void ProgressHandler(std::string_view title, int progress_percent, bool resume_possible) {}
+    virtual void ProgressHandler(std::string_view, int, bool) {}
 
-    virtual void WarningSetHandler(Warning warning, std::string_view message) {}
+    virtual void WarningSetHandler(Warning, std::string_view) {}
 
-    virtual void WarningUnsetHandler(Warning warning) {}
+    virtual void WarningUnsetHandler(Warning) {}
 
-    virtual void FlushErrorHandler(std::string_view error) {}
+    virtual void FlushErrorHandler(std::string_view) {}
 
-    virtual void FatalErrorHandler(std::string_view error) {}
+    virtual void FatalErrorHandler(std::string_view) {}
 };
 
 template <typename Derived>
@@ -1097,13 +1097,13 @@ class ValidationInterface
 public:
     virtual ~ValidationInterface() = default;
 
-    virtual void BlockChecked(Block block, BlockValidationStateView state) {}
+    virtual void BlockChecked(Block, BlockValidationStateView) {}
 
-    virtual void PowValidBlock(BlockTreeEntry entry, Block block) {}
+    virtual void PowValidBlock(BlockTreeEntry, Block) {}
 
-    virtual void BlockConnected(Block block, BlockTreeEntry entry) {}
+    virtual void BlockConnected(Block, BlockTreeEntry) {}
 
-    virtual void BlockDisconnected(Block block, BlockTreeEntry entry) {}
+    virtual void BlockDisconnected(Block, BlockTreeEntry) {}
 };
 
 class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_copy, btck_chain_parameters_destroy>
@@ -1353,7 +1353,7 @@ public:
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
-    ChainMan(const Context& context, const ChainstateManagerOptions& chainman_opts)
+    ChainMan(const Context&, const ChainstateManagerOptions& chainman_opts)
         : UniqueHandle{btck_chainstate_manager_create(chainman_opts.get())}
     {
     }

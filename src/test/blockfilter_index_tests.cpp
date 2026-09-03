@@ -243,7 +243,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
     BOOST_CHECK(!InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
 
     int iter_count = 0;
-    ForEachBlockFilterIndex([&iter_count](BlockFilterIndex& _index) { iter_count++; });
+    ForEachBlockFilterIndex([&iter_count](BlockFilterIndex&) { iter_count++; });
     BOOST_CHECK_EQUAL(iter_count, 1);
 
     BOOST_CHECK(DestroyBlockFilterIndex(BlockFilterType::BASIC));
