@@ -456,18 +456,24 @@ public:
     //! destructors of m_impl instances owned by ProxyServer objects).
     ~Connection() noexcept(false);
 
-    //! Register synchronous cleanup function to run on event loop thread (with
-    //! access to capnp thread local variables) when disconnect() is called.
-    //! any new i/o.
+    //! Register a synchronous cleanup function to run on the event loop thread
+    //! (with access to capnp thread-local variables) when the connection is
+    //! disconnected -- for either a remote disconnect (the peer closes the
+    //! connection) or a local one (the connection is torn down on this side).
+    //! Contrast onDisconnect(), whose handler runs only on a remote
+    //! disconnect. Returns a handle that can be passed to removeSyncCleanup()
+    //! to unregister the function before it runs.
     CleanupIt addSyncCleanup(std::function<void()> fn);
     void removeSyncCleanup(CleanupIt it);
 
-    //! Add disconnect handler.
+    //! Add a remote disconnect handler, run when the peer closes the
+    //! connection. The handler is canceled if the connection is disconnected
+    //! locally first (which destroys m_on_disconnect).
     template <typename F>
     void onDisconnect(F&& f)
     {
-        // Add disconnect handler to local TaskSet to ensure it is canceled and
-        // will never run after connection object is destroyed. But when disconnect
+        // Add the handler to the local TaskSet to ensure it is canceled and
+        // will never run after the connection object is destroyed. But when the
         // handler fires, do not call the function f right away, instead add it
         // to the EventLoop TaskSet to avoid "Promise callback destroyed itself"
         // error in the typical case where f deletes this Connection object.
@@ -478,9 +484,9 @@ public:
     EventLoopRef m_loop;
     kj::Own<kj::AsyncIoStream> m_stream;
     LoggingErrorHandler m_error_handler{*m_loop};
-    //! TaskSet used to cancel the m_network.onDisconnect() handler for remote
-    //! disconnections, if the connection is closed locally first by deleting
-    //! this Connection object.
+    //! TaskSet holding the m_network.onDisconnect() handler for remote
+    //! disconnections. Reset to cancel the handler if the connection is closed
+    //! locally first by deleting this Connection object.
     kj::TaskSet m_on_disconnect{m_error_handler};
     ::capnp::TwoPartyVatNetwork m_network;
     std::optional<::capnp::RpcSystem<::capnp::rpc::twoparty::VatId>> m_rpc_system;
@@ -574,8 +580,8 @@ ProxyClientBase<Interface, Impl>::ProxyClientBase(typename Interface::Client cli
             // Remove disconnect callback on cleanup so it doesn't run and try
             // to access this object after it's destroyed. This call needs to
             // run inside loop->sync() on the event loop thread because
-            // otherwise, if there were an ill-timed disconnect, the
-            // onDisconnect handler could fire and delete the Connection object
+            // otherwise, if there were an ill-timed disconnect, the remote
+            // disconnect handler could fire and delete the Connection object
             // before the removeSyncCleanup call.
             if (m_context.connection) m_context.connection->removeSyncCleanup(disconnect_cb);
 

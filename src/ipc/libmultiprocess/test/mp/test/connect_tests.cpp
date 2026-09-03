@@ -118,11 +118,11 @@ KJ_TEST("ConnectStream defers disconnect failure to the first IPC request for in
     } catch (const std::runtime_error& e) {
         std::string_view reason = e.what();
 
-        // There is a race between the event loop detecting the disconnect
-        // and foo->add() being called. If the onDisconnect callback fires
-        // first and nulls m_context.connection, the error is "called after
-        // disconnect"; if foo->add() submits before the callback fires,
-        // the error is "interrupted by disconnect".
+        // There is a race between the event loop detecting the disconnect and
+        // foo->add() being called. If the TwoPartyVatNetwork::onDisconnect
+        // callback fires first and nulls m_context.connection, the error is
+        // "called after disconnect"; if foo->add() submits before the callback
+        // fires, the error is "interrupted by disconnect".
         KJ_EXPECT(reason == "IPC client method called after disconnect." ||
                   reason == "IPC client method call interrupted by disconnect.");
     }

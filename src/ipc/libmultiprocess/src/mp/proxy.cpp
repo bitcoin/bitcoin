@@ -111,7 +111,8 @@ Connection::~Connection() noexcept(false)
     // Connection destructor is always called on the event loop thread. If this
     // is a local disconnect, it will trigger I/O, so this needs to run on the
     // event loop thread, and if there was a remote disconnect, this is called
-    // by an onDisconnect callback directly from the event loop thread.
+    // by a TwoPartyVatNetwork::onDisconnect callback directly from the event
+    // loop thread.
     assert(std::this_thread::get_id() == m_loop->m_thread_id);
 
     // Try to cancel any calls that may be executing.
@@ -132,13 +133,13 @@ Connection::~Connection() noexcept(false)
     //
     // Sending pending data is important if the connection is a socketpair
     // because when one side of the socketpair is closed, the other side doesn't
-    // seem to receive any onDisconnect event. So it is important for the other
-    // side to instead receive Cap'n Proto "release" messages (see `struct
-    // Release` in capnp/rpc.capnp) from local Client objects being destroyed so
-    // the remote side can free resources and shut down cleanly. Without this,
-    // when one side of a socket pair is closed the other side may not receive
-    // these messages, preventing the remote side from freeing ProxyServer
-    // resources and shutting down cleanly.
+    // seem to receive any TwoPartyVatNetwork::onDisconnect event. So it is
+    // important for the other side to instead receive Cap'n Proto "release"
+    // messages (see `struct Release` in capnp/rpc.capnp) from local Client
+    // objects being destroyed so the remote side can free resources and shut
+    // down cleanly. Without this, when one side of a socket pair is closed the
+    // other side may not receive these messages, preventing the remote side
+    // from freeing ProxyServer resources and shutting down cleanly.
     // Use kj::runCatchingExceptions instead of try/catch because on macOS with
     // dynamic libraries, kj::Exception typeinfo differs between libcapnp and
     // the calling binary, so catch (const kj::Exception&) silently fails to
@@ -184,17 +185,18 @@ Connection::~Connection() noexcept(false)
     // connection implementing the Init interface and handling the Init.makeX() calls.
     //
     // Either way when a connection is closed, capnp behavior is to call all
-    // ProxyServer object destructors first, and then trigger an onDisconnect
-    // callback.
+    // ProxyServer object destructors first, and then trigger a
+    // TwoPartyVatNetwork::onDisconnect callback.
     //
-    // On incoming side of the connection, the onDisconnect callback is written
-    // to delete the Connection object from the m_incoming_connections and call
-    // this destructor which calls Connection::disconnect.
+    // On incoming side of the connection, the TwoPartyVatNetwork::onDisconnect
+    // callback is written to delete the Connection object from the
+    // m_incoming_connections list and call this destructor.
     //
-    // On the outgoing side, the Connection object is owned by top level client
-    // object client, which onDisconnect handler doesn't have ready access to,
-    // so onDisconnect handler just calls Connection::disconnect directly
-    // instead.
+    // On the outgoing side, the Connection object is heap-allocated and owned
+    // by a top-level ProxyClient object. In this case, the
+    // TwoPartyVatNetwork::onDisconnect handler deletes the Connection object
+    // directly, calling this destructor, and loop below sets Connection
+    // pointers in all associated ProxyClient objects to null.
     //
     // Either way disconnect code runs in the event loop thread and called both
     // on clean and unclean shutdowns. In unclean shutdown case when the
