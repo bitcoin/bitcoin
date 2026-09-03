@@ -5,6 +5,7 @@
 #ifndef BITCOIN_POLICY_FEES_ESTIMATOR_MAN_H
 #define BITCOIN_POLICY_FEES_ESTIMATOR_MAN_H
 
+#include <node/mempool_persist.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/mempool_estimator.h>
 #include <primitives/transaction.h>
@@ -13,6 +14,7 @@
 #include <util/fs.h>
 #include <validationinterface.h>
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 
@@ -68,6 +70,9 @@ public:
     /** Flush recorded data to disk as part of shutdown sequence. */
     void ShutdownFlush();
 
+    /** Complete mempool loading and conditionally restore persisted mempool health. */
+    void MempoolLoadCompleted(const node::MempoolLoadResult& load_result);
+
     /**
      * @brief Returns the maximum supported confirmation target from all fee rate estimators.
      */
@@ -97,6 +102,9 @@ protected:
 private:
     std::unique_ptr<CBlockPolicyEstimator> m_block_policy_estimator;
     std::unique_ptr<MemPoolFeeRateEstimator> m_mempool_estimator;
+    //! Whether the mempool load attempt completed without interruption. Until
+    //! then, mempool-policy block notifications and flushes are ignored.
+    std::atomic_bool m_mempool_load_completed{false};
 };
 
 #endif // BITCOIN_POLICY_FEES_ESTIMATOR_MAN_H

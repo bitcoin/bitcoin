@@ -31,6 +31,7 @@ SECONDS_PER_HOUR = 60 * 60
 MIN_BUCKET_FEERATE = Decimal(100) / Decimal(COIN)
 TXS_COUNT = 24
 BLOCK_POLICY_ESTIMATOR_ERROR = "Insufficient data or no feerate found"
+MEMPOOL_POLICY_ESTIMATOR_INSUFFICIENT_DATA_ERROR = "mempool_policy: Not enough recent block data for fee rate estimation"
 BLOCK_POLICY_ESTIMATOR_FILE_PATH = "fees/block_policy_estimates.dat"
 
 def small_txpuzzle_randfee(
@@ -570,6 +571,65 @@ class EstimateFeeTest(BitcoinTestFramework):
         combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "mempool_policy")
+
+        self.log.info("Test persisted mined-block statistics require sufficient post-load mempool weight")
+        # Save matching estimator and mempool snapshots with transactions in the
+        # mempool. Reuse them to exercise startup conditions where the post-load
+        # mempool may be too light while the persisted estimator window still
+        # matches the chain tip.
+        snapshot_utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(2)]
+        snapshot_time = int(time.time())
+        node0.setmocktime(snapshot_time)
+        self.send_transactions(snapshot_utxos[:1], low_feerate, target_vsize=200)
+        latest_entry_time = snapshot_time + 2 * SECONDS_PER_HOUR
+        node0.setmocktime(latest_entry_time)
+        self.send_transactions(snapshot_utxos[1:], low_feerate, target_vsize)
+        mempool_policy_dat = node0.chain_path / "fees/mempool_policy_estimator.dat"
+        mempool_dat = node0.chain_path / "mempool.dat"
+        self.stop_node(0)
+        mempool_policy_snapshot = mempool_policy_dat.read_bytes()
+        mempool_snapshot = mempool_dat.read_bytes()
+
+        def start_from_snapshot(extra_args=None, *, remove_mempool=False):
+            mempool_policy_dat.write_bytes(mempool_policy_snapshot)
+            mempool_dat.write_bytes(mempool_snapshot)
+            if remove_mempool:
+                mempool_dat.unlink()
+            self.start_node(0, extra_args)
+
+        def assert_mempool_estimator_unavailable():
+            estimate = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "none"})
+            assert "feerate" not in estimate
+            verify_estimate_response(estimate, None, [MEMPOOL_POLICY_ESTIMATOR_INSUFFICIENT_DATA_ERROR])
+            assert_equal(estimate["mempool_health_statistics"], [])
+
+        self.log.info("Retain persisted mined-block statistics when post-load weight meets the threshold")
+        start_from_snapshot(extra_args=["-mempoolexpiry=1", f"-mocktime={latest_entry_time}"])
+        assert_equal(node0.getmempoolinfo()["size"], 1)
+        estimate = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "mempool_policy"})
+        assert "feerate" in estimate
+        assert_equal(len(estimate["mempool_health_statistics"]), 6)
+        self.stop_node(0)
+
+        self.log.info("Do not load persisted mined-block statistics when mempool persistence is disabled")
+        start_from_snapshot(extra_args=["-persistmempool=0"])
+        assert_equal(node0.getmempoolinfo()["size"], 0)
+        assert_mempool_estimator_unavailable()
+        self.stop_node(0)
+        assert_equal(mempool_policy_dat.read_bytes(), mempool_policy_snapshot)
+
+        self.log.info("Discard persisted mined-block statistics when mempool.dat is missing")
+        start_from_snapshot(remove_mempool=True)
+        assert_equal(node0.getmempoolinfo()["size"], 0)
+        assert_mempool_estimator_unavailable()
+        self.stop_node(0)
+
+        self.log.info("Discard persisted mined-block statistics when mempool.dat transactions are expired")
+        start_from_snapshot(extra_args=["-mempoolexpiry=1", f"-mocktime={latest_entry_time + 2 * SECONDS_PER_HOUR}"])
+        assert_equal(node0.getmempoolinfo()["size"], 0)
+        assert_mempool_estimator_unavailable()
+        self.restart_node(0)
+        assert_mempool_estimator_unavailable()
 
     def test_stale_mempool_block_stats_are_rejected_on_load(self):
         # Persisted mempool block stats must be tied to the best block hash,

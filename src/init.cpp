@@ -2133,7 +2133,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Load mempool from disk
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
-            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
+            const auto load_result{LoadMempool(
+                *pool,
+                ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{},
+                chainman.ActiveChainstate(), {})};
+            if (node.fee_estimator_man && !chainman.m_interrupt) {
+                FeeRateEstimatorManager* const fee_estimator_man{node.fee_estimator_man.get()};
+                ValidationSignals& validation_signals{*Assert(node.validation_signals)};
+                // Queue completion after block notifications generated during
+                // startup so the mempool-policy estimator ignores them.
+                validation_signals.CallFunctionInValidationInterfaceQueue([fee_estimator_man,
+                                                                           load_result] {
+                    fee_estimator_man->MempoolLoadCompleted(load_result);
+                });
+                validation_signals.SyncWithValidationInterfaceQueue();
+            }
             pool->SetLoadTried(!chainman.m_interrupt);
         }
     });

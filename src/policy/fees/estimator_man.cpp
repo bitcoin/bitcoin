@@ -59,13 +59,21 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
 void FeeRateEstimatorManager::IntervalFlush()
 {
     m_block_policy_estimator->FlushFeeEstimates();
-    m_mempool_estimator->FlushMinedBlockStats();
+    if (m_mempool_load_completed) m_mempool_estimator->FlushMinedBlockStats();
 }
 
 void FeeRateEstimatorManager::ShutdownFlush()
 {
     m_block_policy_estimator->Flush();
-    m_mempool_estimator->FlushMinedBlockStats();
+    if (m_mempool_load_completed) m_mempool_estimator->FlushMinedBlockStats();
+}
+
+void FeeRateEstimatorManager::MempoolLoadCompleted(const node::MempoolLoadResult& load_result)
+{
+    if (load_result) {
+        m_mempool_estimator->MempoolRestored(*load_result);
+    }
+    m_mempool_load_completed = true;
 }
 
 std::vector<MinedBlockStats> FeeRateEstimatorManager::MempoolPolicyEstimatorBlocksStats() const
@@ -86,7 +94,9 @@ void FeeRateEstimatorManager::TransactionRemovedFromMempool(const CTransactionRe
 void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
 {
     m_block_policy_estimator->processBlock(txs_removed_for_block, block_height);
-    m_mempool_estimator->MempoolTxsRemovedForBlock(block, txs_removed_for_block, block_height);
+    if (m_mempool_load_completed) {
+        m_mempool_estimator->MempoolTxsRemovedForBlock(block, txs_removed_for_block, block_height);
+    }
 }
 
 CFeeRate FeeRateEstimatorManager::BlockPolicyEstimateRawFee(unsigned int target, double threshold, FeeEstimateHorizon horizon, EstimationResult* buckets) const
