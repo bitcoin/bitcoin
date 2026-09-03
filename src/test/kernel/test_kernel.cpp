@@ -83,7 +83,7 @@ constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerif
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
 constexpr auto VERIFY_ALL_PRE_TAPROOT{VERIFY_ALL_PRE_SEGWIT | ScriptVerificationFlags::WITNESS};
 
-void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected, bool equal = true)
+void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected, bool /*equal*/ = true)
 {
     std::span<const uint8_t> actual{reinterpret_cast<const unsigned char*>(_actual.data()), _actual.size()};
     std::span<const uint8_t> expected{reinterpret_cast<const unsigned char*>(_expected.data()), _expected.size()};
@@ -118,7 +118,7 @@ struct TestDirectory {
 class TestKernelNotifications : public KernelNotifications
 {
 public:
-    void HeaderTipHandler(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override
+    void HeaderTipHandler(SynchronizationState /*state*/, int64_t /*height*/, int64_t timestamp, bool /*presync*/) override
     {
         BOOST_CHECK_GT(timestamp, 0);
     }
@@ -193,17 +193,17 @@ public:
         }
     }
 
-    void BlockConnected(Block block, BlockTreeEntry entry) override
+    void BlockConnected(Block /*block*/, BlockTreeEntry /*entry*/) override
     {
         std::cout << "Block connected." << std::endl;
     }
 
-    void PowValidBlock(BlockTreeEntry entry, Block block) override
+    void PowValidBlock(BlockTreeEntry /*entry*/, Block /*block*/) override
     {
         std::cout << "Block passed pow verification" << std::endl;
     }
 
-    void BlockDisconnected(Block block, BlockTreeEntry entry) override
+    void BlockDisconnected(Block /*block*/, BlockTreeEntry /*entry*/) override
     {
         std::cout << "Block disconnected." << std::endl;
     }

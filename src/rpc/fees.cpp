@@ -200,7 +200,7 @@ static RPCMethod estimaterawfee()
         RPCExamples{
             HelpExampleCli("estimaterawfee", "6 0.9")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             FeeRateEstimatorManager& fee_estimator_man = EnsureAnyFeeEstimatorMan(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);

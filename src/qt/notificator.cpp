@@ -214,7 +214,7 @@ void Notificator::notifyMacUserNotificationCenter(const QString &title, const QS
 }
 #endif
 
-void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
+void Notificator::notify(Class cls, const QString &title, const QString &text, [[maybe_unused]] const QIcon &icon, int millisTimeout)
 {
     switch(mode)
     {

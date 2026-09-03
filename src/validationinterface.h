@@ -63,17 +63,17 @@ protected:
      *
      * Called on a background thread. Only called for the active chainstate.
      */
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void UpdatedBlockTip(const CBlockIndex*, const CBlockIndex*, bool) {}
     /**
      * Notifies listeners any time the block chain tip changes, synchronously.
      */
-    virtual void ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd) {};
+    virtual void ActiveTipChange(const CBlockIndex&, bool) {};
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
      * Called on a background thread.
      */
-    virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) {}
+    virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t) {}
 
     /**
      * Notifies listeners of a transaction leaving mempool.
@@ -107,7 +107,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
+    virtual void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t) {}
     /*
      * Notifies listeners of transactions removed from the mempool as
      * as a result of new block being connected.
@@ -117,13 +117,13 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height) {}
+    virtual void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>&, const std::vector<RemovedMempoolTransactionInfo>&, unsigned int) {}
     /**
      * Notifies listeners of a block being connected.
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) {}
+    virtual void BlockConnected(const kernel::ChainstateRole&, const std::shared_ptr<const CBlock>&, const CBlockIndex*) {}
     /**
      * Notifies listeners of a block being disconnected
      * Provides the block that was disconnected.
@@ -131,7 +131,7 @@ protected:
      * Called on a background thread. Only called for the active chainstate, since
      * background chainstates should never disconnect blocks.
      */
-    virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) {}
+    virtual void BlockDisconnected(const std::shared_ptr<const CBlock>&, const CBlockIndex*) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
      *
@@ -148,7 +148,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+    virtual void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided BlockValidationState IsValid, the provided block
@@ -160,7 +160,7 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet.
      */
-    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    virtual void NewPoWValidBlock(const CBlockIndex*, const std::shared_ptr<const CBlock>&) {};
     friend class ValidationSignals;
     friend class ValidationInterfaceTest;
 };

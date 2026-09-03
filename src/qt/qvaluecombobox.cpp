@@ -25,7 +25,7 @@ void QValueComboBox::setRole(int _role)
     this->role = _role;
 }
 
-void QValueComboBox::handleSelectionChanged(int idx)
+void QValueComboBox::handleSelectionChanged(int /*idx*/)
 {
     Q_EMIT valueChanged();
 }
