@@ -61,7 +61,7 @@ namespace mp {
 //! capnproto interface. Use Priority<1> so this hook has medium priority, and
 //! higher priority hooks could take precedence over this one.
 template <typename LocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<LocalType>, Priority<1>, InvokeContext& invoke_context, Value&& value, Output&& output)
+void CustomBuildField(TypeList<LocalType>, Priority<1>, InvokeContext&, Value&& value, Output&& output)
 // Enable if serializeable and if LocalType is not cv or reference qualified. If
 // LocalType is cv or reference qualified, it is important to fall back to
 // lower-priority Priority<0> implementation of this function that strips cv
@@ -81,7 +81,7 @@ requires Serializable<LocalType, DataStream> && std::is_same_v<LocalType, std::r
 //! returned from capnproto interface. Use Priority<1> so this hook has medium
 //! priority, and higher priority hooks could take precedence over this one.
 template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<LocalType>, Priority<1>, InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest)
+decltype(auto) CustomReadField(TypeList<LocalType>, Priority<1>, InvokeContext&, Input&& input, ReadDest&& read_dest)
 requires Unserializable<LocalType, DataStream> && (!ipc::capnp::Deserializable<LocalType>)
 {
     return read_dest.update([&](auto& value) {
@@ -98,7 +98,7 @@ requires Unserializable<LocalType, DataStream> && (!ipc::capnp::Deserializable<L
 //! returned from capnproto interface. Use Priority<1> so this hook has medium
 //! priority, and higher priority hooks could take precedence over this one.
 template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<LocalType>, Priority<1>, InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest)
+decltype(auto) CustomReadField(TypeList<LocalType>, Priority<1>, InvokeContext&, Input&& input, ReadDest&& read_dest)
 requires ipc::capnp::Deserializable<LocalType>
 {
     assert(input.has());
@@ -111,7 +111,7 @@ requires ipc::capnp::Deserializable<LocalType>
 //! Overload CustomBuildField and CustomReadField to serialize UniValue
 //! parameters and return values as JSON strings.
 template <typename Value, typename Output>
-void CustomBuildField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_context, Value&& value, Output&& output)
+void CustomBuildField(TypeList<UniValue>, Priority<1>, InvokeContext&, Value&& value, Output&& output)
 {
     std::string str = value.write();
     auto result = output.init(str.size());
@@ -119,7 +119,7 @@ void CustomBuildField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_con
 }
 
 template <typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_context, Input&& input,
+decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext&, Input&& input,
                                ReadDest&& read_dest)
 {
     return read_dest.update([&](auto& value) {
@@ -138,7 +138,7 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
 //! values in a List. Interpreting empty Data values as null CTransactionRef
 //! values works well for this purpose.
 template <typename Input>
-bool CustomHasField(TypeList<CTransaction>, InvokeContext& invoke_context, const Input& input)
+bool CustomHasField(TypeList<CTransaction>, InvokeContext&, const Input& input)
 {
     return input.get().size() > 0;
 }
