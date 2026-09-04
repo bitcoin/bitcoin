@@ -25,6 +25,7 @@
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/obfuscation.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <array>
@@ -185,6 +186,29 @@ enum class ReadRawError {
     BadPartRange,
 };
 
+/** Errors produced by block storage instead of invoking application callbacks. */
+enum class BlockStorageErrorType {
+    FLUSH,
+    FATAL,
+};
+
+struct BlockStorageError {
+    BlockStorageErrorType type;
+    bilingual_str message;
+};
+
+using BlockStorageErrors = std::vector<BlockStorageError>;
+
+/**
+ * Result of a block storage operation. Notifications are returned in occurrence
+ * order and may accompany a successful value.
+ */
+template <typename T>
+struct BlockStorageOutcome {
+    T value;
+    BlockStorageErrors notifications;
+};
+
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
@@ -205,14 +229,14 @@ private:
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like m_dirty_blockindex.
      */
-    bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+    BlockStorageOutcome<bool> LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] BlockStorageOutcome<bool> FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Return false if undo file flushing fails. */
-    [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
+    [[nodiscard]] BlockStorageOutcome<bool> FlushUndoFile(int block_file, bool finalize);
 
     /**
      * Helper function performing various preparations before a block can be saved to disk:
@@ -223,9 +247,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] BlockStorageOutcome<FlatFilePos> FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] BlockStorageOutcome<bool> FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] BlockStorageOutcome<bool> FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
@@ -359,7 +383,7 @@ public:
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+    BlockStorageOutcome<bool> LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
@@ -382,7 +406,7 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    bool WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+    BlockStorageOutcome<bool> WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk and update block file statistics.
@@ -393,7 +417,7 @@ public:
      * @returns in case of success, the position to which the block was written to
      *          in case of an error, an empty FlatFilePos
      */
-    FlatFilePos WriteBlock(const CBlock& block, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    BlockStorageOutcome<FlatFilePos> WriteBlock(const CBlock& block, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *

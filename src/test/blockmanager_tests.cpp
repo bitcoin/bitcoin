@@ -43,7 +43,9 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
     LOCK(::cs_main);
-    BOOST_CHECK_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
+    const auto first_outcome{blockman.WriteBlock(params->GenesisBlock(), 0)};
+    BOOST_CHECK(first_outcome.notifications.empty());
+    BOOST_CHECK_EQUAL(first_outcome.value.nPos, STORAGE_HEADER_BYTES);
     // simulate what happens during reindex
     // simulate a well-formed genesis block being found at offset 8 in the blk00000.dat file
     // the block is found at offset 8 because there is an 8 byte serialization header
@@ -56,8 +58,9 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     // this is a check to make sure that https://github.com/bitcoin/bitcoin/issues/21379 does not recur
     // 8 bytes (for serialization header) + 285 (for serialized genesis block) = 293
     // add another 8 bytes for the second block's serialization header and we get 293 + 8 = 301
-    FlatFilePos actual{blockman.WriteBlock(params->GenesisBlock(), 1)};
-    BOOST_CHECK_EQUAL(actual.nPos, STORAGE_HEADER_BYTES + ::GetSerializeSize(TX_WITH_WITNESS(params->GenesisBlock())) + STORAGE_HEADER_BYTES);
+    const auto second_outcome{blockman.WriteBlock(params->GenesisBlock(), 1)};
+    BOOST_CHECK(second_outcome.notifications.empty());
+    BOOST_CHECK_EQUAL(second_outcome.value.nPos, STORAGE_HEADER_BYTES + ::GetSerializeSize(TX_WITH_WITNESS(params->GenesisBlock())) + STORAGE_HEADER_BYTES);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain100Setup)
@@ -262,10 +265,14 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), 0);
 
     // Write the first block to a new location.
-    FlatFilePos pos1{blockman.WriteBlock(block1, /*nHeight=*/1)};
+    const auto first_outcome{blockman.WriteBlock(block1, /*nHeight=*/1)};
+    BOOST_CHECK(first_outcome.notifications.empty());
+    FlatFilePos pos1{first_outcome.value};
 
     // Write second block
-    FlatFilePos pos2{blockman.WriteBlock(block2, /*nHeight=*/2)};
+    const auto second_outcome{blockman.WriteBlock(block2, /*nHeight=*/2)};
+    BOOST_CHECK(second_outcome.notifications.empty());
+    FlatFilePos pos2{second_outcome.value};
 
     // Two blocks in the file
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), (TEST_BLOCK_SIZE + STORAGE_HEADER_BYTES) * 2);
