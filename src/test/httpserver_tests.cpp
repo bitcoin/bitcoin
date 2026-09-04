@@ -863,7 +863,16 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     }
 
     // Check the sent response from the mock client at the other end of the mock socket
+    constexpr std::string_view expected_response{
+        "HTTP/1.1 200 OK\r\n"
+        "Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n"
+        "Content-Length: 7\r\n"
+        "Content-Type: text/html; charset=ISO-8859-1\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+        "874140\n"};
     std::string actual;
+    actual.reserve(expected_response.length());
     // Wait up to one minute for all the bytes to appear in the "send" pipe.
     char buf[0x10000] = {};
     attempts = 6000;
@@ -872,20 +881,14 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
         if (bytes_read > 0) {
             actual.append(buf, bytes_read);
-            if (actual.length() == 146) {
+            if (actual.length() >= expected_response.length()) {
                 break;
             }
         }
         std::this_thread::sleep_for(10ms);
         --attempts;
     }
-    BOOST_CHECK(actual.starts_with("HTTP/1.1 200 OK\r\n"));
-    BOOST_CHECK(actual.ends_with("\r\n874140\n"));
-    // Headers can be sorted in any order, and will be, since we use unordered_map
-    BOOST_CHECK(actual.find("Connection: close\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Content-Length: 7\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Content-Type: text/html; charset=ISO-8859-1\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n") != std::string::npos);
+    BOOST_CHECK_EQUAL(actual, expected_response);
 
     // Wait up to one minute for connection to be automatically closed, because
     // keep-alive was not set by the client and we are done responding to their request.
