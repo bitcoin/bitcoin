@@ -1556,6 +1556,23 @@ private:
     bool AlreadyConnectedToAddress(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     /**
+     * Atomically check whether we're already connected or already connecting to `addr`
+     * and, if not, reserve it for an in-flight outbound connection attempt. This closes
+     * the race where two threads (e.g. ThreadOpenConnections, ThreadOpenAddedConnections,
+     * or an addnode/addconnection RPC) both pass the "not connected yet" check and then
+     * both spend a possibly long time (e.g. an I2P SAM handshake) connecting to the same
+     * peer, ending up with duplicate connections to it (see GitHub issue #22559).
+     * Must be paired with a later ReleaseConnectingAddr(addr) call once the connection
+     * attempt has failed, or once a successful connection has been added to m_nodes.
+     * @param[in] addr Address:port to reserve.
+     * @return true if `addr` was not already connected/connecting to and is now reserved.
+     */
+    bool TryClaimConnectingAddr(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    /** Release a reservation made by a previous, matching TryClaimConnectingAddr() call. */
+    void ReleaseConnectingAddr(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    /**
      * Try to find an inbound connection to evict.
      * @param[in] evict_tx_relay_peer_only  Whether to only select full relay peers for eviction
      * @param[in] protect_peer              Protect peer with node id
@@ -1661,6 +1678,9 @@ private:
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
+    /** Addresses reserved by TryClaimConnectingAddr() for an outbound connection attempt
+     *  that is still in progress (not yet in m_nodes, and not yet given up on). */
+    std::vector<CService> m_connecting GUARDED_BY(m_nodes_mutex);
     mutable Mutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};

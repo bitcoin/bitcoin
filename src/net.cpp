@@ -347,13 +347,33 @@ bool CConnman::AlreadyConnectedToHost(std::string_view host) const
 bool CConnman::AlreadyConnectedToAddressPort(const CService& addr_port) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&addr_port](CNode* node) { return node->addr == addr_port; });
+    return std::ranges::any_of(m_nodes, [&addr_port](CNode* node) { return node->addr == addr_port; }) ||
+           std::ranges::any_of(m_connecting, [&addr_port](const CService& a) { return a == addr_port; });
 }
 
 bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
+    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; }) ||
+           std::ranges::any_of(m_connecting, [&addr](const CService& a) { return a == addr; });
+}
+
+bool CConnman::TryClaimConnectingAddr(const CService& addr)
+{
+    LOCK(m_nodes_mutex);
+    const bool already_connected_or_connecting =
+        std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; }) ||
+        std::ranges::any_of(m_connecting, [&addr](const CService& a) { return a == addr; });
+    if (already_connected_or_connecting) return false;
+    m_connecting.push_back(addr);
+    return true;
+}
+
+void CConnman::ReleaseConnectingAddr(const CService& addr)
+{
+    LOCK(m_nodes_mutex);
+    const auto it = std::ranges::find(m_connecting, addr);
+    if (it != m_connecting.end()) m_connecting.erase(it);
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -446,6 +466,16 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
     for (auto& target_addr : connect_to) {
+        // Reserve target_addr for the duration of this (possibly slow, e.g. over an
+        // I2P SAM session) connection attempt so that a concurrent call elsewhere
+        // cannot start a second, redundant connection attempt to it in the meantime.
+        // Released below on failure; on success it stays reserved until the caller
+        // has added the resulting node to m_nodes.
+        const bool claimed = target_addr.IsValid() && TryClaimConnectingAddr(target_addr);
+        if (target_addr.IsValid() && !claimed) {
+            LogInfo("Not opening a connection to %s, already connected or connecting", target_addr.ToStringAddrPort());
+            continue;
+        }
         if (target_addr.IsValid()) {
             const std::optional<Proxy> use_proxy{
                 proxy_override.has_value() ? proxy_override : GetProxy(target_addr.GetNetwork()),
@@ -511,6 +541,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         }
         // Check any other resolved address (if any) if we fail to connect
         if (!sock) {
+            if (claimed) ReleaseConnectingAddr(target_addr);
             continue;
         }
 
@@ -1835,6 +1866,19 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         return;
     }
 
+    // Unlike a Tor hidden-service inbound connection (whose source is masked by the
+    // local Tor proxy, see inbound_onion above) or a clearnet IPv4/IPv6 connection
+    // (whose source IP can legitimately be shared by unrelated peers behind NAT), an
+    // I2P inbound connection's source address is the peer's real, non-shareable I2P
+    // destination, and I2P always uses port 0. So an exact match here reliably means
+    // we already have a connection, in progress or established, to this same peer;
+    // reject the new one instead of spending a second inbound slot on it (see
+    // GitHub issue #22559).
+    if (addr.IsI2P() && AlreadyConnectedToAddressPort(addr)) {
+        LogDebug(BCLog::NET, "connection from %s dropped (already connected)\n", addr.ToStringAddrPort());
+        return;
+    }
+
     if (nInbound >= m_max_inbound)
     {
         if (!AttemptToEvictConnection(/*evict_tx_relay_peer_only=*/false)) {
@@ -3127,6 +3171,13 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
     m_msgproc->InitializeNode(*pnode, m_local_services);
     {
         LOCK(m_nodes_mutex);
+        // pnode->addr was reserved via TryClaimConnectingAddr() inside ConnectNode();
+        // release it now, atomically with adding pnode to m_nodes, so there is no gap
+        // in which another thread could see pnode->addr as neither connected nor
+        // reserved and start a redundant connection attempt to it.
+        const auto it = std::ranges::find(m_connecting, pnode->addr);
+        if (it != m_connecting.end()) m_connecting.erase(it);
+
         m_nodes.push_back(pnode);
 
         // update connection count by network
