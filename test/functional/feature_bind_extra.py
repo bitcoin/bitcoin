@@ -8,8 +8,8 @@ it binds to the expected ports, and verify that duplicate or conflicting
 -bind/-whitebind configurations are rejected with a descriptive error.
 """
 
-from contextlib import suppress
 from itertools import combinations_with_replacement
+import re
 from test_framework.netutil import (
     addr_to_hex,
     get_bind_addrs,
@@ -20,6 +20,7 @@ from test_framework.test_framework import (
 from test_framework.test_node import ErrorMatch, FailedToStartError
 from test_framework.util import (
     assert_equal,
+    assert_raises,
     p2p_port,
     rpc_port,
 )
@@ -98,10 +99,8 @@ class BindExtraTest(BitcoinTestFramework):
 
         self.log.info("Test -listenonion with a normal bind and no dedicated onion bind")
         self.stop_node(2)
-        with suppress(FailedToStartError):
-            self.start_node(2, extra_args=self.expected[2][0] + ["-listenonion=1"])
-            self.nodes[2].stop()
-        self.nodes[2].wait_until_stopped(expected_ret_code=0, expected_stderr="")  # TODO: Reject shared Tor binds
+        assert_raises(FailedToStartError, self.start_node, 2, extra_args=self.expected[2][0] + ["-listenonion=1"])
+        self.nodes[2].wait_until_stopped(expected_ret_code=1, expected_stderr=re.compile("Tor onion service cannot share"))
 
         self.log.info("Test -bind with dedicated onion bind starts when -listenonion=1")
         self.restart_node(1, extra_args=self.expected[1][0] + ["-listenonion=1"])
