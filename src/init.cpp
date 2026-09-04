@@ -2307,7 +2307,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     CService onion_service_target;
     if (!connOptions.onion_binds.empty()) {
-        onion_service_target = connOptions.onion_binds.front();
+        onion_service_target = connOptions.onion_binds[0];
     } else if (!connOptions.vBinds.empty()) {
         onion_service_target = connOptions.vBinds.front();
     } else {
@@ -2321,7 +2321,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringAddrPort()));
         }
-        node.tor_controller = std::make_unique<TorController>(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
+        node.tor_controller = std::make_unique<TorController>(args.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
     }
 
     bool should_discover = connOptions.bind_on_any;
