@@ -120,8 +120,10 @@ class BindExtraTest(BitcoinTestFramework):
             if address == "[::]" and not test_ipv6_local():
                 continue
             extra_args = [f"-bind={address}:{p2p_port(0)}=onion"] + TOR_ARGS
-            self.start_node(0, extra_args=extra_args)  # TODO: Wildcard onion binds misclassify incoming Tor connections
-            self.stop_node(0)
+            self.nodes[0].assert_start_raises_init_error(
+                extra_args,
+                "Error: The automatic Tor onion service cannot use a wildcard onion bind. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0.",
+            )
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()
