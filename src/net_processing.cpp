@@ -1253,13 +1253,15 @@ static void AddKnownTx(Peer& peer, const uint256& hash)
 /** Read a locator and stop hash, disconnecting if the locator is oversized. */
 bool ReadBlockLocator(DataStream& stream, CBlockLocator& locator, uint256& hash_stop, CNode& node, const std::string& msg_type)
 {
-    stream >> locator >> hash_stop;
-    if (locator.vHave.size() > MAX_LOCATOR_SZ) {
-        LogDebug(BCLog::NET, "%s locator size %lld > %d, %s", msg_type, locator.vHave.size(), MAX_LOCATOR_SZ, node.DisconnectMsg());
+    try {
+        locator.LimitedRead<MAX_LOCATOR_SZ>(stream);
+        stream >> hash_stop;
+        return true;
+    } catch (const LimitedVectorExceededError& e) {
+        LogDebug(BCLog::NET, "%s locator size %u > %u, %s", msg_type, e.m_size, MAX_LOCATOR_SZ, node.DisconnectMsg());
         node.fDisconnect = true;
         return false;
     }
-    return true;
 }
 
 /** Whether this peer can serve us blocks. */

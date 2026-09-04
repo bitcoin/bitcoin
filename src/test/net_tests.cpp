@@ -1726,7 +1726,7 @@ BOOST_AUTO_TEST_CASE(oversized_locator_handling)
             BOOST_REQUIRE(connman.ReceiveMsgFrom(node, std::move(oversized_locator)));
             node.fPauseSend = false;
             BOOST_CHECK(!connman.ProcessMessagesOnce(node));
-            BOOST_CHECK(!node.fDisconnect); // TODO: reject oversized locators before allocating
+            BOOST_CHECK(node.fDisconnect);
 
             m_node.peerman->FinalizeNode(node);
         }

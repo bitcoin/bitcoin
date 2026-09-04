@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -135,6 +136,13 @@ struct CBlockLocator
         int nVersion = DUMMY_VERSION;
         READWRITE(nVersion);
         READWRITE(obj.vHave);
+    }
+
+    template <size_t Limit, typename Stream>
+    void LimitedRead(Stream& s)
+    {
+        s.ignore(sizeof(DUMMY_VERSION));
+        s >> LIMITED_VECTOR(vHave, Limit);
     }
 
     void SetNull()
