@@ -319,7 +319,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         const BlockManager::Options blockman_opts{
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
-            .notifications = chainman_opts.notifications,
             .block_tree_db_params = DBParams{
                 .path = m_args.GetDataDirNet() / "blocks" / "index",
                 .cache_bytes = m_kernel_cache_sizes.block_tree_db,
