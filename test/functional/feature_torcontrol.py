@@ -6,15 +6,21 @@
 from contextlib import contextmanager
 import socket
 import threading
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     ensure_for,
     p2p_port,
+    tor_port,
 )
 
 SERVICE_ID = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd"
 VALID_PRIVATE_KEY = "ED25519-V3:wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="  # 64 arbitrary bytes encoded as Base64
+
+
+def new_onion_command(target_port):
+    return f"ADD_ONION NEW:ED25519-V3 PoWDefensesEnabled=1 Port=18444,127.0.0.1:{target_port}"
 
 
 class MockTorControlServer:
@@ -123,7 +129,7 @@ class TorControlTest(BitcoinTestFramework):
     def private_key_path(self):
         return self.nodes[0].chain_path / "onion_v3_private_key"
 
-    def restart_with_mock(self, mock_tor, cached_private_key=None):
+    def restart_with_mock(self, mock_tor, cached_private_key=None, extra_args=None):
         self.stop_node(0)
         key_path = self.private_key_path()
         if cached_private_key is None:
@@ -136,7 +142,7 @@ class TorControlTest(BitcoinTestFramework):
             f"-torcontrol=127.0.0.1:{mock_tor.port}",
             "-listenonion=1",
             "-debug=tor",
-        ])
+        ] + (extra_args if extra_args is not None else [f"-bind=127.0.0.1:{tor_port(0)}=onion"]))
 
         # Wait for connection and PROTOCOLINFO command
         mock_tor.conn_ready.wait(timeout=10)
@@ -173,8 +179,7 @@ class TorControlTest(BitcoinTestFramework):
         assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
         assert_equal(mock_tor.received_commands[1], "AUTHENTICATE")
         assert_equal(mock_tor.received_commands[2], "GETINFO net/listeners/socks")
-        assert mock_tor.received_commands[3].startswith("ADD_ONION ")
-        assert "PoWDefensesEnabled=1" in mock_tor.received_commands[3]
+        assert_equal(mock_tor.received_commands[3], new_onion_command(tor_port(0)))
 
         self.log.info("Test a later ADD_ONION reply without a service ID")
         mock_tor.service_id = None
@@ -188,6 +193,27 @@ class TorControlTest(BitcoinTestFramework):
 
         # Clean up
         mock_tor.stop()
+
+    def test_targets(self):
+        self.log.info("Test that the first onion bind is the service target")
+        target_port = tor_port(self.num_nodes)
+        mock_tor = MockTorControlServer(self.next_port())
+        self.restart_with_mock(mock_tor, extra_args=[
+            f"-bind=127.0.0.1:{target_port}=onion",
+            f"-bind=127.0.0.1:{tor_port(0)}=onion",
+            "-whitelist=noban@127.0.0.1",
+        ])
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 4, timeout=10)
+        assert_equal(mock_tor.received_commands[3], new_onion_command(target_port))
+        self.nodes[0].add_p2p_connection(P2PInterface(), dstport=target_port)
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        tor_peer, normal_peer = self.nodes[0].getpeerinfo()
+        assert_equal(tor_peer["network"], "onion")
+        assert_equal(tor_peer["permissions"], [])
+        assert_equal(normal_peer["network"], "not_publicly_routable")
+        assert_equal(normal_peer["permissions"], ["noban", "download"])
+        mock_tor.stop()
+        self.stop_node(0, expected_stderr=f"Warning: More than one onion bind address is provided. Using 127.0.0.1:{target_port} for the automatically created Tor onion service.")
 
     def test_partial_data(self):
         self.log.info("Test that partial Tor control responses are buffered until complete")
@@ -360,6 +386,7 @@ class TorControlTest(BitcoinTestFramework):
             mock_tor.stop()
 
     def run_test(self):
+        self.test_targets()
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
