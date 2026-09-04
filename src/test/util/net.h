@@ -89,6 +89,21 @@ struct ConnmanTestMsg : public CConnman {
         return InitBinds(options);
     }
 
+    bool AlreadyConnectedToAddressPortPublic(const CService& addr_port)
+    {
+        return AlreadyConnectedToAddressPort(addr_port);
+    }
+
+    bool TryClaimConnectingAddrPublic(const CService& addr)
+    {
+        return TryClaimConnectingAddr(addr);
+    }
+
+    void ReleaseConnectingAddrPublic(const CService& addr)
+    {
+        ReleaseConnectingAddr(addr);
+    }
+
     void SocketHandlerPublic()
     {
         SocketHandler();

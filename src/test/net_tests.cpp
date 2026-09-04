@@ -1707,4 +1707,87 @@ BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
     fDiscover = discover_orig;
 }
 
+BOOST_AUTO_TEST_CASE(connecting_addr_claim)
+{
+    // Exercise TryClaimConnectingAddr()/ReleaseConnectingAddr(), which close the race
+    // (see GitHub issue #22559) where two threads both see an address as "not yet
+    // connected" and both start a (possibly slow, e.g. I2P) outbound connection
+    // attempt to it, ending up with two redundant connections to the same peer.
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+
+    const CService addr1{Lookup("1.2.3.4", 8333, /*fAllowLookup=*/false).value()};
+    const CService addr2{Lookup("5.6.7.8", 8333, /*fAllowLookup=*/false).value()};
+
+    BOOST_CHECK(!connman.AlreadyConnectedToAddressPortPublic(addr1));
+    BOOST_CHECK(!connman.AlreadyConnectedToAddressPublic(addr1));
+
+    // Claiming an address reserves it...
+    BOOST_CHECK(connman.TryClaimConnectingAddrPublic(addr1));
+    // ...so it now looks "already connected" to any other caller...
+    BOOST_CHECK(connman.AlreadyConnectedToAddressPortPublic(addr1));
+    BOOST_CHECK(connman.AlreadyConnectedToAddressPublic(addr1));
+    // ...and a second, concurrent claim of the very same address fails.
+    BOOST_CHECK(!connman.TryClaimConnectingAddrPublic(addr1));
+
+    // An unrelated address is unaffected and can be claimed independently.
+    BOOST_CHECK(connman.TryClaimConnectingAddrPublic(addr2));
+
+    // Releasing a reservation (a failed connection attempt, in production code)
+    // makes the address available again.
+    connman.ReleaseConnectingAddrPublic(addr1);
+    BOOST_CHECK(!connman.AlreadyConnectedToAddressPortPublic(addr1));
+    BOOST_CHECK(connman.TryClaimConnectingAddrPublic(addr1));
+
+    connman.ReleaseConnectingAddrPublic(addr1);
+    connman.ReleaseConnectingAddrPublic(addr2);
+    BOOST_CHECK(!connman.AlreadyConnectedToAddressPortPublic(addr1));
+    BOOST_CHECK(!connman.AlreadyConnectedToAddressPortPublic(addr2));
+}
+
+BOOST_AUTO_TEST_CASE(create_node_from_accepted_socket_i2p_dedup)
+{
+    // GitHub issue #22559: a peer could open more than one simultaneous inbound
+    // connection to us. For I2P, unlike Tor (whose inbound source is masked by the
+    // local proxy) or clearnet (whose source IP can be legitimately shared by
+    // distinct peers behind NAT), the accept-time source address is the peer's real,
+    // non-shareable I2P destination and always uses port 0, so it safely identifies
+    // the peer. Verify the second such connection is dropped instead of consuming
+    // another inbound slot, while unrelated peers -- including other peers that
+    // happen to share a clearnet source IP -- are unaffected.
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+    const CAddress addr_bind{CService{Lookup("127.0.0.1", 8333, /*fAllowLookup=*/false).value()}, NODE_NONE};
+
+    CAddress addr_i2p_1;
+    BOOST_REQUIRE(addr_i2p_1.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"));
+    CAddress addr_i2p_2;
+    BOOST_REQUIRE(addr_i2p_2.SetSpecial("c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p"));
+
+    connman.CreateNodeFromAcceptedSocketPublic(
+        std::make_unique<Sock>(INVALID_SOCKET), NetPermissionFlags::None, addr_bind, addr_i2p_1);
+    BOOST_CHECK_EQUAL(connman.TestNodes().size(), 1U);
+
+    // A second, simultaneous connection from the very same I2P peer is dropped.
+    connman.CreateNodeFromAcceptedSocketPublic(
+        std::make_unique<Sock>(INVALID_SOCKET), NetPermissionFlags::None, addr_bind, addr_i2p_1);
+    BOOST_CHECK_EQUAL(connman.TestNodes().size(), 1U);
+
+    // A different I2P peer gets its own connection.
+    connman.CreateNodeFromAcceptedSocketPublic(
+        std::make_unique<Sock>(INVALID_SOCKET), NetPermissionFlags::None, addr_bind, addr_i2p_2);
+    BOOST_CHECK_EQUAL(connman.TestNodes().size(), 2U);
+
+    // Two distinct clearnet peers sharing a source IP (e.g. behind the same NAT, or
+    // the many mock peers the functional test framework connects from 127.0.0.1) are
+    // never deduplicated by address alone: only I2P gets that treatment.
+    const CAddress addr_clearnet_1{Lookup("127.0.0.1", 10001, /*fAllowLookup=*/false).value(), NODE_NONE};
+    const CAddress addr_clearnet_2{Lookup("127.0.0.1", 10002, /*fAllowLookup=*/false).value(), NODE_NONE};
+    connman.CreateNodeFromAcceptedSocketPublic(
+        std::make_unique<Sock>(INVALID_SOCKET), NetPermissionFlags::None, addr_bind, addr_clearnet_1);
+    connman.CreateNodeFromAcceptedSocketPublic(
+        std::make_unique<Sock>(INVALID_SOCKET), NetPermissionFlags::None, addr_bind, addr_clearnet_2);
+    BOOST_CHECK_EQUAL(connman.TestNodes().size(), 4U);
+
+    connman.ClearTestNodes();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

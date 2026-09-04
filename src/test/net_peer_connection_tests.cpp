@@ -163,4 +163,32 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_FIXTURE_TEST_CASE(connect_node_rejects_in_flight_address, PeerTest)
+{
+    // Regression test for GitHub issue #22559: two callers racing to connect to the
+    // same peer (e.g. ThreadOpenConnections and an addnode/addconnection RPC) could
+    // both pass ConnectNode()'s "not already connected" check before either of them
+    // had added a node, and both go on to spend time (e.g. an I2P SAM handshake)
+    // connecting to it, ending up with duplicate connections. TryClaimConnectingAddr()
+    // closes this by letting the first caller reserve the address up front; verify
+    // that reservation is honored by the real ConnectNode() call path, not just by
+    // the dedup helper in isolation.
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerman = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    const CService addr_localhost{Lookup("127.0.0.1", Params().GetDefaultPort(), /*fAllowLookup=*/false).value()};
+
+    // Simulate a connection attempt to 127.0.0.1:<port> already in flight elsewhere.
+    BOOST_REQUIRE(connman->TryClaimConnectingAddrPublic(addr_localhost));
+
+    // A concurrent attempt to the same address (resolved from "localhost") must be
+    // rejected due to the in-flight reservation, without ever creating a node for it.
+    ASSERT_DEBUG_LOG(strprintf("Not opening a connection to localhost, already connected to %s",
+                                addr_localhost.ToStringAddrPort()));
+    BOOST_CHECK(!connman->ConnectNodePublic(*peerman, "localhost", ConnectionType::MANUAL));
+    BOOST_CHECK(connman->TestNodes().empty());
+
+    connman->ReleaseConnectingAddrPublic(addr_localhost);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
