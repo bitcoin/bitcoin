@@ -70,6 +70,7 @@ constexpr int MAX_LINE_LENGTH = 100000;
 constexpr int MAX_LINE_COUNT = 1000;
 /** Timeout for socket operations */
 constexpr auto SOCKET_SEND_TIMEOUT = 10s;
+constexpr std::string_view PRIVATE_KEY_NEW{"NEW:ED25519-V3"};
 
 /****** Low-level TorControlConnection ********/
 
@@ -566,7 +567,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Finally - now create the service
         if (m_private_key.empty()) { // No private key, generate one
-            m_private_key = "NEW:ED25519-V3"; // Explicitly request key type - see issue #9214
+            m_private_key = PRIVATE_KEY_NEW; // Explicitly request key type - see issue #9214
         }
         // Request onion service, redirect port.
         _conn.Command(MakeAddOnionCmd(m_private_key, m_target.ToStringAddrPort(), /*enable_pow=*/true),

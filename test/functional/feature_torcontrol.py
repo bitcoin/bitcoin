@@ -13,9 +13,11 @@ from test_framework.util import (
     p2p_port,
 )
 
+SERVICE_ID = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd"
+
 
 class MockTorControlServer:
-    def __init__(self, port, manual_mode=False):
+    def __init__(self, port, manual_mode=False, private_key=None, service_id=SERVICE_ID):
         self.port = port
         self.sock = None
         self.conn = None
@@ -23,6 +25,8 @@ class MockTorControlServer:
         self.thread = None
         self.received_commands = []
         self.manual_mode = manual_mode
+        self.private_key = private_key  # returned by ADD_ONION, as Tor does for a generated key
+        self.service_id = service_id
         self.conn_ready = threading.Event()
 
     def start(self):
@@ -94,10 +98,10 @@ class MockTorControlServer:
         elif command == "AUTHENTICATE":
             return "250 OK\r\n"
         elif command.startswith("ADD_ONION"):
-            return (
-                "250-ServiceID=testserviceid1234567890123456789012345678901234567890123456\r\n"
-                "250 OK\r\n"
-            )
+            reply = f"250-ServiceID={self.service_id}\r\n"
+            if self.private_key:
+                reply += f"250-PrivateKey={self.private_key}\r\n"
+            return reply + "250 OK\r\n"
         elif command.startswith("GETINFO"):
             return "250-net/listeners/socks=\"127.0.0.1:9050\"\r\n250 OK\r\n"
         else:
@@ -112,9 +116,15 @@ class TorControlTest(BitcoinTestFramework):
         self._port_counter = getattr(self, '_port_counter', 0) + 1
         return p2p_port(self.num_nodes + self._port_counter)
 
-    def restart_with_mock(self, mock_tor):
+    def restart_with_mock(self, mock_tor, cached_private_key=None):
+        self.stop_node(0)
+        key_path = self.nodes[0].chain_path / "onion_v3_private_key"
+        if cached_private_key is None:
+            key_path.unlink(missing_ok=True)
+        else:
+            key_path.write_bytes(cached_private_key.encode())
         mock_tor.start()
-        self.restart_node(0, extra_args=[
+        self.start_node(0, extra_args=[
             f"-torcontrol=127.0.0.1:{mock_tor.port}",
             "-listenonion=1",
             "-debug=tor",
@@ -189,14 +199,8 @@ class TorControlTest(BitcoinTestFramework):
 
         class NoPowServer(MockTorControlServer):
             def _get_response(self, command):
-                if command.startswith("ADD_ONION"):
-                    if "PoWDefensesEnabled=1" in command:
-                        return "512 Unrecognized option\r\n"
-                    else:
-                        return (
-                            "250-ServiceID=testserviceid1234567890123456789012345678901234567890123456\r\n"
-                            "250 OK\r\n"
-                        )
+                if command.startswith("ADD_ONION") and "PoWDefensesEnabled=1" in command:
+                    return "512 Unrecognized option\r\n"
                 return super()._get_response(command)
 
         mock_tor = NoPowServer(self.next_port())
