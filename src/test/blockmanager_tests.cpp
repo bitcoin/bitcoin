@@ -7,9 +7,11 @@
 #include <clientversion.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
-#include <script/solver.h>
 #include <primitives/block.h>
+#include <script/solver.h>
+#include <uint256.h>
 #include <util/chaintype.h>
+#include <util/fs.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -57,6 +59,68 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     const auto second_outcome{blockman.WriteBlock(params->GenesisBlock(), 1)};
     BOOST_CHECK(second_outcome.notifications.empty());
     BOOST_CHECK_EQUAL(second_outcome.value.nPos, STORAGE_HEADER_BYTES + ::GetSerializeSize(TX_WITH_WITNESS(params->GenesisBlock())) + STORAGE_HEADER_BYTES);
+}
+
+BOOST_AUTO_TEST_CASE(blockmanager_returns_flush_errors)
+{
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::MAIN)};
+    const BlockManager::Options blockman_opts{
+        .chainparams = *params,
+        .blocks_dir = m_args.GetBlocksDirPath(),
+        .block_tree_db_params = DBParams{
+            .path = m_args.GetDataDirNet() / "blocks" / "index",
+            .cache_bytes = 0,
+        },
+    };
+    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
+
+    CBlock block;
+    LOCK(::cs_main);
+    const auto first_outcome{blockman.WriteBlock(block, /*nHeight=*/0)};
+    const FlatFilePos first_pos{first_outcome.value};
+    BOOST_REQUIRE(!first_pos.IsNull());
+    BOOST_REQUIRE_EQUAL(first_pos.nFile, 0);
+    BOOST_REQUIRE(first_outcome.notifications.empty());
+
+    // Force a rollover, and make both files from the previous sequence entry
+    // impossible to open. The new block write itself can still succeed.
+    blockman.GetBlockFileInfo(first_pos.nFile)->nSize = MAX_BLOCKFILE_SIZE;
+    const fs::path block_path{blockman.GetBlockPosFilename(FlatFilePos{first_pos.nFile, 0})};
+    BOOST_REQUIRE(fs::remove(block_path));
+    BOOST_REQUIRE(fs::create_directory(block_path));
+    BOOST_REQUIRE(fs::create_directory(m_args.GetBlocksDirPath() / "rev00000.dat"));
+
+    const auto second_outcome{blockman.WriteBlock(block, /*nHeight=*/1)};
+    const FlatFilePos second_pos{second_outcome.value};
+    BOOST_REQUIRE(!second_pos.IsNull());
+    BOOST_CHECK_NE(second_pos.nFile, first_pos.nFile);
+    BOOST_REQUIRE_EQUAL(second_outcome.notifications.size(), 2);
+    BOOST_CHECK(second_outcome.notifications[0].type == node::BlockStorageErrorType::FLUSH);
+    BOOST_CHECK_EQUAL(second_outcome.notifications[0].message.original, "Flushing block file to disk failed. This is likely the result of an I/O error.");
+    BOOST_CHECK(second_outcome.notifications[1].type == node::BlockStorageErrorType::FLUSH);
+    BOOST_CHECK_EQUAL(second_outcome.notifications[1].message.original, "Flushing undo file to disk failed. This is likely the result of an I/O error.");
+}
+
+BOOST_AUTO_TEST_CASE(blockmanager_returns_fatal_error)
+{
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::MAIN)};
+    const BlockManager::Options blockman_opts{
+        .chainparams = *params,
+        .blocks_dir = m_args.GetBlocksDirPath(),
+        .block_tree_db_params = DBParams{
+            .path = m_args.GetDataDirNet() / "blocks" / "index",
+            .cache_bytes = 0,
+            .memory_only = true,
+        },
+    };
+    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
+
+    LOCK(::cs_main);
+    const auto outcome{blockman.LoadBlockIndexDB(uint256::ONE)};
+    BOOST_CHECK(!outcome.value);
+    BOOST_REQUIRE_EQUAL(outcome.notifications.size(), 1);
+    BOOST_CHECK(outcome.notifications[0].type == node::BlockStorageErrorType::FATAL);
+    BOOST_CHECK_NE(outcome.notifications[0].message.original.find("Assumeutxo data not found for the given blockhash"), std::string::npos);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain100Setup)
