@@ -86,7 +86,7 @@ class AuthServiceProxy():
             name = "%s.%s" % (self._service_name, name)
         if not self.reuse_http_connections:
             self._set_conn()
-        return AuthServiceProxy(self.__service_url, name, connection=self.__conn)
+        return AuthServiceProxy(self.__service_url, name, connection=self.__conn, ensure_ascii=self.ensure_ascii)
 
     def _request(self, method, path, postdata):
         '''
@@ -204,7 +204,7 @@ class AuthServiceProxy():
         return response, http_response.status
 
     def __truediv__(self, relative_uri):
-        return AuthServiceProxy("{}/{}".format(self.__service_url, relative_uri), self._service_name, connection=self.__conn)
+        return AuthServiceProxy("{}/{}".format(self.__service_url, relative_uri), self._service_name, connection=self.__conn, ensure_ascii=self.ensure_ascii)
 
     def _set_conn(self, connection=None):
         port = 80 if self.__url.port is None else self.__url.port

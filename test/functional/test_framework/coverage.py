@@ -8,10 +8,12 @@ Provides a way to track which RPC commands are exercised during
 testing.
 """
 
+import json
 import os
+import unittest
+from typing import Optional
 
 from .authproxy import AuthServiceProxy
-from typing import Optional
 
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
@@ -33,6 +35,14 @@ class AuthServiceProxyWrapper():
         self.auth_service_proxy_instance = auth_service_proxy_instance
         self.rpc_url = rpc_url
         self.coverage_logfile = coverage_logfile
+
+    @property
+    def ensure_ascii(self):
+        return self.auth_service_proxy_instance.ensure_ascii
+
+    @ensure_ascii.setter
+    def ensure_ascii(self, value):
+        self.auth_service_proxy_instance.ensure_ascii = value
 
     def __getattr__(self, name):
         return_val = getattr(self.auth_service_proxy_instance, name)
@@ -66,6 +76,7 @@ class AuthServiceProxyWrapper():
     def get_request(self, *args, **kwargs):
         self._log_call()
         return self.auth_service_proxy_instance.get_request(*args, **kwargs)
+
 
 def get_filename(dirname, n_node):
     """
@@ -111,3 +122,49 @@ def write_all_rpc_commands(dirname: str, node: AuthServiceProxy) -> bool:
         f.writelines(list(commands))
 
     return True
+
+
+class TestAuthServiceProxyWrapper(unittest.TestCase):
+    class HTTPConnection:
+        timeout = 60
+
+        def __init__(self):
+            self.postdata = None
+
+        def request(self, method, path, postdata, headers):
+            self.postdata = postdata
+
+        def getresponse(self):
+            return self
+
+        status = 200
+        reason = "OK"
+
+        def getheader(self, name):
+            return "application/json"
+
+        def read(self):
+            return b'{"jsonrpc":"2.0","result":null,"id":1}'
+
+    def test_ensure_ascii(self):
+        connection = self.HTTPConnection()
+        proxy = AuthServiceProxyWrapper(
+            AuthServiceProxy("http://user:pass@localhost", connection=connection),
+            "http://user:pass@localhost",
+        )
+
+        for ensure_ascii in [True, False]:
+            proxy.ensure_ascii = ensure_ascii
+            self.assertEqual(proxy.auth_service_proxy_instance.ensure_ascii, ensure_ascii)
+
+            for endpoint in [proxy, proxy / "wallet/test"]:
+                for text in ["рыба", "𝅘𝅥𝅯"]:
+                    endpoint.test(text)
+                    escaped = json.dumps(text)[1:-1].encode()
+                    utf8 = text.encode()
+                    if ensure_ascii:
+                        self.assertIn(escaped, connection.postdata)
+                        self.assertNotIn(utf8, connection.postdata)
+                    else:
+                        self.assertIn(utf8, connection.postdata)
+                        self.assertNotIn(escaped, connection.postdata)
