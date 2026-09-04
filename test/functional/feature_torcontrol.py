@@ -14,6 +14,7 @@ from test_framework.util import (
 )
 
 SERVICE_ID = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd"
+VALID_PRIVATE_KEY = "ED25519-V3:wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="  # 64 arbitrary bytes encoded as Base64
 
 
 class MockTorControlServer:
@@ -87,6 +88,9 @@ class MockTorControlServer:
         if self.conn:
             self.conn.sendall(data.encode('utf-8'))
 
+    def add_onion_keys(self):
+        return [command.split()[1] for command in self.received_commands if command.startswith("ADD_ONION ")]
+
     def _get_response(self, command):
         if command == "PROTOCOLINFO 1":
             return (
@@ -98,7 +102,7 @@ class MockTorControlServer:
         elif command == "AUTHENTICATE":
             return "250 OK\r\n"
         elif command.startswith("ADD_ONION"):
-            reply = f"250-ServiceID={self.service_id}\r\n"
+            reply = "" if self.service_id is None else f"250-ServiceID={self.service_id}\r\n"
             if self.private_key:
                 reply += f"250-PrivateKey={self.private_key}\r\n"
             return reply + "250 OK\r\n"
@@ -159,7 +163,8 @@ class TorControlTest(BitcoinTestFramework):
         self.log.info("Test Tor control basic functionality")
 
         mock_tor = MockTorControlServer(self.next_port())
-        self.restart_with_mock(mock_tor)
+        with self.nodes[0].assert_debug_log([f"Got tor service ID {SERVICE_ID}"], timeout=10):
+            self.restart_with_mock(mock_tor)
 
         # Waiting for Tor control commands
         self.wait_until(lambda: len(mock_tor.received_commands) >= 4, timeout=10)
@@ -170,6 +175,16 @@ class TorControlTest(BitcoinTestFramework):
         assert_equal(mock_tor.received_commands[2], "GETINFO net/listeners/socks")
         assert mock_tor.received_commands[3].startswith("ADD_ONION ")
         assert "PoWDefensesEnabled=1" in mock_tor.received_commands[3]
+
+        self.log.info("Test a later ADD_ONION reply without a service ID")
+        mock_tor.service_id = None
+        mock_tor.private_key = VALID_PRIVATE_KEY
+        with self.nodes[0].assert_debug_log([f"Got tor service ID {SERVICE_ID}"], timeout=10):  # TODO: Reject a reply without its own service ID
+            mock_tor.conn.shutdown(socket.SHUT_WR)
+            self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 2, timeout=10)
+        mock_tor.conn.shutdown(socket.SHUT_WR)
+        self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 3, timeout=10)
+        assert_equal(mock_tor.add_onion_keys()[2], VALID_PRIVATE_KEY)  # TODO: Do not adopt a key from a reply without a service ID
 
         # Clean up
         mock_tor.stop()
@@ -279,12 +294,79 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_invalid_service_id(self):
+        invalid_service_id = "a" + SERVICE_ID[1:]
+        key_path = self.private_key_path()
+        mock_tor = MockTorControlServer(self.next_port(), private_key=VALID_PRIVATE_KEY, service_id=invalid_service_id)
+
+        self.log.info("Test an invalid service ID returned by ADD_ONION")
+        with self.nodes[0].assert_debug_log([f"Got tor service ID {invalid_service_id}"], timeout=10):  # TODO: Reject the invalid service ID
+            self.restart_with_mock(mock_tor)
+        assert key_path.exists()  # TODO: Do not cache a key for an invalid service ID
+        mock_tor.conn.shutdown(socket.SHUT_WR)
+        self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 2, timeout=10)
+        assert_equal(mock_tor.add_onion_keys()[1], VALID_PRIVATE_KEY)  # TODO: Discard the key when rejecting an invalid service ID
+        mock_tor.stop()
+
+    def test_private_key_tor_command_injection(self):
+        valid_private_key = VALID_PRIVATE_KEY
+        key_path = self.private_key_path()
+
+        self.log.info("Test that a valid returned private key is cached and reused")
+        tor_control_port = self.next_port()
+        mock_tor = MockTorControlServer(tor_control_port, private_key=valid_private_key)
+        with self.nodes[0].assert_debug_log(["Cached service private key"], timeout=10):
+            self.restart_with_mock(mock_tor)
+        assert_equal(key_path.read_bytes(), valid_private_key.encode())
+        mock_tor.stop()
+
+        mock_tor = MockTorControlServer(tor_control_port)
+        self.restart_with_mock(mock_tor, cached_private_key=valid_private_key)
+        self.wait_until(lambda: any(command.startswith(f"ADD_ONION {valid_private_key} ") for command in mock_tor.received_commands), timeout=10)
+        mock_tor.stop()
+
+        for private_key, injected in [
+            # A line break ends the ADD_ONION command, so Tor runs the rest of the key as a second command
+            (f"{valid_private_key}\r\nSIGNAL SHUTDOWN\r\n", "SIGNAL SHUTDOWN"),
+            # A space ends the key argument, so Tor parses the rest of the key as further ADD_ONION arguments
+            (f"{valid_private_key} Flags=Detach", "Flags=Detach"),
+        ]:
+            self.log.info(f"Test {injected!r} injected through a returned private key")
+            # A reply line ends at CRLF and an unquoted value at a space, so only a quoted value can carry either
+            escaped_private_key = private_key.replace("\r", "\\r").replace("\n", "\\n")
+            quoted_private_key = f'"{escaped_private_key}"'
+            mock_tor = MockTorControlServer(tor_control_port, private_key=quoted_private_key)
+            with self.nodes[0].assert_debug_log(["Cached service private key"], timeout=10):  # TODO: Reject the returned key
+                self.restart_with_mock(mock_tor)
+            assert key_path.exists()  # TODO: Do not cache the returned key
+            mock_tor.stop()
+
+            self.log.info(f"Test {injected!r} injected through a cached private key")
+            mock_tor = MockTorControlServer(tor_control_port)
+            with self.nodes[0].assert_debug_log(["Received unexpected sync reply 510" if "\r\n" in private_key else "Cached service private key"], timeout=10):
+                self.restart_with_mock(mock_tor, cached_private_key=private_key)
+            assert any(injected in command for command in mock_tor.received_commands)  # TODO: Refuse to send the cached key
+            mock_tor.stop()
+
+        for malformed_private_key in (
+            valid_private_key.replace("ED25519-V3:", "RSA1024:", 1),
+            "ED25519-V3:$" + valid_private_key.partition(":")[2][1:],
+            "ED25519-V3:AA==",
+        ):
+            mock_tor = MockTorControlServer(tor_control_port, private_key=malformed_private_key)
+            with self.nodes[0].assert_debug_log(["Cached service private key"], timeout=10):  # TODO: Reject malformed returned keys
+                self.restart_with_mock(mock_tor)
+            assert key_path.exists()  # TODO: Do not cache malformed keys
+            mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
         self.test_overmany_lines()
+        self.test_invalid_service_id()
+        self.test_private_key_tor_command_injection()
         self.test_reconnect_backoff()
 
 
