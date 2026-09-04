@@ -117,8 +117,8 @@ private:
 
 /****** Bitcoin specific TorController implementation ********/
 
-/** Controller that connects to Tor control socket, authenticate, then create
- * and maintain an ephemeral onion service.
+/** Controller that connects to the Tor control socket and discovers the onion proxy.
+ * If a target is provided, also creates and maintains an ephemeral onion service.
  */
 class TorController
 {
