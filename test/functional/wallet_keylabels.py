@@ -43,6 +43,12 @@ class WalletKeyLabelsTest(BitcoinTestFramework):
         assert_equal(wallet.getkeylabel(fingerprint), "my hardware wallet")
         assert_equal(wallet.listkeylabels(), {fingerprint: "my hardware wallet"})
 
+        # gethdkeys reports the fingerprint and per-key label for each HD key.
+        hdkeys = wallet.gethdkeys()
+        assert_equal(len(hdkeys), 1)
+        assert_equal(hdkeys[0]["fingerprint"], fingerprint)
+        assert_equal(hdkeys[0]["label"], "my hardware wallet")
+
         # Per-key labels live in their own `key_labels` object, keyed by fingerprint,
         # and are never merged into the per-address `labels` array.
         info = wallet.getaddressinfo(addr)
@@ -84,6 +90,12 @@ class WalletKeyLabelsTest(BitcoinTestFramework):
         assert_equal(info["labels"], ["receiving"])
         assert_equal(info["key_labels"], {})
 
+        # After clearing the per-key label, gethdkeys still reports the
+        # fingerprint but no longer includes a `label` field.
+        hdkeys = wallet.gethdkeys()
+        assert_equal(hdkeys[0]["fingerprint"], fingerprint)
+        assert "label" not in hdkeys[0]
+
         # Invalid fingerprints are rejected.
         assert_raises_rpc_error(-5, "fingerprint must be 8 hex characters", wallet.setkeylabel, "nothex", "x")
         assert_raises_rpc_error(-5, "fingerprint must be 8 hex characters", wallet.setkeylabel, "deadbeef00", "x")
@@ -121,6 +133,12 @@ class WalletKeyLabelsTest(BitcoinTestFramework):
         mw.setkeylabel(fingerprint, "main")
         mw.setkeylabel(co1_fingerprint, "cosigner1")
         mw.setkeylabel(co2_fingerprint, "cosigner2")
+
+        # gethdkeys reports per-key labels for each multisig participant key.
+        mw_hdkeys = {k["fingerprint"]: k for k in mw.gethdkeys()}
+        assert_equal(mw_hdkeys[fingerprint]["label"], "main")
+        assert_equal(mw_hdkeys[co1_fingerprint]["label"], "cosigner1")
+        assert_equal(mw_hdkeys[co2_fingerprint]["label"], "cosigner2")
 
         multi_addr = node.deriveaddresses(multi_desc, [0, 0])[0]
         multi_info = mw.getaddressinfo(multi_addr)

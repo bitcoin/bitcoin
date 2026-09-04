@@ -665,6 +665,8 @@ RPCMethod gethdkeys()
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "xpub", "The extended public key"},
+                    {RPCResult::Type::STR_HEX, "fingerprint", "The master key fingerprint of this HD key (8 hex characters)."},
+                    {RPCResult::Type::STR, "label", /*optional=*/true, "The per-key label set with setkeylabel, if any."},
                     {RPCResult::Type::BOOL, "has_private", "Whether the wallet has the private key for this xpub"},
                     {RPCResult::Type::STR, "xprv", /*optional=*/true, "The extended private key if \"private\" is true"},
                     {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects that use this HD key",
@@ -724,6 +726,11 @@ RPCMethod gethdkeys()
                 }
                 UniValue xpub_info(UniValue::VOBJ);
                 xpub_info.pushKV("xpub", EncodeExtPubKey(xpub));
+                const KeyFingerprint fingerprint{xpub.id_key_fingerprint()};
+                xpub_info.pushKV("fingerprint", HexStr(fingerprint));
+                if (const std::optional<std::string> label{wallet->GetKeyLabel(fingerprint)}) {
+                    xpub_info.pushKV("label", *label);
+                }
                 xpub_info.pushKV("has_private", has_xprv);
                 if (priv && has_xprv) {
                     xpub_info.pushKV("xprv", EncodeExtKey(wallet_xprvs.at(xpub)));
