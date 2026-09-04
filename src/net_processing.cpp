@@ -5652,8 +5652,13 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         });
     }
 
-    // Check whether we have too many outbound-full-relay peers
-    if (m_connman.GetExtraFullOutboundCount() > 0) {
+    // Check whether we have too many peers of either full outbound type. Each type is
+    // evicted against its own budget: evicting across budgets would not help, since
+    // ThreadOpenConnections would just reopen a connection of the evicted type and leave
+    // the overshoot in place.
+    const auto extra{m_connman.GetExtraFullOutboundCounts()};
+
+    if (extra.full_relay > 0) {
         if (EvictWorstOutboundPeer(ConnectionType::OUTBOUND_FULL_RELAY, now)) {
             // If we disconnected an extra peer, that means we successfully
             // connected to at least one peer after the last time we
@@ -5663,18 +5668,33 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
             m_connman.SetTryNewOutboundPeer(false);
         }
     }
+
+    if (extra.reconciliation > 0) {
+        EvictWorstOutboundPeer(ConnectionType::OUTBOUND_FULL_RECONCILIATION, now);
+    }
 }
 
 bool PeerManagerImpl::EvictWorstOutboundPeer(ConnectionType conn_type, NodeClock::time_point now)
 {
     // This applies to full outbound peers only
-    Assume(conn_type == ConnectionType::OUTBOUND_FULL_RELAY);
+    Assume(conn_type == ConnectionType::OUTBOUND_FULL_RELAY ||
+           conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION);
+
+    // Count the connections covering each network, so that we do not evict our last
+    // peer in any of them. Since EvictWorstOutboundPeer can be called multiple times in
+    // a single round, relying on m_network_conn_counts can make us think we have more
+    // connections to a network than we actually do, as some may be marked for
+    // disconnection. ForEachNode only visits fully connected peers, so a peer picked by
+    // an earlier pass in this same round no longer counts as covering its network (and
+    // neither does one that is still handshaking).
+    std::array<int, Network::NET_MAX> conns_per_network{};
+    m_connman.ForEachNode([&](const CNode* pnode) {
+        if (pnode->IsManualOrFullOutboundConn()) ++conns_per_network[pnode->addr.GetNetwork()];
+    });
 
     // If we have more peers of this type than we target, disconnect one.
     // Pick the peer that least-recently announced us a new block, with ties
     // broken by choosing the more recent connection (higher node id).
-    // Protect peers from eviction if we don't have another connection
-    // to their network, counting both full outbound and manual peers.
     struct WorstPeer {
         NodeId node;
         NodeClock::time_point oldest_block_announcement;
@@ -5692,7 +5712,7 @@ bool PeerManagerImpl::EvictWorstOutboundPeer(ConnectionType conn_type, NodeClock
         if (state->m_chain_sync.m_protect) return;
         // If this is the only connection on a particular network that is a full
         // outbound or MANUAL one, protect it.
-        if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
+        if (conns_per_network[pnode->addr.GetNetwork()] <= 1) return;
         if (!worst_peer.has_value() ||
             (state->m_last_block_announcement < (*worst_peer).oldest_block_announcement) ||
             ((state->m_last_block_announcement == (*worst_peer).oldest_block_announcement) && pnode->GetId() > (*worst_peer).node)) {
