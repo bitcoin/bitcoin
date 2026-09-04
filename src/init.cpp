@@ -2305,14 +2305,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    CService onion_service_target;
+    std::optional<CService> onion_service_target;
     if (!connOptions.onion_binds.empty()) {
         onion_service_target = connOptions.onion_binds[0];
-    } else if (!connOptions.vBinds.empty()) {
-        onion_service_target = connOptions.vBinds.front();
-    } else {
+    } else if (connOptions.vBinds.empty()) {
         onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
-        connOptions.onion_binds.push_back(onion_service_target);
+        connOptions.onion_binds.push_back(*onion_service_target);
     }
 
     if (listenonion) {
@@ -2322,7 +2320,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
-                                  onion_service_target.ToStringAddrPort()));
+                                  onion_service_target->ToStringAddrPort()));
         }
     }
 

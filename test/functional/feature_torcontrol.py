@@ -213,7 +213,7 @@ class TorControlTest(BitcoinTestFramework):
         mock_tor = MockTorControlServer(self.next_port())
         # bitcoin.conf's bind=127.0.0.1 is a normal bind without =onion, so no default onion listener is added
         with self.nodes[0].assert_debug_log(
-            [f"Got tor service ID {SERVICE_ID}"],  # TODO: Do not create an onion service on a shared P2P bind
+            ["Skipping automatic onion service creation because no dedicated onion bind is configured"],
             unexpected_msgs=[f"Bound to 127.0.0.1:{p2p_port(0) + 1}"],
             timeout=10,
         ):
@@ -223,8 +223,8 @@ class TorControlTest(BitcoinTestFramework):
             return next(net for net in self.nodes[0].getnetworkinfo()["networks"] if net["name"] == "onion")
         self.wait_until(lambda: onion_network()["reachable"])
         assert_equal(onion_network()["proxy"], "127.0.0.1:9050")
-        self.wait_until(lambda: self.nodes[0].getnetworkinfo()["localaddresses"] != [])  # TODO: Do not advertise a shared onion service
-        expected_commands = ["PROTOCOLINFO 1", "AUTHENTICATE", "GETINFO net/listeners/socks", new_onion_command(p2p_port(0))]  # TODO: Do not forward an onion service to the normal P2P listener
+        assert_equal(self.nodes[0].getnetworkinfo()["localaddresses"], [])
+        expected_commands = ["PROTOCOLINFO 1", "AUTHENTICATE", "GETINFO net/listeners/socks"]
         ensure_for(duration=0.5, f=lambda: mock_tor.received_commands == expected_commands)
         self.nodes[0].add_p2p_connection(P2PInterface())
         peer = self.nodes[0].getpeerinfo()[0]
