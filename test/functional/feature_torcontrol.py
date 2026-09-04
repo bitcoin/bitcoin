@@ -211,7 +211,7 @@ class TorControlTest(BitcoinTestFramework):
     def test_missing_onion_bind(self):
         self.log.info("Test outbound Tor without a dedicated onion listener")
         mock_tor = MockTorControlServer(self.next_port())
-        # bitcoin.conf's bind=127.0.0.1 is a normal bind without =onion, so no default onion listener is added
+        # bitcoin.conf's normal bind (bind=127.0.0.1) suppresses the default onion listener
         with self.nodes[0].assert_debug_log(
             ["Skipping automatic onion service creation because no dedicated onion bind is configured"],
             unexpected_msgs=[f"Bound to 127.0.0.1:{p2p_port(0) + 1}"],

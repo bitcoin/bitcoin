@@ -61,7 +61,7 @@ class BindExtraTest(BitcoinTestFramework):
             ],
         )
 
-        # Node1, both -bind=... and -bind=...=onion.
+        # Node1, both -bind=... and -bind=...=onion with -listenonion=1.
         port = [extra_port(), extra_port()]
         self.expected.append(
             [
