@@ -95,12 +95,24 @@ class BindExtraTest(BitcoinTestFramework):
 
         self.stop_node(0)
 
+        self.log.info("Test -listenonion with a normal bind and no dedicated onion bind")
+        self.stop_node(2)
+        self.start_node(2, extra_args=self.expected[2][0] + ["-listenonion=1", "-torcontrol=127.0.0.1:1"])  # TODO: Reject shared binds that misclassify Tor peers
+        self.stop_node(2)
+
+        self.log.info("Test -bind with dedicated onion bind starts when -listenonion=1")
+        self.restart_node(1, extra_args=self.expected[1][0] + ["-listenonion=1", "-torcontrol=127.0.0.1:1"])
+
         addr = "127.0.0.1:11012"
         for opt1, opt2 in combinations_with_replacement([f"-bind={addr}", f"-bind={addr}=onion", f"-whitebind=noban@{addr}"], 2):
             self.nodes[0].assert_start_raises_init_error(
                         [opt1, opt2],
                         "Error: Duplicate binding configuration",
                         match=ErrorMatch.PARTIAL_REGEX)
+
+        self.log.info("Test wildcard onion bind with -listenonion=1")
+        self.start_node(0, extra_args=[f"-bind=0.0.0.0:{p2p_port(0)}=onion", "-listenonion=1", "-torcontrol=127.0.0.1:1"])  # TODO: Reject wildcard onion binds that cannot classify Tor peers
+        self.stop_node(0)
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()
