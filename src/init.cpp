@@ -2276,6 +2276,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (listenonion) {
+        if (connOptions.onion_binds.empty()) {
+            return InitError(_("The automatic Tor onion service requires a dedicated onion bind. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
+        }
+        if (std::ranges::any_of(connOptions.onion_binds, [](auto& b) { return b.IsBindAny(); })) {
+            return InitError(_("The automatic Tor onion service cannot use a wildcard onion bind. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
+        }
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
