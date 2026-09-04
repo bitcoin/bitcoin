@@ -1006,14 +1006,17 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         Sock::Event event{0};
         if (http_client->ReadyToSend()) {
             event = Sock::SendEvent;
-        } else if (http_client->GetRequest() != nullptr || http_client->ReceiveBufferEmpty()) {
+        } else if ((http_client->GetRequest() != nullptr && http_client->GetRequest()->GetState() != HTTPRequest::State::Complete)
+                    || http_client->ReceiveBufferEmpty()) {
             // Read from the socket when the parser has an incomplete request in
             // progress (needs more bytes) or when the buffer is empty. If the
-            // buffer is non-empty but no parse is in progress, leave event=0:
-            // the client stays in the I/O map so TryReadRequest() runs first to
-            // consume buffered bytes before admitting more socket data. Excess
-            // pipelined data then backs up in the kernel socket buffer, applying
-            // TCP backpressure instead of accumulating without bound in m_recv_buffer.
+            // buffer is non-empty but no parse is in progress, or a fully parsed
+            // request is being held back by TryReadRequest()'s send-buffer
+            // throttle, leave event=0: the client stays in the I/O map so
+            // TryReadRequest() runs first to consume buffered bytes before
+            // admitting more socket data. Excess pipelined data backs up in the
+            // kernel socket buffer, applying TCP backpressure instead of
+            // accumulating without bound in m_recv_buffer.
             event = Sock::RecvEvent;
         }
 
@@ -1089,6 +1092,15 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
         client->m_disconnect = true;
         return nullptr;
     }
+
+    // If this client's send buffer is full, don't move the request
+    // to a worker. This will prevent the server from reading any more
+    // data from this client until they drain their end of the socket,
+    // and prevent the server from packing more responses into the send buffer.
+    const size_t buffer_used{WITH_LOCK(
+        client->m_send_mutex,
+        return client->m_send_buffer.size();)};
+    if (buffer_used > MAX_BODY_SIZE) return nullptr;
 
     // If the request is ready, hand it to a worker.
     if (client->m_req->GetState() == HTTPRequest::State::Complete) {

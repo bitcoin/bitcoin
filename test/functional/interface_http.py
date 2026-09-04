@@ -6,7 +6,13 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.netutil import NETWORK_ERRORS
-from test_framework.util import assert_equal, assert_raises, str_to_b64str
+from test_framework.util import (
+    assert_equal,
+    assert_raises,
+    mine_large_block,
+    str_to_b64str
+)
+from test_framework.wallet import MiniWallet
 
 import concurrent.futures
 import http.client
@@ -154,6 +160,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_whitespace_in_headers()
         self.check_connection_limit()
         self.check_pipelined_data_is_throttled()
+        self.check_slow_read_throttle()
 
 
     def check_default_connection(self):
@@ -777,6 +784,57 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # First reply is for the blocking request.
         response = conn.recv_raw().decode()
         assert generated_block in response
+
+
+    def check_slow_read_throttle(self):
+        self.log.info("Check that request processing is throttled if the client is not draining the socket")
+        self.restart_node(0, extra_args=["-rest=1"])
+        # Generate a big block
+        self.wallet = MiniWallet(self.node)
+        self.generate(self.wallet, 130)
+        mine_large_block(self, self.wallet, self.node)
+        big_block_hash = self.node.getbestblockhash()
+
+        conn = BitcoinHTTPConnection(self.node)
+
+        # Request the big block JSON once to check its size and establish the connection
+        URI = f"/rest/block/{big_block_hash}.json"
+        response = conn.get(URI).read()
+        response_size = len(response)
+        self.log.debug(f"Big block JSON response size is {response_size} bytes")
+
+        # Prepare a batch of requests. We want to fill up at
+        # least one server-side read operation (about 65kB, see HTTPRemoteClient::Receive()).
+        batch = ""
+        num_req = 0
+        while len(batch) < 0x10000:
+            batch += f"GET {URI} HTTP/1.1\r\nHost: somehost\r\n\r\n"
+            num_req += 1
+        self.log.info(f"Sending {num_req} big block JSON requests")
+
+        # Save a debug log checkpoint
+        dl_prev_size = self.node.debug_log_size(encoding="utf-8")
+
+        # Send the batch but do not read any of the responses, leaving
+        # that data on the server-side of the socket.
+        conn.send_raw(batch.encode("ascii"))
+
+        # Open the debug log and count how many of the batch requests were processed.
+        # Expect progress to stall after a few seconds.
+        tries = 10
+        prev_count = -1
+        with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
+            while True:
+                dl.seek(dl_prev_size)
+                log = dl.read()
+                count = log.count(URI)
+                if count == prev_count:
+                    self.log.info(f"Response progress stalled after {count} requests were handled.")
+                    break
+                prev_count = count
+                tries -= 1
+                assert tries > 0, f"Progress failed to stall after {count} requests were handled."
+                time.sleep(1)
 
 
 if __name__ == '__main__':
