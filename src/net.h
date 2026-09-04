@@ -1355,13 +1355,18 @@ public:
     // Count the number of full outbound peers we have, both OUTBOUND_FULL_RELAY and
     // OUTBOUND_FULL_RECONCILIATION.
     int GetFullOutboundConnCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
-    // Return the number of outbound-full-relay peers we have in excess of our
-    // target (eg, if we previously called SetTryNewOutboundPeer(true), and have
-    // since set to false, we may have extra peers that we wish to disconnect).
-    // This may return a value less than (num_outbound_connections - num_outbound_slots)
-    // in cases where some outbound connections are not yet fully connected, or
-    // not yet fully disconnected.
-    int GetExtraFullOutboundCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    /** How many full outbound peers we have in excess of our target
+     *  for it (eg, if we previously called SetTryNewOutboundPeer(true), and have
+     *  since set to false, we may have extra peers that we wish to disconnect).
+     *  Each type has its own budget, so they are reported separately.
+     *  These may be less than (num_outbound_connections - num_outbound_slots) in
+     *  cases where some outbound connections are not yet fully connected, or not
+     *  yet fully disconnected. */
+    struct ExtraFullOutboundCounts {
+        int full_relay{0};
+        int reconciliation{0};
+    };
+    ExtraFullOutboundCounts GetExtraFullOutboundCounts() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     /**
@@ -1443,8 +1448,6 @@ public:
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const;
-
-    bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
     struct ListenSocket {

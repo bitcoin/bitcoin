@@ -2507,23 +2507,22 @@ int CConnman::GetFullOutboundConnCount() const
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
-int CConnman::GetExtraFullOutboundCount() const
+CConnman::ExtraFullOutboundCounts CConnman::GetExtraFullOutboundCounts() const
 {
     AssertLockNotHeld(m_nodes_mutex);
 
-    int full_outbound_peers = 0;
+    int full_relay_peers = 0;
+    int reconciliation_peers = 0;
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
-            // Note this is about the OUTBOUND_FULL_RELAY slots only. Reconciliation peers
-            // are full outbound peers too, but they have their own budget.
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect &&
-                pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) {
-                ++full_outbound_peers;
-            }
+            if (!pnode->fSuccessfullyConnected || pnode->fDisconnect) continue;
+            if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) ++full_relay_peers;
+            if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION) ++reconciliation_peers;
         }
     }
-    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
+    return {std::max(full_relay_peers - m_max_outbound_full_relay, 0),
+            std::max(reconciliation_peers - m_max_outbound_full_recon, 0)};
 }
 
 int CConnman::GetExtraBlockRelayCount() const
@@ -2570,12 +2569,6 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
         }
     }
     return networks;
-}
-
-bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
-{
-    AssertLockHeld(m_nodes_mutex);
-    return m_network_conn_counts[net] > 1;
 }
 
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
