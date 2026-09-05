@@ -1357,6 +1357,60 @@ BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
     }
 }
 
+void CheckMultipathCloneWarning(const std::string& desc, bool expect_warning)
+{
+    const std::string expected_warning = "multipath expansion: key expressions without a multipath specifier are repeated in every expanded descriptor, reusing the same keys";
+    FlatSigningProvider keys;
+    std::string error;
+    auto descs = Parse(desc, keys, error);
+    BOOST_REQUIRE_MESSAGE(!descs.empty(), desc + ": " + error);
+    for (const auto& d : descs) {
+        const auto warnings = d->Warnings();
+        if (expect_warning) {
+            BOOST_REQUIRE_MESSAGE(warnings.size() == 1U, desc);
+            BOOST_CHECK_EQUAL(warnings[0], expected_warning);
+        } else {
+            BOOST_CHECK_MESSAGE(warnings.empty(), desc);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_multipath_clone_warnings)
+{
+    const std::string xpub_a = "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL";
+    const std::string xpub_b = "xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y";
+
+    // multi(): a single-path key next to a multipath one is cloned into every branch
+    CheckMultipathCloneWarning("wsh(multi(1," + xpub_a + "/<0;1>/*," + xpub_b + "/0/*))", /*expect_warning=*/true);
+    CheckMultipathCloneWarning("wsh(multi(1," + xpub_a + "/<0;1>/*," + xpub_b + "/<2;3>/*))", /*expect_warning=*/false);
+    CheckMultipathCloneWarning("wsh(multi(1," + xpub_a + "/0/*," + xpub_b + "/1/*))", /*expect_warning=*/false);
+    // A bare non-ranged pubkey is cloned too
+    CheckMultipathCloneWarning("wsh(multi(1," + xpub_a + "/<0;1>/*,03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", /*expect_warning=*/true);
+
+    // tr(): cloned internal key, including the BIP341 NUMS point: an identical internal key
+    // revealed by script-path spends is a clustering vector too
+    CheckMultipathCloneWarning("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pk(" + xpub_a + "/<0;1>/*))", /*expect_warning=*/true);
+    CheckMultipathCloneWarning("tr(50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,pk(" + xpub_a + "/<0;1>/*))", /*expect_warning=*/true);
+    // tr(): cloned subscript
+    CheckMultipathCloneWarning("tr(" + xpub_a + "/<0;1>/*,pk(" + xpub_b + "/0/*))", /*expect_warning=*/true);
+    CheckMultipathCloneWarning("tr(" + xpub_a + "/<0;1>/*,pk(" + xpub_b + "/<2;3>/*))", /*expect_warning=*/false);
+
+    // Miniscript: a single-path key next to a multipath one is cloned into every branch
+    CheckMultipathCloneWarning("wsh(and_v(v:pk(" + xpub_a + "/<0;1>/*),pk(" + xpub_b + "/0/*)))", /*expect_warning=*/true);
+    CheckMultipathCloneWarning("wsh(and_v(v:pk(" + xpub_a + "/<0;1>/*),pk(" + xpub_b + "/<2;3>/*)))", /*expect_warning=*/false);
+
+    // musig(): no warning even with cloned single-path participants, the per-branch aggregate keys
+    // differ so nothing observable is reused on chain
+    CheckMultipathCloneWarning("rawtr(musig(" + xpub_a + "/<1;2>/0/*," + xpub_b + "/0/*))", /*expect_warning=*/false);
+    CheckMultipathCloneWarning("rawtr(musig(" + xpub_a + "," + xpub_b + ")/<0;1>/*)", /*expect_warning=*/false);
+    CheckMultipathCloneWarning("tr(" + xpub_a + "/<0;1>/*,and_v(v:pk(musig(" + xpub_a + "/<1;2>," + xpub_b + ")),older(10)))", /*expect_warning=*/false);
+    // A single-path musig() cloned as tr() internal key does reuse the aggregate key across branches
+    CheckMultipathCloneWarning("tr(musig(" + xpub_a + "," + xpub_b + "),pk(" + xpub_a + "/<0;1>/*))", /*expect_warning=*/true);
+
+    // Multipath descriptor with a single key expression, nothing is cloned
+    CheckMultipathCloneWarning("wpkh(" + xpub_a + "/<0;1>/*)", /*expect_warning=*/false);
+}
+
 void CheckSingleUnparsable(const std::string& desc, const std::string& expected_error)
 {
     FlatSigningProvider keys;

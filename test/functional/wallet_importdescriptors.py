@@ -37,6 +37,7 @@ from test_framework.wallet_util import (
 )
 
 MISSING_KEYS_WARNING = "Not all private keys provided. Some wallet functionality may return unexpected errors"
+MULTIPATH_CLONED_KEYS_WARNING = "multipath expansion: key expressions without a multipath specifier are repeated in every expanded descriptor, reusing the same keys"
 
 class ImportDescriptorsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -1070,6 +1071,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
+        self.log.info("Mixing multipath and single-path key expressions results in a warning")
+        xpub2 = ExtendedPrivateKey.generate().pubkey().to_string()
+        self.test_importdesc({"desc": descsum_create(f"wsh(multi(1,{xpub}/<2;3>/0/*,{xpub2}/0/*))"),
+                              "active": True,
+                              "range": 10,
+                              "timestamp": "now"},
+                              success=True,
+                              warnings=[MULTIPATH_CLONED_KEYS_WARNING])
+
         self.log.info("Test older() safety")
 
         for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:
@@ -1096,6 +1106,18 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             self.test_importdesc(
                 {
                     'desc': desc,
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=True,
+                warnings=[expected_warning],
+            )
+
+            self.log.debug("Importing an unsafe value in a multipath descriptor results in a single warning")
+            self.test_importdesc(
+                {
+                    'desc': descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/<0;1>/*),older({unsafe_value})))"),
                     'active': True,
                     'range': [0, 2],
                     'timestamp': 'now'
