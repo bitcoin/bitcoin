@@ -539,7 +539,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-par=<n>", strprintf("Set the number of script verification threads (0 = auto, up to %d, <0 = leave that many cores free, default: %d)",
         MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-prevoutfetchthreads=<n>", strprintf("Set the number of threads used to prefetch block input prevouts from the chainstate database (0 disables, up to %d, default: %d). Negative values are rejected.", MAX_PREVOUTFETCH_THREADS, DEFAULT_PREVOUTFETCH_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-persistmempool", strprintf("Whether to save and load the mempool and persist related mempool-policy estimator data across restarts (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-persistmempoolv1",
                    strprintf("Whether a mempool.dat file created by -persistmempool or the savemempool RPC will be written in the legacy format "
                              "(version 1) or the current format (version 2). This temporary option will be removed in the future. (default: %u)",
@@ -1960,7 +1960,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
         }
         MaybeMigrateLegacyFeeEstimates(args);
-        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(BlockPolicyFeeEstPath(args), read_stale_estimates, MempoolPolicyEstimatorPath(args), *Assert(node.mempool), chainman);
+        const fs::path mempool_estimator_path{
+            ShouldPersistMempool(args) ? MempoolPolicyEstimatorPath(args) : fs::path{}};
+        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(
+            BlockPolicyFeeEstPath(args), read_stale_estimates, mempool_estimator_path,
+            *Assert(node.mempool), chainman);
 
         // Flush estimates to disk periodically
         FeeRateEstimatorManager* fee_estimator_man = node.fee_estimator_man.get();
@@ -2129,7 +2133,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Load mempool from disk
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
-            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
+            const auto load_result{LoadMempool(
+                *pool,
+                ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{},
+                chainman.ActiveChainstate(), {})};
+            if (node.fee_estimator_man && !chainman.m_interrupt) {
+                FeeRateEstimatorManager* const fee_estimator_man{node.fee_estimator_man.get()};
+                ValidationSignals& validation_signals{*Assert(node.validation_signals)};
+                // Queue completion after block notifications generated during
+                // startup so the mempool-policy estimator ignores them.
+                validation_signals.CallFunctionInValidationInterfaceQueue([fee_estimator_man,
+                                                                           load_result] {
+                    fee_estimator_man->MempoolLoadCompleted(load_result);
+                });
+                validation_signals.SyncWithValidationInterfaceQueue();
+            }
             pool->SetLoadTried(!chainman.m_interrupt);
         }
     });

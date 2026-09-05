@@ -167,11 +167,11 @@ MemPoolFeeRateEstimator::MemPoolFeeRateEstimator(fs::path mempool_estimator_file
       m_chainman(chainman),
       m_mempool_estimator_file_path(std::move(mempool_estimator_file_path))
 {
-    ReadFromDisk();
 }
 
 void MemPoolFeeRateEstimator::ReadFromDisk()
 {
+    if (m_mempool_estimator_file_path.empty()) return;
     AutoFile file{fsbridge::fopen(m_mempool_estimator_file_path, "rb")};
     if (file.IsNull()) {
         LogDebug(BCLog::ESTIMATEFEE, "%s: %s does not exist. Continuing anyway",
@@ -260,6 +260,7 @@ bool MemPoolFeeRateEstimator::Write(AutoFile& file) const
 
 void MemPoolFeeRateEstimator::FlushMinedBlockStats()
 {
+    if (m_mempool_estimator_file_path.empty()) return;
     if (!m_mempool_estimator_file_path.parent_path().empty()) {
         std::error_code error;
         fs::create_directories(m_mempool_estimator_file_path.parent_path(), error);
@@ -316,6 +317,25 @@ void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<co
     AddMinedBlockStats(m_prev_mined_blocks, {block_height, removed_weight, block_weight});
     m_mined_blocks_tip_hash = block->GetHash();
     m_cache.Clear();
+}
+
+void MemPoolFeeRateEstimator::MempoolRestored(uint64_t snapshot_weight)
+{
+    const uint64_t post_load_mempool_weight{
+        WITH_LOCK(m_mempool.cs, return m_mempool.GetTotalTxWeight())};
+    const double retention_ratio{snapshot_weight == 0 ? 1.0 : static_cast<double>(post_load_mempool_weight) / snapshot_weight};
+    if (retention_ratio < MEMPOOL_SNAPSHOT_RETENTION_THRESHOLD) {
+        LogDebug(BCLog::ESTIMATEFEE,
+                 "%s: not loading persisted mined-block stats because post-load weight was insufficient; "
+                 "post_load_mempool_weight=%s snapshot_weight=%s retention_ratio=%.2f required_retention=%.2f",
+                 FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                 post_load_mempool_weight,
+                 snapshot_weight,
+                 retention_ratio,
+                 MEMPOOL_SNAPSHOT_RETENTION_THRESHOLD);
+        return;
+    }
+    ReadFromDisk();
 }
 
 // Require at least one block worth of activity across the window before using

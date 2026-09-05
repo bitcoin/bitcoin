@@ -504,6 +504,18 @@ public:
         return totalTxSize;
     }
 
+    //! Sum of all mempool transaction weights (BIP 141). Computed by walking
+    //! the pool, so this method should not be called in hot paths.
+    uint64_t GetTotalTxWeight() const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        uint64_t total_weight{0};
+        for (const auto& entry : mapTx) {
+            total_weight += static_cast<uint64_t>(entry.GetTxWeight());
+        }
+        return total_weight;
+    }
+
     CAmount GetTotalFee() const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);

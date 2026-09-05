@@ -2,8 +2,11 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <kernel/mempool_entry.h>
+#include <node/mempool_persist.h>
 #include <policy/fees/estimator_args.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -15,6 +18,7 @@
 #include <util/feefrac.h>
 #include <util/fees.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -22,6 +26,13 @@
 #include <string>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_fee_estimator_tests, TestingSetup)
+
+class TestFeeRateEstimatorManager final : public FeeRateEstimatorManager
+{
+public:
+    using FeeRateEstimatorManager::FeeRateEstimatorManager;
+    using FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock;
+};
 
 static inline CTransactionRef MakeRandomTx()
 {
@@ -126,6 +137,84 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     clock += CACHE_LIFE + std::chrono::seconds{1};
     BOOST_CHECK(cache.IsStale());
     BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+}
+
+BOOST_AUTO_TEST_CASE(mempool_post_load_weight_retention)
+{
+    const fs::path estimator_path{MempoolPolicyEstimatorPath(*m_node.args)};
+    const auto genesis{std::make_shared<CBlock>(Params().GenesisBlock())};
+    {
+        MemPoolFeeRateEstimator persisted_estimator{
+            estimator_path, *m_node.mempool, *m_node.chainman};
+        persisted_estimator.MempoolTxsRemovedForBlock(
+            genesis, /*txs_removed_for_block=*/{}, /*block_height=*/0);
+        persisted_estimator.FlushMinedBlockStats();
+    }
+
+    // Persisted stats are not read during construction, and block notifications
+    // received before mempool loading completes are ignored.
+    {
+        TestFeeRateEstimatorManager interrupted_manager{
+            BlockPolicyFeeEstPath(*m_node.args), /*read_stale_estimates=*/false,
+            estimator_path, *m_node.mempool, *m_node.chainman};
+        auto pre_load_block{std::make_shared<CBlock>(*genesis)};
+        ++pre_load_block->nNonce;
+        interrupted_manager.MempoolTransactionsRemovedForBlock(
+            pre_load_block, /*txs_removed_for_block=*/{}, /*block_height=*/1);
+        BOOST_CHECK(interrupted_manager.MempoolPolicyEstimatorBlocksStats().empty());
+
+        // Pre-load flushes must not replace persisted stats with the empty in-memory state.
+        interrupted_manager.IntervalFlush();
+        interrupted_manager.ShutdownFlush();
+    }
+
+    // A successful load of an empty snapshot reads the preserved stats.
+    TestFeeRateEstimatorManager empty_snapshot_manager{
+        BlockPolicyFeeEstPath(*m_node.args), /*read_stale_estimates=*/false,
+        estimator_path, *m_node.mempool, *m_node.chainman};
+    BOOST_CHECK(empty_snapshot_manager.MempoolPolicyEstimatorBlocksStats().empty());
+    empty_snapshot_manager.MempoolLoadCompleted(node::MempoolLoadResult{0});
+    const auto empty_snapshot_stats{empty_snapshot_manager.MempoolPolicyEstimatorBlocksStats()};
+    BOOST_REQUIRE_EQUAL(empty_snapshot_stats.size(), 1);
+    BOOST_CHECK_EQUAL(empty_snapshot_stats.front().m_height, 0);
+
+    bilingual_str mempool_error;
+    CTxMemPool populated_mempool{MemPoolOptionsForTest(m_node), mempool_error};
+    BOOST_REQUIRE(mempool_error.empty());
+    TestMemPoolEntryHelper entry;
+    const auto tx{MakeRandomTx()};
+    const uint64_t tx_weight{static_cast<uint64_t>(GetTransactionWeight(*tx))};
+    TryAddToMempool(populated_mempool, entry.FromTx(tx));
+    for (int i{0}; i < 2; ++i) {
+        const auto additional_tx{MakeRandomTx()};
+        BOOST_REQUIRE_EQUAL(GetTransactionWeight(*additional_tx), tx_weight);
+        TryAddToMempool(populated_mempool, entry.FromTx(additional_tx));
+    }
+    BOOST_REQUIRE_EQUAL(WITH_LOCK(populated_mempool.cs, return populated_mempool.GetTotalTxWeight()), 3 * tx_weight);
+
+    // Read persisted stats at the weight threshold. The post-load weight is
+    // deliberately permissive and may include transactions that were not in
+    // the snapshot.
+    TestFeeRateEstimatorManager threshold_manager{
+        BlockPolicyFeeEstPath(*m_node.args), /*read_stale_estimates=*/false,
+        estimator_path, populated_mempool, *m_node.chainman};
+    threshold_manager.MempoolLoadCompleted(node::MempoolLoadResult{4 * tx_weight});
+    BOOST_CHECK_EQUAL(threshold_manager.MempoolPolicyEstimatorBlocksStats().size(), 1);
+
+    // Falling below the separately defined retention threshold skips the read.
+    TestFeeRateEstimatorManager below_threshold_manager{
+        BlockPolicyFeeEstPath(*m_node.args), /*read_stale_estimates=*/false,
+        estimator_path, populated_mempool, *m_node.chainman};
+    below_threshold_manager.MempoolLoadCompleted(node::MempoolLoadResult{4 * tx_weight + 1});
+    BOOST_CHECK(below_threshold_manager.MempoolPolicyEstimatorBlocksStats().empty());
+
+    // A failed load skips the read even when the post-load mempool is nonempty.
+    TestFeeRateEstimatorManager failed_load_manager{
+        BlockPolicyFeeEstPath(*m_node.args), /*read_stale_estimates=*/false,
+        estimator_path, populated_mempool, *m_node.chainman};
+    failed_load_manager.MempoolLoadCompleted(
+        util::Unexpected{node::MempoolLoadError::FILE_OPEN_FAILED});
+    BOOST_CHECK(failed_load_manager.MempoolPolicyEstimatorBlocksStats().empty());
 }
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)

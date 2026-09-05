@@ -36,6 +36,9 @@ constexpr std::chrono::seconds CACHE_LIFE{7};
 // Constants for mempool sanity checks.
 constexpr size_t MEMPOOL_HEALTH_WINDOW_BLOCKS = 6;
 constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
+//! Minimum post-load mempool weight relative to the persisted snapshot weight
+//! required to retain persisted mined-block statistics.
+constexpr double MEMPOOL_SNAPSHOT_RETENTION_THRESHOLD{0.75};
 
 //! Weight statistics for a recently mined block, used to assess mempool coverage.
 struct MinedBlockStats {
@@ -122,6 +125,17 @@ public:
                                    const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                    unsigned int block_height)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    /**
+     * Read persisted health after a successful mempool restoration when the
+     * post-load mempool weight is sufficient relative to the persisted snapshot.
+     *
+     * This is intentionally permissive: transactions added independently by
+     * wallets, RPC, peers, or reorg handling before the post-load measurement
+     * contribute to post_load_mempool_weight. This biases the decision toward
+     * retaining potentially usable estimator history, but does not measure
+     * exact snapshot overlap.
+     */
+    void MempoolRestored(uint64_t snapshot_weight) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Health of the recent mined-block window for fee rate estimation.
     enum class MempoolHealth {
         //! Recent blocks represent the mempool well enough to estimate a fee rate.
