@@ -8,9 +8,11 @@
 #include <outputtype.h>
 #include <pubkey.h>
 #include <uint256.h>
+#include <util/expected.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -19,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+struct CExtKey;
 class CScript;
 class SigningProvider;
 struct FlatSigningProvider;
@@ -203,7 +206,17 @@ struct Descriptor {
 
     /** Get the number of key expressions in this descriptor. Used only for tests */
     virtual size_t GetKeyCount() const = 0;
+
+    /** Substitute all pubkeys with their corresponding private keys provided by the caller */
+    virtual void SubstituteMasterExtPubs(std::map<CExtPubKey, CExtKey> xprvs) = 0;
 };
+
+/** Validate the numeric bounds of a descriptor key-expression range
+ *  [low, high] (high inclusive). On success returns an Expected with no
+ *  value; on failure returns the first violated invariant's user-facing
+ *  message.
+ */
+util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high);
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.
  *

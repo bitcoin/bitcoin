@@ -49,6 +49,20 @@
 
 using util::Split;
 
+util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high)
+{
+    if (low < 0) {
+        return util::Unexpected<std::string>("Range should be greater or equal than 0");
+    }
+    if ((high >> 31) != 0) {
+        return util::Unexpected<std::string>("End of range is too high");
+    }
+    if (high >= low + 1000000) {
+        return util::Unexpected<std::string>("Range is too large");
+    }
+    return {};
+}
+
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////
@@ -252,10 +266,6 @@ public:
 
 class OriginPubkeyProvider final : public PubkeyProvider
 {
-    KeyOriginInfo m_origin;
-    std::unique_ptr<PubkeyProvider> m_provider;
-    bool m_apostrophe;
-
     std::string OriginString(StringType type, bool normalized=false) const
     {
         // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
@@ -264,6 +274,10 @@ class OriginPubkeyProvider final : public PubkeyProvider
     }
 
 public:
+    const KeyOriginInfo m_origin;
+    const std::unique_ptr<PubkeyProvider> m_provider;
+    const bool m_apostrophe;
+
     OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider, bool apostrophe) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)), m_apostrophe(apostrophe) {}
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
@@ -403,13 +417,6 @@ enum class DeriveType {
 /** An object representing a parsed extended public key in a descriptor. */
 class BIP32PubkeyProvider final : public PubkeyProvider
 {
-    // Root xpub, path, and final derivation step type being used, if any
-    CExtPubKey m_root_extkey;
-    KeyPath m_path;
-    DeriveType m_derive;
-    // Whether ' or h is used in harded derivation
-    bool m_apostrophe;
-
     bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
     {
         CKey key;
@@ -442,6 +449,13 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
 public:
+    // Root xpub, path, and final derivation step type being used, if any
+    const CExtPubKey m_root_extkey;
+    const KeyPath m_path;
+    const DeriveType m_derive;
+    // Whether ' or h is used in harded derivation
+    const bool m_apostrophe;
+
     BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive, bool apostrophe) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive), m_apostrophe(apostrophe) {}
     bool IsRange() const override { return m_derive != DeriveType::NON_RANGED; }
     size_t GetSize() const override { return 33; }
@@ -618,9 +632,11 @@ public:
 /** PubkeyProvider for a musig() expression */
 class MuSigPubkeyProvider final : public PubkeyProvider
 {
-private:
+public:
     //! PubkeyProvider for the participants
-    const std::vector<std::unique_ptr<PubkeyProvider>> m_participants;
+    std::vector<std::unique_ptr<PubkeyProvider>> m_participants;
+
+private:
     //! Derivation path
     const KeyPath m_path;
     //! PubkeyProvider for the aggregate pubkey if it can be cached (i.e. participants are not ranged)
@@ -837,7 +853,7 @@ class DescriptorImpl : public Descriptor
 {
 protected:
     //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for WSH and Multisig).
-    const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
+    std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
     //! Warnings (not including subdescriptors).
@@ -1058,11 +1074,19 @@ public:
     // NOLINTNEXTLINE(misc-no-recursion)
     void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override
     {
-        for (const auto& p : m_pubkey_args) {
+        auto insert_pubs = [&pubkeys, &ext_pubs](const std::unique_ptr<PubkeyProvider>& p) {
             std::optional<CPubKey> pub = p->GetRootPubKey();
             if (pub) pubkeys.insert(*pub);
             std::optional<CExtPubKey> ext_pub = p->GetRootExtPubKey();
             if (ext_pub) ext_pubs.insert(*ext_pub);
+        };
+        for (const auto& p : m_pubkey_args) {
+            if (MuSigPubkeyProvider* musig = dynamic_cast<MuSigPubkeyProvider*>(p.get())) {
+                for (const auto& mp : musig->m_participants) {
+                    insert_pubs(mp);
+                }
+            }
+            insert_pubs(p);
         }
         for (const auto& arg : m_subdescriptor_args) {
             arg->GetPubKeys(pubkeys, ext_pubs);
@@ -1127,6 +1151,61 @@ public:
             if (!sub->CanSelfExpand()) return false;
         }
         return true;
+    }
+
+    void SubstituteMasterExtPubs(std::map<CExtPubKey, CExtKey> xprvs) override
+    {
+        auto substitute_key = [&xprvs](std::vector<std::unique_ptr<PubkeyProvider>>::iterator& it, std::vector<std::unique_ptr<PubkeyProvider>>& provs) {
+            OriginPubkeyProvider* origin_pub = dynamic_cast<OriginPubkeyProvider*>(it->get());
+            if (!origin_pub) return;
+            BIP32PubkeyProvider* xpub_prov = dynamic_cast<BIP32PubkeyProvider*>(origin_pub->m_provider.get());
+            if (!xpub_prov) return;
+            std::unique_ptr<PubkeyProvider> sub_prov;
+            for (const auto& [xpub, xprv] : xprvs) {
+                const CKeyID& id = xpub.pubkey.GetID();
+                unsigned char fingerprint[4];
+                std::copy(id.begin(), id.begin() + 4, fingerprint);
+                if (!std::ranges::equal(fingerprint, origin_pub->m_origin.fingerprint)) continue;
+                CExtKey derived = xprv;
+                for (const auto& p : origin_pub->m_origin.path) {
+                    if (!derived.Derive(derived, p)) {
+                        break;
+                    }
+                }
+                if (derived.Neuter() != xpub_prov->m_root_extkey) continue;
+                // Construct the new further derivation path that is the origin path + original xpub's further derivation
+                std::vector<uint32_t> new_path = origin_pub->m_origin.path;
+                new_path.insert(new_path.end(), xpub_prov->m_path.begin(), xpub_prov->m_path.end());
+                sub_prov = std::make_unique<BIP32PubkeyProvider>(xpub_prov->m_expr_index, xpub, new_path, xpub_prov->m_derive, xpub_prov->m_apostrophe);
+                break;
+            }
+            if (sub_prov) {
+                // Erase the current iterator and emplace the new PubkeyProvider
+                it = provs.erase(it);
+                it = provs.emplace(it, std::move(sub_prov));
+            }
+        };
+
+        std::vector<DescriptorImpl*> todo = {this};
+        while (!todo.empty()) {
+            DescriptorImpl* desc = todo.back();
+            todo.pop_back();
+
+            // We only need to substitute Origin + BIP32 for a single BIP32
+            for (auto it = desc->m_pubkey_args.begin(); it != desc->m_pubkey_args.end(); ++it) {
+                if (MuSigPubkeyProvider* musig = dynamic_cast<MuSigPubkeyProvider*>(it->get())) {
+                    for (auto mit = musig->m_participants.begin(); mit != musig->m_participants.end(); ++mit) {
+                        substitute_key(mit, musig->m_participants);
+                    }
+                    continue;
+                }
+                substitute_key(it, desc->m_pubkey_args);
+            }
+
+            for (const auto& s : desc->m_subdescriptor_args) {
+                todo.push_back(s.get());
+            }
+        }
     }
 };
 
