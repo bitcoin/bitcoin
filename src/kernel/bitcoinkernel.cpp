@@ -24,6 +24,8 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
+#include <script/trace.h>
 #include <script/verify_flags.h>
 #include <serialize.h>
 #include <streams.h>
@@ -231,6 +233,34 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
         return btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED;
     case kernel::Warning::LARGE_WORK_INVALID_CHAIN:
         return btck_Warning_LARGE_WORK_INVALID_CHAIN;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+btck_ScriptTraceFrameKind cast_btck_trace_frame_kind(ScriptTraceFrameKind kind)
+{
+    switch (kind) {
+    case ScriptTraceFrameKind::Begin:
+        return btck_ScriptTraceFrameKind_BEGIN;
+    case ScriptTraceFrameKind::Step:
+        return btck_ScriptTraceFrameKind_STEP;
+    case ScriptTraceFrameKind::End:
+        return btck_ScriptTraceFrameKind_END;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+btck_SigVersion cast_btck_sig_version(SigVersion version)
+{
+    switch(version) {
+    case SigVersion::BASE:
+        return btck_SigVersion_BASE;
+    case SigVersion::TAPSCRIPT:
+        return btck_SigVersion_TAPSCRIPT;
+    case SigVersion::TAPROOT:
+        return btck_SigVersion_TAPROOT;
+    case SigVersion::WITNESS_V0:
+        return btck_SigVersion_WITNESS_V0;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -509,6 +539,9 @@ struct btck_Txid: Handle<btck_Txid, Txid> {};
 struct btck_PrecomputedTransactionData : Handle<btck_PrecomputedTransactionData, PrecomputedTransactionData> {};
 struct btck_BlockHeader: Handle<btck_BlockHeader, CBlockHeader> {};
 struct btck_ConsensusParams: Handle<btck_ConsensusParams, Consensus::Params> {};
+struct btck_ScriptTraceFrame: Handle<btck_ScriptTraceFrame, ScriptTraceFrame> {};
+struct btck_ScriptEvalStack : Handle<btck_ScriptEvalStack, std::span<const std::vector<unsigned char>>> {};
+struct btck_ScriptEvalStackItem : Handle<btck_ScriptEvalStackItem, std::vector<unsigned char>> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -686,13 +719,14 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     }
 
     if (status) *status = btck_ScriptVerifyStatus_OK;
+    ScriptError error = ScriptError::SCRIPT_ERR_OK;
 
     bool result = VerifyScript(tx.vin[input_index].scriptSig,
                                btck_ScriptPubkey::get(script_pubkey),
                                &tx.vin[input_index].scriptWitness,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
-                               nullptr);
+                               &error);
     return result ? 1 : 0;
 }
 
@@ -1559,4 +1593,113 @@ int btck_set_mock_time(int64_t timestamp)
     }
     SetMockTime(std::chrono::seconds{timestamp});
     return 0;
+}
+
+int btck_script_trace_register_callback(btck_ScriptTraceCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+{
+#ifndef ENABLE_SCRIPT_TRACE
+    (void)callback;
+    if (user_data_destroy_callback) user_data_destroy_callback(user_data);
+    return 1;
+#else
+    std::shared_ptr<void> owned_user_data{user_data, [user_data_destroy_callback](void* user_data) {
+        if (user_data && user_data_destroy_callback) user_data_destroy_callback(user_data);
+    }};
+
+    auto wrapper = [owned_user_data, callback](const ScriptTraceFrame& frame) {
+        callback(owned_user_data.get(), btck_ScriptTraceFrame::ref(&frame));
+    };
+
+    ScriptTraceRegisterCallback(std::move(wrapper));
+    return 0;
+#endif // ENABLE_SCRIPT_TRACE
+}
+
+btck_ScriptTraceFrameKind btck_script_trace_frame_get_kind(const btck_ScriptTraceFrame* frame)
+{
+    return cast_btck_trace_frame_kind(btck_ScriptTraceFrame::get(frame).kind);
+}
+
+const btck_ScriptEvalStack* btck_script_trace_frame_get_stack(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptEvalStack::ref(&btck_ScriptTraceFrame::get(frame).stack);
+}
+
+const btck_ScriptEvalStack* btck_script_trace_frame_get_altstack(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptEvalStack::ref(&btck_ScriptTraceFrame::get(frame).altstack);
+}
+
+size_t btck_script_eval_stack_count_items(const btck_ScriptEvalStack* stack)
+{
+    return btck_ScriptEvalStack::get(stack).size();
+}
+
+const btck_ScriptEvalStackItem* btck_script_eval_stack_get_item_at(const btck_ScriptEvalStack* stack, size_t index)
+{
+    const auto& items{btck_ScriptEvalStack::get(stack)};
+    assert(index < items.size());
+    return btck_ScriptEvalStackItem::ref(&items[index]);
+}
+
+int btck_script_eval_stack_item_to_bytes(const btck_ScriptEvalStackItem* item, btck_WriteBytes writer, void* user_data)
+{
+    const auto& bytes{btck_ScriptEvalStackItem::get(item)};
+    return writer(bytes.data(), bytes.size(), user_data);
+}
+
+int btck_script_trace_frame_get_script(const btck_ScriptTraceFrame* frame, btck_WriteBytes writer, void* user_data)
+{
+    const CScript& script{btck_ScriptTraceFrame::get(frame).script};
+    return writer(script.data(), script.size(), user_data);
+}
+
+uint32_t btck_script_trace_frame_get_opcode_pos(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptTraceFrame::get(frame).opcode_pos;
+}
+
+int btck_script_trace_frame_get_exec(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptTraceFrame::get(frame).exec ? 1 : 0;
+}
+
+uint8_t btck_script_trace_frame_get_opcode(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptTraceFrame::get(frame).opcode;
+}
+
+int btck_script_trace_frame_get_op_count(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptTraceFrame::get(frame).op_count;
+}
+
+btck_SigVersion btck_script_trace_frame_get_sig_version(const btck_ScriptTraceFrame* frame)
+{
+    return cast_btck_sig_version(static_cast<SigVersion>(btck_ScriptTraceFrame::get(frame).sig_version));
+}
+
+int btck_script_trace_frame_get_tapleaf_hash(const btck_ScriptTraceFrame* frame, unsigned char output[32])
+{
+    const auto* hash{btck_ScriptTraceFrame::get(frame).tapleaf_hash};
+    if (!hash) return -1;
+    std::memcpy(output, hash, 32);
+    return 0;
+}
+
+uint32_t btck_script_trace_frame_get_codeseparator_pos(const btck_ScriptTraceFrame* frame)
+{
+    return btck_ScriptTraceFrame::get(frame).codeseparator_pos;
+}
+
+int32_t btck_script_trace_frame_get_script_error(const btck_ScriptTraceFrame* frame)
+{
+    return static_cast<int32_t>(btck_ScriptTraceFrame::get(frame).script_error);
+}
+
+void btck_script_trace_unregister_callback()
+{
+#ifdef ENABLE_SCRIPT_TRACE
+    ScriptTraceRegisterCallback(nullptr);
+#endif // ENABLE_SCRIPT_TRACE
 }
