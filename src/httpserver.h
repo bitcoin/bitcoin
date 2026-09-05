@@ -502,6 +502,7 @@ public:
     const CService& GetPeer() const { return m_addr; }
     std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
     bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
+    bool ReceiveBufferEmpty() const { return m_recv_buffer.empty(); }
 
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
@@ -522,11 +523,15 @@ public:
      */
     bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
 
-    //! Used for tests.
-    //! @{
-    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
+    /**
+     * Used to determine if an incomplete request is in progress.
+     * @returns nullptr after a complete request is moved to a worker thread,
+     *          but before reading any new data from m_recv_buffer.
+     */
     const HTTPRequest* GetRequest() const { return m_req.get(); }
-    //! @}
+
+    //! Used for tests.
+    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
 
 protected:
     //! Used for tests.
@@ -564,6 +569,7 @@ private:
 
     //! Set to true by the I/O thread when a request is popped off
     //! and passed to a worker thread, reset to false by the worker thread.
+    //! Only one request per connection is ever in flight.
     std::atomic_bool m_req_busy{false};
 
     /**

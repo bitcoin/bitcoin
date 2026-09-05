@@ -153,6 +153,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_invalid_http_version()
         self.check_whitespace_in_headers()
         self.check_connection_limit()
+        self.check_pipelined_data_is_throttled()
 
 
     def check_default_connection(self):
@@ -697,6 +698,85 @@ class HTTPBasicsTest (BitcoinTestFramework):
             # Close all remaining connections for clean up
             for client in connections:
                 client.close_sock()
+
+
+    def check_pipelined_data_is_throttled(self):
+        self.log.info("Check that pipelined data is throttled while a request is in flight")
+        self.restart_node(0, extra_args=["-rpcservertimeout=0"])
+
+        conn = BitcoinHTTPConnection(self.node)
+
+        # A blocking RPC request: the server reads it fully and it enters the
+        # worker pool as "in flight" (m_req_busy) until a new block arrives.
+        tip_height = self.node.getblockcount()
+        conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}')
+
+        # Flood the same connection with big pipelined requests:
+        # Large garbage submitblock (just under MAX_BODY_SIZE each, including HTTP/jsonrpc overhead)
+        garbage_block = "0" * (MAX_BODY_SIZE - 100)
+        body = f'{{"method": "submitblock", "params": ["{garbage_block}"]}}'
+        flood = (
+            f'POST / HTTP/1.1\r\nAuthorization: Basic {str_to_b64str(conn.authpair)}\r\n'
+            f'Content-Length: {len(body)}\r\n\r\n' +
+            body
+        ).encode("ascii")
+
+        # Non-blocking send: When the server stops reading from the buffer
+        # due to TCP backpressure, Python will raise an error. If the socket
+        # was set to blocking, we would have to wait for an ambiguous timeout.
+        conn.conn.sock.setblocking(False)
+
+        # Kernel socket buffer sizes vary widely across platforms,
+        # so we can't rely on counting sent() bytes to determine if the
+        # server is actually draining its end of the socket.
+        # When the server is busy, a continuous flood from the client SHOULD,
+        # at some point, stall indefinitely. An unpatched server will continue
+        # to accept data from the socket, at some rate, indefinitely.
+
+        # If send() is blocked for this many seconds, we assume the server
+        # is behaving correctly.
+        STALL_TIMEOUT = 5
+        # If send() continues to progress for this many seconds, we assume
+        # the server is vulnerable to memory exhaustion.
+        PROGRESS_TIMEOUT = 10
+
+        sent = 0
+        stuck_since = None
+        start = time.monotonic()
+        while True:
+            try:
+                sent += conn.conn.sock.send(flood[sent % len(flood):])
+                # Progress: the server is still reading
+                stuck_since = None
+                self.log.debug(f"sent: {sent}")
+                assert sent <= len(flood) * 10, (
+                    f"Server accepted {sent} bytes of pipelined data while a "
+                    "request was still in flight: the receive buffer is not throttled")
+            except BlockingIOError:
+                # The kernel send buffer is full (EAGAIN).
+                # That's good, but we still need to determine if we are
+                # feeling backpressure from the server or the client-side buffer.
+                if stuck_since is None:
+                    stuck_since = time.monotonic()
+                elif time.monotonic() - stuck_since > STALL_TIMEOUT:
+                    # No progress: the server has stopped reading.
+                    break
+            if stuck_since is None and time.monotonic() - start > PROGRESS_TIMEOUT:
+                # Continuous progress: the server is still draining the
+                # receive buffer while a request is in flight.
+                raise AssertionError(
+                    f"Server kept reading pipelined data ({sent} bytes) while a "
+                    f"request was still in flight for {PROGRESS_TIMEOUT}s.")
+            time.sleep(0.05)
+
+        self.log.info(f"Pipelined flood stalled after {sent} bytes; no progress for {STALL_TIMEOUT}s.")
+
+        # Unblock the client request queue.
+        conn.conn.sock.settimeout(10)
+        generated_block = self.generate(self.node, 1, sync_fun=self.no_op)[0]
+        # First reply is for the blocking request.
+        response = conn.recv_raw().decode()
+        assert generated_block in response
 
 
 if __name__ == '__main__':
