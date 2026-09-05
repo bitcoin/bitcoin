@@ -5993,8 +5993,8 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
             validated_cs.m_assumeutxo != Assumeutxo::VALIDATED ||
             !validated_cs.m_chain.Tip() ||
             // Or the validated chainstate is not targeting the snapshot block...
-            !validated_cs.m_target_blockhash ||
-            *validated_cs.m_target_blockhash != *unvalidated_cs.m_from_snapshot_blockhash ||
+            !validated_cs.TargetBlockHash() ||
+            *validated_cs.TargetBlockHash() != *unvalidated_cs.m_from_snapshot_blockhash ||
             // Or the validated chainstate has not reached the snapshot block yet...
             !validated_cs.ReachedTarget()) {
        // Then the snapshot cannot be validated and there is nothing to do.
@@ -6190,7 +6190,7 @@ Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainst
     Chainstate& prev_chainstate{CurrentChainstate()};
     assert(prev_chainstate.m_assumeutxo == Assumeutxo::VALIDATED);
     // Set target block for historical chainstate to snapshot block.
-    assert(!prev_chainstate.m_target_blockhash);
+    assert(!prev_chainstate.TargetBlockHash());
     prev_chainstate.SetTargetBlockHash(*Assert(chainstate->m_from_snapshot_blockhash));
     m_chainstates.push_back(std::move(chainstate));
     Chainstate& curr_chainstate{CurrentChainstate()};
