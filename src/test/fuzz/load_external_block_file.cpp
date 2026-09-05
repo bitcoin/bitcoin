@@ -16,18 +16,37 @@
 #include <cstdint>
 #include <vector>
 
+extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
+
 namespace {
-const TestingSetup* g_setup;
+TestingSetup* g_setup;
+
+/** Recreate the chainman from a deterministic genesis baseline. */
+void ResetChainman(TestingSetup& setup, FakeNodeClock& node_clock)
+{
+    node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    MakeRandDeterministicDANGEROUS(uint256::ZERO);
+    setup.m_node.chainman.reset();
+    setup.m_make_chainman();
+    setup.LoadVerifyActivateChainstate();
+}
 } // namespace
 
 void initialize_load_external_block_file()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
+    FakeNodeClock init_clock{}; // Uses the existing mock time
+    static const auto testing_setup = MakeNoLogFileContext<TestingSetup>(
+        ChainType::REGTEST,
+        {
+            .setup_net = false,
+        });
     g_setup = testing_setup.get();
+    ResetChainman(*g_setup, init_clock);
 }
 
 FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_file)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
@@ -44,4 +63,6 @@ FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_fil
         // Corresponds to the -loadblock= case (orphan blocks aren't tracked across files).
         g_setup->m_node.chainman->LoadExternalBlockFile(fuzzed_block_file);
     }
+
+    ResetChainman(*g_setup, clock);
 }
