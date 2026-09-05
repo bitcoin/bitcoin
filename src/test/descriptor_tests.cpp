@@ -14,6 +14,7 @@
 
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -55,6 +56,7 @@ constexpr int MUSIG = 1 << 9; // This is a MuSig so key counts will have an extr
 constexpr int MUSIG_DERIVATION = 1 << 10; // MuSig with BIP 328 derivation from the aggregate key
 constexpr int MIXED_MUSIG = 1 << 11; // Both MuSig and normal key expressions are present
 constexpr int UNIQUE_XPUBS = 1 << 12; // Whether the xpub count should be of unique xpubs
+constexpr int NO_KEYS = 1 << 13; // No keys are present at all in the descriptor
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
 bool EqualDescriptor(std::string a, std::string b)
@@ -121,6 +123,7 @@ static size_t CountUniqueXpubs(const std::string& desc)
 }
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
+const std::set<std::vector<uint32_t>> NO_PATHS{};
 
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
@@ -166,6 +169,66 @@ std::set<std::pair<CPubKey, KeyOriginInfo>> GetKeyOriginData(const FlatSigningPr
         }
     }
     return ret;
+}
+
+/** ERE string matching a base58 character. */
+const std::string STR_BASE58CHAR = "[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]";
+/** ERE string matching origin info, or empty string. */
+const std::string STR_MAYBE_ORIGIN = "([[][0-9a-f]{8}(/[0-9]+['h]?)*])?";
+/** ERE string matching a compressed pubkey, an x-only pubkey, or an uncompressed pubkey. */
+const std::string STR_PUBKEY = "((02|03)?[a-f0-9]{64}|04[a-f0-9]{128})";
+/** ERE string matching a pubkey hash. */
+const std::string STR_PUBKEYHASH = "([a-f0-9]{40})";
+/** ERE string matching an xpub or xprv. */
+const std::string STR_XPUBPRV = "((xpub|xprv)" + STR_BASE58CHAR + "{74,108})";
+/** ERE string matching a single derivation path step: a plain index, or a BIP389 multipath
+ *  specifier like <1;2;3>. */
+const std::string STR_KEYSTEP = "([0-9]+['h]?|[<][0-9]+['h]?([;][0-9]+['h]?)*[>])";
+/** ERE string matching an xpub or xprv followed by optional derivation path. */
+const std::string STR_BIP32KEY = "(" + STR_XPUBPRV + "(/" + STR_KEYSTEP + ")*(/[*]['h]?)?)";
+/** ERE string matching a descriptor key expression. */
+const std::string STR_KEYEXPR = "(" + STR_MAYBE_ORIGIN + "(" + STR_PUBKEY + "|" + STR_PUBKEYHASH + "|" + STR_BIP32KEY + "))";
+
+/** Regular expression matching a descriptor key expression. */
+const std::regex KEY_RE("([(,])" + STR_KEYEXPR + "([),])", std::regex::extended);
+/** Regular expression matching the word "sortedmulti". */
+const std::regex SORTEDMULTI_RE("(^|[(,])sortedmulti[(]", std::regex::extended);
+/** Regular expression collapsing a whole musig() key expression, including any trailing
+ *  derivation path, to a single unit. musig()'s participants are plain keys with no
+ *  parentheses of their own, and musig() cannot be nested or carry origin info (see
+ *  ParsePubkey() in script/descriptor.cpp), so a match up to the first ')' is sufficient;
+ *  KEY_RE above doesn't need to understand musig()'s internal structure as a result. */
+const std::regex MUSIG_RE("musig[(][^()]*[)][^(),]*", std::regex::extended);
+/** Replacement string for KEY_RE: keeps the separators captured in groups 1 and mark_count(),
+ *  replacing the key expression itself with "<KEY>". The trailing group number is computed from
+ *  KEY_RE's actual capture count rather than hardcoded, so it can't silently drift out of sync
+ *  if STR_KEYEXPR's structure changes again in the future. */
+const std::string KEY_RE_REPLACEMENT = "$1<KEY>$" + util::ToString(KEY_RE.mark_count());
+
+/** Replace all key expressions in desc with "<KEY>", "sortedmulti" with "multi", and drop checksum. */
+std::string DropKeys(std::string desc)
+{
+    if (desc.size() >= 9 && *(desc.end() - 9) == '#') {
+        // Drop checksum
+        desc = desc.substr(0, desc.size() - 9);
+    }
+    {
+        // Collapse musig() expressions first; KEY_RE below only understands plain keys.
+        std::ostringstream ostr;
+        std::regex_replace(std::ostreambuf_iterator<char>(ostr), desc.begin(), desc.end(), MUSIG_RE, "<KEY>");
+        desc = ostr.str();
+    }
+    while (true) {
+        std::ostringstream ostr;
+        std::regex_replace(std::ostreambuf_iterator<char>(ostr), desc.begin(), desc.end(), KEY_RE, KEY_RE_REPLACEMENT);
+        auto newdesc = ostr.str();
+        ostr.str("");
+        std::regex_replace(std::ostreambuf_iterator<char>(ostr), newdesc.begin(), newdesc.end(), SORTEDMULTI_RE, "$1multi(");
+        auto newdesc2 = ostr.str();
+        std::swap(desc, newdesc2);
+        if (newdesc2 == desc) break;
+    }
+    return desc;
 }
 
 void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int flags,
@@ -214,9 +277,11 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK(parse_pub->GetOutputType() == type);
 
     // Check private keys are extracted from the private version but not the public one.
-    BOOST_CHECK(keys_priv.keys.size());
+    BOOST_CHECK_EQUAL(keys_priv.keys.empty(), !!(flags & NO_KEYS));
     BOOST_CHECK(!keys_pub.keys.size());
-    const bool have_all_private_keys = !(flags & MISSING_PRIVKEYS);
+    // HavePrivateKeys() returns false for a descriptor with no keys at all, same as one
+    // with some private keys genuinely missing.
+    const bool have_all_private_keys = !(flags & (MISSING_PRIVKEYS | NO_KEYS));
     BOOST_CHECK_EQUAL(parse_priv->HavePrivateKeys(keys_priv), have_all_private_keys);
     BOOST_CHECK_EQUAL(parse_pub->HavePrivateKeys(keys_priv), have_all_private_keys);
     BOOST_CHECK(!parse_priv->HavePrivateKeys(keys_pub));
@@ -240,7 +305,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     }
 
     // Check that both can be serialized with private key back to the private version, but not without private key.
-    if (!(flags & MISSING_PRIVKEYS)) {
+    // (Descriptors with no keys at all have nothing to check here.)
+    if (!(flags & (MISSING_PRIVKEYS | NO_KEYS))) {
         std::string prv1;
         BOOST_CHECK(parse_priv->ToPrivateString(keys_priv, prv1));
         if (expected_prv) {
@@ -285,13 +351,23 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
-    // Check that the highest key expression index matches the number of keys in the descriptor
-    BOOST_TEST_INFO("Pub desc: " + pub);
+    // Check that the highest key expression index matches the number of keys in the descriptor.
+    // Descriptors with no keys at all (flags & NO_KEYS) have neither.
+    BOOST_TEST_INFO_SCOPE("Pub desc: " + pub);
     uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
-    BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
-    BOOST_TEST_INFO("Priv desc: " + prv);
+    if (flags & NO_KEYS) {
+        BOOST_CHECK_EQUAL(key_exprs, 0U);
+        BOOST_CHECK_EQUAL(parse_pub->GetKeyCount(), 0U);
+    } else {
+        BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
+    }
+    BOOST_TEST_INFO_SCOPE("Priv desc: " + prv);
     BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
-    BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+    if (flags & NO_KEYS) {
+        BOOST_CHECK_EQUAL(parse_priv->GetKeyCount(), 0U);
+    } else {
+        BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+    }
 
     // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
     //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
@@ -462,6 +538,15 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
                 auto inferred = InferDescriptor(spks[n], script_provider);
+                // Only meaningful for descriptors producing a single script (i.e. not combo()),
+                // since inferring back from just one of combo()'s scripts can't reproduce combo()
+                // itself. Also skipped for taproot trees with more than one leaf/branch (pub
+                // containing '{'): sibling branches in a taptree have no meaningful order, so
+                // InferDescriptor() reconstructing them in a different (but equally valid) order
+                // is not something DropKeys' plain string comparison can account for.
+                if (ref.size() == 1 && pub.find('{') == std::string::npos) {
+                    BOOST_CHECK_EQUAL(DropKeys(inferred->ToString()), DropKeys(pub));
+                }
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
@@ -1046,6 +1131,14 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("", "addr(asdf)", "Address is not valid"); // Invalid address
     CheckUnparsable("", "raw(asdf)", "Raw script is not hex"); // Invalid script
     CheckUnparsable("", "raw(Ü)#00000000", "Invalid characters in payload"); // Invalid chars
+
+    Check("raw(1337)", "raw(1337)", "raw(1337)", NO_KEYS | UNSOLVABLE, {{"1337"}}, std::nullopt, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", "addr(13MKnpg1J36ogDYVT8GSFHYZQzphkDTESu)", NO_KEYS | UNSOLVABLE, {{"76a91419c84184d9473c2d52913c7468dc6743db09ea9688ac"}}, OutputType::LEGACY, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", "addr(3P14159f73E4gFr7JterCCQh9QjiTjiZrG)", NO_KEYS | UNSOLVABLE, {{"a914e9c3dd0c07aac76179ebc76a6c78d4d67c6c160a87"}}, OutputType::LEGACY, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", "addr(bc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck)", NO_KEYS | UNSOLVABLE, {{"00144160bb1870159a08724557f75c7bb665a3a132e0"}}, OutputType::BECH32, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", "addr(bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3)", NO_KEYS | UNSOLVABLE, {{"00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262"}}, OutputType::BECH32, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", "addr(bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y)", NO_KEYS | UNSOLVABLE, {{"5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, NO_PATHS);
+    Check("addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", "addr(bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs)", NO_KEYS | UNSOLVABLE, {{"5210751e76e8199196d454941c45d1b3a323"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, NO_PATHS);
 
     Check(
         "rawtr(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/86'/1'/0'/1/*)#a5gn3t7k",
