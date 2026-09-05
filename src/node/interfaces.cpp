@@ -843,7 +843,7 @@ public:
         });
         if (!action) return false;
         // Now dump value to disk if requested
-        return *action != interfaces::SettingsAction::WRITE || args().WriteSettingsFile();
+        return *action != interfaces::SettingsAction::WRITE || (args().GetSettingsPath() && args().WriteSettingsFile());
     }
     bool overwriteRwSetting(const std::string& name, common::SettingsValue value, interfaces::SettingsAction action) override
     {
