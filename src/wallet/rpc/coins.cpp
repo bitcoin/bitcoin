@@ -56,7 +56,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
     // Tally
     CAmount amount = 0;
-    for (const auto& [_, wtx] : wallet.mapWallet) {
+    for (const auto& wtx : wallet.m_txs_by_txid) {
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth
             // Coinbase with less than 1 confirmation is no longer in the main chain
@@ -303,12 +303,12 @@ RPCMethod lockunspent()
 
         const COutPoint outpt(txid, nOutput);
 
-        const auto it = pwallet->mapWallet.find(outpt.hash);
-        if (it == pwallet->mapWallet.end()) {
+        const CWalletTx* wtx = pwallet->GetWalletTx(outpt.hash);
+        if (!wtx) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction");
         }
 
-        const CWalletTx& trans = it->second;
+        const CWalletTx& trans = *wtx;
 
         if (outpt.n >= trans.GetTx()->vout.size()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
