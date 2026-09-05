@@ -38,7 +38,7 @@
 #include <validation.h>
 #include <versionbits.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -229,11 +229,11 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     const auto combined_txs_size = parent_tx.GetTxSize() + high_fee_tx.GetTxSize();
     FeeFrac package_feefrac{combined_txs_fee, combined_txs_size};
     // The package should be added first.
-    BOOST_CHECK(block_package_feerates[0] == package_feefrac);
+    BOOST_CHECK_EQUAL(block_package_feerates[0], package_feefrac);
 
     // The medium_fee_tx should be added next.
     FeeFrac medium_tx_feefrac{medium_fee_tx.GetFee(), medium_fee_tx.GetTxSize()};
-    BOOST_CHECK(block_package_feerates[1] == medium_tx_feefrac);
+    BOOST_CHECK_EQUAL(block_package_feerates[1], medium_tx_feefrac);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;

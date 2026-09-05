@@ -5,12 +5,13 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <optional>
 #include <regex>
@@ -203,11 +204,11 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK(max_sat_nonmaxsig <= max_sat_maxsig);
     const auto max_elems{parse_priv->MaxSatisfactionElems()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
-    BOOST_CHECK_MESSAGE(is_input_size_info_set || is_nontop_or_nonsolvable, prv);
+    BOOST_CHECK_MESSAGE((is_input_size_info_set || is_nontop_or_nonsolvable), prv);
 
     // The ScriptSize() must match the size of the Script string. (ScriptSize() is set for all descs but 'combo()'.)
     const bool is_combo{!parse_priv->IsSingleType()};
-    BOOST_CHECK_MESSAGE(is_combo || parse_priv->ScriptSize() == scripts[0][0].size() / 2, "Invalid ScriptSize() for " + prv);
+    BOOST_CHECK_MESSAGE((is_combo || parse_priv->ScriptSize() == scripts[0][0].size() / 2), "Invalid ScriptSize() for " + prv);
 
     // Check that the correct OutputType is inferred
     BOOST_CHECK(parse_priv->GetOutputType() == type);
@@ -286,11 +287,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
     // Check that the highest key expression index matches the number of keys in the descriptor
-    BOOST_TEST_INFO("Pub desc: " + pub);
     uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
-    BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
-    BOOST_TEST_INFO("Priv desc: " + prv);
-    BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
+    BOOST_CHECK_MESSAGE(key_exprs + 1 == parse_pub->GetKeyCount(), "Pub desc: " + pub);
+    BOOST_CHECK_MESSAGE(key_exprs == parse_priv->GetMaxKeyExpr(), "Priv desc: " + prv);
     BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
 
     // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
@@ -326,7 +325,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             BOOST_CHECK(spks == spks_cached);
             BOOST_CHECK(GetKeyData(script_provider, flags) == GetKeyData(script_provider_cached, flags));
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
-            BOOST_CHECK(GetKeyOriginData(script_provider, flags) == GetKeyOriginData(script_provider_cached, flags));
+            const auto origins{GetKeyOriginData(script_provider, flags)};
+            const auto origins_cached{GetKeyOriginData(script_provider_cached, flags)};
+            BOOST_CHECK_EQUAL_COLLECTIONS(origins.begin(), origins.end(), origins_cached.begin(), origins_cached.end());
 
             // Check whether keys are in the cache
             const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
@@ -433,7 +434,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 BOOST_CHECK(spks1 == spk1_from_cache);
                 BOOST_CHECK(GetKeyData(script_provider1, flags) == GetKeyData(script_provider_cached1, flags));
                 BOOST_CHECK(script_provider1.scripts == script_provider_cached1.scripts);
-                BOOST_CHECK(GetKeyOriginData(script_provider1, flags) == GetKeyOriginData(script_provider_cached1, flags));
+                const auto origins1{GetKeyOriginData(script_provider1, flags)};
+                const auto origins_cached1{GetKeyOriginData(script_provider_cached1, flags)};
+                BOOST_CHECK_EQUAL_COLLECTIONS(origins1.begin(), origins1.end(), origins_cached1.begin(), origins_cached1.end());
             }
 
             // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
@@ -469,7 +472,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 BOOST_CHECK_EQUAL(spks_inferred.size(), 1U);
                 BOOST_CHECK(spks_inferred[0] == spks[n]);
                 BOOST_CHECK_EQUAL(InferDescriptor(spks_inferred[0], provider_inferred)->IsSolvable(), !(flags & UNSOLVABLE));
-                BOOST_CHECK(GetKeyOriginData(provider_inferred, flags) == GetKeyOriginData(script_provider, flags));
+                const auto origins_inferred{GetKeyOriginData(provider_inferred, flags)};
+                const auto origins_script{GetKeyOriginData(script_provider, flags)};
+                BOOST_CHECK_EQUAL_COLLECTIONS(origins_inferred.begin(), origins_inferred.end(), origins_script.begin(), origins_script.end());
             }
 
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),
