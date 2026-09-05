@@ -1300,6 +1300,56 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+
+    // Unterminated musig() expression
+    CheckUnparsable("tr(musig(00)", "tr(musig(00)", "tr(): Invalid musig() expression");
+    // Invalid musig() participant key
+    CheckUnparsable("tr(musig(00))", "tr(musig(00))", "tr(): musig(): Pubkey '00' is invalid");
+    // Garbage after a musig() participant key. The '}' closes the level opened by the '(' of
+    // musig( and the '{' re-opens it, so the final ')' stays inside the expression span.
+    CheckUnparsable("tr(musig(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1}{))", "tr(musig(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd}{))", "tr(): musig(): expected ',', got '}'");
+    // Invalid musig() derivation path element
+    CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/4294967296)", "tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/4294967296)", "tr(): musig(): Key path value '4294967296' is not a valid uint32");
+    // musig() participants with multipath derivations of mismatched lengths
+    CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1;2>))", "tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1;2>))", "tr(): musig(): Multipath derivation paths have mismatched lengths");
+    // multi() is not allowed inside tr()
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,multi(1,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn))", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi(1,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0))", "Can only have multi/sortedmulti at top level, in sh(), or in wsh()");
+    // multi_a() is not allowed at top level
+    CheckUnparsable("multi_a(1,L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "multi_a(1,03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "Can only have multi_a/sortedmulti_a inside tr()");
+    // addr() is not allowed inside sh()
+    CheckUnparsable("sh(addr(asdf))", "sh(addr(asdf))", "Can only have addr() at top level");
+    // Garbage after the tr() internal key
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1}(x))", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd}(x))", "tr: expected ',', got '}'");
+    // Too many taptree nesting levels
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1," + std::string(129, '{') + ")", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd," + std::string(129, '{') + ")", "tr() supports at most 128 nesting levels");
+    // A taptree of exactly 128 nesting levels is valid, so the limit above is not off by one
+    {
+        std::string tree = "pk(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)";
+        for (int i = 0; i < 128; ++i) {
+            tree = "{" + tree + ",pk(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402)}";
+        }
+        FlatSigningProvider tree_keys;
+        std::string tree_error;
+        auto parsed = Parse("tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd," + tree + ")", tree_keys, tree_error);
+        BOOST_CHECK_MESSAGE(!parsed.empty(), tree_error);
+        std::vector<CScript> scripts;
+        FlatSigningProvider provider;
+        BOOST_CHECK(parsed.at(0)->Expand(0, tree_keys, scripts, provider));
+    }
+    // Missing '}' after the right branch of a taptree pair
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,{pk(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),pk(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A),pk(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A)})", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{pk(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),pk(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402),pk(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402)})", "tr(): expected '}' after script expression");
+    // Missing ',' after the left branch of a taptree pair
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,{pk(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)})", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{pk(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)})", "tr(): expected ',' after script expression");
+    // Garbage after a taptree script expression
+    CheckUnparsable("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,pk(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),pk(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))", "tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pk(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),pk(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))", "tr(): expected ')' after script expression");
+    // tr() is not allowed inside sh()
+    CheckUnparsable("sh(tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have tr at top level");
+    // Invalid rawtr() key
+    CheckUnparsable("rawtr(00)", "rawtr(00)", "rawtr(): Pubkey '00' is invalid");
+    // rawtr() is not allowed inside sh()
+    CheckUnparsable("sh(rawtr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(rawtr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have rawtr at top level");
+    // raw() is not allowed inside sh()
+    CheckUnparsable("sh(raw(00))", "sh(raw(00))", "Can only have raw() at top level");
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
