@@ -2852,6 +2852,23 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
         uint32_t tx_requested_size{0};
         for (const auto& tx : resp.txn) tx_requested_size += tx->ComputeTotalSize();
         LogDebug(BCLog::CMPCTBLOCK, "%s sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)", pfrom.LogPeer(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
+        if (util::log::ShouldTraceLog(BCLog::CMPCTBLOCK)) {
+            std::string missing_txids{};
+
+            static constexpr size_t txid_str_len = Txid::size() * 2;
+            missing_txids.reserve((txid_str_len + 2) * resp.txn.size());
+
+            bool first = true;
+            for(const auto& txn : resp.txn) {
+                if (!first) {
+                    missing_txids += ", ";
+                }
+                missing_txids += txn->GetHash().ToString();
+                first = false;
+            }
+
+            LogTrace(BCLog::CMPCTBLOCK, "%s sent a GETBLOCKTXN for block %s requesting the following transactions: %s", pfrom.LogPeer(), block.GetHash().ToString(), missing_txids);
+        }
     }
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
