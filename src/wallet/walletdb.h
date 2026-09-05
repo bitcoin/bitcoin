@@ -70,6 +70,8 @@ extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string LAST_DECRYPTED_FEATURES;
+extern const std::string LAST_OPENED_FEATURES;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
 extern const std::string MINVERSION;
@@ -271,19 +273,18 @@ public:
 
     DBErrors LoadWallet(CWallet* pwallet);
 
-    /**
-     * Write the given `client_version` to m_batch, indicating the last version
-     * of client software to load this wallet.
-     *
-     * @param[in]   client_version  `CLIENT_VERSION` outside of test code.
-     * @return      A bool indicating whether or not the write succeeded.
-     */
-    bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, client_version); }
+    //! Write the current client version in the VERSION record
+    bool WriteLastOpenedVersion();
+    //! Write the current client features in the LAST_OPENED_FEATURES record
+    bool WriteLastOpenedFeatures();
+    //! Write the current wallet client features to the LAST_DECRYPTED_FEATURES record
+    bool WriteLastDecryptedFeatures();
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(uint64_t flags);
+
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
