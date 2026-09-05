@@ -28,6 +28,7 @@
 #include <undo.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -175,6 +176,28 @@ static std::string AvailableDataFormatsString()
     return formats;
 }
 
+util::Expected<bool, std::string> RESTParseBoolParam(HTTPRequest* req, std::string_view param_name, bool default_val)
+{
+    std::optional<std::string> param_val{std::nullopt};
+    try {
+        param_val = req->GetQueryParameter(param_name);
+    } catch (const std::runtime_error& e) {
+        return util::Unexpected{e.what()};
+    }
+
+    if (param_val.has_value()) {
+        if (param_val == "true") {
+            return true;
+        } else if (param_val == "false") {
+            return false;
+        } else {
+            return util::Unexpected{strprintf("The \"%s\" query parameter must be either \"true\" or \"false\".", param_name)};
+        }
+    } else {
+        return default_val;
+    }
+}
+
 static bool CheckWarmup(HTTPRequest* req)
 {
     std::string statusmessage;
@@ -195,17 +218,24 @@ static bool rest_headers(const std::any& context,
 
     std::string raw_count;
     std::string hashStr;
+    bool active_chain_only{true};
     if (path.size() == 2) {
         // deprecated path: /rest/headers/<count>/<hash>
         hashStr = path[1];
         raw_count = path[0];
     } else if (path.size() == 1) {
-        // new path with query parameter: /rest/headers/<hash>?count=<count>
+        // new path with query parameter: /rest/headers/<hash>?count=<count>&activechainonly=<activechainonly>
         hashStr = path[0];
         try {
             raw_count = req->GetQueryParameter("count").value_or("5");
         } catch (const std::runtime_error& e) {
             return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+        const auto activechainonly_parse = RESTParseBoolParam(req, "activechainonly", /*default_val=*/true);
+        if (activechainonly_parse.has_value()) {
+            active_chain_only = activechainonly_parse.value();
+        } else {
+            return RESTERR(req, HTTP_BAD_REQUEST, activechainonly_parse.error());
         }
     } else {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>.<ext>?count=<count>");
@@ -214,6 +244,10 @@ static bool rest_headers(const std::any& context,
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
         return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, raw_count));
+    }
+
+    if (active_chain_only == false && parsed_count.value() != 1) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count must be set to 1 when activechainonly=false, it was set to %s", raw_count));
     }
 
     auto hash{uint256::FromHex(hashStr)};
@@ -229,15 +263,20 @@ static bool rest_headers(const std::any& context,
     ChainstateManager& chainman = *maybe_chainman;
     {
         LOCK(cs_main);
+        const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*hash)};
         CChain& active_chain = chainman.ActiveChain();
         tip = active_chain.Tip();
-        const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*hash)};
-        while (pindex != nullptr && active_chain.Contains(*pindex)) {
-            headers.push_back(pindex);
-            if (headers.size() == *parsed_count) {
-                break;
+
+        if (active_chain_only) {
+            while (pindex != nullptr && active_chain.Contains(*pindex)) {
+                headers.push_back(pindex);
+                if (headers.size() == *parsed_count) {
+                    break;
+                }
+                pindex = active_chain.Next(*pindex);
             }
-            pindex = active_chain.Next(*pindex);
+        } else if (pindex != nullptr) {
+            headers.push_back(pindex);
         }
     }
 
@@ -824,26 +863,21 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     case RESTResponseFormat::JSON: {
         std::string str_json;
         if (param == "contents") {
-            std::string raw_verbose;
-            try {
-                raw_verbose = req->GetQueryParameter("verbose").value_or("true");
-            } catch (const std::runtime_error& e) {
-                return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+            bool verbose, mempool_sequence;
+            const auto verbose_parse = RESTParseBoolParam(req, "verbose", /*default_val=*/true);
+            if (verbose_parse.has_value()) {
+                verbose = verbose_parse.value();
+            } else {
+                return RESTERR(req, HTTP_BAD_REQUEST, verbose_parse.error());
             }
-            if (raw_verbose != "true" && raw_verbose != "false") {
-                return RESTERR(req, HTTP_BAD_REQUEST, "The \"verbose\" query parameter must be either \"true\" or \"false\".");
+
+            const auto mempool_sequence_parse = RESTParseBoolParam(req, "mempool_sequence", /*default_val=*/false);
+            if (mempool_sequence_parse.has_value()) {
+                mempool_sequence = mempool_sequence_parse.value();
+            } else {
+                return RESTERR(req, HTTP_BAD_REQUEST, mempool_sequence_parse.error());
             }
-            std::string raw_mempool_sequence;
-            try {
-                raw_mempool_sequence = req->GetQueryParameter("mempool_sequence").value_or("false");
-            } catch (const std::runtime_error& e) {
-                return RESTERR(req, HTTP_BAD_REQUEST, e.what());
-            }
-            if (raw_mempool_sequence != "true" && raw_mempool_sequence != "false") {
-                return RESTERR(req, HTTP_BAD_REQUEST, "The \"mempool_sequence\" query parameter must be either \"true\" or \"false\".");
-            }
-            const bool verbose{raw_verbose == "true"};
-            const bool mempool_sequence{raw_mempool_sequence == "true"};
+
             if (verbose && mempool_sequence) {
                 return RESTERR(req, HTTP_BAD_REQUEST, "Verbose results cannot contain mempool sequence values. (hint: set \"verbose=false\")");
             }
