@@ -24,6 +24,7 @@
 #include <initializer_list>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -149,6 +150,9 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 RPCErrorCode RPCErrorFromTransactionError(node::TransactionError terr);
 UniValue JSONRPCPSBTError(common::PSBTError err);
 UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string& err_string = "");
+
+//! Error message when a transaction lookup only matched blocks whose data was pruned.
+std::string PrunedBlocksErrorMessage(std::span<const uint256> pruned_block_hashes);
 
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);

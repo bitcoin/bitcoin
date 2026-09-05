@@ -139,34 +139,35 @@ TransactionError BroadcastTransaction(NodeContext& node,
     return TransactionError::OK;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
+TxLookupResult GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman)
 {
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);
-        if (ptx) return ptx;
+        if (ptx) return {std::move(ptx)};
     }
     if (g_txindex) {
-        if (auto result{g_txindex->FindTx(hash)}) {
-            if (!block_index || block_index->GetBlockHash() == result->block_hash) {
+        TxLookupResult result{g_txindex->FindTx(hash)};
+        if (result.tx) {
+            if (!block_index || block_index->GetBlockHash() == result.block_hash) {
                 // Don't return the transaction if the provided block hash doesn't match.
                 // The case where a transaction appears in multiple blocks (e.g. reorgs or
                 // BIP30) is handled by the block lookup below.
-                hashBlock = result->block_hash;
-                return result->tx;
+                return result;
             }
+        } else if (!block_index) {
+            return TxLookupResult{std::move(result.pruned_block_hashes)};
         }
     }
     if (block_index) {
         CBlock block;
         if (blockman.ReadBlock(block, *block_index)) {
-            for (const auto& tx : block.vtx) {
+            for (auto& tx : block.vtx) {
                 if (tx->GetHash() == hash) {
-                    hashBlock = block_index->GetBlockHash();
-                    return tx;
+                    return {std::move(tx), block_index->GetBlockHash()};
                 }
             }
         }
     }
-    return nullptr;
+    return {};
 }
 } // namespace node
