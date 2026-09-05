@@ -21,6 +21,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
+#include <test/fuzz/util/reachability.h>
 #include <test/util/mining.h>
 #include <test/util/random.h>
 #include <test/util/script.h>
@@ -57,6 +58,8 @@ namespace {
 const TestingSetup* g_setup;
 std::vector<COutPoint> g_outpoints_coinbase_init_mature;
 std::vector<COutPoint> g_outpoints_coinbase_init_immature;
+constexpr ReachabilityGoal TX_POOL_STANDARD_ACCEPTS_TRANSACTION{"tx_pool_standard accepts a transaction"};
+constexpr ReachabilityGoal TX_POOL_ACCEPTS_TRANSACTION{"tx_pool accepts a transaction"};
 
 struct MockedTxPool : public CTxMemPool {
     void RollingFeeUpdate() EXCLUSIVE_LOCKS_REQUIRED(!cs)
@@ -67,7 +70,7 @@ struct MockedTxPool : public CTxMemPool {
     }
 };
 
-void initialize_tx_pool()
+void initialize_tx_pool_common()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
@@ -84,6 +87,18 @@ void initialize_tx_pool()
         outpoints.push_back(prevout);
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
+}
+
+void initialize_tx_pool_standard()
+{
+    RegisterReachabilityGoal(TX_POOL_STANDARD_ACCEPTS_TRANSACTION);
+    initialize_tx_pool_common();
+}
+
+void initialize_tx_pool()
+{
+    RegisterReachabilityGoal(TX_POOL_ACCEPTS_TRANSACTION);
+    initialize_tx_pool_common();
 }
 
 struct TransactionsDelta final : public CValidationInterface {
@@ -287,7 +302,7 @@ void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, b
     }
 }
 
-FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
+FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -313,6 +328,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
 
     chainstate.SetMempool(&tx_pool);
+
+    bool accepted_transaction{false};
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
@@ -418,6 +435,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), /*bypass_limits=*/false, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
+        accepted_transaction |= accepted;
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
 
@@ -470,6 +488,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
             }
         }
     }
+    ObserveReachabilityGoal(accepted_transaction, TX_POOL_STANDARD_ACCEPTS_TRANSACTION);
     Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
 
@@ -499,6 +518,8 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
+    bool accepted_transaction{false};
+
     // If we ever bypass limits, do not do TRUC invariants checks
     bool ever_bypassed_limits{false};
 
@@ -525,6 +546,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const auto tx = MakeTransactionRef(mut_tx);
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
+        accepted_transaction |= accepted;
         if (accepted) {
             txids.push_back(tx->GetHash());
             if (!ever_bypassed_limits) {
@@ -532,6 +554,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             }
         }
     }
+    ObserveReachabilityGoal(accepted_transaction, TX_POOL_ACCEPTS_TRANSACTION);
     Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
 } // namespace
