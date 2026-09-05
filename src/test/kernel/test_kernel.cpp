@@ -15,11 +15,15 @@
 
 #include <boost/test/included/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <latch>
 #include <memory>
 #include <optional>
 #include <random>
@@ -27,6 +31,8 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <thread>
+#include <utility>
 #include <vector>
 
 using namespace btck;
@@ -108,6 +114,18 @@ void LogTestMessage(uint8_t value)
     const std::byte challenge{value};
     ChainParams params{std::span{&challenge, 1}};
 }
+
+// Stop and join before referenced test state is destroyed, including on exceptions.
+struct LoggingThreads {
+    std::atomic<bool> m_stop{false};
+    std::vector<std::thread> m_threads;
+
+    ~LoggingThreads()
+    {
+        m_stop = true;
+        for (auto& thread : m_threads) thread.join();
+    }
+};
 
 struct TestDirectory {
     fs::path m_directory;
@@ -768,6 +786,99 @@ BOOST_FIXTURE_TEST_CASE(logging_buffer_lifetime, LoggingSetup)
     }
     BOOST_CHECK_EQUAL(view, "Signet with challenge 01\n");
     BOOST_CHECK_EQUAL(saved->GetMessageAt(0), view);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_buffer_concurrent_drain, LoggingSetup)
+{
+    Logger logger;
+    Logger reference;
+    logger.Drain();
+    reference.Drain();
+
+    std::array<std::vector<LogMessages>, 2> batches;
+    {
+        LoggingThreads consumers;
+        for (size_t reader{0}; reader < batches.size(); ++reader) {
+            consumers.m_threads.emplace_back([&, reader] {
+                while (!consumers.m_stop) {
+                    auto messages{logger.Drain()};
+                    if (messages.Count() != 0 || messages.GetDiscarded() != 0) {
+                        batches[reader].push_back(std::move(messages));
+                    }
+                    std::this_thread::yield();
+                }
+            });
+        }
+        LoggingThreads producers;
+        for (size_t writer{0}; writer < 4; ++writer) {
+            producers.m_threads.emplace_back([writer] {
+                for (size_t i{0}; i < 64; ++i) {
+                    LogTestMessage(static_cast<uint8_t>(writer * 64 + i));
+                }
+            });
+        }
+    } // Join all producers before stopping the consumers.
+    batches[0].push_back(logger.Drain());
+
+    // An undrained connection provides the complete stream in logging order.
+    // Concurrent drains must partition that stream without loss or duplication.
+    auto complete{reference.Drain()};
+    BOOST_REQUIRE_EQUAL(complete.Count(), 256);
+    BOOST_CHECK_EQUAL(complete.GetDiscarded(), 0);
+    std::vector<std::string> expected;
+    for (const auto message : complete.Messages()) {
+        expected.emplace_back(message);
+    }
+    std::vector<std::string> received;
+    for (const auto& reader_batches : batches) {
+        auto next{expected.begin()};
+        for (const auto& batch : reader_batches) {
+            BOOST_CHECK_EQUAL(batch.GetDiscarded(), 0);
+            for (const auto message : batch.Messages()) {
+                // Every consumer also observes its messages in FIFO order.
+                next = std::find(next, expected.end(), message);
+                BOOST_REQUIRE(next != expected.end());
+                ++next;
+                received.emplace_back(message);
+            }
+        }
+    }
+    std::ranges::sort(expected);
+    std::ranges::sort(received);
+    BOOST_CHECK_EQUAL_COLLECTIONS(received.begin(), received.end(), expected.begin(), expected.end());
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_buffer_concurrent_disconnect, LoggingSetup)
+{
+    Logger observer;
+    observer.Drain();
+    std::latch started{1};
+    {
+        LoggingThreads producer;
+        producer.m_threads.emplace_back([&] {
+            LogTestMessage(1);
+            started.count_down();
+            while (!producer.m_stop) {
+                LogTestMessage(1);
+                std::this_thread::yield();
+            }
+        });
+        started.wait();
+
+        // Disconnect must unregister the internal sink before freeing its buffer,
+        // even with ongoing production and an application that never drains it.
+        for (int i{0}; i < 100; ++i) {
+            Logger transient{/*max_buffer_bytes=*/64};
+        }
+    }
+
+    // Other connections continue receiving logs after the transient ones leave.
+    observer.Drain();
+    LogTestMessage(2);
+    auto messages{observer.Drain()};
+    BOOST_REQUIRE_EQUAL(messages.Count(), 1);
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(0), "Signet with challenge 02\n");
+    BOOST_CHECK_EQUAL(messages.GetDiscarded(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
