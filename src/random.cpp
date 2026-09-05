@@ -77,7 +77,7 @@ inline int64_t GetPerformanceCounter() noexcept
 #endif
 }
 
-#ifdef HAVE_GETCPUID
+#if defined(HAVE_GETCPUID) && !defined(_MSC_VER)
 bool g_rdrand_supported = false;
 bool g_rdseed_supported = false;
 constexpr uint32_t CPUID_F1_ECX_RDRAND = 0x40000000;
