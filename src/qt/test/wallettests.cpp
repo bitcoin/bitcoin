@@ -3,9 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/test/wallettests.h>
-#include <qt/test/util.h>
 
-#include <wallet/coincontrol.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -21,30 +19,33 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendcoinsentry.h>
+#include <qt/test/util.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
 #include <script/solver.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
+#include <wallet/coincontrol.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
-
-#include <chrono>
-#include <memory>
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
 #include <QClipboard>
+#include <QDialogButtonBox>
+#include <QListView>
 #include <QObject>
 #include <QPushButton>
+#include <QTextEdit>
 #include <QTimer>
 #include <QVBoxLayout>
-#include <QTextEdit>
-#include <QListView>
-#include <QDialogButtonBox>
+
+#include <chrono>
+#include <memory>
 
 using wallet::AddWallet;
 using wallet::CWallet;

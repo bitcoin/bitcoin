@@ -4,6 +4,7 @@
 
 #include <test/util/setup_common.h>
 #include <util/btcsignals.h>
+#include <util/check.h>
 
 #include <boost/test/unit_test.hpp>
 

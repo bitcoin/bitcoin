@@ -2,15 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/fuzz/util/mempool.h>
+
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <kernel/mempool_entry.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
-#include <test/fuzz/util/mempool.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdint>
 #include <limits>
 

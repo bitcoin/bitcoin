@@ -10,21 +10,22 @@
 #include <ipc/test/ipc_test.capnp.h>
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
+#include <kj/common.h>
+#include <kj/memory.h>
+#include <kj/test.h>
 #include <mp/proxy-types.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <validation.h>
 
-#include <future>
-#include <thread>
-#include <kj/common.h>
-#include <kj/memory.h>
-#include <kj/test.h>
-#include <stdexcept>
-
 #include <boost/test/unit_test.hpp>
+
+#include <future>
+#include <stdexcept>
+#include <thread>
 
 static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());

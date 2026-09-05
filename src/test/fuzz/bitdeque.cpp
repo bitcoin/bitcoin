@@ -2,10 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/bitdeque.h>
+
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
-#include <util/bitdeque.h>
+#include <util/check.h>
 
 #include <deque>
 #include <vector>

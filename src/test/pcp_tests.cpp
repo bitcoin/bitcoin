@@ -4,9 +4,10 @@
 
 #include <common/pcp.h>
 #include <netbase.h>
-#include <test/util/logging.h>
 #include <test/util/common.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>

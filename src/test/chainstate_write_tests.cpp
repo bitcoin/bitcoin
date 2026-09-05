@@ -4,6 +4,7 @@
 
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 

@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 
 FUZZ_TARGET(tx_out)
 {
