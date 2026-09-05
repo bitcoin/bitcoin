@@ -161,9 +161,9 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
-bool WalletBatch::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
+bool WalletBatch::WriteMasterKey(const CMasterKey& kMasterKey)
 {
-    return WriteIC(std::make_pair(DBKeys::MASTER_KEY, nID), kMasterKey, true);
+    return WriteIC(std::make_pair(DBKeys::MASTER_KEY, kMasterKey.m_id), kMasterKey, true);
 }
 
 bool WalletBatch::EraseMasterKey(unsigned int id)
@@ -401,19 +401,18 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
     LOCK(pwallet->cs_wallet);
     try {
         // Master encryption key is loaded into only the wallet and not any of the ScriptPubKeyMans.
-        unsigned int nID;
+        uint32_t nID;
         ssKey >> nID;
         CMasterKey kMasterKey;
         ssValue >> kMasterKey;
-        if(pwallet->mapMasterKeys.contains(nID))
-        {
-            strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
+        kMasterKey.m_id = nID;
+
+        if (pwallet->m_encryption_key.has_value()) {
+            strErr = strprintf("Error reading wallet database: more than one encryption key");
             return false;
         }
-        pwallet->mapMasterKeys[nID] = kMasterKey;
-        if (pwallet->nMasterKeyMaxID < nID)
-            pwallet->nMasterKeyMaxID = nID;
 
+        pwallet->m_encryption_key = kMasterKey;
     } catch (const std::exception& e) {
         if (strErr.empty()) {
             strErr = e.what();
@@ -1213,13 +1212,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Removing the mkey records is only safe if there are no *ckey records.
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && pwallet->HasEncryptionKeys() && !pwallet->HaveCryptedKeys()) {
         pwallet->WalletLogPrintf("Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys.\n");
-        for (const auto& [id, _] : pwallet->mapMasterKeys) {
-            if (!EraseMasterKey(id)) {
-                pwallet->WalletLogPrintf("Error: Unable to remove extraneous encryption key '%u'. Wallet corrupt.\n", id);
-                return DBErrors::CORRUPT;
-            }
+        if (!EraseMasterKey(pwallet->m_encryption_key->m_id)) {
+            pwallet->WalletLogPrintf("Error: Unable to remove extraneous encryption key. Wallet corrupt.\n");
+            return DBErrors::CORRUPT;
         }
-        pwallet->mapMasterKeys.clear();
+        pwallet->m_encryption_key.reset();
     }
 
     return result;
