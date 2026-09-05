@@ -324,8 +324,8 @@ private:
     void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    //! Setup descriptors based on the given CExtKey
-    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
+    //! Setup with the given descriptor, storing the given master key
+    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, WalletDescriptor w_desc);
 
 protected:
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
@@ -348,7 +348,7 @@ public:
     static std::unique_ptr<DescriptorScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
     static std::unique_ptr<DescriptorScriptPubKeyMan> CreateFromImport(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     static std::unique_ptr<DescriptorScriptPubKeyMan> CreateFromMigration(WalletStorage& storage, WalletBatch& batch, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
-    static std::unique_ptr<DescriptorScriptPubKeyMan> GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal);
+    static std::unique_ptr<DescriptorScriptPubKeyMan> GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, WalletDescriptor w_desc);
 
     mutable RecursiveMutex cs_desc_man;
 

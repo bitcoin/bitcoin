@@ -92,5 +92,66 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(wallet_load_multipath_descriptors, TestingSetup)
+{
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
+
+    const std::string multipath_desc{"wpkh(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/<0;1;2>/*)"};
+    FlatSigningProvider keys;
+    std::string parse_error;
+    auto parsed_descs = Parse(multipath_desc, keys, parse_error, /*require_checksum=*/false);
+    BOOST_REQUIRE_EQUAL(parsed_descs.size(), 3);
+    std::vector<WalletDescriptor> wallet_descriptors;
+    std::vector<uint256> desc_ids;
+    for (auto& parsed_desc : parsed_descs) {
+        wallet_descriptors.emplace_back(std::move(parsed_desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+        desc_ids.push_back(wallet_descriptors.back().id);
+    }
+
+    // A record referencing only known descriptors is loaded
+    const MultipathDescriptorRecord record(multipath_desc, desc_ids);
+    {
+        WalletBatch batch(*database);
+        for (size_t i{0}; i < record.desc_ids.size(); ++i) {
+            BOOST_CHECK(batch.WriteDescriptor(desc_ids[i], wallet_descriptors[i]));
+        }
+        BOOST_CHECK(batch.WriteMultipathDescriptor(record));
+    }
+    {
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::LOAD_OK);
+        LOCK(wallet->cs_wallet);
+        const auto& multipath_descs = wallet->GetMultipathDescriptors();
+        BOOST_CHECK_EQUAL(multipath_descs.size(), 1);
+        BOOST_REQUIRE(multipath_descs.count(record.GetID()));
+        const auto& loaded_record{multipath_descs.at(record.GetID())};
+        BOOST_CHECK_EQUAL(loaded_record.descriptor, record.descriptor);
+        BOOST_CHECK_EQUAL_COLLECTIONS(loaded_record.desc_ids.begin(), loaded_record.desc_ids.end(), record.desc_ids.begin(), record.desc_ids.end());
+    }
+
+    // Wallet descriptors cannot be deleted, so a record referencing an
+    // unknown descriptor means the database is corrupted
+    database = CreateMockableWalletDatabase();
+    {
+        WalletBatch batch(*database);
+        for (size_t i{0}; i < record.desc_ids.size(); ++i) {
+            BOOST_CHECK(batch.WriteDescriptor(desc_ids[i], wallet_descriptors[i]));
+        }
+        BOOST_CHECK(batch.WriteMultipathDescriptor(MultipathDescriptorRecord("wpkh(bad/<0;1>/*)", {desc_ids[0], uint256::ONE})));
+    }
+    {
+        bool found = false;
+        DebugLogHelper log_helper("references unknown descriptor id", [&](const std::string* s) {
+            found = true;
+            return false;
+        });
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::CORRUPT);
+        BOOST_CHECK(found); // The error must be logged
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

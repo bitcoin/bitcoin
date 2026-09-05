@@ -305,6 +305,14 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.sync_mempools()
         # Abandon transaction, but don't confirm
         node_master.abandontransaction(tx3_id)
+        # Import a multipath descriptor, so that w1 contains a multipath
+        # descriptor record tying the expanded receive and change descriptors
+        # together. Older versions must ignore the record.
+        multipath_xprv = ExtendedPrivateKey.generate()
+        multipath_desc = descsum_create(f"wpkh({multipath_xprv.to_string()}/<0;1>/*)")
+        # The record stores the public form
+        multipath_pub_desc = descsum_create(f"wpkh({multipath_xprv.pubkey().to_string()}/<0;1>/*)")
+        assert_equal(wallet.importdescriptors([{"desc": multipath_desc, "timestamp": "now"}])[0]["success"], True)
 
         # w2: wallet with private keys disabled, created on master: update this
         #     test when default wallets private keys disabled can no longer be
@@ -365,6 +373,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(txs[4]["walletconflicts"], [tx3_id])
                         assert_equal(txs[3]["replaced_by_txid"], tx4_id)
                         assert not hasattr(txs[3], "blockindex")
+                        if n == node_master:
+                            # The multipath descriptor records, one for the
+                            # imported multipath descriptor and one per default
+                            # descriptor pair, survive the round trip through
+                            # the older version
+                            multipaths = [d.get("multipath") for d in wallet.listdescriptors()["descriptors"]]
+                            assert_equal(multipaths.count(multipath_pub_desc), 2)
+                            assert_equal(multipaths.count(None), 0)
+                            assert_equal(len(set(multipaths)), 5)
                     elif wallet_name == "w2":
                         assert_equal(info['private_keys_enabled'], False)
                         assert_equal(info['keypoolsize'], 0)

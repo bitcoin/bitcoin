@@ -3610,27 +3610,60 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
     AddScriptPubKeyMan(id, std::move(spk_manager));
 }
 
-DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
+std::vector<std::string> CWallet::SetupDescriptorScriptPubKeyManPair(WalletBatch& batch, const CExtKey& master_key, OutputType output_type, bool receive, bool change)
 {
     AssertLockHeld(cs_wallet);
     if (IsLocked()) {
         throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
     }
-    auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, output_type, internal);
-    DescriptorScriptPubKeyMan* out = spk_manager.get();
-    uint256 id = spk_manager->GetID();
-    AddScriptPubKeyMan(id, std::move(spk_manager));
-    AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
-    return *out;
+    // Both the receive and change descriptor derive from a single multipath
+    // descriptor, which Parse below expands and returns in normalized form
+    // (which requires the master xprv).
+    const std::string multipath_desc{GenerateMultipathDescriptorString(EncodeExtKey(master_key), output_type)};
+    FlatSigningProvider keys;
+    std::string error;
+    std::optional<std::string> multipath_normalized;
+    auto descs{Parse(multipath_desc, keys, error, /*require_checksum=*/false, /*multipath=*/&multipath_normalized)};
+    Assert(descs.size() == 2 && multipath_normalized);
+
+    // The expanded descriptors are ordered by chain: receive, then change
+    // Take their IDs before they are moved below.
+    const uint256 receive_id{DescriptorID(*descs.at(0))};
+    const uint256 change_id{DescriptorID(*descs.at(1))};
+
+    std::vector<std::pair<std::unique_ptr<Descriptor>, /*internal=*/bool>> requested_descs;
+    if (receive) requested_descs.emplace_back(std::move(descs.at(0)), false);
+    if (change) requested_descs.emplace_back(std::move(descs.at(1)), true);
+
+    std::vector<std::string> new_descs;
+    for (auto& [desc, internal] : requested_descs) {
+        if (GetScriptPubKeyMan(DescriptorID(*desc))) continue;
+        WalletDescriptor w_desc(std::move(desc), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+        auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, std::move(w_desc));
+        uint256 id = spk_manager->GetID();
+        std::string desc_str;
+        Assert(spk_manager->GetDescriptorString(desc_str, /*priv=*/false));
+        new_descs.push_back(std::move(desc_str));
+        AddScriptPubKeyMan(id, std::move(spk_manager));
+        AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
+    }
+
+    // Store a record with the multipath descriptor, once the whole pair
+    // exists and if this call created at least one of its members
+    const bool pair_complete{GetScriptPubKeyMan(receive_id) && GetScriptPubKeyMan(change_id)};
+    if (!new_descs.empty() && pair_complete) {
+        if (auto res{AddMultipathDescriptor(batch, MultipathDescriptorRecord(std::move(*multipath_normalized), {receive_id, change_id}))}; !res) {
+            throw std::runtime_error(strprintf("%s: Failed to store multipath descriptor record: %s", __func__, util::ErrorString(res).original));
+        }
+    }
+    return new_descs;
 }
 
 void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-    for (bool internal : {false, true}) {
-        for (OutputType t : OUTPUT_TYPES) {
-            SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
-        }
+    for (OutputType t : OUTPUT_TYPES) {
+        SetupDescriptorScriptPubKeyManPair(batch, master_key, t);
     }
 }
 
@@ -3849,6 +3882,47 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
     MarkDirty();
 
     return std::reference_wrapper(*spk_man);
+}
+
+void CWallet::LoadMultipathDescriptor(MultipathDescriptorRecord multipath_desc)
+{
+    AssertLockHeld(cs_wallet);
+    uint256 id = multipath_desc.GetID();
+    m_multipath_descriptors[id] = std::move(multipath_desc);
+}
+
+std::optional<std::string> CWallet::GetMultipathDescriptor(const uint256& desc_id) const
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& [id, multipath_desc] : m_multipath_descriptors) {
+        if (std::find(multipath_desc.desc_ids.begin(), multipath_desc.desc_ids.end(), desc_id) != multipath_desc.desc_ids.end()) {
+            return multipath_desc.descriptor;
+        }
+    }
+    return std::nullopt;
+}
+
+util::Result<void> CWallet::AddMultipathDescriptor(WalletBatch& batch, MultipathDescriptorRecord multipath_desc)
+{
+    AssertLockHeld(cs_wallet);
+    for (const uint256& desc_id : multipath_desc.desc_ids) {
+        if (!GetScriptPubKeyMan(desc_id)) return util::Error{Untranslated("Multipath descriptor record references an unknown descriptor")};
+    }
+    // Refuse a record that shares a descriptor with a different existing
+    // record: it would make the multipath attribution of the shared
+    // descriptor ambiguous, and such overlap is almost certainly an accident.
+    const uint256 id{multipath_desc.GetID()};
+    for (const auto& [existing_id, existing] : m_multipath_descriptors) {
+        if (existing_id == id) continue;
+        for (const uint256& desc_id : multipath_desc.desc_ids) {
+            if (std::find(existing.desc_ids.begin(), existing.desc_ids.end(), desc_id) != existing.desc_ids.end()) {
+                return util::Error{Untranslated(strprintf("A descriptor is already part of the multipath descriptor '%s'", existing.descriptor))};
+            }
+        }
+    }
+    if (!batch.WriteMultipathDescriptor(multipath_desc)) return util::Error{Untranslated("Error writing multipath descriptor record to database")};
+    LoadMultipathDescriptor(std::move(multipath_desc));
+    return {};
 }
 
 bool CWallet::MigrateToSQLite(bilingual_str& error)

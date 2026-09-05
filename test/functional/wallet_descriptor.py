@@ -34,6 +34,40 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_no_py_sqlite3()
 
+    def test_multipath_descriptor(self):
+        self.log.info("Check that getaddressinfo and listdescriptors report the multipath descriptor")
+        self.nodes[0].createwallet(wallet_name="multipath", blank=True)
+        wallet = self.nodes[0].get_wallet_rpc("multipath")
+
+        xprv = ExtendedPrivateKey.generate()
+        desc = descsum_create(f"wpkh({xprv.to_string()}/84h/1h/0h/<0;1>/*)")
+        assert_equal(wallet.importdescriptors([{"desc": desc, "timestamp": "now", "active": True, "range": [0, 10]}])[0]["success"], True)
+
+        # The multipath descriptor is reported in normalized public form
+        account_xpub = xprv.derive_path("m/84h/1h/0h").pubkey().to_string()
+        pub_desc = descsum_create(f"wpkh([{xprv._fingerprint().hex()}/84h/1h/0h]{account_xpub}/<0;1>/*)")
+
+        # Both the receive and change address report the multipath descriptor,
+        # while their parent descriptors are the single path ones
+        for addr in [wallet.getnewaddress(), wallet.getrawchangeaddress()]:
+            info = wallet.getaddressinfo(addr)
+            assert_equal(info["multipath"], pub_desc)
+            assert_not_equal(info["parent_desc"], pub_desc)
+
+        # listdescriptors reports it for both expanded descriptors, in public
+        # form even when the private descriptors are listed
+        for private in [False, True]:
+            descriptors = wallet.listdescriptors(private)["descriptors"]
+            assert_equal(len(descriptors), 2)
+            for entry in descriptors:
+                assert_equal(entry["multipath"], pub_desc)
+
+        # The record survives a wallet reload
+        wallet.unloadwallet()
+        self.nodes[0].loadwallet("multipath")
+        for entry in wallet.listdescriptors()["descriptors"]:
+            assert_equal(entry["multipath"], pub_desc)
+
     def test_parent_descriptors(self):
         self.log.info("Check that parent_descs is the same for all RPCs and is normalized")
         self.nodes[0].createwallet(wallet_name="parent_descs")
@@ -291,6 +325,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, "Wallet corrupted", self.nodes[0].loadwallet, wallet_name)
 
         self.test_parent_descriptors()
+        self.test_multipath_descriptor()
 
 if __name__ == '__main__':
     WalletDescriptorTest(__file__).main()
