@@ -78,6 +78,7 @@
 #include <exception>
 #include <limits>
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <thread>
 #include <tuple>
@@ -1183,11 +1184,6 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     CWalletTx& wtx = ins.first->second;
     if (!ins.second) {
         return false;
-    }
-    // If wallet doesn't have a chain (e.g when using bitcoin-wallet tool),
-    // don't bother to update txn.
-    if (HaveChain()) {
-      wtx.updateState(chain());
     }
     wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     AddToSpends(wtx);
@@ -3254,6 +3250,18 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     } else {
         walletInstance->SetLastBlockProcessedInMem(-1, uint256());
     }
+
+    // Update the state of every transaction now that we are connected to the chain
+    // Do this in reverse order to ensure that any abandoning will work recursively
+    for (auto& [_, wtx] : std::ranges::reverse_view(walletInstance->wtxOrdered)) {
+        wtx->updateState(chain);
+        // After updating the state of the tx, abandon if it is a coinbase that is no longer in the active chain.
+        // This could happen during an external wallet load, or if the user replaced the chain data.
+        if (wtx->IsCoinBase() && wtx->isInactive()) {
+            walletInstance->AbandonTransaction(*wtx);
+        }
+    }
+
 
     if (tip_height && *tip_height != rescan_height)
     {
