@@ -455,7 +455,7 @@ class ProxyTest(BitcoinTestFramework):
         self.log.info("Test unknown, removed and non-SOCKS5 network names are rejected by -proxy")
         for network in ["Foo", "tor", "i2p"]:
             self.nodes[1].extra_args = [f"-proxy=127.0.0.1:9050={network}"]
-            msg = f"Error: Unrecognized network in -proxy='127.0.0.1:9050={network}': '{network.lower()}'"  # TODO: The error must identify the invalid input exactly
+            msg = f"Error: Unrecognized network in -proxy='127.0.0.1:9050={network}': '{network}'"
             self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
         self.log.info("Test passing proxy only for IPv6")
