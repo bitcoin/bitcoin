@@ -2138,6 +2138,20 @@ bool FatalError(Notifications& notifications, BlockValidationState& state, const
     return state.Error(message.original);
 }
 
+static void NotifyBlockStorageErrors(Notifications& notifications, node::BlockStorageErrors errors)
+{
+    for (const auto& error : errors) {
+        switch (error.type) {
+        case node::BlockStorageErrorType::FLUSH:
+            notifications.flushError(error.message);
+            break;
+        case node::BlockStorageErrorType::FATAL:
+            notifications.fatalError(error.message);
+            break;
+        }
+    }
+}
+
 /**
  * Restore the UTXO in a Coin at a given COutPoint
  * @param undo The Coin to be restored.
@@ -2632,7 +2646,9 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
-    if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
+    auto write_undo_outcome{m_blockman.WriteBlockUndo(blockundo, state, *pindex)};
+    NotifyBlockStorageErrors(m_chainman.GetNotifications(), std::move(write_undo_outcome.notifications));
+    if (!write_undo_outcome.value) {
         return false;
     }
 
@@ -2706,7 +2722,6 @@ bool Chainstate::FlushStateToDisk(
     assert(this->CanFlushToDisk());
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
-
     [[maybe_unused]] const size_t coins_count{CoinsTip().GetCacheSize()};
     [[maybe_unused]] const size_t coins_mem_usage{CoinsTip().DynamicMemoryUsage()};
 
@@ -2781,7 +2796,9 @@ bool Chainstate::FlushStateToDisk(
                 // First make sure all block and undo data is flushed to disk.
                 // TODO: Handle return error, or add detailed comment why it is
                 // safe to not return an error upon failure.
-                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
+                auto flush_outcome{m_blockman.FlushChainstateBlockFile(m_chain.Height())};
+                NotifyBlockStorageErrors(m_chainman.GetNotifications(), std::move(flush_outcome.notifications));
+                if (!flush_outcome.value) {
                     LogWarning("%s: Failed to flush block file.\n", __func__);
                 }
             }
@@ -4378,7 +4395,9 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             blockPos = *dbp;
             m_blockman.UpdateBlockInfo(block, pindex->nHeight, blockPos);
         } else {
-            blockPos = m_blockman.WriteBlock(block, pindex->nHeight);
+            auto write_outcome{m_blockman.WriteBlock(block, pindex->nHeight)};
+            NotifyBlockStorageErrors(GetNotifications(), std::move(write_outcome.notifications));
+            blockPos = write_outcome.value;
             if (blockPos.IsNull()) {
                 state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
                 return false;
@@ -4921,8 +4940,9 @@ bool ChainstateManager::LoadBlockIndex()
     AssertLockHeld(cs_main);
     // Load block index from databases
     if (m_blockman.m_blockfiles_indexed) {
-        bool ret{m_blockman.LoadBlockIndexDB(CurrentChainstate().m_from_snapshot_blockhash)};
-        if (!ret) return false;
+        auto load_outcome{m_blockman.LoadBlockIndexDB(CurrentChainstate().m_from_snapshot_blockhash)};
+        NotifyBlockStorageErrors(GetNotifications(), std::move(load_outcome.notifications));
+        if (!load_outcome.value) return false;
 
         m_blockman.ScanAndUnlinkAlreadyPrunedFiles();
 
@@ -4957,7 +4977,9 @@ bool ChainstateManager::LoadGenesisBlock()
     }
 
     try {
-        FlatFilePos blockPos{m_blockman.WriteBlock(genesis_block, 0)};
+        auto write_outcome{m_blockman.WriteBlock(genesis_block, 0)};
+        NotifyBlockStorageErrors(GetNotifications(), std::move(write_outcome.notifications));
+        FlatFilePos blockPos{write_outcome.value};
         if (blockPos.IsNull()) {
             LogError("Writing genesis block to disk failed");
             return false;
