@@ -6,11 +6,14 @@
 #include <rpc/protocol.h>
 #include <test/util/common.h>
 #include <test/util/logging.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/overflow.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
+#include <memory>
 
 using util::LineReader;
 using namespace bitcoin_http;
@@ -774,6 +777,110 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         client->receive("k:vv\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
+{
+    struct Client : HTTPRemoteClient {
+        Client(std::unique_ptr<Sock> socket = CreateSock(0, 0, 0))
+            : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/std::move(socket)} {}
+        using HTTPRemoteClient::MutateRecvBuffer;
+    };
+    // Prevent the clock from actually progressing during this scope.
+    const FakeSteadyClock clock;
+    constexpr auto timeout{30s};
+    const auto now{MockableSteadyClock::now()};
+
+    {
+        // Nothing to disconnect for yet.
+        auto idle{std::make_shared<Client>()};
+        BOOST_CHECK(!idle->ShouldDisconnect(now, timeout, /*disconnect_all=*/false));
+        // A shutdown waits for a connection that is still busy, and it starts busy.
+        BOOST_CHECK(!idle->ShouldDisconnect(now, timeout, /*disconnect_all=*/true));
+        // Past -rpcservertimeout, which a timeout of 0 disables.
+        BOOST_CHECK( idle->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/false));
+        // Timeout was disabled by user.
+        BOOST_CHECK(!idle->ShouldDisconnect(now + timeout + 1s, /*rpcservertimeout=*/0s, /*disconnect_all=*/false));
+    }
+
+    {
+        struct SlowSocket : ZeroSock {
+            ssize_t Send(const void*, size_t len, int) const override {
+                return CeilDiv(len, 2U); // Only let through half per call
+            }
+        private:
+            SlowSocket& operator=(Sock&&) override {
+                assert(false && "Move of Sock into SlowSocket not allowed.");
+                return *this;
+            }
+        };
+
+        // A request handed to a worker holds the idle timeout off until the reply is sent.
+        auto busy_slow{std::make_shared<Client>(std::make_unique<SlowSocket>())};
+        busy_slow->MutateRecvBuffer().append("GET / HTTP/1.0\n\n");
+        {
+            std::unique_ptr request{HTTPRemoteClient::TryReadRequest(busy_slow)};
+            BOOST_REQUIRE(request);
+            // Avoid disconnecting even if we are past the timeout, a worker is busy.
+            BOOST_CHECK(!busy_slow->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/false));
+            BOOST_CHECK(!busy_slow->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/true));
+            // Worker becomes finished with the request.
+            request->WriteReply(HTTP_OK);
+        }
+        // Don't disconnect here as WriteReply() was unable to complete the
+        // optimistic send of the full response due to the SlowSocket.
+        BOOST_CHECK(!busy_slow->ShouldDisconnect(now + timeout - 1s, timeout, /*disconnect_all=*/false));
+        // Disconnect anyway if we are past the timeout.
+        BOOST_CHECK( busy_slow->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/false));
+
+        // Finish sending response.
+        while (busy_slow->ReadyToSend()) {
+            busy_slow->MaybeSendBytesFromBuffer();
+        }
+        // Now we are done sending we are ready to disconnect despite being below the timeout.
+        BOOST_CHECK( busy_slow->ShouldDisconnect(now + timeout - 1s, timeout, /*disconnect_all=*/false));
+    }
+
+    {
+        // Allow disconnecting directly after WriteReply() when it is able to
+        // complete the optimistic send of the full response due to
+        // ZeroSock::Send() claiming its able to send everything.
+        auto busy_fast{std::make_shared<Client>(std::make_unique<ZeroSock>())};
+        busy_fast->MutateRecvBuffer().append("GET / HTTP/1.0\n\n");
+        {
+            std::unique_ptr request{HTTPRemoteClient::TryReadRequest(busy_fast)};
+            BOOST_REQUIRE(request);
+            // Worker becomes finished with the request.
+            request->WriteReply(HTTP_OK);
+        }
+        BOOST_CHECK( busy_fast->ShouldDisconnect(now + timeout - 1s, timeout, /*disconnect_all=*/false));
+
+        // TODO: No need to log idle timeout if client already has m_disconnect = true
+        DebugLogHelper require_idle_message{"HTTP client idle timeout"};
+        BOOST_CHECK( busy_fast->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/false));
+    }
+
+    {
+        // A keep-alive HTTP 1.1 client whose reply is out is neither flagged
+        // nor idle, so the shutdown branch is the only thing that can release it.
+        auto keepalive{std::make_shared<Client>(std::make_unique<ZeroSock>())};
+        keepalive->MutateRecvBuffer().append("GET / HTTP/1.1\nHost: 127.0.0.1\n\n");
+        {
+            std::unique_ptr request{HTTPRemoteClient::TryReadRequest(keepalive)};
+            BOOST_REQUIRE(request);
+            request->WriteReply(HTTP_OK);
+        }
+        BOOST_CHECK(!keepalive->ShouldDisconnect(now, timeout + 1s, /*disconnect_all=*/false));
+        BOOST_CHECK( keepalive->ShouldDisconnect(now, timeout + 1s, /*disconnect_all=*/true));
+    }
+
+    {
+        // A malformed request flags the client, and that outranks the rest.
+        auto bad{std::make_shared<Client>()};
+        bad->MutateRecvBuffer().append("GET / HTTP/1.0\nInvalid header with no colon\n\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(bad));
+        BOOST_CHECK(bad->ShouldDisconnect(now, /*rpcservertimeout=*/0s, /*disconnect_all=*/false));
     }
 }
 
