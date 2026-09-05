@@ -1189,8 +1189,8 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     std::vector<std::vector<uint8_t>> sol_dummy;
 
     // CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash,
-    // WitnessV1Taproot, PayToAnchor, WitnessUnknown.
-    static_assert(std::variant_size_v<CTxDestination> == 9);
+    // WitnessV1Taproot, WitnessV2Cisa, PayToAnchor, WitnessUnknown.
+    static_assert(std::variant_size_v<CTxDestination> == 10);
 
     // Go through all defined output types and sanity check SpendsNonAnchorWitnessProg.
 
@@ -1262,6 +1262,13 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     AddCoins(coins, CTransaction{tx_create}, 0, false);
     BOOST_CHECK(::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
+    // Witness v2 (CISA)
+    tx_create.vout[0].scriptPubKey = GetScriptForDestination(WitnessV2Cisa{XOnlyPubKey{pubkey}});
+    BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::WITNESS_V2_CISA);
+    tx_spend.vin[0].prevout.hash = tx_create.GetHash();
+    AddCoins(coins, CTransaction{tx_create}, 0, false);
+    BOOST_CHECK(::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
+
     // P2SH-wrapped P2TR (undefined, non-standard)
     redeem_script = tx_create.vout[0].scriptPubKey;
     tx_create.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(redeem_script));
@@ -1308,9 +1315,9 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     tx_spend.vin[0].scriptSig.clear();
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
-    // Various undefined version >1 32-byte witness programs.
+    // Various undefined version >2 32-byte witness programs.
     const auto program{ToByteVector(XOnlyPubKey{pubkey})};
-    for (int i{2}; i <= 16; ++i) {
+    for (int i{3}; i <= 16; ++i) {
         tx_create.vout[0].scriptPubKey = GetScriptForDestination(WitnessUnknown{i, program});
         BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::WITNESS_UNKNOWN);
         tx_spend.vin[0].prevout.hash = tx_create.GetHash();

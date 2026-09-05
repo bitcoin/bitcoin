@@ -84,8 +84,8 @@ static void test_ecdh_generator_basepoint(void) {
         /* compute "explicitly" */
         CHECK(secp256k1_ec_pubkey_serialize(CTX, point_ser, &point_ser_len, &point[1], SECP256K1_EC_COMPRESSED) == 1);
         secp256k1_sha256_initialize(&sha);
-        secp256k1_sha256_write(secp256k1_get_hash_context(CTX), &sha, point_ser, point_ser_len);
-        secp256k1_sha256_finalize(secp256k1_get_hash_context(CTX), &sha, output_ser);
+        secp256k1_sha256_write(&CTX->hash_ctx, &sha, point_ser, point_ser_len);
+        secp256k1_sha256_finalize(&CTX->hash_ctx, &sha, output_ser);
         /* compare */
         CHECK(secp256k1_memcmp_var(output_ecdh, output_ser, 32) == 0);
     }

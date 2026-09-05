@@ -53,6 +53,7 @@ from test_framework.script import (
     OP_0,
     OP_1,
     OP_2,
+    OP_3,
     OP_16,
     OP_2DROP,
     OP_CHECKMULTISIG,
@@ -1348,8 +1349,8 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
             # First try to spend to a future version segwit script_pubkey.
-            if version == OP_1:
-                # Don't use 32-byte v1 witness (used by Taproot; see BIP 341)
+            if version in (OP_1, OP_2):
+                # Don't use 32-byte v1/v2 witness (used by Taproot and CISA; see BIP341 and BIP460)
                 script_pubkey = CScript([CScriptOp(version), witness_hash + b'\x00'])
             else:
                 script_pubkey = CScript([CScriptOp(version), witness_hash])
@@ -1363,9 +1364,9 @@ class SegWitTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)  # Mine all the transactions
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
-        # Finally, verify that version 0 -> version 2 transactions
+        # Finally, verify that version 0 -> version 3 transactions
         # are standard
-        script_pubkey = CScript([CScriptOp(OP_2), witness_hash])
+        script_pubkey = CScript([CScriptOp(OP_3), witness_hash])
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(tx.txid_int, 0), b"")]
         tx2.vout = [CTxOut(tx.vout[0].nValue - 1000, script_pubkey)]

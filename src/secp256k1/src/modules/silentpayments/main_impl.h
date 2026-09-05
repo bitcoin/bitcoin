@@ -71,7 +71,7 @@ static int secp256k1_silentpayments_calculate_input_hash_scalar(const secp256k1_
 
     secp256k1_silentpayments_sha256_init_inputs(&hash);
     secp256k1_sha256_write(hash_ctx, &hash, outpoint_smallest36, 36);
-    secp256k1_eckey_pubkey_serialize33(pubkey_sum, pubkey_sum_ser);
+    secp256k1_ge_serialize33(pubkey_sum, pubkey_sum_ser);
     secp256k1_sha256_write(hash_ctx, &hash, pubkey_sum_ser, sizeof(pubkey_sum_ser));
     secp256k1_sha256_finalize(hash_ctx, &hash, input_hash);
     /* Convert input_hash to a scalar.
@@ -116,7 +116,7 @@ static void secp256k1_silentpayments_sha256_init_sharedsecret(secp256k1_sha256* 
 }
 
 static int secp256k1_silentpayments_create_output_tweak(const secp256k1_context *ctx, secp256k1_scalar *t_k_scalar, const unsigned char *shared_secret33, uint32_t k) {
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(ctx);
+    const secp256k1_hash_ctx *hash_ctx = &ctx->hash_ctx;
     secp256k1_sha256 hash;
     unsigned char hash_ser[32];
     unsigned char k_serialized[4];
@@ -281,7 +281,7 @@ int secp256k1_silentpayments_sender_create_outputs(
      * curve order, which is statistically improbable. Returning an error here results in an untestable branch in the
      * code, but we do this anyways to ensure strict compliance with BIP0352.
      */
-    if (!secp256k1_silentpayments_calculate_input_hash_scalar(secp256k1_get_hash_context(ctx), &input_hash_scalar, outpoint_smallest36, &prevouts_pubkey_sum_ge)) {
+    if (!secp256k1_silentpayments_calculate_input_hash_scalar(&ctx->hash_ctx, &input_hash_scalar, outpoint_smallest36, &prevouts_pubkey_sum_ge)) {
         secp256k1_scalar_clear(&seckey_sum_scalar);
         return 0;
     }
@@ -367,7 +367,7 @@ int secp256k1_silentpayments_recipient_label_parse(const secp256k1_context* ctx,
     memset(label, 0, sizeof(*label));
     ARG_CHECK(in33 != NULL);
 
-    if (!secp256k1_eckey_pubkey_parse(&ge, in33, 33)) {
+    if (!secp256k1_ge_parse(&ge, in33, 33)) {
         return 0;
     }
 
@@ -386,7 +386,7 @@ int secp256k1_silentpayments_recipient_label_serialize(const secp256k1_context* 
     if (!secp256k1_silentpayments_label_load(ctx, &ge, label)) {
         return 0;
     }
-    secp256k1_eckey_pubkey_serialize33(&ge, out33);
+    secp256k1_ge_serialize33(&ge, out33);
     return 1;
 }
 
@@ -410,10 +410,10 @@ int secp256k1_silentpayments_recipient_label_create(const secp256k1_context *ctx
 
     /* Compute hash(ser_256(b_scan) || ser_32(m))  [sha256 with tag "BIP0352/Label"] */
     secp256k1_silentpayments_sha256_init_label(&hash);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, scan_key32, 32);
+    secp256k1_sha256_write(&ctx->hash_ctx, &hash, scan_key32, 32);
     secp256k1_write_be32(m_serialized, m);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, m_serialized, sizeof(m_serialized));
-    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &hash, label_tweak32);
+    secp256k1_sha256_write(&ctx->hash_ctx, &hash, m_serialized, sizeof(m_serialized));
+    secp256k1_sha256_finalize(&ctx->hash_ctx, &hash, label_tweak32);
 
     ret &= secp256k1_ec_pubkey_create_helper(&ctx->ecmult_gen_ctx, &label_tweak_scalar, &label_ge, label_tweak32);
     secp256k1_silentpayments_label_save(label, &label_ge);
@@ -552,7 +552,7 @@ int secp256k1_silentpayments_recipient_prevouts_summary_create(
      * curve order, which is statistically improbable. Returning an error here results in an untestable branch in the
      * code, but we do this anyways to ensure strict compliance with BIP0352.
      */
-    if (!secp256k1_silentpayments_calculate_input_hash_scalar(secp256k1_get_hash_context(ctx), &input_hash_scalar, outpoint_smallest36, &prevouts_pubkey_sum_ge)) {
+    if (!secp256k1_silentpayments_calculate_input_hash_scalar(&ctx->hash_ctx, &input_hash_scalar, outpoint_smallest36, &prevouts_pubkey_sum_ge)) {
         return 0;
     }
     memcpy(&prevouts_summary->data[0], secp256k1_silentpayments_prevouts_summary_magic, 4);
@@ -593,7 +593,7 @@ static int secp256k1_silentpayments_check_label_batch(
          * we know that label_candidate = tx_output - unlabeled_output cannot be the point at infinity.
          */
         VERIFY_CHECK(!secp256k1_ge_is_infinity(&label_candidates_ge[i]));
-        secp256k1_eckey_pubkey_serialize33(&label_candidates_ge[i], label33);
+        secp256k1_ge_serialize33(&label_candidates_ge[i], label33);
         *label_tweak = label_lookup(label33, label_context);
         if (*label_tweak != NULL) {
             *label_ge = label_candidates_ge[i];
