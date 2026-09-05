@@ -176,7 +176,7 @@ static RPCMethod getdescriptorinfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys. For a multipath descriptor, only the first will be returned."},
+                {RPCResult::Type::STR, "descriptor", "The descriptor, without private keys. For a multipath descriptor, only the first will be returned."},
                 {RPCResult::Type::ARR, "multipath_expansion", /*optional=*/true, "All descriptors produced by expanding multipath derivation elements. Only if the provided descriptor specifies multipath derivation elements.",
                 {
                     {RPCResult::Type::STR, "", ""},
