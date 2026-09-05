@@ -1792,16 +1792,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         if (net_str.empty()) { // For all networks.
             ipv4_proxy = ipv6_proxy = name_proxy = cjdns_proxy = onion_proxy = proxy;
-        } else if (net_str == "ipv4") {
-            ipv4_proxy = name_proxy = proxy;
-        } else if (net_str == "ipv6") {
-            ipv6_proxy = name_proxy = proxy;
-        } else if (net_str == "onion") {
-            onion_proxy = proxy;
-        } else if (net_str == "cjdns") {
-            cjdns_proxy = proxy;
         } else {
-            return InitError(strprintf(_("Unrecognized network in -proxy='%s': '%s'"), param_value, net_str));
+            switch (ParseNetwork(net_str)) {
+            case NET_IPV4: ipv4_proxy = name_proxy = proxy; break;
+            case NET_IPV6: ipv6_proxy = name_proxy = proxy; break;
+            case NET_ONION: onion_proxy = proxy; break;
+            case NET_CJDNS: cjdns_proxy = proxy; break;
+            case NET_UNROUTABLE:
+            case NET_I2P:
+            case NET_INTERNAL:
+            case NET_MAX:
+                return InitError(strprintf(_("Unrecognized network in -proxy='%s': '%s'"), param_value, net_str));
+            } // no default case, so the compiler can warn about missing cases
         }
     }
     if (ipv4_proxy.IsValid()) {
