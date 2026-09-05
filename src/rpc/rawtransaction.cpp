@@ -1224,7 +1224,7 @@ static RPCMethod decodepsbt()
 
         // Sighash
         if (input.sighash_type != std::nullopt) {
-            in.pushKV("sighash", SighashToStr((unsigned char)*input.sighash_type));
+            in.pushKV("sighash", SighashToStr(*input.sighash_type));
         }
 
         // Redeem script and witness script

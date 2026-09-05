@@ -8,6 +8,25 @@ import sys
 import argparse
 import json
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from test_framework.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework.psbt import (
+    PSBT,
+    PSBT_IN_PARTIAL_SIG,
+    PSBT_IN_SIGHASH_TYPE,
+    PSBT_IN_TAP_KEY_SIG,
+    PSBT_OUT_AMOUNT,
+    PSBT_OUT_SCRIPT,
+)
+
+# Master private key for the tpub in getdescriptors below. Used by signtx,
+# which imports the keys into a wallet on the offline node provided by the
+# test and lets it do the actual signing.
+tprv = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK"
+
+MOCK_WALLET = "mock"
+
 def perform_pre_checks():
     mock_result_path = os.path.join(os.getcwd(), "mock_result")
     if os.path.isfile(mock_result_path):
@@ -56,20 +75,89 @@ def displayaddress(args):
 
     return sys.stdout.write(json.dumps({"address": expected_desc[args.desc]}))
 
+def get_mock_wallet():
+    """RPC connection to the wallet holding our private keys, created on
+    first use. The test provides a dedicated offline node for it and passes
+    the node's RPC URL via a file in our working directory."""
+    with open(os.path.join(os.getcwd(), "mock_rpc_url"), "r", encoding="utf8") as f:
+        node_url = f.read().strip()
+    node = AuthServiceProxy(node_url)
+    wallet = AuthServiceProxy(f"{node_url}/wallet/{MOCK_WALLET}")
+    try:
+        node.loadwallet(filename=MOCK_WALLET)
+        return wallet
+    except JSONRPCException as e:
+        if e.error["code"] == -35:  # RPC_WALLET_ALREADY_LOADED
+            return wallet
+        if e.error["code"] != -18:  # RPC_WALLET_NOT_FOUND
+            raise
+    node.createwallet(wallet_name=MOCK_WALLET, blank=True)
+    requests = []
+    for desc in [f"pkh({tprv}/<0;1>/*)", f"sh(wpkh({tprv}/<0;1>/*))", f"wpkh({tprv}/<0;1>/*)", f"tr({tprv}/<0;1>/*)"]:
+        checksum = node.getdescriptorinfo(descriptor=desc)["checksum"]
+        requests.append({"desc": f"{desc}#{checksum}", "timestamp": "now", "range": [0, 99]})
+    result = wallet.importdescriptors(requests=requests)
+    assert all(r["success"] for r in result)
+    return wallet
+
+def tamper(psbt_b64, mode):
+    """Alter the transaction described by the (version 2) PSBT before signing
+    it, like a rogue or broken signer might."""
+    psbt = PSBT.from_base64(psbt_b64)
+    if mode == "change_amount":
+        # Steal from the output by redirecting the value to fees
+        amount = int.from_bytes(psbt.o[0].map[PSBT_OUT_AMOUNT], "little", signed=True)
+        psbt.o[0].map[PSBT_OUT_AMOUNT] = (amount - 1).to_bytes(8, "little", signed=True)
+    elif mode == "change_script":
+        psbt.o[0].map[PSBT_OUT_SCRIPT] = bytes([0x51])  # OP_TRUE
+    elif mode == "remove_output":
+        psbt.o.pop()
+    return psbt.to_base64()
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
-    with open(os.path.join(os.getcwd(), "mock_psbt"), "r") as f:
-        mock_psbt = f.read()
+    # The test can instruct us to sign in a specific, possibly misbehaving, way
+    mode = None
+    sign_mode_path = os.path.join(os.getcwd(), "mock_sign_mode")
+    if os.path.isfile(sign_mode_path):
+        with open(sign_mode_path, "r", encoding="utf8") as f:
+            mode = f.read().strip()
 
-    if args.fingerprint == "00000001" :
-        sys.stdout.write(json.dumps({
-            "psbt": mock_psbt,
-            "complete": True
-        }))
-    else:
-        sys.stdout.write(json.dumps({"psbt": args.psbt}))
+    psbt = args.psbt
+    if mode in ("change_amount", "change_script", "remove_output"):
+        psbt = tamper(psbt, mode)
+
+    sign_options = {}
+    if mode in ("sighash_none", "sighash_none_hidden"):
+        sign_options["sighashtype"] = "NONE"
+    elif mode == "sighash_all_anyonecanpay":
+        sign_options["sighashtype"] = "ALL|ANYONECANPAY"
+
+    result = get_mock_wallet().walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False, **sign_options)
+    reply = result["psbt"]
+
+    if mode == "sighash_none_hidden":
+        # Drop the declared sighash type, leaving only the signatures
+        # themselves to reveal it
+        signed = PSBT.from_base64(reply)
+        for psbt_in in signed.i:
+            psbt_in.map.pop(PSBT_IN_SIGHASH_TYPE, None)
+        reply = signed.to_base64()
+    elif mode == "strip":
+        # Return only the signatures, plus the fields required to describe
+        # the same transaction
+        signed = PSBT.from_base64(reply)
+        stripped = PSBT.from_base64(reply)
+        stripped.make_blank()
+        for signed_in, stripped_in in zip(signed.i, stripped.i):
+            for key, value in signed_in.map.items():
+                if key == PSBT_IN_TAP_KEY_SIG or (isinstance(key, bytes) and key[0] == PSBT_IN_PARTIAL_SIG):
+                    stripped_in.map[key] = value
+        reply = stripped.to_base64()
+
+    sys.stdout.write(json.dumps({"psbt": reply}))
 
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
