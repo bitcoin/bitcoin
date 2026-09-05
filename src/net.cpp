@@ -1904,6 +1904,9 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
         break;
+    case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
+        max_connections = m_max_outbound_full_recon;
+        break;
     case ConnectionType::BLOCK_RELAY:
         max_connections = m_max_outbound_block_relay;
         break;
@@ -2484,6 +2487,7 @@ void CConnman::StartExtraBlockRelayPeers()
 }
 
 // Return the number of outbound connections that are full relay (not blocks only)
+// this includes both OUTBOUND_FULL_RELAY and OUTBOUND_FULL_RECONCILIATION connections
 int CConnman::GetFullOutboundConnCount() const
 {
     AssertLockNotHeld(m_nodes_mutex);
@@ -2504,20 +2508,22 @@ int CConnman::GetFullOutboundConnCount() const
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
-int CConnman::GetExtraFullOutboundCount() const
+CConnman::ExtraFullOutboundCounts CConnman::GetExtraFullOutboundCounts() const
 {
     AssertLockNotHeld(m_nodes_mutex);
 
-    int full_outbound_peers = 0;
+    int full_relay_peers = 0;
+    int reconciliation_peers = 0;
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsFullOutboundConn()) {
-                ++full_outbound_peers;
-            }
+            if (!pnode->fSuccessfullyConnected || pnode->fDisconnect) continue;
+            if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) ++full_relay_peers;
+            if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION) ++reconciliation_peers;
         }
     }
-    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
+    return {std::max(full_relay_peers - m_max_outbound_full_relay, 0),
+            std::max(reconciliation_peers - m_max_outbound_full_recon, 0)};
 }
 
 int CConnman::GetExtraBlockRelayCount() const
@@ -2564,12 +2570,6 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
         }
     }
     return networks;
-}
-
-bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
-{
-    AssertLockHeld(m_nodes_mutex);
-    return m_network_conn_counts[net] > 1;
 }
 
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
@@ -2721,6 +2721,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
 
         // Only connect out to one peer per ipv4/ipv6 network group (/16 for IPv4).
         int nOutboundFullRelay = 0;
+        int nOutboundFullRecon = 0;
         int nOutboundBlockRelay = 0;
         int outbound_privacy_network_peers = 0;
         std::set<std::vector<unsigned char>> outbound_ipv46_peer_netgroups;
@@ -2728,7 +2729,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         {
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
-                if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
+                // Count the slots per connection type, so IsFullOutboundConn() (which
+                // covers both full-relay and reconciliation peers) is not what we want here.
+                if (pnode->m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY) nOutboundFullRelay++;
+                if (pnode->IsOutboundReconciliationConn()) nOutboundFullRecon++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
                 // Make sure our persistent outbound slots to ipv4/ipv6 peers belong to different netgroups.
@@ -2745,6 +2749,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                         break;
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
+                    case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
                     case ConnectionType::BLOCK_RELAY:
                         const CAddress address{pnode->addr};
                         if (address.IsTor() || address.IsI2P() || address.IsCJDNS()) {
@@ -2794,6 +2799,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             // OUTBOUND_FULL_RELAY
         } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
             conn_type = ConnectionType::BLOCK_RELAY;
+        } else if (nOutboundFullRecon < m_max_outbound_full_recon) {
+            conn_type = ConnectionType::OUTBOUND_FULL_RECONCILIATION;
         } else if (GetTryNewOutboundPeer()) {
             // OUTBOUND_FULL_RELAY
         } else if (now > next_extra_block_relay && m_start_extra_block_relay_peers) {

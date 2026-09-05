@@ -37,6 +37,7 @@
 #include <node/txdownloadman.h>
 #include <node/txorphanage.h>
 #include <node/txreconciliation.h>
+#include <node/txreconciliation_impl.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -101,10 +102,14 @@ static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{2min};
-/** Protect at least this many outbound peers from disconnection due to slow/
- * behind headers chain.
+/** Protect at least this many OUTBOUND_FULL_RELAY peers from disconnection due to
+ * slow/behind headers chain.
  */
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
+/** Protect at least this many outbound reconciliation peers from disconnection due to
+ * slow/behind headers chain.
+ */
+static constexpr int32_t MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT = 2;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork */
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
@@ -468,7 +473,9 @@ struct CNodeState {
       * marked as protected if all of these are true:
       *   - its connection type is IsBlockOnlyConn() == false
       *   - it gave us a valid connecting header
-      *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
+      *   - we haven't reached the protection budget for its connection type yet
+      *     (MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT for OUTBOUND_FULL_RELAY peers,
+      *     MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT for reconciliation ones)
       *   - its chain tip has at least as much work as ours
       *
       * CHAIN_SYNC_TIMEOUT: if a peer's best known block has less work than our tip,
@@ -578,6 +585,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
+    void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
@@ -626,6 +635,10 @@ private:
 
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Try to disconnect the peer of the given type with the oldest block announcement.
+     *  @return whether a peer was disconnected */
+    bool EvictWorstOutboundPeer(ConnectionType conn_type, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
@@ -814,6 +827,16 @@ private:
         if (!Assume(feature_data.size() <= MAX_FEATUREDATA_LENGTH)) return;
         MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
     }
+    /** Collect transactions to announce to a given peer into `invs`. If the node support reconciliation,
+     * add them to its reconciliation set instead (but only if `from_post_reconciliation` is false). */
+    void AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
+                     std::vector<CTransactionRef> txs, bool from_post_reconciliation,
+                     std::vector<CInv>& invs)
+        EXCLUSIVE_LOCKS_REQUIRED(tx_relay.m_tx_inventory_mutex, !tx_relay.m_bloom_filter_mutex);
+
+    /** Immediately announce transactions to a given peer via INV message(s). Used to send transaction after reconciliation */
+    void AnnounceReconciliationTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -867,7 +890,7 @@ private:
     Mutex m_tx_download_mutex ACQUIRED_BEFORE(m_mempool.cs);
     node::TxDownloadManager m_txdownloadman GUARDED_BY(m_tx_download_mutex);
 
-    std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
+    std::unique_ptr<node::TxReconciliationTracker> m_txreconciliation;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -928,8 +951,16 @@ private:
     /** Number of peers with wtxid relay. */
     std::atomic<int> m_wtxid_relay_peers{0};
 
-    /** Number of outbound peers with m_chain_sync.m_protect. */
+    /** Maximum number of inbound reconciliation peers. */
+    static constexpr int MAX_INBOUND_RECONCILIATION_PEERS{30};
+    /** Number of inbound reconciliation peers. */
+    std::atomic<int> m_inbound_reconciliation_peers{0};
+
+    /** Number of OUTBOUND_FULL_RELAY peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
+
+    /** Number of outbound reconciliation peers with m_chain_sync.m_protect. */
+    int m_recon_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
     /** Number of preferable block download peers. */
     int m_num_preferred_download_peers GUARDED_BY(cs_main){0};
@@ -1812,12 +1843,23 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         LOCK(m_tx_download_mutex);
         m_txdownloadman.DisconnectedPeer(nodeid);
     }
-    if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_txreconciliation) {
+        const bool was_offered = m_txreconciliation->ForgetPeer(nodeid);
+        if (node.IsInboundConn() && was_offered) {
+            --m_inbound_reconciliation_peers;
+            assert(m_inbound_reconciliation_peers >= 0);
+        }
+    }
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
-    m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
-    assert(m_outbound_peers_with_protect_from_disconnect >= 0);
+    if (node.IsOutboundReconciliationConn()) {
+        m_recon_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
+        assert(m_recon_peers_with_protect_from_disconnect >= 0);
+    } else {
+        m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
+        assert(m_outbound_peers_with_protect_from_disconnect >= 0);
+    }
 
     m_node_states.erase(nodeid);
 
@@ -1827,7 +1869,9 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_num_preferred_download_peers == 0);
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
+        assert(m_recon_peers_with_protect_from_disconnect == 0);
         assert(m_wtxid_relay_peers == 0);
+        assert(m_inbound_reconciliation_peers == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
     }
     } // cs_main
@@ -2146,7 +2190,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (opts.reconcile_txs) {
-        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
+        m_txreconciliation = std::make_unique<node::TxReconciliationTracker>(node::TXRECONCILIATION_VERSION);
     }
 }
 
@@ -2216,6 +2260,27 @@ void PeerManagerImpl::BlockConnected(
         LOCK(m_tx_download_mutex);
         m_txdownloadman.BlockConnected(pblock);
     }
+}
+
+void PeerManagerImpl::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+{
+    // A transaction we can no longer serve must not stay in any reconciliation set: it would be
+    // sketched, asked for, and then dropped, wasting sketch capacity and a round trip.
+    if (m_txreconciliation) m_txreconciliation->RemoveFromSets({tx->GetWitnessHash()});
+}
+
+void PeerManagerImpl::MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
+{
+    // Mined transactions are the bulk of the case above: removeUnchecked deliberately skips
+    // TransactionRemovedFromMempool for MemPoolRemovalReason::BLOCK, so they only arrive here.
+    if (!m_txreconciliation) return;
+
+    std::vector<Wtxid> wtxids;
+    wtxids.reserve(txs_removed_for_block.size());
+    for (const auto& removed : txs_removed_for_block) {
+        wtxids.push_back(removed.info.m_tx->GetWitnessHash());
+    }
+    m_txreconciliation->RemoveFromSets(wtxids);
 }
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
@@ -3195,16 +3260,23 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
         }
     }
 
-    // If this is an outbound full-relay peer, check to see if we should protect
-    // it from the bad/lagging chain logic.
+    // If this is a full outbound peer (fanout or reconciliation), check to see if we
+    // should protect it from the bad/lagging chain logic.
     // Note that outbound block-relay peers are excluded from this protection, and
     // thus always subject to eviction under the bad/lagging chain logic.
+    // Reconciliation peers are protected out of their own budget, so that they cannot
+    // use up the protection our OUTBOUND_FULL_RELAY peers rely on.
     // See ChainSyncTimeoutState.
     if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
-        if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
+        const bool is_recon{pfrom.IsOutboundReconciliationConn()};
+        int& protected_peers{is_recon ? m_recon_peers_with_protect_from_disconnect : m_outbound_peers_with_protect_from_disconnect};
+        const int32_t max_protected_peers{is_recon ? MAX_RECONCILIATION_PEERS_TO_PROTECT_FROM_DISCONNECT : MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT};
+        // For a reconciliation peer to be eligible for protection, it must be registered with the reconciliation manager.
+        const bool eligible{!is_recon || (m_txreconciliation && m_txreconciliation->IsPeerRegistered(pfrom.GetId()))};
+        if (eligible && protected_peers < max_protected_peers && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
             LogDebug(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
             nodestate->m_chain_sync.m_protect = true;
-            ++m_outbound_peers_with_protect_from_disconnect;
+            ++protected_peers;
         }
     }
 }
@@ -3975,16 +4047,19 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (greatest_common_version >= WTXID_RELAY_VERSION && m_txreconciliation) {
             // Per BIP-330, we announce txreconciliation support if:
             // - protocol version per the peer's VERSION message supports WTXID_RELAY;
-            // - transaction relay is supported per the peer's VERSION message
-            // - this is not a block-relay-only connection and not a feeler
-            // - this is not an addr fetch connection;
-            // - we are not in -blocksonly mode.
+            // - transaction relay is supported per the peer's VERSION message;
+            // - this is an outbound reconciliation connection;
+            // - and we still have space for inbound reconciliation peers;
             const auto* tx_relay = peer.GetTxRelay();
+            const bool offer_reconciliation =
+                pfrom.IsOutboundReconciliationConn() ||
+                (pfrom.IsInboundConn() && m_inbound_reconciliation_peers < MAX_INBOUND_RECONCILIATION_PEERS);
             if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
-                !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
+                offer_reconciliation && !m_opts.ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
                 MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
-                                   TXRECONCILIATION_VERSION, recon_salt);
+                                   node::TXRECONCILIATION_VERSION, recon_salt);
+                if (pfrom.IsInboundConn()) ++m_inbound_reconciliation_peers;
             }
         }
 
@@ -4135,7 +4210,18 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 // We could have optimistically pre-registered/registered the peer. In that case,
                 // we should forget about the reconciliation state here if this wasn't followed
                 // by WTXIDRELAY (since WTXIDRELAY can't be announced later).
-                m_txreconciliation->ForgetPeer(pfrom.GetId());
+                const bool was_offered = m_txreconciliation->ForgetPeer(pfrom.GetId());
+                if (pfrom.IsInboundConn() && was_offered) {
+                    --m_inbound_reconciliation_peers;
+                    assert(m_inbound_reconciliation_peers >= 0);
+                }
+
+                // If the peer is an outbound reconciliation connection, we disconnect it if it did
+                // not negotiate reconciliation.
+                if (pfrom.IsOutboundReconciliationConn()) {
+                    LogDebug(BCLog::NET, "reconciliation was not negotiated, %s", pfrom.DisconnectMsg());
+                    pfrom.fDisconnect = true;
+                }
             }
         }
 
@@ -4293,22 +4379,22 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         uint64_t remote_salt;
         vRecv >> peer_txreconcl_version >> remote_salt;
 
-        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
-                                                                                     peer_txreconcl_version, remote_salt);
-        switch (result) {
-        case ReconciliationRegisterResult::NOT_FOUND:
-            LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
-            break;
-        case ReconciliationRegisterResult::SUCCESS:
-            break;
-        case ReconciliationRegisterResult::ALREADY_REGISTERED:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        case ReconciliationRegisterResult::PROTOCOL_VIOLATION:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
+        const auto error = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(), peer_txreconcl_version, remote_salt);
+        if (error.has_value()) {
+            switch (error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
+                    break;
+                case node::ReconciliationError::ALREADY_REGISTERED:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s\n", pfrom.DisconnectMsg());
+                    pfrom.fDisconnect = true;
+                    return;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation, %s\n", pfrom.DisconnectMsg());
+                    pfrom.fDisconnect = true;
+                    return;
+                default: break;
+            }
         }
         return;
     }
@@ -4395,6 +4481,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 if (!seen_hashes.insert(inv.hash).second) continue;
                 const GenTxid gtxid = ToGenTxid(inv);
                 AddKnownTx(peer, inv.hash);
+                if (m_txreconciliation && gtxid.IsWtxid()) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), std::get<Wtxid>(gtxid));
 
                 if (!m_chainman.IsInitialBlockDownload()) {
                     const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
@@ -4721,6 +4808,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(peer, hash);
+        if (m_txreconciliation) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), wtxid);
 
         if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
@@ -5357,6 +5445,125 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         return;
     }
 
+    // Only respond to reconciliation messages if this is a reconciliation connection.
+    // Disconnect otherwise.
+    if (!m_txreconciliation && (msg_type == NetMsgType::REQTXRCNCL || msg_type == NetMsgType::SKETCH ||
+        msg_type == NetMsgType::REQSKETCHEXT || msg_type == NetMsgType::RECONCILDIFF)) {
+        LogDebug(BCLog::NET, "%s received, but we don't have reconciliation enabled, %s", msg_type, pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::REQTXRCNCL) {
+        uint16_t peer_recon_set_size, peer_q;
+        vRecv >> peer_recon_set_size >> peer_q;
+        if (auto error = m_txreconciliation->HandleReconciliationRequest(pfrom.GetId(), peer_recon_set_size, peer_q); error.has_value()) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting reconciliation but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting reconciliation out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    LogInfo("Peer is requesting reconciliation with an out-of-range q, %s\n", pfrom.DisconnectMsg());
+                    break;
+                default: break; // No other error is returned by HandleReconciliationRequest
+            }
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        auto result = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata);
+        if (auto handle_sketch_result = std::get_if<node::HandleSketchResult>(&result)) {
+            if (handle_sketch_result->m_succeeded.has_value()) {
+                // Handles both successful and failed reconciliation (but not the case per which we want to request extension).
+                MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, handle_sketch_result->m_succeeded.value(), handle_sketch_result->m_txs_to_request);
+                AnnounceReconciliationTxs(handle_sketch_result->m_txs_to_announce, pfrom);
+            } else {
+                // No final result means we should request sketch extension to make another
+                // reconciliation attempt without losing the initial data.
+                MakeAndPushMessage(pfrom, NetMsgType::REQSKETCHEXT);
+            }
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::REQSKETCHEXT) {
+        if (auto error = m_txreconciliation->HandleExtensionRequest(pfrom.GetId())) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting a reconciliation extension but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting a reconciliation extension out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting a reconciliation extension but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                default: break; // No other error is returned by HandleExtensionRequest
+            }
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    // Among transactions requested by short ID here, we should send only those transactions
+    // sketched (stored in local set snapshot), because otherwise we would leak privacy (mempool content).
+    if (msg_type == NetMsgType::RECONCILDIFF) {
+        uint8_t recon_result;
+        std::vector<uint32_t> ask_shortids;
+        vRecv >> recon_result >> ask_shortids;
+
+        // BIP330: the success field is interpreted as a boolean and MUST have a
+        // value of either 1 or 0.
+        if (recon_result > 1) {
+            LogInfo("Peer is finalizing reconciliation with an invalid success field, %s\n", pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        auto result = m_txreconciliation->HandleReconcilDiff(pfrom.GetId(), recon_result != 0, ask_shortids);
+        if (auto remote_missing = std::get_if<std::vector<Wtxid>>(&result)) {
+            AnnounceReconciliationTxs(*remote_missing, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation finalization violating the protocol.
+            switch (std::get<node::ReconciliationError>(result)) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is finalizing reconciliation but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is finalizing reconciliation out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is finalizing reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    // The specific violation is logged where it is detected.
+                    LogInfo("Peer violated the reconciliation protocol while finalizing, %s\n", pfrom.DisconnectMsg());
+                    break;
+                default: break; // No other error is returned by HandleReconcilDiff
+            }
+            pfrom.fDisconnect = true;
+            return;
+        }
+        return;
+    }
+
     // Ignore unknown message types for extensibility
     LogDebug(BCLog::NET, "Unknown message type \"%s\" from peer=%d", SanitizeString(msg_type), pfrom.GetId());
     return;
@@ -5600,65 +5807,90 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         });
     }
 
-    // Check whether we have too many outbound-full-relay peers
-    if (m_connman.GetExtraFullOutboundCount() > 0) {
-        // If we have more outbound-full-relay peers than we target, disconnect one.
-        // Pick the outbound-full-relay peer that least recently announced
-        // us a new block, with ties broken by choosing the more recent
-        // connection (higher node id)
-        // Protect peers from eviction if we don't have another connection
-        // to their network, counting both outbound-full-relay and manual peers.
-        NodeId worst_peer = -1;
-        int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
+    // Check whether we have too many peers of either full outbound type. Each type is
+    // evicted against its own budget: evicting across budgets would not help, since
+    // ThreadOpenConnections would just reopen a connection of the evicted type and leave
+    // the overshoot in place.
+    const auto extra{m_connman.GetExtraFullOutboundCounts()};
 
-        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
-            AssertLockHeld(::cs_main);
-
-            // Only consider outbound-full-relay peers that are not already
-            // marked for disconnection
-            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
-            CNodeState *state = State(pnode->GetId());
-            if (state == nullptr) return; // shouldn't be possible, but just in case
-            // Don't evict our protected peers
-            if (state->m_chain_sync.m_protect) return;
-            // If this is the only connection on a particular network that is
-            // OUTBOUND_FULL_RELAY or MANUAL, protect it.
-            if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
-            if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
-                worst_peer = pnode->GetId();
-                oldest_block_announcement = state->m_last_block_announcement;
-            }
-        });
-        if (worst_peer != -1) {
-            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-                AssertLockHeld(::cs_main);
-
-                // Only disconnect a peer that has been connected to us for
-                // some reasonable fraction of our check-frequency, to give
-                // it time for new information to have arrived.
-                // Also don't disconnect any peer we're trying to download a
-                // block from.
-                CNodeState &state = *State(pnode->GetId());
-                if (now - pnode->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
-                    LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
-                    pnode->fDisconnect = true;
-                    return true;
-                } else {
-                    LogDebug(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                             pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), state.vBlocksInFlight.size());
-                    return false;
-                }
-            });
-            if (disconnected) {
-                // If we disconnected an extra peer, that means we successfully
-                // connected to at least one peer after the last time we
-                // detected a stale tip. Don't try any more extra peers until
-                // we next detect a stale tip, to limit the load we put on the
-                // network from these extra connections.
-                m_connman.SetTryNewOutboundPeer(false);
-            }
+    if (extra.full_relay > 0) {
+        if (EvictWorstOutboundPeer(ConnectionType::OUTBOUND_FULL_RELAY, now)) {
+            // If we disconnected an extra peer, that means we successfully
+            // connected to at least one peer after the last time we
+            // detected a stale tip. Don't try any more extra peers until
+            // we next detect a stale tip, to limit the load we put on the
+            // network from these extra connections.
+            m_connman.SetTryNewOutboundPeer(false);
         }
     }
+
+    if (extra.reconciliation > 0) {
+        EvictWorstOutboundPeer(ConnectionType::OUTBOUND_FULL_RECONCILIATION, now);
+    }
+}
+
+bool PeerManagerImpl::EvictWorstOutboundPeer(ConnectionType conn_type, NodeClock::time_point now)
+{
+    // This applies to full outbound peers only
+    Assume(conn_type == ConnectionType::OUTBOUND_FULL_RELAY ||
+           conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION);
+
+    // Count the connections covering each network, so that we do not evict our last
+    // peer in any of them. Since EvictWorstOutboundPeer can be called multiple times in
+    // a single round, relying on m_network_conn_counts can make us think we have more
+    // connections to a network than we actually do, as some may be marked for
+    // disconnection. ForEachNode only visits fully connected peers, so a peer picked by
+    // an earlier pass in this same round no longer counts as covering its network (and
+    // neither does one that is still handshaking).
+    std::array<int, Network::NET_MAX> conns_per_network{};
+    m_connman.ForEachNode([&](const CNode* pnode) {
+        if (pnode->IsManualOrFullOutboundConn()) ++conns_per_network[pnode->addr.GetNetwork()];
+    });
+
+    // If we have more peers of this type than we target, disconnect one.
+    // Pick the peer that least recently announced us a new block, with ties
+    // broken by choosing the more recent connection (higher node id)
+    NodeId worst_peer = -1;
+    int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
+
+    m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
+        AssertLockHeld(::cs_main);
+
+        // Only consider peers of this type that are not already marked for disconnection
+        if (pnode->m_conn_type != conn_type || pnode->fDisconnect) return;
+        CNodeState *state = State(pnode->GetId());
+        if (state == nullptr) return; // shouldn't be possible, but just in case
+        // Don't evict our protected peers
+        if (state->m_chain_sync.m_protect) return;
+        // If this is the only connection on a particular network that is a full
+        // outbound or MANUAL one, protect it.
+        if (conns_per_network[pnode->addr.GetNetwork()] <= 1) return;
+        if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
+            worst_peer = pnode->GetId();
+            oldest_block_announcement = state->m_last_block_announcement;
+        }
+    });
+    if (worst_peer == -1) return false;
+
+    return m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
+
+        // Only disconnect a peer that has been connected to us for
+        // some reasonable fraction of our check-frequency, to give
+        // it time for new information to have arrived.
+        // Also don't disconnect any peer we're trying to download a
+        // block from.
+        CNodeState &state = *State(pnode->GetId());
+        if (now - pnode->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
+            LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
+            pnode->fDisconnect = true;
+            return true;
+        } else {
+            LogDebug(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
+                     pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), state.vBlocksInFlight.size());
+            return false;
+        }
+    });
 }
 
 void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
@@ -5870,6 +6102,109 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
                 (currentFilter < 3 * peer.m_fee_filter_sent / 4 || currentFilter > 4 * peer.m_fee_filter_sent / 3)) {
         peer.m_next_send_feefilter = current_time + m_rng.randrange<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
     }
+}
+
+void PeerManagerImpl::AnnounceTxs(CNode& node, const Peer& peer, Peer::TxRelay& tx_relay,
+                                  std::vector<CTransactionRef> txs, bool from_post_reconciliation,
+                                  std::vector<CInv>& invs)
+{
+    LOCK(tx_relay.m_bloom_filter_mutex);
+
+    invs.reserve(std::min<size_t>(MAX_INV_SZ, invs.size() + txs.size()));
+    for (auto& tx : txs) {
+        // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
+        // depending on whether our peer supports wtxid-relay. Therefore, first
+        // construct the inv and then use its hash for the filter check.
+        const auto inv = peer.m_wtxid_relay ?
+                             CInv{MSG_WTX, tx->GetWitnessHash().ToUint256()} :
+                             CInv{MSG_TX, tx->GetHash().ToUint256()};
+        // Check if not in the filter already
+        if (tx_relay.m_tx_inventory_known_filter.contains(inv.hash)) {
+            continue;
+        }
+        if (tx_relay.m_bloom_filter && !tx_relay.m_bloom_filter->IsRelevantAndUpdate(*tx)) continue;
+
+        auto add_to_inv_vec = [&](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay.m_tx_inventory_mutex) {
+            invs.push_back(inv);
+            if (invs.size() == MAX_INV_SZ) {
+                MakeAndPushMessage(node, NetMsgType::INV, invs);
+                invs.clear();
+            }
+            tx_relay.m_tx_inventory_known_filter.insert(inv.hash);
+        };
+
+        // Send
+        // We don't reconcile while in IBD, so transactions added to a reconciliation
+        // set then would sit there unannounced, and mined ones would linger in it.
+        // Fan out until we are synced instead.
+        bool reconcile = !from_post_reconciliation && m_txreconciliation && !m_chainman.IsInitialBlockDownload() &&
+                         m_txreconciliation->IsPeerRegistered(node.GetId());
+        if (reconcile) {
+            Assume(inv.IsMsgWtx());
+            // Try to add the transaction to the reconciliation set
+            const auto error = m_txreconciliation->AddToSet(node.GetId(), Wtxid::FromUint256(inv.hash));
+            if  (error.has_value()) {
+                // If adding fails, fanout instead
+                reconcile = false;
+                if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
+                    // If adding fails due to a collision, fanout the colliding transaction too
+                    Assume(m_txreconciliation->TryRemovingFromSet(node.GetId(), error.value().GetCollision()));
+                    add_to_inv_vec(CInv(MSG_WTX, error.value().GetCollision().ToUint256()));
+                }
+            }
+        }
+        if (!reconcile) {
+            add_to_inv_vec(inv);
+        }
+    }
+}
+
+void PeerManagerImpl::AnnounceReconciliationTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& node)
+{
+    if (remote_missing_wtxids.empty()) return;
+    // We are announcing to a peer we just reconciled with, so it is still connected and it
+    // relays transactions.
+    PeerRef maybe_peer{GetPeerRef(node.GetId())};
+    Assume(maybe_peer);
+    Peer& peer{*maybe_peer};
+    auto tx_relay = peer.GetTxRelay();
+    Assume(tx_relay);
+
+    // Reconciliation is only negotiated with wtxid-relay peers, so we always
+    // identify and announce transactions by their wtxid here.
+    Assume(peer.m_wtxid_relay);
+
+    // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
+    // (sorted from higher priority to lowest, skipping low fee)
+    const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
+
+    std::vector<CInv> remote_missing_invs;
+    {
+        LOCK(tx_relay->m_tx_inventory_mutex);
+
+        auto inv_tx = [&]() {
+            std::vector<CTransactionRef> res;
+
+            LOCK(m_mempool.cs);
+            auto txiters = m_mempool.ExtractBestByMiningScoreWithTopology(remote_missing_wtxids, remote_missing_wtxids.size());
+            res.reserve(txiters.size());
+            for (auto txiter : txiters) {
+                if (txiter->GetFee() < filterrate.GetFee(txiter->GetTxSize())) {
+                    continue; // higher feerate CPFP txs may follow, so just skip, don't stop
+                }
+                res.push_back(txiter->GetSharedTx());
+            }
+            return res;
+        }();
+
+        // These transactions are the outcome of a reconciliation round, so they are fanned
+        // out instead of being added back to the reconciliation set.
+        AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), /*from_post_reconciliation=*/true,
+                    remote_missing_invs);
+    }
+
+    // Send any remaining (some candidates may have been filtered out)
+    if (!remote_missing_invs.empty()) MakeAndPushMessage(node, NetMsgType::INV, remote_missing_invs);
 }
 
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
@@ -6106,6 +6441,14 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     MaybeSendSendHeaders(node, peer);
 
     ProcessInvBacklog(now);
+
+    // We must look into the reconciliation queue first. Since the queue applies to all peers,
+    // this peer might block other reconciliation if we don't make this call regularly and
+    // unconditionally.
+    bool reconcile = false;
+    if (m_txreconciliation && !m_chainman.IsInitialBlockDownload()) {
+        reconcile = m_txreconciliation->IsPeerNextToReconcileWith(node.GetId(), current_time);
+    }
 
     {
         LOCK(cs_main);
@@ -6405,32 +6748,40 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         return res;
                     }();
 
-                    LOCK(tx_relay->m_bloom_filter_mutex);
-                    vInv.reserve(std::min<size_t>(MAX_INV_SZ, vInv.size() + inv_tx.size()));
-                    for (auto& tx : inv_tx) {
-                        // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
-                        // depending on whether our peer supports wtxid-relay. Therefore, first
-                        // construct the inv and then use its hash for the filter check.
-                        const auto inv = peer.m_wtxid_relay ?
-                                             CInv{MSG_WTX, tx->GetWitnessHash().ToUint256()} :
-                                             CInv{MSG_TX, tx->GetHash().ToUint256()};
-                        // Check if not in the filter already
-                        if (tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
-                            continue;
-                        }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*tx)) continue;
-                        // Send
-                        vInv.push_back(inv);
-                        if (vInv.size() == MAX_INV_SZ) {
-                            MakeAndPushMessage(node, NetMsgType::INV, vInv);
-                            vInv.clear();
-                        }
-                        tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
-                    }
+                    AnnounceTxs(node, peer, *tx_relay, std::move(inv_tx), /*from_post_reconciliation=*/false, vInv);
                 }
         }
         if (!vInv.empty())
             MakeAndPushMessage(node, NetMsgType::INV, vInv);
+
+        //
+        // Message: reconciliation response
+        //
+        if (m_txreconciliation) {
+            std::vector<uint8_t> skdata;
+            if (m_txreconciliation->ShouldRespondToReconciliationRequest(node.GetId(), skdata)) {
+                // It's perfectly valid to send an empty sketch, because we use this behavior
+                // to trigger early reconciliation termination when it won't help anyway:
+                // - we have no transactions for the peer
+                // - the peer have no transactions for us
+                MakeAndPushMessage(node, NetMsgType::SKETCH, skdata);
+            }
+        }
+
+        //
+        // Message: reconciliation request
+        //
+        {
+            if (!m_chainman.IsInitialBlockDownload()) {
+                if (reconcile) {
+                    const auto result = m_txreconciliation->InitiateReconciliationRequest(node.GetId());
+                    if (auto* reconciliation_request_params = std::get_if<node::ReconCoefficients>(&result)) {
+                        const auto [local_set_size, local_q_formatted] = *reconciliation_request_params;
+                        MakeAndPushMessage(node, NetMsgType::REQTXRCNCL, local_set_size, local_q_formatted);
+                    }
+                }
+            }
+        }
 
         // Detect whether we're stalling
         auto stalling_timeout = m_block_stalling_timeout.load();

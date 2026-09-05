@@ -300,6 +300,123 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     connman->ClearTestNodes();
 }
 
+// The full-relay and the reconciliation eviction rounds both pick from the peers that
+// count towards network coverage, and a peer marked for disconnection is not reaped
+// until DisconnectNodes runs. Check that one round cannot pick a peer that the other
+// round's victim was covering, leaving us with no connection to a network.
+BOOST_FIXTURE_TEST_CASE(eviction_keeps_a_connection_per_network, OutboundTest)
+{
+    NodeId id{0};
+    FakeNodeClock clock{};
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    constexpr auto MINIMUM_CONNECT_TIME{30s};
+    CConnman::Options options;
+    // Leaves room for 8 full-relay, 2 block-relay and 1 reconciliation connection
+    options.m_max_automatic_connections = 11;
+    options.m_max_outbound_full_recon = MAX_OUTBOUND_FULL_RECON_CONNECTIONS;
+    connman->Init(options);
+
+    std::vector<CNode*> vNodes;
+    for (int i = 0; i < MAX_OUTBOUND_FULL_RELAY_CONNECTIONS; ++i) {
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    }
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RECONCILIATION);
+    CNode* ipv4_recon{vNodes.back()};
+
+    // Overshoot both budgets with one onion peer of each type. They are our only two
+    // onion connections, so evicting both would leave us without the network. Being the
+    // most recently added of their type, each is the one its round would pick.
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RECONCILIATION, /*onion_peer=*/true);
+    CNode* onion_recon{vNodes.back()};
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
+    CNode* onion_full_relay{vNodes.back()};
+
+    clock += MINIMUM_CONNECT_TIME + 1s;
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    // The full-relay round picks the onion peer, since the onion reconciliation peer
+    // still covers the network. The reconciliation round must then leave that peer
+    // alone and fall back to the next candidate.
+    BOOST_CHECK(onion_full_relay->fDisconnect == true);
+    BOOST_CHECK(onion_recon->fDisconnect == false);
+    BOOST_CHECK(ipv4_recon->fDisconnect == true);
+
+    for (const CNode* node : vNodes) {
+        peerLogic->FinalizeNode(*node);
+    }
+    connman->ClearTestNodes();
+}
+
+BOOST_FIXTURE_TEST_CASE(reconciliation_peer_eviction, OutboundTest)
+{
+    NodeId id{0};
+    FakeNodeClock clock{};
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    constexpr int max_outbound_full_recon{MAX_OUTBOUND_FULL_RECON_CONNECTIONS};
+    constexpr auto MINIMUM_CONNECT_TIME{30s};
+    CConnman::Options options;
+    options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
+    options.m_max_outbound_full_recon = max_outbound_full_recon;
+
+    connman->Init(options);
+    std::vector<CNode*> vNodes;
+
+    // Add reconciliation peers up to the limit, plus a full-relay one, which is well
+    // within its own limit
+    for (int i = 0; i < max_outbound_full_recon; ++i) {
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RECONCILIATION);
+    }
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    clock += MINIMUM_CONNECT_TIME + 1s;
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    for (const CNode* node : vNodes) {
+        BOOST_CHECK(node->fDisconnect == false);
+    }
+
+    // Add an extra reconciliation peer breaking the limit (mocks logic in ThreadOpenConnections)
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RECONCILIATION);
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    // The extra peer should only get marked for eviction after MINIMUM_CONNECT_TIME
+    for (const CNode* node : vNodes) {
+        BOOST_CHECK(node->fDisconnect == false);
+    }
+
+    clock += MINIMUM_CONNECT_TIME + 1s;
+    peerLogic->CheckForStaleTipAndEvictPeers();
+
+    // Only the extra reconciliation peer gets evicted. Notably, the full-relay peer is
+    // accounted for in a different budget, so it is not a candidate here.
+    for (size_t i{0}; i < vNodes.size() - 1; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes.back()->fDisconnect == true);
+
+    // Update the last block announcement time for the extra peer, and check that the
+    // next youngest reconciliation peer gets evicted instead.
+    vNodes.back()->fDisconnect = false;
+    peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
+
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    for (int i = 0; i < max_outbound_full_recon - 1; ++i) {
+        BOOST_CHECK(vNodes[i]->fDisconnect == false);
+    }
+    BOOST_CHECK(vNodes[max_outbound_full_recon - 1]->fDisconnect == true);
+    // The full-relay peer, which is the youngest but one, is still not a candidate
+    BOOST_CHECK(vNodes[max_outbound_full_recon]->fDisconnect == false);
+    BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    for (const CNode* node : vNodes) {
+        peerLogic->FinalizeNode(*node);
+    }
+    connman->ClearTestNodes();
+}
+
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);

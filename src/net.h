@@ -67,6 +67,8 @@ inline constexpr unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 inline constexpr unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes over which we'll relay everything (blocks, tx, addrs, etc) */
 inline constexpr int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
+/** Maximum number of automatic outgoing nodes used for reconciliation */
+inline constexpr int MAX_OUTBOUND_FULL_RECON_CONNECTIONS = 4;
 /** Maximum number of addnode outgoing nodes */
 inline constexpr int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number of block-relay-only outgoing connections */
@@ -778,6 +780,7 @@ public:
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
+            case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
             case ConnectionType::BLOCK_RELAY:
                 return true;
             case ConnectionType::INBOUND:
@@ -791,8 +794,15 @@ public:
         assert(false);
     }
 
+    /** Check is this a full outbound connection. Both fanout and reconciliation count */
     bool IsFullOutboundConn() const {
-        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
+        return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY ||
+            m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION;
+    }
+
+    bool IsOutboundReconciliationConn() const
+    {
+        return m_conn_type == ConnectionType::OUTBOUND_FULL_RECONCILIATION;
     }
 
     bool IsManualConn() const {
@@ -807,8 +817,9 @@ public:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
         case ConnectionType::PRIVATE_BROADCAST:
-                return false;
+            return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
         case ConnectionType::MANUAL:
                 return true;
         } // no default case, so the compiler can warn about missing cases
@@ -851,6 +862,7 @@ public:
             case ConnectionType::FEELER:
                 return false;
             case ConnectionType::OUTBOUND_FULL_RELAY:
+            case ConnectionType::OUTBOUND_FULL_RECONCILIATION:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::PRIVATE_BROADCAST:
@@ -1090,6 +1102,7 @@ public:
         ServiceFlags m_local_services = NODE_NONE;
         int m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
         int m_full_relay_inbound_percent = DEFAULT_FULL_RELAY_INBOUND_PCT;
+        int m_max_outbound_full_recon = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
         BanMan* m_banman = nullptr;
@@ -1123,7 +1136,10 @@ public:
         m_max_automatic_connections = connOptions.m_max_automatic_connections;
         m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
-        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
+        m_max_outbound_full_recon = std::min(connOptions.m_max_outbound_full_recon, m_max_automatic_connections - m_max_outbound_block_relay - m_max_outbound_full_relay);
+        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_full_recon + m_max_outbound_block_relay + m_max_feeler;
+        // TODO: reconciliation slots are subtracted here like any other outbound, shrinking our
+        // inbound budget. Should we increase the inbound budget to compensate?
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_max_inbound_full_relay = std::max(0, static_cast<int>(connOptions.m_full_relay_inbound_percent / 100.0 * m_max_inbound));
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
@@ -1336,15 +1352,21 @@ public:
 
     void StartExtraBlockRelayPeers();
 
-    // Count the number of full-relay peer we have.
+    // Count the number of full outbound peers we have, both OUTBOUND_FULL_RELAY and
+    // OUTBOUND_FULL_RECONCILIATION.
     int GetFullOutboundConnCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
-    // Return the number of outbound peers we have in excess of our target (eg,
-    // if we previously called SetTryNewOutboundPeer(true), and have since set
-    // to false, we may have extra peers that we wish to disconnect). This may
-    // return a value less than (num_outbound_connections - num_outbound_slots)
-    // in cases where some outbound connections are not yet fully connected, or
-    // not yet fully disconnected.
-    int GetExtraFullOutboundCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    /** How many full outbound peers we have in excess of our target
+     *  for it (eg, if we previously called SetTryNewOutboundPeer(true), and have
+     *  since set to false, we may have extra peers that we wish to disconnect).
+     *  Each type has its own budget, so they are reported separately.
+     *  These may be less than (num_outbound_connections - num_outbound_slots) in
+     *  cases where some outbound connections are not yet fully connected, or not
+     *  yet fully disconnected. */
+    struct ExtraFullOutboundCounts {
+        int full_relay{0};
+        int reconciliation{0};
+    };
+    ExtraFullOutboundCounts GetExtraFullOutboundCounts() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     /**
@@ -1426,8 +1448,6 @@ public:
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const;
-
-    bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
     struct ListenSocket {
@@ -1725,6 +1745,9 @@ private:
 
     // How many full-relay (tx, block, addr) outbound peers we want
     int m_max_outbound_full_relay;
+
+    // How many reconciliation outbound peers we want (tx via reconciliation, block, addr)
+    int m_max_outbound_full_recon;
 
     // How many block-relay only outbound peers we want
     // We do not relay tx or addr messages with these peers
