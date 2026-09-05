@@ -6,6 +6,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <interfaces/mining.h>
+#include <rpc/register.h> // IWYU pragma: associated
 
 #include <addresstype.h>
 #include <arith_uint256.h>

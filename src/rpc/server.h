@@ -8,16 +8,15 @@
 
 #include <rpc/request.h>
 #include <rpc/util.h>
+#include <univalue.h>
 
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <string>
 #include <string_view>
-
-#include <univalue.h>
-
-class CRPCCommand;
+#include <utility>
+#include <vector>
 
 /** Query whether RPC is running */
 bool IsRPCRunning();

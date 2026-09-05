@@ -7,13 +7,11 @@
 
 #include <addresstype.h>
 #include <consensus/amount.h>
-#include <node/transaction.h>
-#include <outputtype.h>
+#include <policy/feerate.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -24,6 +22,7 @@
 #include <initializer_list>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -31,11 +30,11 @@
 #include <variant>
 #include <vector>
 
-class JSONRPCRequest;
-enum ServiceFlags : uint64_t;
 enum class OutputType;
 struct FlatSigningProvider;
 struct bilingual_str;
+class CBlockIndex;
+
 namespace common {
 enum class PSBTError;
 } // namespace common
@@ -63,8 +62,6 @@ extern const std::string UNIX_EPOCH_TIME;
  */
 extern const std::string EXAMPLE_ADDRESS[2];
 
-class FillableSigningProvider;
-class CScript;
 struct Sections;
 
 struct HelpResult : std::runtime_error {

@@ -3,48 +3,76 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/register.h> // IWYU pragma: associated
+
+#include <addresstype.h>
 #include <base58.h>
 #include <chain.h>
 #include <coins.h>
+#include <common/types.h>
 #include <consensus/amount.h>
-#include <consensus/validation.h>
 #include <core_io.h>
+#include <crypto/common.h>
+#include <crypto/hex_base.h>
+#include <hash.h>
 #include <index/txindex.h>
+#include <kernel/chainparams.h>
+#include <key.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/psbt.h>
 #include <node/transaction.h>
-#include <node/types.h>
-#include <policy/packages.h>
-#include <policy/policy.h>
-#include <policy/rbf.h>
+#include <policy/feerate.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
+#include <pubkey.h>
 #include <random.h>
-#include <rpc/blockchain.h>
+#include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <undo.h>
+#include <univalue.h>
 #include <util/bip32.h>
 #include <util/check.h>
+#include <util/expected.h>
+#include <util/result.h>
 #include <util/strencodings.h>
-#include <util/string.h>
+#include <util/translation.h>
 #include <util/vector.h>
 #include <validation.h>
-#include <validationinterface.h>
 
+#include <algorithm>
+#include <any>
+#include <bitset>
+#include <cstddef>
 #include <cstdint>
-
-#include <univalue.h>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <span>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using node::AnalyzePSBT;
 using node::FindCoins;

@@ -6,22 +6,23 @@
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
 #include <consensus/amount.h>
-#include <core_io.h>
-#include <streams.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <validation.h>
 
-#include <any>
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <vector>
 
 class CBlock;
 class CBlockIndex;
 class CChain;
-class Chainstate;
 class UniValue;
+class AutoFile;
+class uint256;
+enum class TxVerbosity;
+
 namespace node {
 class BlockManager;
 struct NodeContext;

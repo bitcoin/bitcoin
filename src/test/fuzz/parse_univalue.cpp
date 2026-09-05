@@ -3,12 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <rpc/client.h>
 #include <rpc/util.h>
+#include <script/script.h>
+#include <script/signingprovider.h>
 #include <test/fuzz/fuzz.h>
+#include <univalue.h>
 #include <util/chaintype.h>
 
+#include <functional>
 #include <limits>
+#include <stdexcept>
 #include <string>
 
 void initialize_parse_univalue()
