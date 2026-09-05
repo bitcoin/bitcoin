@@ -55,6 +55,8 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.",
             self.nodes[0].createwallet, wallet_name='w0', disable_private_keys=True, passphrase="passphrase")
         assert_raises_rpc_error(-8, "Wallet name cannot be empty", self.nodes[0].createwallet, "")
+        for invalid_name in ["w0\ninvalid", "w0\x7finvalid"]:
+            assert_raises_rpc_error(-8, "Wallet name cannot contain control characters", self.nodes[0].createwallet, invalid_name)
 
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')

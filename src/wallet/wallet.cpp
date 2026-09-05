@@ -79,6 +79,7 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
 #include <tuple>
 #include <utility>
@@ -384,11 +385,23 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
     return wallet;
 }
 
+//! Control characters can forge log lines or be invisible in paths and user interfaces.
+static bool HasControlChars(std::string_view name)
+{
+    return std::ranges::any_of(name, [](uint8_t c) { return c < 0x20 || c == 0x7f; });
+}
+
 std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     // Wallet must have a non-empty name
     if (name.empty()) {
         error = Untranslated("Wallet name cannot be empty");
+        status = DatabaseStatus::FAILED_NEW_UNNAMED;
+        return nullptr;
+    }
+
+    if (HasControlChars(name)) {
+        error = Untranslated("Wallet name cannot contain control characters");
         status = DatabaseStatus::FAILED_NEW_UNNAMED;
         return nullptr;
     }
@@ -464,6 +477,16 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
         error = Untranslated("Wallet name cannot be empty");
         status = DatabaseStatus::FAILED_NEW_UNNAMED;
         return nullptr;
+    }
+
+    if (HasControlChars(wallet_name)) {
+        if (allow_unnamed) {
+            LogWarning("Restoring wallet with control characters in its existing name");
+        } else {
+            error = Untranslated("Wallet name cannot contain control characters");
+            status = DatabaseStatus::FAILED_NEW_UNNAMED;
+            return nullptr;
+        }
     }
 
     DatabaseOptions options;

@@ -11,15 +11,17 @@ from test_framework.util import (
     str_to_b64str,
 )
 import http.client
+import json
 import urllib.parse
 
 
-def rpccall(node, user, method):
+def rpccall(node, user, method, *, batch=False):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
+    request = {"method": method}
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.connect()
-    conn.request('POST', '/', '{"method": "' + method + '"}', headers)
+    conn.request('POST', '/', json.dumps([request] if batch else request), headers)
     resp = conn.getresponse()
     conn.close()
     return resp
@@ -92,6 +94,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
 
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(0, 200)
+        self.test_rejected_method_logging()
 
         # Replace file configurations
         self.nodes[0].replace_in_config([("rpcwhitelistdefault=0", "rpcwhitelistdefault=1")])
@@ -109,6 +112,15 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.restart_node(0)
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(1, 403)
+
+    def test_rejected_method_logging(self):
+        """Test logging a method rejected by the RPC whitelist."""
+        forged_log_line = "ERROR: ConnectTip: ConnectBlock 0000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef failed, bad-txns-inputs-missingorspent"
+        rejected_method = f"getblock\n{forged_log_line}"
+        for batch in [False, True]:
+            self.log.info(f"[{self.users[0][0]}]: Testing rejected method logging (batch={batch})")
+            with self.nodes[0].assert_debug_log([f"not allowed to call method getblock{forged_log_line}"]):
+                assert_equal(403, rpccall(self.nodes[0], self.users[0], rejected_method, batch=batch).status)
 
     def test_users_permissions(self):
         """

@@ -166,6 +166,7 @@ class WalletBackupTest(BitcoinTestFramework):
         node = self.nodes[3]
         backup_file = self.nodes[0].datadir_path / 'wallet.bak'
         assert_raises_rpc_error(-8, "Wallet name cannot be empty", node.restorewallet, "", backup_file)
+        assert_raises_rpc_error(-8, "Wallet name cannot contain control characters", node.restorewallet, "evil\nFORGED", backup_file)
         assert not (node.wallets_path / "wallet.dat").exists()
 
     def test_pruned_wallet_backup(self):
