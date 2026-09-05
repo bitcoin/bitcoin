@@ -106,6 +106,7 @@ BASE_SCRIPTS = [
     'feature_block.py',
     'mempool_ephemeral_dust.py',
     'wallet_conflicts.py',
+    'p2p_handle_io_errors.py',
     'p2p_opportunistic_1p1c.py',
     'p2p_node_network_limited.py --v1transport',
     'p2p_node_network_limited.py --v2transport',

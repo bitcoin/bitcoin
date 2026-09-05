@@ -17,6 +17,7 @@
 #include <test/util/chainstate.h>
 #include <test/util/coins.h>
 #include <test/util/common.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -171,6 +172,109 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // validation chain.
     BOOST_CHECK(block_added);
     BOOST_CHECK_EQUAL(curr_tip, get_notify_tip());
+}
+
+static void check_activate_best_chain_fatal_error(const std::string& expected_log, node::NodeContext& node, Chainstate& chainstate)
+{
+    Assert(node.notifications)->m_shutdown_on_fatal_error = false;
+    node.exit_status = EXIT_SUCCESS;
+
+    ASSERT_DEBUG_LOG(expected_log);
+    BlockValidationState state;
+    BOOST_REQUIRE(!chainstate.ActivateBestChain(state));
+    BOOST_CHECK(state.IsError());
+    BOOST_CHECK_EQUAL(node.exit_status, EXIT_FAILURE); // Ensure fatal error
+}
+// Verify ActivateBestChain triggers a fatal error when a block read fails
+// during block connection (ConnectTip path).
+BOOST_FIXTURE_TEST_CASE(activate_best_chain_connect_io_failure, TestChain100Setup)
+{
+    auto& chainstate = m_node.chainman->ActiveChainstate();
+    const auto blocks_dir = m_args.GetBlocksDirPath();
+
+    const auto paths = {
+        blocks_dir / "blk00000.dat", // Inaccessible block file
+        fs::path{blocks_dir.parent_path()}, // Inaccessible blocks directory
+    };
+    for (const auto& path : paths) {
+        // Disconnect block without changing validity so ActivateBestChain has a block to reconnect.
+        BlockValidationState state;
+        BOOST_REQUIRE([&] {
+            LOCK2(m_node.chainman->GetMutex(), chainstate.MempoolMutex());
+            return chainstate.DisconnectTip(state, /*disconnectpool=*/nullptr);
+        }());
+        BOOST_CHECK(state.IsValid());
+
+        SimulateFileSystemError(m_path_root, path, [&] {
+            check_activate_best_chain_fatal_error("Failed to read block", m_node, chainstate);
+        });
+
+        // Sanity: the block reconnects once the filesystem is restored.
+        BOOST_REQUIRE(chainstate.ActivateBestChain(state));
+        BOOST_CHECK(state.IsValid());
+    }
+}
+
+// Verify ActivateBestChain triggers a fatal error when a block read fails
+// during a reorg (DisconnectTip path).
+BOOST_FIXTURE_TEST_CASE(activate_best_chain_disconnect_io_failure, TestChain100Setup)
+{
+    auto& chainman = m_node.chainman;
+    auto& chainstate = chainman->ActiveChainstate();
+    const auto blocks_dir = m_args.GetBlocksDirPath();
+
+    // Set up a scenario where ActivateBestChain must reorg:
+    //
+    //   Original chain: ... -> 100 -> 101 -> 102 -> 103   (more work)
+    //   Fork:           ... -> 100 -> F101 -> F102        (currently active)
+    //
+    // The fork is active but has less work than the original chain, so
+    // ActivateBestChain will disconnect the fork blocks via DisconnectTip
+    // before reconnecting the original chain.
+
+    // Extend the chain by 3 blocks (heights 101–103).
+    for (int i = 0; i < 3; i++) CreateAndProcessBlock({}, CScript() << OP_1);
+
+    // Invalidate at height 101 to create room for a shorter fork.
+    CBlockIndex* b101_index = WITH_LOCK(chainman->GetMutex(), return chainman->ActiveChain()[101]);
+    BlockValidationState state;
+    chainstate.InvalidateBlock(state, b101_index);
+    BOOST_CHECK(state.IsValid());
+    BOOST_REQUIRE_EQUAL(100, WITH_LOCK(chainman->GetMutex(), return chainman->ActiveHeight()));
+
+    // Build a 2-block fork from height 100. The original chain is invalid,
+    // so these become the active tip.
+    for (int i = 0; i < 2; i++) CreateAndProcessBlock({}, CScript() << OP_2);
+    BOOST_REQUIRE_EQUAL(102, WITH_LOCK(chainman->GetMutex(), return chainman->ActiveHeight()));
+
+    // Now restore the original chain's validity. It has more work (103 > 102) but ActivateBestChain
+    // hasn't been called yet, so we're still on the fork. Similar to ReconsiderBlock but without the ABC call.
+    {
+        LOCK(chainman->GetMutex());
+        chainstate.ResetBlockFailureFlags(b101_index);
+        chainman->RecalculateBestHeader();
+    }
+
+    const auto paths = {
+        blocks_dir / "blk00000.dat",     // Inaccessible block file
+        blocks_dir / "rev00000.dat",     // Inaccessible undo file
+        fs::path{blocks_dir.parent_path()}  // Inaccessible blocks directory
+    };
+
+    for (const auto& path : paths) {
+        BOOST_REQUIRE_EQUAL(102, WITH_LOCK(chainman->GetMutex(), return chainman->ActiveHeight()));
+        SimulateFileSystemError(m_path_root, path, [&] {
+            check_activate_best_chain_fatal_error("Failed to disconnect block", m_node, chainstate);
+        });
+        BOOST_CHECK_EQUAL(102, WITH_LOCK(chainman->GetMutex(), return chainman->ActiveHeight()));
+    }
+
+
+    // Sanity check: the reorg completes once the filesystem is restored.
+    state = BlockValidationState();
+    BOOST_CHECK(chainstate.ActivateBestChain(state));
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK_EQUAL(103, WITH_LOCK(chainman->GetMutex(), return chainman->ActiveHeight()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
