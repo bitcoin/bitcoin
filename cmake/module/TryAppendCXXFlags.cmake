@@ -120,7 +120,7 @@ function(try_append_cxx_flags flags)
 endfunction()
 
 if(MSVC)
-  try_append_cxx_flags("/WX /options:strict" VAR working_compiler_werror_flag SKIP_LINK)
+  try_append_cxx_flags("/WX" VAR working_compiler_werror_flag SKIP_LINK)
 else()
   try_append_cxx_flags("-Werror" VAR working_compiler_werror_flag SKIP_LINK)
 endif()
