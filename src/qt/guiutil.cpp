@@ -610,8 +610,8 @@ bool GetStartOnSystemStartup()
     while (!optionFile.eof())
     {
         getline(optionFile, line);
-        if (line.find("Hidden") != std::string::npos &&
-            line.find("true") != std::string::npos)
+        if (line.contains("Hidden") &&
+            line.contains("true"))
             return false;
     }
     optionFile.close();

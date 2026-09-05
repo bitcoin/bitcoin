@@ -805,7 +805,7 @@ static RPCMethod setban()
     CSubNet subNet;
     CNetAddr netAddr;
     std::string subnet_arg{help.Arg<std::string_view>("subnet")};
-    const bool isSubnet{subnet_arg.find('/') != subnet_arg.npos};
+    const bool isSubnet{subnet_arg.contains('/')};
 
     if (!isSubnet) {
         const std::optional<CNetAddr> addr{LookupHost(subnet_arg, false)};

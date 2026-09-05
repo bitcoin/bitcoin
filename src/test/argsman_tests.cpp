@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(util_AddCommand_clearargs_replaces_command_options)
     add_command(test_args, "-opt2");
 
     const auto help{test_args.GetHelpMessage()};
-    BOOST_CHECK(help.find("-opt2") != std::string::npos);
+    BOOST_CHECK(help.contains("-opt2"));
 
     test_args.ForceSetArg("-opt2", "1");
     std::vector<std::string> details;
