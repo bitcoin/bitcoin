@@ -5,6 +5,7 @@
 #include <cuckoocache.h>
 #include <random.h>
 #include <script/sigcache.h>
+#include <sync.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/byte_units.h>
@@ -12,8 +13,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <deque>
-#include <mutex>
-#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -206,11 +205,11 @@ void test_cache_erase_parallel(size_t bytes)
      * "future proofed".
      */
     std::vector<uint256> hashes_insert_copy = hashes;
-    std::shared_mutex mtx;
+    SharedMutex mtx;
 
     {
         /** Grab lock to make sure we release inserts */
-        std::unique_lock<std::shared_mutex> l(mtx);
+        LOCK(mtx);
         /** Insert the first half */
         for (uint32_t i = 0; i < (n_insert / 2); ++i)
             set.insert(hashes_insert_copy[i]);
@@ -225,7 +224,7 @@ void test_cache_erase_parallel(size_t bytes)
         /** Each thread is emplaced with x copy-by-value
         */
         threads.emplace_back([&, x] {
-            std::shared_lock<std::shared_mutex> l(mtx);
+            READ_LOCK(mtx);
             size_t ntodo = (n_insert/4)/3;
             size_t start = ntodo*x;
             size_t end = ntodo*(x+1);
@@ -240,7 +239,7 @@ void test_cache_erase_parallel(size_t bytes)
     for (std::thread& t : threads)
         t.join();
     /** Grab lock to make sure we observe erases */
-    std::unique_lock<std::shared_mutex> l(mtx);
+    LOCK(mtx);
     /** Insert the second half */
     for (uint32_t i = (n_insert / 2); i < n_insert; ++i)
         set.insert(hashes_insert_copy[i]);
