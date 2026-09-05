@@ -757,6 +757,20 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
     fs::remove(test_buffered.FileName(pos));
 }
 
+BOOST_AUTO_TEST_CASE(buffered_writer_flush_failure)
+{
+    struct FailingStream {
+        int write_attempts{0};
+        void write_buffer(std::span<std::byte>) { if (++write_attempts == 1) throw std::ios_base::failure{"write failed"}; }
+    } stream;
+    BOOST_CHECK_EXCEPTION([&] {
+        BufferedWriter writer{stream};
+        writer.write("00"_hex);
+        writer.flush();
+        }(), std::ios_base::failure, HasReason{"write failed"});
+    BOOST_CHECK_EQUAL(stream.write_attempts, 1);
+}
+
 BOOST_AUTO_TEST_CASE(buffered_writer_reader)
 {
     const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};

@@ -25,6 +25,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -703,8 +704,9 @@ public:
 
     void flush()
     {
-        if (m_buf_pos) m_dst.write_buffer(std::span{m_buf}.first(m_buf_pos));
-        m_buf_pos = 0;
+        if (auto buf_pos{std::exchange(m_buf_pos, 0)}) {
+            m_dst.write_buffer(std::span{m_buf}.first(buf_pos));
+        }
     }
 
     void write(std::span<const std::byte> src)

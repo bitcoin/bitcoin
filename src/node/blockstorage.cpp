@@ -1012,7 +1012,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
                 // Write undo data & checksum
                 fileout << blockundo << hasher.GetHash();
             }
-            // BufferedWriter will flush pending data to file when fileout goes out of scope.
+            fileout.flush();
         }
 
         // Make sure that the file is closed before we call `FlushUndoFile`.
@@ -1168,6 +1168,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         pos.nPos += STORAGE_HEADER_BYTES;
         // Write block
         fileout << TX_WITH_WITNESS(block);
+        fileout.flush();
     }
 
     if (file.fclose() != 0) {
