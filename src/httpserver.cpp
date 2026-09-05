@@ -956,7 +956,7 @@ void HTTPRemoteClient::Receive()
         m_disconnect = true;
     } else {
         // Reset idle timeout
-        m_idle_since = Now<SteadySeconds>();
+        m_idle_since = MockableSteadyClock::now();
 
         // Prevent disconnect until all requests are completely handled.
         m_connection_busy = true;
@@ -1149,7 +1149,7 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
 
 void HTTPServer::DisconnectClients()
 {
-    const auto now{Now<SteadySeconds>()};
+    const auto now{MockableSteadyClock::now()};
     size_t erased = std::erase_if(m_connected, [&](auto& client) {
         bool disconnect{client->ShouldDisconnect(now,
                                                  m_rpcservertimeout,
@@ -1168,7 +1168,7 @@ void HTTPServer::DisconnectClients()
     }
 }
 
-bool HTTPRemoteClient::ShouldDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all) const
+bool HTTPRemoteClient::ShouldDisconnect(MockableSteadyClock::time_point now, std::chrono::seconds rpcservertimeout, bool disconnect_all) const
 {
     // First check for idle timeout. We reset the timer when we send and receive data,
     // but if the server is busy handling a request we should ignore the timeout until
@@ -1349,7 +1349,7 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
         }
 
         // Finally, reset idle timeout
-        m_idle_since = Now<SteadySeconds>();
+        m_idle_since = MockableSteadyClock::now();
     }
 
     return true;
