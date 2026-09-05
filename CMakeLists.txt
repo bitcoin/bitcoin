@@ -637,6 +637,11 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
 endif()
 
+# Populate CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBEXECDIR, etc. before the
+# subdirectories below, which substitute these values into generated files
+# (test/config.ini and src/bitcoin-build-config.h).
+include(GNUInstallDirs)
+
 add_subdirectory(test)
 add_subdirectory(doc)
 

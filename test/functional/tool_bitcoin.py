@@ -12,8 +12,11 @@ from test_framework.util import (
     assert_equal,
 )
 
+import os
 import platform
 import re
+import shutil
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -85,6 +88,66 @@ class ToolBitcoinTest(BitcoinTestFramework):
             self.log.info("Ensure bitcoin recognizes -ipcbind in config file")
             append_config(node.datadir_path, ["ipcbind=unix"])
             self.test_args([], [], expect_exe="bitcoin-node")
+
+        self.test_installed_layout()
+
+    def test_installed_layout(self):
+        """Check how an installed bitcoin wrapper resolves internal executables.
+
+        When the wrapper is installed into a `bin/` directory, it looks for
+        internal executables (bitcoind, bitcoin-node, ...) in a sibling
+        directory under the same install prefix. The normal build-tree tests
+        never exercise this because every binary sits next to the wrapper, so
+        build a fake install prefix and invoke the wrapper by absolute path.
+        """
+        paths = self.get_binaries().paths
+        exeext = self.config["environment"]["EXEEXT"]
+        # Directory (relative to the install prefix) where the wrapper looks for
+        # internal executables, configured at build time via
+        # CMAKE_INSTALL_LIBEXECDIR. An absolute value is not relative to the
+        # prefix constructed here, so skip the check in that case.
+        libexecdir = self.config["environment"]["LIBEXECDIR"]
+        if os.path.isabs(libexecdir):
+            self.log.info("Skipping installed-layout check; CMAKE_INSTALL_LIBEXECDIR is absolute")
+            return
+        prefix = self.nodes[0].datadir_path / "fake-prefix"
+        datadir = self.nodes[0].datadir_path / "wrapper-datadir"
+        datadir.mkdir()
+
+        def make_layout(name, internal_dir):
+            # Lay out <prefix>/<name>/bin/bitcoin and <prefix>/<name>/<internal_dir>/bitcoind.
+            root = prefix / name
+            bindir = root / "bin"
+            internaldir = root / internal_dir
+            bindir.mkdir(parents=True)
+            internaldir.mkdir(parents=True)
+            wrapper = bindir / f"bitcoin{exeext}"
+            shutil.copy2(paths.bitcoin_bin, wrapper)
+            # `bitcoin node` (with no -ipc* option) execs `bitcoind`. Placing
+            # bitcoind only in the internal directory, not next to the wrapper,
+            # forces the wrapper to resolve it through the bin/ -> internal-dir
+            # lookup rather than finding it as a sibling.
+            shutil.copy2(paths.bitcoind, internaldir / f"bitcoind{exeext}")
+            return wrapper
+
+        def run_wrapper(wrapper):
+            env = os.environ.copy()
+            # The wrapper is invoked by absolute path; blank out PATH so a lookup
+            # miss cannot be satisfied by an unrelated bitcoind on the system.
+            env["PATH"] = ""
+            return subprocess.run([wrapper, "node", f"-datadir={datadir}", "-version"],
+                                  capture_output=True, env=env, timeout=60)
+
+        self.log.info(f"Ensure installed wrapper finds internal binaries in configured {libexecdir}/")
+        result = run_wrapper(make_layout("found", libexecdir))
+        assert_equal(result.returncode, 0)
+        assert_equal(get_exe_name(result.stdout), b"bitcoind")
+
+        # A directory that differs from the configured one must not be searched.
+        other_dir = "lib" if libexecdir != "lib" else "libexec"
+        self.log.info(f"Ensure installed wrapper does not find internal binaries in unconfigured {other_dir}/")
+        result = run_wrapper(make_layout("notfound", other_dir))
+        assert result.returncode != 0, f"wrapper unexpectedly ran bitcoind from {other_dir}/: {result.stdout!r}"
 
 
 def get_node_output(node):
