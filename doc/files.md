@@ -44,6 +44,14 @@ Chain option                     | Data directory path
 `-chain=signet` or `-signet`     | *path_to_datadir*`/signet/`
 `-chain=regtest` or `-regtest`   | *path_to_datadir*`/regtest/`
 
+4. Data directories for custom signets include the message start bytes as the suffix:
+
+Chain option                   | Data directory path
+-------------------------------|--------------------
+`-signet -signetchallenge=...` | *path_to_datadir*`/signet_XXXXXXXX/`
+
+(It will still use `/signet/` for the default signet or if the default signet challenge is passed to `-signetchallenge`.)
+
 ## Data directory layout
 
 Subdirectory       | File(s)               | Description
