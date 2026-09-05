@@ -237,6 +237,12 @@ public:
     /** Return the extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 
+    /** Collect the extended public keys this provider contributes, each with the origin
+     *  of the key itself, in the form BIP 174's PSBT_GLOBAL_XPUB expects: the key at the
+     *  deepest hardened derivation step, so that the unhardened children used in the
+     *  transaction can be derived from it. */
+    virtual void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const = 0;
+
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 
@@ -322,6 +328,17 @@ public:
     {
         return m_provider->GetRootExtPubKey();
     }
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        std::map<KeyOriginInfo, std::set<CExtPubKey>> sub;
+        m_provider->GetExtPubKeysWithOrigins(arg, cache, sub);
+        for (auto& [suborigin, xpubs] : sub) {
+            KeyOriginInfo origin{suborigin};
+            origin.fingerprint = m_origin.fingerprint;
+            origin.path.insert(origin.path.begin(), m_origin.path.begin(), m_origin.path.end());
+            out[origin].insert(xpubs.begin(), xpubs.end());
+        }
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
@@ -387,6 +404,7 @@ public:
     {
         return std::nullopt;
     }
+    void GetExtPubKeysWithOrigins(const SigningProvider&, const DescriptorCache*, std::map<KeyOriginInfo, std::set<CExtPubKey>>&) const override {}
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
@@ -432,6 +450,41 @@ class BIP32PubkeyProvider final : public PubkeyProvider
                 last_hardened = xprv;
             }
         }
+        return true;
+    }
+
+    //! Index of the last hardened step in the path, or -1 when there is none.
+    int LastHardenedIndex() const
+    {
+        int i = (int)m_path.size() - 1;
+        for (; i >= 0; --i) {
+            if (m_path.at(i) >> 31) break;
+        }
+        return i;
+    }
+
+    //! The extended public key at the last hardened step, with the origin that leads to
+    //! it. Takes the index from LastHardenedIndex(), which must not be -1. Uses the cache
+    //! when it has the key, and falls back to deriving it, which needs the private key.
+    bool GetLastHardenedExtPubKey(int last_hardened, const SigningProvider& arg, const DescriptorCache* cache, KeyOriginInfo& origin, CExtPubKey& xpub) const
+    {
+        Assume(last_hardened >= 0);
+        for (int k = 0; k <= last_hardened; ++k) {
+            origin.path.push_back(m_path.at(k));
+        }
+        origin.fingerprint = m_root_extkey.id_key_fingerprint();
+
+        if (cache != nullptr) {
+            cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub);
+        }
+        if (!xpub.pubkey.IsValid()) {
+            // Cache miss, or no cache, so derive it
+            CExtKey xprv;
+            CExtKey lh_xprv;
+            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
+            xpub = lh_xprv.Neuter();
+        }
+        assert(xpub.pubkey.IsValid());
         return true;
     }
 
@@ -542,45 +595,17 @@ public:
 
             return true;
         }
-        // Step backwards to find the last hardened step in the path
-        int i = (int)m_path.size() - 1;
-        for (; i >= 0; --i) {
-            if (m_path.at(i) >> 31) {
-                break;
-            }
-        }
+        const int last_hardened{LastHardenedIndex()};
         // Either no derivation or all unhardened derivation
-        if (i == -1) {
+        if (last_hardened == -1) {
             out = ToString();
             return true;
         }
-        // Get the path to the last hardened stup
         KeyOriginInfo origin;
-        int k = 0;
-        for (; k <= i; ++k) {
-            // Add to the path
-            origin.path.push_back(m_path.at(k));
-        }
-        // Build the remaining path
-        KeyPath end_path;
-        for (; k < (int)m_path.size(); ++k) {
-            end_path.push_back(m_path.at(k));
-        }
-        origin.fingerprint = m_root_extkey.id_key_fingerprint();
-
         CExtPubKey xpub;
-        CExtKey lh_xprv;
-        // If we have the cache, just get the parent xpub
-        if (cache != nullptr) {
-            cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub);
-        }
-        if (!xpub.pubkey.IsValid()) {
-            // Cache miss, or nor cache, or need privkey
-            CExtKey xprv;
-            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
-            xpub = lh_xprv.Neuter();
-        }
-        assert(xpub.pubkey.IsValid());
+        if (!GetLastHardenedExtPubKey(last_hardened, arg, cache, origin, xpub)) return false;
+        // The remaining path is whatever comes after the origin the key sits at
+        KeyPath end_path(m_path.begin() + origin.path.size(), m_path.end());
 
         // Build the string
         std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
@@ -607,6 +632,28 @@ public:
     std::optional<CExtPubKey> GetRootExtPubKey() const override
     {
         return m_root_extkey;
+    }
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        // A hardened ranged key expression derives children the receiver cannot reach from
+        // any parent we could publish, so there is nothing useful to contribute.
+        if (m_derive == DeriveType::HARDENED_RANGED) return;
+
+        KeyOriginInfo origin;
+        CExtPubKey xpub;
+        const int last_hardened{LastHardenedIndex()};
+        if (last_hardened == -1) {
+            // No hardened derivation, so the root itself is what the children come from
+            origin.fingerprint = m_root_extkey.id_key_fingerprint();
+            xpub = m_root_extkey;
+        } else if (!GetLastHardenedExtPubKey(last_hardened, arg, cache, origin, xpub)) {
+            return;
+        }
+        if (!xpub.pubkey.IsValid()) return;
+        // The key is about to be serialized with its version bytes, which a key parsed
+        // from a descriptor does not carry.
+        SetExtPubKeyVersion(xpub);
+        out[origin].insert(xpub);
     }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
@@ -802,6 +849,11 @@ public:
     {
         return std::nullopt;
     }
+    // Derivation here is applied to the aggregate key, not to the participants, so a
+    // participant's extended key does not derive the key that ends up in the script.
+    // BIP 174 asks for keys the receiver can derive the transaction's keys from, so
+    // there is nothing here that fits.
+    void GetExtPubKeysWithOrigins(const SigningProvider&, const DescriptorCache*, std::map<KeyOriginInfo, std::set<CExtPubKey>>&) const override {}
 
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
@@ -1066,6 +1118,17 @@ public:
         }
         for (const auto& arg : m_subdescriptor_args) {
             arg->GetPubKeys(pubkeys, ext_pubs);
+        }
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    void GetExtPubKeysWithOrigins(const SigningProvider& arg, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const override
+    {
+        for (const auto& p : m_pubkey_args) {
+            p->GetExtPubKeysWithOrigins(arg, cache, out);
+        }
+        for (const auto& sub : m_subdescriptor_args) {
+            sub->GetExtPubKeysWithOrigins(arg, cache, out);
         }
     }
 
