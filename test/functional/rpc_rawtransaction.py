@@ -16,12 +16,18 @@ from collections import OrderedDict
 from decimal import Decimal
 from itertools import product
 
+from test_framework.address import (
+    address_to_scriptpubkey,
+    create_deterministic_address_bcrt1_p2tr_op_true,
+)
+from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
     TX_MAX_STANDARD_VERSION,
     TX_MIN_STANDARD_VERSION,
     CTransaction,
+    CTxInWitness,
     CTxOut,
     tx_from_hex,
 )
@@ -42,7 +48,7 @@ from test_framework.wallet import (
     getnewdestination,
     MiniWallet,
 )
-
+from test_framework.wallet_util import generate_keypair, get_generate_key
 
 TXID = "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000"
 
@@ -241,6 +247,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         coin_base = self.nodes[1].getblock(block1)['tx'][0]
         gottx = self.nodes[1].getrawtransaction(txid=coin_base, verbosity=2, blockhash=block1)
         assert 'fee' not in gottx
+
         # check that verbosity 2 for a mempool tx will fallback to verbosity 1
         # Do this with a pruned chain, as a regression test for https://github.com/bitcoin/bitcoin/pull/29003
         self.generate(self.nodes[2], 400)
@@ -248,6 +255,176 @@ class RawTransactionsTest(BitcoinTestFramework):
         mempool_tx = self.wallet.send_self_transfer(from_node=self.nodes[2])['txid']
         gottx = self.nodes[2].getrawtransaction(txid=mempool_tx, verbosity=2)
         assert 'fee' not in gottx
+        # verbosity 2 fields that require undo data should also be absent after fallback
+        assert 'prevout' not in gottx['vin'][0]
+        assert 'redeemScript' not in gottx['vin'][0]
+        assert 'witnessScript' not in gottx['vin'][0]
+
+        self.log.info("Test that P2SH, P2WSH, and P2SH-P2WSH transactions show the redeem and witness scripts when verbosity is 2")
+        node = self.nodes[0]
+        # Generate three keypairs
+        pub_keys, priv_keys = [], []
+        for _ in range(3):
+            privkey, pubkey = generate_keypair(wif=True)
+            pub_keys.append(pubkey.hex())
+            priv_keys.append(privkey)
+
+        nsigs = 2
+        # Construct the expected descriptor
+        desc = 'multi({},{})'.format(nsigs, ','.join(pub_keys))
+        p2sh_desc = descsum_create('sh({})'.format(desc))
+        p2wsh_desc = descsum_create('wsh({})'.format(desc))
+        p2sh_p2wsh_desc = descsum_create('sh(wsh({}))'.format(desc))
+
+        p2sh_msig = node.createmultisig(nsigs, pub_keys, 'legacy')
+        p2wsh_msig = node.createmultisig(nsigs, pub_keys, 'bech32')
+        p2sh_p2wsh_msig = node.createmultisig(nsigs, pub_keys, 'p2sh-segwit')
+
+        # Fund multisig addresses
+        assert 'warnings' not in p2sh_msig
+        p2sh_madd = p2sh_msig["address"]
+        p2sh_mredeem = p2sh_msig["redeemScript"]
+        assert_equal(p2sh_desc, p2sh_msig['descriptor'])
+
+        assert 'warnings' not in p2wsh_msig
+        p2wsh_madd = p2wsh_msig["address"]
+        p2wsh_mredeem = p2wsh_msig["redeemScript"]
+        assert_equal(p2wsh_desc, p2wsh_msig['descriptor'])
+
+        assert 'warnings' not in p2sh_p2wsh_msig
+        p2sh_p2wsh_madd = p2sh_p2wsh_msig["address"]
+        p2sh_p2wsh_mredeem = p2sh_p2wsh_msig["redeemScript"]
+        assert_equal(p2sh_p2wsh_desc, p2sh_p2wsh_msig['descriptor'])
+        # The witness script for P2SH-P2WSH is the same multisig script as for P2WSH
+        # (createmultisig with 'p2sh-segwit' only returns the P2WSH program as redeemScript)
+        p2sh_p2wsh_mwitness = p2wsh_msig["redeemScript"]
+
+        p2sh_spk = address_to_scriptpubkey(p2sh_madd)
+        p2wsh_spk = address_to_scriptpubkey(p2wsh_madd)
+        p2sh_p2wsh_spk = address_to_scriptpubkey(p2sh_p2wsh_madd)
+        value = Decimal("0.00004000")
+        p2sh_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2sh_spk, amount=int(value * COIN))
+        p2wsh_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2wsh_spk, amount=int(value * COIN))
+        p2sh_p2wsh_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2sh_p2wsh_spk, amount=int(value * COIN))
+        p2sh_prevtxs = [{"txid": p2sh_fund["txid"], "vout": p2sh_fund["sent_vout"], "scriptPubKey": p2sh_spk.hex(), "redeemScript": p2sh_mredeem, "amount": value}]
+        p2wsh_prevtxs = [{"txid": p2wsh_fund["txid"], "vout": p2wsh_fund["sent_vout"], "scriptPubKey": p2wsh_spk.hex(), "witnessScript": p2wsh_mredeem, "amount": value}]
+        p2sh_p2wsh_prevtxs = [{"txid": p2sh_p2wsh_fund["txid"], "vout": p2sh_p2wsh_fund["sent_vout"], "scriptPubKey": p2sh_p2wsh_spk.hex(), "redeemScript": p2sh_p2wsh_mredeem, "witnessScript": p2sh_p2wsh_mwitness, "amount": value}]
+        self.generate(node, 1)
+
+        outval = value - Decimal("0.00002000")
+        out_addr = getnewdestination('bech32')[2]
+        p2sh_rawtx = node.createrawtransaction([{"txid": p2sh_fund["txid"], "vout": p2sh_fund["sent_vout"]}], [{out_addr: outval}])
+        p2wsh_rawtx = node.createrawtransaction([{"txid": p2wsh_fund["txid"], "vout": p2wsh_fund["sent_vout"]}], [{out_addr: outval}])
+        p2sh_p2wsh_rawtx = node.createrawtransaction([{"txid": p2sh_p2wsh_fund["txid"], "vout": p2sh_p2wsh_fund["sent_vout"]}], [{out_addr: outval}])
+
+        p2sh_rawtx = node.signrawtransactionwithkey(p2sh_rawtx, priv_keys, p2sh_prevtxs)['hex']
+        p2wsh_rawtx = node.signrawtransactionwithkey(p2wsh_rawtx, priv_keys, p2wsh_prevtxs)['hex']
+        p2sh_p2wsh_rawtx = node.signrawtransactionwithkey(p2sh_p2wsh_rawtx, priv_keys, p2sh_p2wsh_prevtxs)['hex']
+
+        p2sh_txid = node.sendrawtransaction(p2sh_rawtx, 0)
+        p2wsh_txid = node.sendrawtransaction(p2wsh_rawtx, 0)
+        p2sh_p2wsh_txid = node.sendrawtransaction(p2sh_p2wsh_rawtx, 0)
+        blk = self.generate(node, 1)[0]
+        # Make sure the transactions are included in the block
+        assert p2sh_txid in node.getblock(blk)["tx"]
+        assert p2wsh_txid in node.getblock(blk)["tx"]
+        assert p2sh_p2wsh_txid in node.getblock(blk)["tx"]
+
+        # Check that getrawtransaction correctly shows the redeem script for P2SH
+        res_p2sh_tx = node.getrawtransaction(txid=p2sh_txid, verbosity=2, blockhash=blk)
+        assert 'redeemScript' in res_p2sh_tx['vin'][0]
+        assert 'witnessScript' not in res_p2sh_tx['vin'][0]
+        assert_equal(sorted(['asm', 'desc', 'type']), sorted(res_p2sh_tx['vin'][0]['redeemScript'].keys()))
+        assert_equal(res_p2sh_tx['vin'][0]['redeemScript']['type'], "multisig")
+        assert_equal(res_p2sh_tx['vin'][0]['redeemScript']['desc'].partition('#')[0], desc)
+        assert_equal(res_p2sh_tx['vin'][0]['redeemScript']['asm'], node.decodescript(p2sh_msig['redeemScript'])['asm'])
+
+        # Check that getrawtransaction correctly shows the witness script for P2WSH
+        res_p2wsh_tx = node.getrawtransaction(txid=p2wsh_txid, verbosity=2, blockhash=blk)
+        assert 'witnessScript' in res_p2wsh_tx['vin'][0]
+        assert 'redeemScript' not in res_p2wsh_tx['vin'][0]
+        assert_equal(sorted(['asm', 'desc', 'type']), sorted(res_p2wsh_tx['vin'][0]['witnessScript'].keys()))
+        assert_equal(res_p2wsh_tx['vin'][0]['witnessScript']['type'], "multisig")
+        assert_equal(res_p2wsh_tx['vin'][0]['witnessScript']['desc'].partition('#')[0], desc)
+        assert_equal(res_p2wsh_tx['vin'][0]['witnessScript']['asm'], node.decodescript(p2wsh_msig['redeemScript'])['asm'])
+
+        # Check that getrawtransaction correctly shows both redeem and witness script for P2SH-P2WSH
+        res_p2sh_p2wsh_tx = node.getrawtransaction(txid=p2sh_p2wsh_txid, verbosity=2, blockhash=blk)
+        assert 'redeemScript' in res_p2sh_p2wsh_tx['vin'][0]
+        assert 'witnessScript' in res_p2sh_p2wsh_tx['vin'][0]
+        # The redeem script is the P2WSH program (OP_0 <32-byte hash>)
+        assert_equal(res_p2sh_p2wsh_tx['vin'][0]['redeemScript']['type'], "witness_v0_scripthash")
+        # The witness script is the actual multisig script
+        assert_equal(sorted(['asm', 'desc', 'type']), sorted(res_p2sh_p2wsh_tx['vin'][0]['witnessScript'].keys()))
+        assert_equal(res_p2sh_p2wsh_tx['vin'][0]['witnessScript']['type'], "multisig")
+        assert_equal(res_p2sh_p2wsh_tx['vin'][0]['witnessScript']['desc'].partition('#')[0], desc)
+        assert_equal(res_p2sh_p2wsh_tx['vin'][0]['witnessScript']['asm'], node.decodescript(p2sh_p2wsh_mwitness)['asm'])
+
+        # Check that redeemScript and witnessScript are absent for verbosity 1
+        res_v1 = node.getrawtransaction(txid=p2sh_txid, verbosity=1, blockhash=blk)
+        assert 'redeemScript' not in res_v1['vin'][0]
+        assert 'witnessScript' not in res_v1['vin'][0]
+
+        # Check that redeemScript and witnessScript are absent for P2TR script-path spends
+        p2tr_addr, p2tr_info = create_deterministic_address_bcrt1_p2tr_op_true()
+        p2tr_spk = address_to_scriptpubkey(p2tr_addr)
+        p2tr_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2tr_spk, amount=int(value * COIN))
+        self.generate(node, 1)
+        p2tr_rawtx = node.createrawtransaction(
+            [{"txid": p2tr_fund["txid"], "vout": p2tr_fund["sent_vout"]}],
+            [{out_addr: outval}],
+        )
+        p2tr_tx = tx_from_hex(p2tr_rawtx)
+        # Spend via the OP_TRUE script path
+        leaf = list(p2tr_info.leaves.values())[0]
+        p2tr_tx.wit.vtxinwit.append(CTxInWitness())
+        p2tr_tx.wit.vtxinwit[0].scriptWitness.stack = [
+            leaf.script,
+            bytes([leaf.version | p2tr_info.negflag]) + p2tr_info.internal_pubkey + leaf.merklebranch,
+        ]
+        p2tr_txid = node.sendrawtransaction(p2tr_tx.serialize().hex(), 0)
+        p2tr_blk = self.generate(node, 1)[0]
+        res_p2tr = node.getrawtransaction(txid=p2tr_txid, verbosity=2, blockhash=p2tr_blk)
+        assert 'redeemScript' not in res_p2tr['vin'][0]
+        assert 'witnessScript' not in res_p2tr['vin'][0]
+
+        # P2WPKH: no redeem or witness script (witness program is just a keyhash)
+        key = get_generate_key()
+        p2wpkh_spk = bytes.fromhex(key.p2wpkh_script)
+        p2wpkh_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2wpkh_spk, amount=int(value * COIN))
+        self.generate(node, 1)
+        p2wpkh_rawtx = node.createrawtransaction(
+            [{"txid": p2wpkh_fund["txid"], "vout": p2wpkh_fund["sent_vout"]}],
+            [{out_addr: outval}],
+        )
+        p2wpkh_prevtxs = [{"txid": p2wpkh_fund["txid"], "vout": p2wpkh_fund["sent_vout"],
+                           "scriptPubKey": key.p2wpkh_script, "amount": value}]
+        p2wpkh_rawtx = node.signrawtransactionwithkey(p2wpkh_rawtx, [key.privkey], p2wpkh_prevtxs)['hex']
+        p2wpkh_txid = node.sendrawtransaction(p2wpkh_rawtx, 0)
+        p2wpkh_blk = self.generate(node, 1)[0]
+        res_p2wpkh = node.getrawtransaction(txid=p2wpkh_txid, verbosity=2, blockhash=p2wpkh_blk)
+        assert 'redeemScript' not in res_p2wpkh['vin'][0]
+        assert 'witnessScript' not in res_p2wpkh['vin'][0]
+
+        # P2SH-P2WPKH: redeem script exists (it's the P2WPKH program) but is just a
+        # witness program, not a meaningful script, so it should not be shown
+        p2sh_p2wpkh_spk = bytes.fromhex(key.p2sh_p2wpkh_script)
+        p2sh_p2wpkh_fund = self.wallet.send_to(from_node=node, scriptPubKey=p2sh_p2wpkh_spk, amount=int(value * COIN))
+        self.generate(node, 1)
+        p2sh_p2wpkh_rawtx = node.createrawtransaction(
+            [{"txid": p2sh_p2wpkh_fund["txid"], "vout": p2sh_p2wpkh_fund["sent_vout"]}],
+            [{out_addr: outval}],
+        )
+        p2sh_p2wpkh_prevtxs = [{"txid": p2sh_p2wpkh_fund["txid"], "vout": p2sh_p2wpkh_fund["sent_vout"],
+                                "scriptPubKey": key.p2sh_p2wpkh_script,
+                                "redeemScript": key.p2sh_p2wpkh_redeem_script,
+                                "amount": value}]
+        p2sh_p2wpkh_rawtx = node.signrawtransactionwithkey(p2sh_p2wpkh_rawtx, [key.privkey], p2sh_p2wpkh_prevtxs)['hex']
+        p2sh_p2wpkh_txid = node.sendrawtransaction(p2sh_p2wpkh_rawtx, 0)
+        p2sh_p2wpkh_blk = self.generate(node, 1)[0]
+        res_p2sh_p2wpkh = node.getrawtransaction(txid=p2sh_p2wpkh_txid, verbosity=2, blockhash=p2sh_p2wpkh_blk)
+        assert 'redeemScript' not in res_p2sh_p2wpkh['vin'][0]
+        assert 'witnessScript' not in res_p2sh_p2wpkh['vin'][0]
 
     def createrawtransaction_tests(self):
         self.log.info("Test createrawtransaction")
