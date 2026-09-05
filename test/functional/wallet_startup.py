@@ -64,6 +64,40 @@ class WalletStartupTest(BitcoinTestFramework):
         # Reset directory permissions for cleanup
         dir_path.chmod(original_dir_perms)
 
+    def test_disabled_settings(self, node):
+        self.log.info("Test wallet startup preferences with dynamic settings disabled")
+
+        settings_path = node.chain_path / "settings.json"
+        settings_before = settings_path.read_bytes()
+        self.restart_node(0, extra_args=["-nosettings"])
+        assert_equal(node.listwallets(), [''])
+
+        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.createwallet, wallet_name="no_settings", load_on_startup=True)
+        assert_equal(set(node.listwallets()), {'', 'no_settings'})
+        assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
+
+        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.unloadwallet, wallet_name="no_settings", load_on_startup=False)
+        assert_equal(node.listwallets(), [''])
+
+        # Check that the wallet stays unloaded across a restart.
+        self.restart_node(0, extra_args=["-nosettings"])
+        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.loadwallet, filename="no_settings", load_on_startup=True)
+        assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
+
+        # Startup preferences were not persisted, but the wallet remains usable.
+        self.restart_node(0, extra_args=["-nosettings"])
+        assert_equal(node.listwallets(), [''])
+        result = node.loadwallet(filename="no_settings")
+        assert_equal(result["name"], "no_settings")
+        assert_equal(result.get("warnings", []), [])
+        assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
+        self.stop_node(0)
+        assert_equal(settings_path.read_bytes(), settings_before)
+
+        # Re-enabling settings restores the original startup preferences.
+        self.start_node(0)
+        assert_equal(set(node.listwallets()), {'w2', 'w3'})
+
     def run_test(self):
         self.log.info('Should start without any wallets')
         assert_equal(self.nodes[0].listwallets(), [])
@@ -94,6 +128,7 @@ class WalletStartupTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].listwallets()), set(('w2', 'w3')))
 
         self.test_load_unwritable_wallet(self.nodes[0])
+        self.test_disabled_settings(self.nodes[0])
 
 if __name__ == '__main__':
     WalletStartupTest(__file__).main()
