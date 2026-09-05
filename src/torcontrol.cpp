@@ -70,6 +70,17 @@ constexpr int MAX_LINE_LENGTH = 100000;
 constexpr int MAX_LINE_COUNT = 1000;
 /** Timeout for socket operations */
 constexpr auto SOCKET_SEND_TIMEOUT = 10s;
+constexpr std::string_view PRIVATE_KEY_NEW{"NEW:ED25519-V3"};
+constexpr std::string_view PRIVATE_KEY_PREFIX{"ED25519-V3:"};
+
+/** Whether the value requests a new Ed25519 v3 key or has the expected key format */
+static bool IsWellFormedPrivateKey(std::string_view key)
+{
+    if (key == PRIVATE_KEY_NEW) return true;
+    if (!key.starts_with(PRIVATE_KEY_PREFIX)) return false;
+    const auto decoded{DecodeBase64(key.substr(PRIVATE_KEY_PREFIX.size()))};
+    return decoded && decoded->size() == 64; // A 32-byte secret scalar followed by a 32-byte PRF secret
+}
 
 /****** Low-level TorControlConnection ********/
 
@@ -521,8 +532,13 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             std::map<std::string,std::string>::iterator i;
             if ((i = m.find("ServiceID")) != m.end())
                 m_service_id = i->second;
-            if ((i = m.find("PrivateKey")) != m.end())
+            if ((i = m.find("PrivateKey")) != m.end()) {
+                if (!IsWellFormedPrivateKey(i->second)) { // Never adopt or cache such a key
+                    LogWarning("tor: ADD_ONION returned a malformed private key");
+                    return;
+                }
                 m_private_key = i->second;
+            }
         }
         if (m_service_id.empty()) {
             LogWarning("tor: Error parsing ADD_ONION parameters:");
@@ -532,6 +548,10 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             return;
         }
         m_service = LookupNumeric(std::string(m_service_id+".onion"), Params().GetDefaultPort());
+        if (!m_service.IsValid()) {
+            LogWarning("tor: ADD_ONION returned a malformed service ID");
+            return;
+        }
         LogInfo("Got tor service ID %s, advertising service %s", m_service_id, m_service.ToStringAddrPort());
         if (WriteBinaryFile(GetPrivateKeyFile(), m_private_key)) {
             LogDebug(BCLog::TOR, "Cached service private key to %s", fs::PathToString(GetPrivateKeyFile()));
@@ -566,7 +586,11 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Finally - now create the service
         if (m_private_key.empty()) { // No private key, generate one
-            m_private_key = "NEW:ED25519-V3"; // Explicitly request key type - see issue #9214
+            m_private_key = PRIVATE_KEY_NEW; // Explicitly request key type - see issue #9214
+        } else if (!IsWellFormedPrivateKey(m_private_key)) {
+            // add_onion_cb() never adopts such a key, so it can only come from the cache file
+            LogWarning("tor: Refusing to use cached private key %s because it is malformed; remove the file to generate a new key", fs::PathToString(GetPrivateKeyFile()));
+            return;
         }
         // Request onion service, redirect port.
         _conn.Command(MakeAddOnionCmd(m_private_key, m_target.ToStringAddrPort(), /*enable_pow=*/true),
