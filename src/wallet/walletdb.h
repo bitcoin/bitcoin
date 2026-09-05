@@ -69,6 +69,7 @@ extern const std::string DESTDATA;
 extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
+extern const std::string KEYLABEL;
 extern const std::string KEYMETA;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
@@ -226,6 +227,9 @@ public:
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
+
+    bool WriteKeyLabel(const KeyFingerprint& fingerprint, const std::string& label);
+    bool EraseKeyLabel(const KeyFingerprint& fingerprint);
 
     bool WritePurpose(const std::string& strAddress, const std::string& purpose);
     bool ErasePurpose(const std::string& strAddress);

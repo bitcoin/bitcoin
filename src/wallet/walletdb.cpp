@@ -42,6 +42,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string KEYLABEL{"keylabel"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -84,6 +85,16 @@ bool WalletBatch::EraseName(const std::string& strAddress)
     // This should only be used for sending addresses, never for receiving addresses,
     // receiving addresses must always have an address book entry if they're not change return.
     return EraseIC(std::make_pair(DBKeys::NAME, strAddress));
+}
+
+bool WalletBatch::WriteKeyLabel(const KeyFingerprint& fingerprint, const std::string& label)
+{
+    return WriteIC(std::make_pair(DBKeys::KEYLABEL, fingerprint), label);
+}
+
+bool WalletBatch::EraseKeyLabel(const KeyFingerprint& fingerprint)
+{
+    return EraseIC(std::make_pair(DBKeys::KEYLABEL, fingerprint));
 }
 
 bool WalletBatch::WritePurpose(const std::string& strAddress, const std::string& strPurpose)
@@ -956,6 +967,21 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, purpose_res.m_result);
+
+    // Load per-key label record (keyed by the key's master fingerprint).
+    // One fingerprint covers every address derived from the same root, so these
+    // labels are shared across script/descriptor types and augment the per-address
+    // labels loaded above (see CWallet::m_key_labels).
+    LoadResult key_label_res = LoadRecords(pwallet, batch, DBKeys::KEYLABEL,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        KeyFingerprint fingerprint;
+        key >> fingerprint;
+        std::string label;
+        value >> label;
+        pwallet->LoadKeyLabel(fingerprint, label);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, key_label_res.m_result);
 
     // Load destination data record
     LoadResult dest_res = LoadRecords(pwallet, batch, DBKeys::DESTDATA,
