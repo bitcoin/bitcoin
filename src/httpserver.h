@@ -153,23 +153,24 @@ class HTTPRemoteClient;
 class HTTPRequest
 {
 public:
+    enum class State {
+        Init,
+        NeedsHeaders,
+        NeedsBody,
+        Complete,
+        Error
+    };
+
     explicit HTTPRequest(const std::shared_ptr<HTTPRemoteClient>& client) : m_client{client} {}
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client{} {}
 
     /**
-     * Methods that attempt to parse HTTP request fields line-by-line
-     * from a receive buffer.
-     * @param[in]   reader  A LineReader object constructed over a span of data.
-     * @returns     true    If the request field was parsed.
-     *              false   If there was not enough data in the buffer to complete the field.
+     * Try to read an HTTP request or part of it.
+     * @returns     The updated state describing which part(s) remain.
      * @throws      std::runtime_error if data is invalid.
      */
-    /// @{
-    bool LoadControlData(util::LineReader& reader);
-    bool LoadHeaders(util::LineReader& reader);
-    bool LoadBody(util::LineReader& reader);
-    /// @}
+    State Load(util::LineReader& reader);
 
     void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
     void WriteReply(HTTPStatusCode status, std::string_view reply_body_view)
@@ -192,17 +193,23 @@ public:
     std::optional<uint64_t> GetChunkSize() const { return m_chunk_size; }
     uint64_t GetChunkProgress() const { return m_chunk_read; }
 
-    enum class State {
-        Init,
-        NeedsHeaders,
-        NeedsBody,
-        Complete,
-        Error
-    };
     State GetState() const { return m_state; }
-    void SetState(State state) { m_state = state; }
 
 private:
+    /**
+     * Methods that attempt to parse HTTP request fields line-by-line
+     * from a receive buffer.
+     * @param[in]   reader  A LineReader object constructed over a span of data.
+     * @returns     true    If the request field was parsed.
+     *              false   If there was not enough data in the buffer to complete the field.
+     * @throws      std::runtime_error if data is invalid.
+     */
+    /// @{
+    bool LoadControlData(util::LineReader& reader);
+    bool LoadHeaders(util::LineReader& reader);
+    bool LoadBody(util::LineReader& reader);
+    /// @}
+
     HTTPRequestMethod m_method;
     std::string m_target;
     HTTPVersion m_version;

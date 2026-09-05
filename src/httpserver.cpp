@@ -1171,33 +1171,9 @@ void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
     if (m_recv_buffer.empty()) return;
 
     LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
-
     try {
-        switch (req.GetState()) {
-        case HTTPRequest::State::Init:
-            if (!req.LoadControlData(reader)) break;
-            req.SetState(HTTPRequest::State::NeedsHeaders);
-            [[fallthrough]];
-
-        case HTTPRequest::State::NeedsHeaders:
-            if (!req.LoadHeaders(reader)) break;
-            req.SetState(HTTPRequest::State::NeedsBody);
-            [[fallthrough]];
-
-        case HTTPRequest::State::NeedsBody:
-            if (!req.LoadBody(reader)) break;
-            req.SetState(HTTPRequest::State::Complete);
-            [[fallthrough]];
-
-        case HTTPRequest::State::Complete:
-            break;
-
-        case HTTPRequest::State::Error:
-            break;
-        }
+        req.Load(reader);
     } catch (...) {
-        // Don't try to read any more data for this request
-        req.SetState(HTTPRequest::State::Error);
         // Clear the memory allocated to this client, caller must disconnect
         m_recv_buffer.clear();
         throw;
@@ -1207,6 +1183,37 @@ void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
     m_recv_buffer.erase(
         m_recv_buffer.begin(),
         m_recv_buffer.begin() + reader.Consumed());
+}
+
+HTTPRequest::State HTTPRequest::Load(util::LineReader& reader)
+{
+    try {
+        switch (m_state) {
+        case HTTPRequest::State::Init:
+            if (!LoadControlData(reader)) break;
+            m_state = HTTPRequest::State::NeedsHeaders;
+            [[fallthrough]];
+
+        case HTTPRequest::State::NeedsHeaders:
+            if (!LoadHeaders(reader)) break;
+            m_state = HTTPRequest::State::NeedsBody;
+            [[fallthrough]];
+
+        case HTTPRequest::State::NeedsBody:
+            if (!LoadBody(reader)) break;
+            m_state = HTTPRequest::State::Complete;
+            [[fallthrough]];
+
+        case HTTPRequest::State::Complete:
+        case HTTPRequest::State::Error:
+            break;
+        } // no default case, so the compiler can warn about missing cases
+    } catch (...) {
+        // Don't try to read any more data for this request
+        m_state = HTTPRequest::State::Error;
+        throw;
+    }
+    return m_state;
 }
 
 bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
