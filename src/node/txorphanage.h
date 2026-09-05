@@ -5,19 +5,22 @@
 #ifndef BITCOIN_NODE_TXORPHANAGE_H
 #define BITCOIN_NODE_TXORPHANAGE_H
 
-#include <consensus/validation.h>
 #include <net.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <sync.h>
-#include <util/time.h>
 
-#include <map>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <set>
+#include <utility>
+#include <vector>
+
+class FastRandomContext;
 
 namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. Helps limit the total amount of memory used by the orphanage. */
-inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
+inline constexpr int64_t DEFAULT_RESERVED_ORPHAN_USAGE_PER_PEER{404'000};
 /** Default value for TxOrphanage::m_max_global_latency_score. Helps limit the maximum latency for operations like
  * EraseForBlock and LimitOrphans. */
 inline constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
@@ -63,6 +66,10 @@ public:
 
     /** Get a transaction by its witness txid */
     virtual CTransactionRef GetTx(const Wtxid& wtxid) const = 0;
+
+    /** Get the unique parent txids (deduplicated prevout hashes, sorted) of an orphan, or std::nullopt if no tx
+     * with this wtxid exists. */
+    virtual std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid) const = 0;
 
     /** Check if we already have an orphan transaction (by wtxid only) */
     virtual bool HaveTx(const Wtxid& wtxid) const = 0;
@@ -147,5 +154,10 @@ public:
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
 std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept;
+
+/** Get the amount TxOrphanage accounts for this transaction, i.e. its contribution to
+ * TotalOrphanUsage() and UsageByPeer(). Exposed so that tests, benchmarks and RPC report the same
+ * metric that the orphanage uses internally. */
+TxOrphanage::Usage GetOrphanUsage(const CTransactionRef& tx);
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
