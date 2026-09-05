@@ -335,12 +335,13 @@ class NetTest(BitcoinTestFramework):
         assert_equal(res[0]["services"], P2P_SERVICES)
 
         # Test for the absence of onion, I2P and CJDNS addresses.
-        for network in ["onion", "i2p", "cjdns"]:
+        for network in ["onion", "OnIoN", "i2p", "cjdns"]:
             assert_equal(self.nodes[0].getnodeaddresses(0, network), [])
 
         # Test invalid arguments.
         assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
-        assert_raises_rpc_error(-8, "Network not recognized: Foo", self.nodes[0].getnodeaddresses, 1, "Foo")
+        for network in ["Foo", "tor"]:
+            assert_raises_rpc_error(-8, f"Network not recognized: {network}", self.nodes[0].getnodeaddresses, 1, network)
 
     def test_addpeeraddress(self):
         self.log.info("Test addpeeraddress")
