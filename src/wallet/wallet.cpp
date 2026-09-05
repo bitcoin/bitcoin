@@ -732,46 +732,110 @@ void CWallet::Close()
     GetDatabase().Close();
 }
 
-void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> range)
+void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx, bool sync_from)
 {
-    // We want all the wallet transactions in range to have the same metadata as
-    // the oldest (smallest nOrderPos).
-    // So: find smallest nOrderPos:
-
-    int nMinOrderPos = std::numeric_limits<int>::max();
-    const CWalletTx* copyFrom = nullptr;
-    for (TxSpends::iterator it = range.first; it != range.second; ++it) {
-        const CWalletTx* wtx = &mapWallet.at(it->second);
-        if (wtx->nOrderPos < nMinOrderPos) {
-            nMinOrderPos = wtx->nOrderPos;
-            copyFrom = wtx;
-        }
-    }
-
-    if (!copyFrom) {
+    if (wtx.IsCoinBase()) {
+        // Coinbases cannot be malleated
         return;
     }
 
-    // Now copy data from copyFrom to rest:
-    for (TxSpends::iterator it = range.first; it != range.second; ++it)
-    {
-        const Txid& hash = it->second;
-        CWalletTx* copyTo = &mapWallet.at(hash);
-        if (copyFrom == copyTo) continue;
-        assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
-        if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
-        copyTo->m_from = copyFrom->m_from;
-        copyTo->m_message = copyFrom->m_message;
-        copyTo->m_comment = copyFrom->m_comment;
-        copyTo->m_comment_to = copyFrom->m_comment_to;
-        copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
-        copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
-        copyTo->m_messages = copyFrom->m_messages;
-        copyTo->m_payment_requests = copyFrom->m_payment_requests;
+    // Get txids of all transactions known to the wallet that spend the exact same inputs
+    bool first = true;
+    bool has_non_witness = false;
+    std::set<Txid> candidate_malleated_txids;
+    for (const CTxIn& txin : wtx.GetTx()->vin) {
+        has_non_witness = has_non_witness || txin.scriptWitness.IsNull();
+        std::set<Txid> txin_conflicts;
+        auto range = mapTxSpends.equal_range(txin.prevout);
+        for (auto& it = range.first; it != range.second; ++it) {
+            txin_conflicts.emplace(it->second);
+        }
+        // wtx should always be a candidate as this function is called after AddToSpends
+        Assert(txin_conflicts.contains(wtx.GetHash()));
+        if (first) {
+            candidate_malleated_txids = std::move(txin_conflicts);
+            first = false;
+            continue;
+        }
+        std::set<Txid> intersection;
+        std::set_intersection(
+            candidate_malleated_txids.begin(), candidate_malleated_txids.end(),
+            txin_conflicts.begin(), txin_conflicts.end(),
+            std::inserter(intersection, intersection.end())
+        );
+        if (intersection.empty()) {
+            // There are no transactions that have exactly the same inputs
+            return;
+        }
+        candidate_malleated_txids = std::move(intersection);
+    }
+
+    // Only transactions that have non-witness inputs can be malleated
+    if (!has_non_witness) return;
+
+    // If there is a single candidate that is wtx, there's nothing to do
+    if (candidate_malleated_txids.size() == 1) {
+        Assert(*candidate_malleated_txids.begin() == wtx.GetHash());
+        return;
+    }
+
+    // If sync_from, remove wtx from the candidates
+    if (sync_from) {
+        candidate_malleated_txids.erase(wtx.GetHash());
+    }
+
+    // Get the actual transactions, sorted by insertion order
+    std::set<CWalletTx*, WalletTxOrderComparator> txs;
+    for (const Txid& txid : candidate_malleated_txids) {
+        CWalletTx* candidate = &mapWallet.find(txid)->second;
+        if (!wtx.IsMalleation(*candidate)) {
+            continue;
+        }
+        txs.insert(candidate);
+    }
+
+    auto it = txs.begin();
+    const CWalletTx* copy_from;
+    if (sync_from) {
+        copy_from = &wtx;
+    } else {
+        // When not sync_from, we want all the malleated wallet transactions to have the same metadata as
+        // the oldest. txs is sorted by nOrderPos already, so copy from the first one.
+        copy_from = *it;
+        it = std::next(it);
+    }
+
+    for (; it != txs.end(); it = std::next(it)) {
+        CWalletTx* copy_to = *it;
+        bool needs_rewrite = false;
+        if (copy_to->m_from != copy_from->m_from
+            || copy_to->m_message != copy_from->m_message
+            || copy_to->m_comment != copy_from->m_comment
+            || copy_to->m_comment_to != copy_from->m_comment_to
+            || copy_to->m_replaces_txid != copy_from->m_replaces_txid
+            || copy_to->m_replaced_by_txid != copy_from->m_replaced_by_txid
+            || copy_to->m_messages != copy_from->m_messages
+            || copy_to->m_payment_requests != copy_from->m_payment_requests
+            || copy_to->nTimeSmart != copy_from->nTimeSmart
+        ) {
+            needs_rewrite = true;
+        }
+        copy_to->m_from = copy_from->m_from;
+        copy_to->m_message = copy_from->m_message;
+        copy_to->m_comment = copy_from->m_comment;
+        copy_to->m_comment_to = copy_from->m_comment_to;
+        copy_to->m_replaces_txid = copy_from->m_replaces_txid;
+        copy_to->m_replaced_by_txid = copy_from->m_replaced_by_txid;
+        copy_to->m_messages = copy_from->m_messages;
+        copy_to->m_payment_requests = copy_from->m_payment_requests;
         // nTimeReceived not copied on purpose
-        copyTo->nTimeSmart = copyFrom->nTimeSmart;
+        copy_to->nTimeSmart = copy_from->nTimeSmart;
         // nOrderPos not copied on purpose
         // cached members not copied on purpose
+
+        if (needs_rewrite) {
+            (void)WalletBatch(GetDatabase()).WriteTx(*copy_to);
+        }
     }
 }
 
@@ -824,10 +888,6 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const Txid& txid)
     mapTxSpends.insert(std::make_pair(outpoint, txid));
 
     UnlockCoin(outpoint);
-
-    std::pair<TxSpends::iterator, TxSpends::iterator> range;
-    range = mapTxSpends.equal_range(outpoint);
-    SyncMetaData(range);
 }
 
 
@@ -1008,6 +1068,7 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     Assert(!wtx.m_replaced_by_txid);
 
     wtx.m_replaced_by_txid = newHash;
+    SyncMalleatedTxMetadata(wtx, /*sync_from=*/true);
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
@@ -1088,6 +1149,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(wtx);
+        SyncMalleatedTxMetadata(wtx);
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());

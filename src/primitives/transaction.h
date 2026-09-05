@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <serialize.h>
 
+#include <algorithm>
 #include <compare>
 #include <cstddef>
 #include <cstdint>
@@ -273,6 +274,11 @@ inline CAmount CalculateOutputValue(const TxType& tx)
     return std::accumulate(tx.vout.cbegin(), tx.vout.cend(), CAmount{0}, [](CAmount sum, const auto& txout) { return sum + txout.nValue; });
 }
 
+struct EqualsOptions {
+    bool include_script_sig{true};
+    bool include_witness_data{true};
+};
+
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -343,9 +349,17 @@ public:
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
-    friend bool operator==(const CTransaction& a, const CTransaction& b)
+    bool Equals(const CTransaction& other, const EqualsOptions opts = {}) const
     {
-        return a.GetWitnessHash() == b.GetWitnessHash();
+        return nLockTime == other.nLockTime &&
+            version == other.version &&
+            vout == other.vout &&
+            std::ranges::equal(vin, other.vin, [&opts](const CTxIn self, const CTxIn other) {
+                return self.prevout == other.prevout &&
+                    self.nSequence == other.nSequence &&
+                    (opts.include_script_sig ? self.scriptSig == other.scriptSig : true) &&
+                    (opts.include_witness_data ? self.scriptWitness.stack == other.scriptWitness.stack : true);
+            });
     }
 
     std::string ToString() const;

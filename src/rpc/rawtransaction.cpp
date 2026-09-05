@@ -362,7 +362,7 @@ static RPCMethod getrawtransaction()
     }
 
     CTxUndo* undoTX {nullptr};
-    auto it = std::find_if(block.vtx.begin(), block.vtx.end(), [tx](CTransactionRef t){ return *t == *tx; });
+    auto it = std::find_if(block.vtx.begin(), block.vtx.end(), [tx](CTransactionRef t){ return t->Equals(*tx); });
     if (it != block.vtx.end()) {
         // -1 as blockundo does not have coinbase tx
         undoTX = &blockUndo.vtxundo.at(it - block.vtx.begin() - 1);
