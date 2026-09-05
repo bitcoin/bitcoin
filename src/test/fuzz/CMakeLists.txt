@@ -72,6 +72,7 @@ add_executable(fuzz
   minisketch.cpp
   mini_miner.cpp
   muhash.cpp
+  musig.cpp
   multiplication_overflow.cpp
   net.cpp
   net_permissions.cpp
