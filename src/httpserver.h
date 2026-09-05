@@ -77,7 +77,8 @@ inline constexpr size_t MIN_REQUEST_LINE_LENGTH = std::string_view("GET / HTTP/1
 //! And libevent http.c evhttp_parse_headers_()
 inline constexpr size_t MAX_HEADERS_SIZE{8192};
 
-//! Maximum size of an HTTP request body
+//! Maximum size of an HTTP request body received from a client.
+//! Also used to limit data queued for sending back to client.
 inline constexpr uint64_t MAX_BODY_SIZE{32_MiB};
 
 //! Thrown when a request body exceeds MAX_BODY_SIZE (or *will* exceed, in chunked transfer)
@@ -515,7 +516,7 @@ public:
      * left in the buffer to wait for more data. Some read errors
      * will mark this client for disconnection.
      */
-    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client);
+    static std::unique_ptr<HTTPRequest> TryReadRequest(const std::shared_ptr<HTTPRemoteClient>& client) EXCLUSIVE_LOCKS_REQUIRED(!client->m_send_mutex);
 
     /**
      * Push data (if there is any) from client's m_send_buffer to the connected socket.
@@ -527,6 +528,9 @@ public:
      * Used to determine if an incomplete request is in progress.
      * @returns nullptr after a complete request is moved to a worker thread,
      *          but before reading any new data from m_recv_buffer.
+     * @note The returned request may also be in State::Complete when it has
+     *       been fully parsed but is being held back by TryReadRequest()'s
+     *       send-buffer throttle; check GetState() to distinguish the two.
      */
     const HTTPRequest* GetRequest() const { return m_req.get(); }
 
