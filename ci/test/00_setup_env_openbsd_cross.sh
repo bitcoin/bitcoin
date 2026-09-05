@@ -28,11 +28,11 @@ export DEP_OPTS="NO_QT=1 build_CC=clang build_CXX=clang++ \
  RANLIB=llvm-ranlib-${APT_LLVM_V} \
  STRIP=llvm-strip-${APT_LLVM_V}"
 export GOAL="install"
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DBUILD_GUI=OFF \
  -DREDUCE_EXPORTS=ON \
- -DWITH_USDT=OFF \
-"
+ -DWITH_USDT=OFF
+export BITCOIN_CONFIG
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
