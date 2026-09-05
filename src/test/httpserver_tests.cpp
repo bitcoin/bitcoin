@@ -856,8 +856,10 @@ BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
         }
         BOOST_CHECK( busy_fast->ShouldDisconnect(now + timeout - 1s, timeout, /*disconnect_all=*/false));
 
-        // TODO: No need to log idle timeout if client already has m_disconnect = true
-        DebugLogHelper require_idle_message{"HTTP client idle timeout"};
+        DebugLogHelper ban_idle_message{"HTTP client idle timeout", [](const std::string* s) {
+            if (s) BOOST_ERROR("Should not get idle message when m_disconnect is already set.");
+            return false;
+        }};
         BOOST_CHECK( busy_fast->ShouldDisconnect(now + timeout + 1s, timeout, /*disconnect_all=*/false));
     }
 
