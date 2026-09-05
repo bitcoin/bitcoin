@@ -35,7 +35,14 @@ int ExecVp(const char* file, char* const argv[])
     new_argv.reserve(escaped_args.size() + 1);
     for (const auto& s : escaped_args) new_argv.push_back(s.c_str());
     new_argv.push_back(nullptr);
-    return _execvp(file, new_argv.data());
+    // Spawn the child process and wait for it to exit. We can't use _execvp
+    // here (the Windows counterpart of POSIX execvp above): on Windows _execvp
+    // creates a new child and immediately exits the parent, so anything waiting
+    // on the parent (e.g. a test framework) sees it exit with code 0 before the
+    // child finishes. _spawnvp(_P_WAIT) blocks until the child exits instead.
+    intptr_t result{_spawnvp(_P_WAIT, file, new_argv.data())};
+    if (result == -1) return -1;
+    _exit(static_cast<int>(result)); // forward child exit code; never returns
 #endif
 }
 

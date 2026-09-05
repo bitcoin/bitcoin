@@ -198,11 +198,27 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
 
     // Try to call ExecVp with given exe path.
     auto try_exec = [&](fs::path exe_path, bool allow_notfound = true) {
+#if defined(WIN32) && !defined(_UCRT)
+        // msvcrt's _spawnvp does not add ".exe" to an absolute path
+        // automatically. ucrt's _spawnvp (and the underlying CreateProcess)
+        // does try appending ".exe", so this is only needed for msvcrt builds.
+        // Without it, _spawnvp on msvcrt fails immediately with EINVAL.
+        if (exe_path.extension().empty()) exe_path = fs::PathFromString(fs::PathToString(exe_path) + ".exe");
+#endif
         std::string exe_path_str{fs::PathToString(exe_path)};
         exec_args[0] = exe_path_str.c_str();
         if (util::ExecVp(exec_args[0], (char*const*)exec_args.data()) == -1) {
+#if defined(WIN32) && !defined(_UCRT)
+            // msvcrt's _spawnvp returns EINVAL (not ENOENT) for any missing
+            // file, even after ".exe" is appended. ucrt returns ENOENT.
+            if (allow_notfound && (errno == ENOENT || errno == EINVAL)) return false;
+#else
             if (allow_notfound && errno == ENOENT) return false;
-            throw std::system_error(errno, std::system_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
+#endif
+            // Throw an exception with the errno value from ExecVp. Use
+            // generic_category because it expects a POSIX errno on all
+            // platforms.
+            throw std::system_error(errno, std::generic_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
         }
         throw std::runtime_error("execvp returned unexpectedly");
     };
