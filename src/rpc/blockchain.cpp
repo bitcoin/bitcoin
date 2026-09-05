@@ -2213,7 +2213,7 @@ static RPCMethod getblockstats()
         if (value.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid selected statistic '%s'", stat));
         }
-        ret.pushKV(stat, value);
+        ret.pushKVEnd(stat, value);
     }
     return ret;
 },

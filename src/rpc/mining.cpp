@@ -606,7 +606,7 @@ static RPCMethod getprioritisedtransactions()
                 if (delta_info.in_mempool) {
                     result_inner.pushKV("modified_fee", *delta_info.modified_fee);
                 }
-                rpc_result.pushKV(delta_info.txid.GetHex(), std::move(result_inner));
+                rpc_result.pushKVEnd(delta_info.txid.GetHex(), std::move(result_inner));
             }
             return rpc_result;
         },

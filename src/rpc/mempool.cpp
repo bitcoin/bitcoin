@@ -788,7 +788,7 @@ static RPCMethod getmempoolancestors()
             const CTxMemPoolEntry &e = *ancestorIt;
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
-            o.pushKV(e.GetTx().GetHash().ToString(), std::move(info));
+            o.pushKVEnd(e.GetTx().GetHash().ToString(), std::move(info));
         }
         return o;
     }
@@ -853,7 +853,7 @@ static RPCMethod getmempooldescendants()
             const CTxMemPoolEntry &e = *descendantIt;
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
-            o.pushKV(e.GetTx().GetHash().ToString(), std::move(info));
+            o.pushKVEnd(e.GetTx().GetHash().ToString(), std::move(info));
         }
         return o;
     }
