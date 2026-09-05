@@ -204,17 +204,11 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
     for (unsigned int i = 0; i < cats.size(); ++i) {
         std::string cat = cats[i].get_str();
-
-        bool success;
-        if (enable) {
-            success = LogInstance().EnableCategory(cat);
-        } else {
-            success = LogInstance().DisableCategory(cat);
-        }
-
-        if (!success) {
+        const auto flag{BCLog::Logger::GetLogCategory(cat)};
+        if (!flag) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
         }
+        LogInstance().SetCategoryLogLevel(*flag, enable ? BCLog::Level::Debug : BCLog::Level::Info);
     }
 }
 
