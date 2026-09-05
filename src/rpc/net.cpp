@@ -323,8 +323,9 @@ static RPCMethod addnode()
         "addnode",
         "Attempts to add or remove a node from the addnode list.\n"
                 "Or try a connection to a node once.\n"
-                "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
-                "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n" +
+                "Nodes added using addnode (or -connect) are protected from DoS disconnection and IBD block stalling\n"
+                "disconnection, and are not required to be full nodes or support SegWit as other outbound peers are (though\n"
+                "such peers will not be synced from).\n" +
                 strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
                 " and are counted separately from the -maxconnections limit.\n",
                 {
@@ -399,7 +400,7 @@ static RPCMethod addconnection()
         "Open an outbound connection to a specified node. This RPC is for testing only.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
-            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\" or \"feeler\")."},
+            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\", \"feeler\" or \"manual\")."},
             {"v2transport", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Attempt to connect using BIP324 v2 transport protocol"},
         },
         RPCResult{
@@ -429,6 +430,8 @@ static RPCMethod addconnection()
         conn_type = ConnectionType::ADDR_FETCH;
     } else if (conn_type_in == "feeler") {
         conn_type = ConnectionType::FEELER;
+    } else if (conn_type_in == "manual") {
+        conn_type = ConnectionType::MANUAL;
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, self.ToString());
     }
