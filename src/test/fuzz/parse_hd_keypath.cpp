@@ -15,16 +15,16 @@ FUZZ_TARGET(parse_hd_keypath)
 {
     const std::string keypath_str(buffer.begin(), buffer.end());
     std::vector<uint32_t> keypath;
-    (void)ParseHDKeypath(keypath_str, keypath);
+    (void)ParseHDKeypathLegacy(keypath_str, keypath);
 
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint32_t> random_keypath = ConsumeRandomLengthIntegralVector<uint32_t>(fuzzed_data_provider);
 
-    // Roundtrip WriteHDKeypath() and ParseHDKeypath()
+    // Roundtrip WriteHDKeypath() and ParseHDKeypathLegacy()
     for (const bool apostrophe : {false, true}) {
         std::vector<uint32_t> roundtrip;
         const std::string written{WriteHDKeypath(random_keypath, apostrophe)};
-        assert(ParseHDKeypath(written, roundtrip));
+        assert(ParseHDKeypathLegacy(written, roundtrip));
         assert(roundtrip == random_keypath);
     }
 }
