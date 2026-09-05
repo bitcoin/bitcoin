@@ -73,7 +73,6 @@
 #include <wallet/walletutil.h>
 
 #include <algorithm>
-#include <cassert>
 #include <condition_variable>
 #include <exception>
 #include <limits>
@@ -882,7 +881,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 encrypted_batch = nullptr;
                 // We now probably have half of our keys encrypted in memory, and half not...
                 // die and let the user reload the unencrypted wallet.
-                assert(false);
+                AssertUnreachable();
             }
         }
 
@@ -891,7 +890,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             encrypted_batch = nullptr;
             // We now have keys encrypted in memory, but not on disk...
             // die to avoid confusion and let the user reload the unencrypted wallet.
-            assert(false);
+            AssertUnreachable();
         }
 
         delete encrypted_batch;
@@ -1807,7 +1806,7 @@ void CWallet::InitWalletFlags(uint64_t flags)
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
 
-    if (!LoadWalletFlags(flags)) assert(false);
+    if (!LoadWalletFlags(flags)) AssertUnreachable();
 }
 
 uint64_t CWallet::GetWalletFlags() const
@@ -3917,7 +3916,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
             batch->TxnAbort();
             m_database->Close();
             fs::remove(m_database->Filename());
-            assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+            AssertUnreachable(); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
         }
     }
     bool committed = batch->TxnCommit();

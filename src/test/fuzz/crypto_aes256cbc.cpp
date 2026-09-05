@@ -6,8 +6,8 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdint>
 #include <vector>
 

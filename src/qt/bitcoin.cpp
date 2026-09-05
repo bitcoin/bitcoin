@@ -31,6 +31,7 @@
 #include <qt/winshutdownmonitor.h>
 #include <uint256.h>
 #include <util/btcsignals.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/log.h>
 #include <util/string.h>
@@ -166,7 +167,7 @@ static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std:
     case QMessageBox::Abort:
         return true;
     default:
-        assert(false);
+        AssertUnreachable();
     }
 }
 

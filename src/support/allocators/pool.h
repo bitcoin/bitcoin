@@ -6,7 +6,6 @@
 #define BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <list>
 #include <memory>

@@ -11,9 +11,9 @@
 #include <prevector.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>

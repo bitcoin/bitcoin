@@ -4,8 +4,9 @@
 
 #include <crypto/hex_base.h>
 
+#include <util/check.h>
+
 #include <array>
-#include <cassert>
 #include <cstring>
 #include <string>
 

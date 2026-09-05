@@ -5,6 +5,7 @@
 #include <wallet/coincontrol.h>
 
 #include <common/args.h>
+#include <util/check.h>
 
 namespace wallet {
 CCoinControl::CCoinControl()

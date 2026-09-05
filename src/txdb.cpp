@@ -13,11 +13,11 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/threadnames.h>
 #include <util/vector.h>
 
-#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <exception>

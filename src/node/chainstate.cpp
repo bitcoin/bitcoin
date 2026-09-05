@@ -15,6 +15,7 @@
 #include <txdb.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/signalinterrupt.h>
@@ -23,7 +24,6 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <cassert>
 #include <vector>
 
 using kernel::CacheSizes;

@@ -15,6 +15,7 @@
 #include <span.h>
 #include <support/cleanse.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <string>
 #include <vector>

@@ -67,7 +67,6 @@
 #include <validationinterface.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <deque>
 #include <numeric>

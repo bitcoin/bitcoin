@@ -5,6 +5,7 @@
 #include <consensus/amount.h>
 #include <key.h>
 #include <script/solver.h>
+#include <util/check.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>

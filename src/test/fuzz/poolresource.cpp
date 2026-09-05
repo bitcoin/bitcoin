@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/poolresourcetester.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <tuple>

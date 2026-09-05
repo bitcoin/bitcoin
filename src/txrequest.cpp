@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -21,7 +22,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <cassert>
 
 namespace {
 

@@ -4,6 +4,7 @@
 
 #include <netaddress.h>
 #include <netbase.h>
+#include <util/check.h>
 
 #include <string>
 #include <type_traits>

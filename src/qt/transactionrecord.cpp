@@ -7,10 +7,11 @@
 #include <chain.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-
-#include <cstdint>
+#include <util/check.h>
 
 #include <QDateTime>
+
+#include <cstdint>
 
 /* Return positive answer if transaction should be shown in list.
  */

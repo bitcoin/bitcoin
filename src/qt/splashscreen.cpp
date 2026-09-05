@@ -15,15 +15,16 @@
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
 #include <qt/walletmodel.h>
+#include <util/check.h>
 #include <util/translation.h>
-
-#include <functional>
 
 #include <QApplication>
 #include <QCloseEvent>
 #include <QPainter>
 #include <QRadialGradient>
 #include <QScreen>
+
+#include <functional>
 
 
 SplashScreen::SplashScreen(const NetworkStyle* networkStyle)

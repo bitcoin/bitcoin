@@ -10,6 +10,7 @@
 #include <script/parsing.h>
 #include <span.h>
 #include <sync.h>
+#include <sys/types.h>
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -18,6 +19,7 @@
 #include <univalue.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
@@ -42,8 +44,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <sys/types.h>
 
 #ifndef WIN32
 #include <sys/wait.h>
@@ -1036,7 +1036,7 @@ enum : char {
                 case util::LockResult::ErrorWrite: return ResErrorWrite;
                 case util::LockResult::ErrorLock: return ResErrorLock;
                 } // no default case, so the compiler can warn about missing cases
-                assert(false);
+                AssertUnreachable();
             }();
             rv = write(fd, &ch, 1);
             assert(rv == 1);
@@ -1051,7 +1051,7 @@ enum : char {
             close(fd);
             exit(0);
         default:
-            assert(0);
+            AssertUnreachable();
         }
     }
 }

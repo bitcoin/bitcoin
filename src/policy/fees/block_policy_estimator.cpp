@@ -16,6 +16,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/serfloat.h>
@@ -23,7 +24,6 @@
 #include <util/time.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -46,7 +46,7 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
     case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason)
@@ -63,7 +63,7 @@ std::string StringForBlockPolicyEstimateReason(BlockPolicyEstimateReason reason)
     case BlockPolicyEstimateReason::CONSERVATIVE:
         return "Conservative Double Target longer horizon";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 namespace {
@@ -777,7 +777,7 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
         return longStats->GetMaxConfirms();
     }
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const

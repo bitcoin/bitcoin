@@ -6,6 +6,7 @@
 
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <util/check.h>
 
 using interfaces::FoundBlock;
 

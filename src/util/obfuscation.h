@@ -8,6 +8,7 @@
 #include <crypto/hex_base.h>
 #include <span.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <array>

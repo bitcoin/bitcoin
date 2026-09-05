@@ -5,13 +5,14 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include <crypto/common.h>
 #include <crypto/chacha20.h>
+
+#include <crypto/common.h>
 #include <support/cleanse.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <bit>
-#include <cassert>
 
 #define QUARTERROUND(a,b,c,d) \
   a += b; d = std::rotl(d ^ a, 16); \

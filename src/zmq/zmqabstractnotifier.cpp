@@ -4,7 +4,8 @@
 
 #include <zmq/zmqabstractnotifier.h>
 
-#include <cassert>
+#include <util/check.h>
+
 
 CZMQAbstractNotifier::~CZMQAbstractNotifier()
 {

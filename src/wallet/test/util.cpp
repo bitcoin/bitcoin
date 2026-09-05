@@ -7,13 +7,13 @@
 #include <chain.h>
 #include <key.h>
 #include <key_io.h>
+#include <sqlite3.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
-
-#include <sqlite3.h>
 
 #include <memory>
 

@@ -9,8 +9,8 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/script.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <ios>
 #include <utility>
 #include <vector>

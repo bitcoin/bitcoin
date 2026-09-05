@@ -2,16 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <script/miniscript.h>
+
 #include <core_io.h>
 #include <hash.h>
 #include <key.h>
-#include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/descriptor.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -839,7 +841,7 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
         }
     }
 
-    assert(false);
+    AssertUnreachable();
 }
 
 /**
@@ -1185,7 +1187,7 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         case Fragment::HASH160:
             return TEST_DATA.hash160_preimages.contains(node.Data());
         default:
-            assert(false);
+            AssertUnreachable();
         }
         return false;
     });

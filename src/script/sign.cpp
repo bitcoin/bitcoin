@@ -722,7 +722,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TxoutType::ANCHOR:
         return true;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 static CScript PushAll(const std::vector<valtype>& values)

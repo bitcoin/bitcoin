@@ -12,12 +12,12 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 
 #include <atomic>
-#include <cassert>
 #include <chrono>
 #include <functional>
 #include <string>

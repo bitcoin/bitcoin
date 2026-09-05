@@ -2,13 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/wallet.h>
-
-#include <cstdint>
-#include <future>
-#include <memory>
-#include <vector>
-
 #include <addresstype.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
@@ -21,6 +14,8 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -30,9 +25,14 @@
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>
-#include <univalue.h>
+
+#include <cstdint>
+#include <future>
+#include <memory>
+#include <vector>
 
 using node::MAX_BLOCKFILE_SIZE;
 
@@ -558,7 +558,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
     if (!ProduceSignature(keystore, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
         // We're hand-feeding it correct arguments; shouldn't happen
-        assert(false);
+        AssertUnreachable();
     }
 
     CTxIn tx_in;

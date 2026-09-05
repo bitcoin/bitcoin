@@ -6,8 +6,9 @@
 #define BITCOIN_WALLET_FEEBUMPER_H
 
 #include <consensus/consensus.h>
-#include <script/interpreter.h>
 #include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <util/check.h>
 
 class uint256;
 enum class FeeEstimateMode;
@@ -92,7 +93,7 @@ public:
             break;
         case SigVersion::TAPROOT:
         case SigVersion::TAPSCRIPT:
-            assert(false);
+            AssertUnreachable();
         }
     }
 

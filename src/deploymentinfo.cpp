@@ -5,6 +5,7 @@
 #include <deploymentinfo.h>
 
 #include <consensus/params.h>
+#include <util/check.h>
 
 #include <string_view>
 

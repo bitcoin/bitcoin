@@ -19,6 +19,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <tinyformat.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstddef>

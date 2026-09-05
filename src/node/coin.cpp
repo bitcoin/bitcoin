@@ -6,6 +6,7 @@
 
 #include <node/context.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 
 namespace node {

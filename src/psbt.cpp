@@ -863,7 +863,7 @@ std::string PSBTRoleName(PSBTRole role) {
     case PSBTRole::FINALIZER: return "finalizer";
     case PSBTRole::EXTRACTOR: return "extractor";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 util::Result<PartiallySignedTransaction> DecodeBase64PSBT(const std::string& base64_tx)

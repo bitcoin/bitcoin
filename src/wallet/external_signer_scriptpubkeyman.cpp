@@ -2,19 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/external_signer_scriptpubkeyman.h>
+
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <external_signer.h>
+#include <key_io.h>
 #include <node/types.h>
-#include <wallet/external_signer_scriptpubkeyman.h>
+#include <univalue.h>
+#include <util/check.h>
 
 #include <iostream>
-#include <key_io.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <univalue.h>
 #include <utility>
 #include <vector>
 

@@ -4,6 +4,8 @@
 
 #include <node/eviction.h>
 
+#include <util/check.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>

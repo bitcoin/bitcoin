@@ -5,9 +5,9 @@
 #include <scheduler.h>
 
 #include <sync.h>
+#include <util/check.h>
 #include <util/time.h>
 
-#include <cassert>
 #include <functional>
 #include <utility>
 

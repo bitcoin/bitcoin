@@ -6,6 +6,7 @@
 #define BITCOIN_DEPLOYMENTSTATUS_H
 
 #include <chain.h>
+#include <util/check.h>
 #include <versionbits.h>
 
 #include <limits>

@@ -8,6 +8,7 @@
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/mempool_estimator.h>
+#include <util/check.h>
 #include <util/fees.h>
 
 FeeRateEstimatorManager::~FeeRateEstimatorManager() = default;
@@ -53,7 +54,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     case FeeRateEstimatorType::MEMPOOL_POLICY:
         return m_mempool_estimator->EstimateFeeRate(conservative);
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void FeeRateEstimatorManager::IntervalFlush()

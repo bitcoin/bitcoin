@@ -16,6 +16,7 @@
 #include <core_io.h>
 #include <streams.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -241,7 +242,7 @@ MAIN_FUNCTION
         } else if (cmd->command == "getchainparams") {
             ret = GetChainParams(cmd->args, strPrint);
         } else {
-            assert(false); // unknown command should be caught earlier
+            AssertUnreachable(); // unknown command should be caught earlier
         }
     } catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();

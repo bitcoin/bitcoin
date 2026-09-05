@@ -6,8 +6,8 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/bip32.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdint>
 #include <vector>
 

@@ -39,7 +39,7 @@ static size_t ExpectedWitnessStackSize(ScriptType script_type)
     case ScriptType::P2TR_KeyPath: return 1; // [signature]
     case ScriptType::P2TR_ScriptPath: return 3; // [signature, tapscript, control block]
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 // Microbenchmark for verification of standard scripts.
@@ -71,7 +71,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
             keystore.tr_trees.emplace(output, builder);
             return output;
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }()};
     const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1);
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));

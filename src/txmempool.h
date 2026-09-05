@@ -20,6 +20,7 @@
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <txgraph.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>

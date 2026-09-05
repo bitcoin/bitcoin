@@ -14,10 +14,10 @@
 #include <serialize.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>

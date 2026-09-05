@@ -13,7 +13,6 @@
 
 #include <kernel/bitcoinkernel_wrapper.h>
 
-#include <cassert>
 #include <charconv>
 #include <filesystem>
 #include <iostream>

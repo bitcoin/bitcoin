@@ -10,9 +10,9 @@
 #include <script/script.h>
 #include <script/solver.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
-#include <cassert>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
@@ -101,7 +101,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CNoDestination(scriptPubKey);
         return false;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 namespace {

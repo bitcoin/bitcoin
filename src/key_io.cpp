@@ -9,11 +9,11 @@
 #include <script/interpreter.h>
 #include <script/solver.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
 
 /// Maximum witness length for Bech32 addresses.

@@ -9,6 +9,7 @@
 #include <crypto/hex_base.h>
 #include <hash.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
 #include <compare>

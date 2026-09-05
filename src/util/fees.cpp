@@ -4,9 +4,9 @@
 
 #include <util/fees.h>
 
+#include <util/check.h>
 #include <util/strencodings.h>
 
-#include <cassert>
 #include <string_view>
 
 std::string_view FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type)
@@ -20,7 +20,7 @@ std::string_view FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estim
         return "mempool_policy";
     }
     // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type)

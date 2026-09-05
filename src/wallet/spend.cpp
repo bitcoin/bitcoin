@@ -1043,7 +1043,7 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // May be MAX BIP125 to disable BIP68 and enable BIP125
         if (in.nSequence == MAX_BIP125_RBF_SEQUENCE) continue;
         // The wallet does not support any other sequence-use right now.
-        assert(false);
+        AssertUnreachable();
     }
 }
 

@@ -4,10 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bech32.h>
+
+#include <util/check.h>
 #include <util/vector.h>
 
 #include <array>
-#include <cassert>
 #include <optional>
 
 namespace bech32

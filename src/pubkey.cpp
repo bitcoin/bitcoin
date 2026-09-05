@@ -13,10 +13,10 @@
 #include <secp256k1_schnorrsig.h>
 #include <span.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 
 using namespace util::hex_literals;
 

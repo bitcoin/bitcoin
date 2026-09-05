@@ -11,6 +11,7 @@
 #include <random.h>
 #include <serialize.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -348,7 +349,7 @@ private:
             break;
         case NET_UNROUTABLE:
         case NET_MAX:
-            assert(false);
+            AssertUnreachable();
         } // no default case, so the compiler can warn about missing cases
 
         // Serialize ONION, I2P and CJDNS as all-zeros.

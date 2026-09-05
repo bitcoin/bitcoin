@@ -23,7 +23,6 @@
 #include <QString>
 #include <QTableView>
 
-#include <cassert>
 #include <chrono>
 #include <utility>
 

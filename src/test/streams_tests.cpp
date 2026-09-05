@@ -8,6 +8,7 @@
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/obfuscation.h>
 #include <util/strencodings.h>

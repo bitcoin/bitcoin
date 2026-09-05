@@ -7,12 +7,6 @@
 
 #include <clientversion.h>
 #include <interfaces/types.h>
-#include <primitives/transaction.h>
-#include <serialize.h>
-#include <streams.h>
-#include <univalue.h>
-
-#include <cstddef>
 #include <mp/proxy-types.h>
 #include <mp/type-chrono.h>
 #include <mp/type-context.h>
@@ -27,6 +21,13 @@
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
 #include <mp/type-vector.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <streams.h>
+#include <univalue.h>
+#include <util/check.h>
+
+#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>

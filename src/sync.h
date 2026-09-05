@@ -9,9 +9,9 @@
 // This header declares threading primitives compatible with Clang
 // Thread Safety Analysis and provides appropriate annotation macros.
 #include <threadsafety.h> // IWYU pragma: export
+#include <util/check.h>
 #include <util/macros.h>
 
-#include <cassert>
 #include <condition_variable>
 #include <mutex>
 #include <string>

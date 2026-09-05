@@ -19,6 +19,7 @@
 #include <span.h>
 #include <streams.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/log.h>
@@ -26,7 +27,6 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>

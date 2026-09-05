@@ -6,12 +6,11 @@
 
 #include <hash.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <cstring>
-
 #include <limits>
 
 using util::ContainsNUL;

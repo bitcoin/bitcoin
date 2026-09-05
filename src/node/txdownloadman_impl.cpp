@@ -3,11 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/txdownloadman_impl.h>
-#include <node/txdownloadman.h>
 
 #include <chain.h>
 #include <consensus/validation.h>
+#include <node/txdownloadman.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <validation.h>
 #include <validationinterface.h>

@@ -14,9 +14,9 @@
 #include <span.h>
 #include <support/cleanse.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>

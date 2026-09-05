@@ -6,17 +6,14 @@
 
 #include <qt/utilitydialog.h>
 
-#include <qt/forms/ui_helpmessagedialog.h>
-
-#include <qt/guiutil.h>
-
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/license_info.h>
 #include <init.h>
+#include <qt/forms/ui_helpmessagedialog.h>
+#include <qt/guiutil.h>
+#include <util/check.h>
 #include <util/strencodings.h>
-
-#include <cstdio>
 
 #include <QCloseEvent>
 #include <QLabel>
@@ -26,6 +23,8 @@
 #include <QTextCursor>
 #include <QTextTable>
 #include <QVBoxLayout>
+
+#include <cstdio>
 
 /** "Help message" or "About" dialog box */
 HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :

@@ -6,11 +6,12 @@
 // by Markku-Juhani O. Saarinen <mjos@iki.fi>
 
 #include <crypto/sha3.h>
+
 #include <crypto/common.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <bit>
-#include <cassert>
 #include <iterator>
 #include <span>
 

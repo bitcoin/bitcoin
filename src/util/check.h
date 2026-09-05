@@ -127,6 +127,9 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
  */
 #define Assume(val) inline_assertion_check<false>(val, std::source_location::current(), #val)
 
+/// Mark unreachable code. Aborts if called.
+#define AssertUnreachable() assertion_fail(std::source_location::current(), "Unreachable code")
+
 /**
  * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
  */

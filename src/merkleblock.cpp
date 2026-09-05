@@ -7,6 +7,7 @@
 
 #include <consensus/consensus.h>
 #include <hash.h>
+#include <util/check.h>
 #include <util/overflow.h>
 
 

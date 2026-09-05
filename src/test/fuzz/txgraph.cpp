@@ -2,13 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <txgraph.h>
+
 #include <cluster_linearize.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/cluster_linearize.h>
 #include <test/util/random.h>
-#include <txgraph.h>
 #include <util/bitset.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 
 #include <algorithm>
@@ -389,7 +391,7 @@ FUZZ_TARGET(txgraph)
                     if (choice == 0) return sim.GetRef(i);
                     --choice;
                 }
-                assert(false);
+                AssertUnreachable();
             } else {
                 choice -= tx_count[level];
             }

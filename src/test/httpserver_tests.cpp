@@ -7,6 +7,7 @@
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 
@@ -945,7 +946,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     {
     public:
         explicit ErrorSock(std::shared_ptr<Pipes> pipes) : DynSock{std::move(pipes)} {}
-        DynSock& operator=(Sock&&) override { assert(false); return *this; }
+        DynSock& operator=(Sock&&) override { AssertUnreachable(); return *this; }
 
         ssize_t Send(const void* buf, size_t len, int flags) const override
         {

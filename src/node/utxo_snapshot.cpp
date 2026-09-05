@@ -8,11 +8,11 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <validation.h>
 
-#include <cassert>
 #include <cstdio>
 #include <optional>
 #include <string>

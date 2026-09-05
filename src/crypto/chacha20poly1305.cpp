@@ -9,8 +9,8 @@
 #include <crypto/poly1305.h>
 #include <span.h>
 #include <support/cleanse.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstddef>
 
 AEADChaCha20Poly1305::AEADChaCha20Poly1305(std::span<const std::byte> key) noexcept : m_chacha20(key)

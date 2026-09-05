@@ -5,8 +5,8 @@
 #include <crypto/siphash.h>
 
 #include <uint256.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <span>
 
 CSipHasher::CSipHasher(uint64_t k0, uint64_t k1) : m_state{k0, k1} {}

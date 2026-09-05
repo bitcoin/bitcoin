@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <uint256.h>
 #include <util/asmap.h>
+#include <util/check.h>
 #include <util/log.h>
 
 #include <cstddef>

@@ -19,12 +19,12 @@
 #include <script/verify_flags.h>
 #include <uint256.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <iterator>

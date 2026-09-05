@@ -6,8 +6,8 @@
 #define BITCOIN_CRYPTO_POLY1305_H
 
 #include <span.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <span>

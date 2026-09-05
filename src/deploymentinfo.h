@@ -6,9 +6,9 @@
 #define BITCOIN_DEPLOYMENTINFO_H
 
 #include <consensus/params.h>
+#include <util/check.h>
 
 #include <array>
-#include <cassert>
 #include <optional>
 #include <string>
 #include <string_view>

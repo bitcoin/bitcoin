@@ -4,6 +4,13 @@
 
 #include <qt/walletmodel.h>
 
+#include <common/args.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <key_io.h>
+#include <node/interface_ui.h>
+#include <node/types.h>
+#include <psbt.h>
 #include <qt/addresstablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
@@ -13,28 +20,21 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
-
-#include <common/args.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <key_io.h>
-#include <node/interface_ui.h>
-#include <node/types.h>
-#include <psbt.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
 
-#include <cstdint>
-#include <functional>
-#include <memory>
-#include <vector>
-
 #include <QDebug>
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
+
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <vector>
 
 using wallet::CCoinControl;
 using wallet::CRecipient;

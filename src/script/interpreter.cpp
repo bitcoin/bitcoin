@@ -15,9 +15,9 @@
 #include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <compare>
 #include <cstring>
 #include <limits>
@@ -411,7 +411,7 @@ static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::con
         // Key path spending in Taproot has no script, so this is unreachable.
         break;
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror)
@@ -1507,7 +1507,7 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
         key_version = 0;
         break;
     default:
-        assert(false);
+        AssertUnreachable();
     }
     assert(in_pos < tx_to.vin.size());
     if (!(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready)) {

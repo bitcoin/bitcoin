@@ -7,9 +7,9 @@
 
 #include <crypto/common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/overflow.h>
 
-#include <cassert>
 
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)

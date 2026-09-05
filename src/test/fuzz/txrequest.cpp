@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <txrequest.h>
+
 #include <crypto/common.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/fuzz.h>
-#include <txrequest.h>
+#include <util/check.h>
 
 #include <bitset>
 #include <cstdint>
@@ -382,7 +384,7 @@ FUZZ_TARGET(txrequest)
             tester.ReceivedResponse(peer, txidnum % MAX_TXHASHES);
             break;
         default:
-            assert(false);
+            AssertUnreachable();
         }
     }
     tester.Check();

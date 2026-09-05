@@ -7,6 +7,7 @@
 
 #include <netaddress.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <vector>

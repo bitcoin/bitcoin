@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/transaction.h>
+
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <net.h>
@@ -11,9 +13,9 @@
 #include <node/context.h>
 #include <node/types.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <node/transaction.h>
 
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)

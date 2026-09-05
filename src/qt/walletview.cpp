@@ -4,6 +4,8 @@
 
 #include <qt/walletview.h>
 
+#include <interfaces/node.h>
+#include <node/interface_ui.h>
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
@@ -17,9 +19,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
-
-#include <interfaces/node.h>
-#include <node/interface_ui.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <QAction>

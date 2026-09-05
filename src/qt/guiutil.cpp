@@ -4,12 +4,6 @@
 
 #include <qt/guiutil.h>
 
-#include <qt/bitcoinaddressvalidator.h>
-#include <qt/bitcoinunits.h>
-#include <qt/platformstyle.h>
-#include <qt/qvalidatedlineedit.h>
-#include <qt/sendcoinsrecipient.h>
-
 #include <addresstype.h>
 #include <base58.h>
 #include <chainparams.h>
@@ -20,8 +14,14 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
+#include <qt/bitcoinaddressvalidator.h>
+#include <qt/bitcoinunits.h>
+#include <qt/platformstyle.h>
+#include <qt/qvalidatedlineedit.h>
+#include <qt/sendcoinsrecipient.h>
 #include <script/script.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/exception.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -69,7 +69,6 @@
 #include <QUrlQuery>
 #include <QtGlobal>
 
-#include <cassert>
 #include <chrono>
 #include <exception>
 #include <fstream>
@@ -694,9 +693,9 @@ QString NetworkToQString(Network net)
     //: Name of CJDNS network in peer info
     case NET_CJDNS: return QObject::tr("CJDNS", "network name");
     case NET_INTERNAL: return "Internal";  // should never actually happen
-    case NET_MAX: assert(false);
+    case NET_MAX: AssertUnreachable();
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)
@@ -727,7 +726,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     //: Short-lived peer connection type that is used for broadcasting privacy-sensitive data.
     case ConnectionType::PRIVATE_BROADCAST: return prefix + QObject::tr("Private Broadcast");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString formatDurationStr(std::chrono::nanoseconds dur)

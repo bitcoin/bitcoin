@@ -9,12 +9,12 @@
 
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
-
-#include <cassert>
-#include <memory>
-#include <optional>
+#include <util/check.h>
 
 #include <QApplication>
+
+#include <memory>
+#include <optional>
 
 class BitcoinGUI;
 class ClientModel;

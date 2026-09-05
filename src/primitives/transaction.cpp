@@ -12,9 +12,9 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <tinyformat.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <span>
 #include <stdexcept>
 

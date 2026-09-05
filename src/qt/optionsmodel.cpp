@@ -6,10 +6,6 @@
 
 #include <qt/optionsmodel.h>
 
-#include <qt/bitcoinunits.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
-
 #include <common/args.h>
 #include <interfaces/node.h>
 #include <mapport.h>
@@ -17,7 +13,11 @@
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <validation.h>
 #include <wallet/wallet.h>

@@ -20,6 +20,7 @@
 #include <qt/platformstyle.h>
 #include <qt/rpcconsole.h>
 #include <qt/utilitydialog.h>
+#include <util/check.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/walletcontroller.h>

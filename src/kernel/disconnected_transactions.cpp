@@ -4,10 +4,10 @@
 
 #include <kernel/disconnected_transactions.h>
 
-#include <cassert>
 #include <core_memusage.h>
 #include <memusage.h>
 #include <primitives/transaction.h>
+#include <util/check.h>
 #include <util/hasher.h>
 
 #include <memory>

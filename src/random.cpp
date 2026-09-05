@@ -17,6 +17,7 @@
 #include <support/allocators/secure.h>
 #include <support/cleanse.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/time.h>
 

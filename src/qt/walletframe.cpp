@@ -11,12 +11,9 @@
 #include <qt/psbtoperationsdialog.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-
-#include <cassert>
-#include <fstream>
-#include <string>
 
 #include <QApplication>
 #include <QClipboard>
@@ -25,6 +22,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+
+#include <fstream>
+#include <string>
 
 WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
     : QFrame(parent),

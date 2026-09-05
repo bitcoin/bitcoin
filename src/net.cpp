@@ -28,6 +28,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/overflow.h>
 #include <util/sock.h>

@@ -8,8 +8,8 @@
 #include <common/args.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 
-#include <cassert>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -51,7 +51,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 void SelectBaseParams(const ChainType chain)

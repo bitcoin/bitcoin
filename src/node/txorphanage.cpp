@@ -7,6 +7,7 @@
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/log.h>
@@ -17,7 +18,6 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
-#include <cassert>
 #include <cmath>
 #include <unordered_map>
 

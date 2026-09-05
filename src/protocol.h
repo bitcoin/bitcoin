@@ -12,6 +12,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <array>

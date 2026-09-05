@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <logging.h>
 #include <util/threadpool.h>
 
+#include <logging.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 
 #include <atomic>
 #include <future>
@@ -34,7 +35,7 @@ static void GetFuture(std::future<void>& future, uint32_t& fail_counter)
     } catch (const ExpectedException&) {
         fail_counter++;
     } catch (...) {
-        assert(false && "Unexpected exception type");
+        AssertUnreachable(); // Unexpected exception type
     }
 }
 

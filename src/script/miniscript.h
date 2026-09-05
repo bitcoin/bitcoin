@@ -262,7 +262,7 @@ constexpr bool IsTapscript(MiniscriptContext ms_ctx)
         case MiniscriptContext::P2WSH: return false;
         case MiniscriptContext::TAPSCRIPT: return true;
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 namespace internal {
@@ -868,7 +868,7 @@ public:
                     return BuildScript(std::move(script), node.k, verify ? OP_EQUALVERIFY : OP_EQUAL);
                 }
             }
-            assert(false);
+            AssertUnreachable();
         };
         return TreeEval<CScript>(false, downfn, upfn);
     }
@@ -994,7 +994,7 @@ public:
                 }
                 default: break;
             }
-            assert(false);
+            AssertUnreachable();
         };
 
         return TreeEvalMaybe<std::string>(false, downfn, upfn);
@@ -1072,7 +1072,7 @@ private:
                 return {count, sats[k], sats[0]};
             }
         }
-        assert(false);
+        AssertUnreachable();
     }
 
     internal::StackSize CalcStackSize() const {
@@ -1187,7 +1187,7 @@ private:
                 };
             }
         }
-        assert(false);
+        AssertUnreachable();
     }
 
     internal::WitnessSize CalcWitnessSize() const {
@@ -1240,7 +1240,7 @@ private:
                 return {sats[k], sats[0]};
             }
         }
-        assert(false);
+        AssertUnreachable();
     }
 
     template<typename Ctx>
@@ -1441,7 +1441,7 @@ private:
                 case Fragment::JUST_0: return {EMPTY, INVALID};
                 case Fragment::JUST_1: return {INVALID, EMPTY};
             }
-            assert(false);
+            AssertUnreachable();
             return {INVALID, INVALID};
         };
 

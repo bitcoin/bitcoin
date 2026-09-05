@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cluster_linearize.h>
+
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
@@ -10,6 +11,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/util/cluster_linearize.h>
 #include <util/bitset.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 
 #include <algorithm>
@@ -419,7 +421,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             if (offset == 0) return i;
             --offset;
         }
-        assert(false);
+        AssertUnreachable();
         return DepGraphIndex(-1);
     };
 

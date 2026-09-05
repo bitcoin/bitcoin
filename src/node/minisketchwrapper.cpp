@@ -4,10 +4,10 @@
 
 #include <node/minisketchwrapper.h>
 
+#include <minisketch.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/time.h>
-
-#include <minisketch.h>
 
 #include <algorithm>
 #include <cstddef>

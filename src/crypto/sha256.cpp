@@ -3,10 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/sha256.h>
+
 #include <crypto/common.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)

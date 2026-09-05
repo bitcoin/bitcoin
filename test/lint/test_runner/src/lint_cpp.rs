@@ -155,7 +155,7 @@ pub fn lint_rpc_assert() -> LintResult {
             "grep",
             "--line-number",
             "--extended-regexp",
-            r"\<(A|a)ss(ume|ert)\(",
+            r"\<(A|a)ss(ume|ert)(Unreachable)?\(",
             "--",
             "src/rpc/",
             "src/wallet/rpc*",
@@ -167,10 +167,66 @@ pub fn lint_rpc_assert() -> LintResult {
         .success();
     if found {
         Err(r#"
-CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.
+CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of Assert, Assume, or
+AssertUnreachable for RPC code.
 
 Aborting the whole process is undesirable for RPC code. So nonfatal
 checks should be used over assert. See: src/util/check.h
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn lint_assert_falsy() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"\<(a|A)ssert\s*\(\s*(0|false)\s*(&&|\))",
+            "--",
+            "src/",
+            // Temporary exclusions, which are not linking the util lib:
+            ":(exclude)src/univalue/",
+            ":(exclude)src/tinyformat.h", // Uses exceptions, not the assert error handling
+        ])
+        .args(get_pathspecs_default_excludes())
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Assertions with a falsy literal value should be replaced with AssertUnreachable().
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn lint_std_unreachable() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--fixed-string",
+            "std::unreachable()",
+            "--",
+            "src/",
+        ])
+        .args(get_pathspecs_default_excludes())
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        // Reject all for now, but if there is an optimization use case in the future, an exclusion
+        // can be added, or this linter can be removed.
+        Err(r#"
+std::unreachable() invokes UB and should be replaced with AssertUnreachable().
             "#
         .trim()
         .to_string())

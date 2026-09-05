@@ -7,6 +7,7 @@
 
 #include <pubkey.h>
 #include <script/script.h>
+#include <util/check.h>
 
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.

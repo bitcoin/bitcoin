@@ -91,5 +91,5 @@ std::string SigningResultString(const SigningResult res)
         case SigningResult::SIGNING_FAILED:
             return "Sign failed";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }

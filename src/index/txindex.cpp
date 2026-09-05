@@ -21,13 +21,13 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <validation.h>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
