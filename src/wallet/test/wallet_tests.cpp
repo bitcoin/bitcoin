@@ -21,6 +21,7 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -752,6 +753,94 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     }
 
     TestUnloadWallet(std::move(wallet));
+}
+
+BOOST_FIXTURE_TEST_CASE(derive_hd_key, BasicTestingSetup)
+{
+    WalletContext context;
+    context.args = &m_args;
+    auto wallet = TestCreateWallet(context);
+    BOOST_REQUIRE(wallet);
+
+    LOCK(wallet->cs_wallet);
+
+    const std::vector<uint32_t> path{87 | BIP32_HARDENED_FLAG};
+    const auto result{wallet->DeriveHDKey(path, std::nullopt)};
+    BOOST_REQUIRE(result);
+
+    const auto active{wallet->GetHDPubKeys(CWallet::HDKeyFilter::Active)};
+    BOOST_REQUIRE_EQUAL(active.size(), 1U);
+    const auto xprv{wallet->GetExtKey(active.begin()->first)};
+    BOOST_REQUIRE(xprv);
+    const auto expected{DeriveExtKey(*xprv, path)};
+    BOOST_REQUIRE(expected);
+    BOOST_CHECK(result->first == expected->first);
+    BOOST_CHECK(result->second == expected->second);
+}
+
+BOOST_FIXTURE_TEST_CASE(derive_hd_key_unhardened_path, BasicTestingSetup)
+{
+    WalletContext context;
+    context.args = &m_args;
+    auto wallet = TestCreateWallet(context);
+    BOOST_REQUIRE(wallet);
+
+    LOCK(wallet->cs_wallet);
+    const auto result{wallet->DeriveHDKey(/*path=*/{87}, std::nullopt)};
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error().code == WalletErrorCode::GenericError);
+    BOOST_CHECK_EQUAL(result.error().message.original, "Derivation path requires at least one hardened step");
+}
+
+BOOST_FIXTURE_TEST_CASE(derive_hd_key_path_too_deep, BasicTestingSetup)
+{
+    WalletContext context;
+    context.args = &m_args;
+    auto wallet = TestCreateWallet(context);
+    BOOST_REQUIRE(wallet);
+
+    LOCK(wallet->cs_wallet);
+    const std::vector<uint32_t> path(256, BIP32_HARDENED_FLAG);
+    const auto result{wallet->DeriveHDKey(path, std::nullopt)};
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error().code == WalletErrorCode::GenericError);
+    BOOST_CHECK_EQUAL(result.error().message.original, "Unable to derive HD key at the requested path");
+}
+
+BOOST_FIXTURE_TEST_CASE(derive_hd_key_unknown_hdkey, BasicTestingSetup)
+{
+    WalletContext context;
+    context.args = &m_args;
+    auto wallet = TestCreateWallet(context);
+    BOOST_REQUIRE(wallet);
+
+    CExtKey unknown;
+    unknown.SetSeed(GenerateRandomKey());
+
+    LOCK(wallet->cs_wallet);
+    const auto result{wallet->DeriveHDKey(/*path=*/{87 | BIP32_HARDENED_FLAG}, unknown.Neuter())};
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error().code == WalletErrorCode::GenericError);
+    BOOST_CHECK_EQUAL(result.error().message.original, "HD key is not used by an active or unused(KEY) descriptor");
+}
+
+BOOST_FIXTURE_TEST_CASE(derive_hd_key_watch_only_wallet, BasicTestingSetup)
+{
+    WalletContext context;
+    context.args = &m_args;
+    DatabaseOptions options;
+    options.require_create = true;
+    options.create_flags = WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto wallet = TestCreateWallet(MakeWalletDatabase("", options, status, error), context, options.create_flags);
+    BOOST_REQUIRE(wallet);
+
+    LOCK(wallet->cs_wallet);
+    const auto result{wallet->DeriveHDKey(/*path=*/{87 | BIP32_HARDENED_FLAG}, std::nullopt)};
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error().code == WalletErrorCode::GenericError);
+    BOOST_CHECK_EQUAL(result.error().message.original, "Deriving HD keys is not available for watch-only wallets");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
