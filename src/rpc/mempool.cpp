@@ -148,13 +148,14 @@ static RPCMethod getprivatebroadcastinfo()
     return RPCMethod{
         "getprivatebroadcastinfo",
         "Returns information about transactions tracked for private broadcast.\n"
-        "Transactions that have reached the send-attempt limit remain in the result with attempts_remaining=0.\n"
+        "Transactions that have reached the send-attempt limit, or that have been received back from\n"
+        "the network, remain in the result with attempts_remaining=0.\n"
         "This method is only available when running with -privatebroadcast enabled.\n",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::ARR, "transactions", "",
+                {RPCResult::Type::ARR, "transactions", "Transactions currently in the private broadcast queue",
                     {
                         {RPCResult::Type::OBJ, "", "",
                             {
@@ -162,7 +163,7 @@ static RPCMethod getprivatebroadcastinfo()
                                 {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
                                 {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"},
                                 {RPCResult::Type::NUM_TIME, "time_added", "The time this transaction was added to the private broadcast queue (seconds since epoch)"},
-                                {RPCResult::Type::NUM, "attempts_remaining", "The number of additional private broadcast send attempts allowed for this transaction"},
+                                {RPCResult::Type::NUM, "attempts_remaining", "The number of additional private broadcast send attempts allowed for this transaction, 0 if it will not be sent again unless re-added"},
                                 {RPCResult::Type::ARR, "peers", "Per-peer send and acknowledgment information for this transaction",
                                     {
                                         {RPCResult::Type::OBJ, "", "",
@@ -171,6 +172,11 @@ static RPCMethod getprivatebroadcastinfo()
                                                 {RPCResult::Type::NUM_TIME, "sent", "The time this transaction was picked for sending to this peer via private broadcast (seconds since epoch)"},
                                                 {RPCResult::Type::NUM_TIME, "received", /*optional=*/true, "The time this peer acknowledged reception of the transaction (seconds since epoch)"},
                                             }},
+                                    }},
+                                {RPCResult::Type::OBJ, "received_by_us", /*optional=*/true, "Information about how this transaction was received back from the network",
+                                    {
+                                        {RPCResult::Type::STR, "address", "The peer address from which this transaction was received back from the network"},
+                                        {RPCResult::Type::NUM_TIME, "time", "The time this transaction was received back from the network (seconds since epoch)"},
                                     }},
                             }},
                     }},
@@ -208,6 +214,12 @@ static RPCMethod getprivatebroadcastinfo()
                     peers.push_back(std::move(p));
                 }
                 o.pushKV("peers", std::move(peers));
+                if (tx_info.received_by_us.has_value()) {
+                    UniValue r(UniValue::VOBJ);
+                    r.pushKV("address", tx_info.received_by_us->from.ToStringAddrPort());
+                    r.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(tx_info.received_by_us->when));
+                    o.pushKV("received_by_us", std::move(r));
+                }
                 transactions.push_back(std::move(o));
             }
 
