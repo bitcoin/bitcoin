@@ -61,6 +61,7 @@ To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-w
 and use `-DENABLE_WALLET=OFF` to build without the wallet and skip the SQLite dependency.
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)).
+The Cap'n Proto libraries must be built with C++ exception support.
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require libzmq.

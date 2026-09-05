@@ -27,6 +27,7 @@ Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.
 pkg_add capnproto
 ```
 
+The Cap'n Proto libraries must be built with C++ exception support.
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 See [dependencies.md](dependencies.md) for a complete overview.

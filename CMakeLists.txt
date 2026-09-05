@@ -248,6 +248,19 @@ if(ENABLE_IPC AND WITH_EXTERNAL_LIBMULTIPROCESS)
   find_package(LibmultiprocessNative REQUIRED COMPONENTS Bin
     NAMES Libmultiprocess
   )
+  # Debian CapnProtoConfig.cmake is not idempotent (libmultiprocess#68).
+  if(NOT TARGET CapnProto::kj)
+    set(_kj_saved_found_libatomic "${FOUND_LIBATOMIC}")
+    set(FOUND_LIBATOMIC TRUE)
+    find_package(CapnProto 0.7 REQUIRED NO_MODULE)
+    if(_kj_saved_found_libatomic STREQUAL "")
+      unset(FOUND_LIBATOMIC)
+    else()
+      set(FOUND_LIBATOMIC "${_kj_saved_found_libatomic}")
+    endif()
+  endif()
+  include(CheckKjExceptions)
+  check_kj_exception_support()
 endif()
 
 if(WITH_USDT)
