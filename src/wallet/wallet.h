@@ -809,6 +809,14 @@ public:
     util::Result<void> RemoveTxs(std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     util::Result<void> RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    /**
+     * Drop all in-memory transaction state: the transactions themselves, the
+     * outputs derived from them, the spends index and any coin locks. The
+     * database, the wallet flags and the ScriptPubKeyMans are left untouched.
+     * This is test-only function for harnesses that reuse a single wallet.
+     */
+    void ClearInMemoryTxStateForTest() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
