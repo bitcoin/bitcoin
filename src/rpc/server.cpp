@@ -951,6 +951,18 @@ UniValue CRPCTable::buildOpenRPCDoc(bool include_hidden) const
                 result_schema.pushKV("oneOf", std::move(one_of));
             }
         }
+        const auto& discriminator{helpman.GetResults().m_discriminator};
+        if (discriminator.has_value()) {
+            CHECK_NONFATAL(result_schema.exists("oneOf"));
+            CHECK_NONFATAL(result_schema.find_value("oneOf").size() == discriminator->values.size());
+            UniValue disc_meta{UniValue::VOBJ};
+            disc_meta.pushKV("parameter", discriminator->param_name);
+            disc_meta.pushKV("parameterIndex", static_cast<int>(discriminator->param_index));
+            UniValue vals{UniValue::VARR};
+            vals.push_backV(discriminator->values);
+            disc_meta.pushKV("values", std::move(vals));
+            result_schema.pushKV("x-bitcoin-discriminatedResult", std::move(disc_meta));
+        }
 
         UniValue method{UniValue::VOBJ};
         method.pushKV("name", method_name);
