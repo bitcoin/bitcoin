@@ -7,8 +7,10 @@
 #include <script/sign.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/translation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -592,6 +594,17 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
 
     std::unique_ptr<Descriptor> desc = InferDescriptor(script, provider);
     BOOST_CHECK_EQUAL(desc->ToString(), expected_desc + "#" + checksum);
+}
+
+const std::string MULTISIG_KEY_A{"[6738736c/48h/0h/0h/2h]xpub6FC1fXFP1GXLX5TKtcjHGT4q89SDRehkQLtbKJ2PzWcvbBHtyDsJPLtpLtkGqYNYZdVVAjRQ5kug9CsapegmmeRutpP7PW4u4wVF9JfkDhw"};
+const std::string MULTISIG_KEY_B{"[b2b1f0cf/48h/0h/0h/2h]xpub6EWhjpPa6FqrcaPBuGBZRJVjzGJ1ZsMygRF26RwN932Vfkn1gyCiTbECVitBjRCkexEvetLdiqzTcYimmzYxyR1BZ79KNevgt61PDcukmC7"};
+const std::string MULTISIG_KEY_C{"[a666a867/44h/0h/0h/100h]xpub6Dgsze3ujLi1EiHoCtHFMS9VLS1UheVqxrHGfP7sBJ2DBfChEUHV4MDwmxAXR2ayeytpwm3zJEU3H3pjCR6q6U5sP2p2qzAD71x9z5QShK2"};
+
+void CheckMultisigError(const util::Result<std::string>& res, std::string_view expected_reason)
+{
+    BOOST_REQUIRE(!res);
+    const std::string err{util::ErrorString(res).original};
+    BOOST_CHECK_MESSAGE(err.find(expected_reason) != std::string::npos, "expected '" << expected_reason << "' in error: " << err);
 }
 
 }
@@ -1417,5 +1430,71 @@ BOOST_AUTO_TEST_CASE(unused_descriptor_test)
     CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0h/0h/1)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0h/0h/1)");
 }
+
+BOOST_AUTO_TEST_CASE(descriptor_create_multisig_valid)
+{
+    const std::string inner{
+        "wsh(sortedmulti(2,"
+        + MULTISIG_KEY_A + "/<0;1>/*,"
+        + MULTISIG_KEY_B + "/<0;1>/*,"
+        + MULTISIG_KEY_C + "/<0;1>/*))"};
+    const std::string expected{inner + "#" + GetDescriptorChecksum(inner)};
+
+    {
+        const auto res{CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32)};
+        BOOST_REQUIRE(res);
+        BOOST_CHECK_EQUAL(*res, expected);
+
+        FlatSigningProvider provider;
+        std::string error;
+        const auto descs{Parse(*res, provider, error)};
+        BOOST_REQUIRE_EQUAL(descs.size(), 2U);
+        BOOST_CHECK(descs[0]->ToString().find("/0/*") != std::string::npos);
+        BOOST_CHECK(descs[1]->ToString().find("/1/*") != std::string::npos);
+    }
+
+    // Threshold = 1 and threshold = n are valid edge cases
+    BOOST_CHECK(CreateMultisigDescriptor(1, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32));
+    BOOST_CHECK(CreateMultisigDescriptor(3, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32));
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_create_multisig_valid_p2tr)
+{
+    const auto res{CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32M)};
+    BOOST_REQUIRE(res);
+    // NUMS_H as internal key
+    BOOST_CHECK(res->starts_with("tr(xpub661MyMwAqRbcEYS8w7XLSVeEsBXy79zSzH1J8vCdxAZningWLdN3zgtU6QgnecKFpJFPpdzxKrwoaZoV44qAJewsc4kX9vGaCaBExuvJH57,"));
+    BOOST_CHECK(res->find("sortedmulti_a(2,") != std::string::npos);
+    BOOST_CHECK(res->find("/<0;1>/*") != std::string::npos);
+
+    FlatSigningProvider provider;
+    std::string error;
+    const auto descs{Parse(*res, provider, error)};
+    BOOST_REQUIRE_EQUAL(descs.size(), 2U);
+    BOOST_CHECK(descs[0]->ToString().find("/0/*") != std::string::npos);
+    BOOST_CHECK(descs[1]->ToString().find("/1/*") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_policy)
+{
+    CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::LEGACY), "Unsupported address type");
+    CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::P2SH_SEGWIT), "Unsupported address type");
+    CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::UNKNOWN), "Unsupported address type");
+
+    CheckMultisigError(CreateMultisigDescriptor(0, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32), "threshold");
+    CheckMultisigError(CreateMultisigDescriptor(4, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32), "threshold");
+    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A}, OutputType::BECH32), "at least 2");
+    CheckMultisigError(CreateMultisigDescriptor(1, {}, OutputType::BECH32), "at least 2");
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_keys)
+{
+    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A, MULTISIG_KEY_A}, OutputType::BECH32), "Duplicate");
+    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/0", MULTISIG_KEY_B}, OutputType::BECH32), "derivation path");
+    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/<0;1>/*", MULTISIG_KEY_B}, OutputType::BECH32), "multipath");
+    CheckMultisigError(CreateMultisigDescriptor(1, {"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1", MULTISIG_KEY_B}, OutputType::BECH32), "private key");
+    CheckMultisigError(CreateMultisigDescriptor(1, {"[6738736c/48h/0h/0h/2h]xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi", MULTISIG_KEY_B}, OutputType::BECH32), "private key");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
