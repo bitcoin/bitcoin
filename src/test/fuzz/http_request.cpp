@@ -29,9 +29,7 @@ FUZZ_TARGET(http_request)
     HTTPRequest http_request;
     LineReader reader(http_buffer, MAX_HEADERS_SIZE);
     try {
-        if (!http_request.LoadControlData(reader)) return;
-        if (!http_request.LoadHeaders(reader)) return;
-        if (!http_request.LoadBody(reader)) return;
+        if (http_request.Load(reader) != HTTPRequest::State::Complete) return;
     } catch (const std::runtime_error&) {
         return;
     }
@@ -44,7 +42,7 @@ FUZZ_TARGET(http_request)
     (void)http_request.GetHeader(header);
     (void)http_request.WriteHeader(std::string(header), fuzzed_data_provider.ConsumeRandomLengthString(16));
     (void)http_request.GetHeader(header);
-    // Reaching here means LoadControlData/LoadHeaders/LoadBody all succeeded, so the
+    // Reaching here means Load succeeded, so the
     // parsed body must be consistent with the message framing. Before libevent was
     // replaced with HTTPRequest (#35182), ReadBody() always returned an
     // empty string here; LoadBody now populates the body per RFC 9112 framing, so mirror
