@@ -943,22 +943,32 @@ inline void logging_disable_category(LogCategory category)
     btck_logging_disable_category(static_cast<btck_LogCategory>(category));
 }
 
-template <typename T>
-concept Log = requires(T a, std::string_view message) {
-    { a.LogMessage(message) } -> std::same_as<void>;
-};
-
-template <Log T>
-class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+class LogMessages : public UniqueHandle<btck_LogMessages, btck_log_messages_destroy>
 {
 public:
-    Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
-              log.release(),
-              +[](void* user_data) { delete static_cast<T*>(user_data); })}
+    explicit LogMessages(btck_LogMessages* messages) : UniqueHandle{messages} {}
+
+    size_t Count() const { return btck_log_messages_count(get()); }
+
+    size_t GetDiscarded() const { return btck_log_messages_get_discarded(get()); }
+
+    std::string_view GetMessageAt(size_t index) const
     {
+        size_t len;
+        const char* message{btck_log_messages_get_message_at(get(), index, &len)};
+        return {message, len};
     }
+
+    MAKE_RANGE_METHOD(Messages, LogMessages, &LogMessages::Count, &LogMessages::GetMessageAt, *this)
+};
+
+class Logger : public UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+{
+public:
+    explicit Logger(size_t max_buffer_bytes = 1'000'000)
+        : UniqueHandle{btck_logging_connection_create(max_buffer_bytes)} {}
+
+    LogMessages Drain() { return LogMessages{btck_logging_connection_drain(get())}; }
 };
 
 class BlockTreeEntry : public View<btck_BlockTreeEntry>

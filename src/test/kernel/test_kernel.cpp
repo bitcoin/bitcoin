@@ -10,12 +10,13 @@
 // Boost.Test's SIGSTKSZ alternate stack can be smaller than Linux requires on musl.
 #define BOOST_TEST_DISABLE_ALT_STACK
 #define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
-#include <boost/test/included/unit_test.hpp>
-
 #include <test/kernel/block_data.h>
 #include <test/util/common.h>
 
+#include <boost/test/included/unit_test.hpp>
+
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -92,14 +93,21 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
         expected.begin(), expected.end());
 }
 
-class TestLog
-{
-public:
-    void LogMessage(std::string_view message)
+struct LoggingSetup {
+    LoggingSetup()
     {
-        std::cout << "kernel: " << message;
+        logging_set_options({});
+        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
+        logging_enable_category(LogCategory::KERNEL);
     }
 };
+
+// Creating custom signet parameters emits an Info message containing the challenge.
+void LogTestMessage(uint8_t value)
+{
+    const std::byte challenge{value};
+    ChainParams params{std::span{&challenge, 1}};
+}
 
 struct TestDirectory {
     fs::path m_directory;
@@ -665,10 +673,101 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     {
         logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
         logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
+        Logger logger;
+        Logger logger_2;
+        auto messages{logger_2.Drain()};
+        BOOST_REQUIRE_EQUAL(messages.Count(), 1);
+        BOOST_CHECK(messages.GetMessageAt(0).ends_with("[kernel:debug] Logger connected.\n"));
+        BOOST_CHECK_EQUAL(messages.GetDiscarded(), 0);
+        BOOST_CHECK_GE(logger.Drain().Count(), 2);
     }
-    Logger logger{std::make_unique<TestLog>()};
+    Logger logger;
+    BOOST_CHECK_EQUAL(logger.Drain().Count(), 1);
+    BOOST_CHECK_EQUAL(logger.Drain().Count(), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_buffer, LoggingSetup)
+{
+    Logger logger;
+    logger.Drain();
+    LogTestMessage(1);
+
+    // Formatting is captured when logging, not when draining.
+    btck_LoggingOptions options{};
+    options.always_print_category_levels = true;
+    logging_set_options(options);
+    LogTestMessage(2);
+    auto messages{logger.Drain()};
+    BOOST_REQUIRE_EQUAL(messages.Count(), 2);
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(0), "Signet with challenge 01\n");
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(1), "[all:info] Signet with challenge 02\n");
+    BOOST_CHECK_EQUAL(messages.GetDiscarded(), 0);
+
+    // Processing a drained batch can call APIs that log, without reentrancy.
+    for (const auto message : messages.Messages()) {
+        BOOST_CHECK(!message.empty());
+        LogTestMessage(3);
+    }
+    BOOST_CHECK_EQUAL(logger.Drain().Count(), 2);
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(0), "Signet with challenge 01\n");
+    auto empty{logger.Drain()};
+    BOOST_CHECK_EQUAL(empty.Count(), 0);
+    BOOST_CHECK_EQUAL(empty.GetDiscarded(), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_buffer_limits, LoggingSetup)
+{
+    const size_t message_size{std::string_view{"Signet with challenge 01\n"}.size()};
+    Logger logger{2 * message_size};
+    logger.Drain();
+    LogTestMessage(1);
+    LogTestMessage(2);
+    LogTestMessage(3);
+    auto messages{logger.Drain()};
+    BOOST_REQUIRE_EQUAL(messages.Count(), 2);
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(0), "Signet with challenge 02\n");
+    BOOST_CHECK_EQUAL(messages.GetMessageAt(1), "Signet with challenge 03\n");
+    BOOST_CHECK_EQUAL(messages.GetDiscarded(), 1);
+    BOOST_CHECK_EQUAL(logger.Drain().GetDiscarded(), 0);
+
+    // An oversized message does not evict a pending message that fits.
+    LogTestMessage(4);
+    const std::vector<std::byte> large_challenge(100);
+    ChainParams params{large_challenge};
+    auto oversized{logger.Drain()};
+    BOOST_REQUIRE_EQUAL(oversized.Count(), 1);
+    BOOST_CHECK_EQUAL(oversized.GetMessageAt(0), "Signet with challenge 04\n");
+    BOOST_CHECK_EQUAL(oversized.GetDiscarded(), 1);
+
+    for (const size_t limit : {size_t{0}, message_size - 1, message_size}) {
+        Logger bounded{limit};
+        bounded.Drain();
+        LogTestMessage(5);
+        auto batch{bounded.Drain()};
+        const bool fits{limit == message_size};
+        BOOST_CHECK_EQUAL(batch.Count(), fits ? 1 : 0);
+        BOOST_CHECK_EQUAL(batch.GetDiscarded(), fits ? 0 : 1);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_buffer_lifetime, LoggingSetup)
+{
+    std::optional<LogMessages> saved;
+    std::string_view view;
+    {
+        Logger logger;
+        logger.Drain();
+        LogTestMessage(1);
+        saved.emplace(logger.Drain());
+        BOOST_REQUIRE_EQUAL(saved->Count(), 1);
+        view = saved->GetMessageAt(0);
+        LogTestMessage(2);
+        auto next{logger.Drain()};
+        BOOST_REQUIRE_EQUAL(next.Count(), 1);
+        BOOST_CHECK_EQUAL(next.GetMessageAt(0), "Signet with challenge 02\n");
+    }
+    BOOST_CHECK_EQUAL(view, "Signet with challenge 01\n");
+    BOOST_CHECK_EQUAL(saved->GetMessageAt(0), view);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
@@ -774,7 +873,7 @@ Context create_context(std::shared_ptr<TestKernelNotifications> notifications, C
 
 BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 {
-    Logger logger{std::make_unique<TestLog>()};
+    Logger logger;
     auto test_directory{TestDirectory{"chainman_test_bitcoin_kernel"}};
 
     { // test with default context
@@ -817,6 +916,11 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
     ChainMan chainman{context, chainman_opts};
+
+    auto messages{logger.Drain()};
+    for (const auto message : messages.Messages()) {
+        std::cout << "kernel: " << message;
+    }
 }
 
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,

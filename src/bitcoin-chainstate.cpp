@@ -41,14 +41,16 @@ std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
     return bytes;
 }
 
-class KernelLog
+void PrintLogMessages(Logger& logger)
 {
-public:
-    void LogMessage(std::string_view message)
-    {
+    auto messages{logger.Drain()};
+    if (messages.GetDiscarded() != 0) {
+        std::cerr << "kernel: " << messages.GetDiscarded() << " log messages discarded" << std::endl;
+    }
+    for (const auto message : messages.Messages()) {
         std::cout << "kernel: " << message;
     }
-};
+}
 
 class TestValidationInterface : public ValidationInterface
 {
@@ -168,7 +170,7 @@ int main(int argc, char* argv[])
 
     logging_set_options(logging_options);
 
-    Logger logger{std::make_unique<KernelLog>()};
+    Logger logger;
 
     ContextOptions options{};
     ChainParams params{has_regtest_flag ? ChainType::REGTEST : ChainType::MAINNET};
@@ -186,9 +188,11 @@ int main(int argc, char* argv[])
     try {
         chainman = std::make_unique<ChainMan>(context, chainman_opts);
     } catch (std::exception&) {
+        PrintLogMessages(logger);
         std::cerr << "Failed to instantiate ChainMan, exiting" << std::endl;
         return 1;
     }
+    PrintLogMessages(logger);
 
     std::cout << "Enter the block you want to validate on the next line:" << std::endl;
 
@@ -203,12 +207,14 @@ int main(int argc, char* argv[])
         try {
             block = std::make_unique<Block>(raw_block);
         } catch (std::exception&) {
+            PrintLogMessages(logger);
             std::cerr << "Block decode failed, try again:" << std::endl;
             continue;
         }
 
         bool new_block = false;
         bool accepted = chainman->ProcessBlock(*block, &new_block);
+        PrintLogMessages(logger);
         if (accepted) {
             std::cerr << "Block has not yet been rejected" << std::endl;
         } else {
@@ -218,4 +224,6 @@ int main(int argc, char* argv[])
             std::cerr << "Block is a duplicate" << std::endl;
         }
     }
+    chainman.reset();
+    PrintLogMessages(logger);
 }

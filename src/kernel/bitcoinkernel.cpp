@@ -34,6 +34,7 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/stdmutex.h>
 #include <util/task_runner.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -42,11 +43,13 @@
 
 #include <cstddef>
 #include <cstring>
+#include <deque>
 #include <exception>
 #include <functional>
 #include <limits>
 #include <list>
 #include <memory>
+#include <new>
 #include <optional>
 #include <span>
 #include <stdexcept>
@@ -235,32 +238,68 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
     assert(false);
 }
 
-struct LoggingConnection {
-    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
-    void* m_user_data;
-    std::function<void(void* user_data)> m_deleter;
+struct LogMessages {
+    std::deque<std::string> messages;
+    size_t discarded{0};
+};
 
-    LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+class LoggingConnection
+{
+    const size_t m_max_buffer_bytes;
+    StdMutex m_mutex;
+    LogMessages m_buffer GUARDED_BY(m_mutex);
+    size_t m_buffer_bytes GUARDED_BY(m_mutex){0};
+    std::list<std::function<void(const std::string&)>>::iterator m_connection{};
+
+    // Called under the logger's mutex. Never log or call application code here.
+    void BufferMessage(const std::string& message) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
-        LOCK(cs_main);
-
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
-            }
-            throw std::runtime_error("Failed to start logging");
+        STDLOCK(m_mutex);
+        if (message.size() > m_max_buffer_bytes) {
+            ++m_buffer.discarded;
+            return;
         }
 
-        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
-        m_user_data = user_data;
-        m_deleter = user_data_destroy_callback;
+        while (m_buffer_bytes > m_max_buffer_bytes - message.size()) {
+            m_buffer_bytes -= m_buffer.messages.front().size();
+            m_buffer.messages.pop_front();
+            ++m_buffer.discarded;
+        }
+        try {
+            m_buffer.messages.push_back(message);
+            m_buffer_bytes += message.size();
+        } catch (const std::bad_alloc&) {
+            ++m_buffer.discarded;
+        }
+    }
 
-        LogDebug(BCLog::KERNEL, "Logger connected.");
+    void Disconnect() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        // Removing the sink under the logger's mutex waits for any in-flight
+        // BufferMessage call before the connection's storage is destroyed.
+        if (LogInstance().NumConnections() == 1) {
+            LogInstance().DisconnectTestLogger();
+        } else {
+            LogInstance().DeleteCallback(m_connection);
+        }
+    }
+
+public:
+    explicit LoggingConnection(size_t max_buffer_bytes) : m_max_buffer_bytes{max_buffer_bytes}
+    {
+        LOCK(cs_main);
+        m_connection = LogInstance().PushBackCallback([this](const std::string& message) { BufferMessage(message); });
+        try {
+            if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
+                throw std::runtime_error("Failed to start logging");
+            }
+
+            LogDebug(BCLog::KERNEL, "Logger connected.");
+        } catch (...) {
+            // The sink captures this, so it must not survive a failed constructor.
+            Disconnect();
+            throw;
+        }
     }
 
     ~LoggingConnection()
@@ -268,18 +307,19 @@ struct LoggingConnection {
         LOCK(cs_main);
         LogDebug(BCLog::KERNEL, "Logger disconnecting.");
 
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
+        Disconnect();
+    }
 
-        m_connection.reset();
-        if (m_user_data && m_deleter) {
-            m_deleter(m_user_data);
-        }
+    std::unique_ptr<LogMessages> Drain() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        // Allocate before removing anything so allocation failure leaves the
+        // pending messages and discard count untouched.
+        auto messages{std::make_unique<LogMessages>()};
+        STDLOCK(m_mutex);
+        messages->messages.swap(m_buffer.messages);
+        messages->discarded = std::exchange(m_buffer.discarded, 0);
+        m_buffer_bytes = 0;
+        return messages;
     }
 };
 
@@ -492,6 +532,7 @@ struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransa
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};
 struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
 struct btck_LoggingConnection : Handle<btck_LoggingConnection, LoggingConnection> {};
+struct btck_LogMessages : Handle<btck_LogMessages, LogMessages> {};
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
@@ -824,10 +865,10 @@ void btck_logging_disable()
     LogInstance().DisableLogging();
 }
 
-btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+btck_LoggingConnection* btck_logging_connection_create(size_t max_buffer_bytes)
 {
     try {
-        return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
+        return btck_LoggingConnection::create(max_buffer_bytes);
     } catch (const std::exception&) {
         return nullptr;
     }
@@ -836,6 +877,39 @@ btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback
 void btck_logging_connection_destroy(btck_LoggingConnection* connection)
 {
     delete connection;
+}
+
+btck_LogMessages* btck_logging_connection_drain(btck_LoggingConnection* connection)
+{
+    try {
+        return btck_LogMessages::ref(btck_LoggingConnection::get(connection).Drain().release());
+    } catch (const std::exception&) {
+        return nullptr;
+    }
+}
+
+void btck_log_messages_destroy(btck_LogMessages* messages)
+{
+    delete messages;
+}
+
+size_t btck_log_messages_count(const btck_LogMessages* messages)
+{
+    return btck_LogMessages::get(messages).messages.size();
+}
+
+const char* btck_log_messages_get_message_at(const btck_LogMessages* messages, size_t index, size_t* message_len)
+{
+    const auto& entries{btck_LogMessages::get(messages).messages};
+    assert(index < entries.size());
+    const auto& message{entries[index]};
+    *message_len = message.size();
+    return message.data();
+}
+
+size_t btck_log_messages_get_discarded(const btck_LogMessages* messages)
+{
+    return btck_LogMessages::get(messages).discarded;
 }
 
 btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_type)

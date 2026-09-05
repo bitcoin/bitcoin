@@ -146,7 +146,9 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
 /**
  * Opaque data structure for holding a logging connection.
  *
- * The logging connection can be used to manually stop logging.
+ * Each connection owns a bounded buffer of formatted log messages. Applications
+ * retrieve messages with btck_logging_connection_drain; logging never invokes
+ * application callbacks.
  *
  * Messages that were logged before a connection is created are buffered in a
  * 1MB buffer. Logging can alternatively be permanently disabled by calling
@@ -155,6 +157,13 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
  * instances.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
+
+/**
+ * An owned, immutable batch of log messages drained from a connection. The batch
+ * remains valid independently of the connection and is freed with
+ * btck_log_messages_destroy.
+ */
+typedef struct btck_LogMessages btck_LogMessages;
 
 /**
  * Opaque data structure for holding the chain parameters.
@@ -350,12 +359,6 @@ typedef uint8_t btck_Warning;
 #define btck_Warning_LARGE_WORK_INVALID_CHAIN ((btck_Warning)(1))
 
 /** Callback function types */
-
-/**
- * Function signature for the global logging callback. All bitcoin kernel
- * internal logs will pass through this callback.
- */
-typedef void (*btck_LogCallback)(void* user_data, const char* message, size_t message_len);
 
 /**
  * Function signature for freeing user data.
@@ -926,27 +929,67 @@ BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
 BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
 
 /**
- * @brief Start logging messages through the provided callback. Log messages
- * produced before this function is first called are buffered and on calling this
- * function are logged immediately.
+ * @brief Start buffering log messages for explicit retrieval.
  *
- * @param[in] log_callback               Non-null, function through which messages will be logged.
- * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
- *                                       to the user through the callback. If the user_data_destroy_callback
- *                                       is also defined it is assumed that ownership of the user_data is passed
- *                                       to the created logging connection.
- * @param[in] user_data_destroy_callback Nullable, function for freeing the user data.
- * @return                               A new kernel logging connection, or null on error.
+ * Each connection independently buffers messages in logging order. The first
+ * connection also receives any messages retained by the startup log buffer.
+ * Formatting and filtering settings remain global. No application code is
+ * invoked when a message is logged.
+ *
+ * The oldest pending messages are discarded when necessary to fit a new message.
+ * Messages larger than the limit are discarded whole without evicting pending
+ * messages. Allocation failures also discard messages. These losses are counted
+ * and reported by btck_log_messages_get_discarded on the next drained batch.
+ * Producers never wait for applications to drain the buffer.
+ *
+ * @param[in] max_buffer_bytes Maximum total bytes of pending formatted messages,
+ *                            excluding container overhead and null terminators.
+ *                            Zero discards all messages.
+ * @return                    A new logging connection, or null on error.
  */
 BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_connection_create(
-    btck_LogCallback log_callback,
-    void* user_data,
-    btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
+    size_t max_buffer_bytes);
 
 /**
- * Stop logging and destroy the logging connection.
+ * Stop buffering and destroy the logging connection, discarding pending messages.
+ * Previously drained batches remain valid. Destruction must not run concurrently
+ * with calls that use the same connection. Other threads may continue logging.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
+
+/**
+ * Atomically remove all pending messages and reset the discard count. This does
+ * not wait for new messages or invoke application code. Messages logged after
+ * the batch is removed remain pending for the next drain.
+ *
+ * May run concurrently with logging or other drains on the same connection.
+ * Each message is returned by at most one drain per connection. Applications
+ * control when to process the returned messages, outside kernel operations.
+ *
+ * @return An owned batch (possibly empty), or null on allocation failure, in
+ *         which case pending messages and the discard count are unchanged.
+ */
+BITCOINKERNEL_API btck_LogMessages* BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_connection_drain(
+    btck_LoggingConnection* connection) BITCOINKERNEL_ARG_NONNULL(1);
+
+/** Destroy a drained batch and invalidate all message pointers obtained from it. */
+BITCOINKERNEL_API void btck_log_messages_destroy(btck_LogMessages* messages);
+
+/** Return the number of messages in a drained batch. */
+BITCOINKERNEL_API size_t btck_log_messages_count(const btck_LogMessages* messages) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Return a view of a message, valid until the batch is destroyed.
+ * @param[in]  messages    Non-null batch.
+ * @param[in]  index       Must be less than btck_log_messages_count(messages).
+ * @param[out] message_len Non-null, receives the message length in bytes,
+ *                         excluding the terminating null byte.
+ */
+BITCOINKERNEL_API const char* btck_log_messages_get_message_at(
+    const btck_LogMessages* messages, size_t index, size_t* message_len) BITCOINKERNEL_ARG_NONNULL(1, 3);
+
+/** Return the number of messages discarded since the preceding drain or creation. */
+BITCOINKERNEL_API size_t btck_log_messages_get_discarded(const btck_LogMessages* messages) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 
