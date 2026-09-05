@@ -21,12 +21,17 @@ private:
         : DescriptorScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys)
     {}
 
+    ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
+        : DescriptorScriptPubKeyMan(storage, descriptor, keypool_size)
+    {}
+
     ExternalSignerScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
         : DescriptorScriptPubKeyMan(storage, keypool_size)
     {}
 
 public:
     static std::unique_ptr<ExternalSignerScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
+    static std::unique_ptr<ExternalSignerScriptPubKeyMan> CreateFromImport(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     static std::unique_ptr<ExternalSignerScriptPubKeyMan> CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc);
 
   static util::Result<ExternalSigner> GetExternalSigner();

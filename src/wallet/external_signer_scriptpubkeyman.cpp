@@ -26,6 +26,15 @@ std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::Lo
     return std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys));
 }
 
+std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::CreateFromImport(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider)
+{
+    auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, descriptor, keypool_size));
+    if (auto res = spkm->UpdateWalletDescriptor(descriptor, provider); !res) {
+        throw std::runtime_error(util::ErrorString(res).original);
+    }
+    return spkm;
+}
+
 std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc)
 {
     auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, keypool_size));
@@ -88,13 +97,24 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
 // If sign is true, transaction must previously have been filled
 std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed) const
 {
-    if (!options.sign) {
-        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, options, n_signed);
-    }
+    // Fill in metadata. The base class only signs if options.sign is set, and
+    // only with keys we hold ourselves.
+    if (auto err = DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, options, n_signed)) return err;
+    if (!options.sign) return {};
 
-    // Already complete if every input is now signed
+    // No need for an external signer roundtrip if we already have all the
+    // signatures we need.
     bool complete = true;
     for (const auto& input : psbt.inputs) {
+        CTxOut utxo;
+        // An externally created PSBT may not include the UTXO for inputs we
+        // don't know, in which case we can't tell whether it's ours. Leave it
+        // to the signer.
+        if (input.GetUTXO(utxo)) {
+            // Only consider inputs that belong to this descriptor; the wallet
+            // may hold the private key for the other inputs.
+            if (!IsMine(utxo.scriptPubKey)) continue;
+        }
         complete &= PSBTInputSigned(input);
     }
     if (complete) return {};

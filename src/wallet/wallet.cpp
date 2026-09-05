@@ -402,13 +402,6 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     options.require_format = DatabaseFormat::SQLITE;
 
 
-    // Private keys must be disabled for an external signer wallet
-    if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        error = Untranslated("Private keys must be disabled when using an external signer");
-        status = DatabaseStatus::FAILED_CREATE;
-        return nullptr;
-    }
-
     // Do not allow a passphrase when private keys are disabled
     if (born_encrypted && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         error = Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.");
@@ -1744,32 +1737,36 @@ bool CWallet::CanGetAddresses(bool internal) const
     return false;
 }
 
-void CWallet::SetWalletFlag(uint64_t flags)
+bool CWallet::SetWalletFlag(uint64_t flags)
 {
     WalletBatch batch(GetDatabase());
     return SetWalletFlagWithDB(batch, flags);
 }
 
-void CWallet::SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags)
+bool CWallet::SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags)
 {
     LOCK(cs_wallet);
+    const uint64_t flags_before{m_wallet_flags};
     m_wallet_flags |= flags;
     if (!batch.WriteWalletFlags(m_wallet_flags))
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    return ((flags_before ^ m_wallet_flags) & WALLET_FLAGS_REQUIRING_RELOAD) != 0;
 }
 
-void CWallet::UnsetWalletFlag(uint64_t flag)
+bool CWallet::UnsetWalletFlag(uint64_t flag)
 {
     WalletBatch batch(GetDatabase());
-    UnsetWalletFlagWithDB(batch, flag);
+    return UnsetWalletFlagWithDB(batch, flag);
 }
 
-void CWallet::UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag)
+bool CWallet::UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag)
 {
     LOCK(cs_wallet);
+    const uint64_t flags_before{m_wallet_flags};
     m_wallet_flags &= ~flag;
     if (!batch.WriteWalletFlags(m_wallet_flags))
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    return ((flags_before ^ m_wallet_flags) & WALLET_FLAGS_REQUIRING_RELOAD) != 0;
 }
 
 void CWallet::UnsetBlankWalletFlag(WalletBatch& batch)
@@ -3703,10 +3700,10 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 void CWallet::SetupWalletGeneration()
 {
     AssertLockHeld(cs_wallet);
-    // Skip setup for non-external-signer wallets that are either blank
-    // or have private keys disabled (not having private keys implies blank).
-    if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) &&
-        (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) || IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
+    // Skip setup for blank wallets. Non-external-signer wallets with disabled
+    // private keys also skip setup (not having private keys implies blank).
+    if (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) ||
+        (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) && IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
         return;
     }
     SetupDescriptorScriptPubKeyMans();
@@ -3810,7 +3807,12 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
             return util::Error{util::ErrorString(spkm_res)};
         }
     } else {
-        auto new_spk_man = DescriptorScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        std::unique_ptr<DescriptorScriptPubKeyMan> new_spk_man;
+        if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+            new_spk_man = ExternalSignerScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        } else {
+            new_spk_man = DescriptorScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        }
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory

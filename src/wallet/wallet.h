@@ -157,7 +157,11 @@ inline constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_EXTERNAL_SIGNER;
 
 inline constexpr uint64_t MUTABLE_WALLET_FLAGS =
-        WALLET_FLAG_AVOID_REUSE;
+        WALLET_FLAG_AVOID_REUSE
+    |   WALLET_FLAG_EXTERNAL_SIGNER;
+
+inline constexpr uint64_t WALLET_FLAGS_REQUIRING_RELOAD =
+        WALLET_FLAG_EXTERNAL_SIGNER;
 
 inline const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
     {WALLET_FLAG_AVOID_REUSE, "avoid_reuse"},
@@ -383,7 +387,7 @@ private:
     bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& strPurpose);
 
     //! Unsets a wallet flag and saves it to disk
-    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
+    bool UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
 
     //! Unset the blank wallet flag and saves it to disk
     void UnsetBlankWalletFlag(WalletBatch& batch) override;
@@ -428,7 +432,7 @@ private:
     void AddActiveScriptPubKeyManWithDb(WalletBatch& batch, uint256 id, OutputType type, bool internal);
 
     /** Store wallet flags */
-    void SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags);
+    bool SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags);
 
     //! Cache of descriptor ScriptPubKeys used for IsMine. Maps ScriptPubKey to set of spkms
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
@@ -910,11 +914,11 @@ public:
      */
     void BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet);
 
-    /** set a single wallet flag */
-    void SetWalletFlag(uint64_t flags);
+    /** Set wallet flags. Returns whether the wallet needs to be reloaded. */
+    bool SetWalletFlag(uint64_t flags);
 
-    /** Unsets a single wallet flag */
-    void UnsetWalletFlag(uint64_t flag);
+    /** Unset wallet flags. Returns whether the wallet needs to be reloaded. */
+    bool UnsetWalletFlag(uint64_t flag);
 
     /** check if a certain wallet flag is set */
     bool IsWalletFlagSet(uint64_t flag) const override;
