@@ -345,7 +345,7 @@ class ConstPubkeyProvider final : public PubkeyProvider
 
 public:
     ConstPubkeyProvider(uint32_t exp_index, const CPubKey& pubkey, bool xonly) : PubkeyProvider(exp_index), m_pubkey(pubkey), m_xonly(xonly) {}
-    std::optional<CPubKey> GetPubKey(int pos, const SigningProvider&, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    std::optional<CPubKey> GetPubKey(int /*pos*/, const SigningProvider&, FlatSigningProvider& out, const DescriptorCache* /*read_cache*/ = nullptr, DescriptorCache* /*write_cache*/ = nullptr) const override
     {
         KeyOriginInfo info;
         CKeyID keyid = m_pubkey.GetID();
@@ -357,7 +357,7 @@ public:
     bool IsRange() const override { return false; }
     size_t GetSize() const override { return m_pubkey.size(); }
     bool IsBIP32() const override { return false; }
-    std::string ToString(StringType type) const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
+    std::string ToString(StringType) const override { return m_xonly ? HexStr(m_pubkey).substr(2) : HexStr(m_pubkey); }
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         std::optional<CKey> key = GetPrivKey(arg);
@@ -368,12 +368,12 @@ public:
         ret = EncodeSecret(*key);
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
+    bool ToNormalizedString(const SigningProvider&, std::string& ret, const DescriptorCache*) const override
     {
         ret = ToString(StringType::PUBLIC);
         return true;
     }
-    void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const override
+    void GetPrivKey(int /*pos*/, const SigningProvider& arg, FlatSigningProvider& out) const override
     {
         std::optional<CKey> key = GetPrivKey(arg);
         if (!key) return;
@@ -1049,7 +1049,7 @@ public:
      * @param use_max_sig Whether to assume ECDSA signatures will have a high-r.
      * @return The maximum size of the satisfaction in raw bytes (with no witness meaning).
      */
-    virtual std::optional<int64_t> MaxSatSize(bool use_max_sig) const { return {}; }
+    virtual std::optional<int64_t> MaxSatSize([[maybe_unused]] bool use_max_sig) const { return {}; }
 
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
 
@@ -1146,7 +1146,7 @@ public:
         return OutputTypeFromDestination(m_destination);
     }
     bool IsSingleType() const final { return true; }
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+    bool ToPrivateString(const SigningProvider&, std::string&) const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return GetScriptForDestination(m_destination).size(); }
     std::unique_ptr<DescriptorImpl> Clone() const override
@@ -1173,7 +1173,7 @@ public:
         return OutputTypeFromDestination(dest);
     }
     bool IsSingleType() const final { return true; }
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+    bool ToPrivateString(const SigningProvider&, std::string&) const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return m_script.size(); }
 
@@ -1391,7 +1391,7 @@ public:
         return (1 + 32 + 1) * n_keys + BuildScript(m_threshold).size() + 1;
     }
 
-    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+    std::optional<int64_t> MaxSatSize(bool /*use_max_sig*/) const override {
         return (1 + 65) * m_threshold + (m_pubkey_args.size() - m_threshold);
     }
 
@@ -1674,7 +1674,7 @@ private:
     miniscript::Node<uint32_t> m_node;
 
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts,
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> /*scripts*/,
                                      FlatSigningProvider& provider) const override
     {
         const auto script_ctx{m_node.GetMsCtx()};
@@ -1754,7 +1754,7 @@ public:
 class RawTRDescriptor final : public DescriptorImpl
 {
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> /*scripts*/, FlatSigningProvider& /*out*/) const override
     {
         assert(keys.size() == 1);
         XOnlyPubKey xpk(keys[0]);
@@ -1789,7 +1789,7 @@ public:
 class UnusedDescriptor final : public DescriptorImpl
 {
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return {}; }
 public:
     UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
     bool IsSingleType() const final { return true; }
@@ -2213,7 +2213,7 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
     return key_provider;
 }
 
-std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
+std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext /*ctx*/, const SigningProvider& provider)
 {
     CPubKey pubkey{xkey.GetEvenCorrespondingCPubKey()};
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);

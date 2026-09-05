@@ -11,7 +11,7 @@ namespace mp {
 template <typename Value, typename Output>
 void CustomBuildField(TypeList<std::string>,
     Priority<1>,
-    InvokeContext& invoke_context,
+    InvokeContext&,
     Value&& value,
     Output&& output)
 {
@@ -22,7 +22,7 @@ void CustomBuildField(TypeList<std::string>,
 template <typename Input, typename ReadDest>
 decltype(auto) CustomReadField(TypeList<std::string>,
     Priority<1>,
-    InvokeContext& invoke_context,
+    InvokeContext&,
     Input&& input,
     ReadDest&& read_dest)
 {

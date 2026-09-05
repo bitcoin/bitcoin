@@ -260,7 +260,7 @@ public:
     //! Get and set internal node context. Useful for testing, but not
     //! accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
-    virtual void setContext(node::NodeContext* context) { }
+    virtual void setContext(node::NodeContext*) { }
 };
 
 //! Return implementation of Node interface.

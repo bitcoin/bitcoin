@@ -460,7 +460,7 @@ static void HandleSIGHUP(int)
     LogInstance().m_reopen_file = true;
 }
 #else
-static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
+static BOOL WINAPI consoleCtrlHandler(DWORD)
 {
     if (!(*Assert(g_shutdown))()) {
         LogError("Failed to send shutdown signal on Ctrl-C\n");
@@ -916,7 +916,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
     std::terminate();
 };
 
-bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
+bool AppInitBasicSetup(const ArgsManager&, std::atomic<int>&)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER

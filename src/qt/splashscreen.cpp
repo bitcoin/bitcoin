@@ -223,7 +223,7 @@ void SplashScreen::showMessage(const QString &message, int alignment, const QCol
     update();
 }
 
-void SplashScreen::paintEvent(QPaintEvent *event)
+void SplashScreen::paintEvent(QPaintEvent * /*event*/)
 {
     QPainter painter(this);
     painter.drawPixmap(0, 0, pixmap);

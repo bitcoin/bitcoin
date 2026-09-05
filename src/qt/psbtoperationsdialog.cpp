@@ -244,7 +244,7 @@ void PSBTOperationsDialog::showStatus(const QString &msg, StatusLevel level) {
     m_ui->statusBar->show();
 }
 
-size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &psbtx) {
+size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &) {
     if (!m_wallet_model) {
         return 0;
     }

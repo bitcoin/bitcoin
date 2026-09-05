@@ -986,13 +986,13 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     // because a reply was already sitting in the send buffer when a second reply
     // was added.
     DebugLogHelper find_two_replies{strprintf("Sent %d bytes to client", reply_length * 2),
-                                    [&](const std::string* s) {
+                                    [&](const std::string*) {
                                         return true;
                                     }};
     // Last reply should be sent on its own by optimistic send path, because
     // the send buffer was empty when the reply was written.
     DebugLogHelper find_one_reply{strprintf("Sent %d bytes to client", reply_length),
-                                  [&](const std::string* s) {
+                                  [&](const std::string*) {
                                       return true;
                                    }};
 

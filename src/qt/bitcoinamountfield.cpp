@@ -34,7 +34,7 @@ public:
         connect(lineEdit(), &QLineEdit::textEdited, this, &AmountSpinBox::valueChanged);
     }
 
-    QValidator::State validate(QString &text, int &pos) const override
+    QValidator::State validate(QString &text, int &/*pos*/) const override
     {
         if(text.isEmpty())
             return QValidator::Intermediate;

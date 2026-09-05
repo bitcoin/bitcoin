@@ -57,7 +57,7 @@ public:
 
     std::optional<std::string> m_expected_valid_block = std::nullopt;
 
-    void BlockChecked(Block block, BlockValidationStateView state) override
+    void BlockChecked(Block, BlockValidationStateView state) override
     {
         auto mode{state.GetValidationMode()};
         switch (mode) {
@@ -115,12 +115,12 @@ public:
         std::cout << "Block tip changed" << std::endl;
     }
 
-    void ProgressHandler(std::string_view title, int progress_percent, bool resume_possible) override
+    void ProgressHandler(std::string_view title, int progress_percent, bool) override
     {
         std::cout << "Made progress: " << title << " " << progress_percent << "%" << std::endl;
     }
 
-    void WarningSetHandler(Warning warning, std::string_view message) override
+    void WarningSetHandler(Warning, std::string_view message) override
     {
         std::cout << message << std::endl;
     }

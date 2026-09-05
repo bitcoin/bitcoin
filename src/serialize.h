@@ -146,8 +146,8 @@ const Out& AsBase(const In& x)
 }
 
 #define READWRITE(...) (ser_action.SerReadWriteMany(s, __VA_ARGS__))
-#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, std::remove_const_t<Type>& obj) { code; })
-#define SER_WRITE(obj, code) ser_action.SerWrite(s, obj, [&](Stream& s, const Type& obj) { code; })
+#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&]([[maybe_unused]] Stream& s, std::remove_const_t<Type>& obj) { code; })
+#define SER_WRITE(obj, code) ser_action.SerWrite(s, obj, [&]([[maybe_unused]] Stream& s, const Type& obj) { code; })
 
 /**
  * Implement the Ser and Unser methods needed for implementing a formatter (see Using below).
@@ -1068,7 +1068,7 @@ struct ActionSerialize {
     }
 
     template<typename Stream, typename Type, typename Fn>
-    static void SerRead(Stream& s, Type&&, Fn&&)
+    static void SerRead(Stream&, Type&&, Fn&&)
     {
     }
 
@@ -1094,7 +1094,7 @@ struct ActionUnserialize {
     }
 
     template<typename Stream, typename Type, typename Fn>
-    static void SerWrite(Stream& s, Type&&, Fn&&)
+    static void SerWrite(Stream&, Type&&, Fn&&)
     {
     }
 };
