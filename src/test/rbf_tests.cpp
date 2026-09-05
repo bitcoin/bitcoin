@@ -8,6 +8,7 @@
 #include <txmempool.h>
 #include <util/time.h>
 
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -359,9 +360,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_one{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_one.has_value());
         std::vector<FeeFrac> expected_old_chunks{{low_fee, low_size}};
-        BOOST_CHECK(replace_one->first == expected_old_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_one->first.begin(), replace_one->first.end(),
+                                      expected_old_chunks.begin(), expected_old_chunks.end());
         std::vector<FeeFrac> expected_new_chunks{{0, entry_replacement.GetAdjustedWeight()}};
-        BOOST_CHECK(replace_one->second == expected_new_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_one->second.begin(), replace_one->second.end(),
+                                      expected_new_chunks.begin(), expected_new_chunks.end());
     }
 
     // Non-zero replacement fee/size
@@ -372,9 +375,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_one_fee{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_one_fee.has_value());
         std::vector<FeeFrac> expected_old_diagram{{low_fee, low_size}};
-        BOOST_CHECK(replace_one_fee->first == expected_old_diagram);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_one_fee->first.begin(), replace_one_fee->first.end(),
+                                      expected_old_diagram.begin(), expected_old_diagram.end());
         std::vector<FeeFrac> expected_new_diagram{{high_fee, entry_replacement.GetAdjustedWeight()}};
-        BOOST_CHECK(replace_one_fee->second == expected_new_diagram);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_one_fee->second.begin(), replace_one_fee->second.end(),
+                                      expected_new_diagram.begin(), expected_new_diagram.end());
     }
 
     // Add a second transaction to the cluster that will make a single chunk, to be evicted in the RBF
@@ -391,9 +396,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_single_chunk{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_single_chunk.has_value());
         std::vector<FeeFrac> expected_old_chunks{{low_fee + high_fee, low_size + high_size}};
-        BOOST_CHECK(replace_single_chunk->first == expected_old_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_single_chunk->first.begin(), replace_single_chunk->first.end(),
+                                      expected_old_chunks.begin(), expected_old_chunks.end());
         std::vector<FeeFrac> expected_new_chunks{{high_fee, entry_replacement.GetAdjustedWeight()}};
-        BOOST_CHECK(replace_single_chunk->second == expected_new_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_single_chunk->second.begin(), replace_single_chunk->second.end(),
+                                      expected_new_chunks.begin(), expected_new_chunks.end());
     }
 
     // Conflict with the 2nd tx, resulting in new diagram with three entries
@@ -404,9 +411,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_cpfp_child{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_cpfp_child.has_value());
         std::vector<FeeFrac> expected_old_chunks{{low_fee + high_fee, low_size + high_size}};
-        BOOST_CHECK(replace_cpfp_child->first == expected_old_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_cpfp_child->first.begin(), replace_cpfp_child->first.end(),
+                                      expected_old_chunks.begin(), expected_old_chunks.end());
         std::vector<FeeFrac> expected_new_chunks{{high_fee, entry_replacement.GetAdjustedWeight()}, {low_fee, low_size}};
-        BOOST_CHECK(replace_cpfp_child->second == expected_new_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_cpfp_child->second.begin(), replace_cpfp_child->second.end(),
+                                      expected_new_chunks.begin(), expected_new_chunks.end());
     }
 
     // Make a size 2 cluster that is itself two chunks; evict both txns
@@ -428,9 +437,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_two_chunks_single_cluster{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(replace_two_chunks_single_cluster.has_value());
         std::vector<FeeFrac> expected_old_chunks{{high_fee, high_size_2}, {low_fee, low_size_2}};
-        BOOST_CHECK(replace_two_chunks_single_cluster->first == expected_old_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_two_chunks_single_cluster->first.begin(), replace_two_chunks_single_cluster->first.end(),
+                                      expected_old_chunks.begin(), expected_old_chunks.end());
         std::vector<FeeFrac> expected_new_chunks{{high_fee, low_size_2}};
-        BOOST_CHECK(replace_two_chunks_single_cluster->second == expected_new_chunks);
+        BOOST_CHECK_EQUAL_COLLECTIONS(replace_two_chunks_single_cluster->second.begin(), replace_two_chunks_single_cluster->second.end(),
+                                      expected_new_chunks.begin(), expected_new_chunks.end());
     }
 
     // You can have more than two direct conflicts
