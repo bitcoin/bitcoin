@@ -177,6 +177,7 @@ def run_tests(ci_type):
         for var, exe in test_envs.items():
             os.environ[var] = str(release_bin / exe)
 
+        os.environ["QT_ASSUME_STDERR_HAS_CONSOLE"] = "1"
         ctest_cmd = [
             "ctest",
             "--test-dir",
