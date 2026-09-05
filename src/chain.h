@@ -309,8 +309,11 @@ inline arith_uint256 GetBlockProof(const CBlockHeader& header) { return GetBitsP
 
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
-/** Find the forking point between two chain tips. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb);
+/**
+ * Find the forking point between two chain tips.
+ * The two chains must share a common ancestor (at least the same genesis).
+ */
+const CBlockIndex& LastCommonAncestor(const CBlockIndex& a, const CBlockIndex& b);
 
 
 /** Used to marshal pointers into hashes for db storage. */
@@ -379,7 +382,7 @@ public:
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;
+    std::vector<std::reference_wrapper<CBlockIndex>> vChain;
 
 public:
     CChain() = default;
@@ -389,13 +392,13 @@ public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex* Genesis() const
     {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        return vChain.size() > 0 ? &(vChain[0].get()) : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex* Tip() const
     {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        return vChain.size() > 0 ? &(vChain[vChain.size() - 1].get()) : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
@@ -403,7 +406,7 @@ public:
     {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return nullptr;
-        return vChain[nHeight];
+        return &(vChain[nHeight].get());
     }
 
     /** Efficiently check whether a block is present in this chain. */
