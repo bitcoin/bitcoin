@@ -335,6 +335,45 @@ class CompactBlocksTest(BitcoinTestFramework):
         lb_peer.send_await_disconnect(msg_cmpctblock(cmpct_block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
+        # Also test the optimistic reconstruction path: a peer sending an invalid cmpctblock
+        # message for a block already in-flight from MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK peers
+        # must also be disconnected.
+        block2 = self.build_block_on_tip(self.nodes[0])
+
+        # Encode coinbase as shortid (never in mempool) to force getblocktxn.
+        inflight_cmpct = HeaderAndShortIDs()
+        inflight_cmpct.header = CBlockHeader(block2)
+        inflight_cmpct.nonce = 0
+        [k0, k1] = inflight_cmpct.get_siphash_keys()
+        inflight_cmpct.shortids = [calculate_shortid(k0, k1, block2.vtx[0].wtxid_int)]
+
+        stall1 = self.nodes[0].add_p2p_connection(TestP2PConn())
+        stall1.send_and_ping(msg_cmpctblock(inflight_cmpct.to_p2p()))
+        with p2p_lock:
+            assert "getblocktxn" in stall1.last_message
+
+        self.additional_segwit_node.clear_getblocktxn()
+        self.additional_segwit_node.send_and_ping(msg_cmpctblock(inflight_cmpct.to_p2p()))
+        with p2p_lock:
+            assert "getblocktxn" in self.additional_segwit_node.last_message
+
+        self.outbound_node.clear_getblocktxn()
+        self.outbound_node.send_and_ping(msg_cmpctblock(inflight_cmpct.to_p2p()))
+        with p2p_lock:
+            assert "getblocktxn" in self.outbound_node.last_message
+
+        # Now all MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK slots are taken. A fourth peer
+        # sending an invalid cmpctblock message for the same block falls into the optimistic
+        # reconstruction path and must be disconnected.
+        invalid_cmpct = P2PHeaderAndShortIDs()
+        invalid_cmpct.header = CBlockHeader(block2)
+        invalid_cmpct.prefilled_txn_length = 1
+        # This index will be too high
+        invalid_cmpct.prefilled_txn = [PrefilledTransaction(1, block2.vtx[0])]
+        bad_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        bad_peer.send_await_disconnect(msg_cmpctblock(invalid_cmpct))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block2.hashPrevBlock)
+
     # Compare the generated shortids to what we expect based on BIP 152, given
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, test_node):
