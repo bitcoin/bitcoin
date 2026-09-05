@@ -224,50 +224,50 @@ public:
     WalletBatch(const WalletBatch&) = delete;
     WalletBatch& operator=(const WalletBatch&) = delete;
 
-    bool WriteName(const std::string& strAddress, const std::string& strName);
-    bool EraseName(const std::string& strAddress);
+    [[nodiscard]] bool WriteName(const std::string& strAddress, const std::string& strName);
+    [[nodiscard]] bool EraseName(const std::string& strAddress);
 
-    bool WritePurpose(const std::string& strAddress, const std::string& purpose);
-    bool ErasePurpose(const std::string& strAddress);
+    [[nodiscard]] bool WritePurpose(const std::string& strAddress, const std::string& purpose);
+    [[nodiscard]] bool ErasePurpose(const std::string& strAddress);
 
-    bool WriteTx(const CWalletTx& wtx);
-    bool EraseTx(Txid hash);
-    bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);
+    [[nodiscard]] bool WriteTx(const CWalletTx& wtx);
+    [[nodiscard]] bool EraseTx(Txid hash);
+    [[nodiscard]] bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);
 
-    bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
-    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
-    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
-    bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
-    bool EraseMasterKey(unsigned int id);
+    [[nodiscard]] bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
+    [[nodiscard]] bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
+    [[nodiscard]] bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+    [[nodiscard]] bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
+    [[nodiscard]] bool EraseMasterKey(unsigned int id);
 
-    bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
+    [[nodiscard]] bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
 
-    bool WriteBestBlock(const CBlockLocator& locator);
-    bool ReadBestBlock(CBlockLocator& locator);
+    [[nodiscard]] bool WriteBestBlock(const CBlockLocator& locator);
+    [[nodiscard]] bool ReadBestBlock(CBlockLocator& locator);
 
     // Returns true if wallet stores encryption keys
     bool IsEncrypted();
 
-    bool WriteOrderPosNext(int64_t nOrderPosNext);
+    [[nodiscard]] bool WriteOrderPosNext(int64_t nOrderPosNext);
 
-    bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
-    bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);
-    bool WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor);
-    bool WriteDescriptorDerivedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index, uint32_t der_index);
-    bool WriteDescriptorParentCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
-    bool WriteDescriptorLastHardenedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
-    bool WriteDescriptorCacheItems(const uint256& desc_id, const DescriptorCache& cache);
+    [[nodiscard]] bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
+    [[nodiscard]] bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);
+    [[nodiscard]] bool WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor);
+    [[nodiscard]] bool WriteDescriptorDerivedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index, uint32_t der_index);
+    [[nodiscard]] bool WriteDescriptorParentCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
+    [[nodiscard]] bool WriteDescriptorLastHardenedCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index);
+    [[nodiscard]] bool WriteDescriptorCacheItems(const uint256& desc_id, const DescriptorCache& cache);
 
-    bool WriteLockedUTXO(const COutPoint& output);
-    bool EraseLockedUTXO(const COutPoint& output);
+    [[nodiscard]] bool WriteLockedUTXO(const COutPoint& output);
+    [[nodiscard]] bool EraseLockedUTXO(const COutPoint& output);
 
-    bool WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent);
-    bool WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request);
-    bool EraseAddressReceiveRequest(const CTxDestination& dest, const std::string& id);
-    bool EraseAddressData(const CTxDestination& dest);
+    [[nodiscard]] bool WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent);
+    [[nodiscard]] bool WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request);
+    [[nodiscard]] bool EraseAddressReceiveRequest(const CTxDestination& dest, const std::string& id);
+    [[nodiscard]] bool EraseAddressData(const CTxDestination& dest);
 
-    bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
-    bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
+    [[nodiscard]] bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
+    [[nodiscard]] bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
 
     DBErrors LoadWallet(CWallet* pwallet);
 
@@ -278,18 +278,18 @@ public:
      * @param[in]   client_version  `CLIENT_VERSION` outside of test code.
      * @return      A bool indicating whether or not the write succeeded.
      */
-    bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, client_version); }
+    [[nodiscard]] bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, client_version); }
 
     //! Delete records of the given types
-    bool EraseRecords(const std::unordered_set<std::string>& types);
+    [[nodiscard]] bool EraseRecords(const std::unordered_set<std::string>& types);
 
-    bool WriteWalletFlags(uint64_t flags);
+    [[nodiscard]] bool WriteWalletFlags(uint64_t flags);
     //! Begin a new transaction
-    bool TxnBegin();
+    [[nodiscard]] bool TxnBegin();
     //! Commit current transaction
-    bool TxnCommit();
+    [[nodiscard]] bool TxnCommit();
     //! Abort current transaction
-    bool TxnAbort();
+    [[nodiscard]] bool TxnAbort();
     bool HasActiveTxn() { return m_batch->HasActiveTxn(); }
 
     //! Registers db txn callback functions

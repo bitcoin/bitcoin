@@ -176,7 +176,8 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
 
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
-    WITH_LOCK(wallet->cs_wallet, wallet->WriteBestBlock());
+    // Write failure is ok, next load will need to rescan
+    WITH_LOCK(wallet->cs_wallet, (void)wallet->WriteBestBlock());
 
     // Unregister with the validation interface which also drops shared pointers.
     wallet->DisconnectChainNotifications();
@@ -623,7 +624,26 @@ static bool DecryptMasterKey(const SecureString& wallet_passphrase, const CMaste
     return true;
 }
 
-bool CWallet::Unlock(const SecureString& strWalletPassphrase)
+static util::Unexpected<WalletError> UnlockPassphraseError(const SecureString& passphrase)
+{
+    bilingual_str message;
+    if (passphrase.find('\0') != std::string::npos) {
+        // The passphrase has a null character (see #27067 for details)
+        message = _("Error: The wallet passphrase entered is incorrect. "
+                    "It contains a null character (ie - a zero byte). "
+                    "If the passphrase was set with a version of this software prior to 25.0, "
+                    "please try again with only the characters up to — but not including — "
+                    "the first null character. If this is successful, please set a new "
+                    "passphrase to avoid this issue in the future.");
+    } else if (passphrase.empty()) {
+        message = _("Error: The wallet passphrase was not provided");
+    } else {
+        message = _("Error: The wallet passphrase entered was incorrect.");
+    }
+    return util::Unexpected{WalletError{WalletErrorCode::UnlockNeeded, std::move(message)}};
+}
+
+util::Expected<void, WalletError> CWallet::Unlock(const SecureString& strWalletPassphrase)
 {
     CKeyingMaterial plain_master_key;
 
@@ -637,14 +657,14 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
-                return true;
+                return {};
             }
         }
     }
-    return false;
+    return UnlockPassphraseError(strWalletPassphrase);
 }
 
-bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
+util::Expected<void, WalletError> CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
     bool fWasLocked = IsLocked();
 
@@ -656,24 +676,27 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         for (auto& [master_key_id, master_key] : mapMasterKeys)
         {
             if (!DecryptMasterKey(strOldWalletPassphrase, master_key, plain_master_key)) {
-                return false;
+                return UnlockPassphraseError(strOldWalletPassphrase);
             }
             if (Unlock(plain_master_key))
             {
-                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, master_key)) {
-                    return false;
-                }
-                WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", master_key.nDeriveIterations);
-
-                WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, master_key);
                 if (fWasLocked)
                     Lock();
-                return true;
+                CMasterKey new_master_key{master_key};
+                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, new_master_key)) {
+                    return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Unable to encrypt encryption key with new passphrase")}};
+                }
+                if (!WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, new_master_key)) {
+                    return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("Error: Writing the new encryption key to the wallet database failed")}};
+                }
+                WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", new_master_key.nDeriveIterations);
+                master_key = std::move(new_master_key);
+                return {};
             }
         }
     }
 
-    return false;
+    return UnlockPassphraseError(strOldWalletPassphrase);
 }
 
 void CWallet::SetLastBlockProcessedInMem(int block_height, uint256 block_hash)
@@ -689,7 +712,9 @@ void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
     AssertLockHeld(cs_wallet);
 
     SetLastBlockProcessedInMem(block_height, block_hash);
-    WriteBestBlock();
+    if (!WriteBestBlock()) {
+        WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+    }
 }
 
 std::set<Txid> CWallet::GetConflicts(const Txid& txid) const
@@ -865,37 +890,23 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     {
         LOCK2(m_relock_mutex, cs_wallet);
-        mapMasterKeys[++nMasterKeyMaxID] = master_key;
-        WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
-        if (!encrypted_batch->TxnBegin()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
+        const unsigned int new_master_key_id{nMasterKeyMaxID + 1};
+        if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"wallet encryption", [&](WalletBatch& batch) {
+                if (!batch.WriteMasterKey(new_master_key_id, master_key)) {
+                    return false;
+                }
+                for (const auto& spk_man_pair : m_spk_managers) {
+                    if (!spk_man_pair.second->Encrypt(plain_master_key, &batch)) {
+                        return false;
+                    }
+                }
+                return true;
+            })) {
             return false;
         }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, master_key);
 
-        for (const auto& spk_man_pair : m_spk_managers) {
-            auto spk_man = spk_man_pair.second.get();
-            if (!spk_man->Encrypt(plain_master_key, encrypted_batch)) {
-                encrypted_batch->TxnAbort();
-                delete encrypted_batch;
-                encrypted_batch = nullptr;
-                // We now probably have half of our keys encrypted in memory, and half not...
-                // die and let the user reload the unencrypted wallet.
-                assert(false);
-            }
-        }
-
-        if (!encrypted_batch->TxnCommit()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
-            // We now have keys encrypted in memory, but not on disk...
-            // die to avoid confusion and let the user reload the unencrypted wallet.
-            assert(false);
-        }
-
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
+        nMasterKeyMaxID = new_master_key_id;
+        mapMasterKeys[new_master_key_id] = master_key;
 
         Lock();
         if (!Unlock(strWalletPassphrase)) {
@@ -967,19 +978,19 @@ DBErrors CWallet::ReorderTransactions()
                 return DBErrors::LOAD_FAIL;
         }
     }
-    batch.WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return DBErrors::LOAD_FAIL;
+    }
 
     return DBErrors::LOAD_OK;
 }
 
-int64_t CWallet::IncOrderPosNext(WalletBatch* batch)
+std::optional<int64_t> CWallet::IncOrderPosNext(WalletBatch& batch)
 {
     AssertLockHeld(cs_wallet);
     int64_t nRet = nOrderPosNext++;
-    if (batch) {
-        batch->WriteOrderPosNext(nOrderPosNext);
-    } else {
-        WalletBatch(GetDatabase()).WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return std::nullopt;
     }
     return nRet;
 }
@@ -1084,7 +1095,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     bool fUpdated = update_wtx && update_wtx(wtx, fInsertedNew);
     if (fInsertedNew) {
         wtx.nTimeReceived = GetTime();
-        wtx.nOrderPos = IncOrderPosNext(&batch);
+        std::optional<int64_t> pos = IncOrderPosNext(batch);
+        if (!pos) {
+            return nullptr;
+        }
+        wtx.nOrderPos = *pos;
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(wtx);
@@ -1110,7 +1125,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             desc_tx->m_state = inactive_state;
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
-            batch.WriteTx(*desc_tx);
+            if (!batch.WriteTx(*desc_tx)) {
+                return nullptr;
+            }
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1398,7 +1415,11 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTx(wtx);
+            if (batch) {
+                if (!batch->WriteTx(wtx)) {
+                    throw std::runtime_error(strprintf("Unable to update state for %s", wtx.GetHash().ToString()));
+                }
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -1569,7 +1590,9 @@ void CWallet::blockConnected(const ChainstateRole& role, const interfaces::Block
 
     // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
     if (wallet_updated || block.height % 144 == 0) {
-        WriteBestBlock();
+        if (!WriteBestBlock()) {
+            WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+        }
     }
 }
 
@@ -1965,9 +1988,12 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 result.last_scanned_height = block_height;
 
                 if (!loc.IsNull()) {
-                    WalletLogPrintf("Saving scan progress %d.\n", block_height);
                     WalletBatch batch(GetDatabase());
-                    batch.WriteBestBlock(loc);
+                    if (!batch.WriteBestBlock(loc)) {
+                        WalletLogPrintf("Unable to save scan progress\n");
+                    } else {
+                        WalletLogPrintf("Saving scan progress %d.\n", block_height);
+                    }
                 }
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
@@ -3348,7 +3374,9 @@ void CWallet::postInitProcess()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
-    WITH_LOCK(cs_wallet, WriteBestBlock());
+    if (!WITH_LOCK(cs_wallet, return WriteBestBlock())) {
+        return false;
+    }
     return GetDatabase().Backup(strDest);
 }
 
@@ -4019,7 +4047,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         // Copy the next tx order pos to the watchonly wallet
         LOCK(data.watchonly_wallet->cs_wallet);
         data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
-        watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
+        if (!watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext)) {
+            return util::Error{_("Error: Unable to write watchonly wallet next transaction order")};
+        }
         // Write the locator record. An empty locator is valid and triggers rescan on load.
         if (!watchonly_batch->WriteBestBlock(best_block_locator)) {
             return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
@@ -4049,7 +4079,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
-                watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
+                if (!watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash))) {
+                    return util::Error{strprintf(_("Error: Could not write watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
+                }
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
@@ -4062,7 +4094,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
-        local_wallet_batch.WriteTx(*wtx);
+        if (!local_wallet_batch.WriteTx(*wtx)) {
+            return util::Error{strprintf(_("Error: Could not update tx %s in migrated wallet"), wtx->GetHash().GetHex())};
+        }
     }
 
     // Do the removes
@@ -4080,12 +4114,27 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // Write address book entry to disk
     auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
         auto address{EncodeDestination(dest)};
-        if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
-        if (entry.label) batch.WriteName(address, *entry.label);
-        for (const auto& [id, request] : entry.receive_requests) {
-            batch.WriteAddressReceiveRequest(dest, id, request);
+        if (entry.purpose) {
+            if (!batch.WritePurpose(address, PurposeToString(*entry.purpose))) {
+                return false;
+            }
         }
-        if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
+        if (entry.label) {
+            if (!batch.WriteName(address, *entry.label)) {
+                return false;
+            }
+        }
+        for (const auto& [id, request] : entry.receive_requests) {
+            if (!batch.WriteAddressReceiveRequest(dest, id, request)) {
+                return false;
+            }
+        }
+        if (entry.previously_spent) {
+            if (!batch.WriteAddressPreviouslySpent(dest, true)) {
+                return false;
+            }
+        }
+        return true;
     };
 
     // Check the address book data in the same way we did for transactions
@@ -4101,7 +4150,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
             // Copy the entire address book entry
             wallet->m_address_book[dest] = record;
-            func_store_addr(*batch, dest, record);
+            if (!func_store_addr(*batch, dest, record)) {
+                return util::Error{_("Error: Unable to write address book data")};
+            }
 
             copied = true;
             // Only delete 'receive' records that are no longer part of the original wallet
@@ -4370,15 +4421,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     bool success = false;
 
     // Unlock the wallet if needed
-    if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
-        if (passphrase.find('\0') == std::string::npos) {
-            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
-        } else {
-            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
-                                            "The passphrase contains a null character (ie - a zero byte). "
-                                            "If this passphrase was set with a version of this software prior to 25.0, "
-                                            "please try again with only the characters up to — but not including — "
-                                            "the first null character.")};
+    if (local_wallet->IsLocked()) {
+        auto unlocked{local_wallet->Unlock(passphrase)};
+        if (!unlocked) {
+            return util::Error{unlocked.error().message};
         }
     }
 
@@ -4594,7 +4640,7 @@ std::optional<CExtKey> CWallet::GetExtKey(const CExtPubKey& xpub) const
     return std::nullopt;
 }
 
-void CWallet::WriteBestBlock() const
+bool CWallet::WriteBestBlock() const
 {
     AssertLockHeld(cs_wallet);
 
@@ -4604,9 +4650,10 @@ void CWallet::WriteBestBlock() const
 
         if (!loc.IsNull()) {
             WalletBatch batch(GetDatabase());
-            batch.WriteBestBlock(loc);
+            return batch.WriteBestBlock(loc);
         }
     }
+    return true;
 }
 
 void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
