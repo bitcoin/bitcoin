@@ -324,7 +324,7 @@ public:
 
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
-    [[nodiscard]] bool Merge(const PSBTInput& input);
+    void Merge(const PSBTInput& input);
     uint32_t GetVersion() const { return m_psbt_version; }
     COutPoint GetOutPoint() const;
     /**
@@ -958,7 +958,7 @@ public:
 
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
-    [[nodiscard]] bool Merge(const PSBTOutput& output);
+    void Merge(const PSBTOutput& output);
     uint32_t GetVersion() const { return m_psbt_version; }
 
     explicit PSBTOutput(uint32_t psbt_version, CAmount amount, const CScript& script)
