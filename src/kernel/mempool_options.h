@@ -8,6 +8,7 @@
 
 #include <policy/feerate.h>
 #include <policy/policy.h>
+#include <util/log.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -56,6 +57,7 @@ struct MemPoolOptions {
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 
+    util::log::Logger* logger{nullptr};
     ValidationSignals* signals{nullptr};
 };
 } // namespace kernel

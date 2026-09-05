@@ -24,6 +24,7 @@
 #include <index/coinstatsindex.h>
 #include <interfaces/mining.h>
 #include <kernel/coinstats.h>
+#include <logging.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
@@ -3239,6 +3240,7 @@ UniValue CreateRolledBackUTXOSnapshot(
     };
 
     std::unique_ptr<CCoinsViewDB> temp_db = std::make_unique<CCoinsViewDB>(
+        LogInstance(),
         std::move(db_params),
         CoinsViewOptions{}
     );
