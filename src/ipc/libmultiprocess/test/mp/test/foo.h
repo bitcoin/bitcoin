@@ -74,7 +74,7 @@ public:
     void addInOut(int x, int& sum) { sum += x; }
     int mapSize(const std::map<std::string, std::string>& map) { return map.size(); }
     FooStruct pass(FooStruct foo) { return foo; }
-    void raise(FooStruct foo) { throw foo; }
+    [[noreturn]] void raise(FooStruct foo) { throw foo; }
     void initThreadMap() {}
     int callback(FooCallback& callback, int arg) { return callback.call(arg); }
     int callbackUnique(std::unique_ptr<FooCallback> callback, int arg) { return callback->call(arg); }
