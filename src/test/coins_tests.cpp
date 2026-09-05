@@ -42,7 +42,7 @@ class CCoinsViewTest : public CoinsViewEmpty
 public:
     explicit CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override
     {
         if (auto it{map_.find(outpoint)}; it != map_.end() && !it->second.IsSpent()) return it->second;
         return std::nullopt;
@@ -905,7 +905,7 @@ void TestFlushBehavior(
     COutPoint outp = COutPoint(txid, 0);
     Coin coin = MakeCoin();
     // Ensure the coins views haven't seen this coin before.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!view->HaveCoin(outp));
 
     // --- 1. Adding a random coin to the child cache
@@ -916,7 +916,7 @@ void TestFlushBehavior(
     cache_size = view->map().size();
 
     // `base` shouldn't have coin (no flush yet) but `view` should have cached it.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::DIRTY_FRESH));
@@ -934,7 +934,7 @@ void TestFlushBehavior(
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN)); // State should have been wiped.
 
     // Both views should now have the coin.
-    BOOST_CHECK(base.HaveCoin(outp));
+    BOOST_CHECK(base.GetCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
     if (do_erasing_flush) {
@@ -967,13 +967,13 @@ void TestFlushBehavior(
     // The coin should be in the cache, but spent and marked dirty.
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), SPENT_DIRTY);
     BOOST_CHECK(!view->HaveCoin(outp)); // Coin should be considered spent in `view`.
-    BOOST_CHECK(base.HaveCoin(outp));  // But coin should still be unspent in `base`.
+    BOOST_CHECK(base.GetCoin(outp));    // But coin should still be unspent in `base`.
 
     flush_all(/*erase=*/ false);
 
     // Coin should be considered spent in both views.
     BOOST_CHECK(!view->HaveCoin(outp));
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 
     // Spent coin should not be spendable.
     BOOST_CHECK(!view->SpendCoin(outp));
@@ -984,19 +984,19 @@ void TestFlushBehavior(
     txid = Txid::FromUint256(m_rng.rand256());
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
     all_caches[0]->AddCoin(outp, std::move(coin), false);
     all_caches[0]->Sync();
-    BOOST_CHECK(base.HaveCoin(outp));
+    BOOST_CHECK(base.GetCoin(outp));
     BOOST_CHECK(all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoinInCache(outp));
 
     BOOST_CHECK(all_caches[1]->SpendCoin(outp));
     flush_all(/*erase=*/ false);
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
@@ -1008,7 +1008,7 @@ void TestFlushBehavior(
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
     CAmount coin_val = coin.out.nValue;
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
@@ -1018,7 +1018,7 @@ void TestFlushBehavior(
     // Coin should be FRESH in the cache.
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(coin_val, CoinEntry::State::DIRTY_FRESH));
     // Base shouldn't have seen coin.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 
     BOOST_CHECK(all_caches[0]->SpendCoin(outp));
     all_caches[0]->Sync();
@@ -1026,7 +1026,7 @@ void TestFlushBehavior(
     // Ensure there is no sign of the coin after spend/flush.
     BOOST_CHECK(!GetCoinsMapEntry(all_caches[0]->map(), outp));
     BOOST_CHECK(!all_caches[0]->HaveCoinInCache(outp));
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 }
 }; // struct FlushTest
 
@@ -1066,6 +1066,53 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
 
     BOOST_CHECK_EQUAL(*Assert(base.GetCoin(outpoint)), coin);
     BOOST_CHECK_EQUAL(base.GetBestBlock(), block_hash);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_cache_behavior)
+{
+    class CCoinsViewSpy final : public CoinsViewEmpty
+    {
+    public:
+        const COutPoint expected;
+        mutable size_t getcoin_calls{0};
+
+        explicit CCoinsViewSpy(const COutPoint& out) : expected{out} {}
+
+        std::optional<Coin> GetCoin(const COutPoint& out) const noexcept override
+        {
+            BOOST_CHECK(out == expected);
+            ++getcoin_calls;
+            return Coin{CTxOut{1, CScript{}}, 1, false};
+        }
+    };
+
+    const COutPoint prevout{Txid::FromUint256(m_rng.rand256()), 0};
+    CCoinsViewSpy base{prevout};
+    CCoinsViewCache cache{&base};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(prevout);
+    const CTransaction tx{mtx};
+
+    BOOST_CHECK(cache.HaveInputs(tx));
+    BOOST_CHECK_EQUAL(base.getcoin_calls, 1);
+
+    BOOST_CHECK(cache.HaveInputs(tx));
+    BOOST_CHECK(cache.GetCoin(prevout));
+    BOOST_CHECK(!cache.AccessCoin(prevout).IsSpent());
+    BOOST_CHECK(cache.HaveCoin(prevout));
+    BOOST_CHECK_EQUAL(base.getcoin_calls, 1);
+
+    const COutPoint prefilled_prevout{AddTestCoin(m_rng, cache)};
+    BOOST_CHECK(cache.HaveCoinInCache(prefilled_prevout));
+
+    CMutableTransaction prefilled_mtx;
+    prefilled_mtx.vin.emplace_back(prefilled_prevout);
+    const CTransaction prefilled_tx{prefilled_mtx};
+    BOOST_CHECK(cache.HaveInputs(prefilled_tx));
+
+    BOOST_CHECK(cache.SpendCoin(prevout));
+    BOOST_CHECK(!cache.HaveCoinInCache(prevout));
 }
 
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)

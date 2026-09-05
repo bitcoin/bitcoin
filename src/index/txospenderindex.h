@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -53,7 +54,8 @@ protected:
     BaseIndex::DB& GetDB() const override;
 
 public:
-    explicit TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false,
+                             std::function<void()> read_error_cb = {});
 
     /**
      * Search the index for a transaction that spends the given outpoint.
