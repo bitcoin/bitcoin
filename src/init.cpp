@@ -124,6 +124,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <thread>
 #include <tuple>
@@ -174,6 +175,7 @@ static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
+static constexpr std::string_view ADDNODE_BIP152_HB_SUFFIX{"=bip152-hb"};
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -563,7 +565,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
-    argsman.AddArg("-addnode=<ip>", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-addnode=<ip>[:<port>][=bip152-hb]", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). Append =bip152-hb to request BIP152 high-bandwidth compact block announcements. This is incompatible with -blocksonly and is additional to the automatically selected high-bandwidth peers. This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers. Relative paths will be prefixed by the net-specific datadir location.%s",
                 #ifdef ENABLE_EMBEDDED_ASMAP
                     " If a bool arg is given (-asmap or -asmap=1), the embedded mapping data in the binary will be used."
@@ -985,6 +987,17 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (!errors.empty()) {
         return InitError(errors);
+    }
+
+    if (args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        for (const std::string& value : args.GetArgs("-addnode")) {
+            std::string_view added_node{value};
+            if (!added_node.ends_with(ADDNODE_BIP152_HB_SUFFIX)) continue;
+            added_node.remove_suffix(ADDNODE_BIP152_HB_SUFFIX.size());
+            if (TrimStringView(added_node).empty()) continue;
+            return InitError(Untranslated(strprintf(
+                "Invalid -addnode value '%s': the bip152-hb suffix is incompatible with -blocksonly", value)));
+        }
     }
 
     // Testnet3 deprecation warning
@@ -2190,14 +2203,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.m_msgproc = node.peerman.get();
     connOptions.nSendBufferMaxSize = 1000 * args.GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000 * args.GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
-    for (const std::string& added_node : args.GetArgs("-addnode")) {
+    // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
+    // peer doesn't support it or immediately disconnects us for another reason.
+    const bool use_v2transport{static_cast<bool>(g_local_services & NODE_P2P_V2)};
+    for (const std::string& value : args.GetArgs("-addnode")) {
+        std::string added_node{value};
+        const bool bip152_highbandwidth{added_node.ends_with(ADDNODE_BIP152_HB_SUFFIX)};
+        if (bip152_highbandwidth) added_node.resize(added_node.size() - ADDNODE_BIP152_HB_SUFFIX.size());
+
         // Such a value is not a valid connection target, but would otherwise be
         // treated as one and retried indefinitely.
         if (TrimStringView(added_node).empty()) {
             LogWarning("Ignoring empty -addnode value");
             continue;
         }
-        connOptions.m_added_nodes.push_back(added_node);
+        connOptions.m_added_nodes.push_back({std::move(added_node), use_v2transport, bip152_highbandwidth});
     }
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
