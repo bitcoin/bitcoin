@@ -13,9 +13,28 @@
 #include <util/hash_type.h>
 
 #include <cassert>
+#include <stdexcept>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
+
+std::optional<SilentPaymentsDestination> SilentPaymentsDestination::From(
+    const CPubKey& scan_pubkey,
+    const CPubKey& spend_pubkey,
+    uint8_t version,
+    const std::span<unsigned char>& extension_data
+) {
+    if (version >= 31) return std::nullopt;
+    if (version == 0 && !extension_data.empty()) {
+        // V0 address has no extension data
+        return std::nullopt;
+    }
+    if (!scan_pubkey.IsFullyValid() || !scan_pubkey.IsCompressed())
+        return std::nullopt;
+    if (!spend_pubkey.IsFullyValid() || !spend_pubkey.IsCompressed())
+        return std::nullopt;
+    return SilentPaymentsDestination(version, scan_pubkey, spend_pubkey, extension_data);
+}
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
 ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
@@ -108,6 +127,11 @@ namespace {
 class CScriptVisitor
 {
 public:
+    CScript operator()(const SilentPaymentsDestination& dest) const
+    {
+        return CScript();
+    }
+
     CScript operator()(const CNoDestination& dest) const
     {
         return dest.GetScript();
@@ -156,6 +180,9 @@ public:
     bool operator()(const PubKeyDestination& dest) const { return false; }
     bool operator()(const PKHash& dest) const { return true; }
     bool operator()(const ScriptHash& dest) const { return true; }
+    // silent payments addresses are not valid until sending support has been implemented
+    // TODO: set this to true once sending is implemented
+    bool operator()(const SilentPaymentsDestination& dest) const { return false; }
     bool operator()(const WitnessV0KeyHash& dest) const { return true; }
     bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
     bool operator()(const WitnessV1Taproot& dest) const { return true; }

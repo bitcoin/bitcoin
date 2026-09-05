@@ -12,6 +12,7 @@
 #include <util/time.h>
 
 #include <memory>
+#include <stdexcept>
 
 std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, std::span<const uint8_t> byte_data, const bool compressed) noexcept
 {
@@ -215,6 +216,17 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
         },
         [&] {
             tx_destination = PayToAnchor{};
+        },
+        [&] {
+            uint8_t version{fuzzed_data_provider.ConsumeIntegralInRange<uint8_t>(0, 30)};
+            CPubKey scan_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            CPubKey spend_pk{ConstructPubKeyBytes(fuzzed_data_provider, ConsumeFixedLengthByteVector(fuzzed_data_provider, CPubKey::COMPRESSED_SIZE), /*compressed=*/true)};
+            auto extension_data{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/565)};
+            if (auto sp_dest{SilentPaymentsDestination::From(scan_pk, spend_pk, version, extension_data)}) {
+                tx_destination = *sp_dest;
+            } else {
+                tx_destination = CNoDestination();
+            }
         },
         [&] {
             std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
