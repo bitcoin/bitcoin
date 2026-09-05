@@ -441,20 +441,22 @@ class ProxyTest(BitcoinTestFramework):
         self.start_node(1, extra_args=["-onlynet=onion", "-listenonion=1"])
         self.stop_node(1)
 
-        self.log.info("Test passing unknown network to -onlynet raises expected init error")
-        self.nodes[1].extra_args = ["-onlynet=abc"]
-        msg = "Error: Unknown network specified in -onlynet: 'abc'"
-        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+        self.log.info("Test unknown and removed network names are rejected by -onlynet")
+        for network in ["abc", "tor"]:
+            self.nodes[1].extra_args = [f"-onlynet={network}"]
+            msg = f"Error: Unknown network specified in -onlynet: '{network}'"
+            self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
         self.log.info("Test passing trailing '=' raises expected init error")
         self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050="]
         msg = "Error: Invalid -proxy address or hostname, ends with '=': '127.0.0.1:9050='"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
-        self.log.info("Test passing unrecognized network raises expected init error")
-        self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050=foo"]
-        msg = "Error: Unrecognized network in -proxy='127.0.0.1:9050=foo': 'foo'"
-        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+        self.log.info("Test unknown, removed and non-SOCKS5 network names are rejected by -proxy")
+        for network in ["Foo", "tor", "i2p"]:
+            self.nodes[1].extra_args = [f"-proxy=127.0.0.1:9050={network}"]
+            msg = f"Error: Unrecognized network in -proxy='127.0.0.1:9050={network}': '{network}'"
+            self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
         self.log.info("Test passing proxy only for IPv6")
         self.start_node(1, extra_args=["-proxy=127.6.6.6:6666=ipv6"])
@@ -470,8 +472,8 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
         self.stop_node(1)
 
-        self.log.info("Test overriding the Onion proxy")
-        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=onion"])
+        self.log.info("Test overriding the Onion proxy with a mixed-case network suffix")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=OnIoN"])
         nets = networks_dict(self.nodes[1].getnetworkinfo())
         assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
         assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")
