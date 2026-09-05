@@ -1464,6 +1464,12 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].importdescriptors([{"desc": descsum_create("tr({})".format(privkey)), "timestamp":"now"}])
 
         psbt = watchonly.sendall([wallet.getnewaddress(), addr])["psbt"]
+
+        analysis = self.nodes[0].analyzepsbt(psbt)
+        assert_equal(analysis["next"], "signer")
+        for input_analysis in analysis["inputs"]:
+            assert_equal(input_analysis["next"], "signer")
+
         processed_psbt = self.nodes[0].walletprocesspsbt(psbt)
         txid = self.nodes[0].sendrawtransaction(processed_psbt["hex"])
         vout = find_vout_for_address(self.nodes[0], txid, addr)

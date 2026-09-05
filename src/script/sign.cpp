@@ -280,9 +280,10 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
     return false;
 }
 
-static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& script_pubkey, const uint256* merkle_root, const uint256* leaf_hash, SigVersion sigversion)
+static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& script_pubkey, const uint256* merkle_root, const uint256* leaf_hash, SigVersion sigversion, bool* is_musig = nullptr)
 {
     Assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    if (is_musig) *is_musig = false;
 
     // Lookup derivation paths for the script pubkey
     KeyOriginInfo agg_info;
@@ -337,6 +338,8 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
             if (!Assume(tweaked)) return false;
             plain_pub = tweaked->first.GetCPubKeys().at(tweaked->second ? 1 : 0);
         }
+
+        if (is_musig) *is_musig = true;
 
         // First try to aggregate
         if (creator.CreateMuSig2AggregateSig(part_pks, sig_out, agg_pub, plain_pub, leaf_hash, tweaks, sigversion, sigdata)) {
@@ -394,8 +397,14 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
 
     if (creator.CreateSchnorrSig(provider, sig_out, pubkey, &leaf_hash, nullptr, sigversion)) {
         sigdata.taproot_script_sigs[lookup_key] = sig_out;
-    } else if (!SignMuSig2(creator, sigdata, provider, sig_out, pubkey, /*merkle_root=*/nullptr, &leaf_hash, sigversion)) {
-        return false;
+    } else {
+        bool is_musig{false};
+        if (!SignMuSig2(creator, sigdata, provider, sig_out, pubkey, /*merkle_root=*/nullptr, &leaf_hash, sigversion, &is_musig)) {
+            return false;
+        }
+        if (!is_musig && !sigdata.taproot_script_sigs.contains(lookup_key)) {
+            sigdata.missing_sigs.push_back(pubkey.GetEvenCorrespondingCPubKey().GetID());
+        }
     }
 
     return sigdata.taproot_script_sigs.contains(lookup_key);
