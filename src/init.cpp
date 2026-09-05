@@ -573,6 +573,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                 ), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet3: 127.0.0.1:%u=onion, testnet4: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, testnet4ChainParams->GetDefaultPort() + 1, signetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-outboundbind=<addr>", "Bind outgoing connections to the given local address (one per address family). The address must be assigned to a local interface and is used as the source address of outgoing clearnet connections; connections over Tor, I2P and CJDNS are unaffected. Specify a bare address without a port; set -nooutboundbind to disable a previously set address.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -2243,6 +2244,53 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
         return InitError(ResolveErrMsg("bind", bind_arg));
+    }
+
+    for (const std::string& bind_arg : args.GetArgs("-outboundbind")) {
+        const std::optional<CNetAddr> lookup_addr = LookupHost(bind_arg, /*fAllowLookup=*/false);
+        if (!lookup_addr.has_value()) {
+            return InitError(ResolveErrMsg("outboundbind", bind_arg));
+        }
+        // Classify fc00::/8 as CJDNS when -cjdnsreachable is set, the same
+        // way the connect path does.
+        const CNetAddr bind_addr{static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{*lookup_addr, /*port=*/0}))};
+        // The unspecified (wildcard) address pins nothing, so it is not a
+        // usable source address. Any other unusable value is left to the
+        // trial bind of the effective address below.
+        if (bind_addr.IsBindAny()) {
+            return InitError(strprintf(_("-outboundbind address '%s' is not a usable source address"), bind_arg));
+        }
+        // GetArgs() returns values in descending source precedence (command line
+        // before config file), so keep the first per family: the command line
+        // wins over the config file, and repeats resolve to the first given.
+        if (bind_addr.IsIPv4()) {
+            if (!connOptions.outbound_bind_v4) connOptions.outbound_bind_v4 = bind_addr;
+        } else if (bind_addr.IsIPv6()) {
+            if (!connOptions.outbound_bind_v6) connOptions.outbound_bind_v6 = bind_addr;
+        } else if (bind_addr.IsCJDNS()) {
+            return InitError(strprintf(_("-outboundbind address '%s' is a CJDNS address (fc00::/8 while -cjdnsreachable is set), which cannot be a clearnet source"), bind_arg));
+        } else {
+            // LookupHost() also accepts Tor/I2P addresses (via SetSpecial);
+            // they cannot be a clearnet source.
+            return InitError(strprintf(_("-outboundbind address '%s' is not an IPv4 or IPv6 address"), bind_arg));
+        }
+    }
+    // Check that the addresses that will be used can be bound to. Only the
+    // effective address per family is checked, so that a command-line
+    // -outboundbind can override a config-file one that is no longer assigned
+    // to this machine.
+    for (const std::optional<CNetAddr>& bind_addr : {connOptions.outbound_bind_v4, connOptions.outbound_bind_v6}) {
+        if (!bind_addr.has_value()) continue;
+        bilingual_str error;
+        if (!IsAddrBindable(*bind_addr, error)) {
+            return InitError(error);
+        }
+    }
+    // -outboundbind only affects direct clearnet connections; a proxy configured
+    // for a family makes it inert for that family.
+    if ((connOptions.outbound_bind_v4 && GetProxy(NET_IPV4)) ||
+        (connOptions.outbound_bind_v6 && GetProxy(NET_IPV6))) {
+        InitWarning(_("Option '-outboundbind' is set but a proxy is configured; it has no effect on connections made through the proxy."));
     }
 
     for (const std::string& strBind : args.GetArgs("-whitebind")) {
