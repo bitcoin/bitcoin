@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(xor_random_chunks)
         const std::vector original{m_rng.randbytes<std::byte>(write_size)};
         std::vector roundtrip{original};
 
-        const auto key_bytes{m_rng.randbool() ? m_rng.randbytes<Obfuscation::KEY_SIZE>() : std::array<std::byte, Obfuscation::KEY_SIZE>{}};
+        auto key_bytes{m_rng.randbool() ? m_rng.randbytes<Obfuscation::KEY_SIZE>() : Obfuscation::Key{}};
         const Obfuscation obfuscation{key_bytes};
         apply_random_xor_chunks(roundtrip, obfuscation);
         BOOST_CHECK_EQUAL(roundtrip.size(), original.size());
@@ -55,6 +55,32 @@ BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
 
     const Obfuscation obfuscation{key_bytes};
     BOOST_CHECK_EQUAL(obfuscation.HexKey(), HexStr(key_bytes));
+
+    auto parsed_key{Obfuscation::KeyFromHex(obfuscation.HexKey())};
+    BOOST_REQUIRE(parsed_key);
+    BOOST_CHECK(*parsed_key == key_bytes);
+
+    BOOST_CHECK(!Obfuscation::KeyFromHex(""));
+    BOOST_CHECK(!Obfuscation::KeyFromHex("00"));                                        // too short
+    BOOST_CHECK(!Obfuscation::KeyFromHex(obfuscation.HexKey() + "00"));                 // too long
+    BOOST_CHECK(!Obfuscation::KeyFromHex(std::string(2 * Obfuscation::KEY_SIZE, 'z'))); // not hex
+}
+
+BOOST_AUTO_TEST_CASE(obfuscation_delta)
+{
+    auto data{m_rng.randbytes<std::byte>(128)};
+    Obfuscation old_obfuscation{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+    Obfuscation new_obfuscation{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+
+    auto migrated{data};
+    old_obfuscation(migrated); // as stored under the old key
+    auto delta{Obfuscation::Delta(old_obfuscation, new_obfuscation)};
+    delta(migrated);
+
+    auto expected{data};
+    new_obfuscation(expected);
+
+    BOOST_CHECK(migrated == expected);
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
