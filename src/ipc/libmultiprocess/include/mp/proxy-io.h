@@ -12,12 +12,14 @@
 
 #include <capnp/rpc-twoparty.h>
 
+#include <any>
 #include <assert.h>
 #include <algorithm>
 #include <condition_variable>
 #include <cstdlib>
 #include <functional>
 #include <kj/function.h>
+#include <kj/io.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -37,6 +39,7 @@ struct InvokeContext
 struct ClientInvokeContext : InvokeContext
 {
     ThreadContext& thread_context;
+    std::function<void(std::function<void()>)> cancel_receiver;
     ClientInvokeContext(Connection& conn, ThreadContext& thread_context)
         : InvokeContext{conn}, thread_context{thread_context}
     {
@@ -56,14 +59,22 @@ struct ServerInvokeContext : InvokeContext
     //! results structs if the request is canceled while the worker thread is
     //! reading params (`call_context.getParams()`) or writing results
     //! (`call_context.getResults()`).
-    Lock* cancel_lock{nullptr};
+    Lock* request_lock{nullptr};
+    //! For IPC methods that execute asynchronously, not on the event-loop
+    //! thread: mutex request_lock refers to, set together with it. Null for
+    //! methods executing on the event-loop thread.
+    Mutex* request_mutex{nullptr};
     //! For IPC methods that execute asynchronously, not on the event-loop
     //! thread, this is set to true if the IPC call was canceled by the client
     //! or canceled by a disconnection. If the call runs on the event-loop
-    //! thread, it can't be canceled. This should be accessed with cancel_lock
+    //! thread, it can't be canceled. This should be accessed with request_lock
     //! held if it is not null, since in the asynchronous case it is accessed
     //! from multiple threads.
     bool request_canceled{false};
+    //! For IPC methods that execute asynchronously, not on the event-loop
+    //! thread: callback registered by a wrapped method. Runs when request
+    //! cancellation is detected.
+    std::function<void()> cancel_fn;
 
     ServerInvokeContext(ProxyServer& proxy_server, CallContext& call_context, int req)
         : InvokeContext{*proxy_server.m_context.connection}, proxy_server{proxy_server}, call_context{call_context}, req{req}
@@ -213,6 +224,9 @@ private:
 
 std::string LongThreadName(const char* exe_name);
 
+//! Wrap a socket file descriptor as an async stream, taking ownership of the fd.
+Stream MakeStream(EventLoop&loop, SocketId socket);
+
 //! Event loop implementation.
 //!
 //! Cap'n Proto threading model is very simple: all I/O operations are
@@ -311,11 +325,12 @@ public:
     //! Callback functions to run on async thread.
     std::optional<CleanupList> m_async_fns MP_GUARDED_BY(m_mutex);
 
-    //! Pipe read handle used to wake up the event loop thread.
-    int m_wait_fd = -1;
+    //! Socket pair used to post and wait for wakeups to the event loop thread.
+    kj::Own<kj::AsyncIoStream> m_wait_stream;
+    kj::Own<kj::AsyncIoStream> m_post_stream;
 
-    //! Pipe write handle used to wake up the event loop thread.
-    int m_post_fd = -1;
+    //! Synchronous writer used to write to m_post_stream.
+    kj::Own<kj::OutputStream> m_post_writer;
 
     //! Number of EventLoopRef instances referencing this event loop. This is a
     //! sum of the number of client and server objects (Connection, ProxyClient,
@@ -369,7 +384,73 @@ public:
 
     //! Hook called on the event loop thread when a client has disconnected.
     std::function<void()> testing_hook_disconnected;
+
+    //! Miscellaneous testing hook. Called from various places with an
+    //! argument identifying the call site (typically a string literal), so
+    //! tests can control timing or inject behavior at specific points without
+    //! requiring a dedicated hook for each one.
+    std::function<void(std::any)> testing_hook_misc;
 };
+
+//! Cancellation state of one IPC call, created by clientInvoke.
+class ClientCancelState
+{
+public:
+    explicit ClientCancelState(EventLoop& loop) : m_loop(loop) {}
+
+    //! Cancel the in-flight request, waking the blocked client thread.
+    //! Callable from any thread.
+    inline void cancel();
+
+    //! Whether cancel was called.
+    bool canceled()
+    {
+        const Lock lock{m_mutex};
+        return m_canceled;
+    }
+
+    //! Keeps the event loop alive while the caller holds the cancel
+    //! function.
+    EventLoopRef m_loop;
+    Mutex m_mutex;
+    bool m_canceled MP_GUARDED_BY(m_mutex){false};
+    //! Canceler of the request promise, owned by the RequestCanceler attached
+    //! to it. Null before the request is sent and after it completes.
+    kj::Canceler* m_canceler MP_GUARDED_BY(m_mutex){nullptr};
+};
+
+//! kj::Canceler wrapping a request promise. Attached to the promise so it
+//! is created and destroyed on the event loop thread, keeping
+//! ClientCancelState::m_canceler valid while the request is in flight.
+struct RequestCanceler : kj::Canceler
+{
+    explicit RequestCanceler(std::shared_ptr<ClientCancelState> state) : m_state(std::move(state))
+    {
+        const Lock lock{m_state->m_mutex};
+        m_state->m_canceler = this;
+    }
+    ~RequestCanceler()
+    {
+        const Lock lock{m_state->m_mutex};
+        m_state->m_canceler = nullptr;
+    }
+    std::shared_ptr<ClientCancelState> m_state;
+};
+
+void ClientCancelState::cancel()
+{
+    {
+        const Lock lock{m_mutex};
+        if (m_canceled) return;
+        m_canceled = true;
+        // Null canceler means the call already completed, so there is nothing to cancel.
+        if (!m_canceler) return;
+    }
+    m_loop->sync([&] {
+        const Lock lock{m_mutex};
+        if (m_canceler) m_canceler->cancel("canceled by client");
+    });
+}
 
 //! Single element task queue used to handle recursive capnp calls. (If the
 //! server makes a callback into the client in the middle of a request, while the client
@@ -451,7 +532,7 @@ public:
     //! Capability::Client handles owned by ProxyClient objects), then schedules
     //! asynchronous cleanup functions to run in a worker thread (to run
     //! destructors of m_impl instances owned by ProxyServer objects).
-    ~Connection();
+    ~Connection() noexcept(false);
 
     //! Register synchronous cleanup function to run on event loop thread (with
     //! access to capnp thread local variables) when disconnect() is called.
@@ -587,7 +668,28 @@ ProxyClientBase<Interface, Impl>::ProxyClientBase(typename Interface::Client cli
         });
     }
     });
-    Sub::construct(*this);
+    // If construct() fails, run the cleanup functions before rethrowing,
+    // because ~ProxyClientBase will not run for an object whose constructor
+    // threw, and the connection would otherwise be leaked.
+    try {
+        Sub::construct(*this);
+    } catch (...) {
+        MP_LOG(*m_context.loop, Log::Debug) << "Cleaning up " << CxxTypeName(*this) << " " << this << " after construct() failure";
+        CleanupRun(m_context.cleanup_fns);
+        throw;
+    }
+
+    // If this client owns the connection, delete the connection on disconnect.
+    if (destroy_connection) {
+        m_context.loop->sync([&] {
+            EventLoop& loop = *m_context.loop;
+            Connection* connection = m_context.connection;
+            connection->onDisconnect([&loop, connection] {
+                MP_LOG(loop, Log::Warning) << "IPC client: unexpected network disconnect.";
+                delete connection;
+            });
+        });
+    }
 }
 
 template <typename Interface, typename Impl>
@@ -689,7 +791,7 @@ using ConnThread = ConnThreads::iterator;
 // inserted bool.
 std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connection* connection, const std::function<Thread::Client()>& make_thread);
 
-//! The thread_local ThreadContext g_thread_context struct provides information
+//! The thread_local ThreadContext struct (see CurrentThread()) provides information
 //! about individual threads and a way of communicating between them. Because
 //! it's a thread local struct, each ThreadContext instance is initialized by
 //! the thread that owns it.
@@ -824,24 +926,21 @@ kj::Promise<T> ProxyServer<Thread>::post(Fn&& fn)
     return ret;
 }
 
-//! Given stream file descriptor, make a new ProxyClient object to send requests
-//! over the stream. Also create a new Connection object embedded in the
-//! client that is freed when the client is closed.
+//! Given a stream, make a new ProxyClient object to send requests over it.
+//! Also create a new Connection object embedded in the client that is freed
+//! when the client is closed.
+//!
+//! If the init interface declares a construct() method, creating the client
+//! calls it, so this function may block making an IPC call and may throw if
+//! the call fails.
 template <typename InitInterface>
-std::unique_ptr<ProxyClient<InitInterface>> ConnectStream(EventLoop& loop, int fd)
+std::unique_ptr<ProxyClient<InitInterface>> ConnectStream(EventLoop& loop, Stream stream)
 {
     typename InitInterface::Client init_client(nullptr);
     std::unique_ptr<Connection> connection;
     loop.sync([&] {
-        auto stream =
-            loop.m_io_context.lowLevelProvider->wrapSocketFd(fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP);
         connection = std::make_unique<Connection>(loop, kj::mv(stream));
         init_client = connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<InitInterface>();
-        Connection* connection_ptr = connection.get();
-        connection->onDisconnect([&loop, connection_ptr] {
-            MP_LOG(loop, Log::Warning) << "IPC client: unexpected network disconnect.";
-            delete connection_ptr;
-        });
     });
     return std::make_unique<ProxyClient<InitInterface>>(
         kj::mv(init_client), connection.release(), /* destroy_connection= */ true);
@@ -905,22 +1004,18 @@ void _Listen(const std::shared_ptr<Listener>& listener, EventLoop& loop, InitImp
         }));
 }
 
-//! Given stream file descriptor and an init object, handle requests on the
-//! stream by calling methods on the Init object.
+//! Given a stream and an init object, handle requests on the stream by calling
+//! methods on the Init object.
 template <typename InitInterface, typename InitImpl>
-void ServeStream(EventLoop& loop, int fd, InitImpl& init)
+void ServeStream(EventLoop& loop, Stream stream, InitImpl& init)
 {
-    _Serve<InitInterface>(
-        loop,
-        loop.m_io_context.lowLevelProvider->wrapSocketFd(fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP),
-        init,
-        [] {});
+    _Serve<InitInterface>(loop, kj::mv(stream), init, [] {});
 }
 
-//! Given listening socket file descriptor and an init object, handle incoming
+//! Given listening socket identifier and an init object, handle incoming
 //! connections and requests by calling methods on the Init object.
 template <typename InitInterface, typename InitImpl>
-void ListenConnections(EventLoop& loop, int fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
+void ListenConnections(EventLoop& loop, SocketId fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
 {
     loop.sync([&]() {
         auto listener{std::make_shared<Listener>(
@@ -934,6 +1029,26 @@ extern thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial
 // Silence nonstandard bitcoin tidy error "Variable with non-trivial destructor
 // cannot be thread_local" which should not be a problem on modern platforms, and
 // could lead to a small memory leak at worst on older ones.
+
+//! Return the current thread's ThreadContext.
+//!
+//! Why per-thread state is needed at all: libmultiprocess has no control over
+//! which threads the C++ application uses to call ProxyClient methods after
+//! the proxy objects are returned to it. The thread-mapping model (see
+//! "Thread Mapping" in doc/design.md) gives each application thread making
+//! IPC calls a dedicated server-side thread that executes its requests, so
+//! thread-local state and recursive mutexes work as expected across the
+//! process boundary and callbacks from the server run on the originating
+//! client thread. The client-side handles for those dedicated server threads
+//! (the ProxyClient<Thread> objects returned by ThreadMap.makeThread, stored
+//! per connection in the request_threads / callback_threads maps below) are
+//! state that must be keyed implicitly by the calling thread, and must be
+//! released when the client thread exits so the corresponding server threads
+//! are freed. A thread_local object is the C++ mechanism that provides both
+//! of these: per-thread storage plus a destructor that runs at thread exit
+//! (the C equivalent would be a pthread key destructor). This is why
+//! ThreadContext is thread_local and why its destructor is nontrivial.
+ThreadContext& CurrentThread();
 
 } // namespace mp
 

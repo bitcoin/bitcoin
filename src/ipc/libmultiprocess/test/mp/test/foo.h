@@ -34,6 +34,7 @@ struct FooCustom
 {
     std::string v1;
     int v2;
+    std::vector<int> v3;
 };
 
 struct FooEmpty
@@ -66,6 +67,31 @@ public:
     virtual int callExtended(int arg) = 0;
 };
 
+class FooInit
+{
+};
+
+//! A second, arbitrary interface used to test returning a
+//! list of interface objects.
+class Bar
+{
+public:
+    virtual ~Bar() = default;
+    virtual int value() = 0;
+};
+
+//! Concrete Bar that returns a fixed value, used by listBars tests.
+class SimpleBar : public Bar
+{
+public:
+    explicit SimpleBar(int value) : m_value(value) {}
+    int value() override { return m_value; }
+    int m_value;
+};
+
+using CancelFn = std::function<void()>;
+using CancelArg = std::function<void(CancelFn)>;
+
 class FooImplementation
 {
 public:
@@ -74,7 +100,7 @@ public:
     void addInOut(int x, int& sum) { sum += x; }
     int mapSize(const std::map<std::string, std::string>& map) { return map.size(); }
     FooStruct pass(FooStruct foo) { return foo; }
-    void raise(FooStruct foo) { throw foo; }
+    [[noreturn]] void raise(FooStruct foo) { throw foo; }
     void initThreadMap() {}
     int callback(FooCallback& callback, int arg) { return callback.call(arg); }
     int callbackUnique(std::unique_ptr<FooCallback> callback, int arg) { return callback->call(arg); }
@@ -90,13 +116,28 @@ public:
     FooEnum passEnum(FooEnum foo) { return foo; }
     double passDouble(double value) { return value; }
     int passFn(std::function<int()> fn) { return fn(); }
+    int passExtra(int arg, int extra) { return arg + extra; }
     std::vector<FooDataRef> passDataPointers(std::vector<FooDataRef> values) { return values; }
+    std::vector<std::unique_ptr<Bar>> listBars(int n)
+    {
+        std::vector<std::unique_ptr<Bar>> result;
+        result.reserve(n);
+        for (int i = 0; i < n; ++i) result.push_back(std::make_unique<SimpleBar>(i));
+        return result;
+    }
     std::shared_ptr<FooCallback> m_callback;
     void callFn() { assert(m_fn); m_fn(); }
     void callFnAsync() { assert(m_fn); m_fn(); }
     int callIntFnAsync(int arg) { assert(m_int_fn); return m_int_fn(arg); }
+    FooMessage callMessageAsync() { assert(m_fn); m_fn(); return {}; }
+    void callCancelFnAsync(CancelArg cancel)
+    {
+        assert(m_cancel_fn);
+        m_cancel_fn(std::move(cancel));
+    }
     std::function<void()> m_fn;
     std::function<int(int)> m_int_fn;
+    std::function<void(CancelArg)> m_cancel_fn;
 };
 
 } // namespace test
