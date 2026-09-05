@@ -330,6 +330,7 @@ BASE_SCRIPTS = [
     'wallet_sendmany.py',
     'wallet_spend_unconfirmed.py',
     'wallet_rescan_unconfirmed.py',
+    'wallet_rescan_intrablock_ordering.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'feature_init.py',

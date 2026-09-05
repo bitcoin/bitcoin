@@ -1957,8 +1957,41 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     result.status = ScanResult::FAILURE;
                     break;
                 }
-                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, /*rescanning_old_block=*/true);
+                // Collect range_end per HD descriptor so we can detect a mid-block
+                // look-ahead pool expansion (TopUp called from MarkUnusedAddresses).
+                auto collect_range_ends = [this]() {
+                    std::map<uint256, int32_t> ends;
+                    for (const auto* spkm : GetAllScriptPubKeyMans()) {
+                        if (const auto* desc = dynamic_cast<const DescriptorScriptPubKeyMan*>(spkm)) {
+                            if (desc->IsHDEnabled()) ends[desc->GetID()] = desc->GetEndRange();
+                        }
+                    }
+                    return ends;
+                };
+                // Process transactions in vtx order. If a pool-expanding tx appears
+                // after a tx paying to a not-yet-derived key in the same block, the
+                // earlier tx is missed. Track the last vtx position where the pool
+                // expands and re-scan only the prefix before it [0, scan_end) on the
+                // next pass, to recover missed txs without re-processing ones that
+                // came after the final expansion (which would double-fire
+                // walletnotify for those). The prefix shrinks each pass, guaranteeing
+                // termination.
+                auto range_ends = collect_range_ends();
+                size_t scan_end = block.vtx.size();
+                while (scan_end > 0) {
+                    std::optional<size_t> next_scan_end;
+                    for (size_t pos_in_block = 0; pos_in_block < scan_end; ++pos_in_block) {
+                        if (!SyncTransaction(block.vtx[pos_in_block], TxStateConfirmed{block_hash, block_height, static_cast<int>(pos_in_block)}, /*rescanning_old_block=*/true)) {
+                            continue; // Not wallet-relevant; the pool cannot have expanded.
+                        }
+                        auto cur = collect_range_ends();
+                        if (cur != range_ends) {
+                            next_scan_end = pos_in_block;
+                            range_ends = std::move(cur);
+                        }
+                    }
+                    if (!next_scan_end.has_value()) break;
+                    scan_end = *next_scan_end;
                 }
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
