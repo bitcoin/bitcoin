@@ -28,6 +28,7 @@
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
+#include <wallet/walletutil.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
