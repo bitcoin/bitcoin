@@ -748,7 +748,7 @@ static RPCMethod createwalletdescriptor()
             {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "The address type the descriptor will produce. Options are " + FormatAllOutputTypes() + "."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", {
                 {"internal", RPCArg::Type::BOOL, RPCArg::DefaultHint{"Both external and internal will be generated unless this parameter is specified"}, "Whether to only make one descriptor that is internal (if parameter is true) or external (if parameter is false)"},
-                {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"The HD key used by all other active descriptors"}, "The HD key that the wallet knows the private key of, listed using 'gethdkeys', to use for this descriptor's key"},
+                {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"The HD key used by all other active descriptors, or, if there are none, the HD key of an unused(KEY) descriptor."}, "The HD key that the wallet knows the private key of, listed using 'gethdkeys', to use for this descriptor's key"},
             }},
         },
         RPCResult{
@@ -790,11 +790,24 @@ static RPCMethod createwalletdescriptor()
 
             CExtPubKey xpub;
             if (hdkey.isNull()) {
+                // First consider the HD key from active descriptors
                 HDPubKeyMap active_xpubs = pwallet->GetHDPubKeys(HDKeyFilter::Active);
-                if (active_xpubs.size() != 1) {
+                if (active_xpubs.size() == 1) {
+                    xpub = active_xpubs.begin()->first;
+                } else if (active_xpubs.size() > 1) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'");
+                } else {
+                    // Look for an unused(KEY) descriptor
+                    HDPubKeyMap wallet_xpubs{pwallet->GetHDPubKeys(HDKeyFilter::UnusedKey)};
+
+                    if (wallet_xpubs.empty()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No HD key found. Please generate one with 'addhdkey' or import an active descriptor.");
+                    } else if (wallet_xpubs.size() > 1) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use. Please specify with 'hdkey'");
+                    }
+
+                    xpub = wallet_xpubs.begin()->first;
                 }
-                xpub = active_xpubs.begin()->first;
             } else {
                 xpub = DecodeExtPubKey(hdkey.get_str());
                 if (!xpub.pubkey.IsValid()) {
@@ -882,6 +895,10 @@ RPCMethod addhdkey()
             }
 
             LOCK(wallet->cs_wallet);
+            if (wallet->GetKey(hdkey.Neuter().pubkey.GetID())) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
+            }
+
             std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
             FlatSigningProvider keys;
             std::string error;
