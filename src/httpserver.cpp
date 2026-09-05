@@ -722,6 +722,17 @@ util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CServi
                                           NetworkErrorString(WSAGetLastError()))};
     }
 
+#ifdef WIN32
+    // Prevent another application from binding to the same address and port and
+    // intercepting RPC credentials.
+    // SO_REUSEADDR on Windows is non-exclusive so another process could bind to
+    // the same port.
+    if (sock->SetSockOpt(SOL_SOCKET, SO_EXCLUSIVEADDRUSE, &SOCKET_OPTION_TRUE, sizeof(SOCKET_OPTION_TRUE)) == SOCKET_ERROR) {
+        return util::Unexpected{strprintf("Cannot set SO_EXCLUSIVEADDRUSE on %s listen socket: %s",
+                                          to.ToStringAddrPort(),
+                                          NetworkErrorString(WSAGetLastError()))};
+    }
+#else
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
     if (sock->SetSockOpt(SOL_SOCKET, SO_REUSEADDR, &SOCKET_OPTION_TRUE, sizeof(SOCKET_OPTION_TRUE)) == SOCKET_ERROR) {
@@ -730,6 +741,7 @@ util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CServi
                  to.ToStringAddrPort(),
                  NetworkErrorString(WSAGetLastError()));
     }
+#endif
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
     // and enable it by default or not. Try to enable it, if possible.

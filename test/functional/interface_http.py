@@ -134,6 +134,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.node.reuse_http_connections = False
 
         self.check_default_connection()
+        self.check_socket_exclusivity()
         self.check_keepalive_connection()
         self.check_close_connection()
         self.check_excessive_request_size()
@@ -171,6 +172,18 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Close
         conn.close_sock()
         assert conn.sock_closed()
+
+
+    def check_socket_exclusivity(self):
+        self.log.info("Checking that another process cannot bind the HTTP listen port")
+        url = urllib.parse.urlparse(self.node.url)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as competing_listener:
+            competing_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Ill-configured sockets permit port reuse unless the original
+            # listener requested exclusive address use.
+            assert_raises(
+                OSError,
+                lambda: competing_listener.bind((url.hostname, url.port)))
 
 
     def check_keepalive_connection(self):
