@@ -13,6 +13,7 @@ from pathlib import Path
 import random
 import re
 import sys
+import unittest
 from typing import Union
 
 asmap_dir = Path(__file__).parent.parent / "asmap"
@@ -61,7 +62,7 @@ def parseline(line: str) -> Union[dict, None]:
         # Ignore line that starts with comment
         return None
     sline = line.split()
-    if len(sline) < 11:
+    if len(sline) < 12:
         # line too short to be valid, skip it.
         return None
     # Skip bad results.
@@ -265,6 +266,26 @@ def main():
         if 'asn' in ip:
             print(f" # AS{ip['asn']}", end="")
         print()
+
+class TestParseLine(unittest.TestCase):
+    """Unit tests for `parseline`."""
+
+    # A seeder line has 12 whitespace-separated fields: address, good, lastSuccess, %(2h), %(8h), %(1d), %(7d), %(30d), blocks, services, version, user agent
+    VALID_LINE = '1.2.3.4:8333 1 1700000000 100.00% 100.00% 100.00% 100.00% 100.00% 910001 000000000000040d 70016 "/Satoshi:29.0.0/"'
+
+    def test_valid_line(self):
+        parsed = parseline(self.VALID_LINE)
+        self.assertEqual(parsed['net'], 'ipv4')
+        self.assertEqual(parsed['ip'], '1.2.3.4')
+        self.assertEqual(parsed['port'], 8333)
+        self.assertEqual(parsed['agent'], '/Satoshi:29.0.0/')
+
+    def test_truncated_line_is_skipped(self):
+        fields = self.VALID_LINE.split()
+        for count in range(11):
+            with self.subTest(fields=count):
+                self.assertIsNone(parseline(' '.join(fields[:count])))
+        self.assertIsNone(parseline(' '.join(fields[:11])))  # The user agent is the 12th field, so 11 fields is still too short
 
 if __name__ == '__main__':
     main()
