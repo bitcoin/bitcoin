@@ -1644,7 +1644,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin) const
     if (txo) {
         return txo->GetTxOut().nValue;
     }
-    return 0;
+    return 0*sats;
 }
 
 bool CWallet::IsMine(const CTxOut& txout) const
@@ -1710,7 +1710,7 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
 
 CAmount CWallet::GetDebit(const CTransaction& tx) const
 {
-    CAmount nDebit = 0;
+    CAmount nDebit{0};
     for (const CTxIn& txin : tx.vin)
     {
         nDebit += GetDebit(txin);
@@ -3020,7 +3020,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     if (const auto arg{args.GetArg("-maxapsfee")}) {
         const std::string& max_aps_fee{*arg};
         if (max_aps_fee == "-1") {
-            wallet->m_max_aps_fee = -1;
+            wallet->m_max_aps_fee = -1*sats;
         } else if (std::optional<CAmount> max_fee = ParseMoney(max_aps_fee)) {
             if (max_fee.value() > HIGH_APS_FEE) {
                 warnings.push_back(AmountHighWarn("-maxapsfee") + Untranslated(" ") +
@@ -3046,7 +3046,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     }
 
     // Disable fallback fee in case value was set to 0, enable if non-null value
-    wallet->m_allow_fallback_fee = wallet->m_fallback_fee.GetFeePerK() != 0;
+    wallet->m_allow_fallback_fee = wallet->m_fallback_fee.GetFeePerK() != 0*sats;
 
     if (const auto arg{args.GetArg("-discardfee")}) {
         std::optional<CAmount> discard_fee = ParseMoney(*arg);

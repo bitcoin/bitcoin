@@ -243,8 +243,8 @@ static RPCMethod estimaterawfee()
                 failbucket.pushKV("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0);
                 failbucket.pushKV("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0);
 
-                // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
-                if (feeRate != CFeeRate(0)) {
+                // CFeeRate(0*sats) is used to indicate error as a return value from estimateRawFee
+                if (feeRate != CFeeRate(0*sats)) {
                     horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", buckets.scale);

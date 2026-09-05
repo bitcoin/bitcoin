@@ -62,7 +62,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
         for (const auto& in : tx->vin) {
             if (txids.contains(in.prevout.hash)) continue;
             Coin coin{};
-            if (!spent) coin.out.nValue = 1;
+            if (!spent) coin.out.nValue = 1*sats;
             cache.EmplaceCoinInternalDANGER(in.prevout, std::move(coin));
         }
         txids.emplace(tx->GetHash());
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(access_non_input_coins)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
     Coin coin{};
-    coin.out.nValue = 1;
+    coin.out.nValue = 1*sats;
     const COutPoint outpoint{Txid::FromUint256(uint256::ZERO), 0};
     main_cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, std::move(coin));
 

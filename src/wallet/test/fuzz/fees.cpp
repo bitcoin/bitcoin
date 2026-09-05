@@ -50,7 +50,7 @@ public:
 
     util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int confTarget, bool conservative) const override
     {
-        FeePerVSize feerate(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
+        FeePerVSize feerate(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000*sats), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
         return FeeRateEstimation{FeeRateEstimatorType::BLOCK_POLICY, feerate, fuzzed_data_provider.ConsumeIntegralInRange<int>(2, 1004)};
     }
     util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(FeeRateEstimatorType type, int confTarget, bool conservative) const override
@@ -81,14 +81,14 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 
     bilingual_str error;
     CTxMemPool::Options mempool_opts{
-        .incremental_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
-        .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
-        .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
+        .incremental_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000*sats)},
+        .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000*sats)},
+        .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000*sats)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
     std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man = std::make_unique<FuzzedFeeEstimatorMan>(fuzzed_data_provider, *node.mempool, *node.chainman);
     g_setup->SetFeeEstimatorMan(std::move(fee_estimator_man));
-    auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
+    auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000*sats)}};
     if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&
         target_feerate > node.mempool->m_opts.min_relay_feerate) {
         MockMempoolMinFee(target_feerate, *node.mempool);

@@ -717,7 +717,7 @@ public:
     std::optional<CAmount> calculateCombinedBumpFee(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) override
     {
         if (!m_node.mempool) {
-            return 0;
+            return 0*sats;
         }
         return MiniMiner(*m_node.mempool, outpoints).CalculateTotalBumpFees(target_feerate);
     }

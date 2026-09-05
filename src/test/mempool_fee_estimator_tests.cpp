@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
     BOOST_CHECK(empty.p75.IsEmpty());
     const int32_t chunk_size{10};
     const int32_t individual_tx_vsize = static_cast<int32_t>(DEFAULT_BLOCK_MAX_WEIGHT / WITNESS_SCALE_FACTOR) / chunk_size;
-    const FeePerVSize super_high_fee_rate{500 * individual_tx_vsize, individual_tx_vsize};
-    const FeePerVSize high_fee_rate{100 * individual_tx_vsize, individual_tx_vsize};
-    const FeePerVSize medium_fee_rate{50 * individual_tx_vsize, individual_tx_vsize};
-    const FeePerVSize low_fee_rate{10 * individual_tx_vsize, individual_tx_vsize};
+    const FeePerVSize super_high_fee_rate{CAmount{500 * individual_tx_vsize}, individual_tx_vsize};
+    const FeePerVSize high_fee_rate{CAmount{100 * individual_tx_vsize}, individual_tx_vsize};
+    const FeePerVSize medium_fee_rate{CAmount{50 * individual_tx_vsize}, individual_tx_vsize};
+    const FeePerVSize low_fee_rate{CAmount{10 * individual_tx_vsize}, individual_tx_vsize};
     std::vector<FeePerVSize> chunk_feerates;
     chunk_feerates.reserve(chunk_size);
     for (int i = 0; i < chunk_size; ++i) {
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     MemPoolFeeRateEstimatorCache cache;
     const uint256 tip_hash{uint256::ONE};
     const uint256 next_tip_hash{uint256{2}};
-    const FeePerVSize conservative{2, 1};
-    const FeePerVSize economical{1, 1};
+    const FeePerVSize conservative{2*sats, 1};
+    const FeePerVSize economical{1*sats, 1};
 
     BOOST_CHECK(cache.IsStale());
     BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));

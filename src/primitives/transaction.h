@@ -142,10 +142,7 @@ public:
     CAmount nValue;
     CScript scriptPubKey;
 
-    CTxOut()
-    {
-        SetNull();
-    }
+    CTxOut() : nValue{-1} {}
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
@@ -153,13 +150,13 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = -1*sats;
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == -1*sats);
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -270,7 +267,7 @@ void SerializeTransaction(const TxType& tx, Stream& s, const TransactionSerParam
 template<typename TxType>
 inline CAmount CalculateOutputValue(const TxType& tx)
 {
-    return std::accumulate(tx.vout.cbegin(), tx.vout.cend(), CAmount{0}, [](CAmount sum, const auto& txout) { return sum + txout.nValue; });
+    return std::accumulate(tx.vout.cbegin(), tx.vout.cend(), 0*sats, [](CAmount sum, const auto& txout) { return sum + txout.nValue; });
 }
 
 
