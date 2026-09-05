@@ -18,6 +18,16 @@ using namespace std::chrono_literals;
 
 BOOST_FIXTURE_TEST_SUITE(sock_tests, BasicTestingSetup)
 
+static bool SocketIsClosed(const Sock &s)
+{
+    // Notice that if another thread is running and creates its own socket after `s` has been
+    // closed, it may be assigned the same file descriptor number. In this case, our test will
+    // wrongly pretend that the socket is not closed.
+    int type;
+    socklen_t len = sizeof(type);
+    return s.GetSockOpt(SOL_SOCKET, SO_TYPE, reinterpret_cast<char*>(&type), &len) == SOCKET_ERROR;
+}
+
 static bool SocketIsClosed(const SOCKET& s)
 {
     // Notice that if another thread is running and creates its own socket after `s` has been
@@ -86,11 +96,13 @@ struct TcpSocketPair {
     Sock sender;
     Sock receiver;
 
-    TcpSocketPair()
+    TcpSocketPair(bool connect = true)
         : sender{Sock{CreateSocket()}},
         receiver{Sock{CreateSocket()}}
     {
-        connect_pair();
+        if (connect) {
+            connect_pair();
+        }
     }
 
     TcpSocketPair(const TcpSocketPair&) = delete;
@@ -146,7 +158,7 @@ BOOST_AUTO_TEST_CASE(send_and_receive)
 
 BOOST_AUTO_TEST_CASE(wait)
 {
-    TcpSocketPair socks = TcpSocketPair{};
+    TcpSocketPair socks{};
 
     std::thread waiter([&socks]() { (void)socks.receiver.Wait(24h, Sock::RecvEvent); });
 
@@ -160,7 +172,7 @@ BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
     constexpr auto timeout = 1min; // High enough so that it is never hit.
     CThreadInterrupt interrupt;
 
-    TcpSocketPair socks = TcpSocketPair{};
+    TcpSocketPair socks{};
 
     std::thread receiver([&socks, &timeout, &interrupt]() {
         constexpr size_t max_data{10};
@@ -179,6 +191,39 @@ BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
     BOOST_REQUIRE_NO_THROW(socks.sender.SendComplete("89a\n", timeout, interrupt));
 
     receiver.join();
+}
+
+BOOST_AUTO_TEST_CASE(tcp_info)
+{
+    TcpSocketPair socks{/*connect=*/false};
+
+    // Set some small multiple of 8 as receiver advertised window, as long as we
+    // are below MSS this will be the window size.
+    int sender_rcvbuf = 8 * 160;
+    socklen_t sender_rcvbuf_len{sizeof(sender_rcvbuf)};
+    BOOST_CHECK(!socks.sender.SetSockOpt(SOL_SOCKET, SO_RCVBUF, &sender_rcvbuf, sender_rcvbuf_len));
+
+    int receiver_rcvbuf = 8 * 150;
+    socklen_t receiver_rcvbuf_len{sizeof(receiver_rcvbuf)};
+    BOOST_CHECK(!socks.receiver.SetSockOpt(SOL_SOCKET, SO_RCVBUF, &receiver_rcvbuf, receiver_rcvbuf_len));
+
+    // Now connect.
+    socks.connect_pair();
+
+    TCPInfo sender_info{socks.sender}, receiver_info{socks.receiver};
+    // Test that we can acquire a valid TCP_INFO structure on all
+    // supported platforms.
+    BOOST_CHECK(sender_info.m_valid);
+    BOOST_CHECK(receiver_info.m_valid);
+
+#if !defined(__APPLE__)
+    // macOS ignores SO_RCVBUF if sysctl param net.inet.tcp.doautorcvbuf == 1
+    BOOST_CHECK_EQUAL(sender_info.GetTCPWindowSize(), receiver_rcvbuf);
+    BOOST_CHECK_EQUAL(receiver_info.GetTCPWindowSize(), sender_rcvbuf);
+#endif
+
+    BOOST_CHECK(!SocketIsClosed(socks.sender));
+    BOOST_CHECK(!SocketIsClosed(socks.receiver));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
