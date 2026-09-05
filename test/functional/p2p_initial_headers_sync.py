@@ -33,6 +33,7 @@ import time
 # Constants from net_processing
 HEADERS_DOWNLOAD_TIMEOUT_BASE_SEC = 15 * 60
 HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER_MS = 1
+HEADERS_RESPONSE_TIME_SEC = 2 * 60
 POW_TARGET_SPACING_SEC = 10 * 60
 
 
@@ -68,6 +69,7 @@ class HeadersSyncTest(BitcoinTestFramework):
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
+        self.nodes[0].setmocktime(int(time.time()))
 
         self.log.info("Adding a peer to node0")
         peer1 = self.nodes[0].add_p2p_connection(P2PInterface())
@@ -75,11 +77,6 @@ class HeadersSyncTest(BitcoinTestFramework):
 
         # Wait for peer1 to receive a getheaders
         peer1.wait_for_getheaders(block_hash=best_block_hash)
-        # An empty reply will clear the outstanding getheaders request,
-        # allowing additional getheaders requests to be sent to this peer in
-        # the future.
-        peer1.send_without_ping(msg_headers())
-
         self.log.info("Connecting two more peers to node0")
         # Connect 2 more peers; they should not receive a getheaders yet
         peer2 = self.nodes[0].add_p2p_connection(P2PInterface())
@@ -94,17 +91,19 @@ class HeadersSyncTest(BitcoinTestFramework):
             assert "getheaders" not in peer2.last_message
             assert "getheaders" not in peer3.last_message
 
+        # Let peer1's request expire so the announcement can trigger another
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
         self.log.info("Have all peers announce a new block")
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
         peer1.wait_for_getheaders(block_hash=best_block_hash)
-        peer1.send_without_ping(msg_headers()) # Send empty response, see above
 
         self.log.info("Check that exactly 1 of {peer2, peer3} received a getheaders in response")
         peer_receiving_getheaders = self.assert_single_getheaders_recipient([peer2, peer3])
-        peer_receiving_getheaders.send_without_ping(msg_headers()) # Send empty response, see above
 
+        # Let the previous requests expire so the next announcement can trigger new ones
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
         self.log.info("Announce another new block, from all peers")
         self.announce_random_block(all_peers)
 
@@ -117,6 +116,39 @@ class HeadersSyncTest(BitcoinTestFramework):
             expected_peer = peer3
 
         expected_peer.wait_for_getheaders(block_hash=best_block_hash)
+
+        self.log.info("Test empty headers response from inbound peer")
+        # Disconnect the announcement peers so peer4 is the only eligible replacement
+        peer2.peer_disconnect()
+        peer3.peer_disconnect()
+        self.nodes[0].wait_until(lambda: self.nodes[0].num_test_p2p_connections() == 1)
+
+        self.nodes[0].bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
+        peer1.send_and_ping(msg_headers())
+        peer4 = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer4.sync_with_ping()
+        with p2p_lock:
+            assert_equal("getheaders" in peer4.last_message, True)  # Release peer1's initial-sync slot after its empty response
+
+        self.log.info("Test empty headers response from manual peer")
+        node = self.nodes[0]
+        node.disconnect_p2ps()
+        manual_peer = P2PInterface()
+        manual_peer.peer_accept_connection(
+            connect_id=1, connect_cb=lambda address, port: node.addnode(f"{address}:{port}", "onetry"),
+            net=self.chain, timeout_factor=node.timeout_factor, supports_v2_p2p=node.use_v2transport, reconnect=False,
+        )()
+        manual_peer.wait_for_connect()
+        node.p2ps.append(manual_peer)
+        manual_peer.wait_for_getheaders(block_hash=best_block_hash)
+        assert_equal(node.getpeerinfo()[0]["connection_type"], "manual")
+
+        node.bumpmocktime(HEADERS_RESPONSE_TIME_SEC + 1)
+        manual_peer.send_and_ping(msg_headers())
+        replacement_peer = node.add_p2p_connection(P2PInterface())
+        replacement_peer.sync_with_ping()
+        with p2p_lock:
+            assert_equal("getheaders" in replacement_peer.last_message, True)  # Release the manual peer's initial-sync slot after its empty response
 
     def setup_timeout_test_peers(self):
         self.log.info("Add peer1 and check it receives an initial getheaders request")
