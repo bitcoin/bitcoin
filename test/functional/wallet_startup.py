@@ -72,16 +72,19 @@ class WalletStartupTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=["-nosettings"])
         assert_equal(node.listwallets(), [''])
 
-        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.createwallet, wallet_name="no_settings", load_on_startup=True)
+        result = node.createwallet(wallet_name="no_settings", load_on_startup=True)
+        assert_equal(result, {"name": "no_settings", "warnings": ["Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."]})
         assert_equal(set(node.listwallets()), {'', 'no_settings'})
         assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
 
-        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.unloadwallet, wallet_name="no_settings", load_on_startup=False)
+        result = node.unloadwallet(wallet_name="no_settings", load_on_startup=False)
+        assert_equal(result, {"warnings": ["Wallet load on startup setting could not be updated, so wallet may still be loaded next node startup."]})
         assert_equal(node.listwallets(), [''])
 
         # Check that the wallet stays unloaded across a restart.
         self.restart_node(0, extra_args=["-nosettings"])
-        assert_raises_rpc_error(-1, "Attempt to write settings file when dynamic settings are disabled.", node.loadwallet, filename="no_settings", load_on_startup=True)
+        result = node.loadwallet(filename="no_settings", load_on_startup=True)
+        assert_equal(result, {"name": "no_settings", "warnings": ["Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."]})
         assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
 
         # Startup preferences were not persisted, but the wallet remains usable.
