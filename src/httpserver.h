@@ -492,7 +492,7 @@ class HTTPRemoteClient
 {
 public:
     explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
-        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{Now<SteadySeconds>()} {}
+        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{MockableSteadyClock::now()} {}
 
     // Disable copies (should only be used as shared pointers)
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
@@ -507,7 +507,7 @@ public:
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
-    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+    bool ShouldDisconnect(std::chrono::time_point<MockableSteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all) const;
 
     /**
      * Try to read an HTTPRequest from a client's receive buffer.
@@ -630,7 +630,7 @@ private:
     //! Timestamp of last send or receive activity, used for -rpcservertimeout.
     //! Due to optimistic sends it may be updated in either a worker thread or in the
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
-    std::atomic<SteadySeconds> m_idle_since;
+    std::atomic<MockableSteadyClock::time_point> m_idle_since;
 };
 
 /** Initialize HTTP server.
