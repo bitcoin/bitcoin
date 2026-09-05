@@ -9,11 +9,11 @@
 
 namespace mp {
 template <size_t index, typename LocalType, typename Value, typename Output>
+    requires (index < ProxyType<LocalType>::fields)
 void BuildOne(TypeList<LocalType> param,
     InvokeContext& invoke_context,
     Output&& output,
-    Value&& value,
-    typename std::enable_if < index<ProxyType<LocalType>::fields>::type * enable = nullptr)
+    Value&& value)
 {
     using Index = std::integral_constant<size_t, index>;
     using Struct = typename ProxyType<LocalType>::Struct;
@@ -25,31 +25,31 @@ void BuildOne(TypeList<LocalType> param,
 }
 
 template <size_t index, typename LocalType, typename Value, typename Output>
+    requires (index == ProxyType<LocalType>::fields)
 void BuildOne(TypeList<LocalType> param,
     InvokeContext& invoke_context,
     Output&& output,
-    Value&& value,
-    typename std::enable_if<index == ProxyType<LocalType>::fields>::type* enable = nullptr)
+    Value&& value)
 {
 }
 
 template <typename LocalType, typename Value, typename Output>
+    requires requires { typename ProxyType<LocalType>::Struct; }
 void CustomBuildField(TypeList<LocalType> local_type,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
-    Output&& output,
-    typename ProxyType<LocalType>::Struct* enable = nullptr)
+    Output&& output)
 {
     BuildOne<0>(local_type, invoke_context, output.init(), value);
 }
 
 template <size_t index, typename LocalType, typename Input, typename Value>
+    requires (index != ProxyType<LocalType>::fields)
 void ReadOne(TypeList<LocalType> param,
     InvokeContext& invoke_context,
     Input&& input,
-    Value&& value,
-    typename std::enable_if<index != ProxyType<LocalType>::fields>::type* enable = nullptr)
+    Value&& value)
 {
     using Index = std::integral_constant<size_t, index>;
     using Struct = typename ProxyType<LocalType>::Struct;
@@ -62,21 +62,21 @@ void ReadOne(TypeList<LocalType> param,
 }
 
 template <size_t index, typename LocalType, typename Input, typename Value>
+    requires (index == ProxyType<LocalType>::fields)
 void ReadOne(TypeList<LocalType> param,
     InvokeContext& invoke_context,
     Input& input,
-    Value& value,
-    typename std::enable_if<index == ProxyType<LocalType>::fields>::type* enable = nullptr)
+    Value& value)
 {
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires requires { typename ProxyType<LocalType>::Struct; }
 decltype(auto) CustomReadField(TypeList<LocalType> param,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename ProxyType<LocalType>::Struct* enable = nullptr)
+    ReadDest&& read_dest)
 {
     return read_dest.update([&](auto& value) { ReadOne<0>(param, invoke_context, input, value); });
 }
