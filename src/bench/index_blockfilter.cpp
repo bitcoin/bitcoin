@@ -4,6 +4,7 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
+#include <bench/index_sync_util.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <index/base.h>
@@ -17,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
+#include <util/byte_units.h> // IWYU pragma: keep
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -59,4 +61,35 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
     });
 }
 
+// Returns a fresh, not-yet-initialized BASIC BlockFilterIndex. f_memory only
+// covers the index database: the filters always go through m_filter_fileseq
+// into the data directory, so both variants pay that I/O.
+static std::unique_ptr<BlockFilterIndex> MakeBlockFilterIndex(TestChain100Setup& test_setup, bool f_memory)
+{
+    return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(test_setup.m_node), BlockFilterType::BASIC,
+                                              /*n_cache_size=*/1_MiB, f_memory, /*f_wipe=*/true);
+}
+
+// Same sync as BlockFilterIndexSync above, but over blocks carrying
+// transactions paying to distinct scripts, so the filters scale with what a
+// block contains rather than with the number of blocks.
+static void BlockFilterIndexSyncRealistic(benchmark::Bench& bench, bool f_memory)
+{
+    const auto test_setup = MakeNoLogFileContext<TestChain100Setup>();
+    ExtendChainWithSpends(*test_setup, BENCH_INDEX_NUM_BLOCKS, BENCH_INDEX_TXS_PER_BLOCK);
+
+    BenchIndexSync(bench, *test_setup, [&] { return MakeBlockFilterIndex(*test_setup, f_memory); });
+}
+
+static void BlockFilterIndexSyncRealisticDisk(benchmark::Bench& bench)
+{
+    BlockFilterIndexSyncRealistic(bench, /*f_memory=*/false);
+}
+static void BlockFilterIndexSyncRealisticMem(benchmark::Bench& bench)
+{
+    BlockFilterIndexSyncRealistic(bench, /*f_memory=*/true);
+}
+
 BENCHMARK(BlockFilterIndexSync);
+BENCHMARK(BlockFilterIndexSyncRealisticDisk);
+BENCHMARK(BlockFilterIndexSyncRealisticMem);
