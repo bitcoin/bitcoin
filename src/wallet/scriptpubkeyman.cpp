@@ -1421,9 +1421,9 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
                 pubkeys.push_back(pk);
             }
 
-            // Taproot output pubkey
+            // Taproot or witness v2 output pubkey
             std::vector<std::vector<unsigned char>> sols;
-            if (Solver(script, sols) == TxoutType::WITNESS_V1_TAPROOT) {
+            if (const TxoutType type{Solver(script, sols)}; type == TxoutType::WITNESS_V1_TAPROOT || type == TxoutType::WITNESS_V2_CISA) {
                 sols[0].insert(sols[0].begin(), 0x02);
                 pubkeys.emplace_back(sols[0]);
                 sols[0][0] = 0x03;

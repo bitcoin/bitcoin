@@ -709,7 +709,8 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
     // If only the parameter is provided, use it and add it to the PSBT if it is other than SIGHASH_DEFAULT
     // for all input types, and not SIGHASH_ALL for non-taproot input types.
     // If neither are provided, use SIGHASH_DEFAULT if it is taproot, and SIGHASH_ALL for everything else.
-    int sighash{options.sighash_type.value_or(utxo.scriptPubKey.IsPayToTaproot() ? SIGHASH_DEFAULT : SIGHASH_ALL)};
+    const bool schnorr_keypath{utxo.scriptPubKey.IsPayToTaproot() || utxo.scriptPubKey.IsPayToCisa()};
+    int sighash{options.sighash_type.value_or(schnorr_keypath ? SIGHASH_DEFAULT : SIGHASH_ALL)};
 
     // For user safety, the desired sighash must be provided if the PSBT wants something other than the default set in the previous line.
     if (input.sighash_type && input.sighash_type != sighash) {
@@ -718,8 +719,8 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
     // Set the PSBT sighash field when sighash is not DEFAULT or ALL
     // DEFAULT is allowed for non-taproot inputs since DEFAULT may be passed for them (e.g. the psbt being signed also has taproot inputs)
     // Note that signing already aliases DEFAULT to ALL for non-taproot inputs.
-    if (utxo.scriptPubKey.IsPayToTaproot() ? sighash != SIGHASH_DEFAULT :
-                                            (sighash != SIGHASH_DEFAULT && sighash != SIGHASH_ALL)) {
+    if (schnorr_keypath ? sighash != SIGHASH_DEFAULT :
+                          (sighash != SIGHASH_DEFAULT && sighash != SIGHASH_ALL)) {
         input.sighash_type = sighash;
     }
 
@@ -728,11 +729,17 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
         if (!input.m_tap_key_sig.empty() && input.m_tap_key_sig.size() != 64) {
             return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
         }
+        if (!input.m_cisa_halfagg_sig.empty() && input.m_cisa_halfagg_sig.size() != 64) {
+            return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+        }
         for (const auto& [_, sig] : input.m_tap_script_sigs) {
             if (sig.size() != 64) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
         }
     } else {
         if (!input.m_tap_key_sig.empty() && (input.m_tap_key_sig.size() != 65 || input.m_tap_key_sig.back() != sighash)) {
+            return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+        }
+        if (!input.m_cisa_halfagg_sig.empty() && (input.m_cisa_halfagg_sig.size() != 65 || input.m_cisa_halfagg_sig.back() != sighash)) {
             return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
         }
         for (const auto& [_, sig] : input.m_tap_script_sigs) {
@@ -743,14 +750,27 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
         }
     }
 
+    // Full-aggregation signing needs the keys, messages and nonces of the whole group
+    const uint8_t cisa_mode{utxo.scriptPubKey.IsPayToCisa() ? input.m_cisa_mode.value_or(0) : uint8_t{0}};
+    if (cisa_mode == CISA_MARKER_FULLAGG) {
+        for (uint32_t i = 0; i < psbt.inputs.size(); ++i) {
+            const PSBTInput& member = psbt.inputs[i];
+            if (member.m_cisa_mode != CISA_MARKER_FULLAGG) continue;
+            sigdata.cisa_group.push_back({i, static_cast<uint8_t>(member.sighash_type.value_or(SIGHASH_DEFAULT)), member.m_cisa_fullagg_pubnonce});
+        }
+    }
+
     sigdata.witness = false;
     bool sig_complete;
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, {.sighash_type = sighash});
+        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, {.sighash_type = sighash, .cisa_mode = cisa_mode});
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
+    // An aggregated input is complete with its own signature material, its witness is built by FinalizeCISAInputs()
+    if (cisa_mode == CISA_MARKER_HALFAGG) sig_complete |= !sigdata.cisa_halfagg_sig.empty();
+    if (cisa_mode == CISA_MARKER_FULLAGG) sig_complete |= !sigdata.cisa_fullagg_partial_sig.IsNull();
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return util::Unexpected{PSBTError::INCOMPLETE};
 
