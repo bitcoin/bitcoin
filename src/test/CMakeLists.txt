@@ -149,6 +149,7 @@ target_json_data_sources(test_bitcoin
   data/bip341_wallet_vectors.json
   data/blockfilters.json
   data/cisa_consensus_vectors.json
+  data/cisa_descriptor_vectors.json
   data/cisa_wallet_vectors.json
   data/key_io_invalid.json
   data/key_io_valid.json
