@@ -30,6 +30,8 @@ add_executable(bench_bitcoin
   hashpadding.cpp
   index_blockfilter.cpp
   index_sync_util.cpp
+  index_txindex.cpp
+  index_txospender.cpp
   load_external.cpp
   lockedpool.cpp
   logging.cpp
