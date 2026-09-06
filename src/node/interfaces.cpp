@@ -172,7 +172,7 @@ public:
         return ignored;
     }
     common::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
-    void updateRwSetting(const std::string& name, const common::SettingsValue& value) override
+    bool updateRwSetting(const std::string& name, const common::SettingsValue& value) override
     {
         args().LockSettings([&](common::Settings& settings) {
             if (value.isNull()) {
@@ -181,7 +181,7 @@ public:
                 settings.rw_settings[name] = value;
             }
         });
-        if (args().GetSettingsPath()) args().WriteSettingsFile();
+        return args().GetSettingsPath() && args().WriteSettingsFile();
     }
     void forceSetting(const std::string& name, const common::SettingsValue& value) override
     {

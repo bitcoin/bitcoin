@@ -105,9 +105,9 @@ public:
     virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.
-    //! The in-memory value is always updated. The write to disk is skipped
-    //! when settings are disabled with -nosettings.
-    virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
+    //! The in-memory value is always updated. Returns whether it reached
+    //! disk, which it does not when settings are disabled with -nosettings.
+    virtual bool updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Force a setting value to be applied, overriding any other configuration
     //! source, but not being persisted.
