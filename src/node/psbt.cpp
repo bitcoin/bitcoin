@@ -132,7 +132,8 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             Coin newcoin;
 
             const auto sign_result = SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, nullptr, /*options=*/{});
-            if (!sign_result.has_value() || !input.GetUTXO(newcoin.out)) {
+            // Aggregated witness v2 inputs cannot be finalized with dummy signatures
+            if (!sign_result.has_value() || !input.GetUTXO(newcoin.out) || (input.m_cisa_mode.value_or(0) != 0 && !PSBTInputSigned(input))) {
                 success = false;
                 break;
             } else {
