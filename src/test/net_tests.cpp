@@ -1406,11 +1406,15 @@ BOOST_AUTO_TEST_CASE(outbound_message_limits)
     BOOST_CHECK(more);
     BOOST_CHECK_EQUAL(message_type, MAX_MESSAGE_TYPE);
 
+    V1Transport max_payload_transport{NodeId{0}};
+    auto max_payload_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)};
+
     // The pending type-limit message keeps messages passed through PushMessage() in the queue
     auto queued{0U};
     for (auto& [msg, reject] : std::array{
              std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
-             std::pair{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1), false}}) {
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), false}, // TODO: Reject payloads above the protocol limit
+             std::pair{max_payload_msg.Copy(), false}}) {
         test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
         try {
             m_node.connman->PushMessage(&node, std::move(msg));
@@ -1421,11 +1425,13 @@ BOOST_AUTO_TEST_CASE(outbound_message_limits)
         LOCK(node.cs_vSend);
         BOOST_CHECK_EQUAL(node.vSendMsg.size(), queued);
     }
+    BOOST_REQUIRE(max_payload_transport.SetMessageToSend(max_payload_msg));
 }
 
 BOOST_AUTO_TEST_CASE(v2transport_test)
 {
     auto max_type_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1)};
+    auto max_payload_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)};
 
     // A mostly normal scenario, testing a transport in initiator mode.
     for (int i = 0; i < 10; ++i) {
@@ -1594,6 +1600,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveMessage("barfoo", {});
         // Accepted messages occupy the send buffer, so use a separate ready transport for each case.
         BOOST_REQUIRE(i != 0 || tester.GetTransport().SetMessageToSend(max_type_msg));
+        BOOST_REQUIRE(i != 1 || tester.GetTransport().SetMessageToSend(max_payload_msg));
     }
 
     // Too long garbage (initiator).
