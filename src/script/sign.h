@@ -113,6 +113,11 @@ struct SignatureData {
     std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, std::vector<uint8_t>>> musig2_pubnonces;
     //! Mapping from pair of MuSig2 aggregate pubkey, and tapleaf hash to map of MuSig2 participant pubkeys to MuSig2 partial signature
     std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, uint256>> musig2_partial_sigs;
+    //! BIP460 aggregation mode of a witness v2 input, from PSBT_IN_CISA_MODE
+    std::optional<uint8_t> cisa_mode;
+    std::vector<unsigned char> cisa_halfagg_sig;
+    std::vector<uint8_t> cisa_fullagg_pubnonce;
+    uint256 cisa_fullagg_partial_sig;
 
     SignatureData() = default;
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
