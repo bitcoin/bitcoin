@@ -85,6 +85,28 @@ void OptionTests::migrateSettings()
         "}\n");
 }
 
+void OptionTests::disabledSettings()
+{
+    // Settings writes must not throw when dynamic settings are disabled.
+    gArgs.LockSettings([&](common::Settings& s) { s.forced_settings["settings"] = false; });
+    gArgs.ClearPathCache();
+    QVERIFY(!gArgs.GetSettingsPath());
+
+    m_node.updateRwSetting("dbcache", 600);
+    m_node.resetSettings();
+
+    // Legacy GUI settings survive, since there is nowhere to migrate them to.
+    QSettings settings;
+    settings.setValue("nDatabaseCache", 600);
+    settings.sync();
+
+    bilingual_str error;
+    QVERIFY(OptionsModel{m_node}.Init(error));
+    QVERIFY(settings.contains("nDatabaseCache"));
+
+    settings.remove("nDatabaseCache");
+}
+
 void OptionTests::integerGetArgBug()
 {
     // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure
