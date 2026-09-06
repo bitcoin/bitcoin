@@ -47,6 +47,8 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     }
 
     for (unsigned int i = 0; i < inputs.size(); ++i) {
+        // Differing modes, nonces or partial signatures belong to different signing sessions, see the Combiner role of the CISA PSBT BIP
+        if (!inputs[i].CISACompatible(psbt.inputs[i])) return false;
         inputs[i].Merge(psbt.inputs[i]);
     }
     for (unsigned int i = 0; i < outputs.size(); ++i) {
@@ -349,6 +351,10 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     for (const auto& [agg_key_lh, psigs] : m_musig2_partial_sigs) {
         sigdata.musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+    sigdata.cisa_mode = m_cisa_mode;
+    sigdata.cisa_halfagg_sig = m_cisa_halfagg_sig;
+    sigdata.cisa_fullagg_pubnonce = m_cisa_fullagg_pubnonce;
+    sigdata.cisa_fullagg_partial_sig = m_cisa_fullagg_partial_sig;
 }
 
 void PSBTInput::FromSignatureData(const SignatureData& sigdata)
@@ -403,6 +409,10 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     for (const auto& [agg_key_lh, psigs] : sigdata.musig2_partial_sigs) {
         m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+    if (!m_cisa_mode && sigdata.cisa_mode) m_cisa_mode = sigdata.cisa_mode;
+    if (m_cisa_halfagg_sig.empty() && !sigdata.cisa_halfagg_sig.empty()) m_cisa_halfagg_sig = sigdata.cisa_halfagg_sig;
+    if (m_cisa_fullagg_pubnonce.empty() && !sigdata.cisa_fullagg_pubnonce.empty()) m_cisa_fullagg_pubnonce = sigdata.cisa_fullagg_pubnonce;
+    if (m_cisa_fullagg_partial_sig.IsNull() && !sigdata.cisa_fullagg_partial_sig.IsNull()) m_cisa_fullagg_partial_sig = sigdata.cisa_fullagg_partial_sig;
     for (const auto& [hash, preimage] : sigdata.ripemd160_preimages) {
         ripemd160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
     }
@@ -460,9 +470,20 @@ void PSBTInput::Merge(const PSBTInput& input)
     for (const auto& [agg_key_lh, psigs] : input.m_musig2_partial_sigs) {
         m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+    if (!m_cisa_mode) m_cisa_mode = input.m_cisa_mode;
+    if (m_cisa_halfagg_sig.empty()) m_cisa_halfagg_sig = input.m_cisa_halfagg_sig;
+    if (m_cisa_fullagg_pubnonce.empty()) m_cisa_fullagg_pubnonce = input.m_cisa_fullagg_pubnonce;
+    if (m_cisa_fullagg_partial_sig.IsNull()) m_cisa_fullagg_partial_sig = input.m_cisa_fullagg_partial_sig;
     if (sequence == std::nullopt && input.sequence != std::nullopt) sequence = input.sequence;
     if (time_locktime == std::nullopt && input.time_locktime != std::nullopt) time_locktime = input.time_locktime;
     if (height_locktime == std::nullopt && input.height_locktime != std::nullopt) height_locktime = input.height_locktime;
+}
+
+bool PSBTInput::CISACompatible(const PSBTInput& input) const
+{
+    if (m_cisa_mode && input.m_cisa_mode && m_cisa_mode != input.m_cisa_mode) return false;
+    if (!m_cisa_fullagg_pubnonce.empty() && !input.m_cisa_fullagg_pubnonce.empty() && m_cisa_fullagg_pubnonce != input.m_cisa_fullagg_pubnonce) return false;
+    return m_cisa_fullagg_partial_sig.IsNull() || input.m_cisa_fullagg_partial_sig.IsNull() || m_cisa_fullagg_partial_sig == input.m_cisa_fullagg_partial_sig;
 }
 
 bool PSBTInput::HasSignatures() const
@@ -472,7 +493,9 @@ bool PSBTInput::HasSignatures() const
            || !partial_sigs.empty()
            || !m_tap_key_sig.empty()
            || !m_tap_script_sigs.empty()
-           || !m_musig2_partial_sigs.empty();
+           || !m_musig2_partial_sigs.empty()
+           || !m_cisa_halfagg_sig.empty()
+           || !m_cisa_fullagg_partial_sig.IsNull();
 }
 
 void PSBTOutput::FillSignatureData(SignatureData& sigdata) const

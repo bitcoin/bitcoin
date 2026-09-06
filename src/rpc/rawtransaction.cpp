@@ -940,6 +940,10 @@ const RPCResult& DecodePSBTInputs()
                         {RPCResult::Type::STR_HEX, "partial_sig", "The partial signature itself."},
                     }},
                 }},
+                {RPCResult::Type::STR, "cisa_mode", /*optional=*/true, "The BIP460 aggregation mode of the input: \"optout\", \"halfagg\" or \"fullagg\""},
+                {RPCResult::Type::STR_HEX, "cisa_halfagg_sig", /*optional=*/true, "hex-encoded signature of a half-aggregation input"},
+                {RPCResult::Type::STR_HEX, "cisa_fullagg_pubnonce", /*optional=*/true, "hex-encoded public nonce of a full-aggregation input"},
+                {RPCResult::Type::STR_HEX, "cisa_fullagg_partial_sig", /*optional=*/true, "hex-encoded partial signature of a full-aggregation input"},
                 {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
                 {
                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
@@ -1432,6 +1436,12 @@ static RPCMethod decodepsbt()
             }
             in.pushKV("musig2_partial_sigs", musig_partial_sigs);
         }
+
+        // CISA fields
+        if (input.m_cisa_mode) in.pushKV("cisa_mode", CISAModeToStr(*input.m_cisa_mode));
+        if (!input.m_cisa_halfagg_sig.empty()) in.pushKV("cisa_halfagg_sig", HexStr(input.m_cisa_halfagg_sig));
+        if (!input.m_cisa_fullagg_pubnonce.empty()) in.pushKV("cisa_fullagg_pubnonce", HexStr(input.m_cisa_fullagg_pubnonce));
+        if (!input.m_cisa_fullagg_partial_sig.IsNull()) in.pushKV("cisa_fullagg_partial_sig", HexStr(input.m_cisa_fullagg_partial_sig));
 
         // Proprietary
         if (!input.m_proprietary.empty()) {
