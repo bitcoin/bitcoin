@@ -437,6 +437,12 @@ KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
     if (!success) ClearKeyPairData();
 }
 
+const secp256k1_keypair* KeyPair::Get() const
+{
+    if (!IsValid()) return nullptr;
+    return reinterpret_cast<const secp256k1_keypair*>(m_keypair->data());
+}
+
 bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const
 {
     assert(sig.size() == 64);
