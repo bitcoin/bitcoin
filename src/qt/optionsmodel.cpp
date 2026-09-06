@@ -750,7 +750,10 @@ void OptionsModel::checkAndMigrate()
     }
 
     // Migrate and delete legacy GUI settings that have now moved to <datadir>/settings.json.
+    // With -nosettings there is nowhere to migrate them to, so leave them in
+    // place instead of dropping them.
     auto migrate_setting = [&](OptionID option, const QString& qt_name) {
+        if (!gArgs.GetSettingsPath()) return;
         if (!settings.contains(qt_name)) return;
         QVariant value = settings.value(qt_name);
         if (node().getPersistentSetting(SettingName(option)).isNull()) {

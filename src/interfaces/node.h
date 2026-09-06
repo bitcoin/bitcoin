@@ -105,6 +105,8 @@ public:
     virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.
+    //! The in-memory value is always updated. The write to disk is skipped
+    //! when settings are disabled with -nosettings.
     virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Force a setting value to be applied, overriding any other configuration
@@ -112,7 +114,9 @@ public:
     virtual void forceSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Clear all settings in <datadir>/settings.json and store a backup of
-    //! previous settings in <datadir>/settings.json.bak.
+    //! previous settings in <datadir>/settings.json.bak. The in-memory
+    //! settings are always cleared, and both writes are skipped when settings
+    //! are disabled with -nosettings.
     virtual void resetSettings() = 0;
 
     //! Map port.

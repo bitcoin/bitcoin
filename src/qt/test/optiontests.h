@@ -20,6 +20,7 @@ public:
 private Q_SLOTS:
     void init(); // called before each test function execution.
     void migrateSettings();
+    void disabledSettings();
     void integerGetArgBug();
     void parametersInteraction();
     void extractFilter();
