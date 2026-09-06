@@ -64,5 +64,20 @@ class DeriveaddressesTest(BitcoinTestFramework):
         bare_multisig_descriptor = descsum_create("multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/1/0,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/1/1)")
         assert_raises_rpc_error(-5, "Descriptor does not have a corresponding address", self.nodes[0].deriveaddresses, bare_multisig_descriptor)
 
+        # First cisa() and rawcisa() vectors of the descriptor BIP, on regtest
+        cisa_descriptor = descsum_create("cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)")
+        assert_equal(self.nodes[0].deriveaddresses(cisa_descriptor), ["bcrt1zw74tdcrxlzn5r8z6ku2vztr86fgq0m245s72mjktf4afwzsf8ugsay4prz"])
+        rawcisa_descriptor = descsum_create("rawcisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)")
+        assert_equal(self.nodes[0].deriveaddresses(rawcisa_descriptor), ["bcrt1z5d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7s20ldn2"])
+        # cisa() and tr() derive the same output key, encoded as witness version 2 and 1
+        key ="tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/1/*"
+        tr_addresses = self.nodes[0].deriveaddresses(descsum_create(f"tr({key},pk({key}))"), 2)
+        cisa_addresses = self.nodes[0].deriveaddresses(descsum_create(f"cisa({key},pk({key}))"), 2)
+        for tr_address, cisa_address in zip(tr_addresses, cisa_addresses):
+            tr_info = self.nodes[0].validateaddress(tr_address)
+            cisa_info = self.nodes[0].validateaddress(cisa_address)
+            assert_equal((tr_info["witness_version"], cisa_info["witness_version"]), (1, 2))
+            assert_equal(tr_info["witness_program"], cisa_info["witness_program"])
+
 if __name__ == '__main__':
     DeriveaddressesTest(__file__).main()
