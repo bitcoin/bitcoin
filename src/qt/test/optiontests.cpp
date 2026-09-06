@@ -92,7 +92,7 @@ void OptionTests::disabledSettings()
     gArgs.ClearPathCache();
     QVERIFY(!gArgs.GetSettingsPath());
 
-    m_node.updateRwSetting("dbcache", 600);
+    QVERIFY(!m_node.updateRwSetting("dbcache", 600));
     m_node.resetSettings();
 
     // Legacy GUI settings survive, since there is nowhere to migrate them to.
@@ -101,10 +101,39 @@ void OptionTests::disabledSettings()
     settings.sync();
 
     bilingual_str error;
-    QVERIFY(OptionsModel{m_node}.Init(error));
+    OptionsModel options{m_node};
+    QVERIFY(options.Init(error));
     QVERIFY(settings.contains("nDatabaseCache"));
 
+    // A write that cannot reach disk is reported back to the caller, and does
+    // not ask for a restart that would drop the in-memory change.
+    options.clearWriteFailed();
+    QVERIFY(!options.setOption(OptionsModel::DatabaseCache, 123));
+    QVERIFY(options.writeFailed());
+    QVERIFY(!options.isRestartRequired());
+
     settings.remove("nDatabaseCache");
+}
+
+void OptionTests::unwritableSettings()
+{
+    // The same reporting has to hold when settings are enabled but the write
+    // fails, which is what a full disk or a read-only settings file looks like.
+    gArgs.LockSettings([&](common::Settings& s) {
+        s.forced_settings["settings"] = "nonexistent-directory/settings.json";
+    });
+    gArgs.ClearPathCache();
+    QVERIFY(gArgs.GetSettingsPath());
+
+    QVERIFY(!m_node.updateRwSetting("dbcache", 600));
+
+    bilingual_str error;
+    OptionsModel options{m_node};
+    QVERIFY(options.Init(error));
+    options.clearWriteFailed();
+    QVERIFY(!options.setOption(OptionsModel::DatabaseCache, 123));
+    QVERIFY(options.writeFailed());
+    QVERIFY(!options.isRestartRequired());
 }
 
 void OptionTests::integerGetArgBug()
