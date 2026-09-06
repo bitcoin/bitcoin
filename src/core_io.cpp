@@ -349,6 +349,16 @@ std::string SighashToStr(int32_t sighash_type)
     return it->second;
 }
 
+std::string CISAModeToStr(uint8_t mode)
+{
+    switch (mode) {
+    case 0: return "optout";
+    case CISA_MARKER_HALFAGG: return "halfagg";
+    case CISA_MARKER_FULLAGG: return "fullagg";
+    }
+    return "";
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
