@@ -1333,6 +1333,7 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
         // Always include musig_secnonces as this descriptor may have a participant private key
         // but not a musig() descriptor
         out_keys->musig2_secnonces = &m_musig2_secnonces;
+        out_keys->cisa_secnonces = &m_cisa_secnonces;
     }
 
     return out_keys;

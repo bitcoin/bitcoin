@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <addresstype.h>
+#include <cisa.h>
 #include <common/messages.h>
 #include <common/signmessage.h>
 #include <common/types.h>
@@ -300,6 +301,8 @@ private:
      * to find ongoing signing sessions, see MuSig2SessionID.
      */
     mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
+    //! Full-aggregation secnonces of ongoing CISA signing sessions, held in memory only like m_musig2_secnonces
+    mutable std::map<uint256, FullAggSecNonce> m_cisa_secnonces;
 
     //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)

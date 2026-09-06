@@ -19,6 +19,7 @@
 #include <vector>
 
 struct secp256k1_context_struct;
+struct secp256k1_keypair;
 typedef struct secp256k1_context_struct secp256k1_context;
 
 /**
@@ -303,6 +304,9 @@ public:
 
     //! Check whether this keypair is valid.
     bool IsValid() const { return !!m_keypair; }
+
+    //! The underlying keypair for libsecp256k1 signing functions, nullptr if invalid.
+    const secp256k1_keypair* Get() const;
 
 private:
     KeyPair(const CKey& key, const uint256* merkle_root);

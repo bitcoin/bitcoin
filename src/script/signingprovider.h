@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+class FullAggSecNonce;
 class MuSig2SecNonce;
 
 struct ShortestVectorFirstComparator
@@ -181,6 +182,9 @@ public:
     virtual void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const {}
     virtual std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256& session_id) const { return std::nullopt; }
     virtual void DeleteMuSig2Session(const uint256& session_id) const {}
+    virtual void SetCISASecNonce(const uint256& id, FullAggSecNonce&& nonce) const {}
+    virtual std::optional<std::reference_wrapper<FullAggSecNonce>> GetCISASecNonce(const uint256& session_id) const { return std::nullopt; }
+    virtual void DeleteCISASession(const uint256& session_id) const {}
 
     bool GetKeyByXOnly(const XOnlyPubKey& pubkey, CKey& key) const
     {
@@ -229,6 +233,9 @@ public:
     void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const override;
     std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256& session_id) const override;
     void DeleteMuSig2Session(const uint256& session_id) const override;
+    void SetCISASecNonce(const uint256& id, FullAggSecNonce&& nonce) const override;
+    std::optional<std::reference_wrapper<FullAggSecNonce>> GetCISASecNonce(const uint256& session_id) const override;
+    void DeleteCISASession(const uint256& session_id) const override;
 };
 
 struct FlatSigningProvider final : public SigningProvider
@@ -240,6 +247,7 @@ struct FlatSigningProvider final : public SigningProvider
     std::map<XOnlyPubKey, TaprootBuilder> tr_trees; /** Map from output key to Taproot tree (which can then make the TaprootSpendData */
     std::map<CPubKey, std::vector<CPubKey>> aggregate_pubkeys; /** MuSig2 aggregate pubkeys */
     std::map<uint256, MuSig2SecNonce>* musig2_secnonces{nullptr};
+    std::map<uint256, FullAggSecNonce>* cisa_secnonces{nullptr};
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
@@ -253,6 +261,9 @@ struct FlatSigningProvider final : public SigningProvider
     void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const override;
     std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256& session_id) const override;
     void DeleteMuSig2Session(const uint256& session_id) const override;
+    void SetCISASecNonce(const uint256& id, FullAggSecNonce&& nonce) const override;
+    std::optional<std::reference_wrapper<FullAggSecNonce>> GetCISASecNonce(const uint256& session_id) const override;
+    void DeleteCISASession(const uint256& session_id) const override;
 
     FlatSigningProvider& Merge(FlatSigningProvider&& b) LIFETIMEBOUND;
 };
