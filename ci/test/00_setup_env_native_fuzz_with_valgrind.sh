@@ -15,8 +15,8 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="all"
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
  -DBUILD_FOR_FUZZING=ON \
  -DCMAKE_C_COMPILER=clang \
- -DCMAKE_CXX_COMPILER=clang++ \
-"
+ -DCMAKE_CXX_COMPILER=clang++
+export BITCOIN_CONFIG

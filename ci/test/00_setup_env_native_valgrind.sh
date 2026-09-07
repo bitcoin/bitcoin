@@ -15,11 +15,10 @@ export NO_DEPENDS=1
 # bind tests excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 export TEST_RUNNER_EXTRA="--exclude rpc_bind --exclude feature_bind_extra"
 export GOAL="install"
-# GUI disabled, because it only passes with a DEBUG=1 depends build
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
- -DBUILD_GUI=OFF \
+ -DBUILD_GUI=OFF  `# GUI disabled, because it only passes with a DEBUG=1 depends build` \
  -DWITH_USDT=OFF \
  -DCMAKE_C_COMPILER=clang \
- -DCMAKE_CXX_COMPILER=clang++ \
-"
+ -DCMAKE_CXX_COMPILER=clang++
+export BITCOIN_CONFIG
