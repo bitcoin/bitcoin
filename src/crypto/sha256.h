@@ -50,4 +50,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
  */
 void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
 
+/** The implementation selected by SHA256AutoDetect(), or the portable one until it runs */
+void SHA256Transform(uint32_t* state, const unsigned char* blocks64, size_t n_blocks);
+
 #endif // BITCOIN_CRYPTO_SHA256_H

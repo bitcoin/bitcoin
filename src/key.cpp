@@ -7,6 +7,7 @@
 
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <random.h>
 
@@ -331,7 +332,7 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     ECDHSecret output;
     // BIP324 uses the initiator as party A, and the responder as party B. Remap the inputs
     // accordingly:
-    bool success = secp256k1_ellswift_xdh(secp256k1_context_static,
+    bool success = secp256k1_ellswift_xdh(GetSecp256k1SignContext(),
                                           UCharCast(output.data()),
                                           UCharCast(initiating ? our_ellswift.data() : their_ellswift.data()),
                                           UCharCast(initiating ? their_ellswift.data() : our_ellswift.data()),
@@ -445,6 +446,9 @@ const secp256k1_context* GetSecp256k1SignContext()
     static const secp256k1_context* const sign_ctx{[] {
         secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
         assert(ctx != nullptr);
+        // SHA256Transform dispatches to the implementation selected by SHA256AutoDetect() at
+        // the time of each call, so this does not depend on whether that has run already.
+        secp256k1_context_set_sha256_compression(ctx, SHA256Transform);
 
         // Pass in a random blinding seed to the secp256k1 context. Use GetStrongRandBytes,
         // which is never made deterministic in tests: drawing from the deterministic RNG at
