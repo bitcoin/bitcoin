@@ -13,6 +13,10 @@ typedef struct secp256k1_context_struct secp256k1_context;
 /** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
 secp256k1_context* GetSecp256k1SignContext();
 
+/** Access the secp256k1 context used for verification: the ECC_Context's, or
+ *  secp256k1_context_static without one. */
+const secp256k1_context* GetSecp256k1VerifyContext();
+
 /**
  * RAII class initializing and deinitializing global state for elliptic curve support.
  * Only one instance may be initialized at a time.
@@ -27,9 +31,11 @@ public:
     ~ECC_Context();
 
     secp256k1_context* SignContext() const { return m_sign_ctx; }
+    const secp256k1_context* VerifyContext() const { return m_verify_ctx; }
 
 private:
     secp256k1_context* m_sign_ctx{nullptr};
+    secp256k1_context* m_verify_ctx{nullptr};
 };
 
 #endif // BITCOIN_ECC_CONTEXT_H
