@@ -359,6 +359,15 @@ std::string CISAModeToStr(uint8_t mode)
     return "";
 }
 
+util::Result<uint8_t> CISAModeFromStr(const std::string& mode)
+{
+    static constexpr uint8_t modes[]{0, CISA_MARKER_HALFAGG, CISA_MARKER_FULLAGG};
+    for (const uint8_t value : modes) {
+        if (CISAModeToStr(value) == mode) return value;
+    }
+    return util::Error{Untranslated("'" + mode + "' is not a valid aggregation mode.")};
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
