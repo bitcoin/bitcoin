@@ -2032,6 +2032,7 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, co
         }
     }
 
+    if (options.finalize) FinalizeCISAInputs(psbtx, txdata);
     RemoveUnnecessaryTransactions(psbtx);
 
     // Complete if every input is now signed
