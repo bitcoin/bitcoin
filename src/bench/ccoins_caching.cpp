@@ -4,9 +4,9 @@
 
 #include <bench/bench.h>
 #include <coins.h>
+#include <common/ecc_init.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
-#include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -25,7 +25,7 @@
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::Bench& bench)
 {
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     FillableSigningProvider keystore;
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};

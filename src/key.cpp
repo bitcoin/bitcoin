@@ -454,12 +454,6 @@ bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, con
     return ret;
 }
 
-bool ECC_InitSanityCheck() {
-    CKey key = GenerateRandomKey();
-    CPubKey pubkey = key.GetPubKey();
-    return key.VerifyPubKey(pubkey);
-}
-
 secp256k1_context* GetSecp256k1SignContext()
 {
     return g_ecc_context ? g_ecc_context->SignContext() : nullptr;

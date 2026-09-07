@@ -4,8 +4,8 @@
 
 #include <bench/bench.h>
 #include <checkqueue.h>
+#include <common/ecc_init.h>
 #include <common/system.h>
-#include <key.h>
 #include <prevector.h>
 #include <random.h>
 #include <script/script.h>
@@ -28,7 +28,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     struct PrevectorJob {
         prevector<CScriptBase::STATIC_SIZE, uint8_t> p;

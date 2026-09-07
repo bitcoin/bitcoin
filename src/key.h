@@ -321,9 +321,6 @@ private:
     }
 };
 
-/** Check that required EC support is available at runtime. */
-bool ECC_InitSanityCheck();
-
 /** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
 secp256k1_context* GetSecp256k1SignContext();
 

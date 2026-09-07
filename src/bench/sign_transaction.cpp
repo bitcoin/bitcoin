@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <bench/bench.h>
 #include <coins.h>
+#include <common/ecc_init.h>
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -28,7 +29,7 @@ enum class InputType {
 
 static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_type)
 {
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     FlatSigningProvider keystore;
     std::vector<CScript> prev_spks;
@@ -79,7 +80,7 @@ static void SignTransactionSchnorr(benchmark::Bench& bench) { SignTransactionSin
 static void SignSchnorrTapTweakBenchmark(benchmark::Bench& bench, bool use_null_merkle_root)
 {
     FastRandomContext rng;
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     auto key = GenerateRandomKey();
     auto msg = rng.rand256();
