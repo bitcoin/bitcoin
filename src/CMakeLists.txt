@@ -70,6 +70,7 @@ add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   arith_uint256.cpp
   consensus/merkle.cpp
   consensus/tx_check.cpp
+  ecc_context.cpp
   hash.cpp
   primitives/block.cpp
   primitives/transaction.cpp
