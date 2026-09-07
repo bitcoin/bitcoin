@@ -427,7 +427,7 @@ bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, con
         // Additional verification step to prevent using a potentially corrupted signature
         secp256k1_xonly_pubkey pubkey_verify;
         ret = secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey_verify, nullptr, keypair);
-        ret &= secp256k1_schnorrsig_verify(secp256k1_context_static, sig.data(), hash.begin(), 32, &pubkey_verify);
+        ret &= secp256k1_schnorrsig_verify(GetSecp256k1PublicContext(), sig.data(), hash.begin(), 32, &pubkey_verify);
     }
     if (!ret) memory_cleanse(sig.data(), sig.size());
     return ret;

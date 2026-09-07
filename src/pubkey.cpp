@@ -5,6 +5,7 @@
 
 #include <pubkey.h>
 
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
@@ -31,6 +32,19 @@ struct Secp256k1SelfTester
 } SECP256K1_SELFTESTER;
 
 } // namespace
+
+const secp256k1_context* GetSecp256k1PublicContext()
+{
+    // Like the signing context, created on first use and never destroyed. It needs no
+    // randomization, as it is only used on public data.
+    static const secp256k1_context* const public_ctx{[] {
+        secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+        assert(ctx != nullptr);
+        secp256k1_context_set_sha256_compression(ctx, SHA256Transform);
+        return ctx;
+    }()};
+    return public_ctx;
+}
 
 /** This function is taken from the libsecp256k1 distribution and implements
  *  DER parsing for ECDSA signatures, while supporting an arbitrary subset of

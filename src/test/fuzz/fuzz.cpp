@@ -7,6 +7,7 @@
 #include <key.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <pubkey.h>
 #include <test/fuzz/util/check_globals.h>
 #include <test/util/coverage.h>
 #include <test/util/random.h>
@@ -165,9 +166,10 @@ static void initialize()
     g_test_one_input = &it->second.test_one_input;
     it->second.opts.init();
 
-    // Create the secp256k1 signing context now rather than on first use, so that its
-    // one-time setup is not attributed to whichever input happens to sign first.
+    // Create the secp256k1 contexts now rather than on first use, so that their
+    // one-time setup is not attributed to whichever input happens to use them first.
     (void)GetSecp256k1SignContext();
+    (void)GetSecp256k1PublicContext();
 
     ResetCoverageCounters();
 }
