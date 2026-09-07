@@ -545,7 +545,7 @@ static RPCResult OpenRPCDocResult()
                                 {
                                     {RPCResult::Type::STR, "name", "Parameter name."},
                                     {RPCResult::Type::BOOL, "required", "Whether the parameter is required."},
-                                    {RPCResult::Type::ANY, "schema", "JSON Schema for the parameter."},
+                                    {RPCResult::Type::ANY, "schema", "JSON Schema for the parameter. May include \"x-bitcoin-default-hint\" when the default cannot be expressed as a JSON value."},
                                     {RPCResult::Type::STR, "description", /*optional=*/true, "Parameter description."},
                                     {RPCResult::Type::ARR, "x-bitcoin-aliases", /*optional=*/true, "Alternative parameter names.",
                                         {{RPCResult::Type::STR, "", "An alias."}}},
@@ -556,7 +556,8 @@ static RPCResult OpenRPCDocResult()
                             {
                                 {RPCResult::Type::STR, "name", "Result name."},
                                 {RPCResult::Type::ANY, "schema", "JSON Schema for the result. Numeric schemas may include "
-                                    "\"x-bitcoin-unit\" property: \"amount\" which denotes a Bitcoin amount in BTC."},
+                                    "\"x-bitcoin-unit\" property: \"amount\" which denotes a Bitcoin amount in BTC. "
+                                    "Multi-result schemas may include \"x-bitcoin-discriminated-result\" naming the request parameter or parameters that select among the top-level oneOf branches."},
                             }},
                         {RPCResult::Type::STR, "x-bitcoin-category", "RPC category."},
                     }}}},
