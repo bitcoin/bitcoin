@@ -134,22 +134,18 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     BOOST_CHECK_EQUAL(mempool_estimator.MaximumTarget(), MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
     // Before the mempool has finished loading, no estimate is available.
     {
-        const std::string unloaded_err = strprintf("%s: Mempool not loaded yet, no fee rate estimate available",
-                                                   FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY));
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         BOOST_CHECK(!result);
-        BOOST_CHECK_EQUAL(result.error().reason, unloaded_err);
+        BOOST_CHECK(result.error() == MempoolEstimationFailure::MEMPOOL_NOT_LOADED);
     }
     m_node.mempool->SetLoadTried(true);
 
-    BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
-    BOOST_CHECK(mempool_estimator.GetMempoolHealth() == MemPoolFeeRateEstimator::MempoolHealth::INSUFFICIENT_DATA);
+    BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().error() == MempoolEstimationFailure::INSUFFICIENT_DATA);
     {
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
-        const std::string insufficient_err{strprintf("%s: Not enough recent block data for fee rate estimation",
-                                                     FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY))};
         BOOST_CHECK(!result);
-        BOOST_CHECK_EQUAL(result.error().reason, insufficient_err);
+        BOOST_CHECK(result.error() == MempoolEstimationFailure::INSUFFICIENT_DATA);
     }
     {
         MemPoolFeeRateEstimator custom_mempool_estimator{
@@ -160,7 +156,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                             /*removed_txs_weight=*/0,
                             /*block_txs_weight=*/0,
                             custom_height);
-            BOOST_CHECK(!custom_mempool_estimator.IsMempoolHealthy());
+            BOOST_CHECK(!custom_mempool_estimator.CheckMempoolHealth().has_value());
         }
         {
             const int64_t low_activity_weight{1000};
@@ -169,7 +165,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         // Below one block worth of total activity across the full window, even
         // poor coverage in the only non-empty block is too noisy to reject the
         // mempool as unhealthy.
-        BOOST_CHECK(custom_mempool_estimator.IsMempoolHealthy());
+        BOOST_CHECK(custom_mempool_estimator.CheckMempoolHealth().has_value());
     }
     size_t block_count = 1;
     const int64_t weight{DEFAULT_BLOCK_MAX_WEIGHT / 2};
@@ -178,66 +174,67 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     while (block_count <= MEMPOOL_HEALTH_WINDOW_BLOCKS) {
         AddRemovedBlock(mempool_estimator, weight, weight, height);
         if (block_count < MEMPOOL_HEALTH_WINDOW_BLOCKS) {
-            BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+            BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
         }
         block_count += 1;
     }
     // Total txs weight ~11999k WU (~3.0 blocks), removed txs ~11999k WU (~3.0 blocks); coverage = 100%.
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
     // Adding a single underrepresented block will not make the mempool unhealthy
     // while the window coverage remains above the threshold.
     AddRemovedBlock(mempool_estimator, weight / 2, weight, height);
     // Total txs weight ~11999k WU (~3.0 blocks), removed txs ~10999k WU (~2.75 blocks); coverage = ~92%.
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
     // Empty block
     // Total txs weight ~9999k WU (~2.5 blocks), removed txs ~8999k WU (~2.25 blocks); coverage = 90%.
     AddRemovedBlock(mempool_estimator, 0, 0, height);
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
     // Total txs weight ~9999k WU (~2.5 blocks), removed txs ~7999k WU (~2.0 blocks); coverage = 80%.
     AddRemovedBlock(mempool_estimator, weight / 2, weight, height);
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
     // Total txs weight ~9999k WU (~2.5 blocks), removed txs ~7000k WU (~1.75 blocks); coverage = 70%.
     AddRemovedBlock(mempool_estimator, weight / 2, weight, height);
-    BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().error() == MempoolEstimationFailure::LOW_COVERAGE);
     block_count = 1;
     while (block_count <= 3) {
         AddRemovedBlock(mempool_estimator, weight, weight, height);
         if (block_count < 3) {
-            BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+            BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
         }
         block_count += 1;
     }
     // Total txs weight ~9999k WU (~2.5 blocks), removed txs ~7999k WU (~2.0 blocks); coverage = 80%.
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
 
     // Reorg out and replace the last block. Replacing the tip block should keep a full
     // healthy window when the replacement block has good mempool representation.
     height -= 1;
     AddRemovedBlock(mempool_estimator, weight, weight, height);
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
 
     // Reorg out the last two blocks. The estimator should discard the stale suffix,
     // become temporarily unhealthy due to having fewer than MEMPOOL_HEALTH_WINDOW_BLOCKS stats,
     // then recover after the replacement chain catches up.
     height -= 2;
     AddRemovedBlock(mempool_estimator, weight, weight, height);
-    BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
     AddRemovedBlock(mempool_estimator, weight, weight, height);
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
 
     // A forward height gap (e.g. stale persisted stats after an unclean shutdown
     // while the chain advanced) resets the tracked window entirely; the estimator
     // stays unhealthy until a full window of contiguous blocks is seen again.
     height += 3;
     AddRemovedBlock(mempool_estimator, weight, weight, height);
-    BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
     for (size_t i = 1; i < MEMPOOL_HEALTH_WINDOW_BLOCKS; ++i) {
         AddRemovedBlock(mempool_estimator, weight, weight, height);
         if (i < MEMPOOL_HEALTH_WINDOW_BLOCKS - 1) {
-            BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
+            BOOST_CHECK(!mempool_estimator.CheckMempoolHealth().has_value());
         }
     }
-    BOOST_CHECK(mempool_estimator.IsMempoolHealthy());
+    BOOST_CHECK(mempool_estimator.CheckMempoolHealth().has_value());
     {
         LOCK(m_node.mempool->cs);
         BOOST_CHECK_EQUAL(m_node.mempool->GetTotalTxSize(), 0);

@@ -22,6 +22,13 @@ FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_pa
 {
 }
 
+// Flatten a mempool fee rate estimation failure into the fee rate estimation error.
+static util::Unexpected<FeeRateEstimationError> EstimationError(MempoolEstimationFailure failure)
+{
+    return EstimationError(FeeRateEstimatorType::MEMPOOL_POLICY, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET,
+                           std::string{MempoolEstimationFailureToString(failure)});
+}
+
 util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManager::GetFeeRateEstimate(int target, bool conservative) const
 {
     auto block_policy_estimate = m_block_policy_estimator->EstimateFeeRate(target, conservative);
@@ -33,8 +40,9 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     if (!mempool_estimate) {
         // A failed mempool estimate is surfaced as a warning rather than silently returning the
         // block policy estimate, which callers can still request explicitly.
-        LogDebug(BCLog::ESTIMATEFEE, "%s", mempool_estimate.error().reason);
-        return mempool_estimate;
+        const auto mempool_error = EstimationError(mempool_estimate.error());
+        LogDebug(BCLog::ESTIMATEFEE, "%s", mempool_error.error().reason);
+        return mempool_error;
     }
     auto selected_estimate = std::min(*block_policy_estimate, *mempool_estimate);
     LogDebug(BCLog::ESTIMATEFEE, "Fee rate estimated using %s: target=%s feerate=%s %s/kvB.",
@@ -50,8 +58,11 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
         return GetFeeRateEstimate(target, conservative);
     case FeeRateEstimatorType::BLOCK_POLICY:
         return m_block_policy_estimator->EstimateFeeRate(target, conservative);
-    case FeeRateEstimatorType::MEMPOOL_POLICY:
-        return m_mempool_estimator->EstimateFeeRate(conservative);
+    case FeeRateEstimatorType::MEMPOOL_POLICY: {
+        auto mempool_estimate = m_mempool_estimator->EstimateFeeRate(conservative);
+        if (!mempool_estimate) return EstimationError(mempool_estimate.error());
+        return *mempool_estimate;
+    }
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
