@@ -286,6 +286,14 @@ void MemPoolFeeRateEstimator::FlushMinedBlockStats()
              fs::PathToString(m_mempool_estimator_file_path));
 }
 
+void MemPoolFeeRateEstimator::MempoolLoadFailed()
+{
+    LOCK(cs);
+    if (m_prev_mined_blocks.size() <= MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD) return;
+    LogDebug(BCLog::ESTIMATEFEE, "%s: mempool did not load; keeping the %s most recent of %s tracked mined-block stats",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY), MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD, m_prev_mined_blocks.size());
+    m_prev_mined_blocks.erase(m_prev_mined_blocks.begin(), m_prev_mined_blocks.end() - MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD);
+}
 
 void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<const CBlock>& block,
                                                         const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,

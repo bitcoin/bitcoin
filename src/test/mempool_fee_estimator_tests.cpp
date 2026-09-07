@@ -337,4 +337,20 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     }
 }
 
+BOOST_AUTO_TEST_CASE(mempool_load_drops_stale_stats)
+{
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman};
+    unsigned int height{100};
+    const int64_t weight{DEFAULT_BLOCK_MAX_WEIGHT / 2};
+    for (size_t i{0}; i < MEMPOOL_HEALTH_WINDOW_BLOCKS; ++i) {
+        AddRemovedBlock(estimator, weight, weight, height);
+    }
+    BOOST_CHECK(estimator.CheckMempoolHealth().has_value());
+
+    // Without a mempool load, only the newest MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD stats are kept, dropping below the health window.
+    estimator.MempoolLoadFailed();
+    BOOST_CHECK_EQUAL(estimator.GetPrevBlockData().size(), MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD);
+    BOOST_CHECK(estimator.CheckMempoolHealth().error() == MempoolEstimationFailure::INSUFFICIENT_DATA);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

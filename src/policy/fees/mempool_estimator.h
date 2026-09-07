@@ -37,6 +37,8 @@ constexpr std::chrono::seconds CACHE_LIFE{7};
 // Constants for mempool sanity checks.
 constexpr size_t MEMPOOL_HEALTH_WINDOW_BLOCKS = 6;
 constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
+// Recent mined-block stats kept after a restart without a successful mempool load.
+constexpr size_t MEMPOOL_STATS_TO_KEEP_WITHOUT_LOAD{3};
 
 //! Why the mempool fee rate estimator fails to return a fee rate estimate.
 enum class MempoolEstimationFailure {
@@ -136,6 +138,8 @@ public:
     //! Fail with INSUFFICIENT_DATA or LOW_COVERAGE if recent mined blocks fail the health check; otherwise succeed.
     util::Expected<void, MempoolEstimationFailure> CheckMempoolHealth() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void FlushMinedBlockStats() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Drop the oldest stats when the mempool did not load, to wait for fresh inflow.
+    void MempoolLoadFailed() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Deserialize mined-block stats without taking ownership of file.
     bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Serialize mined-block stats without taking ownership of file.

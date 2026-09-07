@@ -72,6 +72,9 @@ public:
     /** Flush recorded data to disk as part of shutdown sequence. */
     void ShutdownFlush();
 
+    /** Called when a non-interrupted mempool load attempt failed. */
+    void MempoolLoadFailed();
+
     /**
      * @brief Returns the maximum supported confirmation target from all fee rate estimators.
      */

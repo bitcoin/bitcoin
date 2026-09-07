@@ -80,6 +80,11 @@ void FeeRateEstimatorManager::ShutdownFlush()
     m_mempool_estimator->FlushMinedBlockStats();
 }
 
+void FeeRateEstimatorManager::MempoolLoadFailed()
+{
+    m_mempool_estimator->MempoolLoadFailed();
+}
+
 std::vector<MinedBlockStats> FeeRateEstimatorManager::MempoolPolicyEstimatorBlocksStats() const
 {
     return m_mempool_estimator->GetPrevBlockData();

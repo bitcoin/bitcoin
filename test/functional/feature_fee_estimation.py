@@ -381,6 +381,38 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
 
+    def test_fallback_to_block_policy_without_mempool_load(self):
+        # The mempool policy estimator is used before this test forces a fallback.
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
+        mempool_dat = self.nodes[0].chain_path / "mempool.dat"
+
+        def refill_window_and_stop(blocks):
+            self.generate(self.nodes[0], blocks, sync_fun=lambda: None)
+            self.stop_node(0)
+
+        def assert_falls_back_without_load():
+            self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
+            assert "errors" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+            assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "block_policy")
+
+        refill_window_and_stop(6)
+        mempool_dat.unlink()  # mempool.dat missing
+        self.start_node(0)
+        assert_falls_back_without_load()
+
+        refill_window_and_stop(3)
+        mempool_dat.write_bytes(b"not a valid mempool.dat")  # mempool.dat corrupted
+        self.start_node(0)
+        assert_falls_back_without_load()
+
+        refill_window_and_stop(3)
+        self.start_node(0, extra_args=["-persistmempool=0"])  # persistence disabled
+        assert_falls_back_without_load()
+
+        # Clean up and verify that we are back to using the mempool fee estimator.
+        refill_window_and_stop(3)
+        self.start_node(0)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
 
     def test_estimate_dat_is_flushed_periodically(self):
         block_policy_fees_dat = self.nodes[0].chain_path / BLOCK_POLICY_ESTIMATOR_FILE_PATH
@@ -667,6 +699,9 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Test fallback to block policy when the mempool estimator is not ready")
         self.test_fallback_when_mempool_estimator_not_ready()
+
+        self.log.info("Test fallback to block policy when the mempool does not load")
+        self.test_fallback_to_block_policy_without_mempool_load()
 
         self.log.info("Test reading old block policy estimator file")
         self.test_old_fee_estimate_file()
