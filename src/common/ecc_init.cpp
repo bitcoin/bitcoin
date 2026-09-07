@@ -4,6 +4,7 @@
 
 #include <common/ecc_init.h>
 
+#include <ecc_context.h>
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>

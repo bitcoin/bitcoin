@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <musig.h>
+#include <ecc_context.h>
 #include <key.h>
 #include <random.h>
 #include <support/allocators/secure.h>

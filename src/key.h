@@ -18,9 +18,6 @@
 #include <utility>
 #include <vector>
 
-struct secp256k1_context_struct;
-typedef struct secp256k1_context_struct secp256k1_context;
-
 /**
  * CPrivKey is a serialized private key, with all parameters included
  * (SIZE bytes)
@@ -319,28 +316,6 @@ private:
     {
         m_keypair.reset();
     }
-};
-
-/** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
-secp256k1_context* GetSecp256k1SignContext();
-
-/**
- * RAII class initializing and deinitializing global state for elliptic curve support.
- * Only one instance may be initialized at a time.
- */
-class ECC_Context
-{
-public:
-    explicit ECC_Context(std::span<const unsigned char> rng_seed32);
-    ECC_Context(const ECC_Context&) = delete;
-    ECC_Context& operator=(const ECC_Context&) = delete;
-
-    ~ECC_Context();
-
-    secp256k1_context* SignContext() const { return m_sign_ctx; }
-
-private:
-    secp256k1_context* m_sign_ctx{nullptr};
 };
 
 #endif // BITCOIN_KEY_H
