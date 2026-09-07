@@ -13,7 +13,6 @@
 #include <kernel/types.h>
 #include <node/blockstorage.h>
 #include <outputtype.h>
-#include <policy/feerate.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -27,11 +26,9 @@
 #include <versionbits.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
-#include <wallet/db.h>
 #include <wallet/spend.h>
 #include <wallet/sqlite.h>
 #include <wallet/test/util.h>
-#include <wallet/types.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 

@@ -9,7 +9,7 @@
 #include <random.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/byte_units.h> // IWYU pragma: keep
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>

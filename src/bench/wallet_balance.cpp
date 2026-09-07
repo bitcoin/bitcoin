@@ -15,7 +15,6 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
-#include <wallet/db.h>
 #include <wallet/receive.h>
 #include <wallet/sqlite.h>
 #include <wallet/test/util.h>

@@ -14,7 +14,6 @@
 #include <util/check.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
-#include <wallet/db.h>
 #include <wallet/spend.h>
 #include <wallet/sqlite.h>
 #include <wallet/transaction.h>

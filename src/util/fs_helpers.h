@@ -10,7 +10,7 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <iosfwd>
+#include <ios>
 #include <limits>
 #include <optional>
 #include <string>
