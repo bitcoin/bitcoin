@@ -333,7 +333,7 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     ECDHSecret output;
     // BIP324 uses the initiator as party A, and the responder as party B. Remap the inputs
     // accordingly:
-    bool success = secp256k1_ellswift_xdh(secp256k1_context_static,
+    bool success = secp256k1_ellswift_xdh(GetSecp256k1SignContext(),
                                           UCharCast(output.data()),
                                           UCharCast(initiating ? our_ellswift.data() : their_ellswift.data()),
                                           UCharCast(initiating ? their_ellswift.data() : our_ellswift.data()),
@@ -447,7 +447,7 @@ bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, con
         // Additional verification step to prevent using a potentially corrupted signature
         secp256k1_xonly_pubkey pubkey_verify;
         ret = secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey_verify, nullptr, keypair);
-        ret &= secp256k1_schnorrsig_verify(secp256k1_context_static, sig.data(), hash.begin(), 32, &pubkey_verify);
+        ret &= secp256k1_schnorrsig_verify(GetSecp256k1VerifyContext(), sig.data(), hash.begin(), 32, &pubkey_verify);
     }
     if (!ret) memory_cleanse(sig.data(), sig.size());
     return ret;
