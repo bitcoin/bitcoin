@@ -39,6 +39,7 @@ std::string ScriptToAsmStr(const CScript& script, bool fAttemptSighashDecode = f
 bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 
 [[nodiscard]] util::Result<int> SighashFromStr(const std::string& sighash);
+[[nodiscard]] util::Result<uint8_t> CISAModeFromStr(const std::string& mode);
 
 UniValue ValueFromAmount(CAmount amount);
 std::string FormatScript(const CScript& script);

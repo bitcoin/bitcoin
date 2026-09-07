@@ -750,6 +750,11 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
         }
     }
 
+    // Updater role of the CISA PSBT BIP, inputs with signature material keep their mode
+    if (options.cisa_mode && !input.m_cisa_mode && !input.HasSignatures() && input.m_cisa_fullagg_pubnonce.empty() && input.m_musig2_pubnonces.empty() && utxo.scriptPubKey.IsPayToCisa()) {
+        input.m_cisa_mode = sigdata.cisa_mode = options.cisa_mode;
+    }
+
     // Full-aggregation signing needs the keys, messages and nonces of the whole group
     const uint8_t cisa_mode{utxo.scriptPubKey.IsPayToCisa() ? input.m_cisa_mode.value_or(0) : uint8_t{0}};
     if (cisa_mode == CISA_MARKER_FULLAGG) {

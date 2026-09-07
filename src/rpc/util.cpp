@@ -376,6 +376,18 @@ std::optional<int> ParseSighashString(const UniValue& sighash)
     return result.value();
 }
 
+std::optional<uint8_t> ParseCISAMode(const UniValue& mode)
+{
+    if (mode.isNull()) {
+        return std::nullopt;
+    }
+    const auto result{CISAModeFromStr(mode.get_str())};
+    if (!result) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(result).original);
+    }
+    return result.value();
+}
+
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
 {
     const int target{value.getInt<int>()};

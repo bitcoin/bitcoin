@@ -124,7 +124,7 @@ static std::vector<RPCArg> CreateTxDoc()
 
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize, std::optional<uint8_t> cisa_mode)
 {
     // Unserialize the transactions
     util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(psbt_string);
@@ -194,7 +194,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
         // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
-        const auto sign_result = SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize}, /*out_sigdata=*/nullptr);
+        const auto sign_result = SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize, .cisa_mode = cisa_mode}, /*out_sigdata=*/nullptr);
         if (!sign_result.has_value() && sign_result.error() == common::PSBTError::SIGHASH_MISMATCH) {
             throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
         }
@@ -1865,7 +1865,8 @@ static RPCMethod utxoupdatepsbt()
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/true, /*hide_origin=*/false),
         /*sighash_type=*/std::nullopt,
-        /*finalize=*/false);
+        /*finalize=*/false,
+        /*cisa_mode=*/std::nullopt);
 
     DataStream ssTx{};
     ssTx << psbtx;
@@ -2092,6 +2093,7 @@ RPCMethod descriptorprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2124,7 +2126,8 @@ RPCMethod descriptorprocesspsbt()
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
         sighash_type,
-        finalize);
+        finalize,
+        ParseCISAMode(request.params[5]));
 
     // Check whether or not all of the inputs are now correctly signed
     bool complete = true;
