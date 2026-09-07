@@ -4,6 +4,7 @@
 
 #include <ecc_context.h>
 
+#include <crypto/sha256.h>
 #include <secp256k1.h>
 
 #include <cassert>
@@ -22,6 +23,9 @@ static secp256k1_context* ECC_Start(std::span<const unsigned char> rng_seed32) {
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     assert(ctx != nullptr);
+
+    SHA256AutoDetect();
+    secp256k1_context_set_sha256_compression(ctx, SHA256Transform);
 
     if (!rng_seed32.empty()){
         // Pass in a random blinding seed to the secp256k1 context.
