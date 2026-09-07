@@ -47,6 +47,38 @@ enum class LogLevel : btck_LogLevel {
     ERROR_LEVEL = btck_LogLevel_ERROR,
 };
 
+constexpr std::string_view Name(LogLevel level) noexcept
+{
+    switch (level) {
+    case LogLevel::TRACE_LEVEL: return "trace";
+    case LogLevel::DEBUG_LEVEL: return "debug";
+    case LogLevel::INFO_LEVEL: return "info";
+    case LogLevel::WARNING_LEVEL: return "warning";
+    case LogLevel::ERROR_LEVEL: return "error";
+    } // no default case, so the compiler can warn about missing cases
+    return "unknown";
+}
+
+constexpr std::string_view Name(LogCategory category) noexcept
+{
+    switch (category) {
+    case LogCategory::ALL: return "all";
+    case LogCategory::BENCH: return "bench";
+    case LogCategory::BLOCKSTORAGE: return "blockstorage";
+    case LogCategory::COINDB: return "coindb";
+    case LogCategory::LEVELDB: return "leveldb";
+    case LogCategory::MEMPOOL: return "mempool";
+    case LogCategory::PRUNE: return "prune";
+    case LogCategory::RAND: return "rand";
+    case LogCategory::REINDEX: return "reindex";
+    case LogCategory::TXPACKAGES: return "txpackages";
+    case LogCategory::VALIDATION: return "validation";
+    case LogCategory::KERNEL: return "kernel";
+    case LogCategory::LOCK: return "lock";
+    } // no default case, so the compiler can warn about missing cases
+    return "unknown";
+}
+
 enum class ChainType : btck_ChainType {
     MAINNET = btck_ChainType_MAINNET,
     TESTNET = btck_ChainType_TESTNET,
