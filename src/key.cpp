@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <span>
 
-static secp256k1_context* secp256k1_context_sign = nullptr;
+static const ECC_Context* g_ecc_context = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 
@@ -176,7 +176,7 @@ CPrivKey CKey::GetPrivKey() const {
     size_t seckeylen;
     seckey.resize(SIZE);
     seckeylen = SIZE;
-    ret = ec_seckey_export_der(secp256k1_context_sign, seckey.data(), &seckeylen, UCharCast(begin()), fCompressed);
+    ret = ec_seckey_export_der(GetSecp256k1SignContext(), seckey.data(), &seckeylen, UCharCast(begin()), fCompressed);
     assert(ret);
     seckey.resize(seckeylen);
     return seckey;
@@ -187,7 +187,7 @@ CPubKey CKey::GetPubKey() const {
     secp256k1_pubkey pubkey;
     size_t clen = CPubKey::SIZE;
     CPubKey result;
-    int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, UCharCast(begin()));
+    int ret = secp256k1_ec_pubkey_create(GetSecp256k1SignContext(), &pubkey, UCharCast(begin()));
     assert(ret);
     secp256k1_ec_pubkey_serialize(secp256k1_context_static, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(result.size() == clen);
@@ -217,19 +217,19 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
     uint32_t counter = 0;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
+    int ret = secp256k1_ecdsa_sign(GetSecp256k1SignContext(), &sig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
 
     // Grind for low R
     while (ret && !SigHasLowR(&sig) && grind) {
         WriteLE32(extra_entropy, ++counter);
-        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, extra_entropy);
+        ret = secp256k1_ecdsa_sign(GetSecp256k1SignContext(), &sig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, extra_entropy);
     }
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_static, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey pk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, UCharCast(begin()));
+    ret = secp256k1_ec_pubkey_create(GetSecp256k1SignContext(), &pk, UCharCast(begin()));
     assert(ret);
     ret = secp256k1_ecdsa_verify(secp256k1_context_static, &sig, hash.begin(), &pk);
     assert(ret);
@@ -255,7 +255,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     vchSig.resize(CPubKey::COMPACT_SIGNATURE_SIZE);
     int rec = -1;
     secp256k1_ecdsa_recoverable_signature rsig;
-    int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &rsig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, nullptr);
+    int ret = secp256k1_ecdsa_sign_recoverable(GetSecp256k1SignContext(), &rsig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, nullptr);
     assert(ret);
     ret = secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_static, &vchSig[1], &rec, &rsig);
     assert(ret);
@@ -263,7 +263,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey epk, rpk;
-    ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &epk, UCharCast(begin()));
+    ret = secp256k1_ec_pubkey_create(GetSecp256k1SignContext(), &epk, UCharCast(begin()));
     assert(ret);
     ret = secp256k1_ecdsa_recover(secp256k1_context_static, &rpk, &rsig, hash.begin());
     assert(ret);
@@ -317,7 +317,7 @@ EllSwiftPubKey CKey::EllSwiftCreate(std::span<const std::byte> ent32) const
     assert(ent32.size() == 32);
     std::array<std::byte, EllSwiftPubKey::size()> encoded_pubkey;
 
-    auto success = secp256k1_ellswift_create(secp256k1_context_sign,
+    auto success = secp256k1_ellswift_create(GetSecp256k1SignContext(),
                                              UCharCast(encoded_pubkey.data()),
                                              keydata->data(),
                                              UCharCast(ent32.data()));
@@ -426,7 +426,7 @@ KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
     static_assert(std::tuple_size<KeyType>() == sizeof(secp256k1_keypair));
     MakeKeyPairData();
     auto keypair = reinterpret_cast<secp256k1_keypair*>(m_keypair->data());
-    bool success = secp256k1_keypair_create(secp256k1_context_sign, keypair, UCharCast(key.data()));
+    bool success = secp256k1_keypair_create(GetSecp256k1SignContext(), keypair, UCharCast(key.data()));
     if (success && merkle_root) {
         secp256k1_xonly_pubkey pubkey;
         unsigned char pubkey_bytes[32];
@@ -443,7 +443,7 @@ bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, con
     assert(sig.size() == 64);
     if (!IsValid()) return false;
     auto keypair = reinterpret_cast<const secp256k1_keypair*>(m_keypair->data());
-    bool ret = secp256k1_schnorrsig_sign32(secp256k1_context_sign, sig.data(), hash.data(), keypair, aux.data());
+    bool ret = secp256k1_schnorrsig_sign32(GetSecp256k1SignContext(), sig.data(), hash.data(), keypair, aux.data());
     if (ret) {
         // Additional verification step to prevent using a potentially corrupted signature
         secp256k1_xonly_pubkey pubkey_verify;
@@ -462,7 +462,7 @@ bool ECC_InitSanityCheck() {
 
 secp256k1_context* GetSecp256k1SignContext()
 {
-    return secp256k1_context_sign;
+    return g_ecc_context ? g_ecc_context->SignContext() : nullptr;
 }
 
 /** Create an elliptic curve context. Provide rng seed for blinding factor if needed */
@@ -490,13 +490,14 @@ static std::vector<unsigned char, secure_allocator<unsigned char>> RandSeed32()
 
 ECC_Context::ECC_Context()
 {
-    assert(secp256k1_context_sign == nullptr);
-    secp256k1_context_sign = ECC_Start(RandSeed32());
+    assert(g_ecc_context == nullptr);
+    m_sign_ctx = ECC_Start(RandSeed32());
+    g_ecc_context = this;
 }
 
 ECC_Context::~ECC_Context()
 {
-    secp256k1_context* ctx = secp256k1_context_sign;
-    secp256k1_context_sign = nullptr;
-    secp256k1_context_destroy(ctx);
+    assert(g_ecc_context == this);
+    g_ecc_context = nullptr;
+    secp256k1_context_destroy(m_sign_ctx);
 }

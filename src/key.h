@@ -330,9 +330,6 @@ secp256k1_context* GetSecp256k1SignContext();
 /**
  * RAII class initializing and deinitializing global state for elliptic curve support.
  * Only one instance may be initialized at a time.
- *
- * In the future global ECC state could be removed, and this class could contain
- * state and be passed as an argument to ECC key functions.
  */
 class ECC_Context
 {
@@ -342,6 +339,11 @@ public:
     ECC_Context& operator=(const ECC_Context&) = delete;
 
     ~ECC_Context();
+
+    secp256k1_context* SignContext() const { return m_sign_ctx; }
+
+private:
+    secp256k1_context* m_sign_ctx{nullptr};
 };
 
 #endif // BITCOIN_KEY_H
