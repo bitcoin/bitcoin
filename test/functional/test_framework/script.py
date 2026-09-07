@@ -814,7 +814,7 @@ def BIP341_sha_sequences(txTo):
 def BIP341_sha_outputs(txTo):
     return sha256(b"".join(o.serialize() for o in txTo.vout))
 
-def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpath=False, leaf_script=None, codeseparator_pos=-1, annex=None, leaf_ver=LEAF_VERSION_TAPSCRIPT):
+def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpath=False, leaf_script=None, codeseparator_pos=None, annex=None, leaf_ver=LEAF_VERSION_TAPSCRIPT):
     assert_equal(len(txTo.vin), len(spent_utxos))
     assert input_index < len(txTo.vin)
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
@@ -853,6 +853,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
     if scriptpath:
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
+        assert codeseparator_pos is not None, "codeseparator_pos is required for scriptpath; 0xffffffff means no OP_CODESEPARATOR executed"
         ss += codeseparator_pos.to_bytes(4, "little", signed=False)
     assert_equal(len(ss), 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37)
     return ss
