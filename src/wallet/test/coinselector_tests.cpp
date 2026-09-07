@@ -878,7 +878,7 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
 
         selection.Clear();
-        BOOST_CHECK_LT(selection.GetTotalBumpFees(), 0); // TODO: Clearing a selection must reset its bump fee discount
+        BOOST_CHECK_EQUAL(selection.GetTotalBumpFees(), 0);
     }
 
     {
