@@ -557,6 +557,32 @@ class PSBTTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_sighash_single(self):
+        self.log.info("Test that SIGHASH_SINGLE won't sign an input with no matching output")
+        node = self.nodes[0]
+        node.createwallet("sighash_single")
+        wallet = node.get_wallet_rpc("sighash_single")
+        def_wallet = node.get_wallet_rpc(self.default_wallet_name)
+
+        for addr_type in ["legacy", "bech32", "bech32m"]:
+            addrs = [wallet.getnewaddress("", addr_type) for _ in range(2)]
+            for addr in addrs:
+                def_wallet.sendtoaddress(addr, 1)
+            self.generatetoaddress(node, 1, def_wallet.getnewaddress())
+            node.syncwithvalidationinterfacequeue()
+            ins = [{"txid": u["txid"], "vout": u["vout"]} for u in wallet.listunspent(addresses=addrs)]
+            assert_equal(len(ins), 2)
+
+            raw = node.createrawtransaction(ins, [{wallet.getnewaddress(): 1.9999}])
+            signed = wallet.walletprocesspsbt(node.converttopsbt(raw), True, "SINGLE")["psbt"]
+            state = wallet.analyzepsbt(signed)["inputs"]
+            # Output at index 0 exist, so input 0 signs and finalizes
+            assert state[0]["is_final"]
+            # No output at index 1, so SIGHASH_SINGLE won't sign input 1
+            assert not state[1]["is_final"]
+
+        wallet.unloadwallet()
+
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
 
@@ -604,7 +630,8 @@ class PSBTTest(BitcoinTestFramework):
 
     def test_psbt_roundtrip(self):
         self.log.info("Test that PSBTs roundtrip when RPC does nothing")
-        utxo = self.nodes[0].listunspent()[0]
+        # Pick mature coinbase so unspent ordering do not affect the test behavior
+        utxo = next(out for out in self.nodes[0].listunspent() if out["amount"] == Decimal(50))
         for ver in [0, 2]:
             psbt = self.nodes[0].walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.nodes[0].getnewaddress(): utxo["amount"] / 2}], psbt_version=ver)["psbt"]
 
@@ -620,7 +647,8 @@ class PSBTTest(BitcoinTestFramework):
 
     def test_psbt_version(self):
         tobump = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        utxo = self.nodes[0].listunspent()[0]
+        # Pick mature coinbase so unspent ordering do not affect the test behavior
+        utxo = next(out for out in self.nodes[0].listunspent() if out["amount"] == Decimal(50))
         outputs = [{self.nodes[0].getnewaddress(): utxo["amount"] / 2}]
         rawtx = self.nodes[0].createrawtransaction(inputs=[utxo], outputs=outputs)
         for ver in [0, 2]:
@@ -1619,6 +1647,7 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_sighash_single()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
