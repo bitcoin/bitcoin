@@ -91,6 +91,18 @@ hardware implementations will typically implement multiple roles simultaneously.
   possible, computes the fee of the resulting transaction and estimates the
   final weight and feerate.
 
+#### Cross-input signature aggregation
+
+Witness version 2 inputs ([BIP 460](https://github.com/bitcoin/bips/pull/2212))
+are signed with plain BIP 341 signatures unless the PSBT marks them for
+aggregation. The `cisa_mode` option of `walletcreatefundedpsbt`, `send`,
+`sendall`, `walletprocesspsbt` and `descriptorprocesspsbt` sets the mode
+(`halfagg`, `fullagg` or `optout`) on witness version 2 inputs that have none.
+Signers then add a half-aggregation signature, or a public nonce and, once every
+input of the group has one, a partial signature for full aggregation. The
+Finalizer verifies and aggregates the signatures of a group once all of its
+inputs are signed and builds their witnesses together.
+
 
 ### Workflows
 

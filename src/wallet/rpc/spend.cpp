@@ -114,8 +114,9 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
     bool complete;
-    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete);
-    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false}, complete)};
+    const std::optional<uint8_t> cisa_mode{ParseCISAMode(options["cisa_mode"])};
+    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true, .cisa_mode = cisa_mode}, complete);
+    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false, .cisa_mode = cisa_mode}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -515,6 +516,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"maxconf", UniValueType(UniValue::VNUM)},
                     {"input_weights", UniValueType(UniValue::VARR)},
                     {"max_tx_weight", UniValueType(UniValue::VNUM)},
+                    {"cisa_mode", UniValueType(UniValue::VSTR)},
                 },
                 true, true);
 
@@ -1235,6 +1237,7 @@ RPCMethod send()
                     },
                     {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
                                                   "Transaction building will fail if this can not be satisfied."},
+                    {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
@@ -1347,6 +1350,7 @@ RPCMethod sendall()
                         {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Require inputs with at least this many confirmations."},
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
                         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
+                        {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                     },
                     FundTxDoc()
                 ),
@@ -1607,6 +1611,7 @@ RPCMethod walletprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1647,7 +1652,7 @@ RPCMethod walletprocesspsbt()
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs, .cisa_mode = ParseCISAMode(request.params[5])}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -1730,6 +1735,7 @@ RPCMethod walletcreatefundedpsbt()
                             },
                             {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
                                                           "Transaction building will fail if this can not be satisfied."},
+                            {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                         },
                         FundTxDoc()),
                         RPCArgOptions{.oneline_description="options"}},
@@ -1798,7 +1804,7 @@ RPCMethod walletcreatefundedpsbt()
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs, .cisa_mode = ParseCISAMode(options["cisa_mode"])}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
