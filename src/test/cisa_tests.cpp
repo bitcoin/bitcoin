@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <cisa.h>
 #include <key.h>
 #include <key_io.h>
 #include <primitives/transaction.h>
@@ -171,6 +172,23 @@ BOOST_AUTO_TEST_CASE(cisa_witness_structure_table)
     BOOST_REQUIRE(parsed_optout.has_value());
     BOOST_CHECK(!parsed_optout->marker);
     BOOST_CHECK_EQUAL(parsed_optout->signature.size(), 65);
+}
+
+BOOST_AUTO_TEST_CASE(cisa_aggregated_marker)
+{
+    const CTxOut utxo{1, CScript() << OP_2 << std::vector<unsigned char>(WITNESS_V2_CISA_SIZE, 1)};
+    const CTxOut taproot{1, CScript() << OP_1 << std::vector<unsigned char>(WITNESS_V2_CISA_SIZE, 1)};
+    const std::vector<unsigned char> member(32), optout(64), annex{ANNEX_TAG};
+    std::vector<unsigned char> fullagg_final(65);
+    fullagg_final.back() = CISA_MARKER_FULLAGG;
+    const auto witness{[](std::vector<std::vector<unsigned char>> stack) { CScriptWitness w; w.stack = std::move(stack); return w; }};
+    BOOST_CHECK(!AggregatedCISAMarker(utxo, witness({})));
+    BOOST_CHECK(!AggregatedCISAMarker(utxo, witness({optout})));
+    BOOST_CHECK(AggregatedCISAMarker(utxo, witness({member})) == CISA_MARKER_HALFAGG);
+    BOOST_CHECK(!AggregatedCISAMarker(taproot, witness({member})));
+    BOOST_CHECK(AggregatedCISAMarker(utxo, witness({member, annex})) == CISA_MARKER_HALFAGG);
+    BOOST_CHECK(!AggregatedCISAMarker(utxo, witness({member, member})));
+    BOOST_CHECK(AggregatedCISAMarker(utxo, witness({fullagg_final})) == CISA_MARKER_FULLAGG);
 }
 
 BOOST_AUTO_TEST_CASE(cisa_halfagg_single_verify)
