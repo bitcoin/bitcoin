@@ -836,6 +836,77 @@ void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx)
     }
 }
 
+void FinalizeCISAInputs(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata)
+{
+    std::optional<CMutableTransaction> unsigned_tx = psbt.GetUnsignedTx();
+    if (!unsigned_tx || !txdata.m_spent_outputs_ready) return;
+
+    for (const uint8_t marker : {CISA_MARKER_HALFAGG, CISA_MARKER_FULLAGG}) {
+        std::vector<PSBTInput*> group;
+        std::vector<XOnlyPubKey> pubkeys;
+        std::vector<uint256> msgs;
+        std::vector<uint8_t> sighash_types;
+        std::vector<std::vector<uint8_t>> sigs; // 64-byte signatures for half-agg, pubnonces for full-agg
+        std::vector<uint256> partial_sigs;
+        bool complete{true};
+        for (size_t i = 0; i < psbt.inputs.size() && complete; ++i) {
+            PSBTInput& input = psbt.inputs[i];
+            if (input.m_cisa_mode != marker || PSBTInputSigned(input)) continue;
+            CTxOut utxo;
+            int version;
+            std::vector<unsigned char> program;
+            complete = input.GetUTXO(utxo) && utxo.scriptPubKey.IsWitnessProgram(version, program) && version == 2 && program.size() == WITNESS_V2_CISA_SIZE;
+            // An opted-out signature does not sign the aggregated message
+            complete &= input.m_tap_key_sig.empty();
+            uint8_t sighash_type(input.sighash_type.value_or(SIGHASH_DEFAULT));
+            if (marker == CISA_MARKER_HALFAGG) {
+                const auto& sig = input.m_cisa_halfagg_sig;
+                complete &= !sig.empty();
+                if (sig.size() == 65) {
+                    complete &= !input.sighash_type || sighash_type == sig.back();
+                    sighash_type = sig.back();
+                }
+                if (!complete) break;
+                sigs.emplace_back(sig.begin(), sig.begin() + 64);
+            } else {
+                complete &= !input.m_cisa_fullagg_pubnonce.empty() && !input.m_cisa_fullagg_partial_sig.IsNull();
+                if (!complete) break;
+                sigs.push_back(input.m_cisa_fullagg_pubnonce);
+                partial_sigs.push_back(input.m_cisa_fullagg_partial_sig);
+            }
+            ScriptExecutionData execdata;
+            execdata.m_annex_init = true;
+            execdata.m_annex_present = false;
+            execdata.m_cisa_agg_mode = marker;
+            uint256 msg;
+            complete &= SignatureHashSchnorr(msg, execdata, *unsigned_tx, i, sighash_type, SigVersion::WITNESS_V2_KEYPATH, txdata, MissingDataBehavior::FAIL);
+            group.push_back(&input);
+            pubkeys.emplace_back(program);
+            msgs.push_back(msg);
+            sighash_types.push_back(sighash_type);
+        }
+        if (!complete || group.empty()) continue;
+
+        const auto aggsig{marker == CISA_MARKER_HALFAGG ? AggregateHalfAggSigs(pubkeys, msgs, sigs) : AggregateFullAggSigs(pubkeys, msgs, sigs, partial_sigs)};
+        if (!aggsig) continue;
+
+        // Witnesses per the BIP460 structure table: members carry their share, the final input the aggregate and the marker
+        for (size_t j = 0; j < group.size(); ++j) {
+            const bool final{j + 1 == group.size()};
+            std::vector<unsigned char> elem;
+            if (marker == CISA_MARKER_HALFAGG) {
+                elem.assign(sigs[j].begin(), sigs[j].begin() + 32);
+                if (final) elem.insert(elem.end(), aggsig->end() - 32, aggsig->end());
+            } else if (final) {
+                elem = *aggsig;
+            }
+            if (sighash_types[j] != SIGHASH_DEFAULT) elem.push_back(sighash_types[j]);
+            if (final) elem.push_back(marker);
+            group[j]->final_script_witness.stack = {std::move(elem)};
+        }
+    }
+}
+
 bool FinalizePSBT(PartiallySignedTransaction& psbtx)
 {
     // Finalize input signatures -- in case we have partial signatures that add up to a complete
@@ -852,6 +923,11 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
         PSBTInput& input = psbtx.inputs.at(i);
         const auto sign_result = SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, {.sighash_type = input.sighash_type, .finalize = true}, /*out_sigdata=*/nullptr);
         complete &= sign_result.has_value();
+    }
+    // Aggregated inputs are only complete once their group is finalized
+    FinalizeCISAInputs(psbtx, txdata);
+    for (const PSBTInput& input : psbtx.inputs) {
+        if (input.m_cisa_mode.value_or(0) != 0) complete &= PSBTInputSigned(input);
     }
 
     return complete;

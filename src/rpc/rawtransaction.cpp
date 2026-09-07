@@ -200,6 +200,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         }
     }
 
+    if (finalize) FinalizeCISAInputs(psbtx, txdata);
+
     // Update script/keypath information using descriptor data.
     for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
         UpdatePSBTOutput(provider, psbtx, i);

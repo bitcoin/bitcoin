@@ -1723,6 +1723,10 @@ size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
  */
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index);
 
+/** Finalizer role of the CISA PSBT BIP: verify and aggregate the signatures of every complete
+ *  aggregation group and set the BIP460 witnesses of its inputs. */
+void FinalizeCISAInputs(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata);
+
 /**
  * Finalizes a PSBT if possible, combining partial signatures.
  *
