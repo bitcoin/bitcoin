@@ -338,6 +338,9 @@ class ECC_Context
 {
 public:
     ECC_Context();
+    ECC_Context(const ECC_Context&) = delete;
+    ECC_Context& operator=(const ECC_Context&) = delete;
+
     ~ECC_Context();
 };
 
