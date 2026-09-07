@@ -38,8 +38,9 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     }
     auto mempool_estimate = m_mempool_estimator->EstimateFeeRate(conservative);
     if (!mempool_estimate) {
-        // A failed mempool estimate is surfaced as a warning rather than silently returning the
-        // block policy estimate, which callers can still request explicitly.
+        if (mempool_estimate.error() == MempoolEstimationFailure::INSUFFICIENT_DATA) {
+            return block_policy_estimate;
+        }
         const auto mempool_error = EstimationError(mempool_estimate.error());
         LogDebug(BCLog::ESTIMATEFEE, "%s", mempool_error.error().reason);
         return mempool_error;

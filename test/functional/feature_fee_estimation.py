@@ -326,6 +326,23 @@ class EstimateFeeTest(BitcoinTestFramework):
         est_feerate = node.estimatesmartfee(2, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
         assert_equal(est_feerate, high_feerate_kvb)
 
+    def test_fallback_when_mempool_estimator_not_ready(self):
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
+        self.stop_node(0)
+        # Move the mempool estimator data aside so the mempool policy estimator has insufficient data.
+        original_path = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
+        temp_path = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat.bak"
+        original_path.replace(temp_path)
+        self.start_node(0)
+        self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
+        assert "errors" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "block_policy")
+
+        # Restore the mempool estimator data.
+        self.stop_node(0)
+        temp_path.replace(original_path)
+        self.start_node(0)
+
     def test_old_fee_estimate_file(self):
         # Get the initial fee rate while node is running
         fee_rate = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
@@ -551,8 +568,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         verify_estimate_response(lower_estimate, low_feerate, [])
         # The mempool block stats are persisted across restarts, so the mempool
         # stays healthy and the lower mempool estimate is still returned after a
-        # restart. Without persistence, the combined estimate would return a
-        # mempool-policy error until enough new blocks are observed.
+        # restart. Without persistence, the combined estimate would fall back to
+        # the block policy estimate until enough new blocks are observed.
         self.restart_node(0)
         estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
         verify_estimate_response(estimate_post_restart, low_feerate, [])
@@ -647,6 +664,9 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Test acceptstalefeeestimates option")
         self.test_acceptstalefeeestimates_option()
+
+        self.log.info("Test fallback to block policy when the mempool estimator is not ready")
+        self.test_fallback_when_mempool_estimator_not_ready()
 
         self.log.info("Test reading old block policy estimator file")
         self.test_old_fee_estimate_file()

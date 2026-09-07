@@ -46,7 +46,11 @@ public:
     virtual ~FeeRateEstimatorManager();
 
     /**
-     * @brief Get a fee rate estimate from the available fee rate estimators.
+     * @brief Get a combined fee rate estimate from the available fee rate estimators.
+     * Combines both estimators, returning the lower of the block policy and mempool fee rate
+     * estimates. If the mempool fee rate estimator has insufficient data, the block policy fee
+     * rate estimate is returned instead. If the block policy fee rate estimate is unavailable,
+     * or the mempool fee rate estimator fails for any other reason, an error is returned.
      * @param[in] target The target within which the transaction should be confirmed.
      * @param[in] conservative Whether to select a more conservative, potentially higher, fee rate estimate.
      * @return fee rate estimation, or an error on failure.
