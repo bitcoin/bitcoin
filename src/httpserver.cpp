@@ -1362,10 +1362,13 @@ bool InitHTTPServer()
         }
     };
     for (const auto& [address_string, port, required] : endpoints) {
-        LogInfo("Binding RPC on address %s port %i", address_string, port);
-        const std::optional<CService> addr{Lookup(address_string, port, false)};
+        // Don't allow hostname lookups when binding to local interfaces. This
+        // means numeric collisions on available interfaces detected by endpoints_seen
+        // are probably just repeated instances - skip without logging why.
+        const std::optional<CService> addr{Lookup(address_string, port, /*fAllowLookup=*/false)};
         if (addr) {
             if (!endpoints_seen.insert(*addr).second) continue;
+            LogInfo("Binding RPC on address %s port %i", address_string, port);
             if (addr->IsBindAny()) {
                 LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
             }
@@ -1380,7 +1383,8 @@ bool InitHTTPServer()
             }
         } else {
             on_failure(required,
-                       strprintf("Could not bind RPC on %s address %s port %i: Address lookup failed.",
+                       strprintf("Could not bind RPC on %s address \"%s\" port %i: Address lookup failed "
+                                 "(only numeric addresses are allowed).",
                                  required ? "required" : "optional",
                                  address_string, port));
         }
