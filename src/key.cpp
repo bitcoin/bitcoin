@@ -475,17 +475,10 @@ static secp256k1_context* ECC_Start(std::span<const unsigned char> rng_seed32) {
     return ctx;
 }
 
-static std::vector<unsigned char, secure_allocator<unsigned char>> RandSeed32()
-{
-    std::vector<unsigned char, secure_allocator<unsigned char>> rng_seed(32);
-    GetRandBytes(rng_seed);
-    return rng_seed;
-}
-
-ECC_Context::ECC_Context()
+ECC_Context::ECC_Context(std::span<const unsigned char> rng_seed32)
 {
     assert(g_ecc_context == nullptr);
-    m_sign_ctx = ECC_Start(RandSeed32());
+    m_sign_ctx = ECC_Start(rng_seed32);
     g_ecc_context = this;
 }
 
