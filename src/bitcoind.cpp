@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/ecc_init.h>
 #include <common/init.h>
 #include <common/license_info.h>
 #include <common/system.h>
@@ -199,7 +200,7 @@ static bool AppInit(NodeContext& node)
         node.warnings = std::make_unique<node::Warnings>();
 
         node.kernel = std::make_unique<kernel::Context>();
-        node.ecc_context = std::make_unique<ECC_Context>();
+        node.ecc_context = MakeContextECC();
         if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console

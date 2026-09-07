@@ -104,6 +104,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/bloom.cpp
   common/bip352.cpp
   common/config.cpp
+  common/ecc_init.cpp
   common/init.cpp
   common/interfaces.cpp
   common/license_info.cpp
