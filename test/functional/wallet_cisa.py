@@ -7,9 +7,9 @@
 import re
 
 from test_framework.descriptors import descsum_create
-from test_framework.psbt import PSBT, PSBT_IN_TAP_KEY_SIG
+from test_framework.psbt import PSBT, PSBT_IN_CISA_FULLAGG_PUB_NONCE, PSBT_IN_TAP_KEY_SIG
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_not_equal, assert_raises_rpc_error
 
 TPRV = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK"
 
@@ -121,6 +121,86 @@ class WalletCisaTest(BitcoinTestFramework):
         assert_equal(final["complete"], True)
         self.broadcast(final["hex"], [[0], [65]])
 
+    def add_reserved_nonces(self, psbt, nonces):
+        """Attach the reserved nonce of every input of psbt, which the mode was set on already."""
+        decoded = self.nodes[0].decodepsbt(psbt)
+        assert not any("cisa_fullagg_pubnonce" in psbt_in for psbt_in in decoded["inputs"])
+        proposal = PSBT.from_base64(psbt)
+        for psbt_in, txin in zip(proposal.i, decoded["tx"]["vin"]):
+            psbt_in.map[PSBT_IN_CISA_FULLAGG_PUB_NONCE] = bytes.fromhex(nonces[(txin["txid"], txin["vout"])])
+        return proposal.to_base64()
+
+    def test_reserved_nonces(self, alice, bob):
+        self.log.info("Nonces reserved before the spend exists aggregate in a single round")
+        node = self.nodes[0]
+        options = {"add_inputs": False, "cisa_mode": "fullagg"}
+        inputs = {w: self.fund(w, 1)[0] for w in (alice, bob)}
+        nonces = {}
+        for wallet, utxo in inputs.items():
+            pubnonce = wallet.reservecisanonce(utxo["txid"], utxo["vout"])["pubnonce"]
+            assert_equal(len(pubnonce), 2 * 66)
+            nonces[(utxo["txid"], utxo["vout"])] = pubnonce
+
+        # The sender keeps a broadcastable fallback of its own input, which the reservation outlives
+        fallback = alice.walletprocesspsbt(alice.walletcreatefundedpsbt(inputs=[inputs[alice]], outputs=[{self.funder.getnewaddress(): 1}], options={"add_inputs": False}, psbt_version=0)["psbt"])
+        assert_equal(fallback["complete"], True)
+        assert_equal(node.testmempoolaccept([fallback["hex"]])[0]["allowed"], True)
+
+        # The receiver builds the proposal around the sender's input, carrying every reserved nonce
+        proposal = self.add_reserved_nonces(node.joinpsbts([
+            wallet.walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.funder.getnewaddress(): 1}], options=options, psbt_version=0)["psbt"]
+            for wallet, utxo in inputs.items()
+        ]), nonces)
+
+        # Neither wallet has to add a nonce, so one call each is enough
+        signed = bob.walletprocesspsbt(proposal)
+        assert_equal(sum("cisa_fullagg_partial_sig" in psbt_in for psbt_in in node.decodepsbt(signed["psbt"])["inputs"]), 1)
+        # Signing again is idempotent, the reservation is only spent once
+        assert_equal(bob.walletprocesspsbt(signed["psbt"])["psbt"], signed["psbt"])
+        signed = alice.walletprocesspsbt(signed["psbt"])
+        assert_equal(signed["complete"], True)
+        self.broadcast(signed["hex"], [[0], [65]])
+
+        self.log.info("Every reservation is a fresh nonce for an own witness v2 output")
+        utxo = self.fund(bob, 1)[0]
+        assert_not_equal(bob.reservecisanonce(utxo["txid"], utxo["vout"])["pubnonce"],
+                         bob.reservecisanonce(utxo["txid"], utxo["vout"])["pubnonce"])
+        assert_raises_rpc_error(-5, "Output not found in wallet", bob.reservecisanonce, utxo["txid"], utxo["vout"] + 100)
+        funder_utxo = self.funder.listunspent()[0]
+        assert_raises_rpc_error(-8, "Output is not a witness version 2 output", self.funder.reservecisanonce, funder_utxo["txid"], funder_utxo["vout"])
+
+        utxo = self.fund(bob, 1)[0]
+        pubnonce = bob.reservecisanonce(utxo["txid"], utxo["vout"])["pubnonce"]
+
+        def spend_with_reserved_nonce(amount):
+            psbt = PSBT.from_base64(bob.walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.funder.getnewaddress(): amount}], options=options, psbt_version=0)["psbt"])
+            psbt.i[0].map[PSBT_IN_CISA_FULLAGG_PUB_NONCE] = bytes.fromhex(pubnonce)
+            return bob.walletprocesspsbt(psbt.to_base64())
+
+        self.log.info("A malformed nonce of another input leaves the reservation for a corrected group")
+        pair = {w: self.fund(w, 1)[0] for w in (alice, bob)}
+        good = {(u["txid"], u["vout"]): w.reservecisanonce(u["txid"], u["vout"])["pubnonce"] for w, u in pair.items()}
+        malformed = {**good, (pair[alice]["txid"], pair[alice]["vout"]): "00" * 66}
+        joint = node.joinpsbts([
+            wallet.walletcreatefundedpsbt(inputs=[u], outputs=[{self.funder.getnewaddress(): 1}], options=options, psbt_version=0)["psbt"]
+            for wallet, u in pair.items()
+        ])
+        assert_equal(bob.walletprocesspsbt(self.add_reserved_nonces(joint, malformed))["complete"], False)
+        corrected = bob.walletprocesspsbt(self.add_reserved_nonces(joint, good))
+        assert_equal(sum("cisa_fullagg_partial_sig" in psbt_in for psbt_in in node.decodepsbt(corrected["psbt"])["inputs"]), 1)
+
+        self.log.info("A reserved nonce signs at most one transaction")
+        assert_equal(spend_with_reserved_nonce(1)["complete"], True)
+        reused = spend_with_reserved_nonce("0.5")
+        assert_equal(reused["complete"], False)
+        assert "cisa_fullagg_partial_sig" not in node.decodepsbt(reused["psbt"])["inputs"][0]
+
+        self.log.info("A nonce without its aggregation mode is not spent as opted out")
+        utxo = self.fund(bob, 1)[0]
+        psbt = PSBT.from_base64(bob.walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.funder.getnewaddress(): 1}], options={"add_inputs": False}, psbt_version=0)["psbt"])
+        psbt.i[0].map[PSBT_IN_CISA_FULLAGG_PUB_NONCE] = bytes.fromhex(bob.reservecisanonce(utxo["txid"], utxo["vout"])["pubnonce"])
+        assert_equal(bob.walletprocesspsbt(psbt.to_base64(), cisa_mode="fullagg")["complete"], False)
+
     def test_finalizer(self, wallet):
         self.log.info("An aggregated input carrying an opted-out signature is not finalized")
         signed = wallet.walletprocesspsbt(self.funded_psbt(wallet, "halfagg"), finalize=False)["psbt"]
@@ -168,6 +248,7 @@ class WalletCisaTest(BitcoinTestFramework):
         self.test_addresses(alice)
         self.test_single_wallet(alice)
         self.test_two_wallets(alice, bob)
+        self.test_reserved_nonces(alice, bob)
         self.test_finalizer(alice)
         self.test_musig()
 
