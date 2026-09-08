@@ -9,12 +9,13 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
+#include <kernel/notifications_interface.h>
 #include <kernel/types.h>
-#include <node/abort.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
+#include <node/kernel_notifications.h>
 #include <primitives/block.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -52,7 +53,12 @@ template <typename... Args>
 void BaseIndex::FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     auto message = tfm::format(fmt, args...);
-    node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
+    Assert(GetNotifications())->fatalError(Untranslated(message));
+}
+
+kernel::Notifications* BaseIndex::GetNotifications() const
+{
+    return m_chain->context()->notifications.get();
 }
 
 CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
@@ -64,7 +70,8 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
     return locator;
 }
 
-BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom) :
+BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe,
+                  bool f_obfuscate, bool f_bloom, kernel::Notifications* notifications) :
     CDBWrapper{DBParams{
         .path = path,
         .cache_bytes = n_cache_size,
@@ -72,6 +79,7 @@ BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool
         .wipe_data = f_wipe,
         .obfuscate = f_obfuscate,
         .bloom_filter = f_bloom,
+        .notifications = notifications,
         .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
