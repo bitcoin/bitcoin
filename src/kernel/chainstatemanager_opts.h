@@ -42,6 +42,9 @@ struct ChainstateManagerOpts {
     //! If the tip is older than this, the node is considered to be in initial block download.
     std::chrono::seconds max_tip_age{DEFAULT_MAX_TIP_AGE};
     DBOptions coins_db{};
+    //! Invoked before the process aborts on a coins database read failure.
+    //! Must be safe to call synchronously from any thread, including while locks are held.
+    std::function<void()> read_error_cb{};
     CoinsViewOptions coins_view{};
     Notifications& notifications;
     ValidationSignals* signals{nullptr};

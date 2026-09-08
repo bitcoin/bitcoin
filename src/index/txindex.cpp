@@ -57,7 +57,7 @@ SipHasher13UJ ReadOrCreateTxidHasher(CDBWrapper& db)
 class TxIndex::DB : public BaseIndex::DB
 {
 public:
-    explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false, std::function<void()> read_error_cb = {});
 
     /// Write a block of transaction positions to the DB.
     void WriteTxs(const interfaces::BlockInfo& block);
@@ -72,23 +72,24 @@ public:
     void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
 
 private:
-    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy);
+    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy, std::function<void()> read_error_cb);
 };
 
 static fs::path TxIndexDBPath() { return gArgs.GetDataDirNet() / "indexes" / "txindex"; }
 
-TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, std::function<void()> read_error_cb) :
     // Bloom filters are built for every key but only consulted by point reads,
     // which iterators bypass: the per-tx hashed ('x') lookups seek with an
     // iterator, and the 's'/'h' point reads are at most one per block against a
     // tiny keyspace. Only the legacy entries' per-tx point lookups benefit, so
     // enable the filters only for databases still containing them.
     DB(n_cache_size, f_memory, f_wipe,
-       /*has_legacy=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), txindex::DB_TXINDEX))
+       /*has_legacy=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), txindex::DB_TXINDEX),
+       std::move(read_error_cb))
 {}
 
-TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
-    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy),
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy, std::function<void()> read_error_cb) :
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy, std::move(read_error_cb)),
     m_hasher{ReadOrCreateTxidHasher(*this)},
     m_has_legacy{has_legacy}
 {}
@@ -132,8 +133,10 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     WriteBatch(batch);
 }
 
-TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txindex", "txidx"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe,
+                 std::function<void()> read_error_cb)
+    : BaseIndex(std::move(chain), "txindex", "txidx"),
+      m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe, std::move(read_error_cb)))
 {
     if (m_db->m_has_legacy) {
         LogInfo("txindex contains entries in the legacy format, which uses excessive disk space. "
