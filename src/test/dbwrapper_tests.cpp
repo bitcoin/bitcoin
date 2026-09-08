@@ -3,12 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
+#include <kernel/notifications_interface.h>
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/string.h>
+#include <util/translation.h>
 
 #include <fstream>
 #include <memory>
@@ -195,13 +197,17 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
     }
 }
 
-// Verify that Read() returns false (without throwing) when the stored value
-// fails to be deserialized
-BOOST_AUTO_TEST_CASE(dbwrapper_read_returns_false_on_deserialization_error)
+//! Surfaces fatal read errors as exceptions, where production would abort
+struct ThrowingNotifications final : kernel::Notifications {
+    void fatalError(const bilingual_str& message) override { throw dbwrapper_error{message.original}; }
+};
+
+BOOST_AUTO_TEST_CASE(dbwrapper_read_deserialization_error)
 {
+    ThrowingNotifications notifications;
     for (const bool obfuscate : {false, true}) {
         const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_deser_obf" : "dbwrapper_deser_noobf")};
-        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
+        CDBWrapper dbw({.path = path, .cache_bytes = 1_MiB, .wipe_data = true, .obfuscate = obfuscate, .notifications = &notifications});
 
         constexpr uint8_t key{'X'};
 
@@ -210,23 +216,23 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_returns_false_on_deserialization_error)
         dbw.Write(key, uint8_t{0xFF});
         BOOST_CHECK(dbw.Exists(key));
 
-        // Read() must catch the deserialization exception and return false,
-        // the same as if the key were absent
         uint256 result;
-        BOOST_CHECK(!dbw.Read(key, result));
+        BOOST_CHECK(!dbw.Read(key, result)); // TODO: A corrupt value must not be reported as a missing key
     }
 }
 
-// Verify Read() throws dbwrapper_error due to an internal db error
-BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
+BOOST_AUTO_TEST_CASE(dbwrapper_read_db_error)
 {
     const fs::path path{m_args.GetDataDirBase() / "dbwrapper_db_error"};
     constexpr uint8_t key{'Y'};
 
-    const auto make_db = [] (const fs::path& path, const bool force_compact) {
-        return CDBWrapper({.path = path, .cache_bytes = 1 << 20, .obfuscate = false,
-                        .options = {.force_compact = force_compact}});
-    };
+    ThrowingNotifications notifications;
+    const auto make_db{[&](const fs::path& path, bool force_compact) {
+        return CDBWrapper({.path = path, .cache_bytes = 1_MiB,
+                           .obfuscate = false, // A stored obfuscation key would be read from the corrupted table at open
+                           .notifications = &notifications,
+                           .options = {.force_compact = force_compact}});
+    }};
 
     // Write a value and close the database
     make_db(path, /*force_compact=*/false).Write(key, m_rng.rand256());
@@ -243,10 +249,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
         }
     }
 
-    // Read() should detect the issue now and throw
+    // Read() should detect the issue
     const auto db{make_db(path, /*force_compact=*/false)};
     uint256 result;
-    BOOST_CHECK_EXCEPTION(db.Read(key, result), dbwrapper_error, HasReason("Fatal LevelDB error"));
+    BOOST_CHECK_EXCEPTION((void)db.Read(key, result), dbwrapper_error, HasReason{"Fatal LevelDB error"}); // TODO: Read failures must notify the database owner
 
     // TryRead() must return DatabaseError (without throwing).
     CDBWrapper::ReadStatus status = db.TryRead(key, result);
@@ -256,7 +262,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
 }
 
 // Exercise TryRead() return values directly: found, absent and DeserializationError.
-// DatabaseError is tested inside 'dbwrapper_read_throws_on_db_error' test
+// DatabaseError is tested inside 'dbwrapper_read_db_error' test
 BOOST_AUTO_TEST_CASE(dbwrapper_tryread)
 {
     for (const bool obfuscate : {false, true}) {
