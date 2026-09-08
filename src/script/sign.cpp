@@ -230,22 +230,6 @@ bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vec
     return true;
 }
 
-std::vector<uint8_t> MutableTransactionSignatureCreator::CreateCISAFullAggNonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root) const
-{
-    CKey key;
-    if (!provider.GetKeyByXOnly(pubkey, key)) return {};
-
-    std::optional<uint256> msg = ComputeSchnorrSignatureHash(nullptr, SigVersion::WITNESS_V2_KEYPATH);
-    if (!msg) return {};
-
-    FullAggSecNonce secnonce;
-    std::vector<uint8_t> pubnonce = ::CreateFullAggNonce(secnonce, key.ComputeKeyPair(merkle_root), *msg);
-    if (pubnonce.empty()) return {};
-
-    provider.SetCISASecNonce(CISASessionID(pubkey, *msg, pubnonce), std::move(secnonce));
-    return pubnonce;
-}
-
 bool MutableTransactionSignatureCreator::CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const
 {
     CKey key;
@@ -271,7 +255,7 @@ bool MutableTransactionSignatureCreator::CreateCISAFullAggPartialSig(const Signi
     }
     if (!signer_index) return false;
 
-    const uint256 session_id{CISASessionID(pubkey, msgs[*signer_index], pubnonces[*signer_index])};
+    const uint256 session_id{CISASessionID(pubkey, pubnonces[*signer_index])};
     std::optional<std::reference_wrapper<FullAggSecNonce>> secnonce = provider.GetCISASecNonce(session_id);
     if (!secnonce || !secnonce->get().IsValid()) return false;
 
@@ -621,6 +605,37 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     return ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
 }
 
+//! The keys a key path spend can be signed with: the internal key with its tweak, or the output key itself.
+static std::array<std::pair<XOnlyPubKey, const uint256*>, 2> KeyPathKeys(const TaprootSpendData& spenddata LIFETIMEBOUND, const XOnlyPubKey& output)
+{
+    return {{{spenddata.internal_key, &spenddata.merkle_root}, {output, nullptr}}};
+}
+
+//! Generate a BIP459 nonce for a witness v2 key path key, keeping the secnonce in provider.
+static std::vector<uint8_t> MakeCISANonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root)
+{
+    CKey key;
+    if (!provider.GetKeyByXOnly(pubkey, key)) return {};
+
+    FullAggSecNonce secnonce;
+    std::vector<uint8_t> pubnonce{CreateFullAggNonce(secnonce, key.ComputeKeyPair(merkle_root))};
+    if (pubnonce.empty()) return {};
+
+    provider.SetCISASecNonce(CISASessionID(pubkey, pubnonce), std::move(secnonce));
+    return pubnonce;
+}
+
+std::vector<uint8_t> ReserveCISANonce(const SigningProvider& provider, const XOnlyPubKey& output_key)
+{
+    TaprootSpendData spenddata;
+    provider.GetTaprootSpendData(output_key, spenddata);
+    for (const auto& [pk, merkle_root] : KeyPathKeys(spenddata, output_key)) {
+        std::vector<uint8_t> pubnonce{MakeCISANonce(provider, pk, merkle_root)};
+        if (!pubnonce.empty()) return pubnonce;
+    }
+    return {};
+}
+
 static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const XOnlyPubKey& output, bool cisa, SignatureData& sigdata, std::vector<valtype>& result)
 {
     TaprootSpendData spenddata;
@@ -656,11 +671,7 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             }
         }
 
-        // Sign with the internal key and the tweak, or with the output key itself
-        const std::array<std::pair<XOnlyPubKey, const uint256*>, 2> keypath_keys{{
-            {sigdata.tr_spenddata.internal_key, &sigdata.tr_spenddata.merkle_root},
-            {output, nullptr},
-        }};
+        const auto keypath_keys{KeyPathKeys(sigdata.tr_spenddata, output)};
 
         // Aggregated witness v2 inputs (BIP460) only collect their signature material here,
         // the witnesses of a group are built by FinalizeCISAInputs()
@@ -685,7 +696,7 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             if (!sigdata.cisa_fullagg_partial_sig.IsNull()) return false;
             for (const auto& [pk, merkle_root] : keypath_keys) {
                 if (sigdata.cisa_fullagg_pubnonce.empty()) {
-                    sigdata.cisa_fullagg_pubnonce = creator.CreateCISAFullAggNonce(provider, pk, merkle_root);
+                    sigdata.cisa_fullagg_pubnonce = MakeCISANonce(provider, pk, merkle_root);
                     if (!sigdata.cisa_fullagg_pubnonce.empty()) break;
                 } else if (creator.CreateCISAFullAggPartialSig(provider, sigdata.cisa_fullagg_partial_sig, pk, merkle_root, sigdata)) {
                     break;
@@ -1094,10 +1105,6 @@ public:
     {
         sig.assign(64, '\000');
         return true;
-    }
-    std::vector<uint8_t> CreateCISAFullAggNonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root) const override
-    {
-        return std::vector<uint8_t>(FULLAGG_PUBNONCE_SIZE, '\000');
     }
     bool CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const override
     {
