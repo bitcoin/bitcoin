@@ -57,7 +57,7 @@ public:
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
     virtual ~TxIndex() override;
 
-    /// Pruning with full history is allowed unless the database still contains legacy entries.
+    /// Pruning with partial history is allowed unless the database still contains legacy entries.
     IndexPrunePolicy GetPrunePolicy() const override;
 
     /// Look up a transaction by hash.

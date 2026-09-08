@@ -146,7 +146,7 @@ TxIndex::~TxIndex() = default;
 
 IndexPrunePolicy TxIndex::GetPrunePolicy() const
 {
-    return m_db->m_has_legacy ? IndexPrunePolicy::Disallowed : IndexPrunePolicy::FullHistory;
+    return m_db->m_has_legacy ? IndexPrunePolicy::Disallowed : IndexPrunePolicy::PartialHistory;
 }
 
 bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
