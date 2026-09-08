@@ -5,6 +5,7 @@
 #ifndef BITCOIN_PSBT_H
 #define BITCOIN_PSBT_H
 
+#include <cisa.h>
 #include <common/types.h>
 #include <musig.h>
 #include <node/transaction.h>
@@ -71,6 +72,10 @@ inline constexpr uint8_t PSBT_IN_TAP_MERKLE_ROOT = 0x18;
 inline constexpr uint8_t PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x1a;
 inline constexpr uint8_t PSBT_IN_MUSIG2_PUB_NONCE = 0x1b;
 inline constexpr uint8_t PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1c;
+inline constexpr uint8_t PSBT_IN_CISA_MODE = 0x21;
+inline constexpr uint8_t PSBT_IN_CISA_HALFAGG_SIG = 0x22;
+inline constexpr uint8_t PSBT_IN_CISA_FULLAGG_PUB_NONCE = 0x23;
+inline constexpr uint8_t PSBT_IN_CISA_FULLAGG_PARTIAL_SIG = 0x24;
 inline constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 
 // Output types
@@ -318,6 +323,12 @@ public:
     // Key is the aggregate pubkey and the script leaf hash, value is a map of participant pubkey to partial_sig
     std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, uint256>> m_musig2_partial_sigs;
 
+    // CISA fields
+    std::optional<uint8_t> m_cisa_mode;
+    std::vector<unsigned char> m_cisa_halfagg_sig;
+    std::vector<uint8_t> m_cisa_fullagg_pubnonce;
+    uint256 m_cisa_fullagg_partial_sig;
+
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
@@ -325,6 +336,8 @@ public:
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
+    //! Whether the CISA fields of both inputs can belong to the same signing session
+    bool CISACompatible(const PSBTInput& input) const;
     uint32_t GetVersion() const { return m_psbt_version; }
     COutPoint GetOutPoint() const;
     /**
@@ -502,6 +515,24 @@ public:
                     }
                     SerializeToVector(s, psig);
                 }
+            }
+
+            // Write CISA fields
+            if (m_cisa_mode) {
+                SerializeToVector(s, PSBT_IN_CISA_MODE);
+                SerializeToVector(s, *m_cisa_mode);
+            }
+            if (!m_cisa_halfagg_sig.empty()) {
+                SerializeToVector(s, PSBT_IN_CISA_HALFAGG_SIG);
+                s << m_cisa_halfagg_sig;
+            }
+            if (!m_cisa_fullagg_pubnonce.empty()) {
+                SerializeToVector(s, PSBT_IN_CISA_FULLAGG_PUB_NONCE);
+                s << m_cisa_fullagg_pubnonce;
+            }
+            if (!m_cisa_fullagg_partial_sig.IsNull()) {
+                SerializeToVector(s, PSBT_IN_CISA_FULLAGG_PARTIAL_SIG);
+                SerializeToVector(s, m_cisa_fullagg_partial_sig);
             }
         }
 
@@ -895,6 +926,41 @@ public:
                     UnserializeFromVector(s, partial_sig);
 
                     m_musig2_partial_sigs[std::make_pair(agg_pub, leaf_hash)].emplace(part_pub, partial_sig);
+                    break;
+                }
+                case PSBT_IN_CISA_MODE:
+                {
+                    ExpectedKeySize("Input CISA Aggregation Mode", key, 1);
+                    uint8_t mode;
+                    UnserializeFromVector(s, mode);
+                    if (mode != 0 && mode != CISA_MARKER_HALFAGG && mode != CISA_MARKER_FULLAGG) {
+                        throw std::ios_base::failure("Input CISA aggregation mode is undefined");
+                    }
+                    m_cisa_mode = mode;
+                    break;
+                }
+                case PSBT_IN_CISA_HALFAGG_SIG:
+                {
+                    ExpectedKeySize("Input CISA Half-Aggregation Signature", key, 1);
+                    s >> m_cisa_halfagg_sig;
+                    if (m_cisa_halfagg_sig.size() != 64 && m_cisa_halfagg_sig.size() != 65) {
+                        throw std::ios_base::failure("Input CISA half-aggregation signature is not 64 or 65 bytes");
+                    }
+                    break;
+                }
+                case PSBT_IN_CISA_FULLAGG_PUB_NONCE:
+                {
+                    ExpectedKeySize("Input CISA Full-Aggregation Public Nonce", key, 1);
+                    s >> m_cisa_fullagg_pubnonce;
+                    if (m_cisa_fullagg_pubnonce.size() != FULLAGG_PUBNONCE_SIZE) {
+                        throw std::ios_base::failure("Input CISA full-aggregation public nonce is not 66 bytes");
+                    }
+                    break;
+                }
+                case PSBT_IN_CISA_FULLAGG_PARTIAL_SIG:
+                {
+                    ExpectedKeySize("Input CISA Full-Aggregation Partial Signature", key, 1);
+                    UnserializeFromVector(s, m_cisa_fullagg_partial_sig);
                     break;
                 }
                 case PSBT_IN_PROPRIETARY:
@@ -1656,6 +1722,10 @@ size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
  * This fills in the redeem_script, witness_script, and hd_keypaths where possible.
  */
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index);
+
+/** Finalizer role of the CISA PSBT BIP: verify and aggregate the signatures of every complete
+ *  aggregation group and set the BIP460 witnesses of its inputs. */
+void FinalizeCISAInputs(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata);
 
 /**
  * Finalizes a PSBT if possible, combining partial signatures.

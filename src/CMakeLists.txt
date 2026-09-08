@@ -114,6 +114,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/signmessage.cpp
   common/system.cpp
   common/url.cpp
+  cisa.cpp
   compressor.cpp
   core_io.cpp
   deploymentinfo.cpp

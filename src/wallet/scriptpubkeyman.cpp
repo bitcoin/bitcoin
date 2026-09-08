@@ -96,6 +96,7 @@ IsMineResult LegacyWalletIsMineInnerDONOTUSE(const LegacyDataSPKM& keystore, con
     case TxoutType::NULL_DATA:
     case TxoutType::WITNESS_UNKNOWN:
     case TxoutType::WITNESS_V1_TAPROOT:
+    case TxoutType::WITNESS_V2_CISA:
     case TxoutType::ANCHOR:
         break;
     case TxoutType::PUBKEY:
@@ -1332,6 +1333,7 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
         // Always include musig_secnonces as this descriptor may have a participant private key
         // but not a musig() descriptor
         out_keys->musig2_secnonces = &m_musig2_secnonces;
+        out_keys->cisa_secnonces = &m_cisa_secnonces;
     }
 
     return out_keys;
@@ -1419,9 +1421,9 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
                 pubkeys.push_back(pk);
             }
 
-            // Taproot output pubkey
+            // Taproot or witness v2 output pubkey
             std::vector<std::vector<unsigned char>> sols;
-            if (Solver(script, sols) == TxoutType::WITNESS_V1_TAPROOT) {
+            if (const TxoutType type{Solver(script, sols)}; type == TxoutType::WITNESS_V1_TAPROOT || type == TxoutType::WITNESS_V2_CISA) {
                 sols[0].insert(sols[0].begin(), 0x02);
                 pubkeys.emplace_back(sols[0]);
                 sols[0][0] = 0x03;
@@ -1472,6 +1474,18 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
     }
 
     return {};
+}
+
+std::vector<uint8_t> DescriptorScriptPubKeyMan::ReserveCISANonce(const CScript& script) const
+{
+    CTxDestination dest;
+    if (!ExtractDestination(script, dest)) return {};
+    const WitnessV2Cisa* output_key{std::get_if<WitnessV2Cisa>(&dest)};
+    if (!output_key) return {};
+
+    std::unique_ptr<FlatSigningProvider> keys{GetSigningProvider(script, /*include_private=*/true)};
+    if (!keys) return {};
+    return ::ReserveCISANonce(*keys, *output_key);
 }
 
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const

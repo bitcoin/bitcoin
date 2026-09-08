@@ -142,6 +142,7 @@ UniValue DescribeAddress(const CTxDestination& dest);
 
 /** Parse a sighash string representation and raise an RPC error if it is invalid. */
 std::optional<int> ParseSighashString(const UniValue& sighash);
+std::optional<uint8_t> ParseCISAMode(const UniValue& mode);
 
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);

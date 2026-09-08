@@ -146,6 +146,9 @@ enum class script_verify_flag_name : uint8_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE,
 
+    // Witness v2 validation with cross-input signature aggregation (BIP460)
+    SCRIPT_VERIFY_WITNESS_V2,
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -200,10 +203,11 @@ struct PrecomputedTransactionData
 
 enum class SigVersion
 {
-    BASE = 0,        //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
-    WITNESS_V0 = 1,  //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
-    TAPROOT = 2,     //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
-    TAPSCRIPT = 3,   //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
+    BASE = 0,               //!< Bare scripts and BIP16 P2SH-wrapped redeemscripts
+    WITNESS_V0 = 1,         //!< Witness v0 (P2WPKH and P2WSH); see BIP 141
+    TAPROOT = 2,            //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, key path spending; see BIP 341
+    TAPSCRIPT = 3,          //!< Witness v1 with 32-byte program, not BIP16 P2SH-wrapped, script path spending, leaf version 0xc0; see BIP 342
+    WITNESS_V2_KEYPATH = 4, //!< Witness v2 with 32-byte program, not BIP16 P2SH-wrapped, aggregated key path spending; see BIP460
 };
 
 struct ScriptExecutionData
@@ -232,12 +236,21 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! The aggregation mode marker byte committed to by witness v2 keypath
+    //! signature messages (BIP460). Only used with SigVersion::WITNESS_V2_KEYPATH.
+    uint8_t m_cisa_agg_mode{0};
 };
 
 /** Signature hash sizes */
 inline constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 inline constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
 inline constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+inline constexpr size_t WITNESS_V2_CISA_SIZE = 32;
+
+/** Witness v2 keypath aggregation mode markers (BIP460) */
+inline constexpr uint8_t CISA_MARKER_HALFAGG = 0xbc;
+inline constexpr uint8_t CISA_MARKER_FULLAGG = 0xbd;
 
 inline constexpr uint8_t TAPROOT_LEAF_MASK = 0xfe;
 inline constexpr uint8_t TAPROOT_LEAF_TAPSCRIPT = 0xc0;
@@ -377,6 +390,32 @@ uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const u
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+
+/** A parsed witness v2 keypath witness element (BIP460). */
+struct CISAWitness {
+    //! Marker of the input's group (CISA_MARKER_HALFAGG/FULLAGG), std::nullopt
+    //! for opted-out inputs. Only final inputs carry the marker byte, members
+    //! are classified by element length.
+    std::optional<uint8_t> marker;
+    bool is_final;
+    //! SIGHASH_DEFAULT unless an explicit sighash byte is present. Not
+    //! extracted for opted-out inputs: their sighash byte stays part of the
+    //! signature and is interpreted by the BIP341 rules.
+    uint8_t sighash_type;
+    //! Signature data of an aggregated input, entire BIP341 signature of an
+    //! opted-out input. Points into the element passed to ParseCISAWitness().
+    std::span<const unsigned char> signature;
+};
+
+/** Parse a witness v2 keypath witness element per the BIP460 structure table.
+ *  Returns std::nullopt and sets serror if the element matches no valid form. */
+std::optional<CISAWitness> ParseCISAWitness(std::span<const unsigned char> elem, ScriptError* serror = nullptr);
+
+/** Verify the aggregate signatures of a transaction's witness v2 keypath
+ *  spends (BIP460). Opted-out inputs and script path spends are covered by
+ *  the per-input VerifyScript() checks instead. txdata must have been
+ *  initialized with the transaction's spent outputs. */
+bool VerifyCISATransaction(const CTransaction& tx, const std::vector<CTxOut>& spent_outputs, script_verify_flags flags, const PrecomputedTransactionData& txdata, ScriptError* serror = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness& witness, script_verify_flags flags);
 

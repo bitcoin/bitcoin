@@ -5,7 +5,7 @@
 
 #include <script/sign.h>
 
-#include <addresstype.h>
+#include <cisa.h>
 #include <coins.h>
 #include <consensus/amount.h>
 #include <hash.h>
@@ -78,7 +78,12 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
 
 std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatureHash(const uint256* leaf_hash, SigVersion sigversion) const
 {
-    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    return ComputeSchnorrSignatureHash(nIn, m_options.sighash_type, leaf_hash, sigversion);
+}
+
+std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatureHash(unsigned int input_idx, int sighash_type, const uint256* leaf_hash, SigVersion sigversion) const
+{
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::WITNESS_V2_KEYPATH);
 
     // BIP341/BIP342 signing needs lots of precomputed transaction data. While some
     // (non-SIGHASH_DEFAULT) sighash modes exist that can work with just some subset
@@ -95,8 +100,9 @@ std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatu
         execdata.m_tapleaf_hash_init = true;
         execdata.m_tapleaf_hash = *leaf_hash;
     }
+    if (sigversion == SigVersion::WITNESS_V2_KEYPATH) execdata.m_cisa_agg_mode = m_options.cisa_mode;
     uint256 hash;
-    if (!SignatureHashSchnorr(hash, execdata, m_txto, nIn, m_options.sighash_type, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
+    if (!SignatureHashSchnorr(hash, execdata, m_txto, input_idx, sighash_type, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
     return hash;
 }
 
@@ -117,7 +123,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
 
 std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const
 {
-    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::WITNESS_V2_KEYPATH);
 
     // Retrieve the private key
     CKey key;
@@ -145,7 +151,7 @@ std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const
 
 bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningProvider& provider, uint256& partial_sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const
 {
-    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::WITNESS_V2_KEYPATH);
 
     // Retrieve private key
     CKey key;
@@ -191,7 +197,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
 
 bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const
 {
-    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::WITNESS_V2_KEYPATH);
     if (!participants.size()) return false;
 
     // Retrieve pubnonces and partial sigs
@@ -216,6 +222,43 @@ bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vec
     sig = res.value();
     if (m_options.sighash_type) sig.push_back(m_options.sighash_type);
 
+    return true;
+}
+
+bool MutableTransactionSignatureCreator::CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const
+{
+    CKey key;
+    if (!provider.GetKeyByXOnly(pubkey, key)) return false;
+    if (!m_txdata || !m_txdata->m_spent_outputs_ready) return false;
+
+    // The group's keys from the spent outputs and messages from each member's own sighash type
+    std::vector<XOnlyPubKey> pubkeys;
+    std::vector<uint256> msgs;
+    std::vector<std::vector<uint8_t>> pubnonces;
+    std::optional<size_t> signer_index;
+    for (const CISAGroupMember& member : sigdata.cisa_group) {
+        int version;
+        std::vector<unsigned char> program;
+        if (member.pubnonce.empty() || member.index >= m_txdata->m_spent_outputs.size()) return false;
+        if (!m_txdata->m_spent_outputs[member.index].scriptPubKey.IsWitnessProgram(version, program) || version != 2 || program.size() != WITNESS_V2_CISA_SIZE) return false;
+        std::optional<uint256> msg = ComputeSchnorrSignatureHash(member.index, member.sighash_type, nullptr, SigVersion::WITNESS_V2_KEYPATH);
+        if (!msg) return false;
+        if (member.index == nIn) signer_index = pubkeys.size();
+        pubkeys.emplace_back(program);
+        msgs.push_back(*msg);
+        pubnonces.push_back(member.pubnonce);
+    }
+    if (!signer_index) return false;
+
+    const uint256 session_id{CISASessionID(pubkey, pubnonces[*signer_index])};
+    std::optional<std::reference_wrapper<FullAggSecNonce>> secnonce = provider.GetCISASecNonce(session_id);
+    if (!secnonce || !secnonce->get().IsValid()) return false;
+
+    std::optional<uint256> sig = ::CreateFullAggPartialSig(key.ComputeKeyPair(merkle_root), *secnonce, pubkeys, msgs, pubnonces, *signer_index);
+    // A group that could not be signed over leaves the secnonce reserved for a corrected one
+    if (!secnonce->get().IsValid()) provider.DeleteCISASession(session_id);
+    if (!sig) return false;
+    partial_sig = *sig;
     return true;
 }
 
@@ -282,7 +325,7 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
 
 static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& script_pubkey, const uint256* merkle_root, const uint256* leaf_hash, SigVersion sigversion)
 {
-    Assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    Assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::WITNESS_V2_KEYPATH);
 
     // Lookup derivation paths for the script pubkey
     KeyOriginInfo agg_info;
@@ -331,7 +374,7 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
         }
 
         // Add the merkle root tweak
-        if (sigversion == SigVersion::TAPROOT && merkle_root) {
+        if ((sigversion == SigVersion::TAPROOT || sigversion == SigVersion::WITNESS_V2_KEYPATH) && merkle_root) {
             tweaks.emplace_back(script_pubkey.ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root), true);
             std::optional<std::pair<XOnlyPubKey, bool>> tweaked = script_pubkey.CreateTapTweak(merkle_root->IsNull() ? nullptr : merkle_root);
             if (!Assume(tweaked)) return false;
@@ -342,6 +385,8 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
         if (creator.CreateMuSig2AggregateSig(part_pks, sig_out, agg_pub, plain_pub, leaf_hash, tweaks, sigversion, sigdata)) {
             if (sigversion == SigVersion::TAPROOT) {
                 sigdata.taproot_key_path_sig = sig_out;
+            } else if (sigversion == SigVersion::WITNESS_V2_KEYPATH) {
+                sigdata.cisa_halfagg_sig = sig_out;
             } else {
                 auto lookup_key = std::make_pair(script_pubkey, leaf_hash ? *leaf_hash : uint256());
                 sigdata.taproot_script_sigs[lookup_key] = sig_out;
@@ -555,7 +600,38 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     return ms && ms->Satisfy(ms_satisfier, result) == miniscript::Availability::YES;
 }
 
-static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const WitnessV1Taproot& output, SignatureData& sigdata, std::vector<valtype>& result)
+//! The keys a key path spend can be signed with: the internal key with its tweak, or the output key itself.
+static std::array<std::pair<XOnlyPubKey, const uint256*>, 2> KeyPathKeys(const TaprootSpendData& spenddata LIFETIMEBOUND, const XOnlyPubKey& output)
+{
+    return {{{spenddata.internal_key, &spenddata.merkle_root}, {output, nullptr}}};
+}
+
+//! Generate a BIP459 nonce for a witness v2 key path key, keeping the secnonce in provider.
+static std::vector<uint8_t> MakeCISANonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root)
+{
+    CKey key;
+    if (!provider.GetKeyByXOnly(pubkey, key)) return {};
+
+    FullAggSecNonce secnonce;
+    std::vector<uint8_t> pubnonce{CreateFullAggNonce(secnonce, key.ComputeKeyPair(merkle_root))};
+    if (pubnonce.empty()) return {};
+
+    provider.SetCISASecNonce(CISASessionID(pubkey, pubnonce), std::move(secnonce));
+    return pubnonce;
+}
+
+std::vector<uint8_t> ReserveCISANonce(const SigningProvider& provider, const XOnlyPubKey& output_key)
+{
+    TaprootSpendData spenddata;
+    provider.GetTaprootSpendData(output_key, spenddata);
+    for (const auto& [pk, merkle_root] : KeyPathKeys(spenddata, output_key)) {
+        std::vector<uint8_t> pubnonce{MakeCISANonce(provider, pk, merkle_root)};
+        if (!pubnonce.empty()) return pubnonce;
+    }
+    return {};
+}
+
+static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const XOnlyPubKey& output, bool cisa, SignatureData& sigdata, std::vector<valtype>& result)
 {
     TaprootSpendData spenddata;
     TaprootBuilder builder;
@@ -590,22 +666,48 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
             }
         }
 
-        auto make_keypath_sig = [&](const XOnlyPubKey& pk, const uint256* merkle_root) {
+        const auto keypath_keys{KeyPathKeys(sigdata.tr_spenddata, output)};
+
+        // Aggregated witness v2 inputs (BIP460) only collect their signature material here,
+        // the witnesses of a group are built by FinalizeCISAInputs()
+        const uint8_t cisa_mode{cisa ? sigdata.cisa_mode.value_or(0) : uint8_t{0}};
+        // An input with an aggregation signature or public nonce must not be signed as opted out
+        if (cisa && !sigdata.cisa_mode && (!sigdata.cisa_halfagg_sig.empty() || !sigdata.cisa_fullagg_pubnonce.empty() || !sigdata.cisa_fullagg_partial_sig.IsNull())) {
+            return false;
+        }
+        if (cisa_mode == CISA_MARKER_HALFAGG) {
+            for (const auto& [pk, merkle_root] : keypath_keys) {
+                if (!sigdata.cisa_halfagg_sig.empty()) break;
+                std::vector<unsigned char> sig;
+                if (creator.CreateSchnorrSig(provider, sig, pk, nullptr, merkle_root, SigVersion::WITNESS_V2_KEYPATH)) {
+                    sigdata.cisa_halfagg_sig = sig;
+                } else {
+                    SignMuSig2(creator, sigdata, provider, sig, pk, merkle_root, /*leaf_hash=*/nullptr, SigVersion::WITNESS_V2_KEYPATH);
+                }
+            }
+            return false;
+        }
+        if (cisa_mode == CISA_MARKER_FULLAGG) {
+            if (!sigdata.cisa_fullagg_partial_sig.IsNull()) return false;
+            for (const auto& [pk, merkle_root] : keypath_keys) {
+                if (sigdata.cisa_fullagg_pubnonce.empty()) {
+                    sigdata.cisa_fullagg_pubnonce = MakeCISANonce(provider, pk, merkle_root);
+                    if (!sigdata.cisa_fullagg_pubnonce.empty()) break;
+                } else if (creator.CreateCISAFullAggPartialSig(provider, sigdata.cisa_fullagg_partial_sig, pk, merkle_root, sigdata)) {
+                    break;
+                }
+            }
+            return false;
+        }
+
+        for (const auto& [pk, merkle_root] : keypath_keys) {
+            if (!sigdata.taproot_key_path_sig.empty()) break;
             std::vector<unsigned char> sig;
             if (creator.CreateSchnorrSig(provider, sig, pk, nullptr, merkle_root, SigVersion::TAPROOT)) {
                 sigdata.taproot_key_path_sig = sig;
             } else {
                 SignMuSig2(creator, sigdata, provider, sig, pk, merkle_root, /*leaf_hash=*/nullptr, SigVersion::TAPROOT);
             }
-        };
-
-        // First try signing with internal key
-        if (sigdata.taproot_key_path_sig.size() == 0) {
-            make_keypath_sig(sigdata.tr_spenddata.internal_key, &sigdata.tr_spenddata.merkle_root);
-        }
-        // Try signing with output key if still no signature
-        if (sigdata.taproot_key_path_sig.size() == 0) {
-            make_keypath_sig(output, nullptr);
         }
         if (sigdata.taproot_key_path_sig.size()) {
             result = Vector(sigdata.taproot_key_path_sig);
@@ -717,7 +819,10 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return false;
 
     case TxoutType::WITNESS_V1_TAPROOT:
-        return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
+        return SignTaproot(provider, creator, XOnlyPubKey{vSolutions[0]}, /*cisa=*/false, sigdata, ret);
+
+    case TxoutType::WITNESS_V2_CISA:
+        return SignTaproot(provider, creator, XOnlyPubKey{vSolutions[0]}, /*cisa=*/true, sigdata, ret);
 
     case TxoutType::ANCHOR:
         return true;
@@ -795,7 +900,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         sigdata.scriptWitness.stack = result;
         sigdata.witness = true;
         result.clear();
-    } else if (whichType == TxoutType::WITNESS_V1_TAPROOT && !P2SH) {
+    } else if ((whichType == TxoutType::WITNESS_V1_TAPROOT || whichType == TxoutType::WITNESS_V2_CISA) && !P2SH) {
         sigdata.witness = true;
         if (solved) {
             sigdata.scriptWitness.stack = std::move(result);
@@ -994,6 +1099,11 @@ public:
     bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override
     {
         sig.assign(64, '\000');
+        return true;
+    }
+    bool CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const override
+    {
+        partial_sig = uint256::ONE;
         return true;
     }
 };

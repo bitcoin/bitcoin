@@ -297,11 +297,16 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     WitnessUnknown unk_v1{1, ToByteVector(pubkey)};
     BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v1);
     s.clear();
-    // -> segwit versions 2+ are not specified yet
+    // -> segwit version 2 with a 32-byte program is a CISA output
     s << OP_2 << ToByteVector(xpk);
     BOOST_CHECK(ExtractDestination(s, address));
-    WitnessUnknown unk_v2{2, ToByteVector(xpk)};
-    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2);
+    BOOST_CHECK(std::get<WitnessV2Cisa>(address) == WitnessV2Cisa{xpk});
+    s.clear();
+    // -> segwit versions 3+ are not specified yet
+    s << OP_3 << ToByteVector(xpk);
+    BOOST_CHECK(ExtractDestination(s, address));
+    WitnessUnknown unk_v3{3, ToByteVector(xpk)};
+    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v3);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)

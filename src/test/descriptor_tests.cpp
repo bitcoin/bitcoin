@@ -2,10 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
+#include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <test/data/cisa_descriptor_vectors.json.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -1300,6 +1304,77 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+}
+
+BOOST_AUTO_TEST_CASE(cisa_descriptor_test)
+{
+    Check("cisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE | XONLY_KEYS, {{"522077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"}}, OutputType::BECH32M);
+    Check("cisa(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0/*,pk(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/1/*))", "cisa(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*,pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*))", "cisa(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*,pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*))", XONLY_KEYS | RANGE, {{"522078bc707124daa551b65af74de2ec128b7525e10f374dc67b64e00ce0ab8b3e12"}, {"522001f0a02a17808c20134b78faab80ef93ffba82261ccef0a2314f5d62b6438f11"}, {"522021024954fcec88237a9386fce80ef2ced5f1e91b422b26c59ccfc174c8d1ad25"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}});
+    Check("cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pkh(L1NKM8dVA1h52mwDrmk1YreTWkAZZTu2vmKLpmLEbFRqGQYjHeEV))", "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pkh(30a6069f344fb784a2b4c99540a91ee727c91e3a25ef6aae867d9c65b5f23529))", "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pkh(30a6069f344fb784a2b4c99540a91ee727c91e3a25ef6aae867d9c65b5f23529))", MISSING_PRIVKEYS | XONLY_KEYS | SIGNABLE, {{"52201e9875f690f5847404e4c5951e2f029887df0525691ee11a682afd37b608aad4"}}, OutputType::BECH32M);
+    Check("cisa(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*,pk(KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU74sHUHy8S))","cisa(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*,pk(f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9))","cisa(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*,pk(f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9))", MISSING_PRIVKEYS | XONLY_KEYS | RANGE | MUSIG | MUSIG_DERIVATION, {{"52201d377b637b5c73f670f5c8a96a2c0bb0d1a682a1fca6aba91fe673501a189782"}, {"52208950c83b117a6c208d5205ffefcf75b187b32512eb7f0d8577db8d9102833036"}, {"5220a49a477c61df73691b77fcd563a80a15ea67bb9c75470310ce5c0f25918db60d"}}, OutputType::BECH32M, /*op_desc_id=*/std::nullopt, {{}, {0, 0}, {0, 1}, {0, 2}});
+    Check("rawcisa(musig(KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU74sHUHy8S,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,023590a94e768f8e1815c2f24b4d80a8e3149316c3518ce7b7ad338368d038ca66))", "rawcisa(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,023590a94e768f8e1815c2f24b4d80a8e3149316c3518ce7b7ad338368d038ca66))", "rawcisa(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,023590a94e768f8e1815c2f24b4d80a8e3149316c3518ce7b7ad338368d038ca66))", MISSING_PRIVKEYS | XONLY_KEYS | MUSIG, {{"5220789d937bade6673538f3e28d8368dda4d0512f94da44cf477a505716d26a1575"}}, OutputType::BECH32M);
+
+    CheckUnparsable("cisa(5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss)", "cisa(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", "cisa(): Uncompressed keys are not allowed");
+    CheckUnparsable("rawcisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,pk(KzoAz5CanayRKex3fSLQ2BwJpN7U52gZvxMyk78nDMHuqrUxuSJy))", "rawcisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pk(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0))", "rawcisa(): only one key expected.");
+    CheckUnparsable("wsh(cisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "wsh(cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have cisa at top level");
+    CheckUnparsable("sh(cisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have cisa at top level");
+    CheckUnparsable("cisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,{pk(KzoAz5CanayRKex3fSLQ2BwJpN7U52gZvxMyk78nDMHuqrUxuSJy)})", "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{pk(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0)})", "cisa(): expected ',' after script expression");
+
+    // Without tree data a witness v2 output infers to rawcisa().
+    const std::string raw_desc{"rawcisa(77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11)"};
+    const CScript spk{CScript() << OP_2 << ParseHex("77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11")};
+    BOOST_CHECK_EQUAL(InferDescriptor(spk, FlatSigningProvider{})->ToString(), raw_desc + "#" + GetDescriptorChecksum(raw_desc));
+}
+
+BOOST_AUTO_TEST_CASE(cisa_descriptor_vectors)
+{
+    UniValue tests;
+    Assert(tests.read(json_tests::cisa_descriptor_vectors));
+
+    for (const auto& vec : tests["valid"].getValues()) {
+        const std::string desc_str{vec["given"]["descriptor"].get_str()};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto descs{Parse(desc_str, keys, error)};
+        BOOST_REQUIRE_MESSAGE(descs.size() == 1, error);
+
+        for (const auto& result : vec["results"].getValues()) {
+            const int pos{result.exists("childIndex") ? result["childIndex"].getInt<int>() : 0};
+            std::vector<CScript> scripts;
+            FlatSigningProvider provider;
+            BOOST_REQUIRE(descs[0]->Expand(pos, keys, scripts, provider));
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+            BOOST_CHECK_EQUAL(HexStr(scripts[0]), result["expected"]["scriptPubKey"].get_str());
+
+            CTxDestination dest;
+            BOOST_REQUIRE(ExtractDestination(scripts[0], dest));
+            BOOST_CHECK_EQUAL(EncodeDestination(dest), result["expected"]["address"].get_str());
+            const XOnlyPubKey output_key{std::get<WitnessV2Cisa>(dest)};
+            BOOST_CHECK_EQUAL(HexStr(output_key), result["intermediary"]["outputKey"].get_str());
+
+            const UniValue& internal_key{result["intermediary"]["internalKey"]};
+            const UniValue& merkle_root{result["intermediary"]["merkleRoot"]};
+            TaprootSpendData spenddata;
+            if (internal_key.isNull()) {
+                BOOST_CHECK(!provider.GetTaprootSpendData(output_key, spenddata));
+                continue;
+            }
+            BOOST_REQUIRE(provider.GetTaprootSpendData(output_key, spenddata));
+            BOOST_CHECK_EQUAL(HexStr(spenddata.internal_key), internal_key.get_str());
+            if (merkle_root.isNull()) {
+                BOOST_CHECK(spenddata.merkle_root.IsNull());
+            } else {
+                BOOST_CHECK_EQUAL(HexStr(spenddata.merkle_root), merkle_root.get_str());
+            }
+        }
+    }
+
+    for (const auto& vec : tests["invalid"].getValues()) {
+        const std::string desc_str{vec["given"]["descriptor"].get_str()};
+        FlatSigningProvider keys;
+        std::string error;
+        BOOST_CHECK_MESSAGE(Parse(desc_str, keys, error).empty(), desc_str);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)

@@ -13,7 +13,7 @@ print_environment() {
     # does not rely on bash.
     for var in WERROR_CFLAGS MAKEFLAGS BUILD \
             ECMULTWINDOW ECMULTGENKB ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
-            EXPERIMENTAL ECDH RECOVERY EXTRAKEYS MUSIG SCHNORRSIG ELLSWIFT SILENTPAYMENTS \
+            EXPERIMENTAL ECDH RECOVERY EXTRAKEYS MUSIG SCHNORRSIG SCHNORRSIG_HALFAGG ELLSWIFT SILENTPAYMENTS FULLAGG \
             SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS SYMBOL_CHECK \
             EXAMPLES \
             HOST WRAPPER_CMD \
@@ -63,8 +63,10 @@ fi
     --enable-module-ellswift="$ELLSWIFT" \
     --enable-module-extrakeys="$EXTRAKEYS" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
+    --enable-module-schnorrsig-halfagg="$SCHNORRSIG_HALFAGG" \
     --enable-module-musig="$MUSIG" \
     --enable-module-silentpayments="$SILENTPAYMENTS" \
+    --enable-module-fullagg="$FULLAGG" \
     --enable-examples="$EXAMPLES" \
     --enable-ctime-tests="$CTIMETESTS" \
     --with-valgrind="$WITH_VALGRIND" \

@@ -408,7 +408,8 @@ static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::con
     case SigVersion::TAPSCRIPT:
         return EvalChecksigTapscript(sig, pubkey, execdata, flags, checker, sigversion, serror, success);
     case SigVersion::TAPROOT:
-        // Key path spending in Taproot has no script, so this is unreachable.
+    case SigVersion::WITNESS_V2_KEYPATH:
+        // Key path spending has no script, so this is unreachable.
         break;
     }
     assert(false);
@@ -1425,12 +1426,14 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     bool uses_bip341_taproot = force;
     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
         if (!txTo.vin[inpos].scriptWitness.IsNull()) {
-            if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
-                m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
-                // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
-                // spend. This only works if spent_outputs was provided as well, but if it wasn't, actual validation
-                // will fail anyway. Note that this branch may trigger for scriptPubKeys that aren't actually segwit
-                // but in that case validation will fail as SCRIPT_ERR_WITNESS_UNEXPECTED anyway.
+            if (m_spent_outputs_ready &&
+                ((m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE && m_spent_outputs[inpos].scriptPubKey[0] == OP_1) ||
+                 (m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V2_CISA_SIZE && m_spent_outputs[inpos].scriptPubKey[0] == OP_2))) {
+                // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 or OP_2 as a
+                // Taproot or witness v2 spend. These use the same precomputed hashes. This only works if
+                // spent_outputs was provided as well, but if it wasn't, actual validation will fail anyway.
+                // Note that this branch may trigger for scriptPubKeys that aren't actually segwit but in that
+                // case validation will fail as SCRIPT_ERR_WITNESS_UNEXPECTED anyway.
                 uses_bip341_taproot = true;
             } else {
                 // Treat every spend that's not known to native witness v1 as a Witness v0 spend. This branch may
@@ -1495,6 +1498,7 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     uint8_t ext_flag, key_version;
     switch (sigversion) {
     case SigVersion::TAPROOT:
+    case SigVersion::WITNESS_V2_KEYPATH:
         ext_flag = 0;
         // key_version is not used and left uninitialized.
         break;
@@ -1517,8 +1521,15 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     HashWriter ss{HASHER_TAPSIGHASH};
 
     // Epoch
-    static constexpr uint8_t EPOCH = 0;
-    ss << EPOCH;
+    if (sigversion == SigVersion::WITNESS_V2_KEYPATH) {
+        // BIP460: hash_TapSighash(0x01 || agg_mode || SigMsg(hash_type, 0))
+        static constexpr uint8_t CISA_EPOCH = 1;
+        ss << CISA_EPOCH;
+        ss << execdata.m_cisa_agg_mode;
+    } else {
+        static constexpr uint8_t EPOCH = 0;
+        ss << EPOCH;
+    }
 
     // Hash type
     const uint8_t output_type = (hash_type == SIGHASH_DEFAULT) ? SIGHASH_ALL : (hash_type & SIGHASH_OUTPUT_MASK); // Default (no sighash byte) is equivalent to SIGHASH_ALL
@@ -1924,6 +1935,54 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     return q.CheckTapTweak(p, merkle_root, control[0] & 1);
 }
 
+/** Check whether an explicit witness v2 sighash byte is valid (BIP460).
+ *  SIGHASH_DEFAULT is only expressible by omitting the sighash byte. */
+static bool IsValidCISASighashType(uint8_t sighash_type)
+{
+    return (sighash_type >= 0x01 && sighash_type <= 0x03) || (sighash_type >= 0x81 && sighash_type <= 0x83);
+}
+
+std::optional<CISAWitness> ParseCISAWitness(std::span<const unsigned char> elem, ScriptError* serror)
+{
+    // Opted-out inputs carry a plain BIP341 signature.
+    if (elem.size() == 64 || (elem.size() == 65 && elem.back() != CISA_MARKER_HALFAGG && elem.back() != CISA_MARKER_FULLAGG)) {
+        return CISAWitness{/*marker=*/std::nullopt, /*is_final=*/false, /*sighash_type=*/SIGHASH_DEFAULT, /*signature=*/elem};
+    }
+
+    uint8_t marker{0};
+    bool is_final{false};
+    bool has_sighash_byte{false};
+    switch (elem.size()) {
+    case 0: marker = CISA_MARKER_FULLAGG; break;
+    case 1: marker = CISA_MARKER_FULLAGG; has_sighash_byte = true; break;
+    case 32: marker = CISA_MARKER_HALFAGG; break;
+    case 33: marker = CISA_MARKER_HALFAGG; has_sighash_byte = true; break;
+    case 66: has_sighash_byte = true; [[fallthrough]];
+    case 65:
+        marker = elem.back();
+        is_final = true;
+        if (marker != CISA_MARKER_HALFAGG && marker != CISA_MARKER_FULLAGG) {
+            set_error(serror, SCRIPT_ERR_WITNESS_V2_INVALID_MARKER);
+            return std::nullopt;
+        }
+        break;
+    default:
+        set_error(serror, SCRIPT_ERR_WITNESS_V2_INVALID_MARKER);
+        return std::nullopt;
+    }
+
+    const size_t trailer_size{static_cast<size_t>(has_sighash_byte) + static_cast<size_t>(is_final)};
+    uint8_t sighash_type{SIGHASH_DEFAULT};
+    if (has_sighash_byte) {
+        sighash_type = elem[elem.size() - trailer_size];
+        if (!IsValidCISASighashType(sighash_type)) {
+            set_error(serror, SCRIPT_ERR_WITNESS_V2_INVALID_SIGHASH);
+            return std::nullopt;
+        }
+    }
+    return CISAWitness{marker, is_final, sighash_type, elem.first(elem.size() - trailer_size)};
+}
+
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
@@ -1954,9 +2013,12 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         } else {
             return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
         }
-    } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE && !is_p2sh) {
-        // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey)
-        if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
+    } else if (((witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE) ||
+                (witversion == 2 && program.size() == WITNESS_V2_CISA_SIZE)) && !is_p2sh) {
+        // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey),
+        // or BIP460 witness v2: same program construction with aggregation-aware keypath spending.
+        if (witversion == 1 && !(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
+        if (witversion == 2 && !(flags & SCRIPT_VERIFY_WITNESS_V2)) return set_success(serror);
         if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
         if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
             // Drop annex (this is non-standard; see IsWitnessStandard)
@@ -1969,6 +2031,14 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         execdata.m_annex_init = true;
         if (stack.size() == 1) {
             // Key path spending (stack size is 1 after removing optional annex)
+            if (witversion == 2) {
+                // BIP460: aggregated inputs are verified at transaction level
+                // in VerifyCISATransaction(), opted-out inputs carry a plain
+                // BIP341 signature and fall through.
+                const auto parsed{ParseCISAWitness(stack.front(), serror)};
+                if (!parsed) return false;
+                if (parsed->marker) return set_success(serror);
+            }
             if (!checker.CheckSchnorrSignature(stack.front(), program, SigVersion::TAPROOT, execdata, serror)) {
                 return false; // serror is set
             }
@@ -2130,6 +2200,96 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     return set_success(serror);
 }
 
+bool VerifyCISATransaction(const CTransaction& tx, const std::vector<CTxOut>& spent_outputs, script_verify_flags flags, const PrecomputedTransactionData& txdata, ScriptError* serror)
+{
+    if (!(flags & SCRIPT_VERIFY_WITNESS_V2)) return set_success(serror);
+    assert(spent_outputs.size() == tx.vin.size());
+
+    struct AggInputInfo {
+        uint32_t input_index;
+        uint8_t sighash_type;
+        XOnlyPubKey pubkey;
+        bool has_annex;
+        uint256 annex_hash;
+    };
+    struct AggGroup {
+        std::vector<AggInputInfo> inputs;
+        std::vector<unsigned char> aggsig;
+        bool final_seen{false};
+    };
+    AggGroup halfagg, fullagg;
+
+    // Pass 1: parse all witness v2 keypath spends and collect the aggregation groups
+    for (uint32_t i = 0; i < tx.vin.size(); i++) {
+        int witver;
+        std::vector<unsigned char> witprog;
+        if (!spent_outputs[i].scriptPubKey.IsWitnessProgram(witver, witprog)) continue;
+        if (witver != 2 || witprog.size() != WITNESS_V2_CISA_SIZE) continue;
+
+        std::span<const valtype> stack{tx.vin[i].scriptWitness.stack};
+        if (stack.empty()) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+
+        // Remove the annex following the BIP341 rule
+        bool has_annex{false};
+        uint256 annex_hash;
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            has_annex = true;
+            annex_hash = (HashWriter{} << stack.back()).GetSHA256();
+            SpanPopBack(stack);
+        }
+
+        // Script path spends are validated per-input under BIP341/342 rules
+        if (stack.size() != 1) continue;
+
+        const auto parsed{ParseCISAWitness(stack.front(), serror)};
+        if (!parsed) return false;
+        // Opted-out inputs are verified per-input, see VerifyWitnessProgram()
+        if (!parsed->marker) continue;
+
+        AggGroup& group = *parsed->marker == CISA_MARKER_HALFAGG ? halfagg : fullagg;
+        // No group members are allowed after the group's final input
+        if (group.final_seen) return set_error(serror, SCRIPT_ERR_CISA_GROUP_INVALID);
+        group.inputs.push_back({i, parsed->sighash_type, XOnlyPubKey{witprog}, has_annex, annex_hash});
+        group.aggsig.insert(group.aggsig.end(), parsed->signature.begin(), parsed->signature.end());
+        group.final_seen = parsed->is_final;
+    }
+
+    // Pass 2: validate the aggregation group structure
+    if (!halfagg.inputs.empty() && !halfagg.final_seen) return set_error(serror, SCRIPT_ERR_CISA_GROUP_INVALID);
+    if (!fullagg.inputs.empty() && !fullagg.final_seen) return set_error(serror, SCRIPT_ERR_CISA_GROUP_INVALID);
+
+    // Pass 3: compute the signature messages and verify the aggregate signatures
+    const auto verify_group = [&](const AggGroup& group, uint8_t marker) {
+        const size_t n = group.inputs.size();
+        std::vector<XOnlyPubKey> pubkeys(n);
+        std::vector<uint256> msgs(n);
+        for (size_t j = 0; j < n; j++) {
+            const AggInputInfo& info = group.inputs[j];
+            pubkeys[j] = info.pubkey;
+            ScriptExecutionData execdata;
+            execdata.m_annex_init = true;
+            execdata.m_annex_present = info.has_annex;
+            if (info.has_annex) execdata.m_annex_hash = info.annex_hash;
+            execdata.m_cisa_agg_mode = marker;
+            if (!SignatureHashSchnorr(msgs[j], execdata, tx, info.input_index, info.sighash_type,
+                                      SigVersion::WITNESS_V2_KEYPATH, txdata, MissingDataBehavior::FAIL)) {
+                return false;
+            }
+        }
+        if (marker == CISA_MARKER_HALFAGG) return VerifyHalfAggSchnorr(pubkeys, msgs, group.aggsig);
+        return VerifyFullAggSchnorr(pubkeys, msgs, group.aggsig);
+    };
+
+    if (!halfagg.inputs.empty() && !verify_group(halfagg, CISA_MARKER_HALFAGG)) {
+        return set_error(serror, SCRIPT_ERR_CISA_VERIFY_FAILED);
+    }
+    if (!fullagg.inputs.empty() && !verify_group(fullagg, CISA_MARKER_FULLAGG)) {
+        return set_error(serror, SCRIPT_ERR_CISA_VERIFY_FAILED);
+    }
+
+    return set_success(serror);
+}
+
 size_t static WitnessSigOps(int witversion, const std::vector<unsigned char>& witprogram, const CScriptWitness& witness)
 {
     if (witversion == 0) {
@@ -2200,6 +2360,7 @@ const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum()
         FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
         FLAG_NAME(DISCOURAGE_OP_SUCCESS),
         FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),
+        FLAG_NAME(WITNESS_V2),
     };
 #undef FLAG_NAME
     return g_names_to_enum;

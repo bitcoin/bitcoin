@@ -666,6 +666,13 @@ public:
     bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** Sign the tx given the input coins and sighash. */
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const;
+
+    /**
+     * Reserve a BIP459 public nonce for a full-aggregation spend of one of the wallet's witness v2
+     * outputs. The nonce can be shared before the spending transaction exists and is used by
+     * FillPSBT() when an input carries it. Returns an empty vector if the script cannot be signed for.
+     */
+    std::vector<uint8_t> ReserveCISANonce(const CScript& script) const;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
 
     /**

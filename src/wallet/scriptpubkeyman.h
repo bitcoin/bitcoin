@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <addresstype.h>
+#include <cisa.h>
 #include <common/messages.h>
 #include <common/signmessage.h>
 #include <common/types.h>
@@ -138,6 +139,8 @@ public:
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
     virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const { return common::PSBTError::UNSUPPORTED; }
+    /** Reserves a BIP459 public nonce for a full-aggregation spend of script, empty if it cannot be signed for. */
+    virtual std::vector<uint8_t> ReserveCISANonce(const CScript& script) const { return {}; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -300,6 +303,8 @@ private:
      * to find ongoing signing sessions, see MuSig2SessionID.
      */
     mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
+    //! Full-aggregation secnonces of ongoing CISA signing sessions, held in memory only like m_musig2_secnonces
+    mutable std::map<uint256, FullAggSecNonce> m_cisa_secnonces;
 
     //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
@@ -394,6 +399,7 @@ public:
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const override;
+    std::vector<uint8_t> ReserveCISANonce(const CScript& script) const override;
 
     uint256 GetID() const override;
 

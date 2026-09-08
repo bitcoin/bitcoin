@@ -1,0 +1,950 @@
+{
+  "testCases": [
+    {
+      "id": "halfagg-valid",
+      "description": "Two-member half-aggregation group, SIGHASH_ALL",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b0121571098a90a1077c7552282afd69f9cd0fa43a1de634b15761cbc10118ba51aee010142d3be7917478689bc10fec632019ff3c203d26df874171a8b934aa2e563ee98f1e9d40d4d403063913f25f7e9aa4d9d6dc4a7e023073d28083a92eab9c6e1a29701bc00000000",
+      "valid": true
+    },
+    {
+      "id": "fullagg-valid",
+      "description": "Two-member full-aggregation group, SIGHASH_ALL",
+      "prevouts": [
+        {
+          "scriptPubKey": "52208640c68f13b51a1e63dfc5cc41202cca21c18f1f9d7037c2cbec3f03f63e52e4",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522018b6491469cc78b764b01669b0a5a4e892f57e8c1b20b89bc1ca6dce3e881b51",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010254d36a0897340110cc34b526d73b206175ae4f5db4d25fe7bdeef3a8a5e89afd0000000000ffffffff835a02826d69e61b563ec713020bd2b7c3bc3848223cda2b3c52bbdcd3e6267a0000000000ffffffff01c07fdc0b000000002252208640c68f13b51a1e63dfc5cc41202cca21c18f1f9d7037c2cbec3f03f63e52e4010101014260ff22c66f7fe9a0911ab6a8a03542510b494e2e1d9de2246e670ce6acd16dc99229ab127ded30ca694b3a846a4e16fbba4246a21a7d21876aac6e18f36ac1c701bd00000000",
+      "valid": true
+    },
+    {
+      "id": "mixed-valid",
+      "description": "Opted-out input alongside a two-member half-aggregation group",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220d0d1709a7b6eef6e5309f9115b163b0a72295b837923a5251641352e5d6ae21f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206bcb2a825ab91fa41da5f6cc1b51edf07ce6dc769e497d741c39ee4de7eb0966",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010305a375e47ab8044473e9642b89e8d0e23c39e6dff3ebc3decd3a21e36df5c8f10000000000ffffffffa098dbe94bda678231b9b104eadb0afd61f44a955146c5518b039ffbdc54eee60000000000fffffffff861074487871c360c0a79a8a0520e6efea15cb031a2b249d5342c417a18d4710000000000ffffffff01c060d21100000000225220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce0140a27155234a9a9c718d3cf638f5caadcbf7d476d7a595aafc40059103773eac36aa44f9b62153b3322329e14d345bb8e5cbc654fcba2a55cda471aaa2f1524fcf0120b7f385ee1e8cee81cc4f5dd06cfa4471807f48aa61d6791c8d0851459a15cea501411587da1c10801778e65bb13619388ec6973f05fbb00c1ab88b1d51e5e60d5dc1ef4662179ab2043b4c919730e9a0cb45a69f6f5ab5738b34a942ef7c76ec4f79bc00000000",
+      "valid": true
+    },
+    {
+      "id": "marker-undefined",
+      "description": "65-byte witness element ending in the undefined marker value 0xbb",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220d0d1709a7b6eef6e5309f9115b163b0a72295b837923a5251641352e5d6ae21f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206bcb2a825ab91fa41da5f6cc1b51edf07ce6dc769e497d741c39ee4de7eb0966",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010305a375e47ab8044473e9642b89e8d0e23c39e6dff3ebc3decd3a21e36df5c8f10000000000ffffffffa098dbe94bda678231b9b104eadb0afd61f44a955146c5518b039ffbdc54eee60000000000fffffffff861074487871c360c0a79a8a0520e6efea15cb031a2b249d5342c417a18d4710000000000ffffffff01c060d21100000000225220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce0141a27155234a9a9c718d3cf638f5caadcbf7d476d7a595aafc40059103773eac36aa44f9b62153b3322329e14d345bb8e5cbc654fcba2a55cda471aaa2f1524fcfbb0120b7f385ee1e8cee81cc4f5dd06cfa4471807f48aa61d6791c8d0851459a15cea501411587da1c10801778e65bb13619388ec6973f05fbb00c1ab88b1d51e5e60d5dc1ef4662179ab2043b4c919730e9a0cb45a69f6f5ab5738b34a942ef7c76ec4f79bc00000000",
+      "valid": false,
+      "failureReason": "undefined marker byte"
+    },
+    {
+      "id": "member-explicit-default",
+      "description": "Half-aggregation member encodes SIGHASH_DEFAULT explicitly as a 0x00 sighash byte",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220d0d1709a7b6eef6e5309f9115b163b0a72295b837923a5251641352e5d6ae21f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206bcb2a825ab91fa41da5f6cc1b51edf07ce6dc769e497d741c39ee4de7eb0966",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010305a375e47ab8044473e9642b89e8d0e23c39e6dff3ebc3decd3a21e36df5c8f10000000000ffffffffa098dbe94bda678231b9b104eadb0afd61f44a955146c5518b039ffbdc54eee60000000000fffffffff861074487871c360c0a79a8a0520e6efea15cb031a2b249d5342c417a18d4710000000000ffffffff01c060d21100000000225220735471e81ea57222642f2198afe0c9753bcb9669beae68aa90a49c0dee85f6ce0140a27155234a9a9c718d3cf638f5caadcbf7d476d7a595aafc40059103773eac36aa44f9b62153b3322329e14d345bb8e5cbc654fcba2a55cda471aaa2f1524fcf0121b7f385ee1e8cee81cc4f5dd06cfa4471807f48aa61d6791c8d0851459a15cea50001411587da1c10801778e65bb13619388ec6973f05fbb00c1ab88b1d51e5e60d5dc1ef4662179ab2043b4c919730e9a0cb45a69f6f5ab5738b34a942ef7c76ec4f79bc00000000",
+      "valid": false,
+      "failureReason": "explicit 0x00 sighash byte"
+    },
+    {
+      "id": "group-no-final",
+      "description": "Half-aggregation members without an input carrying the marker and the s value",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b0120571098a90a1077c7552282afd69f9cd0fa43a1de634b15761cbc10118ba51aee0120d3be7917478689bc10fec632019ff3c203d26df874171a8b934aa2e563ee98f100000000",
+      "valid": false,
+      "failureReason": "aggregation group has no final input"
+    },
+    {
+      "id": "member-after-final",
+      "description": "Half-aggregation member appears after the group's final input",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220f4746153737986ea947e2d197427a62d01f251630de2be1c575124f0d932366b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52200a9deddd6e095811ffe5c061dbee3ba0c57d107d73ae1f5bd04ffaf851495e95",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52202c8ed1bfdfdedf23b4a63a374a5a4b3c7575403f93c7bddb10be5011a2c6a471",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010392ccaa54e5e62f3bd670417a6b572c92cccc3da6bc1cc66df5e503d40112a44f0000000000ffffffff5928ed52c21e87265486ae544e6415b381ee2914638c962c864564c5e0302a770000000000fffffffff0687ec7cc1986f69faeccca2bc20fec6290472ea48f384c8b830c656e4a3d6d0000000000ffffffff01c060d21100000000225220f4746153737986ea947e2d197427a62d01f251630de2be1c575124f0d932366b01200904e70d45681dd516e58aaf575e78f86c9cff6694a126b8de04aac5c919d16e01418676a78d02e381009db0547e06c6c7113fefa4dd1f00128ce38a83e9a3af77a82db7a7bdb47e87a6af6e9358661c0c2e8516f51b12cdfedd63977dfa18f68e4abc01208676a78d02e381009db0547e06c6c7113fefa4dd1f00128ce38a83e9a3af77a800000000",
+      "valid": false,
+      "failureReason": "member after group final"
+    },
+    {
+      "id": "element-length-undefined",
+      "description": "2-byte witness element ending in a marker byte, matching no defined structure",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b010201bc0140804e6b660193e8886f9ff1fcd1818b359142c8bdcb433e8e5a4f4b26255ac53528b54f2fdec22401806cdd9519902f1278606d5db4c79ce4512bd2030a00f2f600000000",
+      "valid": false,
+      "failureReason": "marker and length match no defined structure"
+    },
+    {
+      "id": "cross-mode-fold",
+      "description": "Opted-out signatures folded into a half-aggregation group by a third party",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220ca8344e759bfb6492d1ea6cfaafac886df066bc099ac3455632b2d3680dea261",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220c1253f68ccd5faf5e3dfa399bb499092ecd39384be321aee8ac476b0773569c8",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102c0f4bc942ecfa2798ebbcc06bcbda200152e1d99c434d93c3f3b769e292a7fb10000000000ffffffff109ee50850f7dc5b6b5ece311830798e23b94f633f6afb62043d768fac7d24910000000000ffffffff01c07fdc0b00000000225220ca8344e759bfb6492d1ea6cfaafac886df066bc099ac3455632b2d3680dea261012095c0f5df0ba95b4b0d215407e79942b73e65eb6361a9a306035050ddbf5a807c01413626190b6b57950d8b24cd4c087efcf4893dc6a04d2e18d7db1bf0be74dfb92c58f5202385d611a9db350ea187f44ce535d33e55b7b79d7f24456263be647540bc00000000",
+      "valid": false,
+      "failureReason": "aggregate signature invalid, messages commit to the aggregation mode"
+    },
+    {
+      "id": "empty-witness",
+      "description": "Witness v2 input with an empty witness",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b000140804e6b660193e8886f9ff1fcd1818b359142c8bdcb433e8e5a4f4b26255ac53528b54f2fdec22401806cdd9519902f1278606d5db4c79ce4512bd2030a00f2f600000000",
+      "valid": false,
+      "failureReason": "empty witness"
+    },
+    {
+      "id": "optout-explicit-default",
+      "description": "Opted-out input encodes SIGHASH_DEFAULT explicitly as a 0x00 sighash byte",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b0141a63e68a4f5ea6f759dc5bd22fbd8bb49001b72db053e3ae2fe2e352f905e92c960c47b7753174838713fa2ba7127e21c34493d416636376d94011f1eba75804f000140804e6b660193e8886f9ff1fcd1818b359142c8bdcb433e8e5a4f4b26255ac53528b54f2fdec22401806cdd9519902f1278606d5db4c79ce4512bd2030a00f2f600000000",
+      "valid": false,
+      "failureReason": "explicit 0x00 sighash byte"
+    },
+    {
+      "id": "optout-sig-ends-in-marker",
+      "description": "Opted-out 64-byte signature whose last byte equals the half-aggregation marker 0xbc",
+      "prevouts": [
+        {
+          "scriptPubKey": "52204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cc93415eadd2ed34dc668b345ef49dd492eaaf5c0562482d393917966a6dbfd5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102375412079d92555f10368dc54e08189023c8a6bfe0318933dda280bb8c96e76a0000000000ffffffff2dea8db84ee1bcea688026b1bda8fea0667b8f3b24d914e2afe0f5dffae5086d0000000000ffffffff01c07fdc0b000000002252204049ce224d4b6407e9c7864e88d8020996beb04663cd1596bf4ff8ab335bc57b014028efc4abb49aa3f2e279dacf06add426b4c07794d98b872e864a2c5523aa0fa6ba1f7b9c77190d6206b6027f6dfb16bb0615ada00cbf51f9b2d0441f47d715bc0140804e6b660193e8886f9ff1fcd1818b359142c8bdcb433e8e5a4f4b26255ac53528b54f2fdec22401806cdd9519902f1278606d5db4c79ce4512bd2030a00f2f600000000",
+      "valid": true
+    },
+    {
+      "id": "annex-committed-valid",
+      "description": "Half-aggregation group whose first member carries an annex that is committed in its signature message",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220e3af94f2fb5e23a1967c1f4fad8914fec3505f1c7e735b795a62d0209e9a176c",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220af9693bcd26365ebb9fea91dfbfacf2b96a2e3c06dc2a16f706a15d8ee3a4cc5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001022b72230eed37d5af4f7400a9eb61103cbbf1f9a4dd3b85e7231186ef9fa51fa80000000000ffffffffccadb04d02ec2ae661263fe6801aacf882ed7a01c6ac6aa2cce40f2b9ca16f780000000000ffffffff01c07fdc0b00000000225220e3af94f2fb5e23a1967c1f4fad8914fec3505f1c7e735b795a62d0209e9a176c02201d353f924fcde6d6f4a390c831b77ba5b8c54359a1d26c902e7f6d9ec670d6c310504349534120616e6e6578207465737401411cbc8db7b701dd35e61873370a2b0d32d42ffe3a223b448a0d39253dc93576753f6d2faa075a33ae794d564a3f02b9f44ff3fa8fbaf05d4428eac022bc72ee7fbc00000000",
+      "valid": true
+    },
+    {
+      "id": "annex-stripped",
+      "description": "Annex removed by a third party from the transaction of annex-committed-valid",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220e3af94f2fb5e23a1967c1f4fad8914fec3505f1c7e735b795a62d0209e9a176c",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220af9693bcd26365ebb9fea91dfbfacf2b96a2e3c06dc2a16f706a15d8ee3a4cc5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001022b72230eed37d5af4f7400a9eb61103cbbf1f9a4dd3b85e7231186ef9fa51fa80000000000ffffffffccadb04d02ec2ae661263fe6801aacf882ed7a01c6ac6aa2cce40f2b9ca16f780000000000ffffffff01c07fdc0b00000000225220e3af94f2fb5e23a1967c1f4fad8914fec3505f1c7e735b795a62d0209e9a176c01201d353f924fcde6d6f4a390c831b77ba5b8c54359a1d26c902e7f6d9ec670d6c301411cbc8db7b701dd35e61873370a2b0d32d42ffe3a223b448a0d39253dc93576753f6d2faa075a33ae794d564a3f02b9f44ff3fa8fbaf05d4428eac022bc72ee7fbc00000000",
+      "valid": false,
+      "failureReason": "signature message committed to the annex"
+    },
+    {
+      "id": "scriptpath-valid",
+      "description": "Witness v2 script path spend of a single CHECKSIG leaf under BIP 341/342 rules, alongside an opted-out key path input",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220e8605ff15e754192a9d6c053969ae935932c82ceaeea0fed9a152f0c6b4b424b",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522044fdf832ec12334a9c3316767eae801d4cc9fa26723267e58107cc4574e3b64d",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001027ce7215887dea171a102c5f9c3b5a9835ee098a1fe51a8e6f6bddedd0b173f400000000000ffffffff992524364c91d1d04d24dbf8ea0444e5d2ac69944c0f84ac48d0756abf1bfa1a0000000000ffffffff01c07fdc0b0000000022522084dba7b2063ea2384cada9c8a3b014659c51c9f79ab4e5a40fee826fd9a167790340d49a402de13f7d71177322ff53b56d0e6210e9aa9d902b4a91db9ab1892bc7ef7363cd73d75c09034dec2aa7e2044bc877b16e81e1ff3aa40282420559340aaf222038c01dda6433ce79606dda3f70ee5dd525104bbbba5b0fd96f56d6d634e92f71ac21c139920c3a54000624c1923187eebbbd3fcdc409302757139c1a1b003bc9276da40140e3c17568cbb14e170c60de5a2fbe0312d89a952ee8e42c8c51da647eafdddddd95bd482b3313c1dcca48463a40df23559361b0ae33d15ecdd8dd3065e8a51a3200000000",
+      "valid": true
+    },
+    {
+      "id": "cross-mode-fullagg",
+      "description": "Full-aggregation signature created over plain BIP 341 messages, placed in a full-aggregation group",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220d8ce2162ebd4a65d21981113193e470a7605970928b5fcfe9636d0a2d4cecc4f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220cd51647dde7739fd367ab5666c6b6b32ce728a456ca59621df488418abba93c6",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010277580c79efee3a3be2056167eb3c5785e480b1bb86255389d32709d071d75fe80000000000ffffffff934ab77ec846c517e4f710c23f2b1cb8c6df84754287bea2c52cb2876260b33f0000000000ffffffff01c07fdc0b00000000225220d8ce2162ebd4a65d21981113193e470a7605970928b5fcfe9636d0a2d4cecc4f01000141d0ee74576f533712356e342c9ef64b5fc5a9611c1ab91ad6ddd63f604176a7a6f5f68362d01772e61c0e8d58bcdeb74ea9d6c64de4951121851b647630d5dea3bd00000000",
+      "valid": false,
+      "failureReason": "aggregate signature invalid, messages commit to the aggregation mode"
+    },
+    {
+      "id": "fullagg-size-mismatch",
+      "description": "Full-aggregation final input carries 96 bytes before the marker (97-byte 0xbd element, matches no defined witness structure)",
+      "prevouts": [
+        {
+          "scriptPubKey": "52208640c68f13b51a1e63dfc5cc41202cca21c18f1f9d7037c2cbec3f03f63e52e4",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522018b6491469cc78b764b01669b0a5a4e892f57e8c1b20b89bc1ca6dce3e881b51",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010254d36a0897340110cc34b526d73b206175ae4f5db4d25fe7bdeef3a8a5e89afd0000000000ffffffff835a02826d69e61b563ec713020bd2b7c3bc3848223cda2b3c52bbdcd3e6267a0000000000ffffffff01c07fdc0b000000002252208640c68f13b51a1e63dfc5cc41202cca21c18f1f9d7037c2cbec3f03f63e52e4010101016160ff22c66f7fe9a0911ab6a8a03542510b494e2e1d9de2246e670ce6acd16dc99229ab127ded30ca694b3a846a4e16fbba4246a21a7d21876aac6e18f36ac1c70000000000000000000000000000000000000000000000000000000000000000bd00000000",
+      "valid": false,
+      "failureReason": "marker and length match no defined structure"
+    },
+    {
+      "id": "two-groups-valid",
+      "description": "Mixed transaction mirroring Example 4 of the BIP: two opted-out inputs, a half-aggregation group with a SIGHASH_SINGLE member, and a full-aggregation group, with interleaved input indices",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220b3fd2ebe2399bee6b51828e7fcb82ae1752516c6866c058516a8d592f38b19e8",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52209123086f2d8d878088ec611185f841658513af7f29a1359685eda09536d7dc5d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52201ce55104c3bd91d20b8d7702d4157bb5a70bc0b6e63cd73c3e7684b9c3156d70",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522049875458881f78c4ed3d5fb0e95ee527a2dce487ebad7cc92bdf28a9017df888",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220fbfa11a63ffeff576f5d408c5618ed8761aeb5b6dc92ab36055b792c3cd8ceea",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52207ae16cb88e80051ca988443009fde24fe4d6638f5870fa5cdc6689755bfa24a3",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220ad8f2c1d50a83478441fb5b5887dc53dcf5f342d63a4a1b0e848aef31f2d25b1",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001074dd302fda269f70608bc946098680dbfee25271c19d636ccc42076049f66d3850000000000ffffffff2b5f4f73da1e6ae2f7dbeddf95ceee3219ce7f4a14780bb957453015ad21c9840000000000ffffffffa43d649606b2b1ba5690d9e796f73f4ac8a4621594a29feb75f7313be68c2a2c0000000000ffffffff89bcd4114dfed0f70ab200fbcbad208d2a17cb23f4d582d34c280cb23ef00db20000000000ffffffff92fc75b30a6e897056ed31a32ea0785e9130fd04a2cdf38f8e8a80c9015c65d90000000000ffffffffba7b09c4178344c89056482bbb515c7dd45bccd7de7d6c9b766ee151490b63ff0000000000ffffffff10d992fa14c1f6bb3d82f31b9e8315cb0dd1caf5f631d9ce1c84f6d8762ebbb40000000000ffffffff028093dc1400000000225220b3fd2ebe2399bee6b51828e7fcb82ae1752516c6866c058516a8d592f38b19e84051cd14000000002252209123086f2d8d878088ec611185f841658513af7f29a1359685eda09536d7dc5d0140f06432774c5ec95fd300d85765721bcbbedc4b65c4aa2984eaa99db92d7547c7a20346fde48e7c769e0d18ff908cdb20e67637671e5b5130cf86e7612348e0c80121495cbe82aa8b5c134aaa6e482294108232706b1b9bc17ec6dd2a142921a27c3203010001000141ca82d465c5b280bc90d0724e3193d84a36df9761df5927ef7317b1109b692e1a492f2be9f5618dc8e391914cafb33a9a9f4909c2b8870ab2f8b9d16cbb5ef703bc0141b7f82c5f2d47916937286df6ca545e18a1250d6abec3a8b3636c2c8a7c53a565d8cee64cf0675d85f59020b6da547f694f6b981b1d51f6a1248716777f8b51be8201412022cecf27fe3fa8def798dc85fccd4b530fe9c099129c445c2500f0ba8860fdf02de7d3dbc1cb7ebcb4f83e66262d15b0ebf3ffaecf0400c59440ae1f678dfcbd00000000",
+      "valid": true
+    },
+    {
+      "id": "sighash-single-no-output",
+      "description": "Opted-out input uses SIGHASH_SINGLE at input index 1 of a single-output transaction",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220f082518f206f3be02e70d0b1eabd7152c6e4e3cd8c7df5517f198a049e1b5520",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52207cef82518a7ac1c239b1e33a92197ea618f06ba71be021f59a73bb1f39d2acf2",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010242df0f438abfad5a59cfa19d12c0a7954b04301830c63049f741c0ed73e591f00000000000ffffffffb354dc5ffad02a76b72e6d702aecd38161d43bc42c1de51dc4a62c5bcb4fe6ae0000000000ffffffff01c07fdc0b00000000225220f082518f206f3be02e70d0b1eabd7152c6e4e3cd8c7df5517f198a049e1b552001406308a21865e2cade24f94bc880f77a123cb791f88eedf9a49b63c01abf9e40347b8cbfd2fd230fbcea9be51ea1f8f0dd604e1ea847ed92c98fb3c13304c72efd0141fccbf16c8d49d14eb7b40bc9bf57a7ca416379a7f55d2693f4cac6895eaa9aba133876a6d20a5bd5ee2d37da3f3dd79119e00a0f0eea6509723f6ec08107acad0300000000",
+      "valid": false,
+      "failureReason": "SIGHASH_SINGLE input without corresponding output"
+    },
+    {
+      "id": "halfagg-two-finals",
+      "description": "Two inputs each carrying a 65-byte half-aggregation final element",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220ba77666df5eb8e5c526acedd38d36fc5eaa66da3e26460b71fb7b164089aeb1d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220379fd1c1e12519df482f6c99b464892f04f59418b20b5f65105a93e240e99013",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001025cb6b3fb7d3453d43f571a65d462f30f76bcf4a9cfe6bbd13b59ce601b8475cb0000000000ffffffff57b6ff1c4d459776ed587d8242d7d41c913c64b264eb1f72145489b677fadf4f0000000000ffffffff01c07fdc0b00000000225220ba77666df5eb8e5c526acedd38d36fc5eaa66da3e26460b71fb7b164089aeb1d01417607930ce963eb16ef197fafd0d91dc4ddae836d56745e49713f4d10d0a801e730acc481cbcc2797ddeebb575808191501821c634b2e9f628427d30e0a2876f5bc01415866fbabc10dd40c01e0945b2e414ba9bc509f36275ef21738483dda50a3f6019c35b81f37fbc4c98be423dc9f782ae71f835f5870495ae31519a8147c4b1b46bc00000000",
+      "valid": false,
+      "failureReason": "more than one final input in a group"
+    },
+    {
+      "id": "fullagg-two-finals",
+      "description": "Two inputs each carrying a 65-byte full-aggregation final element",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220a0bb2d2ca5161c1c7bf13ba18767027e3c68e24a23e8fffce66f590c7990f2c1",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522080fa96d74b89de3ae09becd3ab08a1f337471ec9a0104ef6571bdc24737826ba",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102faf294804fe43f7dfec177b001477ea5227e47cfa71dc1e4aa60a84d94af0d0e0000000000ffffffff0056c298771ca89f13e7ce4d0b03a282f4803a332d6cf73050ed20cc4bf113b30000000000ffffffff01c07fdc0b00000000225220a0bb2d2ca5161c1c7bf13ba18767027e3c68e24a23e8fffce66f590c7990f2c10141652b3eb418ba83065dbb167cb7a18a62fe5fe5b8c5db46cb29d2d19b72bd438a67bdc36329abb657c7019f026672bc2617fae0fcdee88a9e688a16ecd3a9cb12bd01413620a5c90db6b1799ae20ac5af2de813f25b6a08fcdf9fdae7582b793cdbb38da4959abbd580892647d122ac3a71f05e9a1b3fac25e2dadecba7fdd04affb913bd00000000",
+      "valid": false,
+      "failureReason": "more than one final input in a group"
+    },
+    {
+      "id": "fullagg-no-final",
+      "description": "Full-aggregation members without an input carrying the marker and the aggregate signature",
+      "prevouts": [
+        {
+          "scriptPubKey": "522014ef07b53514ff8cd94d4e6f4ae0fe246bed37e20c365679f404be89a84a941f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220ce9d369fb59e92098b3e0389cb8d91a3e0807fe51b04dfb7f77a50312498bb02",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102027c0bbee08a5b2b927eac3b88b8305a951fa546550f67a6c52b5542bab2f8ce0000000000ffffffffda74bc8dc984d4dcf61700d4e246a2b781c65d3583e4a99760ef88747fad4bf20000000000ffffffff01c07fdc0b0000000022522014ef07b53514ff8cd94d4e6f4ae0fe246bed37e20c365679f404be89a84a941f0100010000000000",
+      "valid": false,
+      "failureReason": "aggregation group has no final input"
+    },
+    {
+      "id": "fullagg-member-after-final",
+      "description": "Full-aggregation member appears after the group's final input",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220f94afc4ad57d30e591c8c2e36c9f4436a4583a110048f909759dcc4afd1eca0a",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220029fb6b380929cdc76037e241819adbc7a27a14335a855d087bbe2e957a62110",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220130647b26b8fa4baf6e7974cc280be301ae0a186b5b43b36f8fb12b680281eec",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010325af39ed72d725fdc2edcbfbeca5f24ace00352010e3e10de0d0792b6ed6d9500000000000ffffffff6e55f5fe52f5b4d3f707a20ac5cf6280acfca6b29bfd17c2249eac2b5799d2e70000000000ffffffff5875cf9e3bd9c121e935691bdc84c18daf7f3a9f697a525e59330829282857f90000000000ffffffff01c060d21100000000225220f94afc4ad57d30e591c8c2e36c9f4436a4583a110048f909759dcc4afd1eca0a010001415d274cac012ba1f2125e0e880b75be1e5d557ca88928a89380142a0f5b8e425dbe41a79173fb73be2407e46d39ddb8a7e0e27307afb80a66590d9c50b1f4513dbd010000000000",
+      "valid": false,
+      "failureReason": "member after group final"
+    },
+    {
+      "id": "halfagg-single-member",
+      "description": "Half-aggregation group with a single member carrying a 64-byte aggregate in a 65-byte element",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220efce560c8eaf170db44a9af7691f8807be52d8314c4575aa46ba4fce54c2b0c6",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010187fea558630296d581abd8d24b147faeaa371a0d325edcf565b6719d8fd5ea310000000000ffffffff01c09ee60500000000225220efce560c8eaf170db44a9af7691f8807be52d8314c4575aa46ba4fce54c2b0c60141bf6915975cc9bf5ab48830c0f34026519f668d453624848298d9e17fbf1362792f96def59bbab5ae47ab790704392b1e456703ad14bf72c375e874fff750dd1abc00000000",
+      "valid": true
+    },
+    {
+      "id": "fullagg-single-member",
+      "description": "Full-aggregation group with a single member",
+      "prevouts": [
+        {
+          "scriptPubKey": "522009d2ff94dc12d14b0b63c95dcdc8cd2a77a3eecca3bbf2809d322dc8b6b5d62b",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000101787d107a893487240e835409c4cd5c68420bd6301ee936c2b201e90ad5bc8de60000000000ffffffff01c09ee6050000000022522009d2ff94dc12d14b0b63c95dcdc8cd2a77a3eecca3bbf2809d322dc8b6b5d62b01414c72a1b21ae90aff0ca628336daed2f1a8630febac3992bb6cdff5c30a55af917fc1768c4b3ffc1b9e0643bf4c4e9efa536186eea376b08675cab1da0845f327bd00000000",
+      "valid": true
+    },
+    {
+      "id": "annex-lookalike",
+      "description": "Single witness element starting with the annex prefix 0x50",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220c0354bcb3c4b096849967c23f7f424baa649b15777a1ed25d52770064a84be10",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522000277756e6ec3da81b4854d52ecac45717fc3c5cc3b27ddcf6e3755b41fd87c9",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102948f52623998b05a3ba6679673c6894c7b9a596869421be46b54c7db521a7a8d0000000000ffffffff31509114c2c60b92f3e6037bf52ad75bac26572a19178051fd1ee1e7ae08ead30000000000ffffffff01c07fdc0b00000000225220c0354bcb3c4b096849967c23f7f424baa649b15777a1ed25d52770064a84be100110504349534120616e6e65782074657374014019550ec646820ed9cda8f5c16bd3cae2f03338bf1115a540e2397a93436d88adf5fdd08e4deee93389d6bf9ee32425a4c0b17af78b83df55a62f42ff7cb3eb0a00000000",
+      "valid": false,
+      "failureReason": "matches no defined structure, a single element is never an annex"
+    },
+    {
+      "id": "annex-on-final",
+      "description": "Half-aggregation group whose final input carries an annex that is committed in its signature message",
+      "prevouts": [
+        {
+          "scriptPubKey": "52207dfc09f1e03f0d901bc2410833199965cb2a884891ad9889ff5352b29abb2922",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220f9744be4cd3ce7a2fd0b6a453f94e758db9b4abc47825460cfe48d41100f10e4",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102395d48eb0b3ef75dd62014fffcff868fdea29bb830b9fe14e11ae84b22e0bc6d0000000000ffffffffeb44386a3268ac6fb39f78bc9d7023176bd027ff6d7cff7007facf4b98455b840000000000ffffffff01c07fdc0b000000002252207dfc09f1e03f0d901bc2410833199965cb2a884891ad9889ff5352b29abb29220120a6be4df7499feb83100032270c47f4e5e6170c46de0613bd7b75b94774505a960241076f82a2e92e4b6d2810850b5d8e645ea91fea52e6464873d22ad66e80cc9dfc54cdf15793c29b96df45afcb2126572d2113debb199942bddbcfb9f927c169dfbc10504349534120616e6e6578207465737400000000",
+      "valid": true
+    },
+    {
+      "id": "sighash-value-undefined",
+      "description": "Opted-out input with the undefined sighash value 0x04",
+      "prevouts": [
+        {
+          "scriptPubKey": "52207eab9a8cd328cf1ed6329998569ec6b195c368c02cf5c6108476fe95426d883e",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522002d94ebbd12c91590497f89072b4c5b52a77f09f4f1e6f7da33ccccda240f6f7",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001029e94c92941217af1eae64bcfa170116a85cf01c1b0a68d61f4f12bdd09bfdbdc0000000000ffffffff0109ff9ad5f993dec28e407eced18a14380ef4f1d2fb5951f46e8a3506b605b50000000000ffffffff01c07fdc0b000000002252207eab9a8cd328cf1ed6329998569ec6b195c368c02cf5c6108476fe95426d883e01410bd36b3d03885f8c44c6839cf78002aab0312f44f8fcddb29b174a547f99e003a4a86d60331e155fbce9165ae116b16329ee8fbb4d467a839cc2df91ac71bc2a04014042034bf35d7f3faa9e96da927521ddc3cfa98bb4e7f645cad49a79a9eb2fe07546c0531e1f311957917899e8f1b1bcfdead805e101390c5b8ea83ff71c35c3a200000000",
+      "valid": false,
+      "failureReason": "undefined sighash type"
+    },
+    {
+      "id": "member-sighash-is-marker",
+      "description": "33-byte element ending in the marker 0xbc, a half-aggregation member with an invalid sighash byte",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220525bedf0f14fdace49ed96c64c32603f79890443a3e97de56195e56c69b12820",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522052448ca22a975f6526b124857f9cc09aab766848bc29fc8dae549688f2bd6bfb",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001021ae3614f251ce37d8a9514730e17068c60b46853d1bf515b825d1a51643067eb0000000000ffffffff49a39eef33a2b03cd9ac2ed493f1c19a67d269b499b728cd4d942bf119baf8840000000000ffffffff01c07fdc0b00000000225220525bedf0f14fdace49ed96c64c32603f79890443a3e97de56195e56c69b1282001400df5c1afc66e082e7812a648e8c7ae6274523d5742d3d93d15291e4ea75f1268dd98d2a1c579db4e9526b7bab0ef53868f532c722adf5deb569fe0f37ebde0c601212040ba76514a01b76d05a375a63122423b390bd68d9c11c9514353adb713991fbc00000000",
+      "valid": false,
+      "failureReason": "undefined sighash type"
+    },
+    {
+      "id": "program-not-32-bytes",
+      "description": "Witness v2 output with a 33-byte witness program spent with an arbitrary witness",
+      "prevouts": [
+        {
+          "scriptPubKey": "522185ea1c8b957e39246317d01dd5fba0526394b55775db91f32ffd6f983a64c0ec6d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220e3c7e3c4b02437debd6e5ab4cf859378de04da3089be27fac7d7ee4143372075",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001028a2396376d580b848cc4b43d0b0bb2e3481c75ba80be547df52b6069714540960000000000ffffffff2d63ef4986cd3f7b7e7a30bfce4028fd7ee5ca2032f4c2150af17cca84e55edc0000000000ffffffff01c07fdc0b000000002252209e1284ba591f050e4b1475d050d0d54048a15caf983a56b488d25d59f7854cba0101be0140b5908ddb2af07120008e4ed258b694708e8716e8fb09f67ecbf515ed38d74a2a955b82f310611829d7fed544ff91caeedccd90830070d10d4e50b71d35ff514200000000",
+      "valid": true
+    },
+    {
+      "id": "program-offcurve-optout",
+      "description": "Opted-out input whose witness program is not a valid x-only public key",
+      "prevouts": [
+        {
+          "scriptPubKey": "522064c3ae43dac00d99f5ebf5ec074d41a5e4e4ddb7c715564755696b7499d5665c",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52204a9fe450c24c111425a9dd4632f4fc94ed2714681717e369c059789e3751889e",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001024dbb065d92ed45586f93ce8fea4d58381e09c3cb1bc7ebabb40e6d7e3fd87c3a0000000000ffffffffd9aef3faf3ec7368e3932fc48ee1f50a233573ecb42a05c886598994956e8abb0000000000ffffffff01c07fdc0b000000002252202991591a0ebcde9e2fd143ea0bda8265a67659aeeb5396935b4025e1c633d03001404ec4690ce502a5f0ab5fab245db9be42ccc650780be0f3ecaa4082a3a68a69428c363b40db3cf86e4251d733a577f3c994982e2965eac7a892e392126a29fcfa0140dca8295008d071fb0474bc62e696c9ec02aeb069e7ac044d901e1035219ba32ef6c045961be0ae75a69ec5c4ce1405624bd07e4f396ebbc0aa05d6dfb1df907600000000",
+      "valid": false,
+      "failureReason": "witness program is not a valid x-only public key"
+    },
+    {
+      "id": "program-offcurve-in-group",
+      "description": "Half-aggregation group member whose witness program is not a valid x-only public key",
+      "prevouts": [
+        {
+          "scriptPubKey": "52202b57dcc98a4977eb9e5d9c7d2b8b6ea7eccad98ee1a40f77dc43f80c94be5829",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52203ecbcb60ef10bbe471afc9317fda3ac61a26422688d9f9183484ea08b439ae94",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010273d7bf0559f1173564708c1e2d0ebe6175b72f5adee692dc6bf9ce52b75f038b0000000000ffffffff6e048d65284060c05b39ed176a8998ea32e8dd730eb3933a60e755796031f4a50000000000ffffffff01c07fdc0b00000000225220aa5413f1dcbd6a3f50db0278bcba58570af3e0d845807b5bcdabd92245739d1f01207ad0b4a52df2eb8e61ebbcf7f318dee3a1b54679c8e4314827a60d368633adbc0141f6a577712f6ee97781d101525cf34d0eb31471f35c85a2624ab257461e1ffedebd29211b614cf25019cd4345df309889ef09078f21c470907cea39c813e0b727bc00000000",
+      "valid": false,
+      "failureReason": "witness program is not a valid x-only public key"
+    },
+    {
+      "id": "scriptpath-unknown-leaf-version",
+      "description": "Witness v2 script path spend with unknown leaf version 0xc2, which succeeds unconditionally per BIP 341",
+      "prevouts": [
+        {
+          "scriptPubKey": "52203393a7b8c41d3c155cb9e1f9a49a76d1eef2c2de0b5fb76a693a7340001527d7",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52204b87263c4be4747effe770027e7677d8ec6bb46522c50a101d6d43c468265194",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102f9fba162f92dfd4eb91c55cdd8822a997bc4f4cce7e1dc7dd39debb837aa287a0000000000fffffffff82399ba5d5eaf6a581d7ac39883afc9e8f090134fea8afa3eb1c18b9b82c3c90000000000ffffffff01c07fdc0b00000000225220e524abd4c236566678fbb385b729120ef0e57b3ff78c055f807dc4a0ca615f6c02015121c3ab9432f842079557d76f597fdd75613784568e6d33b6a2ccb0cf7c442acf3e3e0140c37a2727f38a84eae22c1787d14dd7bb06b46f669014a13625247f5296d746431a21cfa521495a6c8e21de0354bec58ae96ab3bda0e70cce4b91fc4e6fe775a400000000",
+      "valid": true
+    },
+    {
+      "id": "scriptpath-op-success",
+      "description": "Witness v2 script path spend whose leaf script is OP_SUCCESS188 (byte 0xbc), which succeeds unconditionally per BIP 342",
+      "prevouts": [
+        {
+          "scriptPubKey": "52207696f7e30d71c62aa57ab70b23554a1084f6439b5163b07317f68986b71f0d24",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220f76f37ca6052b7292c8ad1572f57e33e106e04439d2dde833b8324c312bf46c3",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102122000b6c37db73bea687e47db28ec20c7c593e2c294223968607d1b18e075610000000000ffffffff65c38e05ba06fb03830ff257c768e439cb21820683af5f970d17a4403794c9dc0000000000ffffffff01c07fdc0b00000000225220abcc959351c9c6d270152cdb3be1b64b1c7a0755c325603899b33154e3b1c19b0201bc21c10d59725454cf341d2b7bc31c95f1149903f64c33e4baedee3a5669a3cf44633b01401673f6a61cbd094c1cce7f84184ff0b7b3f668d6c62d0fda29a9d1de40a4d44df26c9b6a47ebb3dff8ddf8ac379c3c36d6b1efebd5a0085af9920fc18568061000000000",
+      "valid": true
+    },
+    {
+      "id": "v1-v2-mixed",
+      "description": "Witness v1 key path input alongside a two-member witness v2 half-aggregation group, mirroring Example 3 of the BIP",
+      "prevouts": [
+        {
+          "scriptPubKey": "5120a65a8d02e401105e9e68fd11af633b2135be019ccbf71bfc5fbdfb8e44ba2df7",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220f943a227ca855dd9d22cf25837122a0f0dc129d77b452d8b2c20b2bc709bb684",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522015d5e4e64a5220c7d2c68f5b97454b29c08d6642720017e3ba8d1d133ce98cf6",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010399d38299f14c13d666e271ff326cf8c5e43e21d70826e4f1749566a3e80610b90000000000ffffffffeaa41167c8b8ee495014701bc627f54734586036efed5912e68d96b8fe4fd48a0000000000ffffffff78d37d165ff26a505a04c1d645f1f1d393645c7ab1b2fd81aeb429537ebe81670000000000ffffffff01c060d21100000000225220a65a8d02e401105e9e68fd11af633b2135be019ccbf71bfc5fbdfb8e44ba2df70140f631a1ffd1cf8f1fc640dfecc5453aec039f4cef7f807d5821f5750f2ca44bef7c304c558dcc7ac49b22a247c5c9992121fc0796a8b73b7113fd23b25e6d82480120683645a000862a928c89d3982224214f40ee17daa20b826a4c4a102e91d644cc01418a1dfc706d15974f9ef5509eaf0cd521da02f01decafe69045a15273c8ec7579a936b62607e610249f088f1a2c2bdaca8b3cdf0e97233e0a064b4a9ba7da6f0bbc00000000",
+      "valid": true
+    },
+    {
+      "id": "sighash-byte-stripped",
+      "description": "Explicit SIGHASH_ALL byte removed from a group member by a third party",
+      "prevouts": [
+        {
+          "scriptPubKey": "52205f56c844151d6ded6024f0c30ab90e436e03c5f199f66d77553fc0b8eee66377",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220366b81b84d19c39f58c8769cbd2b1f996542266c400c8de7e3997a5c143d7847",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102959f971cfdea5c89923108e7d2c9abf34a327ce3f0f1aa75e054f923b95b1cc20000000000ffffffff9e97d6493ed7423faad0636f6ba60f4a8eb6b26efa6e75513cf85da975c8c0eb0000000000ffffffff01c07fdc0b000000002252205f56c844151d6ded6024f0c30ab90e436e03c5f199f66d77553fc0b8eee663770120809b87ad64fd5246f69c246e81ef26c75323632c4016387b38efae7dd26155c501417699d8ab2d766b924d454eebadb25596d86b44d1895b713dd53f016cea6b9484130a524a63ba98604780fae2977a728d57786bad1425815e4cc26ee7af363986bc00000000",
+      "valid": false,
+      "failureReason": "signature message committed to the sighash type"
+    },
+    {
+      "id": "empty-element-no-final",
+      "description": "Witness v2 input whose only witness element is empty, a full-aggregation member without a final input",
+      "prevouts": [
+        {
+          "scriptPubKey": "522080348d8193f0b62e05f9614234c03965f9db14665f38523bfe4fa38bc9beb468",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220a6365e706c43c32a7382608828bf4d219302a520286b02487807e63e5765813d",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001027b29d1ac4cd5356006588f0d3622ee61a6fc29ad2d299f2f6eb69cba0d7f5caf0000000000ffffffff9e6158b3c5934a484c25e47bd4dbbb3ca36c773d97a421e842806660232f0a0a0000000000ffffffff01c07fdc0b0000000022522080348d8193f0b62e05f9614234c03965f9db14665f38523bfe4fa38bc9beb468010001405c5072e8a3148f5207b21446e920e443315ec741a4155131b71a7742e178368ebfb9d951a452e076a30e245519fc7a9b2770d86ac3b758893a6f24a5e57ea7ca00000000",
+      "valid": false,
+      "failureReason": "aggregation group has no final input"
+    },
+    {
+      "id": "sighash-single-no-output-group",
+      "description": "Half-aggregation group member uses SIGHASH_SINGLE at input index 1 of a single-output transaction",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220c8ce4e6a6a0d34357827bb0fe91cfd76f4dd76178783ade19eebf9709aa849f2",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220238b9c1c5f0a8267a1407055ab4710d68b6f17c78cae61a26bfde011ad304676",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010243255c54b0a85e8928e17b91f9f3f344372545f70a9c7e85450f4af1d2243cdd0000000000ffffffff45f25548efbd2113170e2c97cb5a2aecd9b0537956d766c60af33b54da9098320000000000ffffffff01c07fdc0b00000000225220c8ce4e6a6a0d34357827bb0fe91cfd76f4dd76178783ade19eebf9709aa849f20120ce3a7541d82797a2e57bc68ea3845186c806e3c73ec6655fa6c98c376df7ffc9014248021e012ca5c831276f4c79425029651ed38bf6082dd791094da491062fcbcbeaced7ba3a69a604d8c83566fc0de5e9f5560b8faba71aa9278fda86240111d803bc00000000",
+      "valid": false,
+      "failureReason": "SIGHASH_SINGLE input without corresponding output"
+    },
+    {
+      "id": "two-elements-no-annex",
+      "description": "Keypath-looking element followed by a second element that is not an annex, making this a script path spend with an invalid control block",
+      "prevouts": [
+        {
+          "scriptPubKey": "52200391079747abc6405211bd3086ac8d0cfa8289c509120f63dfb37348df78178d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52201e6238ab9bd6b76360d86ec5263f6de69dbd2d2766634cc4fa7d814328436633",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102796ded7d3a447a3c4a578f9535a9a52bf44b65d6bfd795fe142c0747df38c42c0000000000ffffffff679f42915303ad3f898d2b0bfee543aa568cb6478000e44e58c271f4b6e52f0a0000000000ffffffff01c07fdc0b000000002252200391079747abc6405211bd3086ac8d0cfa8289c509120f63dfb37348df78178d0240f0899cf64d99c1248b45e1a9978f13896fd52a7f2ba59fdbcc758795a455f34d90e892c51ca483cd2771e4bb2ca136dbfe0e95a5ee53bd80e71cdd6210dbbfa80160014068820e1acecedbb521e18d20bc0b7114fb391ce00e0b6e2eb1563b92cfcd9af64127a03b3cd230ed703e0cbf8a3fe1c6325ac9502db90c6278f11dd05c462d8f00000000",
+      "valid": false,
+      "failureReason": "invalid control block size"
+    },
+    {
+      "id": "agg-mode-sig-as-optout",
+      "description": "Signature created over the half-aggregation flavored message used as a bare opted-out signature",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220f5550ce6e940cf53f9f175a7a81e18e4dd2dac375a4433ad15599979368aac14",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220d8846f187dc43f7a2df28b59753aad58bccbdb873fa0eb0dbc191edb6d322e12",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010274f6fcc771690ea6f38fc9df6d221ea9e858787d79b2e192f91b03f4e5ec59720000000000ffffffff038baab567625964cdcf30d6bc337418829f2699b28f0d51d8ef861a77dca5260000000000ffffffff01c07fdc0b00000000225220f5550ce6e940cf53f9f175a7a81e18e4dd2dac375a4433ad15599979368aac140140c16866682e8b6c0e2b0bb7d4fce36df1cbbfd1b10f29aa936aca928abb203aa72a37caac1975ead54822b06561aba975c1ce14229b89f66ce407b9ae88816fbc014041b811190dff556d541619af4bf934e6f2e6aedbf8ec343db834435c06f6d2faffe3b560cc7bba0a6dbf68806999533673228a010627603a69a19c89203b7fb800000000",
+      "valid": false,
+      "failureReason": "signature invalid, message commits to the aggregation mode"
+    },
+    {
+      "id": "halfagg-large-group",
+      "description": "8-member half-aggregation group",
+      "prevouts": [
+        {
+          "scriptPubKey": "52207ca5a23b5d8253b092e5e7c2ef60167966781689ccc0d311f119759beba0fba7",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52205eee9aada57d816a6cfbb21092b51b0e7fe93d2ee1f3dcd80e27343d419527f2",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522064d00057948fa1890a464fc996a8588b0ea8c6d2abe4c786a4cbc47d0c1cdd3c",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52201827c2d005bd8cb07201eee287ca25cd1e4b209e16fec42d3404fba65d68dc31",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220a8f1b32af980715b3538daa4af8da54ad9f5af4806855875ca955e85a8d807af",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52200a0448560df8dbe5e36c3563e2a51b20f0f08fc2cba5f139822958261ce4ce0d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220e4b368758dd3b238a1705b26cb07df8cb2a2521773701b64c3b573c499526fc0",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52201bfa0b74a1992ae24806abbf2aac3c3f0fb77e2c64083cf2e70313d0214abd73",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000108b8efc85febd6bd845177a7171d06cfd52e3a3c688dcfa32a8e8584841e838f770000000000ffffffffe3ef25b266108d5200cfd923167e4dd7b18072994257b674191ceafbed9f8cbf0000000000fffffffff535b8fca7bd89438e9ba575bdd71f12ececd5e34a7fe622459721dd437c71be0000000000ffffffff6fca2aaffb88ae969bcc62522629bb4e2e31af406a8fac5e2701bb6c3bb4305e0000000000ffffffffa026937889ed804a415cd70c9509dc7edf20ef28278ef23e35e2249f73457b570000000000ffffffff81a4bfd409211d0a308c24c36ded78110f5f5f751f00476ce9e06d6871b2d5690000000000ffffffff527ed3cee5f9c269fa74ac92fb266c65e61208faeb6b0619000dddda32cd167c0000000000ffffffffbde7534ac2149e11a2ccf7e7cdcf01964d068ca662df3d60c42e0cac08011bb30000000000ffffffff01c0c59f2f000000002252207ca5a23b5d8253b092e5e7c2ef60167966781689ccc0d311f119759beba0fba701209ec9d9e7172f588efca57173d91f63738dd5a9e4f6f03274046ecdbd854a224501206b1cf84508ca880021423f40ffca58ff5d32455ab00d96f0a729e0a72bfcbc530120187a1b6ab9fa96226abb5b47c18c489112924940f0f809230a904591290be90b0120c61c05f70bd771e926752988d74ced3f8bfe57d279f0464d626a1c2acc8a9da701209f714ccf3230608d91695e954826083061c02cfcc6fd11f5aa706e54e5da4f8d0120724731033b468ad8c6c6f3b36f479963651e153041dad5a7b74284b418a808730120ad8004c0267a9d9ed8a725046b66b6de030f6ce0d0c6f3a40bf1c2d29e46abdb0141c9e636dcde7f5c28cd5e18be362e44ce2da1e4a85ba62c99c777be590ed54af200653f735dbaaa2f016d38cb5a62c5cd4f98fbabd9894ca7d9559a901b4d546abc00000000",
+      "valid": true
+    },
+    {
+      "id": "scriptpath-marker-lookalike",
+      "description": "Script path spend whose first stack element is a 1-byte 0xbc marker lookalike, which has no marker meaning outside key path spends",
+      "prevouts": [
+        {
+          "scriptPubKey": "522082ace6d1d7a138a915bc07569161b1b6484d7c800b5e2fab8b573aa3dce40175",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220ffaa7773252d946733d00cc9870e80add10e577893ee972332c910dfe0f0b61c",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001026c0780d0a76dc7e1f78a6fdcf25908625d50d37de0b055e4acd4198f23deb6a60000000000ffffffffd3c43fd83c79f225cf5208290086806fb0aab1111fcd10888aa972183b3c8fa10000000000ffffffff01c07fdc0b000000002252209895f077cf6760cdcdc729e244e345fe71f84d49bfd2958f01210a1737caf86e0301bc02755121c0c445296d4c0d625c2932df758a7f2a736d022bb6a55bb52c9eb52eb90ffea14f014014aa95ba5afcaaf375cb9515906433659f6e1157c49ee8cc43fab515753a3add50f5a25aeedc67bd8d079a66732d701700baec3143f45d859d41e2f75552284700000000",
+      "valid": true
+    },
+    {
+      "id": "duplicate-key-groups",
+      "description": "Half-aggregation and full-aggregation groups whose two members each spend outputs with the same witness program (address reuse)",
+      "prevouts": [
+        {
+          "scriptPubKey": "522098425d28f35f2da20c400f472183065fb5b221d6860962c68bb6d20bac20b081",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522098425d28f35f2da20c400f472183065fb5b221d6860962c68bb6d20bac20b081",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206a0487f7f1b886fa757ea427cc370ff758c30e0e9ff194ebd20decb9a94eaa9d",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206a0487f7f1b886fa757ea427cc370ff758c30e0e9ff194ebd20decb9a94eaa9d",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010491e7995af63730c1a6a372277b67a95dccb8610e91a99edfc1e91b227f7437830000000000ffffffff7ebcc3e7e23a3284bb376d66ed1e478a78d4c831e714adce963abd99630803360000000000ffffffff27f82605d137a2cda276cc7aec0e57862a1021b3ab26eb82202b14e50ab6fa5a0000000000ffffffffba4bce7307bda6108692c4b4e89eb98b7a0953ea26f798921557ffaac52b52120000000000ffffffff01c041c8170000000022522098425d28f35f2da20c400f472183065fb5b221d6860962c68bb6d20bac20b08101204134bd40de37fe40f669ede09cbdd10c8314072b79df64d1b1d5586fca61bad4014173b25c213b8dcc75caa9ae39e1dc8fd26f507f718c73ddf5cd387fbfafee290ee17c14f19f8d5de990630bb924940ac910b4515a49b97fd3138add80e8f7d1f8bc010001415577b6e37ddb2f2fb0b5e92ac81d62e5054f26095c4a7aaa83f4c1b7844c5b5bdaea62d60875842f86f51916f129278342f0757d7adf6e39f975685d1fa638e9bd00000000",
+      "valid": true
+    },
+    {
+      "id": "v1-replay",
+      "description": "BIP 341 key path signature created for a witness v1 output with the same output key, replayed on a witness v2 input",
+      "prevouts": [
+        {
+          "scriptPubKey": "52202cd9c8b80033c37a0fc7c1750bba8ef0237dde027d499b347f97243afba66cf8",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220223305cc0a35fa11e7df5671f3b486d54d50041e588279f354efb0363560ae1c",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010270f88f7e0757494753b48ec02fbc696341c643f5fc01bcfda556265680409e930000000000ffffffffea9615452372ede28c74eb220add491d09010ed9c8377b0605364c874eceedbc0000000000ffffffff01c07fdc0b000000002252202cd9c8b80033c37a0fc7c1750bba8ef0237dde027d499b347f97243afba66cf8014191871e1b8537b9aa04e14895ecafbbcf707878f7934924c6ba0928dab831949504b9f95ea86e183b573af36b1bdd9303df87efce00f52e4b42a53eeede13bec9810140800c07f424c186961c554602d1f24b8c33f5c748d48ce41c6e7f414c3ad7cfca1831928c88657c9ef46ca6e8d55e86500592e747ac72070c5fab00a7cf6b4dcd00000000",
+      "valid": false,
+      "failureReason": "signature message commits to the spent scriptPubKey"
+    },
+    {
+      "id": "member-sighash-undefined",
+      "description": "Full-aggregation member with the undefined sighash value 0x04",
+      "prevouts": [
+        {
+          "scriptPubKey": "522042df539f730080e1ed2376f765c6f2143089e4be7ce4d9bbe63e21af8e0b327f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "522059089c0a85019600c1a1bb48a48a6002bdcade4d7d3dd5040ad52358c6dbca8f",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52207bd2a9b241b649fc595db97b178f10e9dba8da55fa85a2a37b11abc16dd4f8de",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010382b704aa2b678bc8d052c0b677bc07167090116187ac01fd930a6b1eadc7b92b0000000000ffffffffc0d2d3ed02079c29fb00ba5ee6321e66dc9d50bd88deb26d5820d3246e31bd800000000000ffffffffdaac67e664466923982c4bef1018b5ae94a92b3fa10210b81c526c1e677dad5a0000000000ffffffff01c060d2110000000022522042df539f730080e1ed2376f765c6f2143089e4be7ce4d9bbe63e21af8e0b327f0140b0351faa8a03a5af239188bfd4fda857ccb3c1e00e24cb04d18e844eef2353c02f9e9f0e7de6f8348e004472073d7dc959729a174c5fa323160aefc4ced8a7d8010104014179ef63e2eaa84926d1b15d862e507100e23f2e3fe52fe9dba417cd82e4f6b61df0ecebc09df3d17208831ef97aab0bb1a74d57318aedf3ee3c1d0e6272790de8bd00000000",
+      "valid": false,
+      "failureReason": "undefined sighash type"
+    },
+    {
+      "id": "halfagg-final-old-format",
+      "description": "97-byte 0xbc element carrying the whole aggregate signature, the final input encoding of an earlier revision",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220c3fdf588e2d9063fd7e49de5a97fbea45c7a4048430e88b23cda74997f8aa067",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220faddf6d6870b6ad1d3b6cc6af9e239764bc62363d2ca9e25d026447e06c7200a",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102917db2c3462c9895bdfa343f317c9112851662a05f7b39f639e735571aa1a3f40000000000ffffffffdde095c91533108ac01227dc10df531d73b5f8293a3b9dff3a9db994ce03a6b90000000000ffffffff01c07fdc0b00000000225220c3fdf588e2d9063fd7e49de5a97fbea45c7a4048430e88b23cda74997f8aa0670120121d1d860389ff25088bd64d369e28a218f93497dbefc0c48af074954dbf51820161121d1d860389ff25088bd64d369e28a218f93497dbefc0c48af074954dbf5182a1080a725a9558ee46904299e5e6eba263191a8dc096be7404f53e2e0f748cbdff7ca98926c6775fddb3540953ad1f4761d7cdebeaff094052b6e9f29b10fb0bbc00000000",
+      "valid": false,
+      "failureReason": "marker and length match no defined structure"
+    },
+    {
+      "id": "halfagg-acp-member",
+      "description": "Half-aggregation group with a SIGHASH_ALL|SIGHASH_ANYONECANPAY member",
+      "prevouts": [
+        {
+          "scriptPubKey": "522089547531e583aef85d429080a8f251e040414fbdf72500ab72dcb9569830b6ce",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52206483a23467272265b2718d368b4b93d58f015c7d1b451f3e502ff90022bd6447",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010237978a1b66b8b936d709511aad50fc9fcb57ffd6ba379d35c6eb146292088f650000000000ffffffff00005b631d87e8087e2e92eeee47007c1869c2da602a1cdb353c8e1d1a919ac50000000000ffffffff01c07fdc0b0000000022522089547531e583aef85d429080a8f251e040414fbdf72500ab72dcb9569830b6ce0121b42ac8ee08116c28e76afe2d7897e52d8bd246df7926ed532a041a2b39d1f51c81014151f322bf3ad2c82e3871672b5d7abd003d3d4ac0a9a9773cd272b4940c4f14d70251425ce05efa58a77d23aa1f561c806378064aac7a0dee0284c6793f240a4dbc00000000",
+      "valid": true
+    },
+    {
+      "id": "marker-swapped-fullagg",
+      "description": "Full-aggregation final of a single-member group mutated to carry the half-aggregation marker",
+      "prevouts": [
+        {
+          "scriptPubKey": "522009d2ff94dc12d14b0b63c95dcdc8cd2a77a3eecca3bbf2809d322dc8b6b5d62b",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000101787d107a893487240e835409c4cd5c68420bd6301ee936c2b201e90ad5bc8de60000000000ffffffff01c09ee6050000000022522009d2ff94dc12d14b0b63c95dcdc8cd2a77a3eecca3bbf2809d322dc8b6b5d62b01414c72a1b21ae90aff0ca628336daed2f1a8630febac3992bb6cdff5c30a55af917fc1768c4b3ffc1b9e0643bf4c4e9efa536186eea376b08675cab1da0845f327bc00000000",
+      "valid": false,
+      "failureReason": "aggregate signature invalid, messages commit to the aggregation mode"
+    },
+    {
+      "id": "annex-on-empty-member",
+      "description": "Full-aggregation member carrying an annex on an empty witness element, committed in its signature message",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220765b3ec5afb0323413e8493ed93c122a15ca3c48b88f1c2722db5247a5461c66",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220ace7e7d0e0a3391864ed53c0095c91b640015c66ee259c0112240609d03af626",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102a7f83858dde67a2b773c9ed4fd0a7c25a514c7a9fa70e7eb7b9449332c39a78a0000000000ffffffff805671eb757aac19fa56a255acda78df1b532c5220d31e44a7867cf187580b7e0000000000ffffffff01c07fdc0b00000000225220765b3ec5afb0323413e8493ed93c122a15ca3c48b88f1c2722db5247a5461c66020010504349534120616e6e657820746573740141498d17fb7502e3d0b886854673785ebe23547f4c4a77e4c5a6a908bde8235219595f20cf104b107a89ec098893d21bd09a57d4c45f9d61fbfb91366e45377d3fbd00000000",
+      "valid": true
+    },
+    {
+      "id": "nonce-shares-swapped",
+      "description": "Nonce shares of the two half-aggregation inputs swapped by a third party",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220c8ee60d3a8a37700930aa95a2f154b73e085ee38f21342bd19bad5c0e8fdbb12",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220f0daee3e78b7614a469644b6b9874c3fe530dfec8b580b3460da45badee74a4b",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102adfe07b3615f73ed6d91c6715e1640dc6520a75b9b7ef7423b0b681b1bef27fe0000000000ffffffff27fcd63dc25c409f3656d0c9d0f5fd700a53f1662cc135fa2033a1e16ede34d20000000000ffffffff01c07fdc0b00000000225220c8ee60d3a8a37700930aa95a2f154b73e085ee38f21342bd19bad5c0e8fdbb120120982c8e5359de318f5a83ccc2b269e56e10ea1d1f345cbc2e4c235f776f427d5701411a09701066a72dee917b725ecef1a881627254da5f4bc343ea799f92be885029ca575a4dc206f896042468af7a60de793ecc82a773aef34a56e08e4048812136bc00000000",
+      "valid": false,
+      "failureReason": "aggregate signature invalid, the randomizers commit to the shares in input order"
+    },
+    {
+      "id": "optout-too-long",
+      "description": "66-byte element ending in a valid sighash byte, one byte above the opted-out maximum",
+      "prevouts": [
+        {
+          "scriptPubKey": "522023bf6306a5bbd4682329b1f71463e8887beb5796e90a75f2cd20e14671bb3015",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "52205617de2e619bb3b360d9064287c2a285f7e79e6b67e7d8043122a7a1cbadaab5",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "020000000001020c775db8b13f8dc047a1eaa9411b3d62762e8a9c51d02a2d1e6c083078d2630a0000000000ffffffff91c615ac861c12ddbfe825e9e3cf5bd952b839ba5d23add6ea92ff8c62e01faf0000000000ffffffff01c07fdc0b0000000022522023bf6306a5bbd4682329b1f71463e8887beb5796e90a75f2cd20e14671bb30150142b3ca4c0ef8058fc55d7886524ed2442f05df5f7c695abb0bf7ec001e125ba75f0964727fd1769c2c3fc6be4b42c7c822029e5815f36b36b54a7e950d4f80a263010101407276cf33f106c7809dde5d1104ab3893bbdaf09d61371d50db20b3435c719fb7d9d75257b5ed3d02db02dd46b92a187ab269f1d8d4f48f6aaac230d00ffa52e000000000",
+      "valid": false,
+      "failureReason": "marker and length match no defined structure"
+    },
+    {
+      "id": "member-marker-only",
+      "description": "1-byte element containing only the marker value 0xbc, a full-aggregation member with an invalid sighash byte",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220d0c828d9203c41f97971718aed433eb578828f313d03913710a359005b7ddc52",
+          "amountSats": 100000000
+        },
+        {
+          "scriptPubKey": "5220f0c19ee28bd77735331185eff795ca94fb69075a820f243d1c2eacd32fe17df8",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "02000000000102be96d771bfb90ce9b5fcf065da4f92446f4408b903f4c88e683728a45c8460080000000000ffffffff268e2af1032ee7d550b1345e9a43d03f0d0ca381b6f21dc1eb4988886107db8c0000000000ffffffff01c07fdc0b00000000225220d0c828d9203c41f97971718aed433eb578828f313d03913710a359005b7ddc520101bc0140a14a719ec76e7df2de4304059717acbff6e4daa7664213c5d129c03536725f31c13fe14b53a8a0043dec8d17efae3a21575ec120a0c6b6828d1691329646576900000000",
+      "valid": false,
+      "failureReason": "undefined sighash type"
+    },
+    {
+      "id": "marker-swapped-halfagg",
+      "description": "Half-aggregation final of a single-member group mutated to carry the full-aggregation marker",
+      "prevouts": [
+        {
+          "scriptPubKey": "5220efce560c8eaf170db44a9af7691f8807be52d8314c4575aa46ba4fce54c2b0c6",
+          "amountSats": 100000000
+        }
+      ],
+      "tx": "0200000000010187fea558630296d581abd8d24b147faeaa371a0d325edcf565b6719d8fd5ea310000000000ffffffff01c09ee60500000000225220efce560c8eaf170db44a9af7691f8807be52d8314c4575aa46ba4fce54c2b0c60141bf6915975cc9bf5ab48830c0f34026519f668d453624848298d9e17fbf1362792f96def59bbab5ae47ab790704392b1e456703ad14bf72c375e874fff750dd1abd00000000",
+      "valid": false,
+      "failureReason": "aggregate signature invalid, messages commit to the aggregation mode"
+    }
+  ]
+}

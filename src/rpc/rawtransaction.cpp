@@ -124,7 +124,7 @@ static std::vector<RPCArg> CreateTxDoc()
 
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize, std::optional<uint8_t> cisa_mode)
 {
     // Unserialize the transactions
     util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(psbt_string);
@@ -194,11 +194,13 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
         // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
-        const auto sign_result = SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize}, /*out_sigdata=*/nullptr);
+        const auto sign_result = SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, {.sighash_type = sighash_type, .finalize = finalize, .cisa_mode = cisa_mode}, /*out_sigdata=*/nullptr);
         if (!sign_result.has_value() && sign_result.error() == common::PSBTError::SIGHASH_MISMATCH) {
             throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
         }
     }
+
+    if (finalize) FinalizeCISAInputs(psbtx, txdata);
 
     // Update script/keypath information using descriptor data.
     for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
@@ -509,6 +511,7 @@ static RPCMethod decodescript()
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V1_TAPROOT:
         case TxoutType::ANCHOR:
+        case TxoutType::WITNESS_V2_CISA:
             // Should not be wrapped
             return false;
         } // no default case, so the compiler can warn about missing cases
@@ -552,6 +555,7 @@ static RPCMethod decodescript()
             case TxoutType::WITNESS_V0_SCRIPTHASH:
             case TxoutType::WITNESS_V1_TAPROOT:
             case TxoutType::ANCHOR:
+            case TxoutType::WITNESS_V2_CISA:
                 // Should not be wrapped
                 return false;
             } // no default case, so the compiler can warn about missing cases
@@ -938,6 +942,10 @@ const RPCResult& DecodePSBTInputs()
                         {RPCResult::Type::STR_HEX, "partial_sig", "The partial signature itself."},
                     }},
                 }},
+                {RPCResult::Type::STR, "cisa_mode", /*optional=*/true, "The BIP460 aggregation mode of the input: \"optout\", \"halfagg\" or \"fullagg\""},
+                {RPCResult::Type::STR_HEX, "cisa_halfagg_sig", /*optional=*/true, "hex-encoded signature of a half-aggregation input"},
+                {RPCResult::Type::STR_HEX, "cisa_fullagg_pubnonce", /*optional=*/true, "hex-encoded public nonce of a full-aggregation input"},
+                {RPCResult::Type::STR_HEX, "cisa_fullagg_partial_sig", /*optional=*/true, "hex-encoded partial signature of a full-aggregation input"},
                 {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
                 {
                     {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
@@ -1431,6 +1439,12 @@ static RPCMethod decodepsbt()
             in.pushKV("musig2_partial_sigs", musig_partial_sigs);
         }
 
+        // CISA fields
+        if (input.m_cisa_mode) in.pushKV("cisa_mode", CISAModeToStr(*input.m_cisa_mode));
+        if (!input.m_cisa_halfagg_sig.empty()) in.pushKV("cisa_halfagg_sig", HexStr(input.m_cisa_halfagg_sig));
+        if (!input.m_cisa_fullagg_pubnonce.empty()) in.pushKV("cisa_fullagg_pubnonce", HexStr(input.m_cisa_fullagg_pubnonce));
+        if (!input.m_cisa_fullagg_partial_sig.IsNull()) in.pushKV("cisa_fullagg_partial_sig", HexStr(input.m_cisa_fullagg_partial_sig));
+
         // Proprietary
         if (!input.m_proprietary.empty()) {
             UniValue proprietary(UniValue::VARR);
@@ -1851,7 +1865,8 @@ static RPCMethod utxoupdatepsbt()
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/true, /*hide_origin=*/false),
         /*sighash_type=*/std::nullopt,
-        /*finalize=*/false);
+        /*finalize=*/false,
+        /*cisa_mode=*/std::nullopt);
 
     DataStream ssTx{};
     ssTx << psbtx;
@@ -2078,6 +2093,7 @@ RPCMethod descriptorprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"cisa_mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP460 aggregation mode to set on witness version 2 inputs that have none: \"optout\", \"halfagg\" or \"fullagg\""},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2110,7 +2126,8 @@ RPCMethod descriptorprocesspsbt()
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
         sighash_type,
-        finalize);
+        finalize,
+        ParseCISAMode(request.params[5]));
 
     // Check whether or not all of the inputs are now correctly signed
     bool complete = true;

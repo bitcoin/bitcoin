@@ -327,6 +327,15 @@ public:
         return obj;
     }
 
+    UniValue operator()(const WitnessV2Cisa& id) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", false);
+        obj.pushKV("iswitness", true);
+        obj.pushKV("witness_version", 2);
+        obj.pushKV("witness_program", HexStr(id));
+        return obj;
+    }
+
     UniValue operator()(const PayToAnchor& anchor) const
     {
         UniValue obj(UniValue::VOBJ);
@@ -361,6 +370,18 @@ std::optional<int> ParseSighashString(const UniValue& sighash)
         return std::nullopt;
     }
     const auto result{SighashFromStr(sighash.get_str())};
+    if (!result) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(result).original);
+    }
+    return result.value();
+}
+
+std::optional<uint8_t> ParseCISAMode(const UniValue& mode)
+{
+    if (mode.isNull()) {
+        return std::nullopt;
+    }
+    const auto result{CISAModeFromStr(mode.get_str())};
     if (!result) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(result).original);
     }
