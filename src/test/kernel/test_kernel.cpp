@@ -15,11 +15,14 @@
 #include <test/kernel/block_data.h>
 #include <test/util/common.h>
 
+#include <array>
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <fstream>
 #include <iostream>
+#include <latch>
 #include <memory>
 #include <optional>
 #include <random>
@@ -28,6 +31,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 using namespace btck;
@@ -96,8 +100,8 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
 
 struct TestDirectory {
     fs::path m_directory;
-    TestDirectory(std::string directory_name)
-        : m_directory{fs::path{fs::temp_directory_path()} / fs::u8path(directory_name + "_🌽_" + random_string(16))}
+    TestDirectory(std::string directory_name, fs::path parent = fs::temp_directory_path())
+        : m_directory{parent / fs::u8path(directory_name + "_🌽_" + random_string(16))}
     {
         fs::create_directories(m_directory);
     }
@@ -107,6 +111,25 @@ struct TestDirectory {
         fs::remove_all(m_directory);
     }
 };
+
+std::string read_log_file(const fs::path& log_path)
+{
+    std::ifstream file{log_path.std_path()};
+    BOOST_REQUIRE(file.is_open());
+    std::ostringstream contents;
+    contents << file.rdbuf();
+    return contents.str();
+}
+
+size_t count_log_line(const std::string& contents, std::string_view message)
+{
+    std::istringstream stream{contents};
+    size_t count{0};
+    for (std::string line; std::getline(stream, line);) {
+        if (line == message) ++count;
+    }
+    return count;
+}
 
 class TestKernelNotifications : public KernelNotifications
 {
@@ -643,13 +666,10 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     const TestDirectory test_directory{"logging_test_bitcoin_kernel"};
     const auto log_path{test_directory.m_directory / "kernel.log"};
     const auto file_path{PathToString(log_path)};
-    const auto read_log = [&] {
-        std::ifstream file{log_path.std_path()};
-        BOOST_REQUIRE(file.is_open());
-        std::ostringstream contents;
-        contents << file.rdbuf();
-        return contents.str();
-    };
+    {
+        std::ofstream file{log_path.std_path()};
+        file << "pre-existing log content\n";
+    }
     btck_LoggingOptions logging_options = {
         .log_timestamps = true,
         .log_time_micros = true,
@@ -669,20 +689,186 @@ BOOST_AUTO_TEST_CASE(logging_tests)
         logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
         logging_enable_category(LogCategory::KERNEL);
         Logger logger{file_path};
+        const auto before_duplicate{read_log_file(log_path)};
         const auto rejected_path{test_directory.m_directory / "rejected.log"};
         BOOST_CHECK_THROW(Logger{PathToString(rejected_path)}, std::runtime_error);
         BOOST_CHECK(!fs::exists(rejected_path));
+        {
+            std::ofstream file{rejected_path.std_path()};
+            file << "other file content\n";
+        }
+        BOOST_CHECK_THROW(Logger{PathToString(rejected_path)}, std::runtime_error);
+        BOOST_CHECK_EQUAL(read_log_file(rejected_path), "other file content\n");
+        BOOST_CHECK_EQUAL(read_log_file(log_path), before_duplicate);
         ChainParams params{hex_string_to_byte_vec("5151")};
     }
-    const auto first_session{read_log()};
+    const auto first_session{read_log_file(log_path)};
+    BOOST_CHECK(first_session.starts_with("pre-existing log content\n"));
     BOOST_CHECK(first_session.find("Signet with challenge 5151") != std::string::npos);
+    ChainParams between_sessions{hex_string_to_byte_vec("5353")};
+    BOOST_CHECK_EQUAL(read_log_file(log_path), first_session);
     {
         Logger logger{file_path};
         ChainParams params{hex_string_to_byte_vec("5252")};
     }
-    const auto second_session{read_log()};
+    const auto second_session{read_log_file(log_path)};
     BOOST_CHECK(second_session.starts_with(first_session));
     BOOST_CHECK(second_session.find("Signet with challenge 5252") != std::string::npos);
+    const auto buffered_message{second_session.find("Signet with challenge 5353")};
+    BOOST_CHECK(buffered_message != std::string::npos);
+    BOOST_CHECK_EQUAL(buffered_message, second_session.rfind("Signet with challenge 5353"));
+}
+
+BOOST_AUTO_TEST_CASE(logging_path_tests)
+{
+    const TestDirectory test_directory{"logging_path_test_bitcoin_kernel"};
+    const auto log_path{test_directory.m_directory / "kernel.log"};
+    const auto file_path{PathToString(log_path)};
+    logging_set_options({});
+    ChainParams before_creation{hex_string_to_byte_vec("545556")};
+
+    using Connection = std::unique_ptr<btck_LoggingConnection, decltype(&btck_logging_connection_destroy)>;
+    const auto check_rejected = [](const char* path, size_t size) {
+        Connection connection{btck_logging_connection_create(path, size), btck_logging_connection_destroy};
+        BOOST_CHECK(!connection);
+    };
+    check_rejected(nullptr, 0);
+    check_rejected("", 0);
+    check_rejected(file_path.data(), 0);
+    check_rejected(file_path.c_str(), file_path.size() + 1); // Includes the terminating NUL.
+    const std::string embedded_nul{file_path + '\0' + "suffix"};
+    check_rejected(embedded_nul.data(), embedded_nul.size());
+    BOOST_CHECK(!fs::exists(log_path));
+    BOOST_CHECK_THROW(Logger{std::string_view{}}, std::runtime_error);
+
+    const auto missing_parent{test_directory.m_directory / "missing" / "kernel.log"};
+    const auto missing_path{PathToString(missing_parent)};
+    check_rejected(missing_path.data(), missing_path.size());
+    BOOST_CHECK(!fs::exists(missing_parent.parent_path()));
+    const auto directory_path{PathToString(test_directory.m_directory)};
+    check_rejected(directory_path.data(), directory_path.size());
+
+    Connection connection{nullptr, btck_logging_connection_destroy};
+    {
+        // The supplied path ends at the length boundary, with no NUL there.
+        // Its backing storage is destroyed before any subsequent logging.
+        const std::string storage{file_path + ".ignored"};
+        connection.reset(btck_logging_connection_create(storage.data(), file_path.size()));
+        BOOST_REQUIRE(connection);
+    }
+    ChainParams after_creation{hex_string_to_byte_vec("575859")};
+    connection.reset();
+    const auto contents{read_log_file(log_path)};
+    BOOST_CHECK_EQUAL(count_log_line(contents, "Signet with challenge 545556"), 1);
+    BOOST_CHECK_EQUAL(count_log_line(contents, "Signet with challenge 575859"), 1);
+    BOOST_CHECK(!fs::exists(log_path + ".ignored"));
+    btck_logging_connection_destroy(nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(logging_relative_path)
+{
+    // Using a directory below cwd also works when the system temporary
+    // directory is on a different Windows drive, without changing process cwd.
+    const TestDirectory test_directory{"logging_relative_test_bitcoin_kernel", fs::current_path()};
+    const auto log_path{test_directory.m_directory / "kernel.log"};
+    const fs::path relative_path{fs::relative(log_path, fs::current_path())};
+    BOOST_REQUIRE(relative_path.is_relative());
+    logging_set_options({});
+    {
+        Logger logger{PathToString(relative_path)};
+        ChainParams params{hex_string_to_byte_vec("616263")};
+    }
+    BOOST_CHECK_EQUAL(count_log_line(read_log_file(log_path), "Signet with challenge 616263"), 1);
+}
+
+BOOST_AUTO_TEST_CASE(logging_formatting_and_filtering)
+{
+    const TestDirectory test_directory{"logging_options_test_bitcoin_kernel"};
+    const auto log_path{test_directory.m_directory / "kernel.log"};
+    btck_LoggingOptions options{};
+    options.always_print_category_levels = true;
+    logging_set_options(options);
+    logging_set_level_category(LogCategory::KERNEL, LogLevel::DEBUG_LEVEL);
+    logging_disable_category(LogCategory::KERNEL);
+    Logger logger{PathToString(log_path)};
+    const auto initial{read_log_file(log_path)};
+    const auto emit_debug = [] {
+        const std::array invalid_block{std::byte{0}};
+        BOOST_CHECK_THROW(Block{invalid_block}, std::runtime_error);
+    };
+
+    emit_debug(); // A disabled category is suppressed even at DEBUG level.
+    BOOST_CHECK_EQUAL(read_log_file(log_path), initial);
+    logging_enable_category(LogCategory::KERNEL);
+    logging_set_level_category(LogCategory::KERNEL, LogLevel::INFO_LEVEL);
+    emit_debug();
+    BOOST_CHECK_EQUAL(read_log_file(log_path), initial);
+    logging_set_level_category(LogCategory::KERNEL, LogLevel::DEBUG_LEVEL);
+    emit_debug();
+    const auto formatted{read_log_file(log_path)};
+    BOOST_CHECK_EQUAL(formatted, initial + "[kernel:debug] Block decode failed.\n");
+    logging_disable_category(LogCategory::KERNEL);
+    emit_debug();
+    BOOST_CHECK_EQUAL(read_log_file(log_path), formatted);
+}
+
+BOOST_AUTO_TEST_CASE(logging_concurrent_close)
+{
+    const TestDirectory test_directory{"logging_close_test_bitcoin_kernel"};
+    const auto first_path{test_directory.m_directory / "first.log"};
+    const auto replay_path{test_directory.m_directory / "replay.log"};
+    logging_set_options({});
+    auto logger{std::make_unique<Logger>(PathToString(first_path))};
+    constexpr uint8_t last_message{65};
+    const auto emit = [](uint8_t sequence) {
+        const std::array challenge{std::byte{0xfa}, std::byte{sequence}};
+        ChainParams params{challenge};
+    };
+    emit(0);
+    std::latch ready{1};
+    std::exception_ptr producer_error;
+    std::thread producer{[&] {
+        try {
+            emit(1);
+        } catch (...) {
+            producer_error = std::current_exception();
+            ready.count_down();
+            return;
+        }
+        ready.count_down();
+        try {
+            for (uint8_t sequence{2}; sequence < last_message; ++sequence) emit(sequence);
+        } catch (...) {
+            producer_error = std::current_exception();
+        }
+    }};
+    try {
+        // The producer has written one record and can keep logging while the file closes.
+        ready.wait();
+        logger.reset();
+        emit(last_message);
+    } catch (...) {
+        producer.join();
+        throw;
+    }
+    producer.join();
+    if (producer_error) std::rethrow_exception(producer_error);
+
+    const auto first_session{read_log_file(first_path)};
+    {
+        Logger replay{PathToString(replay_path)};
+    }
+    const auto replay_session{read_log_file(replay_path)};
+    BOOST_CHECK_EQUAL(count_log_line(first_session, "Signet with challenge fa00"), 1);
+    BOOST_CHECK_EQUAL(count_log_line(first_session, "Signet with challenge fa01"), 1);
+    BOOST_CHECK_EQUAL(count_log_line(first_session, "Signet with challenge fa41"), 0);
+    BOOST_CHECK_EQUAL(count_log_line(replay_session, "Signet with challenge fa41"), 1);
+    const auto contents{first_session + replay_session};
+    constexpr std::string_view hex{"0123456789abcdef"};
+    for (uint8_t sequence{0}; sequence <= last_message; ++sequence) {
+        const auto message{std::string{"Signet with challenge fa"} + hex[sequence >> 4] + hex[sequence & 15]};
+        BOOST_CHECK_EQUAL(count_log_line(contents, message), 1);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
