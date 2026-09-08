@@ -22,7 +22,7 @@ SECP256K1_INLINE static void testrand_seed(const unsigned char *seed16) {
     unsigned char out32[32];
     secp256k1_sha256 hash;
     int i;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(secp256k1_context_static);
+    const secp256k1_hash_ctx *hash_ctx = &secp256k1_context_static->hash_ctx;
 
     /* Use SHA256(PREFIX || seed16) as initial state. */
     secp256k1_sha256_initialize(&hash);
