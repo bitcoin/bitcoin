@@ -124,7 +124,7 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     if (Exists(txindex::BlockHashKey{block.hash})) return;
 
     uint32_t block_seq{0};
-    Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
+    (void)Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
 
     CDBBatch batch(*this);
     batch.Write(txindex::BlockHashKey{block.hash}, block_seq);
@@ -242,12 +242,7 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
 std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
 {
     CDiskTxPos postx;
-    const auto read{m_db->TryRead(txindex::LegacyTxKey(tx_hash), postx)};
-    if (!read) {
-        WarnAndThrowErr("%s: Failed to read legacy entry for txid %s: %s",
-                        GetName(), tx_hash.ToString(), read.error().err_msg);
-    }
-    if (!read.value()) {
+    if (!m_db->Read(txindex::LegacyTxKey(tx_hash), postx)) {
         return std::nullopt;
     }
 
