@@ -14,6 +14,7 @@ import copy
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    DIFFICULTY_ADJUSTMENT_INTERVAL,
     create_block,
     create_coinbase,
     get_witness_script,
@@ -52,7 +53,6 @@ from test_framework.wallet import (
 )
 
 
-DIFFICULTY_ADJUSTMENT_INTERVAL = 144
 MAX_TIMEWARP = 600
 VERSIONBITS_TOP_BITS = 0x20000000
 VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
