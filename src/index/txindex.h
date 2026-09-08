@@ -53,6 +53,8 @@ public:
     /// Pruning is allowed unless the database still contains legacy entries.
     bool AllowPrune() const override;
 
+    bool AllowPartialHistory() const override { return true; }
+
     /// Look up a transaction by hash.
     ///
     /// @param[in]   tx_hash  The hash of the transaction to be returned.

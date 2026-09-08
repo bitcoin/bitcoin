@@ -2467,6 +2467,12 @@ bool StartIndexBackgroundSync(NodeContext& node)
                 } else if (!index_chain.Contains(*pindex)) {
                     pindex = index_chain.FindFork(*pindex);
                 }
+                // If this is the checkpoint just before indexing began, its data was
+                // deliberately skipped. Check availability starting with the next block.
+                if (pindex && pindex->nHeight == summary.first_block_height - 1) {
+                    pindex = index_chain.Next(*pindex);
+                    if (!pindex) continue;
+                }
             }
             if (!pindex) {
                 pindex = index_chain.Genesis();
