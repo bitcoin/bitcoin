@@ -106,7 +106,9 @@ static RPCMethod gettxoutproof()
                     throw JSONRPCError(RPC_MISC_ERROR, PrunedBlocksErrorMessage(result.pruned_block_hashes));
                 }
                 if (!result.tx || result.block_hash.IsNull()) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+                    std::string message{"Transaction not yet in block"};
+                    if (g_txindex) message += TxIndexMissErrorDetails(g_txindex->GetSummary());
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, message);
                 }
                 hashBlock = result.block_hash;
 

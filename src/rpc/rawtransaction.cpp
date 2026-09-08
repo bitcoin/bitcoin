@@ -335,7 +335,7 @@ static RPCMethod getrawtransaction()
         } else if (!f_txindex_ready) {
             errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
         } else {
-            errmsg = "No such mempool or blockchain transaction";
+            errmsg = "No such mempool or blockchain transaction" + TxIndexMissErrorDetails(g_txindex->GetSummary());
         }
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
     }

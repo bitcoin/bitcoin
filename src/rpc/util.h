@@ -32,6 +32,7 @@
 
 enum class OutputType;
 struct FlatSigningProvider;
+struct IndexSummary;
 struct bilingual_str;
 class CBlockIndex;
 
@@ -149,6 +150,9 @@ UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string&
 
 //! Error message when a transaction lookup only matched blocks whose data was pruned.
 std::string PrunedBlocksErrorMessage(std::span<const uint256> pruned_block_hashes);
+
+//! Extra context error message for a txindex lookup miss.
+std::string TxIndexMissErrorDetails(const IndexSummary& summary);
 
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);

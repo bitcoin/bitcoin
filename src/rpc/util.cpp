@@ -12,6 +12,7 @@
 #include <consensus/amount.h>
 #include <core_io.h>
 #include <crypto/hex_base.h>
+#include <index/base.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <pow.h>
@@ -419,6 +420,13 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     } else {
         return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr).original);
     }
+}
+
+std::string TxIndexMissErrorDetails(const IndexSummary& summary)
+{
+    if (!summary.synced) return ". Blockchain transactions are still in the process of being indexed";
+    if (summary.first_block_height == 0) return {};
+    return strprintf(". The transaction may be in an earlier block not covered by this index, which starts at height %d", summary.first_block_height);
 }
 
 std::string PrunedBlocksErrorMessage(std::span<const uint256> pruned_block_hashes)

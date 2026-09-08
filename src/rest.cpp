@@ -903,7 +903,9 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         if (!result.pruned_block_hashes.empty()) {
             return RESTERR(req, HTTP_NOT_FOUND, PrunedBlocksErrorMessage(result.pruned_block_hashes));
         }
-        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+        std::string message{hashStr + " not found"};
+        if (g_txindex) message += TxIndexMissErrorDetails(g_txindex->GetSummary());
+        return RESTERR(req, HTTP_NOT_FOUND, message);
     }
     const CTransactionRef& tx{result.tx};
     const uint256& hashBlock{result.block_hash};
