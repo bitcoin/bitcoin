@@ -400,6 +400,8 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     auto tx2{Transaction{tx_data_2}};
     CheckHandle(tx, tx2);
 
+    BOOST_CHECK(!tx.HasWitness());
+    BOOST_CHECK(tx2.HasWitness());
     const auto txid{tx.Txid().ToBytes()};
     const auto wtxid{tx.Wtxid().ToBytes()};
     const auto txid_2{tx2.Txid().ToBytes()};
