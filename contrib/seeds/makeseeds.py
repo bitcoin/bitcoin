@@ -61,7 +61,7 @@ def parseline(line: str) -> Union[dict, None]:
         # Ignore line that starts with comment
         return None
     sline = line.split()
-    if len(sline) < 11:
+    if len(sline) < 12:
         # line too short to be valid, skip it.
         return None
     # Skip bad results.
