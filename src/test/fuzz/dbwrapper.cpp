@@ -288,7 +288,14 @@ void TestDbWrapper(FuzzedDataProvider& provider,
                 }
             },
             [&] {
-                const auto key{ConsumeKey(provider)};
+                uint16_t key{};
+                if (!oracle.empty() && provider.ConsumeBool()) {
+                    auto it{oracle.begin()};
+                    std::advance(it, provider.ConsumeIntegralInRange<size_t>(0, oracle.size() - 1));
+                    key = it->first;
+                } else {
+                    key = ConsumeKey(provider);
+                }
                 assert(dbw->Exists(key) == oracle.contains(key));
             },
             [&] {
