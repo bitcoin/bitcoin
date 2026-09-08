@@ -9,10 +9,15 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <kernel/cs_main.h>
+#include <kernel/notifications_interface.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/threadinterrupt.h>
+#include <util/translation.h>
 #include <validationinterface.h>
 
 #include <atomic>
@@ -25,8 +30,8 @@
 class CBlock;
 class CBlockIndex;
 class Chainstate;
-
 struct CBlockLocator;
+
 struct IndexSummary {
     std::string name;
     bool synced{false};
@@ -35,13 +40,6 @@ struct IndexSummary {
 };
 namespace interfaces {
 struct BlockRef;
-}
-namespace kernel {
-class Notifications;
-}
-namespace util::log {
-template <unsigned int num_params>
-struct FormatString;
 }
 
 /**
@@ -110,10 +108,13 @@ private:
 
     virtual bool AllowPrune() const = 0;
 
-    template <typename... Args>
-    void FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args);
-
 protected:
+    template <typename... Args>
+    void FatalError(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args) const
+    {
+        Assert(GetNotifications())->fatalError(Untranslated(tfm::format(fmt, args...)));
+    }
+
     /// The node's notifications, through which the index and its database report fatal errors.
     kernel::Notifications* GetNotifications() const;
 
