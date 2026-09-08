@@ -262,10 +262,15 @@ if __name__ == '__main__':
         depends/README.md for which a release exists.
         ''',
     )
+    previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
     parser.add_argument('-r', '--remove-dir', action='store_true',
                         help='remove existing directory.')
     parser.add_argument('-t', '--target-dir', action='store',
-                        help='target directory.', default='releases')
+                        default=previous_releases_path,
+                        help='target directory, defaults to '
+                        'environment\'s PREVIOUS_RELEASES_DIR if set, '
+                        'otherwise to "./releases".'
+                        )
     all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])
     parser.add_argument('tags', nargs='*', default=all_tags,
                         help='release tags. e.g.: v0.18.1 v0.20.0rc2 '
