@@ -71,6 +71,7 @@ MIN_BLOCKS_TO_KEEP = 288
 
 HALVING_INTERVAL = 150  # regtest nSubsidyHalvingInterval
 
+DIFFICULTY_ADJUSTMENT_INTERVAL = 144  # regtest nPowTargetTimespan / nPowTargetSpacing
 N_BITS = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams"
 TARGET = 0x7fffff0000000000000000000000000000000000000000000000000000000000
 assert_equal(uint256_from_compact(N_BITS), TARGET)
