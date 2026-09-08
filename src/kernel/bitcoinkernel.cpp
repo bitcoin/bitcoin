@@ -506,6 +506,7 @@ struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
 struct btck_WitnessStack : Handle<btck_WitnessStack, CScriptWitness> {};
 struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
 struct btck_Txid: Handle<btck_Txid, Txid> {};
+struct btck_Wtxid: Handle<btck_Wtxid, Wtxid> {};
 struct btck_PrecomputedTransactionData : Handle<btck_PrecomputedTransactionData, PrecomputedTransactionData> {};
 struct btck_BlockHeader: Handle<btck_BlockHeader, CBlockHeader> {};
 struct btck_ConsensusParams: Handle<btck_ConsensusParams, Consensus::Params> {};
@@ -552,6 +553,11 @@ uint32_t btck_transaction_get_locktime(const btck_Transaction* transaction)
 const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
 {
     return btck_Txid::ref(&btck_Transaction::get(transaction)->GetHash());
+}
+
+const btck_Wtxid* btck_transaction_get_wtxid(const btck_Transaction* transaction)
+{
+    return btck_Wtxid::ref(&btck_Transaction::get(transaction)->GetWitnessHash());
 }
 
 btck_Transaction* btck_transaction_copy(const btck_Transaction* transaction)
@@ -787,6 +793,26 @@ int btck_txid_equals(const btck_Txid* txid1, const btck_Txid* txid2)
 void btck_txid_destroy(btck_Txid* txid)
 {
     delete txid;
+}
+
+btck_Wtxid* btck_wtxid_copy(const btck_Wtxid* wtxid)
+{
+    return btck_Wtxid::copy(wtxid);
+}
+
+void btck_wtxid_to_bytes(const btck_Wtxid* wtxid, unsigned char output[32])
+{
+    std::memcpy(output, btck_Wtxid::get(wtxid).begin(), 32);
+}
+
+int btck_wtxid_equals(const btck_Wtxid* wtxid1, const btck_Wtxid* wtxid2)
+{
+    return btck_Wtxid::get(wtxid1) == btck_Wtxid::get(wtxid2);
+}
+
+void btck_wtxid_destroy(btck_Wtxid* wtxid)
+{
+    delete wtxid;
 }
 
 void btck_logging_set_options(const btck_LoggingOptions options)

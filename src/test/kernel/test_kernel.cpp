@@ -16,6 +16,7 @@
 #include <test/util/common.h>
 
 #include <charconv>
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -472,6 +473,43 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 
     ScriptPubkey script_pubkey_roundtrip{script_pubkey.ToBytes()};
     check_equal(script_pubkey_roundtrip.ToBytes(), script_pubkey.ToBytes());
+}
+
+BOOST_AUTO_TEST_CASE(btck_transaction_id_tests)
+{
+    auto legacy_tx{Transaction{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")}};
+    auto witness_tx{Transaction{hex_string_to_byte_vec("02000000000101904f4ee5c87d20090b642f116e458cd6693292ad9ece23e72f15fb6c05b956210500000000fdffffff02e2010000000000002251200839a723933b56560487ec4d67dda58f09bae518ffa7e148313c5696ac837d9f10060000000000002251205826bcdae7abfb1c468204170eab00d887b61ab143464a4a09e1450bdc59a3340140f26e7af574e647355830772946356c27e7bbc773c5293688890f58983499581be84de40be7311a14e6d6422605df086620e75adae84ff06b75ce5894de5e994a00000000")}};
+
+    // Txid and Wtxid are distinct types and cannot be compared with each other.
+    static_assert(!std::equality_comparable_with<TxidView, WtxidView>);
+    static_assert(!std::equality_comparable_with<Txid, Wtxid>);
+
+    // View equality on the same object and across objects.
+    BOOST_CHECK(legacy_tx.Txid() == legacy_tx.Txid());
+    BOOST_CHECK(legacy_tx.Wtxid() == legacy_tx.Wtxid());
+    BOOST_CHECK(legacy_tx.Txid() != witness_tx.Txid());
+    BOOST_CHECK(legacy_tx.Wtxid() != witness_tx.Wtxid());
+
+    // Owned handles created from views compare equal to their copies.
+    Txid owned_txid{legacy_tx.Txid()};
+    Txid owned_txid_copy{owned_txid}; // NOLINT(performance-unnecessary-copy-initialization)
+    BOOST_CHECK(owned_txid == owned_txid_copy);
+    BOOST_CHECK(owned_txid != Txid{witness_tx.Txid()});
+    CheckHandle(owned_txid, Txid{witness_tx.Txid()});
+
+    Wtxid owned_wtxid{legacy_tx.Wtxid()};
+    Wtxid owned_wtxid_copy{owned_wtxid}; // NOLINT(performance-unnecessary-copy-initialization)
+    BOOST_CHECK(owned_wtxid == owned_wtxid_copy);
+    BOOST_CHECK(owned_wtxid != Wtxid{witness_tx.Wtxid()});
+    CheckHandle(owned_wtxid, Wtxid{witness_tx.Wtxid()});
+
+    // Without witness data, the wtxid equals the txid; with witness data, it differs.
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(legacy_tx.Txid().ToBytes()), "aca326a724eda9a461c10a876534ecd5ae7b27f10f26c3862fb996f80ea2d45d");
+    check_equal(legacy_tx.Txid().ToBytes(), legacy_tx.Wtxid().ToBytes());
+
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(witness_tx.Txid().ToBytes()), "9d04c6435f39a114f26b5807e92117b388f15c54c2afe7e62c96757f18cec891");
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(witness_tx.Wtxid().ToBytes()), "c5cd58b8eb3dda755eb99c89c4bcb7409e4074c8942c263e3d6d09011984a210");
+    BOOST_CHECK(!std::ranges::equal(witness_tx.Txid().ToBytes(), witness_tx.Wtxid().ToBytes()));
 }
 
 BOOST_AUTO_TEST_CASE(btck_script_pubkey)
