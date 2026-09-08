@@ -4,10 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
+import socket
+import subprocess
+import time
+
 from test_framework.netutil import NETWORK_ERRORS, all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
-from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal, rpc_port
+from test_framework.test_node import ErrorMatch, FailedToStartError
+from test_framework.util import assert_equal, get_auth_cookie, rpc_port, str_to_b64str
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -57,6 +61,65 @@ class RPCBindTest(BitcoinTestFramework):
         init_error = 'Error: Invalid port specified in -rpcbind: '
         for addr in addresses:
             self.nodes[0].assert_start_raises_init_error(base_args + [f'-rpcbind={addr}'], init_error + f"'{addr}'")
+
+    def run_partial_bind_test(self, explicit_binds):
+        self.log.info(f'Check startup when the {"explicit" if explicit_binds else "default IPv4"} RPC address is already owned')
+        self.nodes[0].rpchost = '[::1]'
+        error = ''
+        credential_captured = False
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('127.0.0.1', self.defaultport))
+            sock.listen()
+            sock.settimeout(0.1)
+            try:
+                extra_args = ['-disablewallet', '-nolisten']
+                if explicit_binds:
+                    extra_args += ['-rpcallowip=127.0.0.1', '-rpcbind=127.0.0.1', '-rpcbind=[::1]']
+                self.start_node(0, extra_args=extra_args)
+                started = True
+                cli = subprocess.Popen([
+                    self.nodes[0].binaries.paths.bitcoincli,
+                    f'-datadir={self.nodes[0].datadir_path}',
+                    '-noipcconnect',
+                    '-rpcclienttimeout=2',
+                    'getblockcount',
+                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                try:
+                    conn = None
+                    deadline = time.monotonic() + 5
+                    while conn is None and time.monotonic() < deadline:
+                        try:
+                            conn = sock.accept()[0]
+                        except TimeoutError:
+                            if cli.poll() is not None:
+                                _, stderr = cli.communicate()
+                                raise AssertionError(f'bitcoin-cli exited before connecting: {stderr.decode()}')
+                    assert conn is not None
+                    with conn:
+                        conn.settimeout(5)
+                        request = b''
+                        while b'\r\n\r\n' not in request:
+                            chunk = conn.recv(4096)
+                            assert chunk
+                            request += chunk
+                        conn.sendall(b'HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n')
+                    cli.communicate(timeout=5)
+                finally:
+                    if cli.poll() is None:
+                        cli.kill()
+                        cli.wait()
+                user, password = get_auth_cookie(self.nodes[0].datadir_path, self.chain)
+                credential_captured = f'Authorization: Basic {str_to_b64str(f"{user}:{password}")}\r\n'.encode() in request
+                self.stop_node(0)
+            except FailedToStartError as e:
+                started = False
+                error = str(e)
+                self.cleanup_partially_started_nodes()
+        self.nodes[0].rpchost = None
+
+        assert_equal(started, True)  # TODO: an occupied RPC listener must abort startup to protect credentials
+        assert_equal(credential_captured, True)  # TODO: a client credential must not reach another process's listener
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
@@ -124,6 +187,9 @@ class RPCBindTest(BitcoinTestFramework):
         self.defaultport = rpc_port(0)
 
         if not self.options.run_nonloopback:
+            if not self.options.run_ipv4:
+                for explicit_binds in [False, True]:
+                    self.run_partial_bind_test(explicit_binds)
             self._run_loopback_tests()
             if self.options.run_ipv4:
                 self.run_invalid_bind_test(['127.0.0.1'], ['127.0.0.1:notaport', '127.0.0.1:-18443', '127.0.0.1:0', '127.0.0.1:65536'])
@@ -140,6 +206,8 @@ class RPCBindTest(BitcoinTestFramework):
         if self.options.run_ipv4:
             # check only IPv4 localhost (explicit)
             self.run_bind_test(['127.0.0.1'], '127.0.0.1', ['127.0.0.1'],
+                [('127.0.0.1', self.defaultport)])
+            self.run_bind_test(['127.0.0.1'], '127.0.0.1', ['127.0.0.1', '127.0.0.1'],
                 [('127.0.0.1', self.defaultport)])
             # check only IPv4 localhost (explicit) with alternative port
             self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171'],
