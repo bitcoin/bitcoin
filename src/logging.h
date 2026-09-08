@@ -162,6 +162,9 @@ namespace BCLog {
         /** Send an entry to the log output (internal) */
         void LogPrint_(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
+        bool StartLogging_(const SourceLocation& source_loc) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        void CloseFile() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
     public:
@@ -210,6 +213,24 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages) */
         bool StartLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+
+        /**
+         * Start an owned file output, replaying buffered messages. The path must be
+         * absolute, nonempty, and contain no embedded NUL characters.
+         * Return false if logging is disabled, already running, configured for
+         * another output, or the file cannot be opened. On failure, messages not
+         * yet replayed remain buffered. Exceptions during startup are rethrown
+         * after closing the file and restoring buffering.
+         */
+        bool StartFileLogging(fs::path file_path) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+
+        /**
+         * Close the file owned by a successful StartFileLogging call. The caller
+         * must own that output. Resume buffering unless console output or
+         * internal callbacks remain active; those outputs continue running.
+         */
+        void StopFileLogging() noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+
         /** Only for testing */
         void DisconnectTestLogger() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
