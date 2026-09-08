@@ -102,7 +102,7 @@ CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t 
     fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstatsindex"};
     fs::create_directories(path);
 
-    m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/true, GetNotifications());
 }
 
 bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)

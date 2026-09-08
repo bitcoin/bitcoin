@@ -1915,6 +1915,7 @@ void Chainstate::InitCoinsDB(
             .memory_only = in_memory,
             .wipe_data = should_wipe,
             .obfuscate = true,
+            .notifications = &m_chainman.GetNotifications(),
             .options = m_chainman.m_options.coins_db},
         m_chainman.m_options.coins_view);
 

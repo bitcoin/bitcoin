@@ -25,6 +25,10 @@
 #include <stdexcept>
 #include <string>
 
+namespace kernel {
+class Notifications;
+} // namespace kernel
+
 namespace leveldb {
 class Env;
 } // namespace leveldb
@@ -54,6 +58,10 @@ struct DBParams {
     bool obfuscate = false;
     //! If true, build a LevelDB bloom filter to accelerate point lookups.
     bool bloom_filter = true;
+    //! If non-null, notified via fatalError() right before the process aborts on a read failure.
+    //! Called synchronously from database reads, potentially on any thread while locks are held.
+    //! Caller retains ownership. The notifications object must outlive the database.
+    kernel::Notifications* notifications = nullptr;
     //! Passed-through options.
     DBOptions options{};
     //! If non-null, use this as the leveldb::Env instead of the default.

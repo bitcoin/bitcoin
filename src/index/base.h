@@ -36,6 +36,9 @@ struct IndexSummary {
 namespace interfaces {
 struct BlockRef;
 }
+namespace kernel {
+class Notifications;
+}
 namespace util::log {
 template <unsigned int num_params>
 struct FormatString;
@@ -64,8 +67,8 @@ protected:
     class DB : public CDBWrapper
     {
     public:
-        DB(const fs::path& path, size_t n_cache_size,
-           bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false, bool f_bloom = true);
+        DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe,
+           bool f_obfuscate, bool f_bloom, kernel::Notifications* notifications);
         virtual ~DB() = default;
 
         /// Read block locator of the chain that the index is in sync with.
@@ -111,6 +114,9 @@ private:
     void FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args);
 
 protected:
+    /// The node's notifications, through which the index and its database report fatal errors.
+    kernel::Notifications* GetNotifications() const;
+
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
