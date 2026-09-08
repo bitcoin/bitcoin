@@ -104,11 +104,8 @@ class UTXOAbortOnErrorTest(BitcoinTestFramework):
             except Exception:
                 pass # node0 may validly abort before connect_nodes returns
 
-            # Confirm node0 aborted with SIGABRT
-            self.wait_until(lambda: self.nodes[0].is_node_stopped(
-                expected_ret_code=-6,
-                expected_stderr="Error: A fatal internal error occurred, see debug.log for details: Error reading from database, shutting down.",
-            ))
+            # Confirm node0 aborted
+            node0.wait_until_aborted(fatal_error="Error reading from database, shutting down.")
 
         self.log.info("node0 aborted cleanly — no silent divergence occurred")
 

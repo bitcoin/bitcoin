@@ -19,11 +19,11 @@ from test_framework.wallet import MiniWallet
 class IOErrorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-txindex", "-rest"]]
         self.uses_wallet = None
 
     def test_blk_dat_io_error(self):
         node = self.nodes[0]
-        self.restart_node(0, ["-txindex", "-rest"])
         wallet = MiniWallet(node)
 
         tx, tx2 = wallet.send_self_transfer_chain(from_node=node, chain_length=2)
