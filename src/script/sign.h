@@ -49,8 +49,6 @@ public:
     virtual std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const =0;
     virtual bool CreateMuSig2PartialSig(const SigningProvider& provider, uint256& partial_sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const =0;
     virtual bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const =0;
-    /** Start a BIP459 session for a witness v2 input, keeping the secnonce in the provider. Returns the pubnonce, empty on failure. */
-    virtual std::vector<uint8_t> CreateCISAFullAggNonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root) const =0;
     /** Create the BIP459 partial signature for a witness v2 input once every group member in sigdata has a pubnonce. */
     virtual bool CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const =0;
 };
@@ -77,7 +75,6 @@ public:
     std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const override;
     bool CreateMuSig2PartialSig(const SigningProvider& provider, uint256& partial_sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override;
     bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override;
-    std::vector<uint8_t> CreateCISAFullAggNonce(const SigningProvider& provider, const XOnlyPubKey& pubkey, const uint256* merkle_root) const override;
     bool CreateCISAFullAggPartialSig(const SigningProvider& provider, uint256& partial_sig, const XOnlyPubKey& pubkey, const uint256* merkle_root, const SignatureData& sigdata) const override;
 };
 
@@ -144,6 +141,11 @@ struct SignatureData {
 
 /** Produce a script signature using a generic signature creator. */
 bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata);
+
+/** Reserve a BIP459 public nonce for a full-aggregation spend of the witness v2 output_key, keeping
+ *  the secret nonce in provider. The nonce commits to no transaction, so it can be shared before the
+ *  spend exists. Returns an empty vector if provider has no key for the spend. */
+std::vector<uint8_t> ReserveCISANonce(const SigningProvider& provider, const XOnlyPubKey& output_key);
 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);

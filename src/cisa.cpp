@@ -42,10 +42,10 @@ secp256k1_fullagg_secnonce* FullAggSecNonce::Get() const { return m_impl->Get();
 void FullAggSecNonce::Invalidate() { m_impl->Invalidate(); }
 bool FullAggSecNonce::IsValid() { return m_impl->IsValid(); }
 
-uint256 CISASessionID(const XOnlyPubKey& pubkey, const uint256& msg, const std::vector<uint8_t>& pubnonce)
+uint256 CISASessionID(const XOnlyPubKey& pubkey, const std::vector<uint8_t>& pubnonce)
 {
     HashWriter hasher;
-    hasher << pubkey << msg << pubnonce;
+    hasher << pubkey << pubnonce;
     return hasher.GetSHA256();
 }
 
@@ -91,7 +91,7 @@ struct FullAggGroup {
 };
 } // namespace
 
-std::vector<uint8_t> CreateFullAggNonce(FullAggSecNonce& secnonce, const KeyPair& keypair, const uint256& msg)
+std::vector<uint8_t> CreateFullAggNonce(FullAggSecNonce& secnonce, const KeyPair& keypair)
 {
     const secp256k1_keypair* kp{keypair.Get()};
     if (!kp) return {};
@@ -102,7 +102,7 @@ std::vector<uint8_t> CreateFullAggNonce(FullAggSecNonce& secnonce, const KeyPair
     uint256 rand;
     GetStrongRandBytes(rand);
     secp256k1_fullagg_pubnonce pubnonce;
-    const bool ok{secp256k1_fullagg_nonce_gen(GetSecp256k1SignContext(), secnonce.Get(), &pubnonce, rand.data(), seckey.data(), &pubkey, msg.data()) != 0};
+    const bool ok{secp256k1_fullagg_nonce_gen(GetSecp256k1SignContext(), secnonce.Get(), &pubnonce, rand.data(), seckey.data(), &pubkey, /*extra_input32=*/nullptr) != 0};
     memory_cleanse(seckey.data(), seckey.size());
     if (!ok) return {};
 

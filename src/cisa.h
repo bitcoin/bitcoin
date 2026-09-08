@@ -44,11 +44,12 @@ public:
     bool IsValid();
 };
 
-/** Session id of a signer's full-aggregation session: SHA256 of the signing key, the message and the pubnonce. */
-uint256 CISASessionID(const XOnlyPubKey& pubkey, const uint256& msg, const std::vector<uint8_t>& pubnonce);
+/** Session id of a signer's full-aggregation session: SHA256 of the signing key and the pubnonce. */
+uint256 CISASessionID(const XOnlyPubKey& pubkey, const std::vector<uint8_t>& pubnonce);
 
-/** BIP459 NonceGen for the signer of msg. Returns the serialized pubnonce, empty on failure. */
-std::vector<uint8_t> CreateFullAggNonce(FullAggSecNonce& secnonce, const KeyPair& keypair, const uint256& msg);
+/** BIP459 NonceGen. The nonce commits to no message, so it can be generated before the
+ *  transaction is known. Returns the serialized pubnonce, empty on failure. */
+std::vector<uint8_t> CreateFullAggNonce(FullAggSecNonce& secnonce, const KeyPair& keypair);
 
 /** BIP459 Sign for the signer at signer_index of the group. Invalidates secnonce. */
 std::optional<uint256> CreateFullAggPartialSig(const KeyPair& keypair, FullAggSecNonce& secnonce, const std::vector<XOnlyPubKey>& pubkeys, const std::vector<uint256>& msgs, const std::vector<std::vector<uint8_t>>& pubnonces, size_t signer_index);
