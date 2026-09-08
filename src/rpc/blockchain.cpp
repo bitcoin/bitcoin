@@ -3267,6 +3267,7 @@ UniValue CreateRolledBackUTXOSnapshot(
         .memory_only = in_memory,
         .wipe_data = true,
         .obfuscate = false,
+        .notifications = &chainstate.m_chainman.GetNotifications(),
         .options = DBOptions{}
     };
 

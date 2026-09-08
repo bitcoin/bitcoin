@@ -107,7 +107,7 @@ class UTXOAbortOnErrorTest(BitcoinTestFramework):
             # Confirm node0 aborted with SIGABRT
             self.wait_until(lambda: self.nodes[0].is_node_stopped(
                 expected_ret_code=-6,
-                expected_stderr="Error: Error reading from database, shutting down.",
+                expected_stderr="Error: A fatal internal error occurred, see debug.log for details: Error reading from database, shutting down.",
             ))
 
         self.log.info("node0 aborted cleanly — no silent divergence occurred")
