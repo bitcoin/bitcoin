@@ -177,7 +177,7 @@ chain for " target " development."))
                   "--disable-nls"
                   #$building-on)))))))
 
-(define-public linux-base-gcc
+(define* (make-linux-base-gcc #:key (wchar_t? #t))
   (package
     (inherit base-gcc)
     (arguments
@@ -199,6 +199,7 @@ chain for " target " development."))
                   "--disable-lto"
                   "--disable-nls"
                   "--disable-tm-clone-registry"
+                  #$@(if wchar_t? '() (list "--disable-wchar_t"))
                   #$building-on)))
         ((#:phases phases)
           #~(modify-phases #$phases
@@ -211,6 +212,10 @@ chain for " target " development."))
                                               "^gnu-user.*\\.h$"))
                  (("-rpath=") "-rpath-link="))
                #t))))))))
+
+(define-public linux-base-gcc (make-linux-base-gcc #:wchar_t? #f))
+;; GUI build
+(define-public linux-base-gcc-with-wchar_t (make-linux-base-gcc #:wchar_t? #t))
 
 (define glibc-2.31
   (let ((commit "28eb5caf895ced5d895cb02757e109004a2d33e5"))
