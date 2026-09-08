@@ -1476,6 +1476,18 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
     return {};
 }
 
+std::vector<uint8_t> DescriptorScriptPubKeyMan::ReserveCISANonce(const CScript& script) const
+{
+    CTxDestination dest;
+    if (!ExtractDestination(script, dest)) return {};
+    const WitnessV2Cisa* output_key{std::get_if<WitnessV2Cisa>(&dest)};
+    if (!output_key) return {};
+
+    std::unique_ptr<FlatSigningProvider> keys{GetSigningProvider(script, /*include_private=*/true)};
+    if (!keys) return {};
+    return ::ReserveCISANonce(*keys, *output_key);
+}
+
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
 {
     std::unique_ptr<SigningProvider> provider = GetSigningProvider(GetScriptForDestination(dest));

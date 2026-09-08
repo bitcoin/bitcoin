@@ -2202,6 +2202,17 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     return false;
 }
 
+std::vector<uint8_t> CWallet::ReserveCISANonce(const CScript& script) const
+{
+    // The secnonces are shared with FillPSBT(), which holds cs_wallet
+    LOCK(cs_wallet);
+    for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
+        std::vector<uint8_t> pubnonce{spk_man->ReserveCISANonce(script)};
+        if (!pubnonce.empty()) return pubnonce;
+    }
+    return {};
+}
+
 std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, const common::PSBTFillOptions& options, bool& complete, size_t* n_signed) const
 {
     if (n_signed) {
