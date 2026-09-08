@@ -2144,9 +2144,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
 BlockValidationState FatalError(Notifications& notifications, const bilingual_str& message)
 {
     notifications.fatalError(message);
-    BlockValidationState state;
-    (void)state.Error(message.original);
-    return state;
+    return BlockValidationState::ErrorState(message.original);
 }
 
 /**
@@ -4408,9 +4406,7 @@ BlockValidationState ChainstateManager::AcceptBlock(const std::shared_ptr<const 
         } else {
             blockPos = m_blockman.WriteBlock(block, pindex->nHeight);
             if (blockPos.IsNull()) {
-                BlockValidationState error_state;
-                error_state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
-                return error_state;
+                return BlockValidationState::ErrorState(strprintf("%s: Failed to find position to write new block to disk", __func__));
             }
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
