@@ -706,9 +706,13 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
 {
     // Block header format: version(4) + prev_hash(32) + merkle_root(32) + timestamp(4) + bits(4) + nonce(4) = 80 bytes
     BlockHeader header_0{hex_string_to_byte_vec("00e07a26beaaeee2e71d7eb19279545edbaf15de0999983626ec00000000000000000000579cf78b65229bfb93f4a11463af2eaa5ad91780f27f5d147a423bea5f7e4cdf2a47e268b4dd01173a9662ee")};
+    BlockMerkleRoot merkle_root_0 = header_0.MerkleRoot();
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(header_0.Hash().ToBytes()), "00000000000000000000325c7e14a4ee3b4fcb2343089a839287308a0ddbee4f");
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(header_0.MerkleRoot().ToBytes()), "df4c7e5fea3b427a145d7ff28017d95aaa2eaf6314a1f493fb9b22658bf79c57");
     BlockHeader header_1{hex_string_to_byte_vec("00c00020e7cb7b4de21d26d55bd384017b8bb9333ac3b2b55bed00000000000000000000d91b4484f801b99f03d36b9d26cfa83420b67f81da12d7e6c1e7f364e743c5ba9946e268b4dd011799c8533d")};
+    BlockMerkleRoot merkle_root_1 = header_1.MerkleRoot();
     CheckHandle(header_0, header_1);
+    CheckHandle(merkle_root_0, merkle_root_1);
 
     // Test all header field accessors using mainnet block 1
     auto mainnet_block_1_header = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e36299");
@@ -720,6 +724,8 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(header.Hash().ToBytes()), "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
     auto prev_hash = header.PrevHash();
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(prev_hash.ToBytes()), "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+    auto merkle_root = header.MerkleRoot();
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(merkle_root.ToBytes()), "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098");
 
     // Test round-trip serialization of block header
     auto header_roundtrip{BlockHeader{header.ToBytes()}};

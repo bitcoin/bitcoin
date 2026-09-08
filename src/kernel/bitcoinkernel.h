@@ -296,6 +296,14 @@ typedef struct btck_Coin btck_Coin;
 typedef struct btck_BlockHash btck_BlockHash;
 
 /**
+ * Opaque data structure for holding a block Merkle root.
+ *
+ * This is a type-safe wrapper for the 32-byte Merkle root
+ * committed in the block header.
+ */
+typedef struct btck_BlockMerkleRoot btck_BlockMerkleRoot;
+
+/**
  * Opaque data structure for holding a transaction input.
  *
  * Holds information on the @ref btck_TransactionOutPoint, @ref btck_WitnessStack and script_sig held within.
@@ -1968,6 +1976,46 @@ BITCOINKERNEL_API void btck_block_hash_destroy(btck_BlockHash* block_hash);
 
 ///@}
 
+/** @name BlockMerkleRoot
+ * Functions for working with block Merkle roots.
+ */
+///@{
+
+/**
+ * @brief Copy a block Merkle root.
+ *
+ * @param[in] merkle_root Non-null.
+ * @return                The copied block Merkle root.
+ */
+BITCOINKERNEL_API btck_BlockMerkleRoot* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_merkle_root_copy(
+    const btck_BlockMerkleRoot* merkle_root) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Check if two block Merkle roots are equal.
+ *
+ * @param[in] merkle_root1 Non-null.
+ * @param[in] merkle_root2 Non-null.
+ * @return                 0 if the block Merkle roots are not equal.
+ */
+BITCOINKERNEL_API int btck_block_merkle_root_equals(
+    const btck_BlockMerkleRoot* merkle_root1, const btck_BlockMerkleRoot* merkle_root2) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Serializes the block Merkle root to bytes.
+ *
+ * @param[in] merkle_root Non-null.
+ * @param[out] output     The serialized block Merkle root.
+ */
+BITCOINKERNEL_API void btck_block_merkle_root_to_bytes(
+    const btck_BlockMerkleRoot* merkle_root, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * Destroy the block Merkle root.
+ */
+BITCOINKERNEL_API void btck_block_merkle_root_destroy(btck_BlockMerkleRoot* merkle_root);
+
+///@}
+
 /**
  * @name Block Header
  * Functions for working with block headers.
@@ -2010,6 +2058,16 @@ BITCOINKERNEL_API btck_BlockHash* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_he
  * @return              Previous btck_BlockHash
  */
 BITCOINKERNEL_API const btck_BlockHash* btck_block_header_get_prev_hash(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the Merkle root from btck_BlockHeader. The returned Merkle root
+ * is unowned and only valid for the lifetime of the btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              btck_BlockMerkleRoot
+ */
+BITCOINKERNEL_API const btck_BlockMerkleRoot* btck_block_header_get_merkle_root(
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
