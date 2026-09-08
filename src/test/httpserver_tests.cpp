@@ -466,10 +466,7 @@ public:
     // Pretend bytes moved in either direction at `when`, as
     // HTTPRemoteClient::Receive() and MaybeSendBytesFromBuffer() do when they
     // reset the idle timer.
-    void NotIdleAt(MockableSteadyClock::time_point when)
-    {
-        SetIdleSince(when);
-    }
+    using HTTPRemoteClient::SetIdleSince;
 };
 
 BOOST_AUTO_TEST_CASE(http_request_state_tests)
@@ -889,14 +886,17 @@ BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
         // must not push the deadline forward.
         clock += timeout - 5s;
         client->Receive("Host: 127.0.0.1\n");
-        client->NotIdleAt(now());
+        client->SetIdleSince(now());
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
 
         // The read left the client looking active, so only the completion
         // deadline, counted from the first read, is left to disconnect it.
         clock += 10s;
-        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        {
+            ASSERT_DEBUG_LOG("HTTP client took too long to send a complete request");
+            BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        }
     }
     {
         // The deadline is dropped as soon as the request has been parsed, so an
@@ -915,16 +915,19 @@ BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
         BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
     }
     {
-        // RestartRequestDeadline() moves an armed deadline to now. The I/O loop
-        // calls it while a response goes out, which
-        // http_request_deadline_io_loop_tests covers.
+        // RestartRequestDeadline() moves the start of an armed deadline to now,
+        // so the deadline becomes now + timeout. The I/O loop calls it while a
+        // response goes out, which http_request_deadline_io_loop_tests covers.
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         client->Receive("GET /partial HTTP/1.1\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
 
         clock += timeout + 5s;
-        client->NotIdleAt(now());
-        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        client->SetIdleSince(now());
+        {
+            ASSERT_DEBUG_LOG("HTTP client took too long to send a complete request");
+            BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        }
 
         client->RestartRequestDeadline();
         BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
@@ -936,7 +939,7 @@ BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
         client->RestartRequestDeadline();
         clock += timeout + 5s;
         BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
-        client->NotIdleAt(now());
+        client->SetIdleSince(now());
         BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
     }
     {
@@ -946,8 +949,11 @@ BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         clock += timeout + 5s;
         // Reset the idle timer so the deadline is all that could disconnect it.
-        client->NotIdleAt(now());
-        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        client->SetIdleSince(now());
+        {
+            ASSERT_DEBUG_LOG("HTTP client took too long to send a complete request");
+            BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        }
         BOOST_CHECK(!client->ShouldDisconnect(now(), 0s, /*disconnect_all=*/false));
     }
 }
