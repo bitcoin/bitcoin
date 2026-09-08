@@ -1098,6 +1098,7 @@ RPCMethod bumpfee();
 RPCMethod psbtbumpfee();
 RPCMethod send();
 RPCMethod sendall();
+RPCMethod reservecisanonce();
 RPCMethod walletprocesspsbt();
 RPCMethod walletcreatefundedpsbt();
 RPCMethod signrawtransactionwithwallet();
@@ -1162,6 +1163,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &lockunspent},
         {"wallet", &migratewallet},
         {"wallet", &rescanblockchain},
+        {"wallet", &reservecisanonce},
         {"wallet", &send},
         {"wallet", &sendmany},
         {"wallet", &sendtoaddress},
