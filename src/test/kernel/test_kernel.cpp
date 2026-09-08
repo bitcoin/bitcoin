@@ -18,12 +18,14 @@
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <random>
 #include <ranges>
 #include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -91,15 +93,6 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
         actual.begin(), actual.end(),
         expected.begin(), expected.end());
 }
-
-class TestLog
-{
-public:
-    void LogMessage(std::string_view message)
-    {
-        std::cout << "kernel: " << message;
-    }
-};
 
 struct TestDirectory {
     fs::path m_directory;
@@ -647,6 +640,16 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 
 BOOST_AUTO_TEST_CASE(logging_tests)
 {
+    const TestDirectory test_directory{"logging_test_bitcoin_kernel"};
+    const auto log_path{test_directory.m_directory / "kernel.log"};
+    const auto file_path{PathToString(log_path)};
+    const auto read_log = [&] {
+        std::ifstream file{log_path.std_path()};
+        BOOST_REQUIRE(file.is_open());
+        std::ostringstream contents;
+        contents << file.rdbuf();
+        return contents.str();
+    };
     btck_LoggingOptions logging_options = {
         .log_timestamps = true,
         .log_time_micros = true,
@@ -661,14 +664,25 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     logging_enable_category(LogCategory::VALIDATION);
     logging_disable_category(LogCategory::VALIDATION);
 
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
+    // A file has one owner, and closing it allows another connection to append.
     {
         logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
         logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
+        Logger logger{file_path};
+        const auto rejected_path{test_directory.m_directory / "rejected.log"};
+        BOOST_CHECK_THROW(Logger{PathToString(rejected_path)}, std::runtime_error);
+        BOOST_CHECK(!fs::exists(rejected_path));
+        ChainParams params{hex_string_to_byte_vec("5151")};
     }
-    Logger logger{std::make_unique<TestLog>()};
+    const auto first_session{read_log()};
+    BOOST_CHECK(first_session.find("Signet with challenge 5151") != std::string::npos);
+    {
+        Logger logger{file_path};
+        ChainParams params{hex_string_to_byte_vec("5252")};
+    }
+    const auto second_session{read_log()};
+    BOOST_CHECK(second_session.starts_with(first_session));
+    BOOST_CHECK(second_session.find("Signet with challenge 5252") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
@@ -774,8 +788,8 @@ Context create_context(std::shared_ptr<TestKernelNotifications> notifications, C
 
 BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 {
-    Logger logger{std::make_unique<TestLog>()};
     auto test_directory{TestDirectory{"chainman_test_bitcoin_kernel"}};
+    Logger logger{PathToString(test_directory.m_directory / "kernel.log")};
 
     { // test with default context
         Context context{};

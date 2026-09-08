@@ -45,7 +45,6 @@
 #include <exception>
 #include <functional>
 #include <limits>
-#include <list>
 #include <memory>
 #include <optional>
 #include <span>
@@ -236,50 +235,16 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
 }
 
 struct LoggingConnection {
-    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
-    void* m_user_data;
-    std::function<void(void* user_data)> m_deleter;
-
-    LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+    explicit LoggingConnection(fs::path file_path)
     {
-        LOCK(cs_main);
-
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
-            }
-            throw std::runtime_error("Failed to start logging");
+        if (!LogInstance().StartFileLogging(std::move(file_path))) {
+            throw std::runtime_error("Failed to start file logging");
         }
-
-        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
-        m_user_data = user_data;
-        m_deleter = user_data_destroy_callback;
-
-        LogDebug(BCLog::KERNEL, "Logger connected.");
     }
 
     ~LoggingConnection()
     {
-        LOCK(cs_main);
-        LogDebug(BCLog::KERNEL, "Logger disconnecting.");
-
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
-
-        m_connection.reset();
-        if (m_user_data && m_deleter) {
-            m_deleter(m_user_data);
-        }
+        LogInstance().StopFileLogging();
     }
 };
 
@@ -824,10 +789,13 @@ void btck_logging_disable()
     LogInstance().DisableLogging();
 }
 
-btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+btck_LoggingConnection* btck_logging_connection_create(const char* file_path, size_t file_path_len)
 {
+    if (!file_path || file_path_len == 0) return nullptr;
     try {
-        return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
+        const std::string path{file_path, file_path_len};
+        if (path.find('\0') != std::string::npos) return nullptr;
+        return btck_LoggingConnection::create(fs::absolute(fs::PathFromString(path)));
     } catch (const std::exception&) {
         return nullptr;
     }

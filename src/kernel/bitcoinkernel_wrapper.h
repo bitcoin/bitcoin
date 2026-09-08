@@ -943,20 +943,11 @@ inline void logging_disable_category(LogCategory category)
     btck_logging_disable_category(static_cast<btck_LogCategory>(category));
 }
 
-template <typename T>
-concept Log = requires(T a, std::string_view message) {
-    { a.LogMessage(message) } -> std::same_as<void>;
-};
-
-template <Log T>
 class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
-    Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
-              log.release(),
-              +[](void* user_data) { delete static_cast<T*>(user_data); })}
+    explicit Logger(std::string_view file_path)
+        : UniqueHandle{btck_logging_connection_create(file_path.data(), file_path.size())}
     {
     }
 };
