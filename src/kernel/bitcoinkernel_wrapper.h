@@ -733,6 +733,11 @@ public:
         return btck_transaction_get_locktime(impl());
     }
 
+    bool HasWitness() const
+    {
+        return btck_transaction_has_witness(impl()) != 0;
+    }
+
     TxidView Txid() const
     {
         return TxidView{btck_transaction_get_txid(impl())};

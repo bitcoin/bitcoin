@@ -555,6 +555,11 @@ const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
     return btck_Txid::ref(&btck_Transaction::get(transaction)->GetHash());
 }
 
+int btck_transaction_has_witness(const btck_Transaction* transaction)
+{
+    return btck_Transaction::get(transaction)->HasWitness() ? 1 : 0;
+}
+
 const btck_Wtxid* btck_transaction_get_wtxid(const btck_Transaction* transaction)
 {
     return btck_Wtxid::ref(&btck_Transaction::get(transaction)->GetWitnessHash());
