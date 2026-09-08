@@ -103,6 +103,21 @@ input of the group has one, a partial signature for full aggregation. The
 Finalizer verifies and aggregates the signatures of a group once all of its
 inputs are signed and builds their witnesses together.
 
+Full aggregation takes two rounds, because a signer needs the public nonces of
+the whole group before it can sign. Protocols that pass a PSBT around only once,
+such as payjoin, can still use it by exchanging the nonces beforehand:
+`reservecisanonce` returns a public nonce for one of the wallet's witness
+version 2 outputs without needing the spending transaction, so the nonce can
+travel in an invitation or alongside the proposal. An input that already carries
+a reserved nonce is signed by `walletprocesspsbt` in a single call. The secret
+nonce is only held in memory, is lost when the wallet is unloaded, and signs at
+most one transaction.
+
+An Updater must not change the aggregation mode of an input that already carries
+a signature or a nonce, so a reserved nonce has to be attached together with the
+`fullagg` mode. An input that carries one without the other is left unsigned
+rather than spent with an opted-out signature.
+
 
 ### Workflows
 

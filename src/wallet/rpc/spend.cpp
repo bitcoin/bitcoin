@@ -1591,6 +1591,66 @@ RPCMethod sendall()
     };
 }
 
+RPCMethod reservecisanonce()
+{
+    return RPCMethod{
+        "reservecisanonce",
+        "Reserve a BIP459 public nonce for a full-aggregation spend of one of this wallet's witness version 2 outputs.\n"
+        "The nonce commits to no transaction, so it can be shared before the spend exists, and walletprocesspsbt uses it\n"
+        "for an input that carries it as its aggregation public nonce.\n"
+        "The input must carry the \"fullagg\" aggregation mode as well, which cannot be set once the nonce is present.\n"
+        "The secret nonce is only held in memory, is lost when the wallet is unloaded, and signs at most one transaction." +
+        HELP_REQUIRING_PASSPHRASE,
+        {
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id of the output to spend"},
+            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "pubnonce", "The reserved public nonce"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("reservecisanonce", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" 0")
+            + HelpExampleRpc("reservecisanonce", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", 0")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    EnsureWalletIsUnlocked(*pwallet);
+
+    const Txid txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
+    const int vout{request.params[1].getInt<int>()};
+    if (vout < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "vout must be positive");
+
+    CScript script;
+    {
+        LOCK(pwallet->cs_wallet);
+        const CWalletTx* wtx{pwallet->GetWalletTx(txid)};
+        if (!wtx || static_cast<size_t>(vout) >= wtx->GetTx()->vout.size()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Output not found in wallet");
+        }
+        script = wtx->GetTx()->vout[vout].scriptPubKey;
+    }
+    if (!script.IsPayToCisa()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Output is not a witness version 2 output");
+    }
+
+    const std::vector<uint8_t> pubnonce{pwallet->ReserveCISANonce(script)};
+    if (pubnonce.empty()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for the output is not available");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("pubnonce", HexStr(pubnonce));
+    return result;
+},
+    };
+}
+
 RPCMethod walletprocesspsbt()
 {
     return RPCMethod{
