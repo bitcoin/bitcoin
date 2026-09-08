@@ -4,6 +4,7 @@
 
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -21,7 +22,7 @@ FUZZ_TARGET(script_descriptor_cache)
         const std::vector<uint8_t> code = fuzzed_data_provider.ConsumeBytes<uint8_t>(BIP32_EXTKEY_SIZE);
         if (code.size() == BIP32_EXTKEY_SIZE) {
             CExtPubKey xpub;
-            xpub.Decode(code.data());
+            SpanReader{code} >> xpub;
             const uint32_t key_exp_pos = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
             CExtPubKey xpub_fetched;
             if (fuzzed_data_provider.ConsumeBool()) {

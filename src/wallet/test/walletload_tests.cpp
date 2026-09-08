@@ -96,8 +96,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingSetup)
 {
-    // A cache record whose serialized xpub is shorter than BIP32_EXTKEY_SIZE must be
-    // rejected as corruption, otherwise CExtPubKey::Decode() reads past the buffer.
+    // A cache record whose serialized xpub is not exactly BIP32_EXTKEY_SIZE bytes must be
+    // rejected as corruption.
     bilingual_str error;
     std::vector<bilingual_str> warnings;
 
