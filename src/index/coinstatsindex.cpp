@@ -262,16 +262,7 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
 
 bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
-    if (!m_db->Read(DB_MUHASH, m_muhash)) {
-        // Check that the cause of the read failure is that the key does not
-        // exist. Any other errors indicate database corruption or a disk
-        // failure, and starting the index would cause further corruption.
-        if (m_db->Exists(DB_MUHASH)) {
-            LogError("Cannot read current %s state; index may be corrupted",
-                      GetName());
-            return false;
-        }
-    }
+    (void)m_db->Read(DB_MUHASH, m_muhash); // Absent on a fresh index
 
     if (block) {
         DBVal entry;

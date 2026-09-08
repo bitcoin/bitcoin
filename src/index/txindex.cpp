@@ -117,7 +117,7 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     if (Exists(txindex::BlockHashKey{block.hash})) return;
 
     uint32_t block_seq{0};
-    Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
+    (void)Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
 
     CDBBatch batch(*this);
     batch.Write(txindex::BlockHashKey{block.hash}, block_seq);

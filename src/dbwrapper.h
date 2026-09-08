@@ -11,7 +11,6 @@
 #include <streams.h>
 #include <util/byte_units.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/fs.h>
 #include <util/obfuscation.h>
 
@@ -236,67 +235,9 @@ public:
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
 
-    struct ReadFailure {
-        enum class Code {
-            DeserializationError,   //!< Key exists but value could not be deserialized.
-            DatabaseError,          //!< Unexpected internal DB error.
-        };
-
-        Code status;
-        std::string err_msg;
-    };
-
-    using ReadStatus = util::Expected<bool, ReadFailure>;
-
-    /**
-     * Read and deserialize a value from the database, with explicit error discrimination.
-     *
-     * Unlike Read(), this method distinguishes between a missing key, a deserialization
-     * failure (DeserializationError), and an internal DB error (DatabaseError),
-     * enabling callers to treat data corruption differently from an absent entry.
-     *
-     * @note Callers are expected to provide well-formed keys; key serialization
-     *       is the only operation that may throw.
-     *
-     * @param[in]  key    The key to look up.
-     * @param[out] value  Populated with the deserialized value when the returned
-     *                    Expected holds true; indeterminate otherwise.
-     * @return On success, true if the key was found (value populated) or false if
-     *         the key was absent. On failure, a ReadFailure describing the error.
-     */
-    template <typename K, typename V>
-    [[nodiscard]] ReadStatus TryRead(const K& key, V& value) const
-    {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        // Key serialization is the only operation that may throw.
-        // Callers are expected to provide well-formed keys.
-        ssKey << key;
-
-        std::optional<std::string> strValue;
-        try {
-            strValue = ReadImpl(ssKey);
-            if (!strValue) {
-                return false; // not found
-            }
-        } catch (const std::exception& e) {
-            return util::Unexpected(ReadFailure{ReadFailure::Code::DatabaseError, e.what()});
-        }
-
-        try {
-            std::span ssValue{MakeWritableByteSpan(*strValue)};
-            m_obfuscation(ssValue);
-            SpanReader{ssValue} >> value;
-        } catch (const std::exception& e) {
-            return util::Unexpected(ReadFailure{ReadFailure::Code::DeserializationError, e.what()});
-        }
-
-        return true;
-    }
-
     //! Returns false only for a missing key. LevelDB and value-deserialization errors are fatal.
     template <typename K, typename V>
-    bool Read(const K& key, V& value) const
+    [[nodiscard]] bool Read(const K& key, V& value) const
     {
         auto strValue{ReadRaw(key)};
         if (!strValue) return false;
