@@ -43,6 +43,11 @@ public:
     using Usage = int64_t;
     using Count = unsigned int;
 
+    struct OrphanId {
+        Txid txid;
+        Wtxid wtxid;
+    };
+
     /** Allows providing orphan information externally */
     struct OrphanInfo {
         CTransactionRef tx;
@@ -101,9 +106,10 @@ public:
     /** Does this peer have any work to do? */
     virtual bool HaveTxToReconsider(NodeId peer) = 0;
 
-    /** Get all children that spend from this tx and were received from nodeid. Sorted
-     * reconsiderable before non-reconsiderable, then from most recent to least recent. */
-    virtual std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const = 0;
+    /** Get the txids and wtxids of all children that spend from this tx and were received from nodeid. Sorted
+     * reconsiderable before non-reconsiderable, then from most recent to least recent. Use GetTx() to retrieve a
+     * selected child. */
+    virtual std::vector<OrphanId> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const = 0;
 
     /** Get all orphan transactions */
     virtual std::vector<OrphanInfo> GetOrphanTransactions() const = 0;

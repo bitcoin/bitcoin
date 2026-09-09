@@ -65,11 +65,23 @@ static CTransactionRef MakeMutation(const CTransactionRef& ptx)
     return mutated_tx;
 }
 
-static bool EqualTxns(const std::set<CTransactionRef>& set_txns, const std::vector<CTransactionRef>& vec_txns)
+static bool SameTxns(const std::vector<CTransactionRef>& expected, const std::vector<node::TxOrphanage::OrphanId>& actual)
+{
+    if (expected.size() != actual.size()) return false;
+    for (size_t i{0}; i < expected.size(); ++i) {
+        if (expected.at(i)->GetHash() != actual.at(i).txid ||
+            expected.at(i)->GetWitnessHash() != actual.at(i).wtxid) return false;
+    }
+    return true;
+}
+
+static bool EqualTxns(const std::set<CTransactionRef>& set_txns, const std::vector<node::TxOrphanage::OrphanId>& vec_txns)
 {
     if (vec_txns.size() != set_txns.size()) return false;
+    std::set<std::pair<Txid, Wtxid>> expected_ids;
+    for (const auto& tx : set_txns) expected_ids.emplace(tx->GetHash(), tx->GetWitnessHash());
     for (const auto& tx : vec_txns) {
-        if (!set_txns.contains(tx)) return false;
+        if (expected_ids.erase({tx.txid, tx.wtxid}) != 1) return false;
     }
     return true;
 }
@@ -608,8 +620,8 @@ BOOST_AUTO_TEST_CASE(get_children)
         std::vector<CTransactionRef> expected_parent1_children{child_p1n0_p2n0, child_p1n0_p1n1, child_p1n0};
         std::vector<CTransactionRef> expected_parent2_children{child_p1n0_p2n0, child_p2n1};
 
-        BOOST_CHECK(expected_parent1_children == orphanage->GetChildrenFromSamePeer(parent1, node1));
-        BOOST_CHECK(expected_parent2_children == orphanage->GetChildrenFromSamePeer(parent2, node1));
+        BOOST_CHECK(SameTxns(expected_parent1_children, orphanage->GetChildrenFromSamePeer(parent1, node1)));
+        BOOST_CHECK(SameTxns(expected_parent2_children, orphanage->GetChildrenFromSamePeer(parent2, node1)));
 
         // The peer must match
         BOOST_CHECK(orphanage->GetChildrenFromSamePeer(parent1, node2).empty());
@@ -656,7 +668,7 @@ BOOST_AUTO_TEST_CASE(get_children)
             std::vector<CTransactionRef> expected_parent1_node2{child_p1n0_p2n0, child_p1n0_p1n1};
             BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0_p1n1->GetWitnessHash(), node2));
             BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0_p2n0->GetWitnessHash(), node2));
-            BOOST_CHECK(expected_parent1_node2 == orphanage->GetChildrenFromSamePeer(parent1, node2));
+            BOOST_CHECK(SameTxns(expected_parent1_node2, orphanage->GetChildrenFromSamePeer(parent1, node2)));
         }
 
         // Children of parent2 from node2:
