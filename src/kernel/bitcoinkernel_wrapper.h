@@ -956,19 +956,9 @@ public:
     }
 };
 
-inline void logging_set_level_category(LogCategory category, LogLevel level)
+inline void logging_set_min_level(LogLevel level)
 {
-    btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
-}
-
-inline void logging_enable_category(LogCategory category)
-{
-    btck_logging_enable_category(static_cast<btck_LogCategory>(category));
-}
-
-inline void logging_disable_category(LogCategory category)
-{
-    btck_logging_disable_category(static_cast<btck_LogCategory>(category));
+    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
 }
 
 //! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
@@ -997,8 +987,8 @@ public:
 };
 
 template <typename T>
-concept Log = requires(T a, std::string_view message) {
-    { a.LogMessage(message) } -> std::same_as<void>;
+concept Log = requires(T a, const LogEntry& entry) {
+    { a.LogMessage(entry) } -> std::same_as<void>;
 };
 
 template <Log T>
@@ -1007,7 +997,7 @@ class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_dest
 public:
     Logger(std::unique_ptr<T> log)
         : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
+              +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
