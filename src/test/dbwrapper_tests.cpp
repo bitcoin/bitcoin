@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_deserialization_error)
         BOOST_CHECK(dbw.Exists(key));
 
         uint256 result;
-        BOOST_CHECK(!dbw.Read(key, result)); // TODO: A corrupt value must not be reported as a missing key
+        BOOST_CHECK_EXCEPTION((void)dbw.Read(key, result), dbwrapper_error, HasReason{"dbwrapper test read error"});
     }
 }
 

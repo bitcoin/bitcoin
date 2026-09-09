@@ -124,11 +124,6 @@ struct LevelDBBytewiseU16Cmp {
 /** key → value-size map ordered by LevelDB's bytewise comparator. */
 using Oracle = std::map<uint16_t, uint32_t, LevelDBBytewiseU16Cmp>;
 
-struct FailUnserialize {
-    template <typename Stream>
-    void Unserialize(Stream&) { throw std::ios_base::failure{"always fail"}; }
-};
-
 uint16_t ConsumeKey(FuzzedDataProvider& provider) { return provider.ConsumeIntegral<uint16_t>(); }
 uint32_t ConsumeValueSize(FuzzedDataProvider& provider)
 {
@@ -297,18 +292,6 @@ void TestDbWrapper(FuzzedDataProvider& provider,
                     key = ConsumeKey(provider);
                 }
                 assert(dbw->Exists(key) == oracle.contains(key));
-            },
-            [&] {
-                uint16_t key{};
-                if (!oracle.empty() && provider.ConsumeBool()) {
-                    auto it{oracle.begin()};
-                    std::advance(it, provider.ConsumeIntegralInRange<size_t>(0, oracle.size() - 1));
-                    key = it->first;
-                } else {
-                    key = ConsumeKey(provider);
-                }
-                FailUnserialize wrong_type;
-                assert(!dbw->Read(key, wrong_type));
             },
             [&] {
                 const auto seek_key{provider.ConsumeBool()
