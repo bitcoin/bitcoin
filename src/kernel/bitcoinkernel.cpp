@@ -18,7 +18,6 @@
 #include <kernel/context.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/warning.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <primitives/block.h>
@@ -33,6 +32,7 @@
 #include <undo.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/stdmutex.h>
@@ -47,7 +47,6 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <functional>
 #include <iterator>
 #include <limits>
 #include <list>
@@ -161,71 +160,23 @@ struct btck_TxValidationState : Handle<btck_TxValidationState, TxValidationState
 
 namespace {
 
-BCLog::Level get_bclog_level(btck_LogLevel level)
+constexpr util::log::Level to_util(btck_LogLevel level)
 {
     switch (level) {
     case btck_LogLevel_TRACE: {
-        return BCLog::Level::Trace;
+        return util::log::Level::Trace;
     }
     case btck_LogLevel_DEBUG: {
-        return BCLog::Level::Debug;
+        return util::log::Level::Debug;
     }
     case btck_LogLevel_INFO: {
-        return BCLog::Level::Info;
+        return util::log::Level::Info;
     }
     case btck_LogLevel_WARNING: {
-        return BCLog::Level::Warning;
+        return util::log::Level::Warning;
     }
     case btck_LogLevel_ERROR: {
-        return BCLog::Level::Error;
-    }
-    }
-    assert(false);
-}
-
-BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
-{
-    switch (category) {
-    case btck_LogCategory_BENCH: {
-        return BCLog::LogFlags::BENCH;
-    }
-    case btck_LogCategory_BLOCKSTORAGE: {
-        return BCLog::LogFlags::BLOCKSTORAGE;
-    }
-    case btck_LogCategory_COINDB: {
-        return BCLog::LogFlags::COINDB;
-    }
-    case btck_LogCategory_LEVELDB: {
-        return BCLog::LogFlags::LEVELDB;
-    }
-    case btck_LogCategory_MEMPOOL: {
-        return BCLog::LogFlags::MEMPOOL;
-    }
-    case btck_LogCategory_PRUNE: {
-        return BCLog::LogFlags::PRUNE;
-    }
-    case btck_LogCategory_RAND: {
-        return BCLog::LogFlags::RAND;
-    }
-    case btck_LogCategory_REINDEX: {
-        return BCLog::LogFlags::REINDEX;
-    }
-    case btck_LogCategory_VALIDATION: {
-        return BCLog::LogFlags::VALIDATION;
-    }
-    case btck_LogCategory_KERNEL: {
-        return BCLog::LogFlags::KERNEL;
-    }
-    case btck_LogCategory_TXPACKAGES: {
-        return BCLog::LogFlags::TXPACKAGES;
-    }
-#ifdef DEBUG_LOCKCONTENTION
-    case btck_LogCategory_LOCK: {
-        return BCLog::LogFlags::LOCK;
-    }
-#endif
-    case btck_LogCategory_ALL: {
-        return BCLog::LogFlags::ALL;
+        return util::log::Level::Error;
     }
     }
     assert(false);
@@ -330,54 +281,6 @@ constexpr btck_LogCategory to_btck(BCLog::LogFlags flag)
     }
     }
 }
-
-struct LoggingConnection {
-    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
-    void* m_user_data;
-    std::function<void(void* user_data)> m_deleter;
-
-    LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
-    {
-        LOCK(cs_main);
-
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
-            }
-            throw std::runtime_error("Failed to start logging");
-        }
-
-        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
-        m_user_data = user_data;
-        m_deleter = user_data_destroy_callback;
-
-        LogDebug(BCLog::KERNEL, "Logger connected.");
-    }
-
-    ~LoggingConnection()
-    {
-        LOCK(cs_main);
-        LogDebug(BCLog::KERNEL, "Logger disconnecting.");
-
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
-
-        m_connection.reset();
-        if (m_user_data && m_deleter) {
-            m_deleter(m_user_data);
-        }
-    }
-};
 
 class KernelNotifications final : public kernel::Notifications
 {
@@ -582,8 +485,6 @@ struct ChainMan {
         : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
 };
 
-} // namespace
-
 struct UserDataDeleter {
     btck_DestroyCallback destroy;
     void operator()(void* user_data) const
@@ -598,15 +499,9 @@ using UserData = std::unique_ptr<void, UserDataDeleter>;
 //! Shared by all btck_LoggingConnection instances.
 class KernelLogger
 {
-public:
-    //! Signature of a logging callback. Matches btck_LogCallback once the C API delivers
-    //! btck_LogEntry instead of a string.
-    using LogCallback = void (*)(void* user_data, const btck_LogEntry* entry);
-
-private:
-    //! A registered logging callback. Owns user_data.
+    //! A registered btck_LogCallback. Owns user_data.
     struct Callback {
-        LogCallback fn;
+        btck_LogCallback fn;
         UserData user_data;
 
         void operator()(const btck_LogEntry* entry) const { fn(user_data.get(), entry); }
@@ -643,11 +538,11 @@ public:
     };
 
     //! Registers a logging callback. Takes ownership of user_data, also when registration fails.
-    [[nodiscard]] CallbackHandle RegisterCallback(LogCallback fn, UserData user_data) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    [[nodiscard]] CallbackHandle RegisterCallback(btck_LogCallback fn, UserData user_data) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     //! Set the minimum log level.
     void SetMinLevel(btck_LogLevel level)
     {
-        m_min_level.store(get_bclog_level(level), std::memory_order_relaxed);
+        m_min_level.store(to_util(level), std::memory_order_relaxed);
     }
 
     //! Whether an entry at this level is at or above the minimum level.
@@ -667,7 +562,7 @@ public:
     }
 };
 
-KernelLogger::CallbackHandle KernelLogger::RegisterCallback(LogCallback fn, UserData user_data)
+KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn, UserData user_data)
 {
     STDLOCK(m_mutex);
     m_callbacks.push_back({fn, std::move(user_data)});
@@ -722,10 +617,12 @@ void KernelLogger::Log(const util::log::Entry& entry) const
     }
 }
 
+} // namespace
+
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};
 struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
-struct btck_LoggingConnection : Handle<btck_LoggingConnection, LoggingConnection> {};
+struct btck_LoggingConnection : Handle<btck_LoggingConnection, KernelLogger::CallbackHandle> {};
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
@@ -1054,37 +951,59 @@ void btck_wtxid_destroy(btck_Wtxid* wtxid)
     delete wtxid;
 }
 
-void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
+namespace {
+//! The process-wide kernel logger. Intentionally leaked to avoid static destruction order issues,
+//! matching the node's LogInstance().
+KernelLogger& GetKernelLogger()
 {
-    LOCK(cs_main);
-    if (category == btck_LogCategory_ALL) {
-        LogInstance().SetLogLevel(get_bclog_level(level));
-    }
+    static KernelLogger* logger{new KernelLogger};
+    return *logger;
+}
+} // namespace
 
-    LogInstance().AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
+namespace util::log {
+// Kernel filters on level only. The category is delivered as part of the entry, so consumers can
+// filter on it in their callback.
+bool ShouldDebugLog(Category /*category*/)
+{
+    return GetKernelLogger().ShouldLog(Level::Debug);
 }
 
-void btck_logging_enable_category(btck_LogCategory category)
+bool ShouldTraceLog(Category /*category*/)
 {
-    LogInstance().EnableCategory(get_bclog_flag(category));
+    return GetKernelLogger().ShouldLog(Level::Trace);
 }
 
-void btck_logging_disable_category(btck_LogCategory category)
+void Log(Entry entry)
 {
-    LogInstance().DisableCategory(get_bclog_flag(category));
+    // Conditional logging, because the util::log framework doesn't allow us to check if the
+    // minimum level exceeds Info.
+    GetKernelLogger().MaybeLog(entry);
+}
+} // namespace util::log
+
+
+void btck_logging_set_min_level(btck_LogLevel level)
+{
+    GetKernelLogger().SetMinLevel(level);
 }
 
 btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
 {
+    assert(callback);
     try {
-        return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
-    } catch (const std::exception&) {
+        auto handle{GetKernelLogger().RegisterCallback(callback, UserData{user_data, {user_data_destroy_callback}})};
+        LogDebug(BCLog::KERNEL, "Logger connected.");
+        return btck_LoggingConnection::create(std::move(handle));
+    } catch (...) {
         return nullptr;
     }
 }
 
 void btck_logging_connection_destroy(btck_LoggingConnection* connection)
 {
+    if (!connection) return;
+    LogDebug(BCLog::KERNEL, "Logger disconnecting.");
     delete connection;
 }
 
