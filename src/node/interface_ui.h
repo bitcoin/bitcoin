@@ -93,6 +93,9 @@ public:
      */
     btcsignals::signal<void(const std::string& title, int nProgress, bool resume_possible)> ShowProgress;
 
+    /** Snapshot load progress. */
+    btcsignals::signal<void(double progress)> SnapshotLoadProgress;
+
     /** New block has been accepted */
     btcsignals::signal<void(SynchronizationState, const CBlockIndex& block, double verification_progress)> NotifyBlockTip;
 
