@@ -956,6 +956,8 @@ enum class SnapshotCompletionResult {
 class ChainstateManager
 {
 private:
+    /** Serialize only initial CheckBlock calls; release before waiting for cs_main. */
+    Mutex m_check_block_mutex;
 
     /** The last header for which a headerTip notification was issued. */
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
@@ -1278,7 +1280,8 @@ public:
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
