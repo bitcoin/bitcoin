@@ -4385,6 +4385,14 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     if (!PreWriteCheckBlock(block, state, pindex, fRequested, should_write, min_pow_checked)) return false;
     if (!should_write) return true;
 
+    return StoreBlock(pblock, state, pindex, dbp, fNewBlock);
+}
+
+bool ChainstateManager::StoreBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex* pindex, const FlatFilePos* dbp, bool* fNewBlock)
+{
+    AssertLockHeld(cs_main);
+    const CBlock& block = *pblock;
+
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
     if (!IsInitialBlockDownload() && ActiveTip() == pindex->pprev && m_options.signals) {

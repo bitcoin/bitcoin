@@ -1010,6 +1010,18 @@ private:
         bool fRequested,
         bool& should_write,
         bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Store block data that passed admission and still needs persistence.
+     * If dbp is non-null, the block data already resides on disk.
+     * If provided, fNewBlock is set before storage and remains true on write failure.
+     */
+    bool StoreBlock(
+        const std::shared_ptr<const CBlock>& pblock,
+        BlockValidationState& state,
+        CBlockIndex* pindex,
+        const FlatFilePos* dbp,
+        bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */
