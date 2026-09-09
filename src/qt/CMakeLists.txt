@@ -151,6 +151,7 @@ target_link_libraries(bitcoinqt
     bitcoin_cli
     leveldb
     Boost::headers
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
     $<TARGET_NAME_IF_EXISTS:QRencode::QRencode>
     $<$<PLATFORM_ID:Darwin>:-framework\ AppKit>
     $<$<CXX_COMPILER_ID:MSVC>:shlwapi>

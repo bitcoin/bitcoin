@@ -4,6 +4,7 @@
 
 #include <wallet/wallettool.h>
 
+#include <bitcoin-wallet_settings.h>
 #include <common/args.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -100,11 +101,11 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
     }
-    if ((command == "create" || command == "createfromdump") && !args.IsArgSet("-wallet")) {
+    if ((command == "create" || command == "createfromdump") && WalletSetting::Value(args).isNull()) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
     }
-    const std::string name = args.GetArg("-wallet", "");
+    const std::string name = WalletSetting::Get(args);
     util::Result<fs::path> path_res = GetWalletPath(name);
     if (!path_res) {
         tfm::format(std::cerr, "%s\n", util::ErrorString(path_res).original);
