@@ -72,7 +72,8 @@ FUZZ_TARGET(netaddress)
     (void)net_addr.IsRFC6598();
     (void)net_addr.IsRFC7343();
     (void)net_addr.IsRFC9637();
-    if (!net_addr.IsRoutable()) {
+    const bool routable{net_addr.IsRoutable()};
+    if (!routable) {
         assert(net_addr.GetNetwork() == Network::NET_UNROUTABLE || net_addr.GetNetwork() == Network::NET_INTERNAL);
     }
     if (net_addr.IsTor()) {
@@ -84,7 +85,9 @@ FUZZ_TARGET(netaddress)
     if (net_addr.IsCJDNS()) {
         assert(net_addr.GetNetwork() == Network::NET_CJDNS);
     }
-    (void)net_addr.IsValid();
+    if (!net_addr.IsValid()) {
+        assert(!routable);
+    }
     (void)net_addr.ToStringAddr();
 
     const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
