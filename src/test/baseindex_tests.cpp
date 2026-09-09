@@ -224,7 +224,8 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
     BOOST_REQUIRE(BuildChain(m_node, prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
 
     for (const auto& block : fork) {
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        BlockValidationState state;
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
     }
 
     // The index thread is blocked and not done

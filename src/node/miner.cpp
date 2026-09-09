@@ -409,7 +409,8 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
-    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    BlockValidationState state;
+    bool accepted = chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);

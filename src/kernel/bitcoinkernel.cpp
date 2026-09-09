@@ -1392,7 +1392,8 @@ int btck_chainstate_manager_process_block(
     int* _new_block)
 {
     bool new_block;
-    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    BlockValidationState state;
+    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     if (_new_block) {
         *_new_block = new_block ? 1 : 0;
     }

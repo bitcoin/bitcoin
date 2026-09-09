@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -168,6 +169,97 @@ void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsign
     }
 }
 
+BOOST_AUTO_TEST_CASE(processnewblock_initial_state)
+{
+    struct StateCatcher final : CValidationInterface {
+        int m_calls{0};
+        BlockValidationState m_state;
+
+        void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState& state) override
+        {
+            ++m_calls;
+            m_state = state;
+        }
+    };
+
+    auto& chainman{*Assert(m_node.chainman)};
+    const auto block{GoodBlock(Params().GenesisBlock().GetHash())};
+    auto sub{std::make_shared<StateCatcher>()};
+    m_node.validation_signals->RegisterSharedValidationInterface(sub);
+
+    // CheckBlock failures are returned directly and still notified synchronously.
+    {
+        auto mutated{std::make_shared<CBlock>(*block)};
+        mutated->m_validation_cache = {};
+        CMutableTransaction coinbase{*mutated->vtx[0]};
+        ++coinbase.vout[0].nValue;
+        mutated->vtx[0] = MakeTransactionRef(std::move(coinbase));
+        BlockValidationState state;
+        bool new_block{true};
+        BOOST_CHECK(!chainman.ProcessNewBlock(mutated, state, true, true, &new_block));
+        BOOST_CHECK(!new_block);
+        BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_MUTATED);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txnmrklroot");
+        BOOST_CHECK_EQUAL(sub->m_calls, 1);
+        BOOST_CHECK(sub->m_state.GetResult() == state.GetResult());
+        BOOST_CHECK_EQUAL(sub->m_state.ToString(), state.ToString());
+    }
+
+    // The valid version remains acceptable; its duplicate needs no storage or notification.
+    {
+        BlockValidationState state;
+        bool new_block{false};
+        BOOST_CHECK(chainman.ProcessNewBlock(block, state, true, true, &new_block));
+        BOOST_CHECK(new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 2);
+        BOOST_CHECK(sub->m_state.IsValid());
+    }
+    {
+        BlockValidationState state;
+        bool new_block{true};
+        BOOST_CHECK(chainman.ProcessNewBlock(block, state, true, true, &new_block));
+        BOOST_CHECK(!new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 2);
+    }
+
+    // Contextual failures from AcceptBlock are exposed through the same state.
+    {
+        auto bad_height{Block(block->GetHash())};
+        bad_height->m_validation_cache = {};
+        CMutableTransaction coinbase{*bad_height->vtx[0]};
+        coinbase.vin[0].scriptSig = CScript{} << OP_0 << OP_0;
+        bad_height->vtx[0] = MakeTransactionRef(std::move(coinbase));
+        bad_height = FinalizeBlock(bad_height);
+        BlockValidationState state;
+        bool new_block{true};
+        BOOST_CHECK(!chainman.ProcessNewBlock(bad_height, state, true, true, &new_block));
+        BOOST_CHECK(!new_block);
+        BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_CONSENSUS);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-cb-height");
+        BOOST_CHECK_EQUAL(sub->m_calls, 3);
+        BOOST_CHECK(sub->m_state.GetResult() == state.GetResult());
+        BOOST_CHECK_EQUAL(sub->m_state.ToString(), state.ToString());
+    }
+
+    // A block can pass admission and be stored, but fail validation when connected.
+    {
+        const auto invalid{BadBlock(block->GetHash())};
+        BlockValidationState state;
+        bool new_block{false};
+        BOOST_CHECK(chainman.ProcessNewBlock(invalid, state, true, true, &new_block));
+        BOOST_CHECK(new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 4);
+        BOOST_CHECK(sub->m_state.IsInvalid());
+        BOOST_CHECK(sub->m_state.GetResult() == BlockValidationResult::BLOCK_CONSENSUS);
+        BOOST_CHECK_EQUAL(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->GetBlockHash()), block->GetHash());
+    }
+
+    m_node.validation_signals->UnregisterSharedValidationInterface(sub);
+}
+
 BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 {
     // build a large-ish chain that's likely to have some forks
@@ -179,7 +271,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 
     bool ignored;
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), true, true, &ignored));
+    BlockValidationState state;
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), state, true, true, &ignored));
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -202,13 +295,15 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 const auto& block = blocks[insecure.randrange(blocks.size() - 1)];
-                Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                BlockValidationState state;
+                Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true, &ignored);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                    BlockValidationState state;
+                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true, &ignored);
                     assert(processed);
                 }
             }
@@ -247,7 +342,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&ignored);
+        BlockValidationState state;
+        return Assert(m_node.chainman)->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&ignored);
     };
 
     // Process all mined blocks
