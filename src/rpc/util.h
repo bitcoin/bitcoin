@@ -542,7 +542,8 @@ private:
 };
 
 /**
- * Push warning messages to an RPC "warnings" field as a JSON array of strings.
+ * Push warning messages to an RPC "warnings" field as a JSON array of strings,
+ * only keeping the first occurrence of duplicate warnings.
  *
  * @param[in] warnings  Warning messages to push.
  * @param[out] obj      UniValue object to push the warnings array object to.
