@@ -164,7 +164,7 @@ class InitTest(BitcoinTestFramework):
             },
             {
                 'filepath_glob': 'chainstate/*.ldb',
-                'error_message': 'Error opening coins database.',  # TODO: A corrupt chainstate table must abort through the read error callback
+                'error_message': 'Error reading from database, shutting down.',
                 'startup_args': [],
             },
             {

@@ -70,7 +70,7 @@ class DBReadErrorTest(BitcoinTestFramework):
         self.corrupt_tables(node, 'indexes/txindex')
         self.start_node(1)
         self.trigger_read_error(node, node.getrawtransaction)
-        assert node.process.poll() is None  # TODO: Abort instead of continuing after an index point-read error
+        self.assert_shutdown(node)
 
 
 if __name__ == '__main__':
