@@ -216,7 +216,7 @@ bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
 {
     {
         LOCK(cs_KeyStore);
-        assert(mapKeys.empty());
+        assert(m_keys.empty());
 
         bool keyPass = mapCryptedKeys.empty(); // Always pass when there are no encrypted keys
         bool keyFail = false;
@@ -297,7 +297,9 @@ bool LegacyDataSPKM::LoadCScript(const CScript& redeemScript)
         return true;
     }
 
-    return FillableSigningProvider::AddCScript(redeemScript);
+    LOCK(cs_KeyStore);
+    m_scripts[CScriptID(redeemScript)] = redeemScript;
+    return true;
 }
 
 void LegacyDataSPKM::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata& meta)
@@ -315,7 +317,9 @@ void LegacyDataSPKM::LoadScriptMetadata(const CScriptID& script_id, const CKeyMe
 bool LegacyDataSPKM::AddKeyPubKeyInner(const CKey& key, const CPubKey& pubkey)
 {
     LOCK(cs_KeyStore);
-    return FillableSigningProvider::AddKeyPubKey(key, pubkey);
+    m_keys[pubkey.GetID()] = key;
+    ImplicitlyLearnRelatedKeyScripts(pubkey);
+    return true;
 }
 
 bool LegacyDataSPKM::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid)
@@ -331,7 +335,7 @@ bool LegacyDataSPKM::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<
 bool LegacyDataSPKM::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
-    assert(mapKeys.empty());
+    assert(m_keys.empty());
 
     mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
     ImplicitlyLearnRelatedKeyScripts(vchPubKey);
@@ -385,7 +389,7 @@ bool LegacyDataSPKM::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
-        return FillableSigningProvider::HaveKey(address);
+        return m_keys.contains(address);
     }
     return mapCryptedKeys.contains(address);
 }
@@ -394,7 +398,12 @@ bool LegacyDataSPKM::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
-        return FillableSigningProvider::GetKey(address, keyOut);
+        const auto& it = m_keys.find(address);
+        if (it != m_keys.end()) {
+            keyOut = it->second;
+            return true;
+        }
+        return false;
     }
 
     CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
@@ -444,9 +453,11 @@ bool LegacyDataSPKM::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) con
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
-        if (!FillableSigningProvider::GetPubKey(address, vchPubKeyOut)) {
+        CKey key;
+        if (!GetKey(address, key)) {
             return GetWatchPubKey(address, vchPubKeyOut);
         }
+        vchPubKeyOut = key.GetPubKey();
         return true;
     }
 
@@ -458,6 +469,47 @@ bool LegacyDataSPKM::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) con
     }
     // Check for watch-only pubkeys
     return GetWatchPubKey(address, vchPubKeyOut);
+}
+
+void LegacyDataSPKM::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
+{
+    AssertLockHeld(cs_KeyStore);
+    CKeyID key_id = pubkey.GetID();
+    // This adds the redeemscripts necessary to detect P2WPKH and P2SH-P2WPKH
+    // outputs. Technically P2WPKH outputs don't have a redeemscript to be
+    // spent. However, our current IsMine logic requires the corresponding
+    // P2SH-P2WPKH redeemscript to be present in the wallet in order to accept
+    // payment even to P2WPKH outputs.
+    // Also note that having superfluous scripts in the keystore never hurts.
+    // They're only used to guide recursion in signing and IsMine logic - if
+    // a script is present but we can't do anything with it, it has no effect.
+    // "Implicitly" refers to fact that scripts are derived automatically from
+    // existing keys, and are present in memory, even without being explicitly
+    // loaded (e.g. from a file).
+    if (pubkey.IsCompressed()) {
+        CScript script = GetScriptForDestination(WitnessV0KeyHash(key_id));
+        // This does not use AddCScript, as it may be overridden.
+        CScriptID id(script);
+        m_scripts[id] = std::move(script);
+    }
+}
+
+bool LegacyDataSPKM::HaveCScript(const CScriptID& hash) const
+{
+    LOCK(cs_KeyStore);
+    return m_scripts.contains(hash);
+}
+
+bool LegacyDataSPKM::GetCScript(const CScriptID& hash, CScript& out) const
+{
+    LOCK(cs_KeyStore);
+    const auto& mi = m_scripts.find(hash);
+    if (mi != m_scripts.end())
+    {
+        out = mi->second;
+        return true;
+    }
+    return false;
 }
 
 std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetCandidateScriptPubKeys() const
@@ -474,7 +526,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetCandidateScriptP
         candidate_spks.insert(wpkh);
         candidate_spks.insert(GetScriptForDestination(ScriptHash(wpkh)));
     };
-    for (const auto& [_, key] : mapKeys) {
+    for (const auto& [_, key] : m_keys) {
         add_pubkey(key.GetPubKey());
     }
     for (const auto& [_, ckeypair] : mapCryptedKeys) {
@@ -493,7 +545,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetCandidateScriptP
         candidate_spks.insert(wsh);
         candidate_spks.insert(GetScriptForDestination(ScriptHash(wsh)));
     };
-    for (const auto& [_, script] : mapScripts) {
+    for (const auto& [_, script] : m_scripts) {
         add_script(script);
     }
 
@@ -544,7 +596,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
     // Get all key ids
     std::set<CKeyID> keyids;
-    for (const auto& key_pair : mapKeys) {
+    for (const auto& key_pair : m_keys) {
         keyids.insert(key_pair.first);
     }
     for (const auto& key_pair : mapCryptedKeys) {
