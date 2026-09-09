@@ -377,7 +377,7 @@ private:
      *  plus wtx itself. Sorted by the order in which they were inserted in the wallet (CWalletTx::nOrderPos) */
     std::set<CWalletTx*, WalletTxOrderComparator> GetMalleatedVariants(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    void SyncMalleatedTxMetadata(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncMalleatedTxMetadata(WalletBatch& batch, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
