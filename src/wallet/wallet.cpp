@@ -762,7 +762,7 @@ std::set<CWalletTx*, WalletTxOrderComparator> CWallet::GetMalleatedVariants(cons
     return txs;
 }
 
-void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
+void CWallet::SyncMalleatedTxMetadata(WalletBatch& batch, const CWalletTx& wtx)
 {
     const auto txs = GetMalleatedVariants(wtx);
     if (txs.size() <= 1) return; // no variants, nothing to do
@@ -782,6 +782,7 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
     for (CWalletTx* copyTo : txs) {
         if (copyTo == copyFrom) continue;
         metadata(*copyTo) = metadata(*copyFrom);
+        (void)batch.WriteTxMetadata(*copyTo);
     }
 }
 
@@ -1105,7 +1106,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(wtx);
-        SyncMalleatedTxMetadata(wtx);
+        SyncMalleatedTxMetadata(batch, wtx);
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
@@ -1213,7 +1214,6 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     }
     wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
     AddToSpends(wtx);
-    SyncMalleatedTxMetadata(wtx);
     for (const CTxIn& txin : wtx.GetTx()->vin) {
         auto it = mapWallet.find(txin.prevout.hash);
         if (it != mapWallet.end()) {
