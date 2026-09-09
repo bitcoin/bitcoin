@@ -511,6 +511,19 @@ public:
     bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
 
     /**
+     * Restart the completion deadline of the request currently being received.
+     * Called by the I/O loop after sending response data to this client, since
+     * no request can be received while a response is going out.
+     * Does nothing when no request is in progress.
+     * The optimistic send in Send() needs no restart, because no request is
+     * in progress while a worker thread holds one.
+     */
+    void RestartRequestDeadline()
+    {
+        if (m_request_since) m_request_since = Now<SteadySeconds>();
+    }
+
+    /**
      * Try to read an HTTPRequest from a client's receive buffer.
      * Only complete requests are returned, incomplete requests are
      * left in the buffer to wait for more data. Some read errors
@@ -537,6 +550,12 @@ public:
 protected:
     //! Used for tests.
     std::string& MutateRecvBuffer() { return m_recv_buffer; }
+
+    //! Used for tests. Sets the timestamp the idle timeout measures from.
+    void SetIdleSince(SteadySeconds when) { m_idle_since = when; }
+
+    //! Used for tests. Sets the timestamp the completion deadline measures from.
+    void SetRequestSince(SteadySeconds when) { m_request_since = when; }
 
 private:
     /**
@@ -632,6 +651,12 @@ private:
     //! Due to optimistic sends it may be updated in either a worker thread or in the
     //! I/O thread. It is checked in the I/O thread to disconnect idle clients.
     std::atomic<SteadySeconds> m_idle_since;
+
+    //! Timestamp for when the first byte of the current request was read,
+    //! or when we last attempted to send more data to the client.
+    //! nullopt when no request is in progress. Together with -rpcservertimeout
+    //! this is the deadline for delivering one complete request.
+    std::optional<SteadySeconds> m_request_since;
 };
 
 /** Initialize HTTP server.
