@@ -145,7 +145,7 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(result["bytes_written"], len(data))
 
         # Added in https://github.com/bitcoin/bitcoin/pull/34696
-        expected_hash = "478d61986c59365cf86cd244485bbbe76a9ca0c630864717286dd19949879074"
+        expected_hash = "03580ade8ec0036ad3d6a5a91602b995c89387f722d3fee58127219de6aafc12"
         assert_equal(hashlib.sha256(data).hexdigest(), expected_hash)
         assert_equal(result["file_hash"], expected_hash)
 
