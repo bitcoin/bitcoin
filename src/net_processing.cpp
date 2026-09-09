@@ -1056,8 +1056,17 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
-    /** Process a new block. Perform any post-processing housekeeping */
-    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+    /** ProcessNewBlock outcomes; neither implies full consensus validity. */
+    struct BlockProcessingResult {
+        bool processing_success{false};
+        bool new_block{false};
+    };
+
+    BlockProcessingResult ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+
+    /** Apply post-processing peer updates on the message-handler thread. */
+    void CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Process compact block txns  */
     void ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const BlockTransactions& block_transactions)
@@ -3677,20 +3686,36 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
-void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+PeerManagerImpl::BlockProcessingResult PeerManagerImpl::ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
-    bool new_block{false};
-    m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
-    if (new_block) {
+    BlockProcessingResult result;
+    result.processing_success = m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &result.new_block);
+    return result;
+}
+
+void PeerManagerImpl::CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+{
+    // new_block can be true even if processing failed, for example on a write error.
+    if (result.new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
         // In case this block came from a different peer than we requested
-        // from, we can erase the block request now anyway (as we just stored
-        // this block to disk).
+        // from, we can erase the block request now anyway.
         LOCK(cs_main);
-        RemoveBlockRequest(block->GetHash(), std::nullopt);
+        RemoveBlockRequest(hash, std::nullopt);
     } else {
         LOCK(cs_main);
-        mapBlockSource.erase(block->GetHash());
+        mapBlockSource.erase(hash);
+    }
+
+    if (optimistic_reconstruction) {
+        LOCK(cs_main);
+        const CBlockIndex* index{Assert(m_chainman.m_blockman.LookupBlockIndex(hash))};
+        if (index->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+            // Clear download state for this block, which is in process from
+            // some other peer. Do this after ProcessNewBlock so a malleated
+            // compact block cannot interfere with block relay.
+            RemoveBlockRequest(hash, std::nullopt);
+        }
     }
 }
 
@@ -3776,7 +3801,8 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         // disk-space attacks), but this should be safe due to the
         // protections in the compact block handler -- see related comment
         // in compact block optimistic reconstruction handling.
-        ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
+        const auto result{ProcessBlock(pblock, /*force_processing=*/true, /*min_pow_checked=*/true)};
+        CompleteBlockProcessing(pfrom, pblock->GetHash(), result, /*optimistic_reconstruction=*/false);
     }
     return;
 }
@@ -5038,15 +5064,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // we have a chain with at least the minimum chain work), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                // Clear download state for this block, which is in
-                // process from some other peer.  We do this after calling
-                // ProcessNewBlock so that a malleated cmpctblock announcement
-                // can't be used to interfere with block relay.
-                RemoveBlockRequest(pblock->GetHash(), std::nullopt);
-            }
+            const auto result{ProcessBlock(pblock, /*force_processing=*/true, /*min_pow_checked=*/true)};
+            CompleteBlockProcessing(pfrom, pblock->GetHash(), result, /*optimistic_reconstruction=*/true);
         }
         return;
     }
@@ -5149,7 +5168,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 min_pow_checked = true;
             }
         }
-        ProcessBlock(pfrom, pblock, forceProcessing, min_pow_checked);
+        const auto result{ProcessBlock(pblock, forceProcessing, min_pow_checked)};
+        CompleteBlockProcessing(pfrom, hash, result, /*optimistic_reconstruction=*/false);
         return;
     }
 
