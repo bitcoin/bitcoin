@@ -152,7 +152,7 @@ public:
         pchMessageStart[3] = 0xd9;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 856;
+        m_assumed_blockchain_size = 897;
         m_assumed_chain_state_size = 14;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
@@ -456,8 +456,8 @@ public:
 
             consensus.nMinimumChainWork = uint256{"00000000000000000000000000000000000000000000000000000b463ea0a4b8"};
             consensus.defaultAssumeValid = uint256{"00000008414aab61092ef93f1aacc54cf9e9f16af29ddad493b908a01ff5c329"}; // 293175
-            m_assumed_blockchain_size = 24;
-            m_assumed_chain_state_size = 4;
+            m_assumed_blockchain_size = 25;
+            m_assumed_chain_state_size = 5;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 00000008414aab61092ef93f1aacc54cf9e9f16af29ddad493b908a01ff5c329
                 .nTime    = 1772055248,
