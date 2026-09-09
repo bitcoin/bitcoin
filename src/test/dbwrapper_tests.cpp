@@ -252,17 +252,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_db_error)
     // Read() should detect the issue
     const auto db{make_db(path, /*force_compact=*/false)};
     uint256 result;
-    BOOST_CHECK_EXCEPTION((void)db.Read(key, result), dbwrapper_error, HasReason{"Fatal LevelDB error"}); // TODO: Read failures must notify the database owner
-
-    // TryRead() must return DatabaseError (without throwing).
-    CDBWrapper::ReadStatus status = db.TryRead(key, result);
-    BOOST_REQUIRE(!status);
-    BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DatabaseError);
-    BOOST_CHECK(status.error().err_msg.find("Fatal LevelDB error") != std::string::npos);
+    BOOST_CHECK_EXCEPTION((void)db.Read(key, result), dbwrapper_error, HasReason{"Error reading from database"});
 }
 
 // Exercise TryRead() return values directly: found, absent and DeserializationError.
-// DatabaseError is tested inside 'dbwrapper_read_db_error' test
 BOOST_AUTO_TEST_CASE(dbwrapper_tryread)
 {
     for (const bool obfuscate : {false, true}) {

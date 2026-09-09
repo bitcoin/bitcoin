@@ -4,6 +4,7 @@
 
 #include <dbwrapper.h>
 
+#include <kernel/notifications_interface.h>
 #include <leveldb/cache.h>
 #include <leveldb/db.h>
 #include <leveldb/env.h>
@@ -24,12 +25,14 @@
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -242,7 +245,9 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()},
+      m_path{fs::PathToString(params.path)},
+      m_notifications{params.notifications}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
@@ -321,7 +326,7 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     if (log_memory) {
         double mem_after{DynamicMemoryUsage() / double(1_MiB)};
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
-                 m_name, mem_before, mem_after);
+                 m_path, mem_before, mem_after);
     }
 }
 
@@ -351,8 +356,9 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        LogError("LevelDB read failure in %s: %s", m_path, status.ToString());
+        if (m_notifications) m_notifications->fatalError(_("Error reading from database, shutting down."));
+        std::abort();
     }
     return strValue;
 }
