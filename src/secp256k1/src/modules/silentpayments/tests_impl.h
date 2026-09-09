@@ -254,8 +254,13 @@ static void test_send_api(void) {
     /* Check that array arguments are verified */
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, NULL, 0));
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 0, SMALLEST_OUTPOINT, NULL, 0, p, 1));
-    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 0, p, 1));
-    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 1, p, 0));
+    /* Empty key arrays can have both NULL or non-NULL as pointer value */
+    CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p, 1));
+    CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 0, p, 1));
+    CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 1, NULL, 0));
+    CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 1, p, 0));
+    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, t, 0, NULL, 1));
+    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 1, p, 0));
 
     /* Create malformed keys for Alice by using a key that will overflow */
     CHECK(secp256k1_ec_seckey_verify(CTX, secp256k1_group_order_bytes) == 0);
@@ -273,6 +278,23 @@ static void test_send_api(void) {
     p[0] = MALFORMED_SECKEY;
     CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p, 1) == 0);
     p[0] = ALICE_SECKEY;
+    /* Check that an invalid plain secret key is caught even when it is passed alongside a valid one.
+     * With a single invalid key, the failure would also be caught by the subsequent zero-sum check,
+     * so use two keys to ensure the seckey loop itself rejects the invalid key. The invalid key is
+     * tested in both positions so that neither the first nor the last key is skipped by the check. */
+    {
+        unsigned char const *p2[2];
+        p2[0] = ALICE_SECKEY;
+        p2[1] = MALFORMED_SECKEY;
+        CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p2, 2) == 0);
+        p2[1] = secp256k1_group_order_bytes;
+        CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p2, 2) == 0);
+        p2[0] = MALFORMED_SECKEY;
+        p2[1] = ALICE_SECKEY;
+        CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p2, 2) == 0);
+        p2[0] = secp256k1_group_order_bytes;
+        CHECK(secp256k1_silentpayments_sender_create_outputs(CTX, op, rp, 2, SMALLEST_OUTPOINT, NULL, 0, p2, 2) == 0);
+    }
     /* Create malformed recipients by setting all of the public key bytes to zero.
      * Realistically, this would never happen since a bad public key would get caught when
      * trying to parse the public key with _ec_pubkey_parse
@@ -511,8 +533,11 @@ static void test_recipient_api(void) {
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, NULL, 1, pp, 1));
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 1, NULL, 1));
 
-    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 0, pp, 1));
-    CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 1, pp, 0));
+    /* Empty key arrays can have both NULL or non-NULL as pointer value */
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, NULL, 0, pp, 1));
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 0, pp, 1));
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 1, NULL, 0));
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 1, pp, 0));
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, NULL, 0, pp, 0));
     CHECK_ILLEGAL(CTX, secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, NULL, 0, NULL, 0));
     CHECK(secp256k1_silentpayments_recipient_prevouts_summary_create(CTX, &ps, SMALLEST_OUTPOINT, tp, 1, pp, 1));

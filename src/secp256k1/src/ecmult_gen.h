@@ -133,13 +133,13 @@ typedef struct {
     secp256k1_fe proj_blind;
 } secp256k1_ecmult_gen_context;
 
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context* ctx, const secp256k1_hash_ctx *hash_ctx);
-static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context* ctx);
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ecmult_gen_ctx, const secp256k1_hash_ctx *hash_ctx);
+static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context *ecmult_gen_ctx);
 
 /** Multiply with the generator: R = a*G */
-static void secp256k1_ecmult_gen_gej(const secp256k1_ecmult_gen_context* ctx, secp256k1_gej *r, const secp256k1_scalar *a);
-static void secp256k1_ecmult_gen_ge(const secp256k1_ecmult_gen_context* ctx, secp256k1_ge *r, const secp256k1_scalar *a);
+static void secp256k1_ecmult_gen_gej(const secp256k1_ecmult_gen_context *ecmult_gen_ctx, secp256k1_gej *r, const secp256k1_scalar *a);
+static void secp256k1_ecmult_gen_ge(const secp256k1_ecmult_gen_context *ecmult_gen_ctx, secp256k1_ge *r, const secp256k1_scalar *a);
 
-static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const secp256k1_hash_ctx *hash_ctx, const unsigned char *seed32);
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ecmult_gen_ctx, const secp256k1_hash_ctx *hash_ctx, const unsigned char *seed32);
 
 #endif /* SECP256K1_ECMULT_GEN_H */

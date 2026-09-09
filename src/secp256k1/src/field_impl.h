@@ -213,11 +213,11 @@ SECP256K1_INLINE static int secp256k1_fe_normalizes_to_zero_var(const secp256k1_
     return secp256k1_fe_impl_normalizes_to_zero_var(r);
 }
 
-static void secp256k1_fe_impl_set_int(secp256k1_fe *r, int a);
-SECP256K1_INLINE static void secp256k1_fe_set_int(secp256k1_fe *r, int a) {
+static void secp256k1_fe_impl_set_int_unchecked(secp256k1_fe *r, int a);
+SECP256K1_INLINE static void secp256k1_fe_set_int_unchecked(secp256k1_fe *r, int a) {
     VERIFY_CHECK(0 <= a && a <= 0x7FFF);
 
-    secp256k1_fe_impl_set_int(r, a);
+    secp256k1_fe_impl_set_int_unchecked(r, a);
     r->magnitude = (a != 0);
     r->normalized = 1;
 
