@@ -239,6 +239,13 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['Proxies'], network_info['networks'][0]['proxy'])
         assert_equal(Decimal(cli_get_info['Difficulty']), blockchain_info['difficulty'])
         assert_equal(cli_get_info['Chain'], blockchain_info['chain'])
+        expected_warnings = "\n".join(network_info['warnings']) or "(none)"
+        assert cli_get_info_string.endswith(f"Warnings: {expected_warnings}")
+
+        self.log.info("Test -getinfo with deprecated string warnings")
+        self.restart_node(0, extra_args=["-deprecatedrpc=warnings"])
+        expected_warnings = self.nodes[0].getnetworkinfo()['warnings'] or "(none)"
+        assert self.nodes[0].cli('-getinfo', '-color=never').send_cli().endswith(f"Warnings: {expected_warnings}")
 
         self.log.info("Test -getinfo and bitcoin-cli return all proxies")
         self.restart_node(0, extra_args=["-proxy=127.0.0.1:9050", "-i2psam=127.0.0.1:7656"])

@@ -1516,7 +1516,10 @@ static void ParseGetInfoResult(UniValue& result)
         result_string += "\n";
     }
 
-    const std::string warnings{result["warnings"].getValStr()};
+    const UniValue& warnings_value{result["warnings"]};
+    const std::string warnings{warnings_value.isArray()
+        ? Join(warnings_value.getValues(), "\n", [](const UniValue& warning) { return warning.get_str(); })
+        : warnings_value.getValStr()};
     result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, warnings.empty() ? "(none)" : warnings);
 
     result.setStr(result_string);

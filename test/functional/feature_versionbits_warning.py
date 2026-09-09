@@ -114,6 +114,9 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Check that get*info() shows the versionbits unknown rules warning
         assert WARN_UNKNOWN_RULES_ACTIVE in ",".join(node.getmininginfo()["warnings"])
         assert WARN_UNKNOWN_RULES_ACTIVE in ",".join(node.getnetworkinfo()["warnings"])
+        if self.is_cli_compiled():
+            expected_warnings = "\n".join(node.getnetworkinfo()["warnings"])
+            assert node.cli('-getinfo', '-color=never').send_cli().endswith(f"Warnings: {expected_warnings}")
         # Check that the alert file shows the versionbits unknown rules warning
         self.wait_until(lambda: self.versionbits_in_alert_file())
 
