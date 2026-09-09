@@ -5,6 +5,7 @@
 """Test wallet createwalletdescriptor RPC."""
 
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -25,6 +26,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         self.test_basic()
         self.test_imported_other_keys()
         self.test_encrypted()
+        self.test_multipath()
 
     def test_basic(self):
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -114,6 +116,27 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         with WalletUnlock(wallet, "pass"):
             wallet.createwalletdescriptor(type="bech32m")
 
+    def test_multipath(self):
+        self.log.info("Test createwalletdescriptor stores a multipath record for the new descriptor pair")
+        self.nodes[0].createwallet(wallet_name="multipath")
+        wallet = self.nodes[0].get_wallet_rpc("multipath")
+
+        def import_unused_key():
+            known_xpubs = {key["xpub"] for key in wallet.gethdkeys()}
+            res = wallet.importdescriptors([{"desc": descsum_create(f"unused({ExtendedPrivateKey.generate().to_string()})"), "timestamp": "now"}])
+            assert_equal(res[0]["success"], True)
+            return next(key["xpub"] for key in wallet.gethdkeys() if key["xpub"] not in known_xpubs)
+
+        # With the internal option, a single path descriptor is created; the
+        # record is stored by the call that completes the pair
+        single_xpub = import_unused_key()
+        receive_descs = wallet.createwalletdescriptor(type="bech32", internal=False, hdkey=single_xpub)["descs"]
+        receive_entry = next(entry for entry in wallet.listdescriptors()["descriptors"] if entry["desc"] in receive_descs)
+        assert "multipath" not in receive_entry
+        change_descs = wallet.createwalletdescriptor(type="bech32", internal=True, hdkey=single_xpub)["descs"]
+        pair_entries = [entry for entry in wallet.listdescriptors()["descriptors"] if entry["desc"] in receive_descs + change_descs]
+        assert_equal(len(pair_entries), 2)
+        assert_equal(len({entry["multipath"] for entry in pair_entries}), 1)
 
 
 if __name__ == '__main__':

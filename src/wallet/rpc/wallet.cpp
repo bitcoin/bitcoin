@@ -777,14 +777,6 @@ static RPCMethod createwalletdescriptor()
             UniValue internal_only{options["internal"]};
             UniValue hdkey{options["hdkey"]};
 
-            std::vector<bool> internals;
-            if (internal_only.isNull()) {
-                internals.push_back(false);
-                internals.push_back(true);
-            } else {
-                internals.push_back(internal_only.get_bool());
-            }
-
             LOCK(pwallet->cs_wallet);
             EnsureWalletIsUnlocked(*pwallet);
 
@@ -808,26 +800,19 @@ static RPCMethod createwalletdescriptor()
             }
             CExtKey active_hdkey(xpub, *key);
 
-            std::vector<std::reference_wrapper<DescriptorScriptPubKeyMan>> spkms;
             WalletBatch batch{pwallet->GetDatabase()};
-            for (bool internal : internals) {
-                WalletDescriptor w_desc = GenerateWalletDescriptor(xpub, *output_type, internal);
-                uint256 w_id = DescriptorID(*w_desc.descriptor);
-                if (!pwallet->GetScriptPubKeyMan(w_id)) {
-                    spkms.emplace_back(pwallet->SetupDescriptorScriptPubKeyMan(batch, active_hdkey, *output_type, internal));
-                }
-            }
-            if (spkms.empty()) {
+            // Without the internal option, create both the receive and change
+            // descriptor; with it, only the requested one
+            const bool receive{internal_only.isNull() || !internal_only.get_bool()};
+            const bool change{internal_only.isNull() || internal_only.get_bool()};
+            auto new_descs{pwallet->SetupDescriptorScriptPubKeyManPair(batch, active_hdkey, *output_type, receive, change)};
+            if (new_descs.empty()) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Descriptor already exists");
             }
 
-            // Fetch each descspkm from the wallet in order to get the descriptor strings
             UniValue descs{UniValue::VARR};
-            for (const auto& spkm : spkms) {
-                std::string desc_str;
-                bool ok = spkm.get().GetDescriptorString(desc_str, false);
-                CHECK_NONFATAL(ok);
-                descs.push_back(desc_str);
+            for (const std::string& desc : new_descs) {
+                descs.push_back(desc);
             }
             UniValue out{UniValue::VOBJ};
             out.pushKV("descs", std::move(descs));

@@ -33,6 +33,8 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
         const bool is_range = wallet_descriptor.descriptor->IsRange();
         wallet_descriptors.emplace_back(
             descriptor,
+            wallet_descriptor.id,
+            wallet.GetMultipathDescriptor(wallet_descriptor.id),
             wallet_descriptor.creation_time,
             wallet.IsActiveScriptPubKeyMan(*desc_spk_man),
             wallet.IsInternalScriptPubKeyMan(desc_spk_man),
@@ -86,6 +88,11 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
     {
         LOCK(watchonly_wallet->cs_wallet);
 
+        // Map from the descriptor IDs in this wallet to those in the watchonly
+        // wallet. They can differ because the exported descriptor string is
+        // normalized.
+        std::map<uint256, uint256> desc_id_map;
+
         // Parse the descriptors and add them to the new wallet
         for (const WalletDescInfo& desc_info : *Assert(exported)) {
             // Parse the descriptor
@@ -104,6 +111,8 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             }
 
             WalletDescriptor w_desc(std::move(descs.at(0)), desc_info.creation_time, range_start, range_end, desc_info.next_index);
+
+            desc_id_map.emplace(desc_info.desc_id, w_desc.id);
 
             // For descriptors that cannot self expand (i.e. needs private keys or cache), retrieve the cache
             uint256 desc_id = w_desc.id;
@@ -140,6 +149,20 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             WalletBatch watchonly_batch(watchonly_wallet->GetDatabase());
             if (!watchonly_batch.TxnBegin()) {
                 return util::Error{strprintf(_("Error: database transaction cannot be executed for new watchonly wallet %s"), watchonly_wallet->GetName())};
+            }
+
+            // Copy the multipath descriptor records, with the descriptor IDs
+            // translated to those of the watchonly wallet
+            for (const auto& [id, multipath_desc] : wallet.GetMultipathDescriptors()) {
+                std::vector<uint256> watchonly_desc_ids;
+                watchonly_desc_ids.reserve(multipath_desc.desc_ids.size());
+                for (const uint256& desc_id : multipath_desc.desc_ids) {
+                    watchonly_desc_ids.push_back(desc_id_map.at(desc_id));
+                }
+                MultipathDescriptorRecord watchonly_record{multipath_desc.descriptor, std::move(watchonly_desc_ids)};
+                if (!watchonly_wallet->AddMultipathDescriptor(watchonly_batch, std::move(watchonly_record))) {
+                    return util::Error{_("Error: Unable to write multipath descriptor record to watchonly wallet")};
+                }
             }
 
             // Copy orderPosNext
