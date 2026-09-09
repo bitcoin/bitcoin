@@ -12,8 +12,14 @@
 
 static secp256k1_scratch* secp256k1_scratch_create(const secp256k1_callback* error_callback, size_t size) {
     const size_t base_alloc = ROUND_TO_ALIGN(sizeof(secp256k1_scratch));
-    void *alloc = checked_malloc(error_callback, base_alloc + size);
-    secp256k1_scratch* ret = (secp256k1_scratch *)alloc;
+    void *alloc;
+    secp256k1_scratch* ret;
+    /* Reject sizes that would wrap when added to the aligned header. */
+    if (size > SIZE_MAX - base_alloc) {
+        return NULL;
+    }
+    alloc = checked_malloc(error_callback, base_alloc + size);
+    ret = (secp256k1_scratch *)alloc;
     if (ret != NULL) {
         memset(ret, 0, sizeof(*ret));
         memcpy(ret->magic, "scratch", 8);

@@ -198,7 +198,7 @@ static int secp256k1_fe_impl_normalizes_to_zero_var(const secp256k1_fe *r) {
     return (z0 == 0) | (z1 == 0xFFFFFFFFFFFFFULL);
 }
 
-SECP256K1_INLINE static void secp256k1_fe_impl_set_int(secp256k1_fe *r, int a) {
+SECP256K1_INLINE static void secp256k1_fe_impl_set_int_unchecked(secp256k1_fe *r, int a) {
     r->n[0] = a;
     r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
 }

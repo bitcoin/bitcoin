@@ -80,7 +80,7 @@ static const secp256k1_fe secp256k1_const_beta = SECP256K1_FE_CONST(
 #  define secp256k1_fe_normalize_var secp256k1_fe_impl_normalize_var
 #  define secp256k1_fe_normalizes_to_zero secp256k1_fe_impl_normalizes_to_zero
 #  define secp256k1_fe_normalizes_to_zero_var secp256k1_fe_impl_normalizes_to_zero_var
-#  define secp256k1_fe_set_int secp256k1_fe_impl_set_int
+#  define secp256k1_fe_set_int_unchecked secp256k1_fe_impl_set_int_unchecked
 #  define secp256k1_fe_is_zero secp256k1_fe_impl_is_zero
 #  define secp256k1_fe_is_odd secp256k1_fe_impl_is_odd
 #  define secp256k1_fe_cmp_var secp256k1_fe_impl_cmp_var
@@ -138,10 +138,17 @@ static int secp256k1_fe_normalizes_to_zero_var(const secp256k1_fe *r);
 
 /** Set a field element to an integer in range [0,0x7FFF].
  *
- * On input, r does not need to be initialized, a must be in [0,0x7FFF].
+ * On input, r does not need to be initialized, and a must be an integer
+ * constant expression in [0,0x7FFF].
  * On output, r represents value a, is normalized and has magnitude (a!=0).
  */
-static void secp256k1_fe_set_int(secp256k1_fe *r, int a);
+#define secp256k1_fe_set_int(r, a) ASSERT_INT_CONST_AND_DO(a, secp256k1_fe_set_int_unchecked(r, a))
+
+/** Like secp256k1_fe_set_int but a is not checked to be an integer constant expression.
+ *
+ * Should not be called directly outside of tests.
+ */
+static void secp256k1_fe_set_int_unchecked(secp256k1_fe *r, int a);
 
 /** Clear a field element to prevent leaking sensitive information. */
 static void secp256k1_fe_clear(secp256k1_fe *a);
@@ -210,7 +217,7 @@ static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe *a);
  */
 #define secp256k1_fe_negate(r, a, m) ASSERT_INT_CONST_AND_DO(m, secp256k1_fe_negate_unchecked(r, a, m))
 
-/** Like secp256k1_fe_negate_unchecked but m is not checked to be an integer constant expression.
+/** Like secp256k1_fe_negate but m is not checked to be an integer constant expression.
  *
  * Should not be called directly outside of tests.
  */
@@ -323,8 +330,8 @@ static void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag);
 
 /** Halve the value of a field element modulo the field prime in constant-time.
  *
- * On input, r must be a valid field element.
- * On output, r will be normalized and have magnitude floor(m/2) + 1 where m is
+ * On input, r must be a valid field element with magnitude not exceeding 31.
+ * On output, r will not be normalized, and have magnitude floor(m/2) + 1 where m is
  * the magnitude of r on input.
  */
 static void secp256k1_fe_half(secp256k1_fe *r);
