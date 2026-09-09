@@ -162,6 +162,7 @@ public:
     bool IsRFC6598() const; // IPv4 ISP-level NAT (100.64.0.0/10)
     bool IsRFC5737() const; // IPv4 documentation addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
     bool IsRFC3849() const; // IPv6 documentation address (2001:0DB8::/32)
+    bool IsRFC9637() const; // IPv6 documentation address (3FFF::/20)
     bool IsRFC3927() const; // IPv4 autoconfig (169.254.0.0/16)
     bool IsRFC3964() const; // IPv6 6to4 tunnelling (2002::/16)
     bool IsRFC4193() const; // IPv6 unique local (FC00::/7)
