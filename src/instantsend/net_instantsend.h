@@ -48,6 +48,7 @@ public:
     void WorkThreadMain();
 
 private:
+    friend struct NetInstantSendTest;
     struct BatchVerificationData;
 
     bool ValidateIncomingISLock(const instantsend::InstantSendLock& islock, NodeId node_id);

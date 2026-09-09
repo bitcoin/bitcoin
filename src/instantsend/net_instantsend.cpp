@@ -122,8 +122,9 @@ std::unique_ptr<NetInstantSend::BatchVerificationData> NetInstantSend::BuildVeri
                                               : m_qman.GetQuorum(llmq_params.type, islock->cycleHash);
 
         if (!quorum) {
-            // should not happen, but if one fails to select, all others will also fail to select
-            return nullptr;
+            // Different cycle hashes can select different quorums within the same batch.
+            data->batchVerifier.badMessages.emplace(hash);
+            continue;
         }
         uint256 signHash = llmq::SignHash{llmq_params.type, quorum->qc->quorumHash, id, islock->txid}.Get();
         data->batchVerifier.PushMessage(nodeId, hash, signHash, sig, quorum->qc->quorumPublicKey);
