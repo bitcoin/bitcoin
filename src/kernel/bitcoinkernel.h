@@ -539,6 +539,7 @@ typedef struct {
     btck_NotifyWarningUnset warning_unset;  //!< A previous condition leading to the issuance of a warning is no longer given.
     btck_NotifyFlushError flush_error;      //!< An error encountered when flushing data to disk.
     btck_NotifyFatalError fatal_error;      //!< An unrecoverable system error encountered by the library.
+                                            //!< The library may abort the process after this callback returns.
 } btck_NotificationInterfaceCallbacks;
 
 /**
