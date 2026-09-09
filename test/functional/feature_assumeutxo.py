@@ -565,6 +565,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         expected_verification_progress = background_tx_count / snapshot_tx_count
         assert_approx(bv_res["verificationprogress"], expected_verification_progress, vspan=0.01)
 
+        self.log.info("Check that getchainstates reports the background validation progress")
+        background, snapshot_chainstate = n1.getchainstates()["chainstates"]
+        assert_approx(background["background_verificationprogress"], expected_verification_progress, vspan=0.01)
+        assert "background_verificationprogress" not in snapshot_chainstate
+
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully
         coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
