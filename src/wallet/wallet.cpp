@@ -770,22 +770,18 @@ void CWallet::SyncMalleatedTxMetadata(const CWalletTx& wtx)
     // First tx is the oldest one (smallest nOrderPos)
     const CWalletTx* copyFrom = *txs.begin();
 
+    // The metadata that is kept in sync between malleated variants.
+    // nTimeReceived, nOrderPos and cached members are not copied on purpose.
+    const auto metadata = [](auto& tx) {
+        return std::tie(tx.m_from, tx.m_message, tx.m_comment, tx.m_comment_to,
+                        tx.m_replaces_txid, tx.m_replaced_by_txid,
+                        tx.m_messages, tx.m_payment_requests, tx.nTimeSmart);
+    };
+
     // Now copy data from copyFrom to rest:
-    for (auto it = ++txs.begin(); it != txs.end(); ++it)
-    {
-        CWalletTx* copyTo = *it;
-        copyTo->m_from = copyFrom->m_from;
-        copyTo->m_message = copyFrom->m_message;
-        copyTo->m_comment = copyFrom->m_comment;
-        copyTo->m_comment_to = copyFrom->m_comment_to;
-        copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
-        copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
-        copyTo->m_messages = copyFrom->m_messages;
-        copyTo->m_payment_requests = copyFrom->m_payment_requests;
-        // nTimeReceived not copied on purpose
-        copyTo->nTimeSmart = copyFrom->nTimeSmart;
-        // nOrderPos not copied on purpose
-        // cached members not copied on purpose
+    for (CWalletTx* copyTo : txs) {
+        if (copyTo == copyFrom) continue;
+        metadata(*copyTo) = metadata(*copyFrom);
     }
 }
 
