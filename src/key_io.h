@@ -21,6 +21,12 @@ std::string EncodeExtKey(const CExtKey& extkey);
 CExtPubKey DecodeExtPubKey(const std::string& str);
 std::string EncodeExtPubKey(const CExtPubKey& extpubkey);
 
+/** Stamp an extended public key with this network's version bytes. Keys parsed from a
+ *  descriptor carry none, since the base58 prefix is stripped on decoding, and they are
+ *  needed whenever the key is serialized with its version, as BIP 174 does for
+ *  PSBT_GLOBAL_XPUB. */
+void SetExtPubKeyVersion(CExtPubKey& extpubkey);
+
 std::string EncodeDestination(const CTxDestination& dest);
 CTxDestination DecodeDestination(const std::string& str);
 CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr);

@@ -6,10 +6,14 @@
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/keyorigin.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util/descriptor.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
+
+#include <map>
+#include <set>
 
 //! The converter of mocked descriptors, needs to be initialized when the target is.
 MockedDescriptorConverter MOCKED_DESC_CONVERTER;
@@ -37,6 +41,8 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     (void)desc.ToString();
     (void)desc.ToPrivateString(sig_provider, dummy);
     (void)desc.ToNormalizedString(sig_provider, dummy);
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs;
+    desc.GetExtPubKeysWithOrigins(sig_provider, /*cache=*/nullptr, xpubs);
 
     // Serialization to Script.
     DescriptorCache cache;

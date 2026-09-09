@@ -36,6 +36,22 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         return f"{hdkey_info['origin']}{hdkey_info['xpub']}/<0;1>/*"
 
     @staticmethod
+    def _split_key_expression(xpub_expr):
+        """Split "[fingerprint/path]xpub/<0;1>/*" into the fingerprint, the path and the xpub."""
+        origin, _, rest = xpub_expr.partition("]")
+        fingerprint, _, path = origin.lstrip("[").partition("/")
+        return fingerprint, f"m/{path}", rest.split("/")[0]
+
+    def _check_global_xpubs(self, psbt, xpub_exprs, multisig):
+        """Every co-signer's extended key belongs in the PSBT, with the origin that leads
+        to it, so that a signer holding only the file can tell which key in the script is
+        its own."""
+        got = multisig.decodepsbt(psbt)["global_xpubs"]
+        expected = [self._split_key_expression(x) for x in xpub_exprs]
+        assert_equal(sorted((g["master_fingerprint"], g["path"], g["xpub"]) for g in got),
+                     sorted(expected))
+
+    @staticmethod
     def _check_psbt(psbt, to, value, multisig):
         """Helper function for any of the N participants to check the psbt with decodepsbt and verify it is OK before signing."""
         decoded = multisig.decodepsbt(psbt)
@@ -63,6 +79,33 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             ])
             assert all(r["success"] for r in result)
             yield multisig
+
+    def test_change_descriptor_publishes(self, signers, coordinator):
+        """The internal descriptor publishes on its own, reaching the PSBT through the
+        change output while every input belongs to the external one. A wallet whose two
+        descriptors share their keys cannot show this, since both then contribute the
+        same entries."""
+        def account(signer, path):
+            info = signer.derivehdkey(path)
+            return f"{info['origin']}{info['xpub']}/0/*"
+
+        receiving = [account(signer, "m/44h/1h/0h") for signer in signers]
+        change = [account(signer, "m/44h/1h/1h") for signer in signers]
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(
+            wallet_name="split_change_multisig", blank=True, disable_private_keys=True)["name"])
+        result = wallet.importdescriptors([
+            {"desc": descsum_create(f"wsh(sortedmulti({self.M},{','.join(receiving)}))"),
+             "active": True, "timestamp": "now"},
+            {"desc": descsum_create(f"wsh(sortedmulti({self.M},{','.join(change)}))"),
+             "active": True, "internal": True, "timestamp": "now"},
+        ])
+        assert all(r["success"] for r in result)
+
+        coordinator.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.node, 1)
+        funded = wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010)
+        assert funded["changepos"] != -1, "the case needs a change output"
+        self._check_global_xpubs(funded["psbt"], receiving + change, wallet)
 
     def run_test(self):
         self.M = 2
@@ -113,6 +156,15 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.log.info("First, make a sending transaction, created using `walletcreatefundedpsbt` (anyone can initiate this)...")
         psbt = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010)
 
+        self.log.info("The psbt carries every co-signer's xpub, and does not when bip32derivs is off...")
+        self._check_global_xpubs(psbt["psbt"], xpubs, participants["multisigs"][0])
+        no_derivs = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010, bip32derivs=False)
+        assert_equal(participants["multisigs"][0].decodepsbt(no_derivs["psbt"])["global_xpubs"], [])
+
+        self.log.info("A single key wallet has no co-signer to tell apart, so it publishes nothing...")
+        single_sig = participants["signers"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010)
+        assert_equal(participants["signers"][0].decodepsbt(single_sig["psbt"])["global_xpubs"], [])
+
         psbts = []
         self.log.info("Now at least M users check the psbt with decodepsbt and (if OK) signs it with walletprocesspsbt...")
         for m in range(self.M):
@@ -147,6 +199,9 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.generate(self.node, 1)
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)
+
+        self.log.info("The change descriptor publishes its own keys, even with no input of its own...")
+        self.test_change_descriptor_publishes(participants["signers"], coordinator_wallet)
 
 
 if __name__ == "__main__":

@@ -2,19 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
+#include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/keyorigin.h>
 #include <script/sign.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <map>
 #include <optional>
 #include <regex>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace util::hex_literals;
@@ -1416,6 +1423,97 @@ BOOST_AUTO_TEST_CASE(unused_descriptor_test)
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)");
     CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0h/0h/1)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0h/0h/1)");
+}
+
+/** The extended public keys a descriptor contributes, keyed by the origin they carry,
+ *  in the string form a descriptor and BIP 174 write them in. */
+std::set<std::pair<std::string, std::string>> ExtPubKeysWithOrigins(const std::string& desc_str)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    const auto descs = Parse(desc_str, keys, error, /*require_checksum=*/false);
+    BOOST_REQUIRE_MESSAGE(descs.size() == 1, error);
+
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs;
+    descs.at(0)->GetExtPubKeysWithOrigins(keys, /*cache=*/nullptr, xpubs);
+
+    const auto& version{Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)};
+    std::set<std::pair<std::string, std::string>> ret;
+    for (const auto& [origin, keyset] : xpubs) {
+        for (const CExtPubKey& xpub : keyset) {
+            // A PSBT serializes these keys with their own version bytes, unlike a
+            // descriptor, so every key handed out has to carry them.
+            BOOST_CHECK(std::equal(version.begin(), version.end(), std::begin(xpub.version)));
+            ret.emplace(HexStr(origin.fingerprint) + FormatHDKeypath(origin.path), EncodeExtPubKey(xpub));
+        }
+    }
+    return ret;
+}
+
+void CheckExtPubKeys(const std::string& desc_str, const std::set<std::pair<std::string, std::string>>& expected)
+{
+    BOOST_CHECK_MESSAGE(ExtPubKeysWithOrigins(desc_str) == expected, desc_str);
+}
+
+//! The fingerprint of an extended key, computed without going through a descriptor.
+std::string Fingerprint(const std::string& ext_key)
+{
+    const CExtKey xprv{DecodeExtKey(ext_key)};
+    const CExtPubKey xpub{xprv.key.IsValid() ? xprv.Neuter() : DecodeExtPubKey(ext_key)};
+    return HexStr(xpub.pubkey.GetID().fingerprint());
+}
+
+//! The extended public key at a path, derived without going through a descriptor.
+std::string DeriveExtPubKey(const std::string& xprv_str, const std::vector<uint32_t>& path)
+{
+    CExtKey key{DecodeExtKey(xprv_str)};
+    BOOST_REQUIRE(key.key.IsValid());
+    for (const uint32_t step : path) {
+        CExtKey child;
+        BOOST_REQUIRE(key.Derive(child, step));
+        key = child;
+    }
+    return EncodeExtPubKey(key.Neuter());
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_extpubkeys_with_origins)
+{
+    const std::string XPRV{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+    const std::string XPUB{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string XPUB2{"xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y"};
+    const std::string FP{Fingerprint(XPUB)};
+    const std::string FP2{Fingerprint(XPUB2)};
+
+    // With no hardened step, the key written in the descriptor is the one the children
+    // are derived from, and it is published with an empty path.
+    CheckExtPubKeys("wpkh(" + XPUB + "/0/*)", {{FP, XPUB}});
+    // The private form of the same descriptor publishes the same key.
+    CheckExtPubKeys("wpkh(" + XPRV + "/0/*)", {{FP, XPUB}});
+
+    // With hardened steps, the key at the last one is published, since that is the
+    // deepest key the receiver can derive the transaction's keys from.
+    const std::string lh_xpub{DeriveExtPubKey(XPRV, {84 | BIP32_HARDENED_FLAG, BIP32_HARDENED_FLAG, BIP32_HARDENED_FLAG})};
+    CheckExtPubKeys("wpkh(" + XPRV + "/84h/0h/0h/0/*)", {{FP + "/84h/0h/0h", lh_xpub}});
+    // Deriving it needs the private key, and without a cache there is nothing to publish.
+    CheckExtPubKeys("wpkh(" + XPUB + "/84h/0h/0h/0/*)", {});
+
+    // A key origin in the descriptor is what the published origin starts from.
+    CheckExtPubKeys("wpkh([00aabb22/48h]" + XPUB + "/0/*)", {{"00aabb22/48h", XPUB}});
+    // And when the key expression has hardened steps of its own, they follow it.
+    const std::string lh_one{DeriveExtPubKey(XPRV, {BIP32_HARDENED_FLAG})};
+    CheckExtPubKeys("wpkh([00aabb22/48h]" + XPRV + "/0h/0/*)", {{"00aabb22/48h/0h", lh_one}});
+
+    // Every key expression contributes, including through a subdescriptor.
+    CheckExtPubKeys("wsh(multi(2," + XPUB + "/0/*," + XPUB2 + "/0/*))", {{FP, XPUB}, {FP2, XPUB2}});
+    CheckExtPubKeys("sh(wsh(multi(2," + XPUB + "/0/*," + XPUB2 + "/0/*)))", {{FP, XPUB}, {FP2, XPUB2}});
+
+    // Hardened children cannot be derived from any key that could be published.
+    CheckExtPubKeys("wpkh(" + XPRV + "/0h/*h)", {});
+    // A plain public key has no extended key behind it.
+    CheckExtPubKeys("wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", {});
+    // MuSig derives from the aggregate key, so no participant key derives the key that
+    // ends up in the script.
+    CheckExtPubKeys("rawtr(musig(" + XPUB + "," + XPUB2 + ")/0/*)", {});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

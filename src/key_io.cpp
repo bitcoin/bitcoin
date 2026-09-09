@@ -255,6 +255,13 @@ CExtPubKey DecodeExtPubKey(const std::string& str)
     return key;
 }
 
+void SetExtPubKeyVersion(CExtPubKey& key)
+{
+    const std::vector<unsigned char>& prefix = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
+    assert(prefix.size() == sizeof(key.version));
+    std::copy(prefix.begin(), prefix.end(), key.version);
+}
+
 std::string EncodeExtPubKey(const CExtPubKey& key)
 {
     std::vector<unsigned char> data = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);

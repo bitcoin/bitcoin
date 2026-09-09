@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -22,6 +23,7 @@
 class CScript;
 class SigningProvider;
 struct FlatSigningProvider;
+struct KeyOriginInfo;
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
 
@@ -191,6 +193,18 @@ struct Descriptor {
      * @param[out] ext_pubs Any extended public keys
      */
     virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
+
+    /** Collect the extended public keys of this descriptor, each keyed by the origin of the
+     *  key itself, in the form BIP 174 asks for in PSBT_GLOBAL_XPUB: the key at the deepest
+     *  hardened derivation step, so that the unhardened children used in a transaction can
+     *  be derived from it.
+     *
+     * @param[in] provider Signing provider, used only when the key has to be derived
+     *                     because the cache does not hold it.
+     * @param[in] cache    Descriptor cache holding the already derived hardened keys.
+     * @param[out] out     The keys found, appended to whatever is already there.
+     */
+    virtual void GetExtPubKeysWithOrigins(const SigningProvider& provider, const DescriptorCache* cache, std::map<KeyOriginInfo, std::set<CExtPubKey>>& out) const = 0;
 
     /** Whether this descriptor produces any scripts with the Expand functions */
     virtual bool HasScripts() const = 0;
