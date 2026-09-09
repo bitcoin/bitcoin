@@ -5,8 +5,6 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
-#include <node/mining_types.h>
-
 #include <atomic>
 #include <cstdlib>
 #include <functional>
@@ -31,7 +29,6 @@ class TorController;
 namespace interfaces {
 class Chain;
 class ChainClient;
-class Mining;
 class Init;
 class WalletLoader;
 } // namespace interfaces
@@ -43,6 +40,7 @@ class SignalInterrupt;
 }
 
 namespace node {
+class BlockTemplateManager;
 class KernelNotifications;
 class Warnings;
 
@@ -80,19 +78,13 @@ struct NodeContext {
     std::unique_ptr<interfaces::Chain> chain;
     //! List of all chain clients (wallet processes or other client) connected to node.
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
-    //! Reference to chain client that should used to load or create wallets
-    //! opened by the gui.
-    std::unique_ptr<interfaces::Mining> mining;
-    //! Mining options used to create block templates. This value member is an
-    //! exception to the dependency guidance above because BlockCreateOptions is
-    //! a minimal dependency. It could be moved to the BlockTemplateCache
-    //! proposed in bitcoin/bitcoin#33421.
-    BlockCreateOptions mining_args;
     interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Issues blocking calls about sync status, errors and warnings
     std::unique_ptr<KernelNotifications> notifications;
+    //! Must be destroyed before its dependencies (holds references to them).
+    std::unique_ptr<BlockTemplateManager> block_template_manager;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
     std::atomic<int> exit_status{EXIT_SUCCESS};

@@ -22,6 +22,7 @@ add_executable(fuzz
   block_index_tree.cpp
   block_policy_estimator.cpp
   blockfilter.cpp
+  block_template_manager.cpp
   bloom_filter.cpp
   buffered_file.cpp
   chain.cpp
