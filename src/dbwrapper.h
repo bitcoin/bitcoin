@@ -294,24 +294,20 @@ public:
         return true;
     }
 
-    /**
-     * Wrapper around TryRead() that preserves the original Read() semantics:
-     * returns true on success, false if the key is absent or deserialization
-     * fails, and throws dbwrapper_error on an internal DB error.
-     *
-     * Prefer TryRead() when the caller needs to distinguish between a missing
-     * key and a corrupt value.
-     */
+    //! Returns false only for a missing key. LevelDB and value-deserialization errors are fatal.
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
     {
-        const ReadStatus res = TryRead(key,value);
-        if (res.has_value()) return res.value();
-        switch (const auto& [err_code, err_msg] = res.error(); err_code) {
-            case ReadFailure::Code::DeserializationError: return false;
-            case ReadFailure::Code::DatabaseError: throw dbwrapper_error(err_msg);
-        } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+        auto strValue{ReadRaw(key)};
+        if (!strValue) return false;
+        try {
+            std::span ssValue{MakeWritableByteSpan(*strValue)};
+            m_obfuscation(ssValue);
+            SpanReader{ssValue} >> value;
+        } catch (const std::exception& e) {
+            FatalReadError("Corrupted database entry", e.what());
+        }
+        return true;
     }
 
     template <typename K, typename V>
