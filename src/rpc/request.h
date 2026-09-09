@@ -6,12 +6,14 @@
 #ifndef BITCOIN_RPC_REQUEST_H
 #define BITCOIN_RPC_REQUEST_H
 
-#include <any>
-#include <optional>
-#include <string>
-
 #include <univalue.h>
 #include <util/fs.h>
+
+#include <any>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
 
 enum class JSONRPCVersion {
     V1_LEGACY,

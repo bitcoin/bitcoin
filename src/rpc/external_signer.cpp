@@ -4,15 +4,19 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
-#include <common/args.h>
-#include <common/system.h>
 #include <external_signer.h>
+#include <rpc/register.h> // IWYU pragma: associated
+
+#include <common/args.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <util/strencodings.h>
+#include <univalue.h>
 
+#include <exception>
 #include <string>
+#include <utility>
 #include <vector>
 
 #ifdef ENABLE_EXTERNAL_SIGNER

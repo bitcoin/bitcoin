@@ -3,12 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/register.h> // IWYU pragma: associated
+
 #include <common/messages.h>
 #include <core_io.h>
 #include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator_man.h>
+#include <policy/fees/mempool_estimator.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -16,14 +19,19 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/check.h>
+#include <util/expected.h>
 #include <util/fees.h>
 #include <validationinterface.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <map>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 using common::FeeModeFromString;
 using common::FeeModesDetail;

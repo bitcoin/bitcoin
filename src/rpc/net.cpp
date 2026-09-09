@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/server.h>
 
 #include <addrman.h>
@@ -9,40 +10,56 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
-#include <common/args.h>
 #include <core_io.h>
-#include <hash.h>
+#include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <net_types.h>
+#include <netaddress.h>
 #include <netbase.h>
+#include <node/connection_types.h>
 #include <node/context.h>
-#ifdef ENABLE_EMBEDDED_ASMAP
-#include <node/data/ip_asn.dat.h>
-#endif
 #include <node/protocol_version.h>
 #include <node/warnings.h>
-#include <policy/settings.h>
+#include <policy/feerate.h>
 #include <protocol.h>
-#include <rpc/blockchain.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <semaphore_grant.h>
 #include <sync.h>
+#include <tinyformat.h>
+#include <txmempool.h>
 #include <univalue.h>
-#include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
+#ifdef ENABLE_EMBEDDED_ASMAP
+#include <common/args.h>
+#include <hash.h>
+#include <node/data/ip_asn.dat.h>
+#include <streams.h>
+#include <util/asmap.h>
+#include <util/fs.h>
+#endif
 
-#include <chrono>
+#include <atomic>
+#include <compare>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 using node::NodeContext;

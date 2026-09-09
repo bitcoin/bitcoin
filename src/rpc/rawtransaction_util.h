@@ -8,9 +8,13 @@
 #include <addresstype.h>
 #include <consensus/amount.h>
 #include <rpc/util.h>
+
+#include <cstdint>
 #include <map>
-#include <string>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 struct bilingual_str;
 struct FlatSigningProvider;
