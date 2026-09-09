@@ -7,9 +7,7 @@
 import http.client
 import subprocess
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
 
 
 class DBReadErrorTest(BitcoinTestFramework):
@@ -34,16 +32,14 @@ class DBReadErrorTest(BitcoinTestFramework):
                     f.write(b'\xff')
 
     @staticmethod
-    def trigger_read_error(node, read_tx, expected_log):
+    def assert_read_error_aborts(node, read_tx, expected_log):
         with node.assert_debug_log([expected_log]):
             try:
                 for height in range(1, node.getblockcount() + 1):
                     read_tx(node.getblock(node.getblockhash(height))['tx'][0])
-            except JSONRPCException as e:
-                assert_equal(e.error['code'], -1)
-                assert 'Fatal LevelDB error' in e.error['message']
             except (subprocess.CalledProcessError, http.client.CannotSendRequest, ConnectionError):
                 pass  # Aborting closes the RPC connection
+            node.wait_until_aborted(fatal_error="Error reading from database, shutting down.")
 
     def run_test(self):
         self.log.info('Corrupt chainstate and trigger a read through gettxout')
@@ -51,8 +47,7 @@ class DBReadErrorTest(BitcoinTestFramework):
         self.stop_node(0)  # Clear the block cache before corruption, including on 32-bit systems
         self.corrupt_tables(node, 'chainstate')
         self.start_node(0, extra_args=['-checkblocks=0', '-checklevel=0'])
-        self.trigger_read_error(node, lambda txid: node.gettxout(txid, 0), expected_log='LevelDB read failure')
-        node.wait_until_aborted(fatal_error="Error reading from database, shutting down.")
+        self.assert_read_error_aborts(node, lambda txid: node.gettxout(txid, 0), expected_log=f"LevelDB read failure in {node.chain_path / 'chainstate'}")
 
         self.log.info('Build txindex and corrupt its tables')
         node = self.nodes[1]
@@ -60,8 +55,7 @@ class DBReadErrorTest(BitcoinTestFramework):
         self.stop_node(1)
         self.corrupt_tables(node, 'indexes/txindex')
         self.start_node(1)
-        self.trigger_read_error(node, node.getrawtransaction, expected_log='LevelDB read failure')
-        assert node.process.poll() is None  # TODO: Abort instead of continuing after an index point-read error
+        self.assert_read_error_aborts(node, node.getrawtransaction, expected_log=f"LevelDB read failure in {node.chain_path / 'indexes/txindex'}")
 
 
 if __name__ == '__main__':

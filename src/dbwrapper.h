@@ -205,11 +205,14 @@ private:
     //! holds all leveldb-specific fields of this class
     util::NotNullUniquePtr<LevelDBContext> m_db_context;
 
-    //! the name of this database
-    std::string m_name;
+    //! path of this database, for log messages
+    std::string m_path;
 
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
+
+    //! notified before aborting on a read failure, if non-null
+    kernel::Notifications* m_notifications;
 
     //! obfuscation key storage key, null-prefixed to avoid collisions
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
