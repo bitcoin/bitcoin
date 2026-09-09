@@ -8,20 +8,29 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <crypto/hex_base.h>
 #include <key_io.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/util.h>
+#include <script/interpreter.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/rbf.h>
-#include <util/string.h>
-#include <util/strencodings.h>
 #include <util/translation.h>
+#include <util/vector.h>
+
+#include <cstddef>
+#include <set>
+#include <span>
+#include <variant>
 
 void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
 {
