@@ -203,11 +203,12 @@ public:
 
     enum class StringType {
         PUBLIC,
+        CANONICAL, // string calculation that always use h
         COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
     /** Get the descriptor string form. */
-    virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
+    virtual std::string ToString(StringType type) const = 0;
 
     /** Get the descriptor string form including private data (if available in arg).
      *  If the private data is not available, the output string in the "out" parameter
@@ -259,7 +260,7 @@ class OriginPubkeyProvider final : public PubkeyProvider
     std::string OriginString(StringType type, bool normalized=false) const
     {
         // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
+        bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
         return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, use_apostrophe);
     }
 
@@ -509,7 +510,7 @@ public:
     std::string ToString(StringType type, bool normalized) const
     {
         // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        const bool use_apostrophe = (!normalized && m_apostrophe) || type == StringType::COMPAT;
+        const bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
         std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
         if (IsRange()) {
             ret += "/*";
@@ -517,7 +518,7 @@ public:
         }
         return ret;
     }
-    std::string ToString(StringType type=StringType::PUBLIC) const override
+    std::string ToString(StringType type) const override
     {
         return ToString(type, /*normalized=*/false);
     }
@@ -551,7 +552,7 @@ public:
         }
         // Either no derivation or all unhardened derivation
         if (i == -1) {
-            out = ToString();
+            out = ToString(StringType::PUBLIC);
             return true;
         }
         // Get the path to the last hardened stup
@@ -719,7 +720,7 @@ public:
     // musig() expressions can only be used in tr() contexts which have 32 byte xonly pubkeys
     size_t GetSize() const override { return 32; }
 
-    std::string ToString(StringType type=StringType::PUBLIC) const override
+    std::string ToString(StringType type) const override
     {
         std::string out = "musig(";
         for (size_t i = 0; i < m_participants.size(); ++i) {
@@ -874,6 +875,7 @@ public:
         PUBLIC,
         PRIVATE,
         NORMALIZED,
+        CANONICAL,
         COMPAT, // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
@@ -955,10 +957,13 @@ public:
                     any_success = pubkey->ToPrivateString(*arg, tmp) || any_success;
                     break;
                 case StringType::PUBLIC:
-                    tmp = pubkey->ToString();
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::PUBLIC);
                     break;
                 case StringType::COMPAT:
                     tmp = pubkey->ToString(PubkeyProvider::StringType::COMPAT);
+                    break;
+                case StringType::CANONICAL:
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::CANONICAL);
                     break;
             }
             ret += tmp;
@@ -976,6 +981,13 @@ public:
     {
         std::string ret;
         ToStringHelper(nullptr, ret, compat_format ? StringType::COMPAT : StringType::PUBLIC);
+        return AddChecksum(ret);
+    }
+
+    std::string ToCanonicalString() const final
+    {
+        std::string ret;
+        ToStringHelper(nullptr, ret, StringType::CANONICAL);
         return AddChecksum(ret);
     }
 
@@ -1652,7 +1664,7 @@ public:
         has_priv_key = false;
         switch (m_type) {
         case DescriptorImpl::StringType::PUBLIC:
-            ret = m_pubkeys[key]->ToString();
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::PUBLIC);
             break;
         case DescriptorImpl::StringType::PRIVATE:
             has_priv_key = m_pubkeys[key]->ToPrivateString(*m_arg, ret);
@@ -1661,7 +1673,14 @@ public:
             if (!m_pubkeys[key]->ToNormalizedString(*m_arg, ret, m_cache)) return {};
             break;
         case DescriptorImpl::StringType::COMPAT:
-            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::COMPAT);
+            // For backwards compatibility, we do not pass StringType::COMPAT.
+            // Prior to 31.0, COMPAT was not provided, so PUBLIC was in use. From this string,
+            // DescriptorSPKM IDs were computed from this string, so the incorrect behavior
+            // must be preserved for wallets with Miniscript descriptors to be loaded
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::PUBLIC);
+            break;
+        case DescriptorImpl::StringType::CANONICAL:
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::CANONICAL);
             break;
         }
         return ret;
@@ -2260,7 +2279,7 @@ struct KeyParser {
         // Keys that cannot be derived sort before the ones that can, and are compared by their
         // expression so that two different keys are not taken for duplicates.
         if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
-        return key_a.ToString() < key_b.ToString();
+        return key_a.ToString(PubkeyProvider::StringType::PUBLIC) < key_b.ToString(PubkeyProvider::StringType::PUBLIC);
     }
 
     ParseScriptContext ParseContext() const {
@@ -2283,7 +2302,7 @@ struct KeyParser {
 
     std::optional<std::string> ToString(const Key& key, bool&) const
     {
-        return m_keys.at(key).at(0)->ToString();
+        return m_keys.at(key).at(0)->ToString(PubkeyProvider::StringType::PUBLIC);
     }
 
     template<typename I> std::optional<Key> FromPKBytes(I begin, I end) const
@@ -2985,7 +3004,7 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
     return InferScript(script, ParseScriptContext::TOP, provider);
 }
 
-uint256 DescriptorID(const Descriptor& desc)
+uint256 CompatDescriptorHash(const Descriptor& desc)
 {
     std::string desc_str = desc.ToString(/*compat_format=*/true);
     uint256 id;

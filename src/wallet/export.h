@@ -14,7 +14,7 @@
 
 namespace wallet {
 // Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
-// and without its ID or cache.
+// and without its ID.
 // Used when exporting descriptors from the wallet.
 struct WalletDescInfo {
     std::string descriptor;
@@ -23,6 +23,7 @@ struct WalletDescInfo {
     std::optional<bool> internal;
     std::optional<std::pair<int64_t,int64_t>> range;
     int64_t next_index;
+    DescriptorCache cache;
 };
 
 //! Export the descriptors from a wallet so that they can be imported elsewhere

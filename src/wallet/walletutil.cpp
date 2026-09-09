@@ -85,4 +85,16 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     return w_desc;
 }
 
+void WalletDescriptor::UpdateFrom(const WalletDescriptor& other)
+{
+    if (descriptor->ToCanonicalString() != other.descriptor->ToCanonicalString()) {
+        return;
+    }
+    range_start = other.range_start;
+    next_index = other.next_index;
+    range_end = other.range_end;
+    creation_time = other.creation_time;
+    cache = other.cache;
+}
+
 } // namespace wallet

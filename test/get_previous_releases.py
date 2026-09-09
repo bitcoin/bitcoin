@@ -91,6 +91,24 @@ SHA256_SUMS = {
     "866a4b703a2095301151c17dcc753e19e4dba61ec68d19709ec4f81ff4320103": {"tag": "v28.2", "archive": "bitcoin-28.2-x86_64-apple-darwin.tar.gz"},
     "98add5f220c01b387343b70edeb6273403fe081e22cd85fda132704cdcaa98aa": {"tag": "v28.2", "archive": "bitcoin-28.2-x86_64-linux-gnu.tar.gz"},
     "da0869639c323bbf6f264f1829083b9514e10179b90c34b09d8cbcab8a1897e3": {"tag": "v28.2", "archive": "bitcoin-28.2-win64.zip"},
+
+    "73e76c14edc79808a0511c744d102ffbb494807ee90cbcba176568243254b532": {"tag": "v30.2", "archive": "bitcoin-30.2-aarch64-linux-gnu.tar.gz"},
+    "d510542842318ea34d87cb2c93d6a7fe091dcac2e8684460be2b3c44843fb502": {"tag": "v30.2", "archive": "bitcoin-30.2-arm-linux-gnueabihf.tar.gz"},
+    "c2ecab62891de22228043815cb6211549a32272be3d5d052ff19847d3420bd10": {"tag": "v30.2", "archive": "bitcoin-30.2-arm64-apple-darwin.tar.gz"},
+    "db8803f11f8259794864b8b0d2ef8a1a27d01a5943ff4f525bc26a325031fa87": {"tag": "v30.2", "archive": "bitcoin-30.2-powerpc64-linux-gnu.tar.gz"},
+    "b0302e4d9579d19a9a501f1278e5d2c56d33fd9583040f34802d8567a1f81ace": {"tag": "v30.2", "archive": "bitcoin-30.2-riscv64-linux-gnu.tar.gz"},
+    "99d5cee9b9c37be506396c30837a4b98e320bfea71c474d6120a7e8eb6075c7b": {"tag": "v30.2", "archive": "bitcoin-30.2-x86_64-apple-darwin.tar.gz"},
+    "6aa7bb4feb699c4c6262dd23e4004191f6df7f373b5d5978b5bcdd4bb72f75d8": {"tag": "v30.2", "archive": "bitcoin-30.2-x86_64-linux-gnu.tar.gz"},
+    "0d7e1f16f8823aa26d29b44855ff6dbac11c03d75631a6c1d2ea5fab3a84fdf8": {"tag": "v30.2", "archive": "bitcoin-30.2-win64.zip"},
+
+    "4de1d568dedd48604f75132421bc0abeca432639589b49a3909c81db3a813112": {"tag": "v31.0", "archive": "bitcoin-31.0-aarch64-linux-gnu.tar.gz"},
+    "8c19d007bfc73502625095ea4073af3a98ceb722d500556ab173bac5bcadd0d6": {"tag": "v31.0", "archive": "bitcoin-31.0-arm-linux-gnueabihf.tar.gz"},
+    "a2d7a13b4da53d4a3e4c517f3a0269e2429813417bb320d3b268993cfdc545d0": {"tag": "v31.0", "archive": "bitcoin-31.0-arm64-apple-darwin.tar.gz"},
+    "1d9c865aa0ccf675fc068e79d9fa57a5a70b59132fca38bb322a7d44ce2f0ff2": {"tag": "v31.0", "archive": "bitcoin-31.0-powerpc64-linux-gnu.tar.gz"},
+    "7ece4ea365bba9b2008b27f0717ef6a518598a572edaa2815e775faadc53c136": {"tag": "v31.0", "archive": "bitcoin-31.0-riscv64-linux-gnu.tar.gz"},
+    "56824dd705bc2a3b22d42e8aa02ed53498d491ff7c2c8aa96831333871887ead": {"tag": "v31.0", "archive": "bitcoin-31.0-x86_64-apple-darwin.tar.gz"},
+    "d3e4c58a35b1d0a97a457462c94f55501ad167c660c245cb1ffa565641c65074": {"tag": "v31.0", "archive": "bitcoin-31.0-x86_64-linux-gnu.tar.gz"},
+    "82fd2c504a0f20a31d4d13bd407783d6fc7bf17622d0ce85228a9b92694e03f0": {"tag": "v31.0", "archive": "bitcoin-31.0-win64.zip"},
 }
 
 

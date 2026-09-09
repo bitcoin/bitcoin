@@ -68,7 +68,6 @@ private:
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
 public:
     std::shared_ptr<Descriptor> descriptor;
-    uint256 id; // Descriptor ID (calculated once at descriptor initialization/deserialization)
     uint64_t creation_time = 0;
     DescriptorCache cache;
 
@@ -109,7 +108,6 @@ public:
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
         descriptor = std::move(descs.at(0));
-        id = DescriptorID(*descriptor);
     }
 
     SERIALIZE_METHODS(WalletDescriptor, obj)
@@ -126,8 +124,9 @@ public:
       next_index(next_index),
       range_end(descriptor->IsRange() ? range_end : 1),
       descriptor(descriptor),
-      id(DescriptorID(*descriptor)),
       creation_time(creation_time) {}
+
+    void UpdateFrom(const WalletDescriptor& other);
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
