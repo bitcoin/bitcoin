@@ -476,20 +476,37 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
     }
 }
 
+// A client with a receive buffer for the requests to read from, plus hooks for
+// the timestamps the I/O loop would otherwise set.
+class DummyClient : public HTTPRemoteClient
+{
+public:
+    DummyClient()
+        : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
+
+    void receive(std::string_view s)
+    {
+        MutateRecvBuffer().append(s);
+    }
+
+    // Pretend bytes moved in either direction at `when`, as Receive() and
+    // MaybeSendBytesFromBuffer() do when they reset the idle timer.
+    void not_idle_at(SteadySeconds when)
+    {
+        SetIdleSince(when);
+    }
+
+    // Pretend the first byte of the request in progress arrived at `when`.
+    // ReadRequest() reads the steady clock for this timestamp, which a test
+    // cannot move.
+    void request_started_at(SteadySeconds when)
+    {
+        SetRequestSince(when);
+    }
+};
+
 BOOST_AUTO_TEST_CASE(http_request_state_tests)
 {
-    // For these tests we just need a receive buffer for the requests to read from.
-    class DummyClient : public HTTPRemoteClient
-    {
-    public:
-        DummyClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
-
-        void receive(std::string_view s)
-        {
-            MutateRecvBuffer().append(s);
-        }
-    };
-
     {
         // Step through state machine
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
@@ -774,6 +791,91 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         client->receive("k:vv\n");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
         BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::Error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
+{
+    // What -rpcservertimeout would be set to.
+    constexpr auto timeout{30s};
+
+    // These tests can't move the steady clock, so they either hand
+    // MaybeDisconnect() a "now" that is well past the deadline, or plant a start
+    // time far enough in the past for the deadline to have expired.
+    const auto start{Now<SteadySeconds>()};
+    const auto expired{start + timeout + 5s};
+    const auto long_ago{start - timeout - 5s};
+
+    {
+        // A client trickling out a request it never finishes gets disconnected,
+        // even though each read leaves it looking active.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->receive("GET /trickle HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->MaybeDisconnect(start, timeout, /*disconnect_all=*/false));
+
+        // Backdate the start of the request past its deadline, then read some
+        // more. That read must not push the deadline forward.
+        client->request_started_at(long_ago);
+        client->receive("Host: 127.0.0.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+
+        // The read left the client looking active, so only the completion
+        // deadline is left to disconnect it.
+        client->not_idle_at(start);
+        BOOST_CHECK(client->MaybeDisconnect(start, timeout, /*disconnect_all=*/false));
+    }
+    {
+        // The deadline is dropped as soon as the request has been parsed, so an
+        // RPC that takes a long time to answer keeps its connection.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->receive("GET /slow HTTP/1.1\n\n");
+        BOOST_REQUIRE(HTTPRemoteClient::TryReadRequest(client));
+        client->not_idle_at(expired);
+        BOOST_CHECK(!client->MaybeDisconnect(expired, timeout, /*disconnect_all=*/false));
+    }
+    {
+        // An armed deadline never disconnects a client whose request is out with
+        // a worker thread, same as the idle timer. Parsing already clears the
+        // deadline before the handover, so arm it by hand to reach that state.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->receive("GET /slow HTTP/1.1\n\n");
+        BOOST_REQUIRE(HTTPRemoteClient::TryReadRequest(client));
+
+        client->request_started_at(long_ago);
+        client->not_idle_at(start);
+        BOOST_CHECK(!client->MaybeDisconnect(start, timeout, /*disconnect_all=*/false));
+    }
+    {
+        // A client with queued response data is polled for writeability instead
+        // of readability, so a half-delivered request can't make progress.
+        // Restarting the deadline after a send keeps that wait from counting
+        // against the client.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->receive("GET /pipelined HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+
+        client->request_started_at(long_ago);
+        client->not_idle_at(start);
+        BOOST_CHECK(client->MaybeDisconnect(start, timeout, /*disconnect_all=*/false));
+
+        client->RestartRequestDeadline();
+        BOOST_CHECK(!client->MaybeDisconnect(start, timeout, /*disconnect_all=*/false));
+    }
+    {
+        // Restarting the deadline while no request is in progress must not arm
+        // it. A keep-alive client that sends nothing answers to the idle timer.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->RestartRequestDeadline();
+        client->not_idle_at(expired);
+        BOOST_CHECK(!client->MaybeDisconnect(expired, timeout, /*disconnect_all=*/false));
+    }
+    {
+        // -rpcservertimeout=0 disables the deadline along with the idle timeout.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->receive("GET /trickle HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->MaybeDisconnect(expired, 0s, /*disconnect_all=*/false));
     }
 }
 
