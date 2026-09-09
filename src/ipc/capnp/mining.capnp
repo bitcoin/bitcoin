@@ -28,6 +28,7 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
     getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
     getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
+    getMemoryLoad @10 (context :Proxy.Context) -> (result: MemoryLoad);
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
@@ -50,6 +51,10 @@ struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
     useMempool @0 :Bool = true $Proxy.name("use_mempool");
     blockReservedWeight @1 :UInt64 = .defaultBlockReservedWeight $Proxy.name("block_reserved_weight");
     coinbaseOutputMaxAdditionalSigops @2 :UInt64 = .defaultCoinbaseOutputMaxAdditionalSigops $Proxy.name("coinbase_output_max_additional_sigops");
+}
+
+struct MemoryLoad $Proxy.wrap("interfaces::MemoryLoad") {
+    usage @0 :UInt64;
 }
 
 struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {
