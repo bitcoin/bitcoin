@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-export LC_ALL=C
+export LC_ALL=C.UTF-8
 
 if [ -n "$SOURCE_DATE_EPOCH" ]; then
   find . -exec touch -d "@$SOURCE_DATE_EPOCH" {} +
