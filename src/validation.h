@@ -1305,6 +1305,9 @@ public:
      * May not be called in a validationinterface callback.
      *
      * @param[in]   block The block we want to process.
+     * @param[out]  state Receives the result of CheckBlock() and AcceptBlock(). Must be freshly initialized.
+     *                    A valid state does not imply full block validity or successful chain activation;
+     *                    activation errors are reported separately through the return value.
      * @param[in]   force_processing Process this block even if unrequested; used for non-network block sources.
      * @param[in]   min_pow_checked  True if proof-of-work anti-DoS checks have
      *                               been done by caller for headers chain
@@ -1314,7 +1317,7 @@ public:
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked, bool* new_block)
         EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
