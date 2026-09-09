@@ -409,6 +409,19 @@ EOF
         read -ra _guix_common_flags <<< "$ADDITIONAL_GUIX_COMMON_FLAGS"
         read -ra _guix_env_flags <<< "$ADDITIONAL_GUIX_ENVIRONMENT_FLAGS"
 
+        guix_files_hash="$( {
+            cat "${PWD}/contrib/guix/manifest_build.scm" "${PWD}/contrib/guix/manifest_gui.scm"
+            find "${PWD}/contrib/guix/patches" -type f -print0 | sort -z | xargs -0 cat
+        } | sha256sum | cut -d' ' -f1 )"
+
+        # We want to reuse the depends build cache whenever possible.
+        # However, salting hash ids with the GUIX_ENVIRONMENT value
+        # does not work when manifests are split.
+        # The following value, used for BUILD_ID_SALT and HOST_ID_SALT, ensures
+        # that the cache is invalidated whenever the Guix environment changes.
+        depends_id_salt="$GUIX_TIMEMACHINE_COMMIT $ADDITIONAL_GUIX_TIMEMACHINE_FLAGS \
+                         $guix_files_hash $ADDITIONAL_GUIX_COMMON_FLAGS $ADDITIONAL_GUIX_ENVIRONMENT_FLAGS"
+
         shell_opts=(
             --manifest="${PWD}/contrib/guix/manifest_build.scm"
             --container
@@ -436,6 +449,8 @@ EOF
                 ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
                 ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"}
                 ${SDK_PATH:+SDK_PATH="$SDK_PATH"}
+                BUILD_ID_SALT="$depends_id_salt"
+                HOST_ID_SALT="$depends_id_salt"
                 DISTSRC="$(distsrc_for_host "$HOST" "" /distsrc-base)"
                 OUTDIR="$(outdir_for_host "$HOST" "" /outdir-base)"
                 DIST_ARCHIVE_BASE=/outdir-base/dist-archive
