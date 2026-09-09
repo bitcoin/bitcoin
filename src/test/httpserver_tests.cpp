@@ -14,6 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <memory>
+#include <string_view>
 
 using util::LineReader;
 using namespace bitcoin_http;
@@ -447,19 +448,30 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
     }
 }
 
+// A client with a receive buffer for the requests to read from, plus a hook for
+// the idle timestamp the I/O loop would otherwise set.
+class DummyClient : public HTTPRemoteClient
+{
+public:
+    DummyClient()
+        : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
+
+    void Receive(std::string_view s)
+    {
+        MutateRecvBuffer().append(s);
+    }
+
+    // Pretend bytes moved in either direction at `when`, as
+    // HTTPRemoteClient::Receive() and MaybeSendBytesFromBuffer() do when they
+    // reset the idle timer.
+    void NotIdleAt(MockableSteadyClock::time_point when)
+    {
+        SetIdleSince(when);
+    }
+};
+
 BOOST_AUTO_TEST_CASE(http_request_state_tests)
 {
-    // For these tests we just need a receive buffer for the requests to read from.
-    class DummyClient : public HTTPRemoteClient
-    {
-    public:
-        DummyClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
-
-        void Receive(std::string_view s)
-        {
-            MutateRecvBuffer().append(s);
-        }
-    };
     using enum HTTPRequest::State;
 
     {
@@ -855,6 +867,213 @@ BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(bad));
         BOOST_CHECK(bad->ShouldDisconnect(now, /*rpcservertimeout=*/0s, /*disconnect_all=*/false));
     }
+}
+
+BOOST_AUTO_TEST_CASE(http_request_deadline_tests)
+{
+    // What -rpcservertimeout would be set to.
+    constexpr auto timeout{30s};
+    FakeSteadyClock clock;
+    const auto now{[] { return MockableSteadyClock::now(); }};
+
+    {
+        // A client trickling out a request it never finishes gets disconnected,
+        // even though each read leaves it looking active.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->Receive("GET /trickle HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+
+        // More of the request arrives shortly before the deadline. That read
+        // must not push the deadline forward.
+        clock += timeout - 5s;
+        client->Receive("Host: 127.0.0.1\n");
+        client->NotIdleAt(now());
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+
+        // The read left the client looking active, so only the completion
+        // deadline, counted from the first read, is left to disconnect it.
+        clock += 10s;
+        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+    }
+    {
+        // The deadline is dropped as soon as the request has been parsed, so an
+        // RPC that takes longer than the timeout to answer keeps its connection,
+        // and so does the keep-alive client it answers.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->Receive("GET /slow HTTP/1.1\nHost: 127.0.0.1\n\n");
+        {
+            std::unique_ptr request{HTTPRemoteClient::TryReadRequest(client)};
+            BOOST_REQUIRE(request);
+            clock += timeout + 5s;
+            request->WriteReply(HTTP_OK);
+        }
+        // The reply reset the idle timer and isn't busy any more, so only a
+        // deadline left over from the request could disconnect it now.
+        BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+    }
+    {
+        // RestartRequestDeadline() moves an armed deadline to now. The I/O loop
+        // calls it while a response goes out, which
+        // http_request_deadline_io_loop_tests covers.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->Receive("GET /partial HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+
+        clock += timeout + 5s;
+        client->NotIdleAt(now());
+        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+
+        client->RestartRequestDeadline();
+        BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+    }
+    {
+        // Restarting the deadline while no request is in progress must not arm
+        // it. A keep-alive client that sends nothing answers to the idle timer.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->RestartRequestDeadline();
+        clock += timeout + 5s;
+        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        client->NotIdleAt(now());
+        BOOST_CHECK(!client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+    }
+    {
+        // -rpcservertimeout=0 disables the deadline along with the idle timeout.
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        client->Receive("GET /trickle HTTP/1.1\n");
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        clock += timeout + 5s;
+        // Reset the idle timer so the deadline is all that could disconnect it.
+        client->NotIdleAt(now());
+        BOOST_CHECK(client->ShouldDisconnect(now(), timeout, /*disconnect_all=*/false));
+        BOOST_CHECK(!client->ShouldDisconnect(now(), 0s, /*disconnect_all=*/false));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(http_request_deadline_io_loop_tests)
+{
+    // What -rpcservertimeout would be set to.
+    constexpr auto timeout{30s};
+    FakeSteadyClock clock;
+
+    /**
+     * A mocked Sock derived from DynSock that lets one byte through per send
+     * token the test hands out. Without a token, Send() returns a recoverable
+     * error, as it would with the kernel's send buffer full. DynSock always
+     * reports the socket writable, so the I/O loop keeps trying.
+     */
+    class GateSock : public DynSock
+    {
+    public:
+        struct Pipes : DynSock::Pipes {
+            std::atomic<size_t> send_tokens{0};
+        };
+
+        explicit GateSock(std::shared_ptr<Pipes> pipes) : DynSock{pipes}, m_gate{std::move(pipes)} {}
+        DynSock& operator=(Sock&&) override { assert(false); return *this; }
+
+        ssize_t Send(const void* buf, size_t len, int flags) const override
+        {
+            // Only the test thread adds tokens, so they can't run out between
+            // the load and the subtraction.
+            const size_t n{std::min(len, m_gate->send_tokens.load())};
+            if (n == 0) {
+                #ifdef WIN32
+                WSASetLastError(WSAEWOULDBLOCK);
+                #else
+                errno = WSAEAGAIN;
+                #endif
+                return -1;
+            }
+            m_gate->send_tokens -= n;
+            return DynSock::Send(buf, n, flags);
+        }
+
+    private:
+        std::shared_ptr<Pipes> m_gate;
+    };
+
+    Mutex requests_mutex;
+    std::deque<std::unique_ptr<HTTPRequest>> requests;
+    HTTPServer server{[&](std::unique_ptr<HTTPRequest>&& req) {
+        LOCK(requests_mutex);
+        requests.push_back(std::move(req));
+    }};
+    server.InitHTTPAllowList();
+    server.SetServerTimeout(timeout);
+    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    server.StartSocketsThreads();
+
+    // A complete request followed by the start of a second one. The second
+    // request's deadline starts once the first one's reply is written.
+    constexpr std::string_view data{"GET /first HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n"
+                           "GET /second HTTP/1.1\r\n"};
+    std::shared_ptr<GateSock::Pipes> pipes{ConnectClient<GateSock>(std::as_bytes(std::span(data)))};
+
+    // Answer the first request with no send tokens, so the whole reply stays
+    // in the send buffer and the I/O loop polls the client for writeability.
+    constexpr std::string_view reply_body{"deadline\n"};
+    int attempts{6000};
+    while (true) {
+        {
+            LOCK(requests_mutex);
+            if (!requests.empty()) {
+                BOOST_CHECK_EQUAL(requests.front()->GetURI(), "/first");
+                requests.front()->WriteReply(HTTP_OK, reply_body);
+                break;
+            }
+        }
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    // Drain the reply one byte at a time while the clock moves well past the
+    // timeout. Each byte resets the idle timer, so only the deadline of the
+    // second request could disconnect the client, and the I/O loop restarts
+    // it on every pass that tries to send.
+    std::string received;
+    char buf[0x10000] = {};
+    for (int step{0}; step < 5; ++step) {
+        clock += timeout / 3;
+        pipes->send_tokens += 1;
+        attempts = 6000;
+        while (received.size() <= static_cast<size_t>(step) && server.GetConnectionsCount() == 1) {
+            const ssize_t bytes_read{pipes->send.GetBytes(buf, sizeof(buf), 0)};
+            if (bytes_read > 0) received.append(buf, bytes_read);
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+        BOOST_REQUIRE_EQUAL(server.GetConnectionsCount(), 1);
+    }
+
+    // Let the rest of the reply through.
+    pipes->send_tokens += 0x10000;
+    attempts = 6000;
+    while (!received.ends_with(reply_body)) {
+        const ssize_t bytes_read{pipes->send.GetBytes(buf, sizeof(buf), 0)};
+        if (bytes_read > 0) received.append(buf, bytes_read);
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+    BOOST_CHECK(received.starts_with("HTTP/1.1 200 OK\r\n"));
+
+    // With the reply out, nothing restarts the deadline or the idle timer any
+    // more, so the client holding an unfinished request is dropped.
+    clock += timeout + 1s;
+    attempts = 6000;
+    while (server.GetConnectionsCount() != 0) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    // Stop the I/O loop and shutdown
+    server.InterruptNet();
+    // Wait for I/O loop to finish, after all connected sockets are closed
+    server.JoinSocketsThreads();
+    // Close all listening sockets
+    server.StopListening();
 }
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
