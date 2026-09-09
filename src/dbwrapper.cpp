@@ -30,6 +30,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -243,7 +244,7 @@ struct LevelDBContext {
 
 CDBWrapper::CDBWrapper(const DBParams& params)
     : m_db_context{std::make_unique<LevelDBContext>()},
-      m_name{fs::PathToString(params.path.stem())},
+      m_name{fs::PathToString(params.path)},
       m_read_error_cb{params.read_error_cb}
 {
     DBContext().penv = nullptr;
@@ -353,8 +354,9 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        LogError("LevelDB read failure in %s: %s", m_name, status.ToString());
+        if (m_read_error_cb) m_read_error_cb();
+        std::abort();
     }
     return strValue;
 }
