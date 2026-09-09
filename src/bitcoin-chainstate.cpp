@@ -44,9 +44,12 @@ std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
 class KernelLog
 {
 public:
-    void LogMessage(std::string_view message)
+    void LogMessage(const LogEntry& entry)
     {
-        std::cout << "kernel: " << message;
+        std::cout << "kernel: " << entry.Timestamp().time_since_epoch().count()
+                  << " [" << Name(entry.Category()) << ":"
+                  << Name(entry.Level()) << "] "
+                  << entry.Message() << "\n";
     }
 };
 
