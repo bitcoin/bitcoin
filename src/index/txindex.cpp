@@ -192,9 +192,7 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
         for (it->Seek(key); it->Valid() && it->GetKey(key) && key.hash_prefix == prefix; it->Next()) {
             uint256 candidate_block_hash;
             if (!m_db->Read(txindex::BlockSeqKey{key.pos.block_seq}, candidate_block_hash)) {
-                // Read may throw dbwrapper_error.
-                // Read returns false for internal deserialize errors or a
-                // missing key. A missing key can only happen after corruption.
+                // A missing key can only happen after corruption.
                 WarnAndThrowErr("%s: Corrupt index: block sequence %u not found for txid %s",
                                 GetName(), key.pos.block_seq, tx_hash.ToString());
             }
