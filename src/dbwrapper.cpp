@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
@@ -354,11 +355,16 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure in %s: %s", m_name, status.ToString());
-        if (m_read_error_cb) m_read_error_cb();
-        std::abort();
+        FatalReadError("LevelDB read failure", status.ToString());
     }
     return strValue;
+}
+
+void CDBWrapper::FatalReadError(std::string_view what, std::string_view detail) const
+{
+    LogError("%s in %s: %s", what, m_name, detail);
+    if (m_read_error_cb) m_read_error_cb();
+    std::abort();
 }
 
 size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const
