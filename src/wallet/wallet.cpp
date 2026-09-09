@@ -1030,6 +1030,17 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
         success = false;
     }
 
+    // The new transaction also replaces any malleated variants of wtx,
+    // so bumpfee refuses to bump them afterwards
+    for (CWalletTx* variant : GetMalleatedVariants(wtx)) {
+        if (variant == &wtx) continue;
+        variant->m_replaced_by_txid = newHash;
+        if (!batch.WriteTxMetadata(*variant)) {
+            WalletLogPrintf("%s: Updating variant tx %s failed\n", __func__, variant->GetHash().ToString());
+            success = false;
+        }
+    }
+
     NotifyTransactionChanged(originalHash, CT_UPDATED);
 
     return success;
