@@ -313,4 +313,14 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
     }
 }
 
+BOOST_AUTO_TEST_CASE(psbt_merge_only_same_version)
+{
+    CMutableTransaction mtx;
+    PartiallySignedTransaction psbt_v0(mtx, /*version*/0);
+    PartiallySignedTransaction psbt_v2(mtx, /*version*/2);
+    BOOST_REQUIRE(*psbt_v0.GetUniqueID() == *psbt_v2.GetUniqueID());
+    BOOST_CHECK(!psbt_v0.Merge(psbt_v2));
+    BOOST_CHECK(!psbt_v2.Merge(psbt_v0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
