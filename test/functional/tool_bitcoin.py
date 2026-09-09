@@ -11,7 +11,11 @@ from test_framework.util import (
     assert_equal,
 )
 
+import os
+import platform
 import re
+import shutil
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -49,8 +53,29 @@ class ToolBitcoinTest(BitcoinTestFramework):
             except Exception as e:
                 raise RuntimeError(f"Unexpected output from {node.args + extra_args}: {out=!r} {err=!r} {ret=!r}") from e
 
+    def test_windows_exit_status(self):
+        self.log.info("Ensure bitcoin preserves child exit status on Windows")
+        exe_dir = self.nodes[0].datadir_path / "exit_status"
+        exe_dir.mkdir()
+        wrapper = exe_dir / "bitcoin.exe"
+        shutil.copyfile(self.get_binaries().paths.bitcoin_bin, wrapper)
+        # Use cmd.exe as a fake bitcoind with a controllable exit status.
+        shutil.copyfile(os.path.join(os.environ["SystemRoot"], "System32", "cmd.exe"), exe_dir / "bitcoind.exe")
+        for status in (0, 1, -1):
+            result = subprocess.run(
+                [str(wrapper), "-M", "node", "/d", "/c", "exit", str(status)],
+                capture_output=True, timeout=30,
+            )
+            # Windows process exit codes are unsigned 32-bit values.
+            assert_equal(result.returncode, status & 0xFFFFFFFF)
+            assert_equal(result.stdout, b"")
+            assert_equal(result.stderr, b"")
+
     def run_test(self):
         node = self.nodes[0]
+
+        if platform.system() == "Windows":
+            self.test_windows_exit_status()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
