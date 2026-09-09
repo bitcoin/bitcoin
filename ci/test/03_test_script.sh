@@ -243,9 +243,12 @@ if [[ "${RUN_IWYU}" == true ]]; then
   run_iwyu() {
     mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
     {
-      python3 "/include-what-you-use/iwyu_tool.py" \
-             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
-             -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+      python3 /include-what-you-use/mapgen/iwyu-mapgen-clang-intrin.py --lang imp "$("clang-${IWYU_LLVM_V}" -print-resource-dir)/include" > "${BASE_BUILD_DIR}/clang.intrinsics.imp"
+      python3 /include-what-you-use/iwyu_tool.py \
+             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" -- \
+             -Xiwyu --cxx17ns \
+             -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+             -Xiwyu --mapping_file="${BASE_BUILD_DIR}/clang.intrinsics.imp" \
              -Xiwyu --max_line_length=160 \
              -Xiwyu --check_also='*/common/types\.h' \
              -Xiwyu --check_also='*/consensus/*\.h' \

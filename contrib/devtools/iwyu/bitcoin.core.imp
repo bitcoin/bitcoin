@@ -1,12 +1,3 @@
+# Nothing for now.
 [
-  # Compiler intrinsics.
-  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1764.
-  { "include": [ "<emmintrin.h>", "private", "<immintrin.h>", "public" ] },
-  { "include": [ "<mmintrin.h>", "private", "<immintrin.h>", "public" ] },
-  { "include": [ "<smmintrin.h>", "private", "<immintrin.h>", "public" ] },
-  { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
-
-  # Workaround for IWYU issue.
-  # See: https://github.com/include-what-you-use/include-what-you-use/issues/2084.
-  { "symbol": ["std::tuple", "private", "<tuple>", "public"] },
 ]

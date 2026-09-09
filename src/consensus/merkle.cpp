@@ -11,7 +11,6 @@
 #include <util/check.h>
 
 #include <cstddef>
-#include <memory>
 #include <utility>
 
 /*     WARNING! If you're reading this because you're learning about crypto

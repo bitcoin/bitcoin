@@ -4,9 +4,7 @@
 
 #include <bench/bench.h>
 #include <support/lockedpool.h>
-// IWYU incorrectly suggests removing this header.
-// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
-#include <util/byte_units.h> // IWYU pragma: keep
+#include <util/byte_units.h>
 
 #include <cstddef>
 #include <cstdint>
