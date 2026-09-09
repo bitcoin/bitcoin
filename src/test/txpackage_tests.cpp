@@ -129,6 +129,13 @@ BOOST_AUTO_TEST_CASE(package_hash_tests)
     BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHash(package_213));
     BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHash(package_312));
     BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHash(package_321));
+
+    // Metadata-only selection must use exactly the same rejection-cache keys.
+    BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHashFromWtxids({wtxid_1, wtxid_2, wtxid_3}));
+    BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHashFromWtxids({wtxid_3, wtxid_1, wtxid_2}));
+    BOOST_CHECK_EQUAL(GetPackageHash({ptx_1, ptx_2}), GetPackageHashFromWtxids({wtxid_2, wtxid_1}));
+    BOOST_CHECK_EQUAL(GetPackageHash({ptx_1, ptx_1}), GetPackageHashFromWtxids({wtxid_1, wtxid_1}));
+    BOOST_CHECK_EQUAL(GetPackageHash({}), GetPackageHashFromWtxids({}));
 }
 
 BOOST_AUTO_TEST_CASE(package_sanitization_tests)
