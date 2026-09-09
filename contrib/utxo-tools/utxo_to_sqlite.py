@@ -31,11 +31,19 @@ NET_MAGIC_BYTES = {
 }
 
 
+def read_exact(f, size):
+    """Read a complete field, rejecting truncated snapshots."""
+    data = f.read(size)
+    if len(data) != size:
+        raise ValueError(f"Truncated UTXO snapshot: expected {size} bytes, got {len(data)}")
+    return data
+
+
 def read_varint(f):
     """Equivalent of `ReadVarInt()` (see serialization module)."""
     n = 0
     while True:
-        dat = f.read(1)[0]
+        dat = read_exact(f, 1)[0]
         n = (n << 7) | (dat & 0x7f)
         if (dat & 0x80) > 0:
             n += 1
@@ -45,13 +53,13 @@ def read_varint(f):
 
 def read_compactsize(f):
     """Equivalent of `ReadCompactSize()` (see serialization module)."""
-    n = f.read(1)[0]
+    n = read_exact(f, 1)[0]
     if n == 253:
-        n = int.from_bytes(f.read(2), "little")
+        n = int.from_bytes(read_exact(f, 2), "little")
     elif n == 254:
-        n = int.from_bytes(f.read(4), "little")
+        n = int.from_bytes(read_exact(f, 4), "little")
     elif n == 255:
-        n = int.from_bytes(f.read(8), "little")
+        n = int.from_bytes(read_exact(f, 8), "little")
     return n
 
 
@@ -79,18 +87,18 @@ def decompress_script(f):
     """Equivalent of `DecompressScript()` (see compressor module)."""
     size = read_varint(f)  # sizes 0-5 encode compressed script types
     if size == 0:  # P2PKH
-        return bytes([0x76, 0xa9, 20]) + f.read(20) + bytes([0x88, 0xac])
+        return bytes([0x76, 0xa9, 20]) + read_exact(f, 20) + bytes([0x88, 0xac])
     elif size == 1:  # P2SH
-        return bytes([0xa9, 20]) + f.read(20) + bytes([0x87])
+        return bytes([0xa9, 20]) + read_exact(f, 20) + bytes([0x87])
     elif size in (2, 3):  # P2PK (compressed)
-        return bytes([33, size]) + f.read(32) + bytes([0xac])
+        return bytes([33, size]) + read_exact(f, 32) + bytes([0xac])
     elif size in (4, 5):  # P2PK (uncompressed)
-        compressed_pubkey = bytes([size - 2]) + f.read(32)
+        compressed_pubkey = bytes([size - 2]) + read_exact(f, 32)
         return bytes([65]) + decompress_pubkey(compressed_pubkey) + bytes([0xac])
     else:  # others (bare multisig, segwit etc.)
         size -= 6
         assert size <= 10000, f"too long script with size {size}"
-        return f.read(size)
+        return read_exact(f, size)
 
 
 def decompress_pubkey(compressed_pubkey):
@@ -139,11 +147,11 @@ def main():
 
     # read metadata (magic bytes, version, network magic, block hash, UTXO count)
     f = open(args.infile, 'rb')
-    magic_bytes = f.read(5)
-    version = int.from_bytes(f.read(2), 'little')
-    network_magic = f.read(4)
-    block_hash = f.read(32)
-    num_utxos = int.from_bytes(f.read(8), 'little')
+    magic_bytes = read_exact(f, 5)
+    version = int.from_bytes(read_exact(f, 2), 'little')
+    network_magic = read_exact(f, 4)
+    block_hash = read_exact(f, 32)
+    num_utxos = int.from_bytes(read_exact(f, 8), 'little')
     if magic_bytes != UTXO_DUMP_MAGIC:
         print(f"Error: provided input file '{args.infile}' is not an UTXO dump.")
         sys.exit(1)
@@ -164,7 +172,7 @@ def main():
     for coin_idx in range(1, num_utxos+1):
         # read key (COutPoint)
         if coins_per_hash_left == 0:  # read next prevout hash
-            prevout_hash = f.read(32)
+            prevout_hash = read_exact(f, 32)
             coins_per_hash_left = read_compactsize(f)
         prevout_index = read_compactsize(f)
         # read value (Coin)
