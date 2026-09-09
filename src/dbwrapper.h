@@ -24,6 +24,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace leveldb {
 class Env;
@@ -214,6 +215,8 @@ private:
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
+    //! Aborts rather than returning "not found", which would misreport an unreadable database as a missing entry
+    [[noreturn]] void FatalReadError(std::string_view what, std::string_view detail) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
