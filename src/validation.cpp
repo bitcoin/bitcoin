@@ -3844,7 +3844,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
 
 static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
 {
-    if (block.m_checked_merkle_root) return true;
+    if (block.m_validation_cache.m_checked_merkle_root.load()) return true;
 
     bool mutated;
     uint256 merkle_root = BlockMerkleRoot(block, &mutated);
@@ -3865,7 +3865,7 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
             /*debug_message=*/"duplicate transaction");
     }
 
-    block.m_checked_merkle_root = true;
+    block.m_validation_cache.m_checked_merkle_root.store(true);
     return true;
 }
 
@@ -3878,7 +3878,7 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
 static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment, BlockValidationState& state)
 {
     if (expect_witness_commitment) {
-        if (block.m_checked_witness_commitment) return true;
+        if (block.m_validation_cache.m_checked_witness_commitment.load()) return true;
 
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
@@ -3905,7 +3905,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
                     /*debug_message=*/strprintf("%s : witness merkle commitment mismatch", __func__));
             }
 
-            block.m_checked_witness_commitment = true;
+            block.m_validation_cache.m_checked_witness_commitment.store(true);
             return true;
         }
     }
@@ -3927,7 +3927,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 {
     // These are checks that are independent of context.
 
-    if (block.fChecked)
+    if (block.m_validation_cache.m_checked.load())
         return true;
 
     // Check that the header is valid (particularly PoW).  This is mostly
@@ -3985,7 +3985,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
-        block.fChecked = true;
+        block.m_validation_cache.m_checked.store(true);
 
     return true;
 }
@@ -4419,8 +4419,6 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         if (new_block) *new_block = false;
         BlockValidationState state;
 
-        // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
-        // Therefore, the following critical section must include the CheckBlock() call as well.
         LOCK(cs_main);
 
         // Skipping AcceptBlock() for CheckBlock() failures means that we will never mark a block as invalid if
@@ -4481,9 +4479,7 @@ BlockValidationState TestBlockValidity(
     const bool check_pow,
     const bool check_merkle_root)
 {
-    // Lock must be held throughout this function for two reasons:
-    // 1. We don't want the tip to change during several of the validation steps
-    // 2. To prevent a CheckBlock() race condition for fChecked, see ProcessNewBlock()
+    // Keep the tip stable throughout the validation steps below.
     AssertLockHeld(chainstate.m_chainman.GetMutex());
 
     BlockValidationState state;

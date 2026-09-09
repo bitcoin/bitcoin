@@ -387,7 +387,14 @@ public:
 
 /** Functions for validating blocks and updating the block tree */
 
-/** Context-independent validity checks */
+/** Context-independent validity checks.
+ *
+ * Concurrent checks or copies of the same block are supported while its contents
+ * and effective consensus parameters remain unchanged. Each call needs its own
+ * validation state, and callers must keep the block and parameters alive. Cached
+ * success is not keyed by consensus parameters; use a fresh block when changing
+ * them. See CBlock::ValidationCache for payload ownership requirements.
+ */
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 /**
