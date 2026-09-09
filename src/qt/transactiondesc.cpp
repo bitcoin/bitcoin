@@ -71,7 +71,7 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status
 bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
 {
     // Search for the supported pki type strings
-    if (pr.find(std::string({0x12, 0x0b}) + "x509+sha256") != std::string::npos || pr.find(std::string({0x12, 0x09}) + "x509+sha1") != std::string::npos) {
+    if (pr.contains(std::string({0x12, 0x0b}) + "x509+sha256") || pr.contains(std::string({0x12, 0x09}) + "x509+sha1")) {
         // We want the common name of the Subject of the cert. This should be the second occurrence
         // of the bytes 0x0603550403. The first occurrence of those is the common name of the issuer.
         // After those bytes will be either 0x13 or 0x0C, then length, then either the ascii or utf8

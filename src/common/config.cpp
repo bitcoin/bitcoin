@@ -53,7 +53,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
             } else if ((pos = str.find('=')) != std::string::npos) {
                 std::string name = prefix + TrimString(std::string_view{str}.substr(0, pos), pattern);
                 std::string_view value = TrimStringView(std::string_view{str}.substr(pos + 1), pattern);
-                if (used_hash && name.find("rpcpassword") != std::string::npos) {
+                if (used_hash && name.contains("rpcpassword")) {
                     error = strprintf("parse error on line %i, using # in rpcpassword can be ambiguous and should be avoided", linenr);
                     return false;
                 }

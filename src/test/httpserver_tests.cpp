@@ -882,10 +882,10 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     BOOST_CHECK(actual.starts_with("HTTP/1.1 200 OK\r\n"));
     BOOST_CHECK(actual.ends_with("\r\n874140\n"));
     // Headers can be sorted in any order, and will be, since we use unordered_map
-    BOOST_CHECK(actual.find("Connection: close\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Content-Length: 7\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Content-Type: text/html; charset=ISO-8859-1\r\n") != std::string::npos);
-    BOOST_CHECK(actual.find("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n") != std::string::npos);
+    BOOST_CHECK(actual.contains("Connection: close\r\n"));
+    BOOST_CHECK(actual.contains("Content-Length: 7\r\n"));
+    BOOST_CHECK(actual.contains("Content-Type: text/html; charset=ISO-8859-1\r\n"));
+    BOOST_CHECK(actual.contains("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n"));
 
     // Wait up to one minute for connection to be automatically closed, because
     // keep-alive was not set by the client and we are done responding to their request.
@@ -1010,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
         if (bytes_read > 0) {
             actual.append(buf, bytes_read);
-            if (actual.find(strprintf("height: %d", num_requests - 1)) != std::string::npos) {
+            if (actual.contains(strprintf("height: %d", num_requests - 1))) {
                 break;
             }
         }
@@ -1037,7 +1037,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
         ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
         if (bytes_read > 0) {
             actual.append(buf, bytes_read);
-            if (actual.find(strprintf("height: %d", num_requests - 1)) != std::string::npos) {
+            if (actual.contains(strprintf("height: %d", num_requests - 1))) {
                 break;
             }
         }
@@ -1047,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
 
     // All replies were received
     for (int i = 0; i < num_requests; i++) {
-        BOOST_REQUIRE(actual.find(strprintf("height: %d", i)) != std::string::npos);
+        BOOST_REQUIRE(actual.contains(strprintf("height: %d", i)));
     }
 
     // Close the keep-alive connection

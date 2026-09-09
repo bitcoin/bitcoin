@@ -4371,7 +4371,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
     // Unlock the wallet if needed
     if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
-        if (passphrase.find('\0') == std::string::npos) {
+        if (!passphrase.contains('\0')) {
             return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
         } else {
             return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "

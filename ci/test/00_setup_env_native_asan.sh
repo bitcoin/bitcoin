@@ -25,7 +25,7 @@ export PIP_PACKAGES="--break-system-packages pycapnp"
 export NO_DEPENDS=1
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DSANITIZERS=address,float-divide-by-zero,integer,undefined \
  -DCMAKE_C_COMPILER=clang \
@@ -33,6 +33,7 @@ export BITCOIN_CONFIG="\
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_EXE_LINKER_FLAGS='-fuse-ld=mold' \
- -DAPPEND_CXXFLAGS='-std=c++23' \
+ -DAPPEND_CXXFLAGS=-std=c++26  `# Use the next std version to catch deprecated code early` \
  -DAPPEND_CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
-"
+
+export BITCOIN_CONFIG

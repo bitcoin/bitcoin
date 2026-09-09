@@ -134,7 +134,7 @@ static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 {
     const auto result = SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/cs_params.m_cost_of_change, max_selection_weight);
     BOOST_CHECK_MESSAGE(!result, "BnB-Fail: " + test_title);
-    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    bool max_weight_exceeded = util::ErrorString(result).original.contains("The inputs size exceeds the maximum weight");
     BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
 }
 
@@ -277,7 +277,7 @@ static void TestSRDFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 {
     const auto result = SelectCoinsSRD(utxo_pool, selection_target, cs_params.m_change_fee, cs_params.rng_fast, max_selection_weight);
     BOOST_CHECK_MESSAGE(!result, "SRD-Fail: " + test_title);
-    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    bool max_weight_exceeded = util::ErrorString(result).original.contains("The inputs size exceeds the maximum weight");
     BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
 }
 

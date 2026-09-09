@@ -72,7 +72,7 @@ RPCMethod walletpassphrase()
 
         if (!pwallet->Unlock(strWalletPass)) {
             // Check if the passphrase has a null character (see #27067 for details)
-            if (strWalletPass.find('\0') == std::string::npos) {
+            if (!strWalletPass.contains('\0')) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
             } else {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered is incorrect. "
@@ -158,7 +158,7 @@ RPCMethod walletpassphrasechange()
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
         // Check if the old passphrase had a null character (see #27067 for details)
-        if (strOldWalletPass.find('\0') == std::string::npos) {
+        if (!strOldWalletPass.contains('\0')) {
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
         } else {
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The old wallet passphrase entered is incorrect. "

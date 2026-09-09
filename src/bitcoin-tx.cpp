@@ -338,8 +338,8 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
         const std::string& flags = vStrInputParts[2];
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
+        bSegWit = (flags.contains('W'));
+        bScriptHash = (flags.contains('S'));
     }
 
     if (bSegWit) {
@@ -399,8 +399,8 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     bool bScriptHash = false;
     if (vStrInputParts.size() == numkeys + 4) {
         const std::string& flags = vStrInputParts.back();
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
+        bSegWit = (flags.contains('W'));
+        bScriptHash = (flags.contains('S'));
     }
     else if (vStrInputParts.size() > numkeys + 4) {
         // Validate that there were no more parameters passed
@@ -481,8 +481,8 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
         const std::string& flags = vStrInputParts.back();
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
+        bSegWit = (flags.contains('W'));
+        bScriptHash = (flags.contains('S'));
     }
 
     if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {
