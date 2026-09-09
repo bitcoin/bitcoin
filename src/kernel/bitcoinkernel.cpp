@@ -34,16 +34,20 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/stdmutex.h>
+#include <util/string.h>
 #include <util/task_runner.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <list>
 #include <memory>
@@ -51,6 +55,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -247,6 +252,82 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
         return btck_Warning_LARGE_WORK_INVALID_CHAIN;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+}
+
+constexpr btck_LogLevel to_btck(util::log::Level level)
+{
+    switch (level) {
+    case util::log::Level::Trace: {
+        return btck_LogLevel_TRACE;
+    }
+    case util::log::Level::Debug: {
+        return btck_LogLevel_DEBUG;
+    }
+    case util::log::Level::Info: {
+        return btck_LogLevel_INFO;
+    }
+    case util::log::Level::Warning: {
+        return btck_LogLevel_WARNING;
+    }
+    case util::log::Level::Error: {
+        return btck_LogLevel_ERROR;
+    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+constexpr btck_LogCategory to_btck(BCLog::LogFlags flag)
+{
+    switch (flag) {
+    case BCLog::LogFlags::ALL: {
+        return btck_LogCategory_ALL;
+    }
+    case BCLog::LogFlags::BENCH: {
+        return btck_LogCategory_BENCH;
+    }
+    case BCLog::LogFlags::BLOCKSTORAGE: {
+        return btck_LogCategory_BLOCKSTORAGE;
+    }
+    case BCLog::LogFlags::COINDB: {
+        return btck_LogCategory_COINDB;
+    }
+    case BCLog::LogFlags::LEVELDB: {
+        return btck_LogCategory_LEVELDB;
+    }
+#ifdef DEBUG_LOCKCONTENTION
+    case BCLog::LogFlags::LOCK: {
+        return btck_LogCategory_LOCK;
+    }
+#endif
+    case BCLog::LogFlags::MEMPOOL: {
+        return btck_LogCategory_MEMPOOL;
+    }
+    case BCLog::LogFlags::PRUNE: {
+        return btck_LogCategory_PRUNE;
+    }
+    case BCLog::LogFlags::RAND: {
+        return btck_LogCategory_RAND;
+    }
+    case BCLog::LogFlags::REINDEX: {
+        return btck_LogCategory_REINDEX;
+    }
+    case BCLog::LogFlags::TXPACKAGES: {
+        return btck_LogCategory_TXPACKAGES;
+    }
+    case BCLog::LogFlags::VALIDATION: {
+        return btck_LogCategory_VALIDATION;
+    }
+    case BCLog::LogFlags::KERNEL: {
+        return btck_LogCategory_KERNEL;
+    }
+    default: {
+        // Every category the kernel library can emit must be mapped above. This cannot be enforced
+        // at compile time, so abort in debug builds to catch it early, but deliver the entry as
+        // UNKNOWN in release builds rather than dropping it.
+        Assume(false);
+        return btck_LogCategory_UNKNOWN;
+    }
+    }
 }
 
 struct LoggingConnection {
@@ -501,6 +582,134 @@ struct ChainMan {
 };
 
 } // namespace
+
+//! Holds state for kernel logging subscribers: the registered callbacks and the minimum level.
+//! Shared by all btck_LoggingConnection instances.
+class KernelLogger
+{
+public:
+    //! Signature of a logging callback. Matches btck_LogCallback once the C API delivers
+    //! btck_LogEntry instead of a string.
+    using LogCallback = void (*)(void* user_data, const btck_LogEntry* entry);
+
+private:
+    //! A registered logging callback. Owns user_data: the destroy callback runs when the Callback
+    //! is destroyed.
+    struct Callback {
+        LogCallback fn;
+        void* user_data;
+        btck_DestroyCallback user_data_destroy;
+
+        Callback(LogCallback fn, void* user_data, btck_DestroyCallback user_data_destroy)
+            : fn{fn}, user_data{user_data}, user_data_destroy{user_data_destroy} {}
+        Callback(const Callback&) = delete;
+        Callback& operator=(const Callback&) = delete;
+        ~Callback()
+        {
+            if (user_data && user_data_destroy) user_data_destroy(user_data);
+        }
+
+        void operator()(const btck_LogEntry* entry) const { fn(user_data, entry); }
+    };
+
+    mutable StdMutex m_mutex;
+    //! All registered callbacks that are executed through Log.
+    std::list<Callback> m_callbacks GUARDED_BY(m_mutex);
+    //! Entries below this level are not delivered.
+    std::atomic<util::log::Level> m_min_level{util::log::Level::Info};
+
+public:
+    //! Identifies a registered logging callback.
+    using CallbackHandle = std::list<Callback>::iterator;
+
+    //! Registers a logging callback.
+    [[nodiscard]] CallbackHandle RegisterCallback(
+        LogCallback fn,
+        void* user_data,
+        btck_DestroyCallback user_data_destroy) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    //! Unregisters and destroys the callback. Waits for an in-flight Log to finish, then runs the
+    //! user_data_destroy callback outside m_mutex. Must not be called more than once per handle.
+    void UnregisterCallback(CallbackHandle handle) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    //! Set the minimum log level.
+    void SetMinLevel(btck_LogLevel level)
+    {
+        m_min_level.store(get_bclog_level(level), std::memory_order_relaxed);
+    }
+
+    //! Whether an entry at this level is at or above the minimum level.
+    bool ShouldLog(util::log::Level level) const
+    {
+        return level >= m_min_level.load(std::memory_order_relaxed);
+    }
+    //! Deliver the entry to every registered callback while holding m_mutex, regardless of its
+    //! level. Exceptions from callbacks are swallowed.
+    void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    //! Log() the entry if ShouldLog() passes for its level.
+    void MaybeLog(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        if (ShouldLog(entry.level)) {
+            Log(entry);
+        }
+    }
+};
+
+KernelLogger::CallbackHandle KernelLogger::RegisterCallback(
+    LogCallback fn,
+    void* user_data,
+    btck_DestroyCallback user_data_destroy)
+{
+    STDLOCK(m_mutex);
+    m_callbacks.emplace_back(fn, user_data, user_data_destroy);
+    return std::prev(m_callbacks.end());
+}
+
+void KernelLogger::UnregisterCallback(CallbackHandle handle)
+{
+    // Avoid running the callback destructor while holding m_mutex.
+    std::list<Callback> dying;
+    {
+        STDLOCK(m_mutex);
+        dying.splice(dying.begin(), m_callbacks, handle);
+    }
+}
+
+void KernelLogger::Log(const util::log::Entry& entry) const
+{
+    STDLOCK(m_mutex);
+    if (m_callbacks.empty()) return;
+
+    // Some log statements are manually suffixed with a newline.
+    std::string_view message{util::RemoveSuffixView(entry.message, "\n")};
+    std::string_view thread_name{entry.thread_name};
+    const auto timestamp_ns{TicksSinceEpoch<std::chrono::nanoseconds>(entry.timestamp)};
+    std::string_view file_name{entry.source_loc.file_name()};
+    std::string_view function_name{entry.source_loc.function_name_short()};
+
+    btck_LogEntry btck_entry{
+        .message = message.data(),
+        .message_len = message.size(),
+        .thread_name = thread_name.data(),
+        .thread_name_len = thread_name.size(),
+        .timestamp_ns = timestamp_ns,
+        .mocktime = entry.mocktime.count(),
+        .file_name = file_name.data(),
+        .file_name_len = file_name.size(),
+        .function_name = function_name.data(),
+        .function_name_len = function_name.size(),
+        .line = entry.source_loc.line(),
+        .level = to_btck(entry.level),
+        .category = to_btck(static_cast<BCLog::LogFlags>(entry.category)),
+    };
+
+    for (const auto& callback : m_callbacks) {
+        try {
+            callback(&btck_entry);
+        } catch (...) {
+            // Can't log the error here because we're already inside the logging path (would
+            // deadlock on m_mutex).
+        }
+    }
+}
 
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};

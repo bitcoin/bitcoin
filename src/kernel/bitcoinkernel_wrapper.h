@@ -37,6 +37,7 @@ enum class LogCategory : btck_LogCategory {
     KERNEL = btck_LogCategory_KERNEL,
     TXPACKAGES = btck_LogCategory_TXPACKAGES,
     LOCK = btck_LogCategory_LOCK,
+    UNKNOWN = btck_LogCategory_UNKNOWN,
 };
 
 enum class LogLevel : btck_LogLevel {
@@ -75,6 +76,7 @@ constexpr std::string_view Name(LogCategory category) noexcept
     case LogCategory::VALIDATION: return "validation";
     case LogCategory::KERNEL: return "kernel";
     case LogCategory::LOCK: return "lock";
+    case LogCategory::UNKNOWN: return "unknown";
     } // no default case, so the compiler can warn about missing cases
     return "unknown";
 }

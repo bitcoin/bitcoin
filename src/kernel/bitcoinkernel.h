@@ -364,6 +364,7 @@ typedef uint8_t btck_LogCategory;
 #define btck_LogCategory_KERNEL ((btck_LogCategory)(10))
 #define btck_LogCategory_TXPACKAGES ((btck_LogCategory)(11))
 #define btck_LogCategory_LOCK ((btck_LogCategory)(12))
+#define btck_LogCategory_UNKNOWN ((btck_LogCategory)(13)) //!< Catch-all for categories not (yet) exposed through this API.
 
 /**
  * The severity of a log statement.
