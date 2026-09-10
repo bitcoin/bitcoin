@@ -237,6 +237,15 @@ host_to_commonname() {
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --format=%at -1)}"
 
+# The GUI and non-GUI profiles produce distinct depends build IDs.
+BASE_CACHE_BUILD=""
+BASE_CACHE_GUI=""
+if [ -n "${BASE_CACHE:-}" ]; then
+    BASE_CACHE_BUILD="${BASE_CACHE}/BUILD"
+    BASE_CACHE_GUI="${BASE_CACHE}/GUI"
+fi
+export BASE_CACHE_BUILD BASE_CACHE_GUI
+
 # Precious directories are those which should not be cleaned between successive
 # guix builds
 depends_precious_dir_names="SOURCES_PATH BASE_CACHE SDK_PATH"
@@ -435,6 +444,8 @@ EOF
                 ${V:+V=1}
                 ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
                 ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"}
+                ${BASE_CACHE_BUILD:+BASE_CACHE_BUILD="$BASE_CACHE_BUILD"}
+                ${BASE_CACHE_GUI:+BASE_CACHE_GUI="$BASE_CACHE_GUI"}
                 ${SDK_PATH:+SDK_PATH="$SDK_PATH"}
                 DISTSRC="$(distsrc_for_host "$HOST" "" /distsrc-base)"
                 OUTDIR="$(outdir_for_host "$HOST" "" /outdir-base)"
