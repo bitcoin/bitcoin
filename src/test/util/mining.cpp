@@ -26,6 +26,7 @@
 #include <versionbits.h>
 
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -158,7 +159,7 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
     BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
     BlockValidationState state;
-    const auto result{chainman.ProcessNewBlock(block, state, true, true)};
+    const auto result{chainman.ProcessNewBlock(block, state, true, true).get()};
     const bool duplicate{!result.new_block && result.processing_success};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);

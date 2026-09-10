@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <future>
 #include <map>
 #include <memory>
 #include <optional>
@@ -1299,9 +1300,10 @@ public:
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
 
     /**
-     * Process an incoming block. This only returns after the best known valid
-     * block is made active. Note that it does not, however, guarantee that the
-     * specific block passed to it has been checked for validity!
+     * Process an incoming block and return a future for its processing result.
+     * Processing is currently synchronous, and the returned future is always ready.
+     * The result does not guarantee that the specific block passed to it has been
+     * checked for validity!
      *
      * If you want to *possibly* get feedback on whether block is valid, you must
      * install a CValidationInterface (see validationinterface.h) - this will have
@@ -1315,17 +1317,18 @@ public:
      * @param[in]   block The block we want to process.
      * @param[out]  state Receives the result of CheckBlock() and AcceptBlock(). Must be freshly initialized.
      *                    A valid state does not imply full block validity or successful chain activation;
-     *                    activation errors are reported separately through the return value.
+     *                    activation errors are reported separately through the future's result.
      * @param[in]   force_processing Process this block even if unrequested; used for non-network block sources.
      * @param[in]   min_pow_checked  True if proof-of-work anti-DoS checks have
      *                               been done by caller for headers chain
      *                               (note: only affects headers acceptance; if
      *                               block header is already present in block
      *                               index then this parameter has no effect)
-     * @returns     Processing success and whether the block was first received via this call,
-     *              independently of block validity. new_block can be true even if processing fails.
+     * @returns     A valid, ready future containing processing success and whether the block was
+     *              first received via this call, independently of block validity.
+     *              new_block can be true even if processing fails.
      */
-    BlockProcessingResult ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
+    std::future<BlockProcessingResult> ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
         EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**

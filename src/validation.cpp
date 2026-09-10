@@ -70,6 +70,7 @@
 #include <cassert>
 #include <chrono>
 #include <deque>
+#include <future>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -4439,11 +4440,13 @@ bool ChainstateManager::StoreBlock(const std::shared_ptr<const CBlock>& pblock, 
     return true;
 }
 
-BlockProcessingResult ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
+std::future<BlockProcessingResult> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
 {
     AssertLockNotHeld(cs_main);
     AssertLockNotHeld(m_check_block_mutex);
 
+    std::promise<BlockProcessingResult> result_promise;
+    auto result_future{result_promise.get_future()};
     BlockProcessingResult result;
     {
         CBlockIndex *pindex = nullptr;
@@ -4470,7 +4473,8 @@ BlockProcessingResult ChainstateManager::ProcessNewBlock(const std::shared_ptr<c
                 m_options.signals->BlockChecked(block, state);
             }
             LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
-            return result;
+            result_promise.set_value(result);
+            return result_future;
         }
     }
 
@@ -4479,18 +4483,21 @@ BlockProcessingResult ChainstateManager::ProcessNewBlock(const std::shared_ptr<c
     BlockValidationState activation_state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(activation_state, block)) {
         LogError("%s: ActivateBestChain failed (%s)\n", __func__, activation_state.ToString());
-        return result;
+        result_promise.set_value(result);
+        return result_future;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
         LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        return result;
+        result_promise.set_value(result);
+        return result_future;
      }
 
     result.processing_success = true;
-    return result;
+    result_promise.set_value(result);
+    return result_future;
 }
 
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)

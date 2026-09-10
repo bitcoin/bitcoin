@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <compare>
 #include <condition_variable>
+#include <future>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -85,7 +86,7 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(m_chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
-    const auto processing_result{m_chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true)};
+    const auto processing_result{m_chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(m_chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
