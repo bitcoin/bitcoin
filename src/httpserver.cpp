@@ -1009,23 +1009,32 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         // Safely copy the shared pointer to the socket
         std::shared_ptr<Sock> sock{http_client->GetSock()};
 
-        // Check if client is ready to send data. Don't try to receive again
-        // until the send buffer is cleared (all data sent to client).
-        // Keep this as a separate critical section from the m_sock_mutex one above:
-        // never hold m_sock_mutex and m_send_mutex at the same time here.
-        // MaybeSendBytesFromBuffer() locks m_send_mutex then m_sock_mutex, so nesting
-        // them in the opposite order here would risk a lock-order inversion deadlock.
+        // Event choice:
+        //   1. ReadyToSend() (m_send_ready set) -> Send
+        //      m_send_ready stays set while the send buffer still has data to
+        //      drain, so we keep sending and do not Recv. This is also how the
+        //      send-throttle applies backpressure: while the send buffer is
+        //      full, TryReadRequest() holds a completed request back from a
+        //      worker, so nothing new is read until send has drained.
+        //   2. Else, m_req is incomplete and needs more data, or there is no
+        //      m_req at all and the recv buffer is empty -> Recv
+        //   3. Else (no parse in progress, leftover bytes in m_recv_buffer) -> 0
+        //      Stay in the I/O map so TryReadRequest() drains the buffer first.
+        //      Extra pipelined data waits in the kernel socket buffer
+        //      (TCP backpressure), not in m_recv_buffer.
+        //
+        // Lock-order safety: the convention established by
+        // MaybeSendBytesFromBuffer() is to take m_send_mutex before m_sock_mutex.
+        // In this loop GetSock() (above) takes m_sock_mutex and ReadyToSend()
+        // (below) takes m_send_mutex; both are scoped, so each lock is released
+        // before the next is taken and they stay separate critical sections.
+        // Holding m_sock_mutex while acquiring m_send_mutex would invert that
+        // order and risk a lock-order-inversion deadlock.
         Sock::Event event{0};
         if (http_client->ReadyToSend()) {
             event = Sock::SendEvent;
         } else if (http_client->GetRequest() != nullptr || http_client->ReceiveBufferEmpty()) {
-            // Read from the socket when the parser has an incomplete request in
-            // progress (needs more bytes) or when the buffer is empty. If the
-            // buffer is non-empty but no parse is in progress, leave event=0:
-            // the client stays in the I/O map so TryReadRequest() runs first to
-            // consume buffered bytes before admitting more socket data. Excess
-            // pipelined data then backs up in the kernel socket buffer, applying
-            // TCP backpressure instead of accumulating without bound in m_recv_buffer.
+            // Mid-parse (need more bytes) or buffer empty.
             event = Sock::RecvEvent;
         }
 
@@ -1104,6 +1113,15 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
 
     // If the request is ready, hand it to a worker.
     if (client->m_req->GetState() == HTTPRequest::State::Complete) {
+        // Unless this client's send buffer is full: in that case hold the
+        // parsed request here instead of moving it to a worker. This prevents
+        // the server from reading any more data from this client until they
+        // drain their end of the socket, and prevents the server from packing
+        // more responses into the send buffer.
+        const size_t buffer_used{WITH_LOCK(
+            client->m_send_mutex,
+            return client->m_send_buffer.size();)};
+        if (buffer_used > MAX_BODY_SIZE) return nullptr;
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%llu)",
