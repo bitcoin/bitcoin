@@ -88,6 +88,7 @@ Notable changes
 ### Build
 
 - #35769 depends, zeromq: Apply upstream patch
+- #36218 build: avoid pipe2 on Darwin (for now)
 
 ### Doc
 
@@ -106,6 +107,7 @@ Thanks to everyone who directly contributed to this release:
 - ajtowns
 - cyb3ralbert
 - darosior
+- fanquake
 - fjahr
 - Greg Sanders
 - hebasto
