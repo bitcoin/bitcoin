@@ -422,9 +422,23 @@ struct Waiter
     //! to guard access to related state. Specifically, since the thread_local
     //! ThreadContext struct owns a Waiter, the Waiter::m_mutex is used to guard
     //! access to other parts of the struct to avoid needing to deal with more
-    //! mutexes than necessary. This mutex can be held at the same time as
-    //! EventLoop::m_mutex as long as Waiter::mutex is locked first and
-    //! EventLoop::m_mutex is locked second.
+    //! mutexes than necessary.
+    //!
+    //! Lock order: this mutex can be held at the same time as
+    //! EventLoop::m_mutex as long as Waiter::m_mutex is locked first and
+    //! EventLoop::m_mutex is locked second. ~ProxyServer<Thread> locks them
+    //! in this order on the event loop thread. No code locks them in the
+    //! reverse order.
+    //!
+    //! Blocking rule: a thread other than the event loop thread must not hold
+    //! this mutex while calling EventLoop::sync() or EventLoop::post(). Those
+    //! calls block until the event loop thread runs the posted function, and
+    //! the event loop thread locks Waiter::m_mutex itself (in SetThread and
+    //! its disconnect callback, Waiter::post, and ~ProxyServer<Thread>), so
+    //! holding the mutex across the call could deadlock even though the two
+    //! mutexes would be locked in the permitted order. This is why
+    //! ~ThreadContext releases the mutex before destroying ProxyClient<Thread>
+    //! objects, whose destructor calls EventLoop::sync().
     Mutex m_mutex;
     std::condition_variable m_cv MP_GUARDED_BY(m_mutex);
     std::optional<kj::Function<void()>> m_fn MP_GUARDED_BY(m_mutex);
@@ -768,9 +782,10 @@ struct ThreadContext
     //! However, individual ProxyClient<Thread> objects in the maps will only be
     //! associated with one event loop and guarded by EventLoop::m_mutex. So
     //! Waiter::m_mutex does not need to be held while accessing individual
-    //! ProxyClient<Thread> instances, and may even need to be released to
-    //! respect lock order and avoid locking Waiter::m_mutex before
-    //! EventLoop::m_mutex.
+    //! ProxyClient<Thread> instances, and must be released before destroying
+    //! one from a thread other than the event loop thread, because
+    //! ~ProxyClient<Thread> calls EventLoop::sync() (see the blocking rule in
+    //! the Waiter::m_mutex documentation).
     ConnThreads callback_threads MP_GUARDED_BY(waiter->m_mutex);
 
     //! When client is making a request to a server, this is the `thread`

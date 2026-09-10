@@ -179,10 +179,10 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                 if (erase_thread) {
                     // Look up the thread again without using existing
                     // iterator since entry may no longer be there after
-                    // a disconnect. Destroy node after releasing
-                    // Waiter::m_mutex, so the ProxyClient<Thread>
-                    // destructor is able to use EventLoop::mutex
-                    // without violating lock order.
+                    // a disconnect. Destroy the node after releasing
+                    // Waiter::m_mutex, so ~ProxyClient<Thread> does not
+                    // run with the mutex held (see the SetThread
+                    // disconnect callback).
                     ConnThreads::node_type removed;
                     {
                         Lock lock(thread_context.waiter->m_mutex);
