@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
 
     for (const auto& block : fork) {
         BlockValidationState state;
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).processing_success);
     }
 
     // The index thread is blocked and not done

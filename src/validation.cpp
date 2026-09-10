@@ -4439,14 +4439,14 @@ bool ChainstateManager::StoreBlock(const std::shared_ptr<const CBlock>& pblock, 
     return true;
 }
 
-bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked, bool* new_block)
+BlockProcessingResult ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
 {
     AssertLockNotHeld(cs_main);
     AssertLockNotHeld(m_check_block_mutex);
 
+    BlockProcessingResult result;
     {
         CBlockIndex *pindex = nullptr;
-        if (new_block) *new_block = false;
 
         // Skipping AcceptBlock() for CheckBlock() failures means that we will never mark a block as invalid if
         // CheckBlock() fails.  This is protective against consensus failure if there are any unknown forms of block
@@ -4463,14 +4463,14 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         LOCK(cs_main);
         if (ret) {
             // Store to disk
-            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, &result.new_block, min_pow_checked);
         }
         if (!ret) {
             if (m_options.signals) {
                 m_options.signals->BlockChecked(block, state);
             }
             LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
-            return false;
+            return result;
         }
     }
 
@@ -4479,17 +4479,18 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
     BlockValidationState activation_state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(activation_state, block)) {
         LogError("%s: ActivateBestChain failed (%s)\n", __func__, activation_state.ToString());
-        return false;
+        return result;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
         LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        return false;
+        return result;
      }
 
-    return true;
+    result.processing_success = true;
+    return result;
 }
 
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)

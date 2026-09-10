@@ -84,16 +84,15 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
     // results.
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(m_chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool new_block;
     BlockValidationState state;
-    bool accepted = m_chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    const auto processing_result{m_chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true)};
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(m_chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
-    if (!new_block && accepted) {
+    if (!processing_result.new_block && processing_result.processing_success) {
         reason = "duplicate";
-    } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
+    } else if (!processing_result.processing_success && (!sc->m_found || sc->m_state.IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example
         // from an activation or system error. It can also fail after a valid
         // BlockChecked result. In these cases the validation result is
@@ -107,7 +106,7 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
         reason = sc->m_state.GetRejectReason();
         debug = sc->m_state.GetDebugMessage();
     }
-    const bool result{accepted && new_block && reason.empty()};
+    const bool result{processing_result.processing_success && processing_result.new_block && reason.empty()};
     CHECK_NONFATAL(result == reason.empty());
     return result;
 }

@@ -933,6 +933,14 @@ enum class SnapshotCompletionResult {
     HASH_MISMATCH,
 };
 
+/** ProcessNewBlock outcomes; neither implies full consensus validity. */
+struct BlockProcessingResult {
+    /** Whether initial processing and chain activation returned success. */
+    bool processing_success{false};
+    /** Set before storing newly received block data; can be true even if processing fails. */
+    bool new_block{false};
+};
+
 /**
  * Interface for managing multiple \ref Chainstate objects, where each
  * chainstate is associated with chainstate* subdirectory in the data directory
@@ -1314,10 +1322,10 @@ public:
      *                               (note: only affects headers acceptance; if
      *                               block header is already present in block
      *                               index then this parameter has no effect)
-     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
+     * @returns     Processing success and whether the block was first received via this call,
+     *              independently of block validity. new_block can be true even if processing fails.
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked, bool* new_block)
+    BlockProcessingResult ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
         EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
