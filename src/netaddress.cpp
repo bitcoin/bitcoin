@@ -343,6 +343,12 @@ bool CNetAddr::IsRFC3849() const
     return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 4>{0x20, 0x01, 0x0D, 0xB8});
 }
 
+bool CNetAddr::IsRFC9637() const
+{
+    return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 2>{0x3F, 0xFF}) &&
+           (m_addr[2] & 0xF0) == 0x00;
+}
+
 bool CNetAddr::IsRFC3964() const
 {
     return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 2>{0x20, 0x02});
@@ -434,7 +440,7 @@ bool CNetAddr::IsValid() const
     }
 
     // documentation IPv6 address
-    if (IsRFC3849())
+    if (IsRFC3849() || IsRFC9637())
         return false;
 
     if (IsInternal())

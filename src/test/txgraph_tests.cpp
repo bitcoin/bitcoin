@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     BOOST_CHECK(graph->IsOversized(TxGraph::Level::TOP));
 
     // Call Trim() to remove transactions and bring the cluster back within limits.
-    auto removed_refs = graph->Trim();
+    graph->Trim();
     graph->SanityCheck();
     BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), NUM_TOTAL_TX - 6);
     BOOST_CHECK(!graph->IsOversized(TxGraph::Level::TOP));
