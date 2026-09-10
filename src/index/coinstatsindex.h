@@ -10,6 +10,7 @@
 #include <crypto/muhash.h>
 #include <index/base.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <uint256.h>
 
 #include <cstddef>
@@ -17,7 +18,6 @@
 #include <memory>
 #include <optional>
 
-class CBlockIndex;
 namespace kernel {
 struct CCoinsStats;
 }
@@ -68,8 +68,8 @@ public:
 
     interfaces::Chain::NotifyOptions CustomOptions() override;
 
-    // Look up stats for a specific block using CBlockIndex
-    std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
+    // Look up stats for a specific block using hash and height
+    std::optional<kernel::CCoinsStats> LookUpStats(const interfaces::BlockRef& block) const;
 };
 
 /// The global UTXO set hash object.
