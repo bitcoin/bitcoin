@@ -1098,9 +1098,23 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
 
 std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequestInternal()
 {
+    if (m_recv_buffer.empty()) return nullptr;
+
+    HTTPRequest::State req_state{HTTPRequest::State::Error};
     try {
         // Read data from the buffer into the current request
-        ReadRequest(*m_req);
+        LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
+        try {
+            req_state = m_req->Load(reader);
+        } catch (...) {
+            m_recv_buffer.clear();
+            throw;
+        }
+
+        // Remove the bytes read out of the buffer.
+        m_recv_buffer.erase(
+            m_recv_buffer.begin(),
+            m_recv_buffer.begin() + reader.Consumed());
     } catch (const ContentTooLargeError& e) {
         LogDebug(
             BCLog::HTTP,
@@ -1127,7 +1141,7 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequestInternal()
     }
 
     // If the request is ready, hand it to a worker.
-    if (m_req->GetState() == HTTPRequest::State::Complete) {
+    if (req_state == HTTPRequest::State::Complete) {
         // Unless this client's send buffer is full: in that case hold the
         // parsed request here instead of moving it to a worker. This prevents
         // the server from reading any more data from this client until they
@@ -1222,25 +1236,6 @@ void HTTPServer::ClearConnectedClients()
     LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
     m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
     m_connected.clear();
-}
-
-void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
-{
-    if (m_recv_buffer.empty()) return;
-
-    LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
-    try {
-        req.Load(reader);
-    } catch (...) {
-        // Clear the memory allocated to this client, caller must disconnect
-        m_recv_buffer.clear();
-        throw;
-    }
-
-    // Remove the bytes read out of the buffer.
-    m_recv_buffer.erase(
-        m_recv_buffer.begin(),
-        m_recv_buffer.begin() + reader.Consumed());
 }
 
 HTTPRequest::State HTTPRequest::Load(util::LineReader& reader)
