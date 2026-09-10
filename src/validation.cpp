@@ -6199,6 +6199,7 @@ ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Opt
 
 ChainstateManager::~ChainstateManager()
 {
+    StopBlockProcessing();
     LOCK(::cs_main);
 
     m_versionbitscache.Clear();

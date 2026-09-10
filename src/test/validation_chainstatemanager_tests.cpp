@@ -421,6 +421,7 @@ struct SnapshotTestSetup : TestChain100Setup {
     ChainstateManager& SimulateNodeRestart()
     {
         ChainstateManager& chainman = *Assert(m_node.chainman);
+        chainman.StopBlockProcessing();
 
         BOOST_TEST_MESSAGE("Simulating node restart");
         {
