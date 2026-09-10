@@ -183,16 +183,13 @@ BOOST_AUTO_TEST_CASE(autofile_io_error_detail)
     const std::string errno_suffix{"(" + util::ToString(EBADF) + ")"};
 
     // Checks that fn() throws std::ios_base::failure on a genuine (non-EOF)
-    // I/O failure.
-    // TODO: currently the OS error is discarded; flip to
-    // BOOST_CHECK(HasReason{errno_suffix}(e)) once AutoFile/BufferedFile are
-    // fixed to include it.
+    // I/O failure, and that the OS error is included in the message.
     auto check_io_failure = [&](auto&& fn) {
         try {
             fn();
             BOOST_ERROR("expected std::ios_base::failure was not thrown");
         } catch (const std::ios_base::failure& e) {
-            BOOST_CHECK(!HasReason{errno_suffix}(e));
+            BOOST_CHECK(HasReason{errno_suffix}(e));
         }
     };
 
