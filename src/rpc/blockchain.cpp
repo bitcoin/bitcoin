@@ -3567,7 +3567,7 @@ const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::STR_HEX, "bits", "nBits: compact representation of the block difficulty target"},
     {RPCResult::Type::STR_HEX, "target", "The difficulty target"},
     {RPCResult::Type::NUM, "difficulty", "difficulty of the tip"},
-    {RPCResult::Type::NUM, "verificationprogress", "progress towards the network tip"},
+    {RPCResult::Type::NUM, "verificationprogress", "progress towards the network tip, or towards the snapshot base block for a chainstate validating the chain underneath a snapshot"},
     {RPCResult::Type::STR_HEX, "snapshot_blockhash", /*optional=*/true, "the base block of the snapshot this chainstate is based on, if any"},
     {RPCResult::Type::NUM, "coins_db_cache_bytes", "size of the coinsdb cache"},
     {RPCResult::Type::NUM, "coins_tip_cache_bytes", "size of the coinstip cache"},
@@ -3611,7 +3611,8 @@ return RPCMethod{
         data.pushKV("bits", strprintf("%08x", tip->nBits));
         data.pushKV("target", GetTarget(*tip, chainman.GetConsensus().powLimit).GetHex());
         data.pushKV("difficulty", GetDifficulty(*tip));
-        data.pushKV("verificationprogress", chainman.GuessVerificationProgress(tip));
+        data.pushKV("verificationprogress", cs.TargetBlock() ? chainman.GetBackgroundVerificationProgress(*tip)
+                                                             : chainman.GuessVerificationProgress(tip));
         data.pushKV("coins_db_cache_bytes",  cs.m_coinsdb_cache_size_bytes);
         data.pushKV("coins_tip_cache_bytes", cs.m_coinstip_cache_size_bytes);
         if (cs.m_from_snapshot_blockhash) {
