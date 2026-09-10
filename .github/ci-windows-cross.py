@@ -99,12 +99,9 @@ def prepare_tests():
     content = "\n".join(lines) + "\n"
     config_path.write_text(content)
     print(content)
-    previous_releases_dir = Path(os.environ["PREVIOUS_RELEASES_DIR"])
     cmd_download_prev_rel = [
         sys.executable,
         str(workspace / "test" / "get_previous_releases.py"),
-        "--target-dir",
-        str(previous_releases_dir),
     ]
     run(cmd_download_prev_rel)
     run([sys.executable, "-m", "pip", "install", "pyzmq"])
