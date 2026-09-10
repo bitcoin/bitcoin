@@ -172,21 +172,18 @@ BOOST_AUTO_TEST_CASE(autofile_io_error_detail)
     fs::path path{m_args.GetDataDirBase() / "test_io_error_detail.bin"};
     auto raw_file{[&](const auto& mode) { return fsbridge::fopen(path, mode); }};
     const Obfuscation obfuscation{"ff00ff00ff00ff00"_hex};
-    // SysErrorString() renders as "<message> (<errno>)"; match on the errno
-    // suffix so this doesn't depend on the exact OS-provided wording.
-    const std::string errno_suffix{"(" + util::ToString(EBADF) + ")"};
 
     // Checks that fn() throws std::ios_base::failure on a genuine (non-EOF)
-    // I/O failure.
-    // TODO: currently the OS error is discarded; flip to
-    // BOOST_CHECK(HasReason{errno_suffix}(e)) once AutoFile/BufferedFile are
-    // fixed to include it.
-    auto check_io_failure = [&](auto&& fn) {
+    // I/O failure, and that the OS error is included in the message.
+    // SysErrorString() renders as "<message> (<errno>)"; match on the errno
+    // suffix so this doesn't depend on the exact OS-provided wording.
+    auto check_io_failure = [&](auto&& fn, int expected_errno = EBADF) {
+        const std::string errno_suffix{"(" + util::ToString(expected_errno) + ")"};
         try {
             fn();
             BOOST_ERROR("expected std::ios_base::failure was not thrown");
         } catch (const std::ios_base::failure& e) {
-            BOOST_CHECK(!HasReason{errno_suffix}(e));
+            BOOST_CHECK_MESSAGE(HasReason{errno_suffix}(e), e.what());
         }
     };
 
@@ -260,6 +257,12 @@ BOOST_AUTO_TEST_CASE(autofile_io_error_detail)
         BufferedFile bf{f, 8, 4};
         std::byte one{};
         check_io_failure([&] { bf.read(std::span{&one, 1}); });
+    }
+
+    // Seeking before the start of the file fails with a real OS error.
+    {
+        AutoFile f{raw_file("rb")};
+        check_io_failure([&] { f.seek(-1, SEEK_SET); }, EINVAL);
     }
 }
 
