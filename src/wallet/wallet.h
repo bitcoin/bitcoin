@@ -1096,6 +1096,11 @@ public:
     //! no descriptor has the private key, or the wallet is locked.
     std::optional<CExtKey> GetExtKey(const CExtPubKey& xpub) const;
 
+    //! Derive an HD key at the given path. Without hdkey, unused(KEY)
+    //! descriptors are preferred over active ones. The path must contain at
+    //! least one hardened step, so that sibling keys are not exposed.
+    util::Expected<std::pair<CExtKey, KeyOriginInfo>, WalletError> DeriveHDKey(const std::vector<uint32_t>& path, const std::optional<CExtPubKey>& hdkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
 };
