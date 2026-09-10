@@ -15,10 +15,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(psbt_tests, BasicTestingSetup)
+
+// Bit positions in BIP 370's transaction modifiable flags.
+static constexpr std::size_t INPUTS_MODIFIABLE{0};
+static constexpr std::size_t OUTPUTS_MODIFIABLE{1};
+static constexpr std::size_t HAS_SIGHASH_SINGLE{2};
 
 static PSBTProprietary MakeProprietary(uint64_t subtype, uint8_t key_data, uint8_t value)
 {
@@ -70,7 +76,7 @@ BOOST_AUTO_TEST_CASE(psbt2_addinput)
     CMutableTransaction mtx;
     PartiallySignedTransaction psbt(mtx, /*version=*/2);
     psbt.m_tx_modifiable.emplace();
-    psbt.m_tx_modifiable->set(0, true);
+    psbt.m_tx_modifiable->set(INPUTS_MODIFIABLE);
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 0);
 
     // Same PSBT version is required
@@ -95,12 +101,12 @@ BOOST_AUTO_TEST_CASE(psbt2_addinput)
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 2);
 
     // Disabling inputs modifiable flag prevents adding new inputs
-    psbt.m_tx_modifiable->set(0, false);
+    psbt.m_tx_modifiable->reset(INPUTS_MODIFIABLE);
     rng.fillrand(MakeWritableByteSpan(txid));
     PSBTInput psbtin3(/*psbt_version=*/2, Txid::FromUint256(txid), /*prev_out=*/0);
     BOOST_CHECK(!psbt.AddInput(psbtin3));
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 2);
-    psbt.m_tx_modifiable->set(0, true);
+    psbt.m_tx_modifiable->set(INPUTS_MODIFIABLE);
 
     // Make sure that timelock compatibility checks are working
     // No previous required timelocks, new input with both height and time timelocks is allowed
@@ -167,7 +173,7 @@ BOOST_AUTO_TEST_CASE(psbt2_addoutput)
     CMutableTransaction mtx;
     PartiallySignedTransaction psbt(mtx, /*version=*/2);
     psbt.m_tx_modifiable.emplace();
-    psbt.m_tx_modifiable->set(1, true);
+    psbt.m_tx_modifiable->set(OUTPUTS_MODIFIABLE);
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 0);
 
     // Same PSBT version is required
@@ -179,11 +185,11 @@ BOOST_AUTO_TEST_CASE(psbt2_addoutput)
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 1);
 
     // Disabling outputs modifiable flag prevents adding new outputs
-    psbt.m_tx_modifiable->set(1, false);
+    psbt.m_tx_modifiable->reset(OUTPUTS_MODIFIABLE);
     PSBTOutput psbtout2(/*psbt_version=*/2, /*amount=*/1, CScript());
     BOOST_CHECK(!psbt.AddOutput(psbtout2));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 1);
-    psbt.m_tx_modifiable->set(1, true);
+    psbt.m_tx_modifiable->set(OUTPUTS_MODIFIABLE);
     PSBTOutput psbtout3(/*psbt_version=*/2, /*amount=*/1, CScript());
     BOOST_CHECK(psbt.AddOutput(psbtout3));
     BOOST_CHECK_EQUAL(psbt.outputs.size(), 2);
@@ -329,10 +335,10 @@ BOOST_AUTO_TEST_CASE(psbt_merge_fallback_locktime)
     PartiallySignedTransaction psbt1(mtx, /*version*/2);
     PartiallySignedTransaction psbt2(mtx, /*version*/2);
     psbt1.m_tx_modifiable.emplace();
-    psbt1.m_tx_modifiable->set(0, true);
+    psbt1.m_tx_modifiable->set(INPUTS_MODIFIABLE);
     BOOST_REQUIRE_EQUAL(psbt1.inputs.size(), 0);
     psbt2.m_tx_modifiable.emplace();
-    psbt2.m_tx_modifiable->set(0, true);
+    psbt2.m_tx_modifiable->set(INPUTS_MODIFIABLE);
     BOOST_REQUIRE_EQUAL(psbt2.inputs.size(), 0);
 
 
@@ -358,6 +364,55 @@ BOOST_AUTO_TEST_CASE(psbt_merge_fallback_locktime)
     BOOST_CHECK(psbt1.Merge(psbt2));
     BOOST_REQUIRE(psbt1.fallback_locktime.has_value());
     BOOST_CHECK_EQUAL(*psbt1.fallback_locktime, 21);
+}
+
+BOOST_AUTO_TEST_CASE(psbt_merge_modifiable)
+{
+    CMutableTransaction mtx;
+    PartiallySignedTransaction psbt1(mtx, /*version*/2);
+    PartiallySignedTransaction psbt2(mtx, /*version*/2);
+
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_CHECK(!psbt1.m_tx_modifiable.has_value());
+
+    psbt1.m_tx_modifiable.emplace();
+    psbt1.m_tx_modifiable->set(INPUTS_MODIFIABLE);
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.m_tx_modifiable.has_value());
+    BOOST_CHECK(!psbt1.m_tx_modifiable->test(INPUTS_MODIFIABLE));
+
+    psbt1.m_tx_modifiable.reset();
+    psbt2.m_tx_modifiable.emplace();
+    psbt2.m_tx_modifiable->set(INPUTS_MODIFIABLE);
+    psbt2.m_tx_modifiable->set(HAS_SIGHASH_SINGLE);
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.m_tx_modifiable.has_value());
+    BOOST_CHECK(!psbt1.m_tx_modifiable->test(INPUTS_MODIFIABLE));
+    BOOST_CHECK(psbt1.m_tx_modifiable->test(HAS_SIGHASH_SINGLE));
+
+    psbt1.m_tx_modifiable.emplace();
+    psbt1.m_tx_modifiable->set(HAS_SIGHASH_SINGLE);
+    psbt2.m_tx_modifiable.reset();
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.m_tx_modifiable.has_value());
+    BOOST_CHECK(psbt1.m_tx_modifiable->test(HAS_SIGHASH_SINGLE));
+
+    psbt1.m_tx_modifiable.reset();
+    psbt2.m_tx_modifiable.emplace();
+    psbt2.m_tx_modifiable->set(HAS_SIGHASH_SINGLE);
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.m_tx_modifiable.has_value());
+    BOOST_CHECK(psbt1.m_tx_modifiable->test(HAS_SIGHASH_SINGLE));
+
+    psbt1.m_tx_modifiable.emplace();
+    psbt1.m_tx_modifiable->set(INPUTS_MODIFIABLE);
+    psbt1.m_tx_modifiable->set(OUTPUTS_MODIFIABLE);
+    psbt2.m_tx_modifiable.emplace();
+    psbt2.m_tx_modifiable->set(INPUTS_MODIFIABLE);
+    psbt2.m_tx_modifiable->set(OUTPUTS_MODIFIABLE);
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.m_tx_modifiable.has_value());
+    BOOST_CHECK(psbt1.m_tx_modifiable->test(INPUTS_MODIFIABLE) && psbt1.m_tx_modifiable->test(OUTPUTS_MODIFIABLE));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
