@@ -349,5 +349,5 @@ uint256 AsmapVersion(const std::span<const std::byte> data)
 
     HashWriter asmap_hasher;
     asmap_hasher << data;
-    return asmap_hasher.GetHash();
+    return asmap_hasher.GetSHA256();
 }

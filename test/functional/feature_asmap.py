@@ -22,7 +22,7 @@ from test_framework.util import (
 )
 
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
-VERSION = 'bafc9da308f45179443bd1d22325400ac9104f741522d003e3fac86700f68895'
+VERSION = '55dcec00c72b8a33a271dad20271e14cfbe5526aa1dc12e2559f30c376d85a35'
 
 def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
