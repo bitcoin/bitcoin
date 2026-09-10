@@ -593,6 +593,7 @@ public:
     void InitializeNode(const CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_tx_download_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, !m_tx_download_mutex);
     bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
+    void ProcessPendingEvents() override EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     bool ProcessMessages(CNode& node, std::atomic<bool>& interrupt) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
     bool SendMessages(CNode& node) override
@@ -617,6 +618,8 @@ public:
         m_best_block_time = time;
     };
     void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
+    void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction) override
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
@@ -1056,10 +1059,26 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
-    BlockProcessingResult ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+    struct PendingBlockProcessing {
+        uint256 hash;
+        std::future<BlockProcessingResult> future;
+        bool optimistic_reconstruction;
+    };
+
+    /** One completion per source peer, retained here even after the peer disconnects. */
+    std::map<NodeId, PendingBlockProcessing> m_pending_block_processing GUARDED_BY(g_msgproc_mutex);
+
+    void TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    void ProcessBlock(NodeId peer_id, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool optimistic_reconstruction)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Consume a ready completion. Return true if processing is still pending. */
+    bool IsBlockProcessingPending(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Apply post-processing peer updates on the message-handler thread. */
-    void CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+    void CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Process compact block txns  */
@@ -3680,24 +3699,85 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
-BlockProcessingResult PeerManagerImpl::ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+void PeerManagerImpl::TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
 {
-    BlockValidationState state;
-    return m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked).get();
+    AssertLockHeld(g_msgproc_mutex);
+    assert(future.valid());
+    const auto [it, inserted]{m_pending_block_processing.emplace(peer_id, PendingBlockProcessing{hash, std::move(future), optimistic_reconstruction})};
+    assert(inserted);
 }
 
-void PeerManagerImpl::CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+void PeerManagerImpl::UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
+{
+    Assert(GetPeerRef(peer_id));
+    {
+        LOCK(cs_main);
+        mapBlockSource.emplace(hash, std::make_pair(peer_id, !optimistic_reconstruction));
+    }
+    TrackBlockProcessing(peer_id, hash, std::move(future), optimistic_reconstruction);
+}
+
+void PeerManagerImpl::ProcessBlock(NodeId peer_id, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool optimistic_reconstruction)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    assert(!m_pending_block_processing.contains(peer_id));
+    BlockValidationState state;
+    TrackBlockProcessing(peer_id, block->GetHash(), m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked), optimistic_reconstruction);
+}
+
+bool PeerManagerImpl::IsBlockProcessingPending(NodeId peer_id)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    const auto it{m_pending_block_processing.find(peer_id)};
+    if (it == m_pending_block_processing.end()) return false;
+    if (it->second.future.wait_for(0s) != std::future_status::ready) return true;
+
+    auto pending{std::move(it->second)};
+    m_pending_block_processing.erase(it);
+    BlockProcessingResult result;
+    try {
+        result = pending.future.get();
+    } catch (const std::exception& e) {
+        LogError("Block processing completion failed for peer=%d: %s", peer_id, e.what());
+        m_connman.DisconnectNode(peer_id);
+    } catch (...) {
+        LogError("Block processing completion failed for peer=%d: unknown exception", peer_id);
+        m_connman.DisconnectNode(peer_id);
+    }
+    CompleteBlockProcessing(peer_id, pending.hash, result, pending.optimistic_reconstruction);
+    // SendMessages may consume a completion after ProcessMessages skipped this peer.
+    m_connman.WakeMessageHandler();
+    return false;
+}
+
+void PeerManagerImpl::ProcessPendingEvents()
+{
+    AssertLockHeld(g_msgproc_mutex);
+    // Poll even disconnected peers: completion can clear another peer's block request.
+    for (auto it{m_pending_block_processing.begin()}; it != m_pending_block_processing.end();) {
+        const NodeId peer_id{it->first};
+        ++it;
+        IsBlockProcessingPending(peer_id);
+    }
+}
+
+void PeerManagerImpl::CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
 {
     // new_block can be true even if processing failed, for example on a write error.
     if (result.new_block) {
-        node.m_last_block_time = GetTime<std::chrono::seconds>();
+        m_connman.ForNode(peer_id, [](CNode* node) {
+            node->m_last_block_time = GetTime<std::chrono::seconds>();
+            return true;
+        });
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway.
         LOCK(cs_main);
         RemoveBlockRequest(hash, std::nullopt);
     } else {
         LOCK(cs_main);
-        mapBlockSource.erase(hash);
+        // A newer submission from another peer may now own this source entry.
+        const auto source{mapBlockSource.find(hash)};
+        if (source != mapBlockSource.end() && source->second.first == peer_id) mapBlockSource.erase(source);
     }
 
     if (optimistic_reconstruction) {
@@ -3794,8 +3874,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         // disk-space attacks), but this should be safe due to the
         // protections in the compact block handler -- see related comment
         // in compact block optimistic reconstruction handling.
-        const auto result{ProcessBlock(pblock, /*force_processing=*/true, /*min_pow_checked=*/true)};
-        CompleteBlockProcessing(pfrom, pblock->GetHash(), result, /*optimistic_reconstruction=*/false);
+        ProcessBlock(peer.m_id, pblock, /*force_processing=*/true, /*min_pow_checked=*/true, /*optimistic_reconstruction=*/false);
     }
     return;
 }
@@ -5057,8 +5136,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // we have a chain with at least the minimum chain work), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            const auto result{ProcessBlock(pblock, /*force_processing=*/true, /*min_pow_checked=*/true)};
-            CompleteBlockProcessing(pfrom, pblock->GetHash(), result, /*optimistic_reconstruction=*/true);
+            ProcessBlock(peer.m_id, pblock, /*force_processing=*/true, /*min_pow_checked=*/true, /*optimistic_reconstruction=*/true);
         }
         return;
     }
@@ -5161,8 +5239,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 min_pow_checked = true;
             }
         }
-        const auto result{ProcessBlock(pblock, forceProcessing, min_pow_checked)};
-        CompleteBlockProcessing(pfrom, hash, result, /*optimistic_reconstruction=*/false);
+        ProcessBlock(peer.m_id, pblock, forceProcessing, min_pow_checked, /*optimistic_reconstruction=*/false);
         return;
     }
 
@@ -5450,8 +5527,10 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
 
     const bool processed_orphan = ProcessOrphanTx(peer);
 
-    if (node.fDisconnect)
-        return false;
+    const bool pending_block{IsBlockProcessingPending(peer.m_id)};
+    // Apply block punishment before this peer can send another protocol message.
+    if (MaybeDiscourageAndDisconnect(node, peer) || node.fDisconnect) return false;
+    if (pending_block) return false;
 
     if (processed_orphan) return true;
 
@@ -6078,9 +6157,11 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     Peer& peer{*maybe_peer};
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
 
-    // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
-    // disconnect misbehaving peers even before the version handshake is complete.
+    const bool pending_block{IsBlockProcessingPending(peer.m_id)};
+
+    // Apply punishment even while validation is pending or the handshake is incomplete.
     if (MaybeDiscourageAndDisconnect(node, peer)) return true;
+    if (pending_block) return true;
 
     // Initiate version handshake for outbound connections
     if (!node.IsInboundConn() && !peer.m_outbound_version_message_sent) {

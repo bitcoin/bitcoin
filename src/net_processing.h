@@ -19,6 +19,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,6 +33,7 @@ class CBlockIndex;
 class CScheduler;
 class DataStream;
 class uint256;
+struct BlockProcessingResult;
 
 namespace node {
 class Warnings;
@@ -174,6 +176,10 @@ public:
 
     /* Public for unit testing. */
     virtual void UnitTestMisbehaving(NodeId peer_id) = 0;
+
+    /** Register a block source and a controllable completion future for unit tests. */
+    virtual void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /**
      * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.

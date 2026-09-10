@@ -1055,6 +1055,9 @@ public:
      */
     virtual bool HasAllDesirableServiceFlags(ServiceFlags services) const = 0;
 
+    /** Process deferred events, including when no peers remain connected. */
+    virtual void ProcessPendingEvents() EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+
     /**
      * Process protocol messages received from a given node
      *
