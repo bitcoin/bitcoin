@@ -42,11 +42,16 @@ Notable changes
 - #35691 chainparams: delete my DNS seed
 - #35766 p2p: Assume v2transport for addresses from seeds
 
+### Build
+
+- #36218 build: avoid pipe2 on Darwin (for now)
+
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- fanquake
 - Martin Zumsande
 - sipa
 
