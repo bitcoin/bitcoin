@@ -49,6 +49,7 @@
         <file alias="ko">locale/bitcoin_ko.qm</file>
         <file alias="ku">locale/bitcoin_ku.qm</file>
         <file alias="ku_IQ">locale/bitcoin_ku_IQ.qm</file>
+        <file alias="la">locale/bitcoin_la.qm</file>
         <file alias="lt">locale/bitcoin_lt.qm</file>
         <file alias="lv">locale/bitcoin_lv.qm</file>
         <file alias="mi">locale/bitcoin_mi.qm</file>
@@ -91,8 +92,8 @@
         <file alias="uz@Cyrl">locale/bitcoin_uz@Cyrl.qm</file>
         <file alias="uz@Latn">locale/bitcoin_uz@Latn.qm</file>
         <file alias="ve">locale/bitcoin_ve.qm</file>
+        <file alias="vi">locale/bitcoin_vi.qm</file>
         <file alias="yi">locale/bitcoin_yi.qm</file>
-        <file alias="yo">locale/bitcoin_yo.qm</file>
         <file alias="yue">locale/bitcoin_yue.qm</file>
         <file alias="zh-Hans">locale/bitcoin_zh-Hans.qm</file>
         <file alias="zh-Hant">locale/bitcoin_zh-Hant.qm</file>
