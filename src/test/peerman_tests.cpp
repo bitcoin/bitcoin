@@ -40,7 +40,7 @@ static void mineBlock(node::NodeContext& node, FakeNodeClock& clock, std::chrono
     block.m_validation_cache.m_checked.store(true); // little speedup
     clock.set(curr_time); // process block at current time
     BlockValidationState state;
-    Assert(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), state, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    Assert(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), state, /*force_processing=*/true, /*min_pow_checked=*/true).processing_success);
     node.validation_signals->SyncWithValidationInterfaceQueue(); // drain events queue
 }
 

@@ -133,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
         BlockValidationState state;
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true, nullptr));
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).processing_success);
     }
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
@@ -152,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
         BlockValidationState state;
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true, nullptr));
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).processing_success);
     }
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
@@ -184,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
      for (size_t i = 2; i < 4; i++) {
          const auto& block = chainA[i];
          BlockValidationState state;
-         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true, nullptr));
+         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).processing_success);
      }
 
      // Check that chain A and B blocks can be retrieved.

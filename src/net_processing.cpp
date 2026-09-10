@@ -1056,12 +1056,6 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
-    /** ProcessNewBlock outcomes; neither implies full consensus validity. */
-    struct BlockProcessingResult {
-        bool processing_success{false};
-        bool new_block{false};
-    };
-
     BlockProcessingResult ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
     /** Apply post-processing peer updates on the message-handler thread. */
@@ -3686,12 +3680,10 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
-PeerManagerImpl::BlockProcessingResult PeerManagerImpl::ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+BlockProcessingResult PeerManagerImpl::ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
-    BlockProcessingResult result;
     BlockValidationState state;
-    result.processing_success = m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked, &result.new_block);
-    return result;
+    return m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked);
 }
 
 void PeerManagerImpl::CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)

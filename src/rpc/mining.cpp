@@ -186,7 +186,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     if (!process_new_block) return true;
 
     BlockValidationState state;
-    if (!chainman.ProcessNewBlock(block_out, state, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
+    if (!chainman.ProcessNewBlock(block_out, state, /*force_processing=*/true, /*min_pow_checked=*/true).processing_success) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -1124,13 +1124,12 @@ static RPCMethod submitblock()
         }
     }
 
-    bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
-    bool accepted = chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true)};
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
-    if (!new_block && accepted) {
+    if (!result.new_block && result.processing_success) {
         return "duplicate";
     }
     if (!sc->found) {

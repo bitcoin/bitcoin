@@ -154,12 +154,11 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 {
     auto& chainman{*Assert(node.chainman)};
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
-    bool new_block;
     BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
     BlockValidationState state;
-    const bool processed{chainman.ProcessNewBlock(block, state, true, true, &new_block)};
-    const bool duplicate{!new_block && processed};
+    const auto result{chainman.ProcessNewBlock(block, state, true, true)};
+    const bool duplicate{!result.new_block && result.processing_success};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);
     node.validation_signals->SyncWithValidationInterfaceQueue();
