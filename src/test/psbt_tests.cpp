@@ -323,4 +323,41 @@ BOOST_AUTO_TEST_CASE(psbt_merge_only_same_version)
     BOOST_CHECK(!psbt_v2.Merge(psbt_v0));
 }
 
+BOOST_AUTO_TEST_CASE(psbt_merge_fallback_locktime)
+{
+    CMutableTransaction mtx;
+    PartiallySignedTransaction psbt1(mtx, /*version*/2);
+    PartiallySignedTransaction psbt2(mtx, /*version*/2);
+    psbt1.m_tx_modifiable.emplace();
+    psbt1.m_tx_modifiable->set(0, true);
+    BOOST_REQUIRE_EQUAL(psbt1.inputs.size(), 0);
+    psbt2.m_tx_modifiable.emplace();
+    psbt2.m_tx_modifiable->set(0, true);
+    BOOST_REQUIRE_EQUAL(psbt2.inputs.size(), 0);
+
+
+    PSBTInput psbtin(/*psbt_version=*/2, Txid::FromUint256(uint256::ONE), /*prev_out=*/0);
+    psbtin.height_locktime = 100;
+    BOOST_REQUIRE(psbt1.AddInput(psbtin));
+    BOOST_REQUIRE(psbt2.AddInput(psbtin));
+
+    psbt1.fallback_locktime = std::nullopt;
+    psbt2.fallback_locktime = 21;
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.fallback_locktime.has_value());
+    BOOST_CHECK_EQUAL(*psbt1.fallback_locktime, 21);
+
+    psbt1.fallback_locktime = 5;
+    psbt2.fallback_locktime = 19;
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.fallback_locktime.has_value());
+    BOOST_CHECK_EQUAL(*psbt1.fallback_locktime, 5);
+
+    psbt1.fallback_locktime = 21;
+    psbt2.fallback_locktime = std::nullopt;
+    BOOST_CHECK(psbt1.Merge(psbt2));
+    BOOST_REQUIRE(psbt1.fallback_locktime.has_value());
+    BOOST_CHECK_EQUAL(*psbt1.fallback_locktime, 21);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
