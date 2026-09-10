@@ -66,6 +66,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <future>
 #include <limits>
 #include <map>
 #include <memory>
@@ -186,7 +187,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     if (!process_new_block) return true;
 
     BlockValidationState state;
-    if (!chainman.ProcessNewBlock(block_out, state, /*force_processing=*/true, /*min_pow_checked=*/true).processing_success) {
+    if (!chainman.ProcessNewBlock(block_out, state, /*force_processing=*/true, /*min_pow_checked=*/true).get().processing_success) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -1127,7 +1128,7 @@ static RPCMethod submitblock()
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
-    const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true)};
+    const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
     if (!result.new_block && result.processing_success) {
         return "duplicate";

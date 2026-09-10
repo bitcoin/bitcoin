@@ -44,6 +44,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <future>
 #include <limits>
 #include <list>
 #include <memory>
@@ -1392,7 +1393,7 @@ int btck_chainstate_manager_process_block(
     int* _new_block)
 {
     BlockValidationState state;
-    const auto result{btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true)};
+    const auto result{btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
     if (_new_block) {
         *_new_block = result.new_block ? 1 : 0;
     }

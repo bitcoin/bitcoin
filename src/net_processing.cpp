@@ -3683,7 +3683,7 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
 BlockProcessingResult PeerManagerImpl::ProcessBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
     BlockValidationState state;
-    return m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked);
+    return m_chainman.ProcessNewBlock(block, state, force_processing, min_pow_checked).get();
 }
 
 void PeerManagerImpl::CompleteBlockProcessing(CNode& node, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
