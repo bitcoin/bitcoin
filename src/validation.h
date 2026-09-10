@@ -36,6 +36,7 @@
 #include <util/result.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <validation_queue.h> // IWYU pragma: export
 #include <versionbits.h>
 
 #include <algorithm>
@@ -934,14 +935,6 @@ enum class SnapshotCompletionResult {
     HASH_MISMATCH,
 };
 
-/** ProcessNewBlock outcomes; neither implies full consensus validity. */
-struct BlockProcessingResult {
-    /** Whether initial processing and chain activation returned success. */
-    bool processing_success{false};
-    /** Set before storing newly received block data; can be true even if processing fails. */
-    bool new_block{false};
-};
-
 /**
  * Interface for managing multiple \ref Chainstate objects, where each
  * chainstate is associated with chainstate* subdirectory in the data directory
@@ -967,6 +960,9 @@ class ChainstateManager
 private:
     /** Serialize only initial CheckBlock calls; release before waiting for cs_main. */
     Mutex m_check_block_mutex;
+
+    /** Owned worker infrastructure; ProcessNewBlock does not submit jobs yet. */
+    BlockProcessingQueue m_block_processing_queue;
 
     /** The last header for which a headerTip notification was issued. */
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
@@ -1061,6 +1057,13 @@ public:
     using Options = kernel::ChainstateManagerOpts;
 
     explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
+
+    /** Start only after worker dependencies are initialized. Not enabled by node startup yet. */
+    void StartBlockProcessing() LOCKS_EXCLUDED(cs_main) { m_block_processing_queue.Start(); }
+    /** Close admission without waiting for accepted jobs. */
+    void InterruptBlockProcessing() { m_block_processing_queue.Interrupt(); }
+    /** Finish accepted jobs before destroying callbacks, networking, or mempool dependencies. */
+    void StopBlockProcessing() LOCKS_EXCLUDED(cs_main) { m_block_processing_queue.Stop(); }
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.

@@ -480,11 +480,12 @@ struct ChainstateManagerOptions {
 };
 
 struct ChainMan {
-    std::unique_ptr<ChainstateManager> m_chainman;
+    // Keep notifications and callbacks alive while the manager joins its worker.
     std::shared_ptr<const Context> m_context;
+    std::unique_ptr<ChainstateManager> m_chainman;
 
     ChainMan(std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
-        : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+        : m_context(std::move(context)), m_chainman(std::move(chainman)) {}
 };
 
 } // namespace
