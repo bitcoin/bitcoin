@@ -219,7 +219,6 @@ public:
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
-    std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
     enum AmountType { DEBIT, CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
@@ -354,8 +353,9 @@ public:
     // those with witnesses are preferred, followed by least weight.
     bool Update(CTransactionRef tx, const TxState& new_state);
 
-    //! make sure balances are recalculated
-    void MarkDirty()
+    //! Make sure balances are recalculated
+    //! This function is not actually const, all of its changes are to mutable members.
+    void MarkDirty() const
     {
         m_amounts[DEBIT].Reset();
         m_amounts[CREDIT].Reset();
@@ -391,7 +391,7 @@ public:
     const std::map<Wtxid, CTransactionRef>& GetTxs() const { return m_txs; }
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
-    // copied in and out of the mapWallet map, and fields are updated in the
+    // copied in and out of the m_txs map, and fields are updated in the
     // wrong copy.
     CWalletTx(const CWalletTx&) = delete;
     CWalletTx& operator=(const CWalletTx&) = delete;
@@ -422,13 +422,6 @@ private:
     //! Set m_canonical_wtxid to the best variant under the unconfirmed rule
     //! (witnessed preferred, then least weight). Ignores state.
     void RecomputeCanonical();
-};
-
-struct WalletTxOrderComparator {
-    bool operator()(const CWalletTx* a, const CWalletTx* b) const
-    {
-        return a->nOrderPos < b->nOrderPos;
-    }
 };
 
 class WalletTXO

@@ -174,6 +174,7 @@ if(ENABLE_WALLET)
       bitcoin_wallet
       bitcoin_common
       bitcoin_util
+      $<TARGET_NAME_IF_EXISTS:Boost::headers>
     )
     install_binary_component(bitcoin-wallet HAS_MANPAGE)
   endif()
