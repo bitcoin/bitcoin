@@ -8,7 +8,6 @@
 #include <any>
 #include <atomic>
 #include <capnp/capability.h>
-#include <capnp/rpc.h>
 #include <capnp/rpc-twoparty.h>
 #include <cassert>
 #include <chrono>
@@ -77,13 +76,18 @@ static_assert(std::is_integral_v<decltype(kMP_MINOR_VERSION)>, "MP_MINOR_VERSION
  * this to be true to simplify shutdown and avoid needing to call
  * client_disconnect manually, but false allows testing more ProxyClient
  * behavior and the "IPC client method called after disconnect" code path.
+ *
+ * Also accepts an analogous server_owns_connection option controlling
+ * whether the server Connection is erased automatically when the peer
+ * disconnects. False is needed by tests that need to keep the server
+ * Connection alive across a disconnect notification, tearing it down
+ * explicitly later via server_disconnect() instead.
  */
 class TestSetup
 {
 public:
     std::function<void()> server_disconnect;
     std::function<void()> server_disconnect_later;
-    std::function<void()> server_on_disconnect;
     std::function<void()> client_disconnect;
     std::promise<std::unique_ptr<ProxyClient<messages::FooInterface>>> client_promise;
     std::unique_ptr<ProxyClient<messages::FooInterface>> client;
@@ -92,7 +96,7 @@ public:
     //! not start until the other members are initialized.
     std::thread thread;
 
-    TestSetup(bool client_owns_connection = true)
+    TestSetup(bool client_owns_connection = true, bool server_owns_connection = true)
         : thread{[&] {
               EventLoop loop("mptest", [](mp::LogMessage log) {
                   // Info logs are not printed by default, but will be shown with `mptest --verbose`
@@ -101,36 +105,21 @@ public:
               });
               auto pipe = loop.m_io_context.provider->newTwoWayPipe();
 
-              auto server_connection =
-                  std::make_unique<Connection>(loop, kj::mv(pipe.ends[0]), [&](Connection& connection) {
-                      auto server_proxy = kj::heap<ProxyServer<messages::FooInterface>>(
-                          std::make_shared<FooImplementation>(), connection);
-                      server = server_proxy;
-                      return capnp::Capability::Client(kj::mv(server_proxy));
-                  });
-              server_disconnect = [&] { loop.sync([&] { server_connection.reset(); }); };
+              auto server_result = ServeStream<messages::FooInterface>(
+                  loop, kj::mv(pipe.ends[0]), std::make_shared<FooImplementation>(), server_owns_connection);
+              server = server_result.first;
+              EventLoop::Connections::iterator server_it = server_result.second;
+              server_disconnect = [&] { loop.sync([&] { loop.m_incoming_connections.erase(server_it); }); };
               server_disconnect_later = [&] {
                   assert(std::this_thread::get_id() == loop.m_thread_id);
-                  loop.m_task_set->add(kj::evalLater([&] { server_connection.reset(); }));
+                  loop.m_task_set->add(kj::evalLater([&] { loop.m_incoming_connections.erase(server_it); }));
               };
-              // Set handler to destroy the server when the client disconnects. This
-              // is ignored if server_disconnect() is called instead. Tests can
-              // assign server_on_disconnect to override the default behavior of
-              // destroying the server connection as soon as the disconnect is
-              // detected (in which case they need to destroy it themselves,
-              // e.g. by calling server_disconnect(), so the event loop can
-              // exit).
-              server_on_disconnect = [&] { server_connection.reset(); };
-              server_connection->onDisconnect([&] { server_on_disconnect(); });
 
-              auto client_connection = std::make_unique<Connection>(loop, kj::mv(pipe.ends[1]));
-              auto client_proxy = std::make_unique<ProxyClient<messages::FooInterface>>(
-                  client_connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<messages::FooInterface>(),
-                  client_connection.get(), /* destroy_connection= */ client_owns_connection);
-              if (client_owns_connection) {
-                  (void)client_connection.release();
-              } else {
-                  client_disconnect = [&] { loop.sync([&] { client_connection.reset(); }); };
+              auto client_proxy =
+                  ConnectStream<messages::FooInterface>(loop, kj::mv(pipe.ends[1]), client_owns_connection);
+              if (!client_owns_connection) {
+                  Connection* client_connection = client_proxy->m_context.connection;
+                  client_disconnect = [&loop, client_connection] { loop.sync([&] { delete client_connection; }); };
               }
 
               client_promise.set_value(std::move(client_proxy));
@@ -417,23 +406,19 @@ KJ_TEST("Calling async IPC method with a remote disconnect while results are bui
     //   per-granule shadow history before a late reader comes along.
     //
     // The server Connection object is deliberately kept alive during all this
-    // by overriding server_on_disconnect: destroying it would cancel the
-    // in-flight request (Connection::~Connection calls m_canceler.cancel(),
-    // setting request_canceled) and the worker would throw InterruptException
-    // instead of proceeding into getResults(). Keeping it alive matches the
-    // window in the original report, where the worker races with capnp's own
-    // internal teardown, which runs before any TwoPartyVatNetwork::onDisconnect
-    // notification.
+    // by constructing TestSetup with server_owns_connection=false: destroying
+    // it would cancel the in-flight request (Connection::~Connection calls
+    // m_canceler.cancel(), setting request_canceled) and the worker would
+    // throw InterruptException instead of proceeding into getResults().
+    // Keeping it alive matches the window in the original report, where the
+    // worker races with capnp's own internal teardown, which runs before any
+    // TwoPartyVatNetwork::onDisconnect notification. The connection is
+    // destroyed explicitly at the end of the test instead.
 
-    TestSetup setup{/*client_owns_connection=*/false};
+    TestSetup setup{/*client_owns_connection=*/false, /*server_owns_connection=*/false};
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
     KJ_EXPECT(foo->add(1, 2) == 3);
     foo->initThreadMap();
-
-    // Keep the server Connection object alive when the disconnect is detected
-    // so the in-flight request is not canceled (see comment above). The
-    // connection is destroyed at the end of the test instead.
-    setup.server_on_disconnect = [] {};
 
     // Signaled by the worker thread when the method body runs, just before it
     // returns and the worker calls getResults() and serializes the results.
