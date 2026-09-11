@@ -36,16 +36,20 @@ SignatureCache::SignatureCache(const size_t max_size_bytes)
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
 }
 
-void SignatureCache::ComputeEntryECDSA(uint256& entry, const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
+uint256 SignatureCache::ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
 {
+    uint256 entry;
     CSHA256 hasher = m_salted_hasher_ecdsa;
     hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(vchSig.data(), vchSig.size()).Finalize(entry.begin());
+    return entry;
 }
 
-void SignatureCache::ComputeEntrySchnorr(uint256& entry, const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
+uint256 SignatureCache::ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
 {
+    uint256 entry;
     CSHA256 hasher = m_salted_hasher_schnorr;
     hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
+    return entry;
 }
 
 bool SignatureCache::Get(const uint256& entry, const bool erase)
@@ -62,8 +66,7 @@ void SignatureCache::Set(const uint256& entry)
 
 bool CachingTransactionSignatureChecker::VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
-    uint256 entry;
-    m_signature_cache.ComputeEntryECDSA(entry, sighash, vchSig, pubkey);
+    const uint256 entry{m_signature_cache.ComputeEntryECDSA(sighash, vchSig, pubkey)};
     if (m_signature_cache.Get(entry, !store))
         return true;
     if (!TransactionSignatureChecker::VerifyECDSASignature(vchSig, pubkey, sighash))
@@ -75,8 +78,7 @@ bool CachingTransactionSignatureChecker::VerifyECDSASignature(const std::vector<
 
 bool CachingTransactionSignatureChecker::VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const
 {
-    uint256 entry;
-    m_signature_cache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
+    const uint256 entry{m_signature_cache.ComputeEntrySchnorr(sighash, sig, pubkey)};
     if (m_signature_cache.Get(entry, !store)) return true;
     if (!TransactionSignatureChecker::VerifySchnorrSignature(sig, pubkey, sighash)) return false;
     if (store) m_signature_cache.Set(entry);

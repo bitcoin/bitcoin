@@ -1743,9 +1743,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
                 BOOST_CHECK_MESSAGE(error == expected_error, ScriptErrorString(error) + " where " + ScriptErrorString(expected_error) + " expected");
             }};
             const auto entry_for{[&](const std::vector<unsigned char>& sig, const XOnlyPubKey& key) {
-                uint256 entry;
-                m_signature_cache.ComputeEntrySchnorr(entry, sighash, std::span{sig}.first(64), key);
-                return entry;
+                return m_signature_cache.ComputeEntrySchnorr(sighash, std::span{sig}.first(64), key);
             }};
             const auto is_cached{[&](const uint256& entry) { return m_signature_cache.Get(entry, /*erase=*/false); }};
 
@@ -1764,8 +1762,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             BOOST_CHECK(!is_cached(entry_for(signature, pubkey)));
             auto different_sighash{sighash};
             different_sighash.begin()[0] ^= 1;
-            uint256 different_sighash_entry;
-            m_signature_cache.ComputeEntrySchnorr(different_sighash_entry, different_sighash, std::span{signature}.first(64), output_pubkey);
+            const auto different_sighash_entry{m_signature_cache.ComputeEntrySchnorr(different_sighash, std::span{signature}.first(64), output_pubkey)};
             BOOST_CHECK(!is_cached(different_sighash_entry));
 
             // A correctly sized invalid signature must not be cached

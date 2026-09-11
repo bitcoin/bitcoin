@@ -52,9 +52,9 @@ public:
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
 
-    void ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
+    uint256 ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
 
-    void ComputeEntrySchnorr(uint256& entry, const uint256 &hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
+    uint256 ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
 
     bool Get(const uint256& entry, bool erase);
 
