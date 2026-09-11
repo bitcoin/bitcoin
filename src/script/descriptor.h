@@ -248,7 +248,7 @@ std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const Signing
  * Due to the hash's usage in previous versions, the COMPAT string is computed with some quirks.
  *
  * The hash is the sha256 of the public descriptor using apostrophes as the hardened indicator, except inside of
- * Miniscript expressions, where "h" is the hardened indicator.
+ * Miniscript expressions, where the public serializtion is used as provided.
 */
 uint256 CompatDescriptorHash(const Descriptor& desc);
 
