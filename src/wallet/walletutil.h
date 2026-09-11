@@ -66,6 +66,11 @@ private:
     int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
     int32_t next_index = 0; // Position of the next item to generate
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
+
+    mutable std::optional<uint256> m_canonical_hash; // Hash of the canonical string, used as a shortcut for comparing canonical strings
+
+    uint256 GetCanonicalHash() const;
+
 public:
     const std::shared_ptr<const Descriptor> descriptor;
     uint64_t creation_time = 0;
@@ -129,9 +134,13 @@ public:
       next_index(next_index),
       range_end(descriptor->IsRange() ? range_end : 1),
       descriptor(descriptor),
-      creation_time(creation_time) {}
+      creation_time(creation_time)
+    {}
 
     void UpdateFrom(const WalletDescriptor& other);
+
+    // Compare by using the canonical string to make the hardened indicators consistent for comparison
+    bool IsCanonicallyEquivalent(const WalletDescriptor& other) const;
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
