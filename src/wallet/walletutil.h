@@ -137,6 +137,10 @@ public:
       creation_time(creation_time)
     {}
 
+    /** Replaces all metadata (range, start, end, creation time), and cache from another WalletDescriptor if it has the same canonical descriptor string.
+     *  The descriptor itself is not replaced to preserve existing serialization to maintain compatibility with previous software versions that expect
+     *  specific serialization.
+     */
     void UpdateFrom(const WalletDescriptor& other);
 
     // Compare by using the canonical string to make the hardened indicators consistent for comparison
