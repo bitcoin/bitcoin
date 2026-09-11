@@ -556,14 +556,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         bals["mine"]["nonmempool"] = Decimal('0.0')
 
         # Use self.migrate_and_get_rpc to test this error to get everything copied over to the master node
-        assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", self.migrate_and_get_rpc, "encrypted")
+        assert_raises_rpc_error(-4, "Error: The wallet passphrase was not provided", self.migrate_and_get_rpc, "encrypted")
 
         # Use the RPC directly on the master node for the rest of these checks
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
-        assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", self.master_node.migratewallet, "encrypted", "badpass")
+        assert_raises_rpc_error(-4, "Error: The wallet passphrase entered was incorrect.", self.master_node.migratewallet, "encrypted", "badpass")
 
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
-        assert_raises_rpc_error(-4, "The passphrase contains a null character", self.master_node.migratewallet, "encrypted", "pass\0with\0null")
+        assert_raises_rpc_error(-4, "Error: The wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte).", self.master_node.migratewallet, "encrypted", "pass\0with\0null")
 
         # Verify we can properly migrate the encrypted wallet
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
