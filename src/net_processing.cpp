@@ -798,7 +798,7 @@ private:
      */
     bool MaybeSendGetHeaders(CNode& pfrom, const CBlockLocator& locator, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     /** Potentially fetch blocks from this peer upon receipt of a new headers tip */
-    void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex& last_header);
+    void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex& last_header) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     /** Update peer state based on received headers message */
     void UpdatePeerStateForReceivedHeaders(CNode& pfrom, const CBlockIndex& last_header, bool received_new_header, bool may_have_more_headers)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
@@ -1010,10 +1010,10 @@ private:
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
      *  at most count entries.
      */
-    void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /** Request blocks for the background chainstate, if one is in use. */
-    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex* from_tip, const CBlockIndex* target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex* from_tip, const CBlockIndex* target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /**
     * \brief Find next blocks to download from a peer after a starting block.
@@ -1042,7 +1042,7 @@ private:
     *                     block in the window is in flight and no other peer is
     *                     trying to download the next block).
     */
-    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /* Multimap used to preserve insertion order */
     typedef std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> BlockDownloadMap;
@@ -1067,6 +1067,9 @@ private:
 
     /** One completion per source peer, retained here even after the peer disconnects. */
     std::map<NodeId, PendingBlockProcessing> m_pending_block_processing GUARDED_BY(g_msgproc_mutex);
+
+    /** Whether a received block is still awaiting processing completion. */
+    bool IsBlockBeingProcessed(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     void TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
@@ -1604,6 +1607,8 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
     bool is_limited_peer = IsLimitedPeer(peer);
     NodeId waitingfor = -1;
+    bool waiting_for_processing{false};
+    const CBlockIndex* last_common_block{state->pindexLastCommonBlock};
     while (pindexWalk->nHeight < nMaxHeight) {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
         // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
@@ -1638,6 +1643,13 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 continue;
             }
 
+            // Received blocks may still be waiting for the worker to store them.
+            if (IsBlockBeingProcessed(pindex->GetBlockHash())) {
+                // An earlier local block prevents us from blaming a later peer.
+                if (waitingfor == -1) waiting_for_processing = true;
+                continue;
+            }
+
             // Is block in-flight?
             if (IsBlockRequested(pindex->GetBlockHash())) {
                 if (waitingfor == -1) {
@@ -1650,8 +1662,10 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
             // The block is not already downloaded, and not yet in flight.
             if (pindex->nHeight > nWindowEnd) {
                 // We reached the end of the window.
-                if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
+                if (vBlocks.size() == 0 && waitingfor != peer.m_id && !waiting_for_processing &&
+                    state->pindexLastCommonBlock == last_common_block) {
                     // We aren't able to fetch anything, but we would be if the download window was one larger.
+                    // Local processing must not be holding back or advancing that window.
                     if (nodeStaller) *nodeStaller = waitingfor;
                 }
                 return;
@@ -3130,6 +3144,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
         while (pindexWalk && !m_chainman.ActiveChain().Contains(*pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
                     !IsBlockRequested(pindexWalk->GetBlockHash()) &&
+                    !IsBlockBeingProcessed(pindexWalk->GetBlockHash()) &&
                     (!DeploymentActiveAt(*pindexWalk, m_chainman, Consensus::DEPLOYMENT_SEGWIT) || CanServeWitnesses(peer))) {
                 // We don't have this block, and it's not yet in flight.
                 vToFetch.push_back(pindexWalk);
@@ -3697,6 +3712,12 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               filter_type_ser,
               stop_index->GetBlockHash(),
               headers);
+}
+
+bool PeerManagerImpl::IsBlockBeingProcessed(const uint256& hash) const
+{
+    AssertLockHeld(g_msgproc_mutex);
+    return std::ranges::any_of(m_pending_block_processing, [&hash](const auto& entry) { return entry.second.hash == hash; });
 }
 
 void PeerManagerImpl::TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
@@ -4969,7 +4990,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             nodestate->m_last_block_announcement = GetTime();
         }
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        if ((pindex->nStatus & BLOCK_HAVE_DATA) || IsBlockBeingProcessed(pindex->GetBlockHash())) // Nothing to do here
             return;
 
         auto range_flight = mapBlocksInFlight.equal_range(pindex->GetBlockHash());
