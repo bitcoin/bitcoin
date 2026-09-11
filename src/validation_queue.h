@@ -17,12 +17,14 @@
 
 class CBlock;
 
-/** ProcessNewBlock outcomes; neither implies full consensus validity. */
+/** ProcessNewBlock outcomes; success does not imply full consensus validity. */
 struct BlockProcessingResult {
     /** Whether initial processing and chain activation returned success. */
     bool processing_success{false};
     /** Set before storing newly received block data; can be true even if processing fails. */
     bool new_block{false};
+    /** The worker rejected a block invalidated since admission, before storing it. */
+    bool cached_invalid{false};
 };
 
 /**
@@ -47,8 +49,8 @@ public:
     BlockProcessingQueue(const BlockProcessingQueue&) = delete;
     BlockProcessingQueue& operator=(const BlockProcessingQueue&) = delete;
 
-    /** Start once; throws if already started, interrupted, or stopped. */
-    void Start() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Start once; notify outside the mutex after each future is fulfilled. */
+    void Start(std::function<void()> on_completion = {}) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /** Stop accepting jobs without waiting for accepted work. */
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /**
@@ -75,6 +77,7 @@ private:
     Mutex m_mutex;
     std::condition_variable m_cv;
     std::deque<Job> m_jobs GUARDED_BY(m_mutex);
+    std::function<void()> m_on_completion GUARDED_BY(m_mutex);
     State m_state GUARDED_BY(m_mutex){State::Inactive};
     std::thread m_worker GUARDED_BY(m_mutex);
     std::thread::id m_worker_id GUARDED_BY(m_mutex);

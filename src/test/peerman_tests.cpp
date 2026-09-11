@@ -50,11 +50,11 @@ struct PendingBlockTestingSetup : RegTestingSetup {
         m_node.validation_signals->RegisterValidationInterface(m_node.peerman.get());
     }
 
-    CNode& AddPeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+    CNode& AddPeer(NodeId id, ConnectionType connection_type = ConnectionType::INBOUND) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
     {
         auto& node{*m_nodes.emplace_back(std::make_unique<CNode>(id, /*sock=*/nullptr,
             CAddress(LookupNumeric("127.0.0.1", 18444), NODE_NONE), /*nKeyedNetGroupIn=*/0,
-            /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"", ConnectionType::INBOUND,
+            /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"", connection_type,
             /*inbound_onion=*/false, /*network_key=*/0))};
         Connman().AddTestNode(node);
         Connman().Handshake(node, /*successfully_connected=*/true,
@@ -183,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_pauses_only_source_peer, PendingBlockTesti
     auto& source{AddPeer(0)};
     auto& other{AddPeer(1)};
     std::promise<BlockProcessingResult> completion;
-    Peerman().UnitTestBlockProcessing(source.GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(source.GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
 
     BOOST_REQUIRE(Connman().ReceiveMsgFrom(source, NetMsg::Make(NetMsgType::GETADDR)));
     BOOST_REQUIRE(Connman().ReceiveMsgFrom(other, NetMsg::Make(NetMsgType::GETADDR)));
@@ -228,7 +228,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_allows_queued_getdata_work, PendingBlockTe
     source.fPauseSend = false;
 
     std::promise<BlockProcessingResult> completion;
-    Peerman().UnitTestBlockProcessing(source.GetId(), hash, completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(source.GetId(), hash, completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     BOOST_REQUIRE(Connman().ReceiveMsgFrom(source, NetMsg::Make(NetMsgType::GETADDR)));
 
     // Answer the queued request while validation is pending, without dequeuing GETADDR.
@@ -254,7 +254,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_survives_disconnection, PendingBlockTestin
     const auto [block, index]{PrepareHeader()};
     BOOST_REQUIRE(Peerman().FetchBlock(requested_from.GetId(), *index));
     std::promise<BlockProcessingResult> completion;
-    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     Peerman().ProcessPendingEvents();
     BOOST_CHECK_EQUAL(Stats(requested_from.GetId()).vHeightInFlight.size(), 1);
 
@@ -266,7 +266,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_survives_disconnection, PendingBlockTestin
 
     // The loop must also be able to drain completions with no connected peers left.
     std::promise<BlockProcessingResult> last_completion;
-    Peerman().UnitTestBlockProcessing(requested_from.GetId(), block->GetHash(), last_completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(requested_from.GetId(), block->GetHash(), last_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     RemovePeer(requested_from);
     last_completion.set_value({.processing_success = false, .new_block = false});
     Peerman().ProcessPendingEvents();
@@ -282,13 +282,13 @@ BOOST_FIXTURE_TEST_CASE(pending_optimistic_block_checks_validity_at_completion, 
     BOOST_REQUIRE(Peerman().FetchBlock(requested_from.GetId(), *index));
 
     std::promise<BlockProcessingResult> rejected;
-    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), rejected.get_future(), /*optimistic_reconstruction=*/true);
+    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), rejected.get_future(), /*via_compact_block=*/true, /*optimistic_reconstruction=*/true);
     rejected.set_value({.processing_success = false, .new_block = false});
     Peerman().ProcessPendingEvents();
     BOOST_CHECK_EQUAL(Stats(requested_from.GetId()).vHeightInFlight.size(), 1);
 
     std::promise<BlockProcessingResult> completion;
-    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*optimistic_reconstruction=*/true);
+    Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*via_compact_block=*/true, /*optimistic_reconstruction=*/true);
     // Another submission stores the block before our optimistic completion is ready.
     BlockValidationState state;
     BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).get().processing_success);
@@ -310,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_punishes_before_resuming, PendingBlockTest
     for (const bool ready : {false, true}) {
         auto& source{AddPeer(ready ? 1 : 0)};
         std::promise<BlockProcessingResult> completion;
-        Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*optimistic_reconstruction=*/false);
+        Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
         BOOST_REQUIRE(Connman().ReceiveMsgFrom(source, NetMsg::Make(NetMsgType::GETADDR)));
         m_node.validation_signals->BlockChecked(block, invalid);
         if (ready) completion.set_value({.processing_success = false, .new_block = false});
@@ -332,12 +332,12 @@ BOOST_FIXTURE_TEST_CASE(pending_block_preserves_newer_source, PendingBlockTestin
     auto& second{AddPeer(1)};
     auto block{std::make_shared<const CBlock>(m_node.chainman->GetParams().GenesisBlock())};
     std::promise<BlockProcessingResult> first_completion;
-    Peerman().UnitTestBlockProcessing(first.GetId(), block->GetHash(), first_completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(first.GetId(), block->GetHash(), first_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     m_node.validation_signals->BlockChecked(block, BlockValidationState{});
 
     // A later submission now owns the source entry for the same hash.
     std::promise<BlockProcessingResult> second_completion;
-    Peerman().UnitTestBlockProcessing(second.GetId(), block->GetHash(), second_completion.get_future(), /*optimistic_reconstruction=*/false);
+    Peerman().UnitTestBlockProcessing(second.GetId(), block->GetHash(), second_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     first_completion.set_value({.processing_success = false, .new_block = false});
     Peerman().ProcessPendingEvents();
     BlockValidationState invalid;
@@ -349,6 +349,58 @@ BOOST_FIXTURE_TEST_CASE(pending_block_preserves_newer_source, PendingBlockTestin
     BOOST_CHECK(!first.fDisconnect);
 }
 
+BOOST_FIXTURE_TEST_CASE(pending_cached_rejection_preserves_source_and_exemptions, PendingBlockTestingSetup)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    auto block{std::make_shared<const CBlock>(m_node.chainman->GetParams().GenesisBlock())};
+    BlockValidationState cached_invalid;
+    cached_invalid.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid");
+    BlockValidationState consensus_invalid;
+    consensus_invalid.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "test-invalid-block");
+    struct TestCase {
+        ConnectionType connection;
+        bool via_compact_block;
+        bool optimistic_reconstruction;
+        bool disconnect;
+    };
+    NodeId next_id{0};
+    for (const auto& test : {
+             TestCase{ConnectionType::OUTBOUND_FULL_RELAY, false, false, true},
+             TestCase{ConnectionType::INBOUND, false, false, false},
+             TestCase{ConnectionType::MANUAL, false, false, false},
+             TestCase{ConnectionType::OUTBOUND_FULL_RELAY, true, false, false},
+             TestCase{ConnectionType::OUTBOUND_FULL_RELAY, true, true, false},
+         }) {
+        auto& source{AddPeer(next_id++, ConnectionType::OUTBOUND_FULL_RELAY)};
+        auto& duplicate{AddPeer(next_id++, test.connection)};
+        std::promise<BlockProcessingResult> source_completion, duplicate_completion;
+        Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), source_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
+        Peerman().UnitTestBlockProcessing(duplicate.GetId(), block->GetHash(), duplicate_completion.get_future(), test.via_compact_block, test.optimistic_reconstruction);
+
+        // A cached-invalid callback must neither punish nor erase a different source.
+        m_node.validation_signals->BlockChecked(block, cached_invalid);
+        Connman().ProcessMessagesOnce(source);
+        BOOST_CHECK(!source.fDisconnect);
+        BOOST_REQUIRE(Connman().ReceiveMsgFrom(duplicate, NetMsg::Make(NetMsgType::PING, uint64_t{42})));
+        duplicate_completion.set_value({.cached_invalid = true});
+        Peerman().ProcessPendingEvents();
+        Connman().ProcessMessagesOnce(duplicate);
+        BOOST_CHECK_EQUAL(duplicate.fDisconnect, test.disconnect);
+        auto message{duplicate.PollMessage()};
+        BOOST_CHECK_EQUAL(message.has_value(), test.disconnect);
+        if (message) BOOST_CHECK_EQUAL(message->first.m_type, NetMsgType::PING);
+
+        // Normal validation can still find the source after the duplicate completes.
+        m_node.validation_signals->BlockChecked(block, consensus_invalid);
+        source_completion.set_value({});
+        Connman().ProcessMessagesOnce(source);
+        BOOST_CHECK(source.fDisconnect);
+        Peerman().ProcessPendingEvents();
+        RemovePeer(duplicate);
+        RemovePeer(source);
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(pending_block_failed_future, PendingBlockTestingSetup)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
@@ -356,7 +408,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_failed_future, PendingBlockTestingSetup)
         auto& source{AddPeer(broken_promise ? 0 : 1)};
         {
             std::promise<BlockProcessingResult> completion;
-            Peerman().UnitTestBlockProcessing(source.GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), completion.get_future(), /*optimistic_reconstruction=*/false);
+            Peerman().UnitTestBlockProcessing(source.GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
             if (!broken_promise) {
                 struct UnexpectedException {};
                 completion.set_exception(std::make_exception_ptr(UnexpectedException{}));

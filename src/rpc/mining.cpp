@@ -1072,15 +1072,18 @@ class submitblock_StateCatcher final : public CValidationInterface
 {
 public:
     uint256 hash;
-    bool found{false};
-    BlockValidationState state;
+    Mutex mutex;
+    bool found GUARDED_BY(mutex){false};
+    BlockValidationState state GUARDED_BY(mutex);
 
     explicit submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), state() {}
 
 protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
+        EXCLUSIVE_LOCKS_REQUIRED(!mutex)
     {
         if (block->GetHash() != hash) return;
+        LOCK(mutex);
         found = true;
         state = stateIn;
     }
@@ -1128,6 +1131,8 @@ static RPCMethod submitblock()
     BlockValidationState state;
     const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
+    if (!state.IsValid()) return BIP22ValidationResult(state);
+    LOCK(sc->mutex);
     if (!result.new_block && result.processing_success) {
         return "duplicate";
     }
