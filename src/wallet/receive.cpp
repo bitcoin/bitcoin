@@ -294,6 +294,41 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse,
     return ret;
 }
 
+std::optional<WalletUTXOScanResult> ScanWalletUTXOSet(const CWallet& wallet)
+{
+    // Collect unique scriptPubKeys owned by the wallet.
+    WalletUTXOScanResult result;
+    {
+        LOCK(wallet.cs_wallet);
+        for (const auto& spkm : wallet.GetAllScriptPubKeyMans()) {
+            for (const auto& script : spkm->GetScriptPubKeys()) {
+                result.scripts.emplace(script);
+            }
+        }
+    }
+
+    // Query chainstate for coins matching these scripts.
+    if (!wallet.chain().findCoinsByScript(result.scripts, result.coins, result.best_block)) {
+        return std::nullopt;
+    }
+
+    // Get the block height of the chainstate scan for coinbase maturity filtering.
+    if (!wallet.chain().findBlock(result.best_block, interfaces::FoundBlock().height(result.best_block_height))) {
+        return std::nullopt;
+    }
+
+    for (auto it = result.coins.begin(); it != result.coins.end();) {
+        const Coin& coin = it->second;
+        if (coin.IsCoinBase() && coin.nHeight + COINBASE_MATURITY > result.best_block_height) {
+            it = result.coins.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    return result;
+}
+
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
 {
     std::map<CTxDestination, CAmount> balances;
