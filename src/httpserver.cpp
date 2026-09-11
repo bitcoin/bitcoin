@@ -338,6 +338,10 @@ bool HTTPHeaders::Read(util::LineReader& reader, bool write)
         // which consist of "tokens": https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
         // that can not be empty.
         if (key.empty()) throw std::runtime_error("Empty HTTP header name");
+        constexpr std::string_view field_name_characters{"!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+        if (key.find_first_not_of(field_name_characters) != std::string_view::npos) {
+            throw std::runtime_error("Invalid HTTP header field-name");
+        }
 
         if (write) {
             Write(std::string(key), std::move(value));
@@ -432,6 +436,13 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 {
     // https://httpwg.org/specs/rfc9112.html#message.body
     auto transfer_encoding_header = m_headers.FindFirst("Transfer-Encoding");
+    if (transfer_encoding_header && !m_headers.FindAll("Content-Length").empty()) {
+        // The two framing mechanisms are mutually exclusive. Continuing to
+        // parse the request as chunked could disagree with an intermediary
+        // that uses Content-Length, enabling request smuggling.
+        // https://www.rfc-editor.org/rfc/rfc9112.html#section-6.3
+        throw std::runtime_error("Message contains both Transfer-Encoding and Content-Length headers");
+    }
     if (transfer_encoding_header && ToLower(transfer_encoding_header.value()) == "chunked") {
         // Transfer-Encoding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-3.3.1
         // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1

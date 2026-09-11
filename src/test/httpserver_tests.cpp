@@ -152,6 +152,11 @@ BOOST_AUTO_TEST_CASE(http_headers_tests)
         BOOST_CHECK_EXCEPTION(HTTPHeaders{}.Read(reader), std::runtime_error, HasReason{"Invalid header field-name contains whitespace"});
     }
     {
+        // Field names are tokens, so separators are not permitted.
+        util::LineReader reader{"key@name: value\n", /*max_line_length=*/MAX_HEADERS_SIZE};
+        BOOST_CHECK_EXCEPTION(HTTPHeaders{}.Read(reader), std::runtime_error, HasReason{"Invalid HTTP header field-name"});
+    }
+    {
         // Individual lines are below MAX_HEADERS_SIZE but the total is excessive
         std::string lines;
         lines.reserve(820 * 10);
@@ -295,6 +300,22 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
+    }
+    {
+        // Transfer-Encoding and Content-Length use incompatible message framing.
+        // Reject both together to prevent request smuggling through proxies that
+        // choose a different framing mechanism.
+        constexpr std::string_view ambiguous_framing = "POST / HTTP/1.1\n"
+                                                       "Transfer-Encoding: chunked\n"
+                                                       "Content-Length: 4\n"
+                                                       "\n"
+                                                       "0\n"
+                                                       "\n";
+        HTTPRequest req;
+        util::LineReader reader{ambiguous_framing, /*max_line_length=*/MAX_HEADERS_SIZE};
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Message contains both Transfer-Encoding and Content-Length headers"});
     }
     {
         // Ok
