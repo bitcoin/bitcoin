@@ -32,12 +32,12 @@ SignatureCache::SignatureCache(const size_t max_size_bytes, const uint256& nonce
 
 uint256 SignatureCache::ComputeEntryECDSA(const uint256& hash, const std::vector<uint8_t>& vchSig, const CPubKey& pubkey) const
 {
-    return (HashWriter{m_salted_hasher_ecdsa} << hash << std::span{pubkey} << std::span{vchSig}).GetSHA256();
+    return (HashWriter{m_salted_hasher_ecdsa} << hash << pubkey << vchSig).GetSHA256();
 }
 
 uint256 SignatureCache::ComputeEntrySchnorr(const uint256& hash, std::span<const uint8_t> sig, const XOnlyPubKey& pubkey) const
 {
-    return (HashWriter{m_salted_hasher_schnorr} << hash << std::span{pubkey} << sig).GetSHA256();
+    return (HashWriter{m_salted_hasher_schnorr} << hash << pubkey << sig).GetSHA256();
 }
 
 bool SignatureCache::Get(const uint256& entry, const bool erase)
