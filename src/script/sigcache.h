@@ -15,6 +15,7 @@
 #include <util/hasher.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <shared_mutex>
 #include <span>
 #include <vector>
@@ -52,9 +53,9 @@ public:
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
 
-    void ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
+    uint256 ComputeEntryECDSA(const uint256& hash, const std::vector<uint8_t>& vchSig, const CPubKey& pubkey) const;
 
-    void ComputeEntrySchnorr(uint256& entry, const uint256 &hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
+    uint256 ComputeEntrySchnorr(const uint256& hash, std::span<const uint8_t> sig, const XOnlyPubKey& pubkey) const;
 
     bool Get(const uint256& entry, bool erase);
 
