@@ -216,8 +216,8 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
-    // Cached value for whether the transaction spends any inputs known to the wallet
-    mutable std::optional<bool> m_cached_from_me{std::nullopt};
+    // Tracks whether the transaction spends any inputs known to the wallet
+    std::optional<bool> m_from_me;
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -255,8 +255,10 @@ public:
         Assert(m_txs.contains(GetWitnessHash()));
     }
 
+private:
     TxState m_state;
 
+public:
     // Set of mempool transactions that conflict
     // directly with the transaction, or that conflict
     // with an ancestor transaction. This set will be
@@ -299,6 +301,7 @@ public:
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
         s << TX_WITH_WITNESS(GetTx()) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        if (m_from_me) s << *m_from_me;
     }
 
     template<typename Stream>
@@ -318,6 +321,12 @@ public:
         s >> TX_WITH_WITNESS(canonical_tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
         m_canonical_wtxid = canonical_tx->GetWitnessHash();
         m_txs.emplace(m_canonical_wtxid, std::move(canonical_tx));
+
+        if (!s.empty()) {
+            bool from_me;
+            s >> from_me;
+            m_from_me = from_me;
+        }
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -352,7 +361,7 @@ public:
     // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
     // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
     // those with witnesses are preferred, followed by least weight.
-    bool Update(CTransactionRef tx, const TxState& new_state);
+    bool Update(CTransactionRef tx, const TxState& new_state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn);
 
     //! make sure balances are recalculated
     void MarkDirty()
@@ -361,7 +370,6 @@ public:
         m_amounts[CREDIT].Reset();
         fChangeCached = false;
         m_is_cache_empty = true;
-        m_cached_from_me = std::nullopt;
     }
 
     /** True if only scriptSigs are different */
@@ -373,6 +381,8 @@ public:
 
     template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
     template<typename T> T* state() { return std::get_if<T>(&m_state); }
+    void SetState(const TxState& state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn);
+    const TxState& GetState() const { return m_state; }
 
     //! Update transaction state when attaching to a chain, filling in heights
     //! of conflicted and confirmed blocks
@@ -434,20 +444,35 @@ struct WalletTxOrderComparator {
 class WalletTXO
 {
 private:
-    const CWalletTx& m_wtx;
     const CTxOut& m_output;
+    mutable TxState m_tx_state;
+    bool m_tx_coinbase;
+    bool m_tx_from_me;
+    int64_t m_tx_time;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output)
-    : m_wtx(wtx),
-    m_output(output)
-    {
-        Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
-    }
+    WalletTXO(const CTxOut& output, const TxState& state, bool coinbase, bool tx_from_me, int64_t tx_time, uint32_t tx_version)
+    : m_output(output),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase),
+    m_tx_from_me(tx_from_me),
+    m_tx_time(tx_time),
+    m_tx_version(tx_version)
+    {}
 
-    const CWalletTx& GetWalletTx() const { return m_wtx; }
+    const uint32_t m_tx_version;
 
     const CTxOut& GetTxOut() const { return m_output; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) const { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
+
+    void SetTxFromMe(bool from_me) { m_tx_from_me = from_me; }
+    bool GetTxFromMe() const { return m_tx_from_me; }
+
+    int64_t GetTxTime() const { return m_tx_time; }
 };
 } // namespace wallet
 

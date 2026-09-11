@@ -528,6 +528,8 @@ class WalletSendTest(BitcoinTestFramework):
         # Check tx creation size limits
         self.test_weight_limits()
 
+        self.test_send_commit_inactive()
+
     def test_weight_limits(self):
         self.log.info("Test weight limits")
 
@@ -558,6 +560,25 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.nodes[1].unloadwallet("test_weight_limits")
 
+    def test_send_commit_inactive(self):
+        self.log.info("Test that send always adds signed transactions to the wallet as inactive")
+        self.nodes[0].createwallet("commit")
+        wallet = self.nodes[0].get_wallet_rpc("commit")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.nodes[0], 1)
+
+        utxos = wallet.listunspent()
+        wallet.sendtoaddress(def_wallet.getnewaddress(), 0.5)
+        self.generate(self.nodes[0], 1)
+        bals = wallet.getbalances()
+
+        res = wallet.send(outputs=[{def_wallet.getnewaddress(): 0.25}], inputs=utxos, add_to_wallet=True)
+        assert_equal(res["complete"], True)
+        txinfo = wallet.gettransaction(res["txid"])
+        assert_equal(txinfo["confirmations"], 0)
+        assert_equal(bals, wallet.getbalances())
 
 if __name__ == '__main__':
     WalletSendTest(__file__).main()
