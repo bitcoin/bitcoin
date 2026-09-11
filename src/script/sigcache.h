@@ -45,7 +45,7 @@ class SignatureCache
 private:
     /** Entries are SHA256(nonce [32 bytes] || 'E' or 'S' || salt padding || signature hash [32 bytes] || public key || signature), where the signature excludes the sighash type byte.
      * The ECDSA salt has 31 zero padding bytes, while the Schnorr salt has none.
-     * A valid ECDSA public key determines its length, and an x-only public key is always 32 bytes.
+     * ECDSA keys and signatures serialize with CompactSize prefixes and x-only keys are fixed-size, so the key/signature boundary is unambiguous for any input.
      */
     const HashWriter m_salted_hasher_ecdsa;
     const HashWriter m_salted_hasher_schnorr;

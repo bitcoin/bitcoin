@@ -462,11 +462,10 @@ BOOST_AUTO_TEST_CASE(signature_cache_serialization)
     const uint256 sighash{uint256::ONE};
     const std::vector<uint8_t> sig(64, 0x30);
 
-    // TODO: Use native public-key and signature serialization
     for (const auto& pubkey : {keys.pubkey0C, keys.pubkey0, keys.pubkey0H}) {
         for (const size_t size : {0, 63, 64, 72, 252, 253, 255, 256, 65535, 65536}) {
             const std::vector<uint8_t> ecdsa_sig(size, 0x30);
-            const auto expected{(HashWriter{} << nonce << uint8_t{'E'} << SIGNATURE_CACHE_PADDING << sighash << std::span{pubkey} << std::span{ecdsa_sig}).GetSHA256()};
+            const auto expected{(HashWriter{} << nonce << uint8_t{'E'} << SIGNATURE_CACHE_PADDING << sighash << ToByteVector(pubkey) << ecdsa_sig).GetSHA256()};
             BOOST_CHECK_EQUAL(cache.ComputeEntryECDSA(sighash, ecdsa_sig, pubkey), expected);
         }
         // Interleaved calls leave the salted prefixes intact
@@ -475,9 +474,9 @@ BOOST_AUTO_TEST_CASE(signature_cache_serialization)
         BOOST_CHECK_EQUAL(cache.ComputeEntrySchnorr(sighash, sig, xonly_pubkey), expected);
     }
 
-    // TODO: Distinguish the public-key/signature split
+    // The length prefixes fix the public-key/signature boundary
     const auto sig_with_pubkey{Cat(ToByteVector(keys.pubkey0C), sig)};
-    BOOST_CHECK_EQUAL(cache.ComputeEntryECDSA(sighash, sig_with_pubkey, CPubKey{}), cache.ComputeEntryECDSA(sighash, sig, keys.pubkey0C));
+    BOOST_CHECK_NE(cache.ComputeEntryECDSA(sighash, sig_with_pubkey, CPubKey{}), cache.ComputeEntryECDSA(sighash, sig, keys.pubkey0C));
 }
 
 BOOST_AUTO_TEST_CASE(script_build)
