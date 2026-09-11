@@ -6,7 +6,10 @@
 #include <consensus/validation.h>
 #include <primitives/block.h>
 #include <scheduler.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <validation_queue.h>
 #include <validationinterface.h>
@@ -51,6 +54,84 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
     gen.join();
     sub.join();
     BOOST_CHECK(!generate);
+}
+
+BOOST_AUTO_TEST_CASE(block_checked_queued_ownership)
+{
+    struct Subscriber final : CValidationInterface {
+        int calls{0};
+        uint256 hash;
+        BlockValidationState state;
+
+        void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& result) override
+        {
+            ++calls;
+            hash = block->GetHash();
+            state = result;
+        }
+    };
+    // Leave the scheduler stopped so delivery is explicit and deterministic.
+    CScheduler scheduler;
+    ValidationSignals signals{std::make_unique<SerialTaskRunner>(scheduler)};
+    auto sub{std::make_shared<Subscriber>()};
+    signals.RegisterSharedValidationInterface(sub);
+    auto block{std::make_shared<const CBlock>()};
+    const auto hash{block->GetHash()};
+    std::weak_ptr<const CBlock> retained{block};
+    BlockValidationState state;
+    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "test-invalid-block");
+    signals.BlockChecked(block, state);
+    block.reset();
+    state = BlockValidationState{};
+    BOOST_CHECK_EQUAL(sub->calls, 0);
+    BOOST_CHECK(!retained.expired());
+
+    signals.FlushBackgroundCallbacks();
+    BOOST_CHECK_EQUAL(sub->calls, 1);
+    BOOST_CHECK(sub->hash == hash);
+    BOOST_CHECK(sub->state.GetResult() == BlockValidationResult::BLOCK_CONSENSUS);
+    BOOST_CHECK_EQUAL(sub->state.GetRejectReason(), "test-invalid-block");
+    BOOST_CHECK(retained.expired());
+}
+
+BOOST_AUTO_TEST_CASE(fuzz_runner_queues_block_checked)
+{
+    struct Subscriber final : CValidationInterface {
+        std::atomic<int> calls{0};
+
+        void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) override
+        {
+            // Match PeerManager's callback: the emitter may already hold cs_main.
+            LOCK(cs_main);
+            ++calls;
+        }
+    };
+    auto runner{std::make_unique<FuzzTaskRunner>()};
+    auto& task_runner{*runner};
+    ValidationSignals signals{std::move(runner)};
+    auto sub{std::make_shared<Subscriber>()};
+    signals.RegisterSharedValidationInterface(sub);
+
+    for (int input = 0; input < 2; ++input) {
+        {
+            FuzzTaskRunner::Scope callbacks{task_runner};
+            {
+                LOCK(cs_main);
+                signals.BlockChecked(std::make_shared<const CBlock>(), BlockValidationState{});
+                BOOST_CHECK_EQUAL(sub->calls.load(), 2 * input);
+            }
+            signals.SyncWithValidationInterfaceQueue();
+            BOOST_CHECK_EQUAL(sub->calls.load(), 2 * input + 1);
+            {
+                LOCK(cs_main);
+                signals.BlockChecked(std::make_shared<const CBlock>(), BlockValidationState{});
+            }
+            // Leaving the input also drains callbacks without an explicit sync.
+        }
+        BOOST_CHECK_EQUAL(sub->calls.load(), 2 * input + 2);
+        BOOST_CHECK_EQUAL(signals.CallbacksPending(), 0);
+    }
+    signals.FlushBackgroundCallbacks();
 }
 
 BOOST_AUTO_TEST_CASE(unregister_then_sync_covers_block_processed)
@@ -143,14 +224,13 @@ public:
     {
         if (m_on_destroy) m_on_destroy();
     }
-    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
+    void NewPoWValidBlock(const CBlockIndex*, const std::shared_ptr<const CBlock>&) override
     {
         if (m_on_call) m_on_call();
     }
     void Call()
     {
-        BlockValidationState state;
-        m_signals.BlockChecked(std::make_shared<const CBlock>(), state);
+        m_signals.NewPoWValidBlock(nullptr, std::make_shared<const CBlock>());
     }
     std::function<void()> m_on_call;
     std::function<void()> m_on_destroy;

@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
+#include <scheduler.h>
 #include <util/task_runner.h>
 #include <validation.h>
 #include <validation_queue.h>
@@ -14,7 +15,6 @@
 #include <cstddef>
 #include <functional>
 #include <future>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -57,13 +57,44 @@ public:
     void Open();
 };
 
-/// Runs callbacks synchronously and deterministically, while avoiding DEBUG_LOCKORDER false positives.
-class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
+/** Hold queued validation callbacks without taking validation locks. */
+class ValidationCallbackGate
 {
+    ValidationSignals& m_signals;
+    std::promise<void> m_entered;
+    std::future<void> m_entered_future{m_entered.get_future()};
+    std::promise<void> m_release;
+    std::shared_future<void> m_released{m_release.get_future().share()};
+    bool m_open{false};
+
 public:
-    void insert(std::function<void()> func) override { std::thread(std::move(func)).join(); }
-    void flush() override {}
-    size_t size() override { return 0; }
+    explicit ValidationCallbackGate(ValidationSignals& signals);
+    ~ValidationCallbackGate();
+    void Wait();
+    void Open();
+};
+
+/** Queue callbacks on a separate thread, with no worker left running between fuzz inputs. */
+class FuzzTaskRunner : public util::TaskRunnerInterface
+{
+    SerialTaskRunner* m_runner{nullptr};
+
+public:
+    /** Keep active during initialization and each input; drain before leaving either scope. */
+    class Scope
+    {
+        CScheduler m_scheduler;
+        SerialTaskRunner m_runner{m_scheduler};
+        FuzzTaskRunner& m_owner;
+
+    public:
+        explicit Scope(FuzzTaskRunner& owner);
+        ~Scope();
+    };
+
+    void insert(std::function<void()> func) override;
+    void flush() override;
+    size_t size() override;
 };
 
 struct TestBlockManager : public node::BlockManager {

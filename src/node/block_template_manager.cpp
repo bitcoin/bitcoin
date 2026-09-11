@@ -87,8 +87,8 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
     CHECK_NONFATAL(m_chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
     const auto processing_result{m_chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
-    // BlockChecked runs before completion. Unregistration itself does not wait
-    // for callbacks from other concurrent submissions of this block.
+    // Keep the catcher registered until this submission's queued result is delivered.
+    CHECK_NONFATAL(m_chainman.m_options.signals)->SyncWithValidationInterfaceQueue();
     CHECK_NONFATAL(m_chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
     LOCK(sc->m_mutex);

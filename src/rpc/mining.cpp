@@ -1130,6 +1130,7 @@ static RPCMethod submitblock()
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
     const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
+    CHECK_NONFATAL(chainman.m_options.signals)->SyncWithValidationInterfaceQueue();
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
     if (!state.IsValid()) return BIP22ValidationResult(state);
     LOCK(sc->mutex);
