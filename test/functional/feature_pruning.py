@@ -470,6 +470,11 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
 
+        self.log.info("Test prune with a new index")
+        self.restart_node(0, extra_args=["-prune=550", "-blockfilterindex=1"])
+        node = self.nodes[0]
+        self.wait_until(lambda: node.getindexinfo()["basic block filter index"]["best_block_height"] >= 10, timeout=300)
+
         if self.is_wallet_compiled():
             self.log.info("Test wallet re-scan")
             self.test_wallet_rescan()
