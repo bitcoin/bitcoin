@@ -54,8 +54,10 @@ public:
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
 
+    //! Requires a valid ECDSA public-key encoding and a signature without the sighash byte
     uint256 ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
 
+    //! Requires a Schnorr signature without the optional sighash byte
     uint256 ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
 
     bool Get(const uint256& entry, bool erase);
@@ -72,6 +74,7 @@ private:
 public:
     CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn), m_signature_cache(signature_cache)  {}
 
+    // Direct calls require the input guarantees documented on the base hooks
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
     bool VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
 };

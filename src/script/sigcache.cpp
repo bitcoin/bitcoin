@@ -10,6 +10,7 @@
 #include <random.h>
 #include <script/interpreter.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/log.h>
 
 #include <concepts>
@@ -54,11 +55,13 @@ SignatureCache::SignatureCache(const size_t max_size_bytes)
 
 uint256 SignatureCache::ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
 {
+    Assert(pubkey.IsValid()); // The interpreter guarantees an encoding that makes the cache commitment unambiguous
     return ComputeEntry(m_salted_hasher_ecdsa, hash, vchSig, pubkey);
 }
 
 uint256 SignatureCache::ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
 {
+    Assert(sig.size() == 64); // The interpreter guarantees the verifier's signature format, which direct cache-entry calls must preserve
     return ComputeEntry(m_salted_hasher_schnorr, hash, sig, pubkey);
 }
 
