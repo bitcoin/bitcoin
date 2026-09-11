@@ -7,8 +7,8 @@
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
 #include <consensus/amount.h>
-#include <crypto/sha256.h>
 #include <cuckoocache.h>
+#include <hash.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 #include <util/byte_units.h>
@@ -40,15 +40,19 @@ static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + 
 class SignatureCache
 {
 private:
-    //! Entries are SHA256(nonce || 'E' or 'S' || 31 zero bytes || signature hash || public key || signature):
-    CSHA256 m_salted_hasher_ecdsa;
-    CSHA256 m_salted_hasher_schnorr;
+    /** Entries are SHA256(nonce [32 bytes] || 'E' or 'S' || signature hash [32 bytes] || public key || signature), where the signature excludes the sighash type byte.
+     * A valid ECDSA public key determines its length, and an x-only public key is always 32 bytes.
+     */
+    const HashWriter m_salted_hasher_ecdsa;
+    const HashWriter m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
     std::shared_mutex cs_sigcache;
 
 public:
     SignatureCache(size_t max_size_bytes);
+    //! Salts entries with the given nonce instead of a random one, so tests can recompute them
+    SignatureCache(size_t max_size_bytes, const uint256& nonce);
 
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
