@@ -7,6 +7,7 @@
 #include <core_io.h>
 #include <key.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <rpc/util.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -24,6 +25,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/byte_units.h>
 #include <util/check.h>
@@ -34,7 +36,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
+#include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Uncomment if you want to output updated JSON tests.
@@ -1681,9 +1685,10 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
         BOOST_CHECK_EQUAL(HexStr(txdata.m_spent_scripts_single_hash), vec["intermediary"]["hashScriptPubkeys"].get_str());
         BOOST_CHECK_EQUAL(HexStr(txdata.m_sequences_single_hash), vec["intermediary"]["hashSequences"].get_str());
 
+        const CTransaction spending_tx{tx};
         for (const auto& input : vec["inputSpending"].getValues()) {
-            int txinpos = input["given"]["txinIndex"].getInt<int>();
-            int hashtype = input["given"]["hashType"].getInt<int>();
+            const auto txinpos{input["given"]["txinIndex"].getInt<uint32_t>()};
+            const auto hashtype{input["given"]["hashType"].getInt<int32_t>()};
 
             // Load key.
             auto privkey = ParseHex(input["given"]["internalPrivkey"].get_str());
@@ -1705,7 +1710,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             provider.keys[key.GetPubKey().GetID()] = key;
             MutableTransactionSignatureCreator creator(tx, txinpos, utxos[txinpos].nValue, &txdata, {.sighash_type = hashtype});
             std::vector<unsigned char> signature;
-            BOOST_CHECK(creator.CreateSchnorrSig(provider, signature, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
+            BOOST_REQUIRE(creator.CreateSchnorrSig(provider, signature, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
             BOOST_CHECK_EQUAL(HexStr(signature), input["expected"]["witness"][0].get_str());
 
             // We can't observe the tweak used inside the signing logic, so verify by recomputing it.
@@ -1721,6 +1726,53 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 
             // To verify the sigmsg, hash the expected sigmsg, and compare it with the (expected) sighash.
             BOOST_CHECK_EQUAL(HexStr((HashWriter{HASHER_TAPSIGHASH} << std::span<const uint8_t>{ParseHex(input["intermediary"]["sigMsg"].get_str())}).GetSHA256()), input["intermediary"]["sigHash"].get_str());
+
+            // Exercise cached verification of both 64- and 65-byte signatures from the vectors
+            const auto& script{utxos[txinpos].scriptPubKey};
+            BOOST_REQUIRE(script.IsPayToTaproot());
+            const XOnlyPubKey output_pubkey{std::span{script}.subspan(2)};
+            const auto flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+            const auto verify{[&](const std::vector<uint8_t>& sig, bool store, ScriptError expected_error = SCRIPT_ERR_OK) {
+                CScriptWitness witness;
+                witness.stack = {sig};
+                const CachingTransactionSignatureChecker checker{&spending_tx, txinpos, utxos[txinpos].nValue, store, m_signature_cache, txdata};
+                ScriptError error;
+                BOOST_CHECK_EQUAL(VerifyScript({}, script, &witness, flags, checker, &error), expected_error == SCRIPT_ERR_OK);
+                BOOST_CHECK_MESSAGE(error == expected_error, ScriptErrorString(error) + " where " + ScriptErrorString(expected_error) + " expected");
+            }};
+            const auto entry_for{[&](const uint256& hash, const std::vector<uint8_t>& sig, const XOnlyPubKey& key) {
+                return m_signature_cache.ComputeEntrySchnorr(hash, std::span{sig}.first(64), key);
+            }};
+            const auto is_cached{[&](const uint256& entry) { return m_signature_cache.Get(entry, /*erase=*/false); }};
+
+            const auto output_key_entry{entry_for(sighash, signature, output_pubkey)};
+            BOOST_CHECK(!is_cached(output_key_entry));
+            verify(signature, /*store=*/false); // Miss without storing
+            BOOST_CHECK(!is_cached(output_key_entry));
+            verify(signature, /*store=*/true); // Miss, stored
+            BOOST_CHECK( is_cached(output_key_entry));
+            verify(signature, /*store=*/true); // Hit
+            BOOST_CHECK( is_cached(output_key_entry));
+            verify(signature, /*store=*/false); // A hit without storing only marks the entry erasable, so it stays cached
+            BOOST_CHECK( is_cached(output_key_entry));
+
+            // Changing only the public key or sighash must miss the cached entry
+            BOOST_CHECK(!is_cached(entry_for(sighash, signature, pubkey)));
+            auto different_sighash{sighash};
+            different_sighash.begin()[0] ^= 1;
+            BOOST_CHECK(!is_cached(entry_for(different_sighash, signature, output_pubkey)));
+
+            // A correctly sized invalid signature must not be cached
+            std::vector<uint8_t> invalid_sig{signature};
+            invalid_sig[0] ^= 1;
+            const auto invalid_entry{entry_for(sighash, invalid_sig, output_pubkey)};
+            BOOST_CHECK(!is_cached(invalid_entry));
+            verify(invalid_sig, /*store=*/true, SCRIPT_ERR_SCHNORR_SIG);
+            BOOST_CHECK(!is_cached(invalid_entry));
+
+            verify(std::vector<uint8_t>(63, 0), /*store=*/true, SCRIPT_ERR_SCHNORR_SIG_SIZE);
+            verify(std::vector<uint8_t>(65, 0), /*store=*/true, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE); // An explicit SIGHASH_DEFAULT byte
+            verify(std::vector<uint8_t>(66, 0), /*store=*/true, SCRIPT_ERR_SCHNORR_SIG_SIZE);
         }
     }
 }
