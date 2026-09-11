@@ -372,6 +372,8 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+    // AFL can fork after fixture initialization; keep fuzzing free of worker threads.
+    if (!EnableFuzzDeterminism()) chainman.StartBlockProcessing();
 }
 
 TestingSetup::TestingSetup(

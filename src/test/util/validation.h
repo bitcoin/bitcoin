@@ -9,9 +9,11 @@
 #include <primitives/transaction.h>
 #include <util/task_runner.h>
 #include <validation.h>
+#include <validation_queue.h>
 
 #include <cstddef>
 #include <functional>
+#include <future>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -19,9 +21,41 @@
 namespace node {
 class BlockManager;
 }
+class BaseIndex;
 class CValidationInterface;
 class FakeNodeClock;
+class ValidationSignals;
 struct TestingSetup;
+
+/** Unregister and drain callbacks before a test-owned index is destroyed, also on assertion failure. */
+class IndexTestGuard
+{
+    BaseIndex& m_index;
+    ValidationSignals& m_signals;
+
+public:
+    IndexTestGuard(BaseIndex& index, ValidationSignals& signals) : m_index{index}, m_signals{signals} {}
+    ~IndexTestGuard();
+    IndexTestGuard(const IndexTestGuard&) = delete;
+    IndexTestGuard& operator=(const IndexTestGuard&) = delete;
+};
+
+/** Park the worker without validation locks; destruction releases and waits only for the gate job. */
+class BlockWorkerGate
+{
+    std::promise<void> m_entered;
+    std::future<void> m_entered_future{m_entered.get_future()};
+    std::promise<void> m_release;
+    std::shared_future<void> m_released{m_release.get_future().share()};
+    std::future<BlockProcessingResult> m_completion;
+    bool m_open{false};
+
+public:
+    explicit BlockWorkerGate(ChainstateManager& chainman);
+    ~BlockWorkerGate();
+    void Wait();
+    void Open();
+};
 
 /// Runs callbacks synchronously and deterministically, while avoiding DEBUG_LOCKORDER false positives.
 class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface

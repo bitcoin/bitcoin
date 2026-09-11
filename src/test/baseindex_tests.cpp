@@ -73,6 +73,7 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
         const int tip_height{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight)};
         auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
             auto index{make_index(m_node)};
+            IndexTestGuard guard{*index, *m_node.validation_signals};
             BOOST_REQUIRE(index->Init());
             index->Sync();
             if (do_flush) {
@@ -125,6 +126,7 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
         BOOST_TEST_INFO_SCOPE(index_name);
         {
             auto index{make_index(m_node)};
+            IndexTestGuard guard{*index, *m_node.validation_signals};
             BOOST_REQUIRE(index->Init());
             index->Sync();
             std::shared_ptr<const CBlock> new_block;
@@ -151,6 +153,7 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
 
         {
             auto index{make_index(m_node)};
+            IndexTestGuard guard{*index, *m_node.validation_signals};
             BOOST_REQUIRE(index->Init());
             // Make sure the index reloads from the pre-crash commit.
             BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height);
@@ -201,6 +204,7 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
     int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
 
     IndexReorgCrash index{interfaces::MakeChain(m_node), blocker, blocking_height, m_clock};
+    IndexTestGuard guard{index, *m_node.validation_signals};
     BOOST_REQUIRE(index.Init());
     BOOST_REQUIRE(index.StartBackgroundSync());
 

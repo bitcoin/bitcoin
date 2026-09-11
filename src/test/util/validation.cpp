@@ -6,8 +6,10 @@
 
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <index/base.h>
 #include <node/blockstorage.h>
 #include <node/mining_types.h>
+#include <primitives/block.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
@@ -17,13 +19,55 @@
 #include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
+#include <validation_queue.h>
 #include <validationinterface.h>
 
+#include <chrono>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
 using kernel::ChainstateRole;
+
+IndexTestGuard::~IndexTestGuard()
+{
+    m_index.Interrupt();
+    m_index.Stop();
+    m_signals.SyncWithValidationInterfaceQueue();
+}
+
+BlockWorkerGate::BlockWorkerGate(ChainstateManager& chainman)
+{
+    auto submission{chainman.m_block_processing_queue.Submit(std::make_shared<const CBlock>(), [this](const auto&) {
+        m_entered.set_value();
+        m_released.wait();
+        return BlockProcessingResult{};
+    })};
+    Assert(submission.has_value());
+    m_completion = std::move(*submission);
+}
+
+BlockWorkerGate::~BlockWorkerGate()
+{
+    Open();
+    m_completion.wait();
+}
+
+void BlockWorkerGate::Wait()
+{
+    if (m_entered_future.wait_for(std::chrono::seconds{30}) != std::future_status::ready) {
+        throw std::runtime_error{"Timed out waiting for the block worker gate"};
+    }
+}
+
+void BlockWorkerGate::Open()
+{
+    if (!m_open) {
+        m_open = true;
+        m_release.set_value();
+    }
+}
 
 void TestBlockManager::CleanupForFuzzing()
 {

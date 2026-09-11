@@ -125,7 +125,7 @@ COutPoint MineBlock(const NodeContext& node, const node::BlockCreateOptions& ass
     return valid;
 }
 
-struct BlockValidationStateCatcher : public CValidationInterface {
+struct BlockValidationStateCatcher final : public CValidationInterface {
     const uint256 m_hash;
     std::optional<BlockValidationState> m_state;
 
@@ -155,15 +155,16 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 {
     auto& chainman{*Assert(node.chainman)};
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
-    BlockValidationStateCatcher bvsc{block->GetHash()};
-    node.validation_signals->RegisterValidationInterface(&bvsc);
+    // BlockProcessed callbacks can still be running after the future is fulfilled.
+    auto bvsc{std::make_shared<BlockValidationStateCatcher>(block->GetHash())};
+    node.validation_signals->RegisterSharedValidationInterface(bvsc);
     BlockValidationState state;
     const auto result{chainman.ProcessNewBlock(block, state, true, true).get()};
     const bool duplicate{!result.new_block && result.processing_success};
     assert(!duplicate);
-    node.validation_signals->UnregisterValidationInterface(&bvsc);
+    node.validation_signals->UnregisterSharedValidationInterface(bvsc);
     node.validation_signals->SyncWithValidationInterfaceQueue();
-    const bool was_valid{bvsc.m_state && bvsc.m_state->IsValid()};
+    const bool was_valid{bvsc->m_state && bvsc->m_state->IsValid()};
     assert(old_height + was_valid == WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight()));
 
     if (was_valid) return {block->vtx[0]->GetHash(), 0};
