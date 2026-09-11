@@ -1318,7 +1318,8 @@ public:
      * its BlockChecked method called whenever *any* block completes validation.
      *
      * Initial failures are returned through state without a BlockChecked callback.
-     * Deferred BlockChecked callbacks finish before the processing future is ready.
+     * Deferred BlockChecked callbacks are queued before the processing future is ready,
+     * but callers needing their results must also wait for the validation callback queue.
      * Cached-invalid rejections found by the worker are also included in the result,
      * allowing callers to attribute them to each individual submission.
      *

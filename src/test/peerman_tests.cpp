@@ -19,6 +19,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
+#include <scheduler.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/mining.h>
@@ -55,6 +56,8 @@ struct PendingBlockTestingSetup : RegTestingSetup {
 
     PendingBlockTestingSetup()
     {
+        // Drain setup callbacks before tests install synthetic block sources.
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
         m_node.validation_signals->RegisterValidationInterface(m_node.peerman.get());
     }
 
@@ -109,6 +112,14 @@ struct PendingBlockTestingSetup : RegTestingSetup {
         // PeerManager owns the block futures. Wait for a job queued after them.
         BlockWorkerGate completion{*m_node.chainman};
         completion.Open();
+    }
+
+    void ProcessBlockCompletions() EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+    {
+        // Ready futures need a second poll after their callback markers run.
+        Peerman().ProcessPendingEvents();
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        Peerman().ProcessPendingEvents();
     }
 
     std::pair<std::shared_ptr<CBlock>, const CBlockIndex*> PrepareHeader(unsigned int nonce = 0)
@@ -180,7 +191,7 @@ struct PendingBlockTestingSetup : RegTestingSetup {
 
         gate.Open();
         WaitForBlockProcessing();
-        Peerman().ProcessPendingEvents();
+        ProcessBlockCompletions();
         if (pending_first) {
             BOOST_REQUIRE_EQUAL(WITH_LOCK(cs_main, return chainman.ActiveHeight()), 500);
             Peerman().SendMessages(other);
@@ -233,7 +244,7 @@ struct PendingBlockTestingSetup : RegTestingSetup {
 
         gate.Open();
         WaitForBlockProcessing();
-        Peerman().ProcessPendingEvents();
+        ProcessBlockCompletions();
         for (CNode* peer : {&first, &second}) {
             Connman().ProcessMessagesOnce(*peer);
             BOOST_CHECK_EQUAL(peer->fDisconnect, invalid);
@@ -358,7 +369,23 @@ BOOST_FIXTURE_TEST_CASE(pending_block_pauses_only_source_peer, PendingBlockTesti
     Peerman().SendMessages(other);
     BOOST_CHECK(HasSendData(other));
 
+    ValidationCallbackGate gate{*m_node.validation_signals};
+    gate.Wait();
     completion.set_value({.processing_success = true, .new_block = true});
+    BOOST_CHECK(!Connman().ProcessMessagesOnce(source));
+    BOOST_CHECK(!Stats(source.GetId()).m_addr_relay_enabled);
+    BOOST_CHECK(source.m_last_block_time.load() == 0s);
+    Peerman().SendMessages(source);
+    BOOST_CHECK(!HasSendData(source));
+
+    // Other peers can still process ordinary messages while callbacks are held.
+    auto& callback_other{AddPeer(2)};
+    BOOST_REQUIRE(Connman().ReceiveMsgFrom(callback_other, NetMsg::Make(NetMsgType::GETADDR)));
+    Connman().ProcessMessagesOnce(callback_other);
+    BOOST_CHECK(Stats(callback_other.GetId()).m_addr_relay_enabled);
+
+    gate.Open();
+    ProcessBlockCompletions();
     Connman().ProcessMessagesOnce(source);
     BOOST_CHECK(Stats(source.GetId()).m_addr_relay_enabled);
     BOOST_CHECK(source.m_last_block_time.load() == GetTime<std::chrono::seconds>());
@@ -400,6 +427,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_allows_queued_getdata_work, PendingBlockTe
     BOOST_CHECK(!Stats(source.GetId()).m_addr_relay_enabled);
 
     completion.set_value({.processing_success = true, .new_block = false});
+    ProcessBlockCompletions();
     Connman().ProcessMessagesOnce(source);
     BOOST_CHECK(Stats(source.GetId()).m_addr_relay_enabled);
 }
@@ -418,8 +446,13 @@ BOOST_FIXTURE_TEST_CASE(pending_block_survives_disconnection, PendingBlockTestin
 
     // Destroy the source CNode before completion. Cleanup still belongs to the manager.
     RemovePeer(source);
+    ValidationCallbackGate gate{*m_node.validation_signals};
+    gate.Wait();
     completion.set_value({.processing_success = false, .new_block = true});
     Peerman().ProcessPendingEvents();
+    BOOST_CHECK_EQUAL(Stats(requested_from.GetId()).vHeightInFlight.size(), 1);
+    gate.Open();
+    ProcessBlockCompletions();
     BOOST_CHECK(Stats(requested_from.GetId()).vHeightInFlight.empty());
 
     // The loop must also be able to drain completions with no connected peers left.
@@ -427,7 +460,7 @@ BOOST_FIXTURE_TEST_CASE(pending_block_survives_disconnection, PendingBlockTestin
     Peerman().UnitTestBlockProcessing(requested_from.GetId(), block->GetHash(), last_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     RemovePeer(requested_from);
     last_completion.set_value({.processing_success = false, .new_block = false});
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     Peerman().ProcessPendingEvents();
 }
 
@@ -442,7 +475,7 @@ BOOST_FIXTURE_TEST_CASE(pending_optimistic_block_checks_validity_at_completion, 
     std::promise<BlockProcessingResult> rejected;
     Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), rejected.get_future(), /*via_compact_block=*/true, /*optimistic_reconstruction=*/true);
     rejected.set_value({.processing_success = false, .new_block = false});
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BOOST_CHECK_EQUAL(Stats(requested_from.GetId()).vHeightInFlight.size(), 1);
 
     std::promise<BlockProcessingResult> completion;
@@ -453,7 +486,7 @@ BOOST_FIXTURE_TEST_CASE(pending_optimistic_block_checks_validity_at_completion, 
     Peerman().ProcessPendingEvents();
     BOOST_CHECK_EQUAL(Stats(requested_from.GetId()).vHeightInFlight.size(), 1);
     completion.set_value({.processing_success = true, .new_block = false});
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BOOST_CHECK(Stats(requested_from.GetId()).vHeightInFlight.empty());
     BOOST_CHECK(source.m_last_block_time.load() == 0s);
 }
@@ -470,15 +503,22 @@ BOOST_FIXTURE_TEST_CASE(pending_block_punishes_before_resuming, PendingBlockTest
         std::promise<BlockProcessingResult> completion;
         Peerman().UnitTestBlockProcessing(source.GetId(), block->GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
         BOOST_REQUIRE(Connman().ReceiveMsgFrom(source, NetMsg::Make(NetMsgType::GETADDR)));
+        ValidationCallbackGate gate{*m_node.validation_signals};
+        gate.Wait();
         m_node.validation_signals->BlockChecked(block, invalid);
         if (ready) completion.set_value({.processing_success = false, .new_block = false});
         // Global polling must not allow the peer to resume before punishment either.
         Peerman().ProcessPendingEvents();
         BOOST_CHECK(!Connman().ProcessMessagesOnce(source));
+        BOOST_CHECK(!source.fDisconnect);
+        BOOST_CHECK(!Stats(source.GetId()).m_addr_relay_enabled);
+        gate.Open();
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        BOOST_CHECK(!Connman().ProcessMessagesOnce(source));
         BOOST_CHECK(source.fDisconnect);
         BOOST_CHECK(!Stats(source.GetId()).m_addr_relay_enabled);
         if (!ready) completion.set_value({.processing_success = false, .new_block = false});
-        Peerman().ProcessPendingEvents();
+        ProcessBlockCompletions();
         RemovePeer(source);
     }
 }
@@ -492,16 +532,18 @@ BOOST_FIXTURE_TEST_CASE(pending_block_preserves_newer_source, PendingBlockTestin
     std::promise<BlockProcessingResult> first_completion;
     Peerman().UnitTestBlockProcessing(first.GetId(), block->GetHash(), first_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     m_node.validation_signals->BlockChecked(block, BlockValidationState{});
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // A later submission now owns the source entry for the same hash.
     std::promise<BlockProcessingResult> second_completion;
     Peerman().UnitTestBlockProcessing(second.GetId(), block->GetHash(), second_completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
     first_completion.set_value({.processing_success = false, .new_block = false});
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BlockValidationState invalid;
     invalid.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "test-invalid-block");
     m_node.validation_signals->BlockChecked(block, invalid);
     second_completion.set_value({.processing_success = false, .new_block = false});
+    ProcessBlockCompletions();
     Connman().ProcessMessagesOnce(second);
     BOOST_CHECK(second.fDisconnect);
     BOOST_CHECK(!first.fDisconnect);
@@ -537,11 +579,12 @@ BOOST_FIXTURE_TEST_CASE(pending_cached_rejection_preserves_source_and_exemptions
 
         // A cached-invalid callback must neither punish nor erase a different source.
         m_node.validation_signals->BlockChecked(block, cached_invalid);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
         Connman().ProcessMessagesOnce(source);
         BOOST_CHECK(!source.fDisconnect);
         BOOST_REQUIRE(Connman().ReceiveMsgFrom(duplicate, NetMsg::Make(NetMsgType::PING, uint64_t{42})));
         duplicate_completion.set_value({.cached_invalid = true});
-        Peerman().ProcessPendingEvents();
+        ProcessBlockCompletions();
         Connman().ProcessMessagesOnce(duplicate);
         BOOST_CHECK_EQUAL(duplicate.fDisconnect, test.disconnect);
         auto message{duplicate.PollMessage()};
@@ -551,6 +594,7 @@ BOOST_FIXTURE_TEST_CASE(pending_cached_rejection_preserves_source_and_exemptions
         // Normal validation can still find the source after the duplicate completes.
         m_node.validation_signals->BlockChecked(block, consensus_invalid);
         source_completion.set_value({});
+        ProcessBlockCompletions();
         Connman().ProcessMessagesOnce(source);
         BOOST_CHECK(source.fDisconnect);
         Peerman().ProcessPendingEvents();
@@ -572,12 +616,37 @@ BOOST_FIXTURE_TEST_CASE(pending_block_failed_future, PendingBlockTestingSetup)
                 completion.set_exception(std::make_exception_ptr(UnexpectedException{}));
             }
         }
-        Peerman().ProcessPendingEvents();
+        ProcessBlockCompletions();
         BOOST_CHECK(source.fDisconnect);
         BOOST_CHECK(source.m_last_block_time.load() == 0s);
         Peerman().ProcessPendingEvents();
         RemovePeer(source);
     }
+}
+
+BOOST_AUTO_TEST_CASE(pending_block_marker_after_teardown)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    CNode source{0, /*sock=*/nullptr, CAddress(LookupNumeric("127.0.0.1", 18444), NODE_NONE),
+        /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, CAddress(), /*addrNameIn=*/"",
+        ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+    m_node.peerman->InitializeNode(source, ServiceFlags(NODE_NETWORK | NODE_WITNESS));
+    std::promise<BlockProcessingResult> completion;
+    m_node.peerman->UnitTestBlockProcessing(source.GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), completion.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
+    completion.set_value({});
+
+    // Shutdown may leave a queued marker to be flushed after both owners are gone.
+    m_node.chainman->StopBlockProcessing();
+    m_node.scheduler->stop();
+    m_node.validation_signals->FlushBackgroundCallbacks();
+    m_node.peerman->ProcessPendingEvents();
+    m_node.peerman->ProcessPendingEvents();
+    BOOST_CHECK_EQUAL(m_node.validation_signals->CallbacksPending(), 1);
+    m_node.peerman->FinalizeNode(source);
+    m_node.peerman.reset();
+    m_node.connman.reset();
+    m_node.validation_signals->FlushBackgroundCallbacks();
+    BOOST_CHECK_EQUAL(m_node.validation_signals->CallbacksPending(), 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(worker_processes_peers_and_disconnected_sources, PendingBlockTestingSetup)
@@ -620,7 +689,7 @@ BOOST_FIXTURE_TEST_CASE(worker_processes_peers_and_disconnected_sources, Pending
     BOOST_REQUIRE(duplicate.wait_for(30s) == std::future_status::ready);
     const auto result{duplicate.get()};
     BOOST_CHECK(result.processing_success && !result.new_block);
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BOOST_CHECK(Stats(other.GetId()).vHeightInFlight.empty());
     BOOST_CHECK(WITH_LOCK(cs_main, return first_index->nStatus & BLOCK_HAVE_DATA));
     BOOST_CHECK(WITH_LOCK(cs_main, return second_index->nStatus & BLOCK_HAVE_DATA));
@@ -665,7 +734,7 @@ BOOST_FIXTURE_TEST_CASE(worker_pending_block_not_downloaded, PendingBlockTesting
 
     gate.Open();
     WaitForBlockProcessing();
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BOOST_CHECK(WITH_LOCK(cs_main, return index->nStatus & BLOCK_HAVE_DATA));
 
     // A new block remains eligible for automatic download.
@@ -806,7 +875,7 @@ BOOST_FIXTURE_TEST_CASE(worker_pending_compact_block_not_downloaded, PendingBloc
 
     gate.Open();
     WaitForBlockProcessing();
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     BOOST_CHECK(WITH_LOCK(cs_main, return index->nStatus & BLOCK_HAVE_DATA));
     BOOST_CHECK(WITH_LOCK(cs_main, return chainman.ActiveTip()->GetBlockHash()) == block->GetHash());
 }
@@ -887,7 +956,7 @@ BOOST_FIXTURE_TEST_CASE(worker_initial_failure_punishes_its_sender, PendingBlock
     gate.Open();
     BOOST_REQUIRE(completion.wait_for(30s) == std::future_status::ready);
     BOOST_CHECK(completion.get().processing_success);
-    Peerman().ProcessPendingEvents();
+    ProcessBlockCompletions();
     Connman().ProcessMessagesOnce(good_peer);
     BOOST_CHECK(!good_peer.fDisconnect);
     BOOST_CHECK(WITH_LOCK(cs_main, return index->nStatus & BLOCK_HAVE_DATA));

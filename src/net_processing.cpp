@@ -1065,6 +1065,7 @@ private:
         std::future<BlockProcessingResult> future;
         bool via_compact_block;
         bool optimistic_reconstruction;
+        std::shared_ptr<std::atomic<bool>> callbacks_complete{};
     };
 
     /** One completion per source peer, retained here even after the peer disconnects. */
@@ -1079,7 +1080,7 @@ private:
     void ProcessBlock(NodeId peer_id, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool via_compact_block, bool optimistic_reconstruction)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex);
 
-    /** Consume a ready completion. Return true if processing is still pending. */
+    /** Consume a completion after its callbacks. Return true while either is pending. */
     bool IsBlockProcessingPending(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex);
 
     /** Apply post-processing peer updates on the message-handler thread. */
@@ -3766,6 +3767,23 @@ bool PeerManagerImpl::IsBlockProcessingPending(NodeId peer_id)
     const auto it{m_pending_block_processing.find(peer_id)};
     if (it == m_pending_block_processing.end()) return false;
     if (it->second.future.wait_for(0s) != std::future_status::ready) return true;
+
+    if (auto* signals{m_chainman.m_options.signals}) {
+        auto& complete{it->second.callbacks_complete};
+        if (!complete) {
+            complete = std::make_shared<std::atomic<bool>>(false);
+            // The message thread holds g_msgproc_mutex, so the callback only marks
+            // readiness. Weak ownership makes a late shutdown callback a no-op.
+            signals->CallFunctionInValidationInterfaceQueue([weak_complete = std::weak_ptr{complete}, &connman = m_connman] {
+                if (auto flag{weak_complete.lock()}) {
+                    flag->store(true);
+                    connman.WakeMessageHandler();
+                }
+            });
+            return true;
+        }
+        if (!complete->load()) return true;
+    }
 
     auto pending{std::move(it->second)};
     m_pending_block_processing.erase(it);

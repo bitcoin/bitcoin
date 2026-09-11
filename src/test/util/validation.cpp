@@ -25,6 +25,7 @@
 #include <chrono>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -67,6 +68,63 @@ void BlockWorkerGate::Open()
         m_open = true;
         m_release.set_value();
     }
+}
+
+ValidationCallbackGate::ValidationCallbackGate(ValidationSignals& signals) : m_signals{signals}
+{
+    m_signals.CallFunctionInValidationInterfaceQueue([this] {
+        m_entered.set_value();
+        m_released.wait();
+    });
+}
+
+ValidationCallbackGate::~ValidationCallbackGate()
+{
+    Open();
+    m_signals.SyncWithValidationInterfaceQueue();
+}
+
+void ValidationCallbackGate::Wait()
+{
+    if (m_entered_future.wait_for(std::chrono::seconds{30}) != std::future_status::ready) {
+        throw std::runtime_error{"Timed out waiting for the validation callback gate"};
+    }
+}
+
+void ValidationCallbackGate::Open()
+{
+    if (!m_open) {
+        m_open = true;
+        m_release.set_value();
+    }
+}
+
+FuzzTaskRunner::Scope::Scope(FuzzTaskRunner& owner) : m_owner{owner}
+{
+    Assert(!m_owner.m_runner);
+    m_owner.m_runner = &m_runner;
+    m_scheduler.m_service_thread = std::thread([this] { m_scheduler.serviceQueue(); });
+}
+
+FuzzTaskRunner::Scope::~Scope()
+{
+    m_scheduler.StopWhenDrained();
+    m_owner.m_runner = nullptr;
+}
+
+void FuzzTaskRunner::insert(std::function<void()> func)
+{
+    Assert(m_runner)->insert(std::move(func));
+}
+
+void FuzzTaskRunner::flush()
+{
+    if (m_runner) m_runner->flush();
+}
+
+size_t FuzzTaskRunner::size()
+{
+    return m_runner ? m_runner->size() : 0;
 }
 
 void TestBlockManager::CleanupForFuzzing()

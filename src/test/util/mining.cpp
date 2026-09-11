@@ -155,13 +155,14 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 {
     auto& chainman{*Assert(node.chainman)};
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
-    // BlockProcessed callbacks can still be running after the future is fulfilled.
+    // Validation callbacks can still be queued after the future is fulfilled.
     auto bvsc{std::make_shared<BlockValidationStateCatcher>(block->GetHash())};
     node.validation_signals->RegisterSharedValidationInterface(bvsc);
     BlockValidationState state;
     const auto result{chainman.ProcessNewBlock(block, state, true, true).get()};
     const bool duplicate{!result.new_block && result.processing_success};
     assert(!duplicate);
+    node.validation_signals->SyncWithValidationInterfaceQueue();
     node.validation_signals->UnregisterSharedValidationInterface(bvsc);
     node.validation_signals->SyncWithValidationInterfaceQueue();
     const bool was_valid{bvsc->m_state && bvsc->m_state->IsValid()};

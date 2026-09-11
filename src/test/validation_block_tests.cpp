@@ -190,6 +190,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_initial_state)
     auto& chainman{*Assert(m_node.chainman)};
     const auto block{GoodBlock(Params().GenesisBlock().GetHash())};
     auto sub{std::make_shared<StateCatcher>()};
+    // Observe only test submissions, not queued notifications from fixture setup.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     m_node.validation_signals->RegisterSharedValidationInterface(sub);
 
     // Initial rejection and admission no-ops return ready futures.
@@ -198,9 +200,11 @@ BOOST_AUTO_TEST_CASE(processnewblock_initial_state)
         BOOST_REQUIRE(future.wait_for(std::chrono::seconds{0}) == std::future_status::ready);
         return future.get();
     };
-    const auto GetResult = [](std::future<BlockProcessingResult> future) {
+    const auto GetResult = [&](std::future<BlockProcessingResult> future) {
         BOOST_REQUIRE(future.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
-        return future.get();
+        const auto result{future.get()};
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        return result;
     };
 
     // CheckBlock failures are returned directly without a validation callback.
@@ -314,6 +318,38 @@ BOOST_AUTO_TEST_CASE(processnewblock_after_worker_gate)
     BOOST_CHECK(result.processing_success && result.new_block);
 }
 
+BOOST_AUTO_TEST_CASE(processnewblock_completes_before_callbacks)
+{
+    struct Subscriber final : CValidationInterface {
+        std::promise<void> checked;
+
+        void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) override
+        {
+            checked.set_value();
+        }
+    };
+    auto sub{std::make_shared<Subscriber>()};
+    auto checked{sub->checked.get_future()};
+    auto& signals{*m_node.validation_signals};
+    // Observe only this submission, not queued notifications from fixture setup.
+    signals.SyncWithValidationInterfaceQueue();
+    signals.RegisterSharedValidationInterface(sub);
+    ValidationCallbackGate gate{signals};
+    gate.Wait();
+
+    BlockValidationState state;
+    auto result{m_node.chainman->ProcessNewBlock(GoodBlock(Params().GenesisBlock().GetHash()), state, true, true)};
+    BOOST_REQUIRE(result.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+    BOOST_CHECK(result.get().new_block);
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK(checked.wait_for(std::chrono::seconds{0}) == std::future_status::timeout);
+
+    gate.Open();
+    signals.SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(checked.wait_for(std::chrono::seconds{0}) == std::future_status::ready);
+    signals.UnregisterSharedValidationInterface(sub);
+}
+
 BOOST_AUTO_TEST_CASE(processnewblock_queued_child_invalidated)
 {
     struct Subscriber final : CValidationInterface {
@@ -370,6 +406,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_queued_child_invalidated)
     BOOST_CHECK(parent_result.new_block);
     BOOST_REQUIRE(child_future.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
     const auto child_result{child_future.get()};
+    signals.SyncWithValidationInterfaceQueue();
     signals.UnregisterSharedValidationInterface(sub);
     signals.SyncWithValidationInterfaceQueue();
 
