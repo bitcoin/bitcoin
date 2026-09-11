@@ -6,6 +6,7 @@
 #include <compressor.h>
 #include <core_io.h>
 #include <key.h>
+#include <primitives/transaction.h>
 #include <rpc/util.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -130,8 +131,11 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     }
     ScriptError err;
     const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
-    CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
+    const CTransaction tx{BuildSpendingTransaction(scriptSig, scriptWitness, txCredit)};
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx, {txCredit.vout[0]});
+    const TransactionSignatureChecker uncached_checker{&tx, 0, nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
+    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, uncached_checker, &err) == expect, message);
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
@@ -141,7 +145,8 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
+        bool result{VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, uncached_checker, &err)};
+        BOOST_CHECK_MESSAGE(result == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
     }
 }
 }; // struct ScriptTest
@@ -1660,8 +1665,8 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
         BOOST_CHECK_EQUAL(HexStr(txdata.m_sequences_single_hash), vec["intermediary"]["hashSequences"].get_str());
 
         for (const auto& input : vec["inputSpending"].getValues()) {
-            int txinpos = input["given"]["txinIndex"].getInt<int>();
-            int hashtype = input["given"]["hashType"].getInt<int>();
+            const auto txinpos{input["given"]["txinIndex"].getInt<uint32_t>()};
+            const auto hashtype{input["given"]["hashType"].getInt<int32_t>()};
 
             // Load key.
             auto privkey = ParseHex(input["given"]["internalPrivkey"].get_str());
