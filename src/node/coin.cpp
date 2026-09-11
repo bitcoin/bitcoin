@@ -24,4 +24,35 @@ void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
         }
     }
 }
+
+bool FindCoinsByScript(const NodeContext& node, const std::set<CScript>& output_scripts, std::map<COutPoint, Coin>& coins, uint256& best_block)
+{
+    assert(node.chainman);
+    std::unique_ptr<CCoinsViewCursor> cursor;
+    {
+        LOCK(cs_main);
+        Chainstate& active_chainstate = node.chainman->ActiveChainstate();
+        // Ensure on-disk coins DB is up-to-date so the cursor will see recent coins.
+        active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
+        cursor = active_chainstate.CoinsDB().Cursor();
+    }
+
+    if (!cursor) {
+        return false;
+    }
+    best_block = cursor->GetBestBlock();
+
+    while (cursor->Valid()) {
+        COutPoint key;
+        Coin coin;
+        if (!cursor->GetKey(key) || !cursor->GetValue(coin)) {
+            return false;
+        }
+        if (output_scripts.contains(coin.out.scriptPubKey)) {
+            coins.emplace(std::move(key), std::move(coin));
+        }
+        cursor->Next();
+    }
+    return true;
+}
 } // namespace node
