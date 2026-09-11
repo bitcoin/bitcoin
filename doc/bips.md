@@ -64,6 +64,7 @@ BIPs that are implemented by Bitcoin Core:
   [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)),
   always active as of **v24.0** ([PR 23536](https://github.com/bitcoin/bitcoin/pull/23536)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
+* [`BIP 370`](https://github.com/bitcoin/bips/blob/master/bip-0370.mediawiki): PSBT version 2 is supported and created by default by the PSBT RPCs as of **v32.0** ([PR 21283](https://github.com/bitcoin/bitcoin/pull/21283)).
 * [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
 * [`BIP 373`](https://github.com/bitcoin/bips/blob/master/bip-0373.mediawiki): MuSig2 fields for PSBT as of **v30.0** ([PR 31247](https://github.com/bitcoin/bitcoin/pull/31247))
 * [`BIP 379`](https://github.com/bitcoin/bips/blob/master/bip-0379.md): Miniscript was partially implemented in **v24.0** ([PR 24148](https://github.com/bitcoin/bitcoin/pull/24148)), and fully implemented as of **v26.0** ([PR 27255](https://github.com/bitcoin/bitcoin/pull/27255)).
