@@ -17,6 +17,7 @@
 #include <test/util/common.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
@@ -75,6 +76,7 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 {
     BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, true);
+    IndexTestGuard guard{filter_index, *m_node.validation_signals};
     BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;

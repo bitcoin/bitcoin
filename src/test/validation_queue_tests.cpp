@@ -310,10 +310,10 @@ BOOST_AUTO_TEST_CASE(destructor_finishes_accepted_jobs)
     for (auto& future : futures) BOOST_CHECK(Get(future).processing_success);
 }
 
-BOOST_FIXTURE_TEST_CASE(manager_worker_stopped_by_fixture, TestingSetup)
+BOOST_FIXTURE_TEST_CASE(manager_worker_started_and_stopped_by_fixture, TestingSetup)
 {
     // Exercise the fixture's early stop while its mempool and callbacks are alive.
-    m_node.chainman->StartBlockProcessing();
+    BOOST_CHECK_THROW(m_node.chainman->StartBlockProcessing(), std::logic_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

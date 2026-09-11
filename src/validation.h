@@ -963,6 +963,8 @@ private:
 
     /** Process admitted blocks sequentially, with independently owned completion futures. */
     BlockProcessingQueue m_block_processing_queue;
+    friend class BlockWorkerGate; // Test-only access to submit a blocking job.
+
     BlockProcessingResult FinishBlockProcessing(const std::shared_ptr<const CBlock>& block, bool force_processing) LOCKS_EXCLUDED(cs_main);
 
     /** The last header for which a headerTip notification was issued. */
