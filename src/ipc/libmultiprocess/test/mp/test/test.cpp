@@ -26,6 +26,7 @@
 #include <kj/memory.h>
 #include <kj/string.h>
 #include <kj/test.h>
+#include <list> // IWYU pragma: keep
 #include <map>
 #include <memory>
 #include <mp/config.h>
@@ -499,6 +500,54 @@ KJ_TEST("Worker thread destroyed before it is initialized")
     };
 
     EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
+}
+
+KJ_TEST("Thread exiting while its connection is destroyed")
+{
+    // Regression test for a race between a thread exiting after making IPC
+    // calls and its connection being destroyed on the event loop thread.
+    // ~ThreadContext on the exiting thread and the SetThread disconnect
+    // callback run by ~Connection both remove the thread's map entries for
+    // the connection, and previously nothing synchronized them, so both could
+    // destroy the same ProxyClient<Thread> object.
+    //
+    // The testing_hook_thread_client_destroy hook, called at the start of
+    // ~ProxyClient<Thread>, blocks the exiting thread inside its first map
+    // entry destructor while the main thread destroys the connection. The
+    // disconnect callback must leave that entry alone: it resets
+    // m_disconnect_cb only when it finds the entry in the map and takes over
+    // destroying it, so the entry's m_disconnect_cb must still be set when
+    // the exiting thread resumes.
+    TestSetup setup{/*client_owns_connection=*/false};
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    setup.server->m_impl->m_fn = [] {};
+    EventLoop& loop = *foo->m_context.loop;
+
+    std::promise<void> caller_exiting, release_caller;
+    bool caller_blocked{false};   // caller thread only
+    bool disconnect_cb_set{false}; // caller thread, read after join
+    loop.testing_hook_thread_client_destroy = [&](ProxyClient<Thread>* client) {
+        // The hook also runs on the event loop thread for entries the
+        // disconnect callback destroys. Block only the exiting caller thread,
+        // in the first destructor it runs.
+        if (std::this_thread::get_id() == loop.m_thread_id || caller_blocked) return;
+        caller_blocked = true;
+        caller_exiting.set_value();
+        release_caller.get_future().get();
+        disconnect_cb_set = client->m_disconnect_cb.has_value();
+    };
+
+    // Make a call taking an mp.Context argument, which adds callback and
+    // request thread entries for the connection to the caller's thread-local
+    // ThreadContext maps. They are destroyed when the thread exits.
+    std::thread caller{[&] { foo->callFnAsync(); }};
+    caller_exiting.get_future().get();
+    setup.client_disconnect();
+    release_caller.set_value();
+    caller.join();
+    loop.testing_hook_thread_client_destroy = nullptr;
+    KJ_EXPECT(disconnect_cb_set);
 }
 
 KJ_TEST("Calling async IPC method, with server disconnect racing the call")

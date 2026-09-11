@@ -367,6 +367,11 @@ public:
     //! Hook called on the event loop thread when a client has disconnected.
     std::function<void()> testing_hook_disconnected;
 
+    //! Hook called at the start of ~ProxyClient<Thread>, on whichever thread
+    //! is destroying the object, with the object being destroyed. Used by
+    //! tests to control timing during thread map teardown.
+    std::function<void(ProxyClient<Thread>*)> testing_hook_thread_client_destroy;
+
     //! Miscellaneous testing hook. Called from various places with an
     //! argument identifying the call site (typically a string literal), so
     //! tests can control timing or inject behavior at specific points without
@@ -806,6 +811,11 @@ struct ThreadContext
     //! to assert false if there's an attempt to execute a blocking operation
     //! which could deadlock the thread.
     bool loop_thread = false;
+
+    //! Destructor which destroys the thread maps, coordinating with event
+    //! loop threads that remove entries from them concurrently when
+    //! connections are broken (see the code comment).
+    ~ThreadContext();
 };
 
 template<typename T, typename Fn>
