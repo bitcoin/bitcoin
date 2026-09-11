@@ -157,6 +157,11 @@ protected:
      */
     virtual void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) {}
     /**
+     * A block-processing future has been fulfilled. Delivered through the same
+     * task runner as queued validation callbacks, possibly after the future is consumed.
+     */
+    virtual void BlockProcessed() {}
+    /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet.
      */
@@ -230,6 +235,7 @@ public:
     void BlockDisconnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);
     void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&);
+    void BlockProcessed();
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 };
 

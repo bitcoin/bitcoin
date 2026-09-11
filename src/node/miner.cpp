@@ -378,18 +378,18 @@ class SubmitBlockStateCatcher final : public CValidationInterface
 {
 public:
     uint256 m_hash;
-    bool m_found{false};
-    BlockValidationState m_state;
+    Mutex m_mutex;
+    bool m_found GUARDED_BY(m_mutex){false};
+    BlockValidationState m_state GUARDED_BY(m_mutex);
 
     explicit SubmitBlockStateCatcher(const uint256& hash) : m_hash{hash} {}
 
 protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         if (block->GetHash() != m_hash) return;
-        // ProcessNewBlock emits BlockChecked synchronously while holding cs_main,
-        // so SubmitBlock can read these fields after ProcessNewBlock returns
-        // without extra synchronization.
+        LOCK(m_mutex);
         m_found = true;
         m_state = state;
     }
@@ -411,11 +411,15 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     BlockValidationState state;
     const auto processing_result{chainman.ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
-    // No queue drain is needed. The BlockChecked notification used above is
-    // emitted synchronously by ProcessNewBlock, unlike most validation signals.
+    // BlockChecked runs before completion. Unregistration itself does not wait
+    // for callbacks from other concurrent submissions of this block.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
-    if (!processing_result.new_block && processing_result.processing_success) {
+    LOCK(sc->m_mutex);
+    if (!state.IsValid()) {
+        reason = state.GetRejectReason();
+        debug = state.GetDebugMessage();
+    } else if (!processing_result.new_block && processing_result.processing_success) {
         reason = "duplicate";
     } else if (!processing_result.processing_success && (!sc->m_found || sc->m_state.IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example

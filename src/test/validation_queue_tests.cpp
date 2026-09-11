@@ -269,6 +269,36 @@ BOOST_AUTO_TEST_CASE(processor_can_submit_without_holding_queue_mutex)
     BOOST_CHECK(Get(**nested).processing_success);
 }
 
+BOOST_AUTO_TEST_CASE(completion_notification_follows_future_and_releases_mutex)
+{
+    const auto block{Block()};
+    std::future<BlockProcessingResult> first;
+    std::optional<BlockProcessingQueue::Submission> nested;
+    std::promise<bool> notified;
+    auto notification{notified.get_future()};
+    bool first_notification{true};
+    BlockProcessingQueue queue;
+    JobGate gate;
+    queue.Start([&] {
+        if (!first_notification) return;
+        first_notification = false;
+        const bool ready{first.wait_for(0s) == std::future_status::ready};
+        nested = queue.Submit(block, Process);
+        notified.set_value(ready);
+    });
+    first = Submit(queue, block, [wait = gate.Waiter()](const auto& value) {
+        wait();
+        return Process(value);
+    });
+    gate.WaitUntilEntered();
+    gate.Open();
+    BOOST_REQUIRE(notification.wait_for(30s) == std::future_status::ready);
+    BOOST_CHECK(notification.get());
+    BOOST_REQUIRE(nested && nested->has_value());
+    BOOST_CHECK(Get(first).processing_success);
+    BOOST_CHECK(Get(**nested).processing_success);
+}
+
 BOOST_AUTO_TEST_CASE(destructor_finishes_accepted_jobs)
 {
     std::vector<std::future<BlockProcessingResult>> futures;

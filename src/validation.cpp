@@ -4440,64 +4440,109 @@ bool ChainstateManager::StoreBlock(const std::shared_ptr<const CBlock>& pblock, 
     return true;
 }
 
-std::future<BlockProcessingResult> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
+void ChainstateManager::StartBlockProcessing()
+{
+    m_block_processing_queue.Start([this] {
+        if (m_options.signals) {
+            m_options.signals->BlockProcessed();
+            LimitValidationInterfaceQueue(*m_options.signals);
+        }
+    });
+}
+
+BlockProcessingResult ChainstateManager::FinishBlockProcessing(const std::shared_ptr<const CBlock>& block, bool force_processing)
 {
     AssertLockNotHeld(cs_main);
-    AssertLockNotHeld(m_check_block_mutex);
-
-    std::promise<BlockProcessingResult> result_promise;
-    auto result_future{result_promise.get_future()};
     BlockProcessingResult result;
     {
-        CBlockIndex *pindex = nullptr;
-
-        // Skipping AcceptBlock() for CheckBlock() failures means that we will never mark a block as invalid if
-        // CheckBlock() fails.  This is protective against consensus failure if there are any unknown forms of block
-        // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
-        // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
-        // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
-        bool ret;
-        {
-            LOCK(m_check_block_mutex);
-            ret = CheckBlock(*block, state, GetConsensus());
-        }
-
-        // Admission and synchronous failure notifications still require cs_main.
         LOCK(cs_main);
-        if (ret) {
-            // Store to disk
-            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, &result.new_block, min_pow_checked);
-        }
-        if (!ret) {
+        CBlockIndex* index{Assert(m_blockman.LookupBlockIndex(block->GetHash()))};
+        // The block or an ancestor may have been invalidated since admission.
+        if (index->nStatus & BLOCK_FAILED_VALID) {
             if (m_options.signals) {
+                BlockValidationState state;
+                state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid");
                 m_options.signals->BlockChecked(block, state);
             }
-            LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
-            result_promise.set_value(result);
-            return result_future;
+            return {.cached_invalid = true};
+        }
+        // Another submission or import may have stored the block since admission.
+        if (!ShouldMaybeWrite(index, force_processing)) return {.processing_success = true};
+
+        BlockValidationState state;
+        if (!StoreBlock(block, state, index, /*dbp=*/nullptr, &result.new_block)) {
+            if (m_options.signals) m_options.signals->BlockChecked(block, state);
+            LogError("%s: StoreBlock failed (%s)\n", __func__, state.ToString());
+            return result;
         }
     }
 
     NotifyHeaderTip();
 
-    BlockValidationState activation_state; // Only used to report errors, not invalidity - ignore it
+    BlockValidationState activation_state;
     if (!ActiveChainstate().ActivateBestChain(activation_state, block)) {
         LogError("%s: ActivateBestChain failed (%s)\n", __func__, activation_state.ToString());
-        result_promise.set_value(result);
-        return result_future;
+        return result;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
         LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        result_promise.set_value(result);
-        return result_future;
-     }
+        return result;
+    }
 
     result.processing_success = true;
-    result_promise.set_value(result);
-    return result_future;
+    return result;
+}
+
+std::future<BlockProcessingResult> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
+{
+    AssertLockNotHeld(cs_main);
+    AssertLockNotHeld(m_check_block_mutex);
+
+    const auto ready = [](BlockProcessingResult result) {
+        std::promise<BlockProcessingResult> promise;
+        auto future{promise.get_future()};
+        promise.set_value(result);
+        return future;
+    };
+
+    // Skipping admission for CheckBlock() failures means that we will never mark a block as invalid if
+    // CheckBlock() fails. This is protective against consensus failure if there are any unknown forms of block
+    // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
+    // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html. Because CheckBlock() is
+    // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
+    bool accepted;
+    {
+        LOCK(m_check_block_mutex);
+        accepted = CheckBlock(*block, state, GetConsensus());
+    }
+    bool should_write{false};
+    if (accepted) {
+        LOCK(cs_main);
+        CBlockIndex* index{nullptr};
+        accepted = PreWriteCheckBlock(*block, state, index, force_processing, should_write, min_pow_checked);
+    }
+    if (!accepted) {
+        LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
+        return ready({});
+    }
+    if (!should_write) return ready({.processing_success = true});
+
+    auto submitted{m_block_processing_queue.Submit(block, [this, force_processing](const auto& admitted_block) {
+        return FinishBlockProcessing(admitted_block, force_processing);
+    })};
+    if (submitted) return std::move(*submitted);
+    if (submitted.error() == BlockProcessingQueue::SubmitError::Inactive) {
+        // Unstarted managers process inline for kernel callers and deterministic fuzzing.
+        auto future{ready(FinishBlockProcessing(block, force_processing))};
+        if (m_options.signals) m_options.signals->BlockProcessed();
+        return future;
+    }
+
+    state.Error("Block processing interrupted");
+    return ready({});
 }
 
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)

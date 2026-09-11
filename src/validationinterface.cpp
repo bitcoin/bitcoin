@@ -272,6 +272,13 @@ void ValidationSignals::BlockChecked(const std::shared_ptr<const CBlock>& block,
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
 }
 
+void ValidationSignals::BlockProcessed()
+{
+    m_internals->m_task_runner->insert([this] {
+        m_internals->Iterate([](CValidationInterface& callbacks) { callbacks.BlockProcessed(); });
+    });
+}
+
 void ValidationSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
     LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });

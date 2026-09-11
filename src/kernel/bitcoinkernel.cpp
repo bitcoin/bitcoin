@@ -351,7 +351,6 @@ public:
         m_cbs.user_data_destroy = nullptr;
     }
 
-protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
     {
         if (m_cbs.block_checked) {
@@ -361,6 +360,7 @@ protected:
         }
     }
 
+protected:
     void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block) override
     {
         if (m_cbs.pow_valid_block) {
@@ -1393,8 +1393,15 @@ int btck_chainstate_manager_process_block(
     const btck_Block* block,
     int* _new_block)
 {
+    auto& manager{btck_ChainstateManager::get(chainman)};
     BlockValidationState state;
-    const auto result{btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
+    const auto result{manager.m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
+    if (!state.IsValid() && manager.m_context->m_validation_interface) {
+        // Initial failures no longer emit a global validation signal. Preserve
+        // the kernel API's feedback and serialize it with processing-time BlockChecked.
+        LOCK(manager.m_chainman->GetMutex());
+        manager.m_context->m_validation_interface->BlockChecked(btck_Block::get(block), state);
+    }
     if (_new_block) {
         *_new_block = result.new_block ? 1 : 0;
     }

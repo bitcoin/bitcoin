@@ -8,10 +8,14 @@
 #include <scheduler.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <validation_queue.h>
 #include <validationinterface.h>
 
 #include <atomic>
+#include <chrono>
+#include <future>
 #include <memory>
+#include <thread>
 
 BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, ChainTestingSetup)
 
@@ -28,6 +32,7 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
         BlockValidationState state_dummy;
         while (generate) {
             m_node.validation_signals->BlockChecked(std::make_shared<const CBlock>(), state_dummy);
+            m_node.validation_signals->BlockProcessed();
         }
     }};
 
@@ -46,6 +51,85 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
     gen.join();
     sub.join();
     BOOST_CHECK(!generate);
+}
+
+BOOST_AUTO_TEST_CASE(unregister_then_sync_covers_block_processed)
+{
+    using namespace std::chrono_literals;
+    struct Subscriber final : CValidationInterface {
+        std::promise<void> entered;
+        std::promise<void> release;
+        std::shared_future<void> released{release.get_future().share()};
+        std::atomic<int> calls{0};
+        std::atomic<bool> returned{false};
+
+        void BlockProcessed() override
+        {
+            if (calls.fetch_add(1) != 0) return;
+            entered.set_value();
+            released.wait();
+            returned = true;
+        }
+    } sub;
+
+    auto& signals{*m_node.validation_signals};
+    auto entered{sub.entered.get_future()};
+    BlockProcessingQueue queue;
+    std::future<bool> drained;
+    std::promise<void> drain_started;
+    auto started{drain_started.get_future()};
+    signals.RegisterValidationInterface(&sub);
+    struct Cleanup {
+        Subscriber& sub;
+        ValidationSignals& signals;
+        BlockProcessingQueue& queue;
+        std::future<bool>& drained;
+        bool open{false};
+
+        void Open()
+        {
+            if (!open) {
+                open = true;
+                sub.release.set_value();
+            }
+        }
+        ~Cleanup()
+        {
+            Open();
+            queue.Stop();
+            if (drained.valid()) drained.wait();
+            signals.UnregisterValidationInterface(&sub);
+            signals.SyncWithValidationInterfaceQueue();
+        }
+    } cleanup{sub, signals, queue, drained};
+
+    queue.Start([&] { signals.BlockProcessed(); });
+    auto first{queue.Submit(std::make_shared<const CBlock>(), [](const auto&) { return BlockProcessingResult{}; })};
+    BOOST_REQUIRE(first.has_value());
+    BOOST_REQUIRE(entered.wait_for(30s) == std::future_status::ready);
+    BOOST_CHECK(first->wait_for(0s) == std::future_status::ready);
+
+    // Index Stop() unregisters first. The queue barrier must then cover any
+    // completion callback already running before the raw subscriber is destroyed.
+    signals.UnregisterValidationInterface(&sub);
+    drained = std::async(std::launch::async, [&] {
+        drain_started.set_value();
+        signals.SyncWithValidationInterfaceQueue();
+        return sub.returned.load();
+    });
+    BOOST_REQUIRE(started.wait_for(30s) == std::future_status::ready);
+    BOOST_CHECK(drained.wait_for(100ms) == std::future_status::timeout);
+
+    // A parked notification does not prevent the worker from processing another job.
+    auto second{queue.Submit(std::make_shared<const CBlock>(), [](const auto&) { return BlockProcessingResult{}; })};
+    BOOST_REQUIRE(second.has_value());
+    BOOST_CHECK(second->wait_for(30s) == std::future_status::ready);
+    cleanup.Open();
+    BOOST_REQUIRE(drained.wait_for(30s) == std::future_status::ready);
+    BOOST_CHECK(drained.get());
+    queue.Stop();
+    signals.SyncWithValidationInterfaceQueue();
+    BOOST_CHECK_EQUAL(sub.calls.load(), 1);
 }
 
 class TestInterface : public CValidationInterface

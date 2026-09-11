@@ -178,7 +178,7 @@ public:
     virtual void UnitTestMisbehaving(NodeId peer_id) = 0;
 
     /** Register a block source and a controllable completion future for unit tests. */
-    virtual void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool optimistic_reconstruction)
+    virtual void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block, bool optimistic_reconstruction)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /**

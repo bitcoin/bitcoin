@@ -19,10 +19,11 @@ BlockProcessingQueue::~BlockProcessingQueue()
     Stop();
 }
 
-void BlockProcessingQueue::Start()
+void BlockProcessingQueue::Start(std::function<void()> on_completion)
 {
     LOCK(m_mutex);
     if (m_state != State::Inactive) throw std::logic_error("Block processing queue already started or stopped");
+    m_on_completion = std::move(on_completion);
     m_worker = std::thread{util::TraceThread, "blkprocess", [this] { Work(); }};
     m_worker_id = m_worker.get_id();
     m_state = State::Running;
@@ -89,6 +90,7 @@ BlockProcessingQueue::Submission BlockProcessingQueue::Submit(const std::shared_
 void BlockProcessingQueue::Work()
 {
     WAIT_LOCK(m_mutex, lock);
+    const auto on_completion{m_on_completion};
     for (;;) {
         m_cv.wait(lock, [this]() EXCLUSIVE_LOCKS_REQUIRED(m_mutex) { return m_state != State::Running || !m_jobs.empty(); });
         if (m_jobs.empty()) return;
@@ -112,6 +114,7 @@ void BlockProcessingQueue::Work()
             } else {
                 job.completion.set_value(result);
             }
+            if (on_completion) on_completion();
         }
     }
 }

@@ -961,8 +961,9 @@ private:
     /** Serialize only initial CheckBlock calls; release before waiting for cs_main. */
     Mutex m_check_block_mutex;
 
-    /** Owned worker infrastructure; ProcessNewBlock does not submit jobs yet. */
+    /** Process admitted blocks sequentially, with independently owned completion futures. */
     BlockProcessingQueue m_block_processing_queue;
+    BlockProcessingResult FinishBlockProcessing(const std::shared_ptr<const CBlock>& block, bool force_processing) LOCKS_EXCLUDED(cs_main);
 
     /** The last header for which a headerTip notification was issued. */
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
@@ -1058,8 +1059,8 @@ public:
 
     explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
-    /** Start only after worker dependencies are initialized. Not enabled by node startup yet. */
-    void StartBlockProcessing() LOCKS_EXCLUDED(cs_main) { m_block_processing_queue.Start(); }
+    /** Start only after worker dependencies are initialized. */
+    void StartBlockProcessing() LOCKS_EXCLUDED(cs_main);
     /** Close admission without waiting for accepted jobs. */
     void InterruptBlockProcessing() { m_block_processing_queue.Interrupt(); }
     /** Finish accepted jobs before destroying callbacks, networking, or mempool dependencies. */
@@ -1304,7 +1305,9 @@ public:
 
     /**
      * Process an incoming block and return a future for its processing result.
-     * Processing is currently synchronous, and the returned future is always ready.
+     * Initial checks run on the caller. Admitted blocks needing storage are processed
+     * by the worker after StartBlockProcessing(), or synchronously before startup
+     * to support deterministic fuzzing and standalone callers.
      * The result does not guarantee that the specific block passed to it has been
      * checked for validity!
      *
@@ -1312,24 +1315,27 @@ public:
      * install a CValidationInterface (see validationinterface.h) - this will have
      * its BlockChecked method called whenever *any* block completes validation.
      *
-     * Note that we guarantee that either the proof-of-work is valid on block, or
-     * (and possibly also) BlockChecked will have been called.
+     * Initial failures are returned through state without a BlockChecked callback.
+     * Deferred BlockChecked callbacks finish before the processing future is ready.
+     * Cached-invalid rejections found by the worker are also included in the result,
+     * allowing callers to attribute them to each individual submission.
      *
      * May not be called in a validationinterface callback.
      *
      * @param[in]   block The block we want to process.
-     * @param[out]  state Receives the result of CheckBlock() and AcceptBlock(). Must be freshly initialized.
-     *                    A valid state does not imply full block validity or successful chain activation;
-     *                    activation errors are reported separately through the future's result.
+     * @param[out]  state Receives initial validation or interrupted-submission errors. Must be freshly initialized.
+     *                    A valid state does not imply full block validity or successful processing;
+     *                    deferred errors are reported through callbacks and the future's result.
      * @param[in]   force_processing Process this block even if unrequested; used for non-network block sources.
      * @param[in]   min_pow_checked  True if proof-of-work anti-DoS checks have
      *                               been done by caller for headers chain
      *                               (note: only affects headers acceptance; if
      *                               block header is already present in block
      *                               index then this parameter has no effect)
-     * @returns     A valid, ready future containing processing success and whether the block was
+     * @returns     A valid future containing processing success and whether the block was
      *              first received via this call, independently of block validity.
-     *              new_block can be true even if processing fails.
+     *              new_block can be true even if processing fails. cached_invalid
+     *              indicates rejection by the worker's pre-storage invalidity recheck.
      */
     std::future<BlockProcessingResult> ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
         EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
