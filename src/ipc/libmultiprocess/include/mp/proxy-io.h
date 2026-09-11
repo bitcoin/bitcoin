@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -290,6 +291,12 @@ public:
     //! Check if loop should exit.
     bool done() const MP_REQUIRES(m_mutex);
 
+    //! Type of m_incoming_connections list.
+    using Connections = std::list<Connection>;
+
+    //! View of incoming connections yielding Connection& for each entry.
+    auto incomingConnections() { return std::views::all(m_incoming_connections); }
+
     //! Process name included in thread names so combined debug output from
     //! multiple processes is easier to understand.
     const char* m_exe_name;
@@ -337,7 +344,7 @@ public:
     std::unique_ptr<kj::TaskSet> m_task_set;
 
     //! List of connections.
-    std::list<Connection> m_incoming_connections;
+    Connections m_incoming_connections;
 
     //! Logging options
     LogOptions m_log_opts;
