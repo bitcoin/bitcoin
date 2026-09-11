@@ -5,7 +5,7 @@
 
 #include <script/sigcache.h>
 
-#include <crypto/sha256.h>
+#include <hash.h>
 #include <pubkey.h>
 #include <random.h>
 #include <script/interpreter.h>
@@ -15,23 +15,16 @@
 #include <cstdint>
 #include <mutex>
 #include <shared_mutex>
+#include <span>
 #include <utility>
 #include <vector>
 
-SignatureCache::SignatureCache(const size_t max_size_bytes)
-{
-    uint256 nonce = GetRandHash();
-    // We want the nonce to be 64 bytes long to force the hasher to process
-    // this chunk, which makes later hash computations more efficient. We
-    // just write our 32-byte entropy, and then pad with 'E' for ECDSA and
-    // 'S' for Schnorr (followed by 0 bytes).
-    static constexpr unsigned char PADDING_ECDSA[32] = {'E'};
-    static constexpr unsigned char PADDING_SCHNORR[32] = {'S'};
-    m_salted_hasher_ecdsa.Write(nonce.begin(), 32);
-    m_salted_hasher_ecdsa.Write(PADDING_ECDSA, 32);
-    m_salted_hasher_schnorr.Write(nonce.begin(), 32);
-    m_salted_hasher_schnorr.Write(PADDING_SCHNORR, 32);
+SignatureCache::SignatureCache(const size_t max_size_bytes) : SignatureCache{max_size_bytes, GetRandHash()} {}
 
+SignatureCache::SignatureCache(const size_t max_size_bytes, const uint256& nonce)
+    : m_salted_hasher_ecdsa{HashWriter{} << nonce << uint8_t{'E'} << SIGNATURE_CACHE_PADDING},
+      m_salted_hasher_schnorr{HashWriter{} << nonce << uint8_t{'S'}}
+{
     const auto [num_elems, approx_size_bytes] = setValid.setup_bytes(max_size_bytes);
     LogInfo("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
@@ -39,18 +32,12 @@ SignatureCache::SignatureCache(const size_t max_size_bytes)
 
 uint256 SignatureCache::ComputeEntryECDSA(const uint256& hash, const std::vector<uint8_t>& vchSig, const CPubKey& pubkey) const
 {
-    uint256 entry;
-    CSHA256 hasher = m_salted_hasher_ecdsa;
-    hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(vchSig.data(), vchSig.size()).Finalize(entry.begin());
-    return entry;
+    return (HashWriter{m_salted_hasher_ecdsa} << hash << std::span{pubkey} << std::span{vchSig}).GetSHA256();
 }
 
 uint256 SignatureCache::ComputeEntrySchnorr(const uint256& hash, std::span<const uint8_t> sig, const XOnlyPubKey& pubkey) const
 {
-    uint256 entry;
-    CSHA256 hasher = m_salted_hasher_schnorr;
-    hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
-    return entry;
+    return (HashWriter{m_salted_hasher_schnorr} << hash << std::span{pubkey} << sig).GetSHA256();
 }
 
 bool SignatureCache::Get(const uint256& entry, const bool erase)

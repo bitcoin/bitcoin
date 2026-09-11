@@ -5,6 +5,7 @@
 #include <common/system.h>
 #include <compressor.h>
 #include <core_io.h>
+#include <hash.h>
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -32,10 +33,12 @@
 #include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/vector.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
+#include <initializer_list>
 #include <span>
 #include <string>
 #include <utility>
@@ -449,6 +452,33 @@ std::string JSONPrettyPrint(const UniValue& univalue)
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, ScriptTest)
+
+BOOST_AUTO_TEST_CASE(signature_cache_serialization)
+{
+    const uint256 nonce{m_rng.rand256()};
+    const SignatureCache cache{1_MiB, nonce};
+
+    const KeyData keys;
+    const uint256 sighash{uint256::ONE};
+    const std::vector<uint8_t> sig(64, 0x30);
+
+    // TODO: Use native public-key and signature serialization
+    for (const auto& pubkey : {keys.pubkey0C, keys.pubkey0, keys.pubkey0H}) {
+        for (const size_t size : {0, 63, 64, 72, 252, 253, 255, 256, 65535, 65536}) {
+            const std::vector<uint8_t> ecdsa_sig(size, 0x30);
+            const auto expected{(HashWriter{} << nonce << uint8_t{'E'} << SIGNATURE_CACHE_PADDING << sighash << std::span{pubkey} << std::span{ecdsa_sig}).GetSHA256()};
+            BOOST_CHECK_EQUAL(cache.ComputeEntryECDSA(sighash, ecdsa_sig, pubkey), expected);
+        }
+        // Interleaved calls leave the salted prefixes intact
+        const XOnlyPubKey xonly_pubkey{pubkey};
+        const auto expected{(HashWriter{} << nonce << uint8_t{'S'} << sighash << std::span{xonly_pubkey} << std::span{sig}).GetSHA256()};
+        BOOST_CHECK_EQUAL(cache.ComputeEntrySchnorr(sighash, sig, xonly_pubkey), expected);
+    }
+
+    // TODO: Distinguish the public-key/signature split
+    const auto sig_with_pubkey{Cat(ToByteVector(keys.pubkey0C), sig)};
+    BOOST_CHECK_EQUAL(cache.ComputeEntryECDSA(sighash, sig_with_pubkey, CPubKey{}), cache.ComputeEntryECDSA(sighash, sig, keys.pubkey0C));
+}
 
 BOOST_AUTO_TEST_CASE(script_build)
 {
