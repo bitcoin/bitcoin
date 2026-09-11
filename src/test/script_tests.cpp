@@ -25,6 +25,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <univalue.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
@@ -122,6 +123,8 @@ static ScriptError_t ParseScriptError(const std::string& name)
 }
 
 struct ScriptTest : BasicTestingSetup {
+SignatureCache m_signature_cache{1_MiB};
+
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, script_verify_flags flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
@@ -134,19 +137,29 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     const CTransaction tx{BuildSpendingTransaction(scriptSig, scriptWitness, txCredit)};
     PrecomputedTransactionData txdata;
     txdata.Init(tx, {txCredit.vout[0]});
+    const auto check{[&](const BaseSignatureChecker& checker, const std::string& suffix) {
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, checker, &err) == expect, message + suffix);
+        BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message + suffix);
+    }};
     const TransactionSignatureChecker uncached_checker{&tx, 0, nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, uncached_checker, &err) == expect, message);
-    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
+    check(uncached_checker, "");
 
-    // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
+    // Repeat with signature caching, including a second pass after any successful signatures are stored
+    const CachingTransactionSignatureChecker caching_checker{&tx, 0, nValue, /*storeIn=*/true, m_signature_cache, txdata};
+    check(caching_checker, " (caching, first pass)");
+    check(caching_checker, " (caching, second pass)");
+
+    // Removing flags from a passing test or adding flags to a failing test must preserve the result, including with caching
     for (int i = 0; i < 256; ++i) {
         script_verify_flags extra_flags = script_verify_flags::from_int(m_rng.randbits(MAX_SCRIPT_VERIFY_FLAGS_BITS));
         script_verify_flags combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        bool result{VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, uncached_checker, &err)};
-        BOOST_CHECK_MESSAGE(result == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
+        const bool caching{i % 2 != 0};
+        const TransactionSignatureChecker& checker{caching ? caching_checker : uncached_checker};
+        bool result{VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, checker, &err)};
+        BOOST_CHECK_MESSAGE(result == expect, message + strprintf(" (with flags %x%s)", combined_flags.as_int(), caching ? ", caching" : ""));
     }
 }
 }; // struct ScriptTest
