@@ -613,6 +613,10 @@ BOOST_AUTO_TEST_CASE(script_build)
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                 "P2PK with multi-byte hashtype, with DERSIG", SCRIPT_VERIFY_DERSIG
                                ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", "0101").ScriptError(SCRIPT_ERR_SIG_DER));
+    const std::string sig_padding{HexStr(std::vector<unsigned char>(256 - 70, 0))}; // Pads the 70-byte DER signature past 255 bytes
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
+                                "P2PK with signature padded past 255 bytes, without DERSIG", 0
+                               ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", sig_padding + "01"));
 
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                 "P2PK with high S but no LOW_S", 0
