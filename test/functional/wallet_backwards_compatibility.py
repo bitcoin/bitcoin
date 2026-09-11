@@ -398,11 +398,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(info['private_keys_enabled'], True)
                         assert_equal(info['keypoolsize'], 0)
                     elif wallet_name == "miniscript":
-                        for desc in wallet.listdescriptors()["descriptors"]:
-                            if desc["desc"].startswith("wsh(or_b(pk"):
-                                break
-                        else:
-                            assert False, "Did not find miniscript descriptor"
+                        descs = wallet.listdescriptors()["descriptors"]
+                        assert any(desc["desc"].startswith("wsh(or_b(pk") for desc in descs), "Miniscript descriptor missing"
 
                     # Copy back to master
                     wallet.unloadwallet()
@@ -466,11 +463,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert_equal(info["desc"], descsum_create(descriptor))
 
             if self.major_version_at_least(node, 24):
-                for desc in wallet.listdescriptors()["descriptors"]:
-                    if desc["desc"].startswith("wsh(or_b(pk"):
-                        break
-                else:
-                    assert False, "Did not find miniscript descriptor"
+                descs = wallet.listdescriptors()["descriptors"]
+                assert any(desc["desc"].startswith("wsh(or_b(pk") for desc in descs), "Miniscript descriptor missing"
 
             # Make backup so the wallet can be copied back to old node
             down_wallet_name = f"re_down_{node.version}"
