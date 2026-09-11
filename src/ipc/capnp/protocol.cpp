@@ -101,7 +101,7 @@ public:
         };
         m_loop.emplace(m_exe_name, std::move(opts), &m_context);
         mp::ServeStream<messages::Init>(*m_loop, make_stream(), init);
-        m_parent_connection = &m_loop->m_incoming_connections.back();
+        m_parent_connection = &m_loop->incomingConnections().back();
         m_loop->loop();
         m_loop.reset();
     }
