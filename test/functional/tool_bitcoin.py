@@ -71,11 +71,28 @@ class ToolBitcoinTest(BitcoinTestFramework):
             assert_equal(result.stdout, b"")
             assert_equal(result.stderr, b"")
 
+    def test_launch_failure(self):
+        self.log.info("Ensure bitcoin reports an error if bitcoind can't be started")
+        # Copy the wrapper to a directory without bitcoind. The wrapper is run
+        # by path, so it doesn't fall back to searching PATH and should fail.
+        exe_dir = self.nodes[0].datadir_path / "launch_failure"
+        exe_dir.mkdir()
+        bitcoin_bin = self.get_binaries().paths.bitcoin_bin
+        wrapper = exe_dir / os.path.basename(bitcoin_bin)
+        # Use copy instead of copyfile to keep the executable bit.
+        shutil.copy(bitcoin_bin, wrapper)
+        result = subprocess.run([str(wrapper), "-M", "node", "-version"], capture_output=True, timeout=30)
+        assert_equal(result.returncode, 1)
+        assert_equal(result.stdout, b"")
+        assert b"execvp failed to execute" in result.stderr
+
     def run_test(self):
         node = self.nodes[0]
 
         if platform.system() == "Windows":
             self.test_windows_exit_status()
+
+        self.test_launch_failure()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
