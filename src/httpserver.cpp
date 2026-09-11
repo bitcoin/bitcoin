@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>
@@ -205,19 +206,34 @@ static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
     WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE);
 }
 
-static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
+struct BindAddress {
+    std::string address;
+    uint16_t port;
+    bool required{true};
+};
+
+static bool BindDefaultLoopbackAddresses()
+{
+    // Default to loopback if not allowing external IPs
+    return gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty();
+}
+
+static std::vector<BindAddress> GetBindAddresses()
 {
     uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
-    std::vector<std::pair<std::string, uint16_t>> endpoints;
+    std::vector<BindAddress> endpoints;
 
     // Determine what addresses to bind to
     // To prevent misconfiguration and accidental exposure of the RPC
     // interface, require -rpcallowip and -rpcbind to both be specified
     // together. If either is missing, ignore both values, bind to localhost
     // instead, and log warnings.
-    if (gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty()) { // Default to loopback if not allowing external IPs
-        endpoints.emplace_back("::1", http_port);
-        endpoints.emplace_back("127.0.0.1", http_port);
+    if (BindDefaultLoopbackAddresses()) {
+        // We allow the default IPv6 bind to fail, but IPv4 is required even
+        // with the default port as bitcoin-cli will default to handing RPC
+        // credentials in plaintext to whatever process is running on that port.
+        endpoints.push_back({.address = "::1",       .port = http_port, .required = false});
+        endpoints.push_back({.address = "127.0.0.1", .port = http_port, .required = true});
         if (!gArgs.GetArgs("-rpcallowip").empty()) {
             LogWarning("Option -rpcallowip was specified without -rpcbind; this doesn't usually make sense");
         }
@@ -1333,28 +1349,54 @@ bool InitHTTPServer()
     g_http_server->SetMaxConnections(std::max(gArgs.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS), 1));
 
     // Bind HTTP server to specified addresses
-    std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
+    std::vector<BindAddress> endpoints{GetBindAddresses()};
+    std::set<CService> endpoints_seen;
     bool bind_success{false};
-    for (const auto& [address_string, port] : endpoints) {
+    bool required_failure{false};
+    auto on_failure = [&required_failure](bool required, std::string_view msg) {
+        if (required) {
+            LogError("%s", msg);
+            required_failure = true;
+        } else {
+            LogWarning("%s", msg);
+        }
+    };
+    for (const auto& [address_string, port, required] : endpoints) {
         LogInfo("Binding RPC on address %s port %i", address_string, port);
         const std::optional<CService> addr{Lookup(address_string, port, false)};
         if (addr) {
+            if (!endpoints_seen.insert(*addr).second) continue;
             if (addr->IsBindAny()) {
                 LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
             }
             auto result{g_http_server->BindAndStartListening(addr.value())};
             if (!result) {
-                LogWarning("Binding RPC on address %s failed: %s", addr->ToStringAddrPort(), result.error());
+                on_failure(required,
+                           strprintf("Binding RPC on %s address %s failed: %s",
+                                     required ? "required" : "optional",
+                                     addr->ToStringAddrPort(), result.error()));
             } else {
                 bind_success = true;
             }
         } else {
-            LogWarning("Could not bind RPC on address %s port %i: Address lookup failed.", address_string, port);
+            on_failure(required,
+                       strprintf("Could not bind RPC on %s address %s port %i: Address lookup failed.",
+                                 required ? "required" : "optional",
+                                 address_string, port));
         }
     }
 
     if (!bind_success) {
         LogError("Unable to bind any endpoint for RPC server");
+        return false;
+    } else if (required_failure) {
+        g_http_server->StopListening();
+        if (BindDefaultLoopbackAddresses()) {
+            LogError("Unable to bind default required IPv4 endpoint. Ensure the "
+                     "port is free and retry, or specify endpoints via -rpcbind.");
+        } else {
+            LogError("Unable to bind all specified endpoints for RPC server.");
+        }
         return false;
     }
 

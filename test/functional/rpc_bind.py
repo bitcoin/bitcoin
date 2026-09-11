@@ -118,8 +118,9 @@ class RPCBindTest(BitcoinTestFramework):
                 self.cleanup_partially_started_nodes()
         self.nodes[0].rpchost = None
 
-        assert_equal(started, True)  # TODO: an occupied RPC listener must abort startup to protect credentials
-        assert_equal(credential_captured, True)  # TODO: a client credential must not reach another process's listener
+        assert_equal(started, False)
+        assert_equal(credential_captured, False)
+        assert 'Unable to start HTTP server' in error
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
