@@ -39,7 +39,9 @@ static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + 
 class SignatureCache
 {
 private:
-    //! Entries are SHA256(nonce || 'E' or 'S' || 31 zero bytes || signature hash || public key || signature):
+    /** Entries are SHA256(nonce [32 bytes] || 'E' or 'S' || 31 zero bytes || signature hash [32 bytes] || public key || signature), where the signature excludes the sighash type byte.
+     * The preimage is unambiguous because the public key is self-delimiting: a valid CPubKey's length follows from its first byte, and an XOnlyPubKey is always 32 bytes.
+     */
     CSHA256 m_salted_hasher_ecdsa;
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;

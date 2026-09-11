@@ -12,10 +12,26 @@
 #include <uint256.h>
 #include <util/log.h>
 
+#include <concepts>
 #include <mutex>
 #include <shared_mutex>
+#include <span>
 #include <utility>
 #include <vector>
+
+namespace {
+template <typename PubKey>
+    requires std::same_as<PubKey, CPubKey> || std::same_as<PubKey, XOnlyPubKey>
+uint256 ComputeEntry(CSHA256 hasher, const uint256& hash, std::span<const unsigned char> sig, const PubKey& pubkey)
+{
+    uint256 entry;
+    hasher.Write(hash.begin(), hash.size())
+          .Write(pubkey.data(), pubkey.size()) // A valid key's encoding determines where the signature starts
+          .Write(sig.data(), sig.size())
+          .Finalize(entry.begin());
+    return entry;
+}
+} // namespace
 
 SignatureCache::SignatureCache(const size_t max_size_bytes)
 {
@@ -38,18 +54,12 @@ SignatureCache::SignatureCache(const size_t max_size_bytes)
 
 uint256 SignatureCache::ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
 {
-    uint256 entry;
-    CSHA256 hasher = m_salted_hasher_ecdsa;
-    hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(vchSig.data(), vchSig.size()).Finalize(entry.begin());
-    return entry;
+    return ComputeEntry(m_salted_hasher_ecdsa, hash, vchSig, pubkey);
 }
 
 uint256 SignatureCache::ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
 {
-    uint256 entry;
-    CSHA256 hasher = m_salted_hasher_schnorr;
-    hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
-    return entry;
+    return ComputeEntry(m_salted_hasher_schnorr, hash, sig, pubkey);
 }
 
 bool SignatureCache::Get(const uint256& entry, const bool erase)
