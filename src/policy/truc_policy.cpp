@@ -251,7 +251,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
 
             // Return the sibling if its eviction can be considered. Provide the "descendant count
             // limit" string either way, as the caller may decide not to do sibling eviction.
-            return std::make_pair(strprintf("tx %u (wtxid=%s) would exceed descendant count limit",
+            return std::make_pair(strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
                                             parent_entry.GetSharedTx()->GetHash().ToString(),
                                             parent_entry.GetSharedTx()->GetWitnessHash().ToString()),
                                   consider_sibling_eviction ? (*descendants.begin())->GetSharedTx() : nullptr);
