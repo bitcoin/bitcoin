@@ -17,10 +17,10 @@ from test_framework.util import (
     assert_equal,
 )
 
-# Linux allow all characters other than \x00
-# Windows disallow control characters (0-31) and /\?%:|"<>
-FILE_CHAR_START = 32 if platform.system() == 'Windows' else 1
-FILE_CHAR_END = 128
+# Wallet names disallow control characters (0-31 and 127)
+FILE_CHAR_START = 32
+FILE_CHAR_END = 127
+# Windows also disallows /\?%:|"<>
 FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if platform.system() == 'Windows' else '/'
 UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
