@@ -114,6 +114,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1)
         self.generate(self.nodes[0], 121)
 
+        self.test_wallet_funding_help()
         self.test_add_inputs_default_value()
         self.test_preset_inputs_selection()
         self.test_weight_calculation()
@@ -156,6 +157,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_duplicate_outputs()
         self.test_watchonly_cannot_grind_r()
         self.test_cannot_cover_fees()
+
+    def test_wallet_funding_help(self):
+        self.log.info("Test wallet funding option help uses snake_case names")
+        for rpc_name in ["fundrawtransaction", "walletcreatefundedpsbt"]:
+            help_text = self.nodes[0].help(rpc_name)
+            for option_name in ["change_address", "change_position", "lock_unspents", "subtract_fee_from_outputs"]:
+                assert option_name in help_text
+            for option_name in ["changeAddress", "changePosition", "lockUnspents", "subtractFeeFromOutputs"]:
+                assert option_name not in help_text
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
@@ -933,6 +943,27 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(change[0] + result[0]['fee'], change[2])
         assert_equal(output[3], output[4] + result[4]['fee'])
         assert_equal(change[3] + result[3]['fee'], change[4])
+
+        snake_case_options = {"subtract_fee_from_outputs": [0], "fee_rate": self.fee_rate_sats_per_vb}
+        snake_case_result = self.nodes[3].fundrawtransaction(rawtx, snake_case_options)
+        snake_case_dec = self.nodes[3].decoderawtransaction(snake_case_result['hex'])
+        assert_equal(snake_case_dec['vout'][1 - snake_case_result['changepos']]['value'], output[2])
+
+        psbt_destination = self.nodes[2].getnewaddress()
+        psbt_amount = Decimal("1")
+        psbt_result = self.nodes[3].walletcreatefundedpsbt(
+            inputs=[],
+            outputs=[{psbt_destination: psbt_amount}],
+            options=snake_case_options,
+            psbt_version=0,
+        )
+        psbt_dec = self.nodes[3].decodepsbt(psbt_result['psbt'])['tx']
+        psbt_recipient_vouts = [
+            out for out in psbt_dec['vout']
+            if out['scriptPubKey'].get('address') == psbt_destination
+        ]
+        assert_equal(len(psbt_recipient_vouts), 1)
+        assert_equal(psbt_recipient_vouts[0]['value'] + psbt_result['fee'], psbt_amount)
 
         # Test subtract fee from outputs with fee_rate (sat/vB)
         btc_kvb_to_sat_vb = 100000  # (1e5)
