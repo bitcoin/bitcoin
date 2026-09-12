@@ -491,6 +491,33 @@ BOOST_FIXTURE_TEST_CASE(pending_optimistic_block_checks_validity_at_completion, 
     BOOST_CHECK(source.m_last_block_time.load() == 0s);
 }
 
+BOOST_FIXTURE_TEST_CASE(pending_block_source_cleanup_without_cs_main, PendingBlockTestingSetup)
+{
+    CNode* source;
+    {
+        LOCK(NetEventsInterface::g_msgproc_mutex);
+        source = &AddPeer(0);
+    }
+    std::future<void> completion;
+    {
+        LOCK(cs_main);
+        completion = std::async(std::launch::async, [&] {
+            LOCK(NetEventsInterface::g_msgproc_mutex);
+            std::promise<BlockProcessingResult> result;
+            Peerman().UnitTestBlockProcessing(source->GetId(), m_node.chainman->GetParams().GenesisBlock().GetHash(), result.get_future(), /*via_compact_block=*/false, /*optimistic_reconstruction=*/false);
+            result.set_value({.processing_success = false, .new_block = false});
+            ProcessBlockCompletions();
+        });
+        // Release cs_main before joining even if the old lock dependency returns.
+        BOOST_CHECK(completion.wait_for(10s) == std::future_status::ready);
+    }
+    completion.get();
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    BOOST_REQUIRE(Connman().ReceiveMsgFrom(*source, NetMsg::Make(NetMsgType::GETADDR)));
+    Connman().ProcessMessagesOnce(*source);
+    BOOST_CHECK(Stats(source->GetId()).m_addr_relay_enabled);
+}
+
 BOOST_FIXTURE_TEST_CASE(pending_block_punishes_before_resuming, PendingBlockTestingSetup)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
