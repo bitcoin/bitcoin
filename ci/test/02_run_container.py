@@ -33,7 +33,19 @@ def main():
     settings.update([
         "BASE_BUILD_DIR",
         "CI_FAILFAST_TEST_LEAVE_DANGLING",
+        "TMPDIR",
     ])
+
+    os.environ["TMPDIR"] = "/ci-test-tmp/"
+    if os.getenv("CI_OS_NAME") == "macos":
+        ramdisk_sectors = 4 * 1024 * 1024 * 2048  # 4 GiB
+        ramdisk = run(
+            ["hdiutil", "attach", "-nomount", f"ram://{ramdisk_sectors}"],
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+        run(["diskutil", "erasevolume", "APFS", "CI_TEST_TMP", ramdisk])
+        os.environ["TMPDIR"] = "/Volumes/CI_TEST_TMP/"
 
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
@@ -53,6 +65,7 @@ def main():
         for create_dir in [
                 os.environ["CCACHE_DIR"],
                 os.environ["PREVIOUS_RELEASES_DIR"],
+                os.environ["TMPDIR"],
         ]:
             Path(create_dir).mkdir(parents=True, exist_ok=True)
 
@@ -136,6 +149,7 @@ def main():
         cmd_run += [
             "--cap-add=LINUX_IMMUTABLE",
             *shlex.split(os.getenv("CI_CONTAINER_CAP", "")),
+            "--mount=type=tmpfs,destination=/ci-test-tmp,tmpfs-size=4G",
             f"--mount=type=bind,src={os.environ['BASE_READ_ONLY_DIR']},dst={os.environ['BASE_READ_ONLY_DIR']},readonly",
             f"--mount={CI_CCACHE_MOUNT}",
             f"--mount={CI_DEPENDS_MOUNT}",
