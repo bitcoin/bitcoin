@@ -444,7 +444,7 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             result[utxod->first].Clear();
             // If not coinbase restore prevout
             if (!tx.IsCoinBase()) {
-                result[tx.vin[0].prevout] = orig_coin;
+                result[tx.GetInputs()[0].prevout] = orig_coin;
             }
 
             // Disconnect the tx from the current UTXO
@@ -453,7 +453,7 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             BOOST_CHECK(stack.back()->SpendCoin(utxod->first));
             // restore inputs
             if (!tx.IsCoinBase()) {
-                const COutPoint &out = tx.vin[0].prevout;
+                const COutPoint &out = tx.GetInputs()[0].prevout;
                 Coin coin = undo.vprevout[0];
                 ApplyTxInUndo(std::move(coin), *(stack.back()), out);
             }
@@ -463,7 +463,7 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             // Update the utxoset
             utxoset.erase(utxod->first);
             if (!tx.IsCoinBase())
-                utxoset.insert(tx.vin[0].prevout);
+                utxoset.insert(tx.GetInputs()[0].prevout);
         }
 
         // Once every 1000 iterations and at the end, verify the full cache.

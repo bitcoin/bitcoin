@@ -30,11 +30,11 @@ static inline size_t RecursiveDynamicUsage(const CTxOut& out) {
 }
 
 static inline size_t RecursiveDynamicUsage(const CTransaction& tx) {
-    size_t mem = memusage::DynamicUsage(tx.vin) + memusage::DynamicUsage(tx.vout);
-    for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); it++) {
+    size_t mem = memusage::DynamicUsage(tx.GetInputs()) + memusage::DynamicUsage(tx.GetOutputs());
+    for (std::vector<CTxIn>::const_iterator it = tx.GetInputs().begin(); it != tx.GetInputs().end(); it++) {
         mem += RecursiveDynamicUsage(*it);
     }
-    for (std::vector<CTxOut>::const_iterator it = tx.vout.begin(); it != tx.vout.end(); it++) {
+    for (std::vector<CTxOut>::const_iterator it = tx.GetOutputs().begin(); it != tx.GetOutputs().end(); it++) {
         mem += RecursiveDynamicUsage(*it);
     }
     return mem;

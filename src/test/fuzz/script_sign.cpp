@@ -106,7 +106,7 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
             }
             CMutableTransaction script_tx_to = tx_to;
             CMutableTransaction sign_transaction_tx_to = tx_to;
-            if (n_in < tx_to.vin.size() && tx_to.vin[n_in].prevout.n < tx_from.vout.size()) {
+            if (n_in < tx_to.vin.size() && tx_to.vin[n_in].prevout.n < tx_from.GetOutputs().size()) {
                 SignatureData empty;
                 (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>(), empty);
             }

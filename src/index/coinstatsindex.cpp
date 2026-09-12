@@ -131,8 +131,8 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                 continue;
             }
 
-            for (uint32_t j = 0; j < tx->vout.size(); ++j) {
-                const CTxOut& out{tx->vout[j]};
+            for (uint32_t j = 0; j < tx->GetOutputs().size(); ++j) {
+                const CTxOut& out{tx->GetOutputs()[j]};
                 const Coin coin{out, block.height, is_coinbase};
                 const COutPoint outpoint{tx->GetHash(), j};
 
@@ -161,7 +161,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                 for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                     const Coin& coin{tx_undo.vprevout[j]};
-                    const COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
+                    const COutPoint outpoint{tx->GetInputs()[j].prevout.hash, tx->GetInputs()[j].prevout.n};
 
                     RemoveCoinHash(m_muhash, outpoint, coin);
 
@@ -358,8 +358,8 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
             continue;
         }
 
-        for (uint32_t j = 0; j < tx->vout.size(); ++j) {
-            const CTxOut& out{tx->vout[j]};
+        for (uint32_t j = 0; j < tx->GetOutputs().size(); ++j) {
+            const CTxOut& out{tx->GetOutputs()[j]};
             const COutPoint outpoint{tx->GetHash(), j};
             const Coin coin{out, block.height, is_coinbase};
 
@@ -374,7 +374,7 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
 
             for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
                 const Coin& coin{tx_undo.vprevout[j]};
-                const COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
+                const COutPoint outpoint{tx->GetInputs()[j].prevout.hash, tx->GetInputs()[j].prevout.n};
                 ApplyCoinHash(m_muhash, outpoint, coin);
             }
         }

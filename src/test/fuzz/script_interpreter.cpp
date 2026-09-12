@@ -25,7 +25,7 @@ FUZZ_TARGET(script_interpreter)
         if (mtx) {
             const CTransaction tx_to{*mtx};
             const unsigned int in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-            if (in < tx_to.vin.size()) {
+            if (in < tx_to.GetInputs().size()) {
                 auto n_hash_type = fuzzed_data_provider.ConsumeIntegral<int>();
                 auto amount = ConsumeMoney(fuzzed_data_provider);
                 auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});

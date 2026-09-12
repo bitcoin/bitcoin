@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         return tx;
     };
     auto insert_witness_commitment = [](CBlock& block, uint256 commitment) {
-        assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->vout.empty());
+        assert(!block.vtx.empty() && block.vtx[0]->IsCoinBase() && !block.vtx[0]->GetOutputs().empty());
 
         CMutableTransaction mtx{*block.vtx[0]};
         CHash256().Write(commitment).Write(std::vector<unsigned char>(32, 0x00)).Finalize(commitment);
