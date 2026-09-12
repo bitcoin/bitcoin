@@ -451,6 +451,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 proxy_override.has_value() ? proxy_override : GetProxy(target_addr.GetNetwork()),
             };
             bool proxyConnectionFailed = false;
+            bool bind_failed = false;
 
             if (target_addr.IsI2P() && use_proxy) {
                 i2p::Connection conn;
@@ -492,12 +493,12 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 // No proxy needed (none set for target network). Private broadcast connections
                 // must always use a proxy, otherwise they would leak the originator's IP address.
                 if (Assume(conn_type != ConnectionType::PRIVATE_BROADCAST)) {
-                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL, SelectOutboundBind(target_addr), &bind_failed);
                 }
             }
-            if (!proxyConnectionFailed) {
+            if (!proxyConnectionFailed && !bind_failed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
-                // the proxy, mark this as an attempt.
+                // the proxy or binding the local source address, mark this as an attempt.
                 addrman.get().Attempt(target_addr, fCountFailure);
             }
         } else if (pszDest) {
