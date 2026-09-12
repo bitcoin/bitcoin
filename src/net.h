@@ -1113,6 +1113,9 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        std::function<void(bool)> m_mapport;
+        bool m_mapport_enabled = false;
+        std::function<void(bool)> m_tor_control;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1152,6 +1155,9 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        m_mapport = connOptions.m_mapport;
+        m_mapport_enabled = connOptions.m_mapport_enabled;
+        m_tor_control = connOptions.m_tor_control;
     }
 
     // test only
@@ -1183,6 +1189,7 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
+    void SetMapPortEnabled(bool enable);
 
     /**
      * Open a new P2P connection and initialize it with the PeerManager at `m_msgproc`.
@@ -1649,6 +1656,9 @@ private:
 
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
+    std::function<void(bool)> m_mapport;
+    std::atomic_bool m_mapport_enabled{false};
+    std::function<void(bool)> m_tor_control;
     bool fAddressesInitialized{false};
     std::reference_wrapper<AddrMan> addrman;
     const NetGroupManager& m_netgroupman;
