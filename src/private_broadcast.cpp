@@ -17,13 +17,22 @@ PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
     if (const auto it{m_transactions.find(tx)}; it != m_transactions.end()) {
         if (IsPending(it->second)) return AddResult::AlreadyPresent;
 
-        // An exhausted transaction can be explicitly retried by adding it again.
+        // An exhausted or received transaction can be explicitly retried by adding it again.
         it->second.time_added = NodeClock::now();
         it->second.send_statuses.clear();
+        it->second.received_by_us.reset();
         return AddResult::Added;
     }
 
-    if (m_transactions.size() >= m_max_transactions) return AddResult::QueueFull;
+    if (m_transactions.size() >= m_max_transactions) {
+        // Make room by dropping the oldest transaction that is no longer being broadcast.
+        auto finished{m_transactions | std::views::filter([this](const auto& entry) { return !IsPending(entry.second); })};
+        const auto oldest{std::ranges::min_element(finished, {}, [](const auto& entry) { return entry.second.time_added; })};
+
+        if (oldest == finished.end()) return AddResult::QueueFull;
+
+        m_transactions.erase(oldest.base());
+    }
 
     m_transactions.try_emplace(tx);
     return AddResult::Added;
@@ -39,6 +48,17 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
         return p.num_confirmed;
     }
     return std::nullopt;
+}
+
+std::optional<size_t> PrivateBroadcast::MarkReceived(const CTransactionRef& tx, const CService& received_from)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    const auto it{m_transactions.find(tx)};
+    if (it == m_transactions.end() || it->second.received_by_us.has_value()) return std::nullopt;
+    it->second.received_by_us.emplace(received_from, NodeClock::now());
+    const auto p{DerivePriority(it->second.send_statuses)};
+    return p.num_confirmed;
 }
 
 std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
@@ -136,8 +156,14 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
         for (const auto& status : state.send_statuses) {
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
-        const size_t attempts_remaining{m_max_send_attempts - std::min(state.send_statuses.size(), m_max_send_attempts)};
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .attempts_remaining = attempts_remaining, .peers = std::move(peers)});
+        const size_t attempts_remaining{IsPending(state) ? m_max_send_attempts - state.send_statuses.size() : 0};
+        entries.emplace_back(TxBroadcastInfo{
+            .tx = tx,
+            .time_added = state.time_added,
+            .attempts_remaining = attempts_remaining,
+            .peers = std::move(peers),
+            .received_by_us = state.received_by_us,
+        });
     }
 
     return entries;
@@ -145,7 +171,7 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
 
 bool PrivateBroadcast::IsPending(const TxSendStatus& status) const
 {
-    return status.send_statuses.size() < m_max_send_attempts;
+    return !status.received_by_us.has_value() && status.send_statuses.size() < m_max_send_attempts;
 }
 
 PrivateBroadcast::Priority PrivateBroadcast::DerivePriority(const std::vector<SendStatus>& sent_to)
