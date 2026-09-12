@@ -148,6 +148,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_pipelining(with_invalid_second_request=True)
         self.check_chunked_transfer()
         self.check_idle_timeout()
+        self.check_trickled_request_timeout()
         self.check_server_busy_idle_timeout()
         self.check_auth_required()
         self.check_wrong_credentials()
@@ -447,6 +448,102 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Still open
         assert not conn.sock_closed()
+
+
+    def trickle_request(self, conn, bad_http_request, stop_trickling):
+        """Feed a bad http request to the server one byte at a time.
+
+        The client sends the first byte, which arms the server's deadline. This
+        thread sends the rest, at a slow pace but too fast to look idle and never
+        finishing the request.
+        """
+        interval = RPCSERVERTIMEOUT / 4
+        for i in range(1, len(bad_http_request)):
+            if stop_trickling.wait(interval):
+                return
+            try:
+                conn.send_raw(bad_http_request[i:i + 1])
+            except NETWORK_ERRORS:
+                # The server disconnected mid-write.
+                return
+
+
+    def check_trickled_request_timeout(self):
+        bad_http_request = b"GET /test1 HTTP/1.1\r\nHost: somehost\r\n"
+        self.log.info("Check -rpcservertimeout on requests that are never finished")
+
+        # Same bad request as above, but this time the clients keep sending.
+        # Every byte resets the idle timer, so the connection stays active. Set
+        # the connection limit low so that a couple of such clients can fill
+        # the server, denying new connections.
+        MAX_HTTP_CONNECTIONS = 2
+        self.restart_node(0, extra_args=[
+            f"-rpcservertimeout={RPCSERVERTIMEOUT}",
+            f"-rpcmaxconnections={MAX_HTTP_CONNECTIONS}",
+        ])
+
+        # Free the slot held by the framework's last RPC, as check_connection_limit()
+        # does. The replacement doesn't open a socket until it has something to send.
+        self.node._rpc = self.node.create_new_rpc_connection(mode="AUTHPROXY")
+
+        stop_trickling = threading.Event()
+        hogs = []
+        tricklers = []
+
+        try:
+            # Take every connection slot. Each client completes one request
+            # first to confirm the server accepted it.
+            for i in range(MAX_HTTP_CONNECTIONS):
+                conn = BitcoinHTTPConnection(self.node)
+                # Don't hang forever if the server keeps the connection open.
+                conn.set_timeout(RPCSERVERTIMEOUT * 5)
+                conn.post('/', f'{{"method": "invalidrpc_{i}"}}', connection_header='keep-alive').read()
+                hogs.append(conn)
+
+            # Each client now starts a second request it never finishes. The
+            # deadlines all start with this first byte, which is what the
+            # timing below measures from.
+            start = time.time()
+            for conn in hogs:
+                conn.send_raw(bad_http_request[:1])
+                trickler = threading.Thread(target=self.trickle_request, args=(conn, bad_http_request, stop_trickling))
+                trickler.start()
+                tricklers.append(trickler)
+
+            # The server is full, so a new client only gets as far as the
+            # kernel's accept queue. The TCP connection is established but the
+            # server never reads from it.
+            victim = BitcoinHTTPConnection(self.node)
+            victim.set_timeout(RPCSERVERTIMEOUT / 4)
+            victim.post_raw('/', '{"method": "getblockcount"}')
+            assert_raises(TimeoutError, victim.recv_raw)
+
+            # The slot is reclaimed once a deadline expires and the waiting
+            # client gets in. The log check keeps this from passing on an idle
+            # timeout instead.
+            victim.set_timeout(RPCSERVERTIMEOUT * 3)
+            with self.node.assert_debug_log(["took too long to send a complete request"]):
+                try:
+                    response = victim.recv_raw()
+                except TimeoutError:
+                    response = b""
+                duration = time.time() - start
+                assert response.startswith(b"HTTP/1.1 200 OK"), (
+                    f"Trickling clients held every connection slot for {duration:.1f}s "
+                    "and the waiting client was never served")
+
+            # The deadline runs from the first byte of a request, not from the
+            # last one, so the trickling does not push it back.
+            assert duration <= RPCSERVERTIMEOUT + 2, f"Slot reclaimed too slow: {duration}"
+            assert duration >= RPCSERVERTIMEOUT - 1, f"Slot reclaimed too fast: {duration}"
+        finally:
+            stop_trickling.set()
+            for trickler in tricklers:
+                trickler.join()
+
+        # All trickling clients are disconnected
+        for conn in hogs:
+            assert conn.sock_closed()
 
 
     def check_server_busy_idle_timeout(self):
