@@ -1,0 +1,17 @@
+test: don't require std::wcrtomb for wchar_t log formatting
+
+libstdc++ built with --disable-wchar_t drops the std:: overloads
+from <cwchar>. Use the unqualified name so this keeps building against 
+such a toolchain (like in Guix).
+
+--- a/libs/test/include/boost/test/impl/test_tools.ipp
++++ b/libs/test/include/boost/test/impl/test_tools.ipp
+@@ -118,7 +118,7 @@ print_log_value<wchar_t>::operator()( std::ostream& ostr, wchar_t r )
+ {
+     std::mbstate_t state;
+     std::string mb(MB_CUR_MAX, '\0');
+-    std::size_t ret = std::wcrtomb(&mb[0], r, &state);
++    std::size_t ret = wcrtomb(&mb[0], r, &state);
+     if( ret > 0) {
+         ostr << mb;
+     }
