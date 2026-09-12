@@ -3,8 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <interfaces/chain.h>
 #include <key.h>
+#include <primitives/transaction.h>
+#include <random.h>
 #include <script/solver.h>
+#include <test/util/setup_common.h>
+#include <uint256.h>
+#include <util/time.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
@@ -118,6 +124,92 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     // Second case, don't use 'subtract_fee_from_outputs'.
     recipients[0].fSubtractFeeFromAmount = false;
     BOOST_CHECK(!CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control));
+}
+
+BOOST_FIXTURE_TEST_CASE(discourage_fee_sniping_backdating_bounds, TestChain100Setup)
+{
+    // Verify that DiscourageFeeSniping works as expected when called with the minimum_height
+    // parameter. This only happens while replacing a transaction (bumpfee).
+    FastRandomContext rng_fast(true);
+
+    for (int i{0}; i < 11; ++i) {
+        CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    }
+    const CBlockIndex* tip{WITH_LOCK(Assert(m_node.chainman)->GetMutex(),
+                                     return m_node.chainman->ActiveChain().Tip())};
+    const int block_height{tip->nHeight};
+    const uint256 block_hash{tip->GetBlockHash()};
+    auto& chain{*m_node.chain};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0},
+                         CScript(), CTxIn::MAX_SEQUENCE_NONFINAL);
+
+    // Backdating is constrained to [block_height - 100, block_height].
+    bool backdated{false};
+    bool saw_tip_locktime{false};
+    // Require a tip above 110 so that block_height - 110 cannot underflow when
+    // converted to the uint32_t minimum_height parameter.
+    BOOST_REQUIRE(block_height > 110);
+    for (int i{0}; i < 200; ++i) {
+        DiscourageFeeSniping(mtx, rng_fast, chain, block_hash, block_height, block_height - 110);
+        BOOST_CHECK_LE(mtx.nLockTime, static_cast<uint32_t>(block_height));
+        BOOST_CHECK_GE(mtx.nLockTime, static_cast<uint32_t>(block_height - 100));
+        if (mtx.nLockTime == static_cast<uint32_t>(block_height)) {
+            saw_tip_locktime = true;
+        } else {
+            backdated = true;
+        }
+        if (backdated && saw_tip_locktime) break;
+    }
+    BOOST_CHECK(backdated);
+    BOOST_CHECK(saw_tip_locktime);
+
+    // Check that backdating can reach the minimum height.
+    backdated = false;
+    for (int i{0}; i < 200; ++i) {
+        DiscourageFeeSniping(mtx, rng_fast, chain, block_hash, block_height, block_height - 1);
+        BOOST_CHECK_LE(mtx.nLockTime, static_cast<uint32_t>(block_height));
+        BOOST_CHECK_GE(mtx.nLockTime, static_cast<uint32_t>(block_height - 1));
+        if (mtx.nLockTime < static_cast<uint32_t>(block_height)) {
+            backdated = true;
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(mtx.nLockTime, static_cast<uint32_t>(block_height - 1));
+    BOOST_CHECK(backdated);
+
+    // If minimum_height > block_height the locktime is set to 0.
+    DiscourageFeeSniping(mtx, rng_fast, chain, block_hash, block_height, block_height + 1);
+    BOOST_CHECK_EQUAL(mtx.nLockTime, 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(discourage_fee_sniping_stale_tip, TestChain100Setup)
+{
+    // Verify DiscourageFeeSniping on a stale tip when minimum_height is set.
+    FastRandomContext rng_fast;
+
+    const CBlockIndex* tip{WITH_LOCK(Assert(m_node.chainman)->GetMutex(),
+                                     return m_node.chainman->ActiveChain().Tip())};
+    const int block_height{tip->nHeight};
+    const uint256 block_hash{tip->GetBlockHash()};
+    auto& chain{*m_node.chain};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0},
+                         CScript(), CTxIn::MAX_SEQUENCE_NONFINAL);
+
+    // Make the tip stale by moving the time 9 hours forward, so that it is
+    // older than the 8 hours IsCurrentForAntiFeeSniping allows
+    SetMockTime(std::chrono::seconds{tip->GetBlockTime()} + std::chrono::hours{9});
+    // Stale chain with a minimum_height lower than the block_height
+    // should set the locktime to minimum_height
+    DiscourageFeeSniping(mtx, rng_fast, chain, block_hash, block_height, block_height - 10);
+    BOOST_CHECK_EQUAL(mtx.nLockTime, static_cast<uint32_t>(block_height - 10));
+    // Stale chain with a minimum_height higher than the block_height
+    // should set the locktime to 0
+    DiscourageFeeSniping(mtx, rng_fast, chain, block_hash, block_height, block_height + 1);
+    BOOST_CHECK_EQUAL(mtx.nLockTime, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
