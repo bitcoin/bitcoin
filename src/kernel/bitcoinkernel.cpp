@@ -502,6 +502,7 @@ struct btck_BlockSpentOutputs : Handle<btck_BlockSpentOutputs, std::shared_ptr<C
 struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUndo> {};
 struct btck_Coin : Handle<btck_Coin, Coin> {};
 struct btck_BlockHash : Handle<btck_BlockHash, uint256> {};
+struct btck_BlockMerkleRoot : Handle<btck_BlockMerkleRoot, uint256> {};
 struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
 struct btck_WitnessStack : Handle<btck_WitnessStack, CScriptWitness> {};
 struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
@@ -1303,6 +1304,26 @@ void btck_block_hash_destroy(btck_BlockHash* hash)
     delete hash;
 }
 
+btck_BlockMerkleRoot* btck_block_merkle_root_copy(const btck_BlockMerkleRoot* merkle_root)
+{
+    return btck_BlockMerkleRoot::copy(merkle_root);
+}
+
+int btck_block_merkle_root_equals(const btck_BlockMerkleRoot* merkle_root1, const btck_BlockMerkleRoot* merkle_root2)
+{
+    return btck_BlockMerkleRoot::get(merkle_root1) == btck_BlockMerkleRoot::get(merkle_root2);
+}
+
+void btck_block_merkle_root_to_bytes(const btck_BlockMerkleRoot* merkle_root, unsigned char output[32])
+{
+    std::memcpy(output, btck_BlockMerkleRoot::get(merkle_root).begin(), 32);
+}
+
+void btck_block_merkle_root_destroy(btck_BlockMerkleRoot* merkle_root)
+{
+    delete merkle_root;
+}
+
 btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
 {
     auto block_undo{std::make_shared<CBlockUndo>()};
@@ -1468,6 +1489,11 @@ btck_BlockHash* btck_block_header_get_hash(const btck_BlockHeader* header)
 const btck_BlockHash* btck_block_header_get_prev_hash(const btck_BlockHeader* header)
 {
     return btck_BlockHash::ref(&btck_BlockHeader::get(header).hashPrevBlock);
+}
+
+const btck_BlockMerkleRoot* btck_block_header_get_merkle_root(const btck_BlockHeader* header)
+{
+    return btck_BlockMerkleRoot::ref(&btck_BlockHeader::get(header).hashMerkleRoot);
 }
 
 uint32_t btck_block_header_get_timestamp(const btck_BlockHeader* header)

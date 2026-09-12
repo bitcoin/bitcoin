@@ -798,6 +798,47 @@ public:
 };
 
 template <typename Derived>
+class BlockMerkleRootApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+public:
+    bool operator==(const Derived& other) const
+    {
+        return btck_block_merkle_root_equals(impl(), other.get()) != 0;
+    }
+
+    bool operator!=(const Derived& other) const
+    {
+        return btck_block_merkle_root_equals(impl(), other.get()) == 0;
+    }
+
+    std::array<std::byte, 32> ToBytes() const
+    {
+        std::array<std::byte, 32> hash;
+        btck_block_merkle_root_to_bytes(impl(), reinterpret_cast<unsigned char*>(hash.data()));
+        return hash;
+    }
+};
+
+class BlockMerkleRootView : public View<btck_BlockMerkleRoot>, public BlockMerkleRootApi<BlockMerkleRootView>
+{
+public:
+    explicit BlockMerkleRootView(const btck_BlockMerkleRoot* ptr) : View{ptr} {}
+};
+
+class BlockMerkleRoot : public Handle<btck_BlockMerkleRoot, btck_block_merkle_root_copy, btck_block_merkle_root_destroy>, public BlockMerkleRootApi<BlockMerkleRoot>
+{
+public:
+    BlockMerkleRoot(const BlockMerkleRootView& view)
+        : Handle{view} {}
+};
+
+template <typename Derived>
 class BlockHeaderApi
 {
 private:
@@ -818,6 +859,11 @@ public:
     BlockHashView PrevHash() const
     {
         return BlockHashView{btck_block_header_get_prev_hash(impl())};
+    }
+
+    BlockMerkleRootView MerkleRoot() const
+    {
+        return BlockMerkleRootView{btck_block_header_get_merkle_root(impl())};
     }
 
     uint32_t Timestamp() const
