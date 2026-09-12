@@ -125,14 +125,21 @@ class P2PLeakTest(BitcoinTestFramework):
         pre_wtxidrelay_peer = self.nodes[0].add_p2p_connection(NoVerackIdlePeer(), send_version=False, wait_for_verack=False)
         pre_wtxidrelay_peer.send_without_ping(self.create_old_version(70015))
 
+        # Peer at exactly nVersion == 70016, the lowest version that supports the
+        # feature negotiation messages, so it must receive WTXIDRELAY and SENDADDRV2.
+        wtxidrelay_peer = self.nodes[0].add_p2p_connection(NoVerackIdlePeer(), send_version=False, wait_for_verack=False)
+        wtxidrelay_peer.send_without_ping(self.create_old_version(70016))
+
         # Wait until the peer gets the verack in response to the version. Though, don't wait for the node to receive the
         # verack, since the peer never sent one
         no_verack_idle_peer.wait_for_verack()
         pre_wtxidrelay_peer.wait_for_verack()
+        wtxidrelay_peer.wait_for_verack()
 
         no_version_idle_peer.wait_until(lambda: no_version_idle_peer.ever_connected)
         no_verack_idle_peer.wait_until(lambda: no_verack_idle_peer.version_received)
         pre_wtxidrelay_peer.wait_until(lambda: pre_wtxidrelay_peer.version_received)
+        wtxidrelay_peer.wait_until(lambda: wtxidrelay_peer.version_received)
 
         # Mine a block and make sure that it's not sent to the connected peers
         self.generate(self.nodes[0], nblocks=1)
@@ -159,10 +166,16 @@ class P2PLeakTest(BitcoinTestFramework):
         assert not pre_wtxidrelay_peer.got_sendaddrv2
         assert not pre_wtxidrelay_peer.got_feature
 
+        assert not wtxidrelay_peer.unexpected_msg
+        assert wtxidrelay_peer.got_wtxidrelay
+        assert wtxidrelay_peer.got_sendaddrv2
+        assert not wtxidrelay_peer.got_feature  # feature messages start at nVersion >= 70017
+
         # Expect peers to be disconnected due to timeout
         assert not no_version_idle_peer.is_connected
         assert not no_verack_idle_peer.is_connected
         assert not pre_wtxidrelay_peer.is_connected
+        assert not wtxidrelay_peer.is_connected
 
         self.log.info('Check that the version message does not leak the local address of the node')
         p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
@@ -177,7 +190,7 @@ class P2PLeakTest(BitcoinTestFramework):
 
         self.log.info('Check that old peers are disconnected')
         p2p_old_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(["using obsolete version 31799, disconnecting peer=5"]):
+        with self.nodes[0].assert_debug_log(["using obsolete version 31799, disconnecting peer=6"]):
             p2p_old_peer.send_without_ping(self.create_old_version(31799))
             p2p_old_peer.wait_for_disconnect()
 
