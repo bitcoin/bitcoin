@@ -91,6 +91,8 @@ public:
  *
  * contains(item) will always return true if item was one of the last N to 1.5*N
  * insert()'ed ... but may also return true for items that were not inserted.
+ * Re-inserting an item reported present in the current generation does not
+ * consume additional capacity.
  *
  * It needs around 1.8 bytes per element per factor 0.1 of false positive rate.
  * For example, if we want 1000 elements, we'd need:
