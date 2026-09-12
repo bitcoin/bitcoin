@@ -41,8 +41,10 @@ bool FileCommit(FILE* file);
 /**
  * Sync directory contents. This is required on some environments to ensure that
  * newly created files are committed to disk.
+ * Returns false if opening, syncing, or closing the directory fails.
+ * On Windows this is a no-op that returns true.
  */
-void DirectoryCommit(const fs::path& dirname);
+bool DirectoryCommit(const fs::path& dirname);
 
 bool TruncateFile(FILE* file, unsigned int length);
 
