@@ -330,14 +330,7 @@ bool IsDirWritable(const fs::path& dir_path)
     FastRandomContext rng;
     const auto tmp = dir_path / fs::PathFromString(strprintf(".tmp_%d", rng.rand64()));
 
-    const char* mode;
-#ifdef __MINGW64__
-    mode = "w"; // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
-#else
-    mode = "wx";
-#endif
-
-    if (const auto created{fsbridge::fopen(tmp, mode)}) {
+    if (const auto created{fsbridge::fopen(tmp, "wx")}) {
         std::fclose(created);
         std::error_code ec;
         fs::remove(tmp, ec); // clean up, ignore errors
