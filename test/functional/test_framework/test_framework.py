@@ -20,12 +20,20 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from . import coverage
 from .messages import CAddress
-from .p2p import NetworkThread
+from .netutil import format_addr_port
+from .p2p import (
+    NetworkThread,
+    P2P_SERVICES,
+    P2PInterface,
+    start_p2p_listener,
+)
+from .socks5 import start_socks5_server
 from .test_node import TestNode
 from .util import (
     Binaries,
@@ -128,7 +136,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
         self.disable_autoconnect = True
+        # Auto outbound mode enables ThreadOpenConnections and re-routes all outbound
+        # connections the nodes make with a SOCKS5 proxy to local addresses, behind which
+        # there could be a python p2p or another node.
+        self.auto_outbound_mode = False
+        # Indices of the nodes whose outbound connections go through the proxy. Note that
+        # -proxy applies to every outbound connection, so a node listed here cannot be
+        # connected to the other nodes with connect_nodes().
+        self.auto_outbound_nodes = [0]
+        # The SOCKS5 proxy used by auto outbound mode
+        self.socks5_server = None
+        # Callback that decides where an automatic outbound connection is redirected to.
+        # Takes the connection type as an argument, returns (addr, port, listener)
+        # Tests can override this in set_test_params() to customize where outbound connections go.
+        self.auto_outbound_factory = self._default_auto_outbound_factory
         self.set_test_params()
+        if self.auto_outbound_mode:
+            self.disable_autoconnect = False
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
 
@@ -280,6 +304,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             print("Testcase failed. Attaching python debugger. Enter ? for help")
             pdb.set_trace()
 
+        if self.socks5_server is not None and self.socks5_server.is_running():
+            self.log.debug('Stopping the auto outbound SOCKS5 proxy')
+            self.socks5_server.stop()
+
         self.log.debug('Closing down network thread')
         self.network_thread.close(timeout=self.options.timeout_factor * 10)
         if self.success == TestStatus.FAILED:
@@ -395,6 +423,87 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["blocks"], 200)
                 assert_equal(chain_info["initialblockdownload"], False)
 
+    def start_auto_outbound_listener(self, listener=None):
+        """Start listening with the given Python P2P node (a fresh P2PInterface by default).
+
+        Returns (addr, port, listener), ready to be returned from an auto outbound factory."""
+        if listener is None:
+            listener = P2PInterface()
+        listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
+        listener.peer_connect_send_version(services=P2P_SERVICES)
+        actual_to_addr, actual_to_port = start_p2p_listener(self.network_thread, listener)
+        return (actual_to_addr, actual_to_port, listener)
+
+    def _default_auto_outbound_factory(self, conn_type):
+        """Default destination for an automatic outbound connection: a fresh Python P2P node."""
+        return self.start_auto_outbound_listener()
+
+    def _auto_outbound_conn_type(self, proxy_client):
+        """Return the connection type of the node connection served by the SOCKS5 proxy.
+
+        The proxy has already replied SUCCESS to the SOCKS5 request, so the node has finished
+        ConnectNode() and registered the peer (or is about to). The source addr:port of the
+        proxy's client socket equals the node's addrbind for that peer, which identifies
+        precisely the connection being served."""
+        conn_type = None
+        # SOCKS5 handlers run in separate threads, so each needs its own RPC connection.
+        rpcs = [self.nodes[i].create_new_rpc_connection() for i in self.auto_outbound_nodes]
+
+        def connection_type_found():
+            nonlocal conn_type
+            for rpc in rpcs:
+                for peer in rpc.getpeerinfo():
+                    if peer.get("addrbind") == proxy_client:
+                        conn_type = peer["connection_type"]
+                        return True
+            return False
+
+        self.wait_until(connection_type_found)
+        return conn_type
+
+    def _setup_auto_outbound_mode(self):
+        """Start a SOCKS5 proxy that redirects the nodes' automatic outbound connections."""
+        self.auto_outbound_destinations = []
+        self.auto_outbound_destinations_lock = threading.Lock()
+
+        def destinations_factory(requested_to_addr, requested_to_port, proxy_client):
+            # Must be resolved before taking the lock: it waits on the node's RPC.
+            conn_type = self._auto_outbound_conn_type(proxy_client)
+
+            with self.auto_outbound_destinations_lock:
+                i = len(self.auto_outbound_destinations)
+
+                actual_to_addr, actual_to_port, listener = self.auto_outbound_factory(conn_type)
+
+                target_name = f"Python {type(listener).__name__}" if listener is not None else "another node"
+                self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} ({conn_type}) for "
+                               f"{format_addr_port(requested_to_addr, requested_to_port)} to "
+                               f"{format_addr_port(actual_to_addr, actual_to_port)} ({target_name})")
+
+                self.auto_outbound_destinations.append({
+                    "requested_to": format_addr_port(requested_to_addr, requested_to_port),
+                    "conn_type": conn_type,
+                    "node": listener,
+                })
+
+                assert_equal(len(self.auto_outbound_destinations), i + 1)
+                return {
+                    "actual_to_addr": actual_to_addr,
+                    "actual_to_port": actual_to_port,
+                }
+
+        self.socks5_server = start_socks5_server(destinations_factory)
+        return self.socks5_server
+
+    def wait_for_auto_outbound_destination(self, n):
+        """Wait for auto_outbound_destinations[] to have at least n elements and return the 'n'th."""
+        def get_destinations_len():
+            with self.auto_outbound_destinations_lock:
+                return len(self.auto_outbound_destinations)
+        self.wait_until(lambda: get_destinations_len() > n)
+        with self.auto_outbound_destinations_lock:
+            return self.auto_outbound_destinations[n]
+
     def import_deterministic_coinbase_privkeys(self):
         for i in range(self.num_nodes):
             self.init_wallet(node=i)
@@ -446,6 +555,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_confs = [[]] * num_nodes
         if extra_args is None:
             extra_args = [[]] * num_nodes
+        # Route the outbound connections of the auto outbound nodes through our SOCKS5 proxy.
+        if self.auto_outbound_mode:
+            socks5_addr = self._setup_auto_outbound_mode().conf.addr
+            for i in self.auto_outbound_nodes:
+                extra_args[i] = extra_args[i] + [
+                    f"-proxy={socks5_addr[0]}:{socks5_addr[1]}"
+                ]
         # Whitelist peers to speed up tx relay / mempool sync. Don't use it if testing tx relay or timing.
         if self.noban_tx_relay:
             for i in range(len(extra_args)):
