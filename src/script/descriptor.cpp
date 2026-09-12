@@ -259,8 +259,20 @@ class OriginPubkeyProvider final : public PubkeyProvider
 
     std::string OriginString(StringType type, bool normalized=false) const
     {
-        // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
+        bool use_apostrophe{false};
+        switch (type) {
+        case StringType::COMPAT:
+            // COMPAT always uses apostrophe to stay compatible with previous versions
+            use_apostrophe = true;
+            break;
+        case StringType::CANONICAL:
+            // CANONICAL always uses h
+            use_apostrophe = false;
+            break;
+        case StringType::PUBLIC:
+            use_apostrophe = (!normalized && m_apostrophe) ? true : false;
+            break;
+        } // no default case, so the compiler can warn about missing cases
         return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, use_apostrophe);
     }
 
@@ -509,8 +521,20 @@ public:
     }
     std::string ToString(StringType type, bool normalized) const
     {
-        // If StringType==COMPAT, always use the apostrophe to stay compatible with previous versions
-        const bool use_apostrophe = (type != StringType::CANONICAL && !normalized && m_apostrophe) || type == StringType::COMPAT;
+        bool use_apostrophe{false};
+        switch (type) {
+        case StringType::COMPAT:
+            // COMPAT always uses apostrophe to stay compatible with previous versions
+            use_apostrophe = true;
+            break;
+        case StringType::CANONICAL:
+            // CANONICAL always uses h
+            use_apostrophe = false;
+            break;
+        case StringType::PUBLIC:
+            use_apostrophe = (!normalized && m_apostrophe) ? true : false;
+            break;
+        } // no default case, so the compiler can warn about missing cases
         std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
         if (IsRange()) {
             ret += "/*";

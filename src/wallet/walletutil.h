@@ -66,6 +66,11 @@ private:
     int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
     int32_t next_index = 0; // Position of the next item to generate
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
+
+    uint256 canonical_hash; // Hash of the canonical string, used as a shortcut for comparing canonical strings
+
+    void CalculateCanonicalHash();
+
 public:
     std::shared_ptr<Descriptor> descriptor;
     uint64_t creation_time = 0;
@@ -108,6 +113,7 @@ public:
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
         descriptor = std::move(descs.at(0));
+        CalculateCanonicalHash();
     }
 
     SERIALIZE_METHODS(WalletDescriptor, obj)
@@ -124,9 +130,18 @@ public:
       next_index(next_index),
       range_end(descriptor->IsRange() ? range_end : 1),
       descriptor(descriptor),
-      creation_time(creation_time) {}
+      creation_time(creation_time)
+    {
+        CalculateCanonicalHash();
+    }
 
+    /** Replaces all metadata (range, start, end, creation time), and cache from another WalletDescriptor if it has the same canonical descriptor string.
+     *  The descriptor itself is not replaced to preserve existing serialization to maintain compatibility with previous software versions that expect
+     *  specific serialization.
+     */
     void UpdateFrom(const WalletDescriptor& other);
+
+    bool Equals(const WalletDescriptor& other) const;
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
