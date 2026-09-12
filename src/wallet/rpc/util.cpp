@@ -153,6 +153,28 @@ void HandleWalletError(const std::shared_ptr<CWallet>& wallet, DatabaseStatus& s
     }
 }
 
+RPCErrorCode HandleWalletErrorCode(const WalletErrorCode code)
+{
+    RPCErrorCode res = RPC_WALLET_ERROR;
+    switch(code) {
+        case WalletErrorCode::UnlockNeeded:
+            res = RPC_WALLET_UNLOCK_NEEDED;
+            break;
+        case WalletErrorCode::InvalidDescriptor:
+            res = RPC_INVALID_ADDRESS_OR_KEY;
+            break;
+        case WalletErrorCode::InvalidParameter:
+            res = RPC_INVALID_PARAMETER;
+            break;
+        case WalletErrorCode::MiscError:
+            res = RPC_MISC_ERROR;
+            break;
+        default: // RPC_WALLET_ERROR is returned for all other cases.
+            break;
+    }
+    return res;
+}
+
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
