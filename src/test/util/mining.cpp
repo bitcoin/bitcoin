@@ -107,8 +107,7 @@ bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
 
         chain_block = std::make_shared<CBlock>(std::move(block));
 
-        BlockValidationState state;
-        if (!Assert(node.chainman)->ProcessNewBlockHeaders({{*chain_block}}, true, state, &pindex)) {
+        if (!Assert(node.chainman)->ProcessNewBlockHeaders({{*chain_block}}, true, &pindex).IsValid()) {
             return false;
         }
     }
