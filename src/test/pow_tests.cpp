@@ -64,6 +64,36 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
+/* Test that the largest permitted difficulty increase is not itself rejected
+ * when the new target is not exactly representable in compact form. */
+BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_rounding)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 68543;
+    pindexLast.nTime = 1279297671;
+    pindexLast.nBits = 0x1c05a3f5; // Mantissa is not a multiple of four
+    int64_t nLastRetargetTime = pindexLast.nTime - consensus.nPowTargetTimespan/4;
+    unsigned int expected_nbits = 0x1c0168fdU;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), expected_nbits);
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, pindexLast.nHeight+1, pindexLast.nBits, expected_nbits));
+}
+
+/* Test the lower bound for a negative actual time taken, which is possible
+ * because timestamps only have to exceed the median of the previous eleven. */
+BOOST_AUTO_TEST_CASE(get_next_work_negative_actual)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    int64_t nLastRetargetTime = 1279297671; // Later than pindexLast.nTime
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 68543;
+    pindexLast.nTime = 1279008237;
+    pindexLast.nBits = 0x1c05a3f4;
+    unsigned int expected_nbits = 0x1c0168fdU;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), expected_nbits);
+    BOOST_CHECK(PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, expected_nbits));
+}
+
 /* Test the constraint on the upper bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 {
@@ -79,6 +109,40 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     // Test that increasing nbits further would not be a PermittedDifficultyTransition.
     unsigned int invalid_nbits = expected_nbits+1;
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
+}
+
+/* Test that the retarget window starts at the timestamp of the block at
+ * the start of the window. */
+BOOST_AUTO_TEST_CASE(get_next_work_first_block_time)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+    const int64_t interval{consensus.DifficultyAdjustmentInterval()};
+
+    std::vector<CBlockIndex> blocks(2 * interval);
+    for (int64_t i = 0; i < 2 * interval; i++) {
+        blocks[i].pprev = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight = i;
+        blocks[i].nTime = 1269211443 + i * consensus.nPowTargetSpacing;
+        blocks[i].nBits = 0x1c05a3f4;
+    }
+    blocks[interval].nTime += 5000;
+
+    const CBlockIndex& last{blocks[2 * interval - 1]};
+    unsigned int expected_nbits = 0x1c059d44;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&last, nullptr, consensus), expected_nbits);
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, last.nHeight+1, last.nBits, expected_nbits));
+}
+
+/* Test that nbits is only permitted to change at a difficulty adjustment. */
+BOOST_AUTO_TEST_CASE(permitted_difficulty_transition_no_retarget)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+    const int64_t height{consensus.DifficultyAdjustmentInterval() + 1}; // Not a retarget height
+
+    const unsigned int nbits{0x1c05a3f4};
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, height, nbits, nbits));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, height, nbits, nbits - 1));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, height, nbits, nbits + 1));
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
