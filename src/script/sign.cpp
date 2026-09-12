@@ -219,7 +219,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vec
     return true;
 }
 
-static bool GetCScript(const SigningProvider& provider, const SignatureData& sigdata, const CScriptID& scriptid, CScript& script)
+[[nodiscard]] static bool GetCScript(const SigningProvider& provider, const SignatureData& sigdata, const CScriptID& scriptid, CScript& script)
 {
     if (provider.GetCScript(scriptid, script)) {
         return true;
@@ -235,7 +235,7 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
     return false;
 }
 
-static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
+[[nodiscard]] static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
 {
     // Look for pubkey in all partial sigs
     const auto it = sigdata.signatures.find(address);

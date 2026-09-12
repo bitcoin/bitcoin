@@ -333,7 +333,7 @@ public:
      * @param[out] utxo The UTXO of this input
      * @return Whether the UTXO could be retrieved
      */
-    bool GetUTXO(CTxOut& utxo) const;
+    [[nodiscard]] bool GetUTXO(CTxOut& utxo) const;
     bool HasSignatures() const;
 
     explicit PSBTInput(uint32_t psbt_version, const Txid& prev_txid, uint32_t prev_out, std::optional<uint32_t> sequence = std::nullopt)
