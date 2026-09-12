@@ -14,6 +14,7 @@ import copy
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    DIFFICULTY_ADJUSTMENT_INTERVAL,
     create_block,
     create_coinbase,
     get_witness_script,
@@ -51,7 +52,6 @@ from test_framework.wallet import (
 )
 
 
-DIFFICULTY_ADJUSTMENT_INTERVAL = 144
 MAX_FUTURE_BLOCK_TIME = 2 * 3600
 MAX_TIMEWARP = 600
 VERSIONBITS_TOP_BITS = 0x20000000
@@ -267,6 +267,7 @@ class MiningTest(BitcoinTestFramework):
             self.generate(self.wallet, 1, sync_fun=self.no_op)
         node.setmocktime(t + MAX_FUTURE_BLOCK_TIME)
         self.generate(self.wallet, 1, sync_fun=self.no_op)
+        assert_equal(node.getblockchaininfo()['blocks'] % DIFFICULTY_ADJUSTMENT_INTERVAL, 0)
         first_block_time = node.getblock(node.getbestblockhash())['time']
         assert_equal(first_block_time, t + MAX_FUTURE_BLOCK_TIME)
 
@@ -277,6 +278,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("The template for the last block of the period is adjusted to its first block's time")
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(tmpl['height'] % DIFFICULTY_ADJUSTMENT_INTERVAL, DIFFICULTY_ADJUSTMENT_INTERVAL - 1)
         assert_equal(tmpl['mintime'], first_block_time)
         assert_equal(tmpl['curtime'], first_block_time)
 
