@@ -425,6 +425,77 @@ KJ_TEST("Calling async IPC method, with server disconnect after cleanup")
     EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
 }
 
+KJ_TEST("Waiting for in-flight server call to finish after disconnect")
+{
+    // Regression test for bitcoin/bitcoin#35845. Disconnecting a connection
+    // cancels the KJ promise of an in-flight call, but a C++ server method
+    // body already dispatched to a worker thread runs to completion. Verify
+    // that Connection::waitDrained() blocks until such a body finishes and its
+    // server object is destroyed, so shutdown code can wait for a disconnected
+    // connection to become quiescent before freeing state the body accesses.
+
+    std::promise<void> body_started, release_body;
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+
+    // A server call body that signals when it starts and then blocks until the
+    // test releases it, so the in-flight state can be observed
+    // deterministically.
+    setup.server->m_impl->m_fn = [&] {
+        body_started.set_value();
+        release_body.get_future().get();
+    };
+
+    // Grab the server Connection object on the event loop thread before
+    // disconnecting. It stays valid until server_disconnect() destroys it
+    // below.
+    Connection* connection{nullptr};
+    foo->m_context.loop->sync([&] { connection = setup.server->m_context.connection; });
+
+    // Invoke the async method on a separate thread so its body blocks there
+    // while this thread makes assertions. callFnAsync() takes an mp.Context,
+    // so its body runs on a worker thread via ProxyServer<Thread>::post().
+    std::thread call_thread([&] {
+        EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
+    });
+    body_started.get_future().get();
+
+    // The FooInterface server object is the connection's only counted server
+    // object, and its call body is executing.
+    KJ_EXPECT(connection->pendingServerObjects() == 1);
+
+    // Disconnect. This cancels the call's promise (the client above sees the
+    // disconnect error), but the body is still blocked on the worker thread,
+    // so its server object must still be alive.
+    foo->m_context.loop->sync([&] { connection->disconnect(); });
+    KJ_EXPECT(connection->pendingServerObjects() == 1);
+
+    // A drain must block while the body runs and return only once it
+    // finishes, which is what Ipc::disconnectIncoming relies on during
+    // shutdown.
+    std::atomic<bool> drained{false};
+    std::thread drain_thread([&] {
+        connection->waitDrained();
+        drained = true;
+    });
+
+    // The body is still blocked, so waitDrained() must not have returned.
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    KJ_EXPECT(!drained);
+
+    // Let the body finish; the drain should now complete.
+    release_body.set_value();
+    drain_thread.join();
+    KJ_EXPECT(drained);
+    KJ_EXPECT(connection->pendingServerObjects() == 0);
+    call_thread.join();
+
+    // Destroy the drained connection. (~Connection notices disconnect() has
+    // already run and does not tear things down twice.)
+    setup.server_disconnect();
+}
+
 KJ_TEST("Destroying ProxyClient<> with destroy method after peer disconnect")
 {
     // Regression test for bitcoin-core/libmultiprocess#219 where
