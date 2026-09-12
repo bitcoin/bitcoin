@@ -388,6 +388,14 @@ typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_
  */
 typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
 
+/** Function signature for retrieving a coin.
+ *
+ * The returned coin's ownership passes to the caller invoking this callback.
+ *
+ * Return nullptr if the coin cannot be retrieved.
+ */
+typedef btck_Coin* (*btck_FetchCoin)(void* user_data, const btck_TransactionOutPoint* outpoint);
+
 /**
  * Whether a validated data structure is valid, invalid, or an error was
  * encountered during processing.
@@ -701,6 +709,15 @@ BITCOINKERNEL_API const btck_Txid* btck_transaction_get_txid(
 BITCOINKERNEL_API int btck_transaction_check(
     const btck_Transaction* tx,
     btck_TxValidationState* validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Check if this is a coinbase transaction.
+ *
+ * @param[in] transaction Non-null.
+ * @return                1 if it is coinbase, 0 if it is not.
+ */
+BITCOINKERNEL_API int btck_transaction_is_coinbase(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
  * Destroy the transaction.
@@ -1293,6 +1310,31 @@ BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT bt
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
+ * @brief Validate the passed in block.
+ *
+ * This validates the block against the caller's supplied spent coins without
+ * requiring a full UTXO set or mutating the chainstate. Coins created and
+ * consumed within the same block are ignored. BIP-30 violating transactions
+ * cannot be detected through this function.
+ *
+ * @param[in] chainstate_manager      Non-null.
+ * @param[in] block                   Non-null.
+ * @param[in] block_tree_entry        Non-null. The entry must be associated with the block.
+ * @param[in] coin_fetcher            Non-null. Callback for getting the coins spent by this block.
+ * @param[in] user_data               Nullable. Holds a user-defined opaque structure that will be
+ *                                    passed back through the coin_fetcher callback.
+ * @param[out] block_validation_state The result of the block validation.
+ * @return                            0 if the block is valid.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_validate_block(
+    btck_ChainstateManager* chainstate_manager,
+    const btck_Block* block,
+    const btck_BlockTreeEntry* block_tree_entry,
+    btck_FetchCoin coin_fetcher,
+    void* user_data,
+    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 3, 4, 6);
+
+/**
  * @brief Triggers the start of a reindex if the wipe options were previously
  * set for the chainstate manager. Can also import an array of existing block
  * files selected by the user.
@@ -1798,6 +1840,17 @@ BITCOINKERNEL_API void btck_witness_stack_destroy(btck_WitnessStack* witness_sta
 ///@{
 
 /**
+ * @brief Create a transaction out point from a txid and an output index.
+ *
+ * @param[in] txid  Non-null.
+ * @param[in] index The output index.
+ * @return          The allocated transaction out point. Must be freed with
+ *                  btck_transaction_out_point_destroy.
+ */
+BITCOINKERNEL_API btck_TransactionOutPoint* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_out_point_create(
+    const btck_Txid* txid, uint32_t index) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Copy a transaction out point.
  *
  * @param[in] transaction_out_point Non-null.
@@ -1824,6 +1877,17 @@ BITCOINKERNEL_API uint32_t btck_transaction_out_point_get_index(
  */
 BITCOINKERNEL_API const btck_Txid* btck_transaction_out_point_get_txid(
     const btck_TransactionOutPoint* transaction_out_point) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Check if two transaction out points are equal.
+ *
+ * @param[in] transaction_out_point1 Non-null.
+ * @param[in] transaction_out_point2 Non-null.
+ * @return                           0 if the transaction out points are not equal.
+ */
+BITCOINKERNEL_API int btck_transaction_out_point_equals(
+    const btck_TransactionOutPoint* transaction_out_point1,
+    const btck_TransactionOutPoint* transaction_out_point2) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * Destroy the transaction out point.
@@ -1876,6 +1940,17 @@ BITCOINKERNEL_API void btck_txid_destroy(btck_Txid* txid);
  * Functions for working with coins.
  */
 ///@{
+
+/**
+ * @brief Create a coin.
+ *
+ * @param[in] output              Non-null.
+ * @param[in] confirmation_height The block height the coin was confirmed in. Heights are stored as 31-bit values, so it must fit in 31 bits.
+ * @param[in] is_coinbase         Set to 1 if the coin is from a coinbase output, set to 0 otherwise.
+ * @return                        The coin, or null if the height does not fit in a 31 bit value.
+ */
+BITCOINKERNEL_API btck_Coin* BITCOINKERNEL_WARN_UNUSED_RESULT btck_coin_create(
+    const btck_TransactionOutput* output, uint32_t confirmation_height, int is_coinbase) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
  * @brief Copy a coin.
