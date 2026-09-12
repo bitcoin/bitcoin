@@ -468,9 +468,7 @@ public:
      */
     const std::string& GetName() const { return m_name; }
 
-    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
-    MasterKeyMap mapMasterKeys;
-    unsigned int nMasterKeyMaxID = 0;
+    std::optional<CMasterKey> m_encryption_key;
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
