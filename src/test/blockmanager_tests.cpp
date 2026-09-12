@@ -11,6 +11,8 @@
 #include <script/solver.h>
 #include <primitives/block.h>
 #include <util/chaintype.h>
+#include <util/fs.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -18,11 +20,33 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 
+#include <string>
+
 using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::MAX_BLOCKFILE_SIZE;
+
+namespace node {
+//! Test accessor for BlockManager's private flush methods (befriended in blockstorage.h).
+struct BlockManagerTest {
+    static bool FlushBlockFile(BlockManager& blockman, int file_num, bool finalize, bool finalize_undo)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        return blockman.FlushBlockFile(file_num, finalize, finalize_undo);
+    }
+};
+} // namespace node
+
+namespace {
+//! KernelNotifications that only counts flush-error notifications.
+struct CountingNotifications : KernelNotifications {
+    using KernelNotifications::KernelNotifications;
+    int flush_errors{0};
+    void flushError(const bilingual_str&) override { ++flush_errors; }
+};
+} // namespace
 
 // use BasicTestingSetup here for the data directory configuration, setup, and cleanup
 BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
@@ -322,6 +346,61 @@ BOOST_FIXTURE_TEST_CASE(prune_lock_update_and_delete, TestingSetup)
 
     // Deleting a non-existent lock returns false
     BOOST_CHECK(!blockman.DeletePruneLock("nonexistent"));
+}
+
+static BlockManager::Options TestBlockManagerOptions(const ArgsManager& args, const CChainParams& params, CountingNotifications& notifications)
+{
+    return BlockManager::Options{
+        .chainparams = params,
+        .blocks_dir = args.GetBlocksDirPath(),
+        .notifications = notifications,
+        .block_tree_db_params = DBParams{
+            .path = args.GetDataDirNet() / "blocks" / "index",
+            .cache_bytes = 0,
+        },
+    };
+}
+
+// FlushBlockFile() flushes both the block and the undo file and returns false if
+// either fails. It must never report a failure without emitting the flush-error
+// notification. Exercise each failure source separately.
+BOOST_AUTO_TEST_CASE(blockmanager_flush_notifies_on_block_failure)
+{
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::MAIN)};
+    CountingNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
+    BlockManager blockman{*Assert(m_node.shutdown_signal), TestBlockManagerOptions(m_args, *params, notifications)};
+
+    LOCK(::cs_main);
+    BOOST_REQUIRE_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
+
+    // Replace blk00000.dat with a directory so the block flush's open fails.
+    const fs::path blk_file{blockman.GetBlockPosFilename(FlatFilePos{0, 0})};
+    BOOST_REQUIRE(fs::remove(blk_file));
+    BOOST_REQUIRE(fs::create_directory(blk_file));
+
+    BOOST_CHECK(!node::BlockManagerTest::FlushBlockFile(blockman, /*file_num=*/0, /*finalize=*/false, /*finalize_undo=*/false));
+    BOOST_CHECK_EQUAL(notifications.flush_errors, 1);
+}
+
+BOOST_AUTO_TEST_CASE(blockmanager_flush_notifies_on_undo_failure)
+{
+    const auto params{CreateChainParams(ArgsManager{}, ChainType::MAIN)};
+    CountingNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
+    BlockManager blockman{*Assert(m_node.shutdown_signal), TestBlockManagerOptions(m_args, *params, notifications)};
+
+    LOCK(::cs_main);
+    BOOST_REQUIRE_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
+
+    // Leave blk00000.dat intact; make the undo flush fail by putting a directory
+    // where rev00000.dat would be opened (blk?????.dat -> rev?????.dat).
+    fs::path rev_file{blockman.GetBlockPosFilename(FlatFilePos{0, 0})};
+    std::string rev_name{rev_file.filename().string()};
+    rev_name.replace(0, 3, "rev");
+    rev_file = rev_file.parent_path() / rev_name;
+    BOOST_REQUIRE(fs::create_directory(rev_file));
+
+    BOOST_CHECK(!node::BlockManagerTest::FlushBlockFile(blockman, /*file_num=*/0, /*finalize=*/false, /*finalize_undo=*/false));
+    BOOST_CHECK_EQUAL(notifications.flush_errors, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
