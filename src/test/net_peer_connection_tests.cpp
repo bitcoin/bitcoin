@@ -163,4 +163,19 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_AUTO_TEST_CASE(addnode_literal_host_and_effective_port_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(!connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port + 1), /*m_use_v2transport=*/true}));
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("explicit.example:%u", default_port), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(!connman.AddNode({/*m_added_node=*/"explicit.example", /*m_use_v2transport=*/true}));
+
+    BOOST_CHECK_EQUAL(connman.GetAddedNodeInfo(/*include_connected=*/true).size(), 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
