@@ -196,7 +196,7 @@ void ReportHardwareRand() {}
 #endif
 
 /** Add 64 bits of entropy gathered from hardware to hasher. Do nothing if not supported. */
-void SeedHardwareFast(CSHA512& hasher) noexcept {
+void SeedHardwareFast([[maybe_unused]] CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
@@ -207,7 +207,7 @@ void SeedHardwareFast(CSHA512& hasher) noexcept {
 }
 
 /** Add 256 bits of entropy gathered from hardware to hasher. Do nothing if not supported. */
-void SeedHardwareSlow(CSHA512& hasher) noexcept {
+void SeedHardwareSlow([[maybe_unused]] CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     // When we want 256 bits of entropy, prefer RdSeed over RdRand, as it's
     // guaranteed to produce independent randomness on every call.

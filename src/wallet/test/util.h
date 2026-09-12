@@ -61,7 +61,7 @@ class MockableSQLiteDatabase : public InMemoryWalletDatabase
 public:
     MockableSQLiteDatabase();
 
-    bool Backup(const std::string& strDest) const override { return true; }
+    bool Backup(const std::string&) const override { return true; }
 
     std::string Filename() override { return "mockable"; }
     std::string Format() override { return "sqlite-mock"; }

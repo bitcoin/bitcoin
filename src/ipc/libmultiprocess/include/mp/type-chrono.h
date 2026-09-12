@@ -13,7 +13,7 @@ namespace mp {
 //! Overload CustomBuildField and CustomReadField to serialize std::chrono
 //! parameters and return values as numbers.
 template <class Rep, class Period, typename Value, typename Output>
-void CustomBuildField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext& invoke_context, Value&& value,
+void CustomBuildField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext&, Value&& value,
                       Output&& output)
 {
     static_assert(std::numeric_limits<decltype(output.get())>::lowest() <= std::numeric_limits<Rep>::lowest(),
@@ -24,7 +24,7 @@ void CustomBuildField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>,
 }
 
 template <class Rep, class Period, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext& invoke_context,
+decltype(auto) CustomReadField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext&,
                                Input&& input, ReadDest&& read_dest)
 {
     return read_dest.construct(input.get());

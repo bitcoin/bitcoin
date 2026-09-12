@@ -98,7 +98,7 @@ public:
         PrepareOp();
     }
 
-    PCPTestSock& operator=(Sock&& other) override
+    PCPTestSock& operator=(Sock&&) override
     {
         assert(false && "Move of Sock into PCPTestSock not allowed.");
         return *this;
@@ -167,12 +167,12 @@ public:
 
     int Listen(int) const override { return -1; }
 
-    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
+    std::unique_ptr<Sock> Accept(sockaddr* /*addr*/, socklen_t* /*addr_len*/) const override
     {
         return nullptr;
     };
 
-    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
+    int GetSockOpt(int /*level*/, int /*opt_name*/, void* /*opt_val*/, socklen_t* /*opt_len*/) const override
     {
         return -1;
     }
@@ -211,7 +211,7 @@ public:
         return true;
     }
 
-    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override
+    bool WaitMany(std::chrono::milliseconds /*timeout*/, EventsPerSock& /*events_per_sock*/) const override
     {
         return false;
     }

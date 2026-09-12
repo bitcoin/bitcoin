@@ -46,7 +46,7 @@ class EmptyIterator : public Iterator {
   ~EmptyIterator() override = default;
 
   bool Valid() const override { return false; }
-  void Seek(const Slice& target) override {}
+  void Seek(const Slice&) override {}
   void SeekToFirst() override {}
   void SeekToLast() override {}
   void Next() override { assert(false); }

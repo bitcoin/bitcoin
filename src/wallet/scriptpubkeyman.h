@@ -84,22 +84,22 @@ protected:
 public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
     virtual ~ScriptPubKeyMan() = default;
-    virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
-    virtual bool IsMine(const CScript& script) const { return false; }
+    virtual util::Result<CTxDestination> GetNewDestination(const OutputType) { return util::Error{Untranslated("Not supported")}; }
+    virtual bool IsMine(const CScript&) const { return false; }
 
     //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
-    virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key) { return false; }
-    virtual bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) { return false; }
+    virtual bool CheckDecryptionKey(const CKeyingMaterial&) { return false; }
+    virtual bool Encrypt(const CKeyingMaterial&, WalletBatch*) { return false; }
 
-    virtual util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index) { return util::Error{Untranslated("Not supported")}; }
-    virtual void KeepDestination(int64_t index, const OutputType& type) {}
-    virtual void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) {}
+    virtual util::Result<CTxDestination> GetReservedDestination(const OutputType, bool, int64_t&) { return util::Error{Untranslated("Not supported")}; }
+    virtual void KeepDestination(int64_t, const OutputType&) {}
+    virtual void ReturnDestination(int64_t, bool, const CTxDestination&) {}
 
     /** Fills internal address pool. Use within ScriptPubKeyMan implementations should be used sparingly and only
       * when something from the address pool is removed, excluding GetNewDestination and GetReservedDestination.
       * External wallet code is primarily responsible for topping up prior to fetching new addresses
       */
-    virtual bool TopUp(unsigned int size = 0) { return false; }
+    virtual bool TopUp(unsigned int = 0) { return false; }
 
     /** Mark unused addresses as being used
      * Affects all keys up to and including the one determined by provided script.
@@ -108,13 +108,13 @@ public:
      *
      * @return All of the addresses affected
      */
-    virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
+    virtual std::vector<WalletDestination> MarkUnusedAddresses([[maybe_unused]] const CScript& script) { return {}; }
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
-    virtual bool CanGetAddresses(bool internal = false) const { return false; }
+    virtual bool CanGetAddresses(bool = false) const { return false; }
 
     virtual bool HavePrivateKeys() const { return false; }
     virtual bool HaveCryptedKeys() const { return false; }
@@ -123,21 +123,21 @@ public:
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
 
-    virtual std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const { return nullptr; }
+    virtual std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination&) const { return nullptr; }
 
-    virtual std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const { return nullptr; }
+    virtual std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript&) const { return nullptr; }
 
     /** Whether this ScriptPubKeyMan can provide a SigningProvider (via GetSolvingProvider) that, combined with
       * sigdata, can produce solving data.
       */
-    virtual bool CanProvide(const CScript& script, SignatureData& sigdata) { return false; }
+    virtual bool CanProvide(const CScript&, SignatureData&) { return false; }
 
     /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
-    virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const { return false; }
+    virtual bool SignTransaction(CMutableTransaction&, const std::map<COutPoint, Coin>&, int, std::map<int, bilingual_str>&) const { return false; }
     /** Sign a message with the given script */
-    virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
+    virtual SigningResult SignMessage(const std::string&, const PKHash&, std::string&) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
-    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const { return common::PSBTError::UNSUPPORTED; }
+    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction&, const PrecomputedTransactionData&, const common::PSBTFillOptions&, int* = nullptr) const { return common::PSBTError::UNSUPPORTED; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -264,8 +264,8 @@ public:
     bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
     bool HaveCScript(const CScriptID &scriptid) const override { return m_spk_man.HaveCScript(scriptid); }
     bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
-    bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
-    bool HaveKey(const CKeyID &address) const override { return false; }
+    bool GetKey(const CKeyID&, CKey&) const override { return false; }
+    bool HaveKey(const CKeyID&) const override { return false; }
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
 };
 

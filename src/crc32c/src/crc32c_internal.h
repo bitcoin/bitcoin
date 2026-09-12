@@ -16,7 +16,7 @@ namespace crc32c {
 uint32_t ExtendPortable(uint32_t crc, const uint8_t* data, size_t count);
 
 // CRCs are pre- and post- conditioned by xoring with all ones.
-static constexpr const uint32_t kCRC32Xor = static_cast<uint32_t>(0xffffffffU);
+[[maybe_unused]] static constexpr const uint32_t kCRC32Xor = static_cast<uint32_t>(0xffffffffU);
 
 }  // namespace crc32c
 

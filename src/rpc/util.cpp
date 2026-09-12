@@ -275,17 +275,17 @@ class DescribeAddressVisitor
 public:
     explicit DescribeAddressVisitor() = default;
 
-    UniValue operator()(const CNoDestination& dest) const
+    UniValue operator()(const CNoDestination&) const
     {
         return UniValue(UniValue::VOBJ);
     }
 
-    UniValue operator()(const PubKeyDestination& dest) const
+    UniValue operator()(const PubKeyDestination&) const
     {
         return UniValue(UniValue::VOBJ);
     }
 
-    UniValue operator()(const PKHash& keyID) const
+    UniValue operator()(const PKHash&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", false);
@@ -293,7 +293,7 @@ public:
         return obj;
     }
 
-    UniValue operator()(const ScriptHash& scriptID) const
+    UniValue operator()(const ScriptHash&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
@@ -331,7 +331,7 @@ public:
         return obj;
     }
 
-    UniValue operator()(const PayToAnchor& anchor) const
+    UniValue operator()(const PayToAnchor&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);

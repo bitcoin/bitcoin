@@ -64,7 +64,7 @@ static RPCMethod validateaddress()
             HelpExampleCli("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
             HelpExampleRpc("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             std::string error_msg;
             std::vector<int> error_locations;
@@ -308,7 +308,7 @@ static RPCMethod deriveaddresses()
             HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
             HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest&) -> UniValue
         {
             auto desc_str{self.Arg<std::string_view>("descriptor")};
 
