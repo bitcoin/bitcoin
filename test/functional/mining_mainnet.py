@@ -96,6 +96,7 @@ class MiningMainnetTest(BitcoinTestFramework):
 
         self.log.info("Check difficulty adjustment with getmininginfo")
         mining_info = node.getmininginfo()
+        assert_equal(mining_info['bestblockhash'], prev_hash)
         assert_equal(mining_info['difficulty'], 1)
         assert_equal(mining_info['bits'], nbits_str(DIFF_1_N_BITS))
         assert_equal(mining_info['target'], target_str(DIFF_1_TARGET))
