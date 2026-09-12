@@ -526,4 +526,21 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTestsDiamond)
     BOOST_CHECK_EQUAL(descendants, 4ULL);
 }
 
+BOOST_AUTO_TEST_CASE(MempoolUnbroadcastMemoryUsage)
+{
+    CTxMemPool& pool{*Assert(m_node.mempool)};
+    LOCK2(cs_main, pool.cs);
+
+    auto tx{make_tx({10 * COIN})};
+    auto txid{tx->GetHash()};
+    TryAddToMempool(pool, TestMemPoolEntryHelper{}.Fee(1000).FromTx(tx));
+
+    auto usage_before{pool.DynamicMemoryUsage()};
+    pool.AddUnbroadcastTx(txid);
+    BOOST_CHECK_GT(pool.DynamicMemoryUsage(), usage_before);
+
+    pool.RemoveUnbroadcastTx(txid);
+    BOOST_CHECK_EQUAL(pool.DynamicMemoryUsage(), usage_before);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
