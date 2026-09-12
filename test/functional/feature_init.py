@@ -164,6 +164,11 @@ class InitTest(BitcoinTestFramework):
             },
             {
                 'filepath_glob': 'chainstate/*.ldb',
+                'error_message': 'Error reading from database, shutting down.',
+                'startup_args': [],
+            },
+            {
+                'filepath_glob': 'chainstate/CURRENT',
                 'error_message': 'Error opening coins database.',
                 'startup_args': [],
             },

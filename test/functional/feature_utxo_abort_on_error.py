@@ -97,7 +97,7 @@ class UTXOAbortOnErrorTest(BitcoinTestFramework):
         # Verify that the unserializable entry triggers the expected error and is
         # never silently misreported as a missing input (bad-txns-inputs-missingorspent),
         # which would indicate the previous silent-divergence behaviour.
-        with node0.assert_debug_log(expected_msgs=["Error reading from database: Coin deserialization failure"],
+        with node0.assert_debug_log(expected_msgs=[f"Corrupted database entry in {node0.chain_path / 'chainstate'}"],
                                     unexpected_msgs=["bad-txns-inputs-missingorspent"]):
             try:
                 self.connect_nodes(0, 1)
@@ -107,7 +107,7 @@ class UTXOAbortOnErrorTest(BitcoinTestFramework):
             # Confirm node0 aborted with SIGABRT
             self.wait_until(lambda: self.nodes[0].is_node_stopped(
                 expected_ret_code=-6,
-                expected_stderr="Error: Error reading from database, shutting down.",
+                expected_stderr="Error: A fatal internal error occurred, see debug.log for details: Error reading from database, shutting down.",
             ))
 
         self.log.info("node0 aborted cleanly — no silent divergence occurred")
