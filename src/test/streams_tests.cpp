@@ -14,6 +14,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cerrno>
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
 using namespace std::string_literals;
 using namespace util::hex_literals;
 
@@ -165,6 +170,99 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
         BOOST_CHECK_EQUAL(xor_file.size(), 7);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(autofile_io_error_detail)
+{
+    fs::path path{m_args.GetDataDirBase() / "test_io_error_detail.bin"};
+    auto raw_file{[&](const auto& mode) { return fsbridge::fopen(path, mode); }};
+    const Obfuscation obfuscation{"ff00ff00ff00ff00"_hex};
+    // SysErrorString() renders as "<message> (<errno>)"; match on the errno
+    // suffix so this doesn't depend on the exact OS-provided wording.
+    const std::string errno_suffix{"(" + util::ToString(EBADF) + ")"};
+
+    // Checks that fn() throws std::ios_base::failure on a genuine (non-EOF)
+    // I/O failure, and that the OS error is included in the message.
+    auto check_io_failure = [&](auto&& fn) {
+        try {
+            fn();
+            BOOST_ERROR("expected std::ios_base::failure was not thrown");
+        } catch (const std::ios_base::failure& e) {
+            BOOST_CHECK(HasReason{errno_suffix}(e));
+        }
+    };
+
+    {
+        // Create a non-empty file so opening it below succeeds.
+        AutoFile f{raw_file("wb")};
+        std::byte one{1};
+        f.write(std::span{&one, 1});
+        BOOST_REQUIRE_EQUAL(f.fclose(), 0);
+    }
+
+    // Force a genuine (kernel-level) I/O failure so errno is reliably set:
+    // on POSIX, close the underlying fd out from under a correctly-opened
+    // FILE*, so the next read/write hits a real EBADF from the kernel --
+    // this bypasses musl's __towrite()/__toread(), which never touch errno
+    // for a same-direction file (unlike glibc's, which do). On Windows,
+    // opening in the wrong direction already produces a genuine,
+    // errno-bearing failure.
+#ifdef WIN32
+    auto open_for_failing_write{[&] { return raw_file("rb"); }};
+    auto open_for_failing_read{[&] { return raw_file("wb"); }};
+    auto break_direction{[](std::FILE*) {}};
+#else
+    // Fully unbuffered, so every fwrite()/fread() call reaches the real
+    // syscall immediately instead of silently succeeding into libc's own
+    // buffer without ever touching the (about to be closed) fd.
+    auto open_unbuffered{[&](const auto& mode) {
+        std::FILE* raw{raw_file(mode)};
+        BOOST_REQUIRE_EQUAL(setvbuf(raw, nullptr, _IONBF, 0), 0);
+        return raw;
+    }};
+    auto open_for_failing_write{[&] { return open_unbuffered("wb"); }};
+    auto open_for_failing_read{[&] { return open_unbuffered("wb"); }};
+    auto break_direction{[](std::FILE* raw) { BOOST_REQUIRE_EQUAL(close(fileno(raw)), 0); }};
+#endif
+
+    // Writing fails with a real OS error, both with and without obfuscation.
+    {
+        std::FILE* raw{open_for_failing_write()};
+        AutoFile f{raw};
+        break_direction(raw);
+        std::byte one{1};
+        check_io_failure([&] { f.write(std::span{&one, 1}); });
+    }
+    {
+        std::FILE* raw{open_for_failing_write()};
+        AutoFile f{raw, obfuscation};
+        break_direction(raw);
+        std::byte one{1};
+        check_io_failure([&] { f.write(std::span{&one, 1}); });
+    }
+
+    // Reading fails with a real OS error, distinguishable from EOF.
+    {
+        std::FILE* raw{open_for_failing_read()};
+        AutoFile f{raw};
+        break_direction(raw);
+        std::byte one{};
+        check_io_failure([&] { f.read(std::span{&one, 1}); });
+    }
+    {
+        std::FILE* raw{open_for_failing_read()};
+        AutoFile f{raw};
+        break_direction(raw);
+        check_io_failure([&] { f.ignore(1); });
+    }
+    {
+        std::FILE* raw{open_for_failing_read()};
+        AutoFile f{raw};
+        break_direction(raw);
+        BufferedFile bf{f, 8, 4};
+        std::byte one{};
+        check_io_failure([&] { bf.read(std::span{&one, 1}); });
     }
 }
 
