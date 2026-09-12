@@ -33,6 +33,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -314,6 +315,7 @@ bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& 
  *          calculation, or std::nullopt if there is an error.
  */
 std::optional<LockPoints> CalculateLockPointsAtTip(
+    util::log::Logger* logger,
     CBlockIndex* tip,
     const CCoinsView& coins_view,
     const CTransaction& tx);
@@ -376,7 +378,7 @@ public:
     CuckooCache::cache<uint256, SignatureCacheHasher> m_script_execution_cache;
     SignatureCache m_signature_cache;
 
-    ValidationCache(size_t script_execution_cache_bytes, size_t signature_cache_bytes);
+    ValidationCache(util::log::Logger& logger, size_t script_execution_cache_bytes, size_t signature_cache_bytes);
 
     ValidationCache(const ValidationCache&) = delete;
     ValidationCache& operator=(const ValidationCache&) = delete;
@@ -417,7 +419,7 @@ BlockValidationState TestBlockValidity(
 bool HasValidProofOfWork(std::span<const CBlockHeader> headers, const Consensus::Params& consensusParams);
 
 /** Check if a block has been mutated (with respect to its merkle root and witness commitments). */
-bool IsBlockMutated(const CBlock& block, bool check_witness_root);
+bool IsBlockMutated(util::log::Logger* logger, const CBlock& block, bool check_witness_root);
 
 /** Return the sum of the claimed work on a given set of headers. No verification of PoW is done. */
 arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers);
@@ -478,6 +480,8 @@ enum class FlushStateMode: uint8_t {
 class CoinsViews {
 
 public:
+    util::log::Context m_log;
+
     //! The lowest level of the CoinsViews cache hierarchy sits in a leveldb database on disk.
     //! All unspent coins reside in this store.
     CCoinsViewDB m_dbview GUARDED_BY(cs_main);
@@ -499,7 +503,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(DBParams db_params, CoinsViewOptions options);
+    CoinsViews(util::log::Logger& logger, DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
     void InitCache(int32_t prevoutfetch_threads) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -578,6 +582,7 @@ protected:
     std::optional<const char*> m_last_script_check_reason_logged GUARDED_BY(::cs_main){};
 
 public:
+    const util::log::Context m_log;
     //! Reference to a BlockManager instance which itself is shared across all
     //! Chainstate instances.
     node::BlockManager& m_blockman;
@@ -1008,7 +1013,7 @@ protected:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
+    explicit ChainstateManager(util::log::Logger& logger, const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
@@ -1041,6 +1046,7 @@ public:
      */
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
+    const util::log::Context m_log;
     const util::SignalInterrupt& m_interrupt;
     const Options m_options;
     //! A single BlockManager instance is shared across each constructed
