@@ -31,7 +31,7 @@ CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx);
 struct COutputEntry
 {
     CTxDestination destination;
-    CAmount amount;
+    CAmount amount{0};
     int vout;
 };
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,

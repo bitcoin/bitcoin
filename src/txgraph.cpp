@@ -241,7 +241,7 @@ public:
     /** Get the individual transaction feerate of a Cluster element. */
     virtual FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept = 0;
     /** Modify the fee of a Cluster element. */
-    virtual void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept = 0;
+    virtual void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, CAmount fee) noexcept = 0;
 
     // Debugging functions.
 
@@ -304,7 +304,7 @@ public:
     void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept final;
     bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept final;
     FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept final;
-    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept final;
+    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, CAmount fee) noexcept final;
     void SanityCheck(const TxGraphImpl& graph, int level) const final;
 };
 
@@ -361,7 +361,7 @@ public:
     void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept final;
     bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept final;
     FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept final;
-    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept final;
+    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, CAmount fee) noexcept final;
     void SanityCheck(const TxGraphImpl& graph, int level) const final;
 };
 
@@ -800,7 +800,7 @@ public:
     void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept final;
     void RemoveTransaction(const Ref& arg) noexcept final;
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
-    void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
+    void SetTransactionFee(const Ref&, CAmount fee) noexcept final;
 
     bool DoWork(uint64_t max_cost) noexcept final;
 
@@ -2718,7 +2718,7 @@ void TxGraphImpl::CommitStaging() noexcept
     Compact();
 }
 
-void GenericClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept
+void GenericClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, CAmount fee) noexcept
 {
     // Make sure the specified DepGraphIndex exists in this Cluster.
     Assume(m_depgraph.Positions()[idx]);
@@ -2735,7 +2735,7 @@ void GenericClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx
     Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
-void SingletonClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept
+void SingletonClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, CAmount fee) noexcept
 {
     Assume(GetTxCount());
     Assume(idx == 0);
@@ -2743,7 +2743,7 @@ void SingletonClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex i
     Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
-void TxGraphImpl::SetTransactionFee(const Ref& ref, int64_t fee) noexcept
+void TxGraphImpl::SetTransactionFee(const Ref& ref, CAmount fee) noexcept
 {
     // Don't do anything if the passed Ref is empty.
     if (GetRefGraph(ref) == nullptr) return;

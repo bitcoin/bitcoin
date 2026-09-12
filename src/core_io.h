@@ -5,13 +5,13 @@
 #ifndef BITCOIN_CORE_IO_H
 #define BITCOIN_CORE_IO_H
 
-#include <consensus/amount.h>
 #include <util/result.h>
 
 #include <cstdint>
 #include <functional>
 #include <string>
 
+class CAmount;
 class CBlock;
 class CBlockHeader;
 class CScript;

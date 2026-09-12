@@ -42,7 +42,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     }
 
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
-    if (amount < minAmount)
+    if (amount < minAmount.Int())
         return false;
 
     return true;

@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <bench/bench.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -73,7 +74,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         } // no default case, so the compiler can warn about missing cases
         assert(false);
     }()};
-    const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1);
+    const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1*sats);
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
 
     // Sign spending transaction, precompute transaction data

@@ -219,7 +219,7 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
         m_descendant_set_by_txid.erase(anc->first);
         // The above loop should have deducted each ancestor's size and fees from each of their
         // respective descendants exactly once.
-        Assume(anc->second.GetModFeesWithAncestors() == 0);
+        Assume(anc->second.GetModFeesWithAncestors() == 0*sats);
         Assume(anc->second.GetSizeWithAncestors() == 0);
         auto vec_it = std::find(m_entries.begin(), m_entries.end(), anc);
         Assume(vec_it != m_entries.end());
@@ -377,7 +377,7 @@ std::map<COutPoint, CAmount> MiniMiner::CalculateBumpFees(const CFeeRate& target
             CAmount bump_fee_with_ancestors = target_feerate.GetFee(it->second.GetSizeWithAncestors()) - it->second.GetModFeesWithAncestors();
             CAmount bump_fee_individual = target_feerate.GetFee(it->second.GetTxSize()) - it->second.GetModifiedFee();
             const CAmount bump_fee{std::max(bump_fee_with_ancestors, bump_fee_individual)};
-            Assume(bump_fee >= 0);
+            Assume(bump_fee >= 0*sats);
             for (const auto& outpoint : outpoints) {
                 m_bump_fees.emplace(outpoint, bump_fee);
             }
@@ -422,7 +422,7 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
     }
     const auto ancestor_package_size = std::accumulate(ancestors.cbegin(), ancestors.cend(), int64_t{0},
         [](int64_t sum, const auto it) {return sum + it->second.GetTxSize();});
-    const auto ancestor_package_fee = std::accumulate(ancestors.cbegin(), ancestors.cend(), CAmount{0},
+    const auto ancestor_package_fee = std::accumulate(ancestors.cbegin(), ancestors.cend(), 0*sats,
         [](CAmount sum, const auto it) {return sum + it->second.GetModifiedFee();});
     return target_feerate.GetFee(ancestor_package_size) - ancestor_package_fee;
 }
