@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <kernel/result.h>
 #include <key.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>

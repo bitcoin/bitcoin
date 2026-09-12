@@ -211,7 +211,7 @@ void AddExtraTxsToMempool(TestingSetup& setup)
 
         LOCK(::cs_main);
         // Add transaction to the mempool.
-        const MempoolAcceptResult ctx_result = setup.m_node.chainman->ProcessTransaction(MakeTransactionRef(ctx));
+        auto [ctx_result, ctx_flush] = setup.m_node.chainman->ProcessTransaction(MakeTransactionRef(ctx));
         Assert(ctx_result.m_result_type == MempoolAcceptResult::ResultType::VALID);
 
         Assert(setup.m_node.chainman->ActiveChainstate().GetMempool()->size() == i);
@@ -469,12 +469,12 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
 
     // Try to connect the block.
     BlockValidationState state;
-    bool connected = active_chainstate.ConnectBlock(block,
-                                                    state,
-                                                    &new_index,
-                                                    active_coins,
-                                                    /*fJustCheck=*/true);
-    Assert(connected == state.IsValid());
+    auto connect_result = active_chainstate.ConnectBlock(block,
+                                                         state,
+                                                         &new_index,
+                                                         active_coins,
+                                                         /*fJustCheck=*/true);
+    Assert(bool(connect_result) == state.IsValid());
 }
 
 } // namespace
