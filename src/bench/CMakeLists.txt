@@ -24,6 +24,7 @@ add_executable(bench_bitcoin
   descriptors.cpp
   disconnected_transactions.cpp
   duplicate_inputs.cpp
+  ecc_sign_verify.cpp
   ellswift.cpp
   examples.cpp
   gcs_filter.cpp

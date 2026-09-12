@@ -4,6 +4,7 @@
 
 #include <bip324.h>
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <random.h>
 #include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -18,7 +19,7 @@ namespace {
 
 void Initialize()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::MAIN);
 }
 

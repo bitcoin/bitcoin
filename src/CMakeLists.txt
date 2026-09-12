@@ -70,6 +70,7 @@ add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   arith_uint256.cpp
   consensus/merkle.cpp
   consensus/tx_check.cpp
+  ecc_context.cpp
   hash.cpp
   primitives/block.cpp
   primitives/transaction.cpp
@@ -103,6 +104,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/args.cpp
   common/bloom.cpp
   common/config.cpp
+  common/ecc_init.cpp
   common/init.cpp
   common/interfaces.cpp
   common/license_info.cpp

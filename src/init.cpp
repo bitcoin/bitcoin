@@ -16,6 +16,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/ecc_init.h>
 #include <common/messages.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -42,7 +43,6 @@
 #include <kernel/checks.h>
 #include <kernel/context.h>
 #include <kernel/notifications_interface.h>
-#include <key.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>

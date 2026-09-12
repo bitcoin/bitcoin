@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <key.h>
 #include <psbt.h>
 #include <pubkey.h>
@@ -27,7 +28,7 @@
 
 void initialize_script_sign()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::REGTEST);
 }
 
