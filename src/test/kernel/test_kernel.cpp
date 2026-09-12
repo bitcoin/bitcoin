@@ -400,6 +400,20 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     auto tx2{Transaction{tx_data_2}};
     CheckHandle(tx, tx2);
 
+    BOOST_CHECK(!tx.HasWitness());
+    BOOST_CHECK(tx2.HasWitness());
+    const auto txid{tx.Txid().ToBytes()};
+    const auto wtxid{tx.Wtxid().ToBytes()};
+    const auto txid_2{tx2.Txid().ToBytes()};
+    const auto wtxid_2{tx2.Wtxid().ToBytes()};
+
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(txid), "aca326a724eda9a461c10a876534ecd5ae7b27f10f26c3862fb996f80ea2d45d");
+    BOOST_CHECK(txid == wtxid);
+
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(txid_2), "9d04c6435f39a114f26b5807e92117b388f15c54c2afe7e62c96757f18cec891");
+    BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(wtxid_2), "c5cd58b8eb3dda755eb99c89c4bcb7409e4074c8942c263e3d6d09011984a210");
+    BOOST_CHECK(txid_2 != wtxid_2);
+
     auto invalid_data = hex_string_to_byte_vec("012300");
     BOOST_CHECK_THROW(Transaction{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
@@ -1187,6 +1201,12 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     BOOST_CHECK(txid != txid_2);
     BOOST_CHECK(txid == txid);
     CheckHandle(txid, txid_2);
+
+    Wtxid wtxid = read_block.Transactions()[0].Wtxid();
+    Wtxid wtxid_2 = read_block_2.Transactions()[0].Wtxid();
+    BOOST_CHECK(wtxid != wtxid_2);
+    BOOST_CHECK(wtxid == wtxid);
+    CheckHandle(wtxid, wtxid_2);
 
     auto find_transaction = [&chainman](const TxidView& target_txid) -> std::optional<Transaction> {
         auto chain = chainman->GetChain();
