@@ -101,6 +101,7 @@ void ConnmanTestMsg::FlushSendBuffer(CNode& node) const
     LOCK(node.cs_vSend);
     node.vSendMsg.clear();
     node.m_send_memusage = 0;
+    node.m_send_size = 0;
     while (true) {
         const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend(false);
         if (to_send.empty()) break;
