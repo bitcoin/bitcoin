@@ -294,8 +294,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
+        assert "keypath_only" not in self.nodes[2].help("fundrawtransaction")
         assert_raises_rpc_error(-8, "Unknown named parameter foo", self.nodes[2].fundrawtransaction, rawtx, foo='bar')
         assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type object", self.nodes[2].fundrawtransaction, rawtx, True)
+        assert_raises_rpc_error(-3, "Unexpected key keypath_only", self.nodes[2].fundrawtransaction, rawtx, {"keypath_only": True})
 
         # reserveChangeKey was deprecated and is now removed
         assert_raises_rpc_error(-8, "Unknown named parameter reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, reserveChangeKey=True))

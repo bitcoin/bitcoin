@@ -133,6 +133,7 @@ inline constexpr bool DEFAULT_WALLET_RBF = true;
 inline constexpr bool DEFAULT_WALLETBROADCAST = true;
 inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
+inline constexpr bool DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY{false};
 //! -maxtxfee default
 inline constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
