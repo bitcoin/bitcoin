@@ -69,7 +69,6 @@
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator_args.h>
 #include <policy/fees/estimator_man.h>
-#include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -88,6 +87,7 @@
 #include <util/asmap.h>
 #include <util/batchpriority.h>
 #include <util/btcsignals.h>
+#include <util/byte_units.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -115,7 +115,6 @@
 #include <exception>
 #include <fstream>
 #include <functional>
-#include <initializer_list>
 #include <limits>
 #include <list>
 #include <memory>
@@ -128,7 +127,6 @@
 #include <thread>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #ifndef WIN32

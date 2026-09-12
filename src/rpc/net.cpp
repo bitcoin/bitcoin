@@ -11,6 +11,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <crypto/hex_base.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
@@ -50,10 +51,10 @@
 #include <atomic>
 #include <compare>
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <stdexcept>
 #include <string>
