@@ -839,13 +839,15 @@ static RPCMethod getblock()
         "If verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
                 "If verbosity is 1, returns an Object with information about block <hash>.\n"
                 "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction.\n"
-                "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
+                "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n"
+                "The verbosity = 2 and verbosity = 3 result schemas cannot be distinguished by validating a response alone because a block with no spent inputs returns byte-identical JSON at both levels "
+                "(a coinbase input has no prevout to add), and the verbosity = 3 schema lists prevout as optional, so both object arms accept both responses.\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
                     {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for JSON object with transaction data, and 3 for JSON object with transaction data including prevout information for inputs",
                      RPCArgOptions{.skip_type_check = true}},
                 },
-                {
+                RPCResults{{
                     RPCResult{"for verbosity = 0", RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
                     RPCResult{"for verbosity = 1", RPCResult::Type::OBJ, "", "",
                         GetBlockFields({RPCResult::Type::ARR, "tx", "The transaction ids",
@@ -872,7 +874,7 @@ static RPCMethod getblock()
                                        .prevout_doc = "(Only if undo information is available)",
                                        .vin_inner_elision = "The same output as verbosity = 2"})},
                         }}, /*elision_msg=*/"Same output as verbosity = 2")},
-                },
+                }, RPCResultDiscriminator{"verbosity", 1, std::vector<int>{0, 1, 2, 3}}},
                 RPCExamples{
                     HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
