@@ -220,7 +220,7 @@ void ThrowField(TypeList<LocalType>, InvokeContext& invoke_context, Input&& inpu
 {
     ReadField(
         TypeList<LocalType>(), invoke_context, input, ReadDestEmplace(TypeList<LocalType>(),
-            [](auto&& ...args) -> const LocalType& { throw LocalType{std::forward<decltype(args)>(args)...}; }));
+            [] [[noreturn]] (auto&& ...args) -> const LocalType& { throw LocalType{std::forward<decltype(args)>(args)...}; }));
 }
 
 //! Special case for generic std::exception. It's an abstract type so it can't
