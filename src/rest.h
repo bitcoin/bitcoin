@@ -5,6 +5,9 @@
 #ifndef BITCOIN_REST_H
 #define BITCOIN_REST_H
 
+#include <httpserver.h>
+#include <util/expected.h>
+
 #include <string>
 
 enum class RESTResponseFormat {
@@ -24,5 +27,7 @@ enum class RESTResponseFormat {
  * @return      RESTResponseFormat that was parsed from the URI.
  */
 RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq);
+
+util::Expected<bool, std::string> RESTParseBoolParam(http_bitcoin::HTTPRequest* req, std::string_view param_name, bool default_val);
 
 #endif // BITCOIN_REST_H
