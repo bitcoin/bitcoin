@@ -118,13 +118,11 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             "us"_mst; // u, s
         case Fragment::WRAP_D: return
             "B"_mst.If(x << "Vz"_mst) | // B=V_x*z_x
-            "o"_mst.If(x << "z"_mst) | // o=z_x
-            "e"_mst.If(x << "f"_mst) | // e=f_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
             (x & "ms"_mst) | // m=m_x, s=s_x
             // NOTE: 'd:' is 'u' under Tapscript but not P2WSH as MINIMALIF is only a policy rule there.
             "u"_mst.If(IsTapscript(ms_ctx)) |
-            "ndx"_mst; // n, d, x
+            "ondex"_mst; // o, n, d, e, x
         case Fragment::WRAP_V: return
             "V"_mst.If(x << "B"_mst) | // V=B_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
@@ -173,8 +171,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             "B"_mst.If(x << "Bd"_mst && y << "Wd"_mst) | // B=B_x*d_x*W_x*d_y
             ((x | y) & "o"_mst).If((x | y) << "z"_mst) | // o=o_x*z_y+z_x*o_y
             (x & y & "m"_mst).If((x | y) << "s"_mst && (x & y) << "e"_mst) | // m=m_x*m_y*e_x*e_y*(s_x+s_y)
-            (x & y & "zse"_mst) | // z=z_x*z_y, s=s_x*s_y, e=e_x*e_y
-            "dux"_mst | // d, u, x
+            (x & y & "zs"_mst) | // z=z_x*z_y, s=s_x*s_y
+            "duxe"_mst | // d, u, x, e
             ((x | y) & "ghij"_mst) | // g=g_x+g_y, h=h_x+h_y, i=i_x+i_y, j=j_x+j_y
             (x & y & "k"_mst); // k=k_x*k_y
         case Fragment::OR_D: return
@@ -252,7 +250,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             return "Bdu"_mst |
                    "z"_mst.If(args == 0) | // z=all z
                    "o"_mst.If(args == 1) | // o=all z except one o
-                   "e"_mst.If(all_e && num_s == n_subs) | // e=all e and all s
+                   "e"_mst.If(num_s == n_subs) | // e=all s
                    "m"_mst.If(all_e && all_m && num_s >= n_subs - k) | // m=all e, >=(n-k) s
                    "s"_mst.If(num_s >= n_subs - k + 1) |  // s= >=(n-k+1) s
                    acc_tl; // timelock info
