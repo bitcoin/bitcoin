@@ -338,6 +338,21 @@ typedef struct btck_Txid btck_Txid;
  */
 typedef struct btck_BlockHeader btck_BlockHeader;
 
+/**
+ * Opaque data structure for holding a btck_ScriptTraceFrame.
+ */
+typedef struct btck_ScriptTraceFrame btck_ScriptTraceFrame;
+
+/**
+ * Opaque data structure for holding a view to a stack used in script evaluation.
+ */
+typedef struct btck_ScriptEvalStack btck_ScriptEvalStack;
+
+/**
+ * Opaque data structure for holding a view to an item in the stack used in script evaluation.
+ */
+typedef struct btck_ScriptEvalStackItem btck_ScriptEvalStackItem;
+
 /** Current sync state passed to tip changed callbacks. */
 typedef uint8_t btck_SynchronizationState;
 #define btck_SynchronizationState_INIT_REINDEX ((btck_SynchronizationState)(0))
@@ -2085,6 +2100,125 @@ BITCOINKERNEL_API void btck_block_header_destroy(btck_BlockHeader* header);
  *                      valid [0, 4294967295] range.
  */
 BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_set_mock_time(int64_t timestamp);
+
+///@}
+
+/** @name ScriptTrace
+ * Functions for script execution tracing.
+ */
+///@{
+
+typedef uint8_t btck_ScriptTraceFrameKind;
+#define btck_ScriptTraceFrameKind_BEGIN ((btck_ScriptTraceFrameKind)(0))
+#define btck_ScriptTraceFrameKind_STEP  ((btck_ScriptTraceFrameKind)(1))
+#define btck_ScriptTraceFrameKind_END   ((btck_ScriptTraceFrameKind)(2))
+
+typedef uint8_t btck_SigVersion;
+#define btck_SigVersion_BASE       ((btck_SigVersion)(0))
+#define btck_SigVersion_WITNESS_V0 ((btck_SigVersion)(1))
+#define btck_SigVersion_TAPROOT    ((btck_SigVersion)(2))
+#define btck_SigVersion_TAPSCRIPT  ((btck_SigVersion)(3))
+
+/**
+ * Callback function type for script trace frames.
+ *
+ * Called during script execution with the current execution state.
+ *
+ * @param[in] user_data  User-defined opaque pointer passed through from registration.
+ * @param[in] frame      Pointer to the current execution state snapshot. Data
+ *                       in the struct is only valid for the duration of this callback.
+ */
+typedef void (*btck_ScriptTraceCallback)(
+    void* user_data,
+    const btck_ScriptTraceFrame* frame);
+
+/// Whether this is a begin, step, or end frame.
+BITCOINKERNEL_API btck_ScriptTraceFrameKind btck_script_trace_frame_get_kind(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The returned pointer is unowned and only valid for the lifetime of the frame.
+BITCOINKERNEL_API const btck_ScriptEvalStack* btck_script_trace_frame_get_stack(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The returned pointer is unowned and only valid for the lifetime of the frame.
+BITCOINKERNEL_API const btck_ScriptEvalStack* btck_script_trace_frame_get_altstack(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The script being evaluated
+BITCOINKERNEL_API int btck_script_trace_frame_get_script(
+    const btck_ScriptTraceFrame* frame, btck_WriteBytes writer, void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/// Index of the current opcode under evaluation (counting opcodes, not bytes)
+BITCOINKERNEL_API uint32_t btck_script_trace_frame_get_opcode_pos(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Non-zero if this opcode is evaluated. Zero if it is skipped in a conditional branch. Only meaningful in step frames.
+BITCOINKERNEL_API int btck_script_trace_frame_get_exec(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The current opcode under evaluation. Only meaningful in step frames.
+BITCOINKERNEL_API uint8_t btck_script_trace_frame_get_opcode(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Counter towards the ops script limit.
+BITCOINKERNEL_API int btck_script_trace_frame_get_op_count(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The signature version.
+BITCOINKERNEL_API btck_SigVersion btck_script_trace_frame_get_sig_version(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Returns 0 and writes 32 bytes on success, non-zero if there is no tapleaf hash.
+BITCOINKERNEL_API int btck_script_trace_frame_get_tapleaf_hash(
+    const btck_ScriptTraceFrame* frame, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/// Opcode position of the last evaluated OP_CODESEPARATOR. 0xFFFFFFFF if none.
+BITCOINKERNEL_API uint32_t btck_script_trace_frame_get_codeseparator_pos(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Script error code. Only meaningful in end frames.
+BITCOINKERNEL_API int32_t btck_script_trace_frame_get_script_error(
+    const btck_ScriptTraceFrame* frame) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// The number of items contained in the script evaluation stack.
+BITCOINKERNEL_API size_t btck_script_eval_stack_count_items(
+    const btck_ScriptEvalStack* stack) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Get one of the items in the script evaluation stack.
+BITCOINKERNEL_API const btck_ScriptEvalStackItem* btck_script_eval_stack_get_item_at(
+    const btck_ScriptEvalStack* stack, size_t index) BITCOINKERNEL_ARG_NONNULL(1);
+
+/// Write out bytes from one of the items in the script evaluation stack.
+BITCOINKERNEL_API int btck_script_eval_stack_item_to_bytes(
+    const btck_ScriptEvalStackItem* item, btck_WriteBytes writer, void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Register a global script trace callback.
+ *
+ * Only one callback can be registered at a time. Registering a new callback
+ * replaces the previous one. The callback fires on entry of the script
+ * evaluator, on exit, and once per instruction - after the opcode is decoded
+ * and before it is dispatched/executed.
+ *
+ * @param[in] callback                   The callback function to register.
+ * @param[in] user_data                  User-defined opaque pointer passed to the callback.
+ * @param[in] user_data_destroy_callback Nullable, function for freeing the user data.
+ * @return                               0 if the script trace feature is available.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_script_trace_register_callback(
+    btck_ScriptTraceCallback callback,
+    void* user_data,
+    btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Unregister the global script trace callback.
+ *
+ * Unregistration is not synchronized with callback execution. Script
+ * evaluations already in progress complete with the previously registered
+ * callback. Script evaluations started after this call won't invoke the
+ * callback anymore.
+ */
+BITCOINKERNEL_API void btck_script_trace_unregister_callback();
 
 ///@}
 
