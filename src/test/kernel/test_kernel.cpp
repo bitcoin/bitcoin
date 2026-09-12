@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <optional>
 #include <random>
@@ -95,9 +96,12 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
 class TestLog
 {
 public:
-    void LogMessage(std::string_view message)
+    void LogMessage(const LogEntry& entry)
     {
-        std::cout << "kernel: " << message;
+        std::cout << "kernel: " << entry.Timestamp().time_since_epoch().count()
+                  << " [" << Name(entry.Category()) << ":"
+                  << Name(entry.Level()) << "] "
+                  << entry.Message() << "\n";
     }
 };
 
@@ -645,30 +649,50 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
         /*taproot=*/true);
 }
 
-BOOST_AUTO_TEST_CASE(logging_tests)
+//! Counts delivered entries per message, and its own destruction, which the kernel triggers through
+//! the user_data_destroy_callback when the connection is destroyed.
+class CountingLog
 {
-    btck_LoggingOptions logging_options = {
-        .log_timestamps = true,
-        .log_time_micros = true,
-        .log_threadnames = false,
-        .log_sourcelocations = false,
-        .always_print_category_levels = true,
-    };
+    std::map<std::string, int>& m_messages;
+    int& m_destroyed;
 
-    logging_set_options(logging_options);
-    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    logging_disable_category(LogCategory::BENCH);
-    logging_enable_category(LogCategory::VALIDATION);
-    logging_disable_category(LogCategory::VALIDATION);
+public:
+    CountingLog(std::map<std::string, int>& messages, int& destroyed)
+        : m_messages{messages}, m_destroyed{destroyed} {}
+    ~CountingLog() { ++m_destroyed; }
 
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
+    void LogMessage(const LogEntry& entry) { ++m_messages[std::string{entry.Message()}]; }
+};
+
+//! This test is focused on the public kernel logging interface, to the extent it is testable.
+BOOST_AUTO_TEST_CASE(logging_connection_tests)
+{
+    std::map<std::string, int> messages;
+    int destroyed{0};
+    logging_set_min_level(LogLevel::INFO_LEVEL);
+
     {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
+        // At the default minimum level (INFO), the DEBUG entries are not delivered.
+        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
     }
-    Logger logger{std::make_unique<TestLog>()};
+    BOOST_CHECK(messages.empty());
+    BOOST_CHECK_EQUAL(destroyed, 1);
+    destroyed = 0;
+
+    logging_set_min_level(LogLevel::DEBUG_LEVEL);
+    {
+        // Each connection logs "Logger connected." after registering, and the entry reaches every
+        // connection that exists at that moment: 1 + 2.
+        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        Logger logger_2{std::make_unique<CountingLog>(messages, destroyed)};
+        BOOST_CHECK_EQUAL(messages["Logger connected."], 3);
+        BOOST_CHECK_EQUAL(destroyed, 0);
+    }
+    // "Logger disconnecting." is logged before unregistering, so it still reaches the connection
+    // being destroyed: 2 + 1. Each connection's user_data is destroyed exactly once.
+    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 3);
+    BOOST_CHECK_EQUAL(destroyed, 2);
+    logging_set_min_level(LogLevel::INFO_LEVEL);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)

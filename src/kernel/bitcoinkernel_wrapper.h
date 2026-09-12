@@ -34,14 +34,52 @@ enum class LogCategory : btck_LogCategory {
     RAND = btck_LogCategory_RAND,
     REINDEX = btck_LogCategory_REINDEX,
     VALIDATION = btck_LogCategory_VALIDATION,
-    KERNEL = btck_LogCategory_KERNEL
+    KERNEL = btck_LogCategory_KERNEL,
+    TXPACKAGES = btck_LogCategory_TXPACKAGES,
+    LOCK = btck_LogCategory_LOCK,
+    UNKNOWN = btck_LogCategory_UNKNOWN,
 };
 
 enum class LogLevel : btck_LogLevel {
     TRACE_LEVEL = btck_LogLevel_TRACE,
     DEBUG_LEVEL = btck_LogLevel_DEBUG,
-    INFO_LEVEL = btck_LogLevel_INFO
+    INFO_LEVEL = btck_LogLevel_INFO,
+    WARNING_LEVEL = btck_LogLevel_WARNING,
+    ERROR_LEVEL = btck_LogLevel_ERROR,
 };
+
+constexpr std::string_view Name(LogLevel level) noexcept
+{
+    switch (level) {
+    case LogLevel::TRACE_LEVEL: return "trace";
+    case LogLevel::DEBUG_LEVEL: return "debug";
+    case LogLevel::INFO_LEVEL: return "info";
+    case LogLevel::WARNING_LEVEL: return "warning";
+    case LogLevel::ERROR_LEVEL: return "error";
+    } // no default case, so the compiler can warn about missing cases
+    return "unknown";
+}
+
+constexpr std::string_view Name(LogCategory category) noexcept
+{
+    switch (category) {
+    case LogCategory::ALL: return "all";
+    case LogCategory::BENCH: return "bench";
+    case LogCategory::BLOCKSTORAGE: return "blockstorage";
+    case LogCategory::COINDB: return "coindb";
+    case LogCategory::LEVELDB: return "leveldb";
+    case LogCategory::MEMPOOL: return "mempool";
+    case LogCategory::PRUNE: return "prune";
+    case LogCategory::RAND: return "rand";
+    case LogCategory::REINDEX: return "reindex";
+    case LogCategory::TXPACKAGES: return "txpackages";
+    case LogCategory::VALIDATION: return "validation";
+    case LogCategory::KERNEL: return "kernel";
+    case LogCategory::LOCK: return "lock";
+    case LogCategory::UNKNOWN: return "unknown";
+    } // no default case, so the compiler can warn about missing cases
+    return "unknown";
+}
 
 enum class ChainType : btck_ChainType {
     MAINNET = btck_ChainType_MAINNET,
@@ -918,34 +956,39 @@ public:
     }
 };
 
-inline void logging_disable()
+inline void logging_set_min_level(LogLevel level)
 {
-    btck_logging_disable();
+    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
 }
 
-inline void logging_set_options(const btck_LoggingOptions& logging_options)
+//! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
+//! logging callback, so a LogEntry (and any string_view obtained from it) must not be stored or
+//! used after the callback returns.
+class LogEntry
 {
-    btck_logging_set_options(logging_options);
-}
+private:
+    const btck_LogEntry* m_entry;
 
-inline void logging_set_level_category(LogCategory category, LogLevel level)
-{
-    btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
-}
+public:
+    explicit LogEntry(const btck_LogEntry& entry) : m_entry{&entry} {}
 
-inline void logging_enable_category(LogCategory category)
-{
-    btck_logging_enable_category(static_cast<btck_LogCategory>(category));
-}
-
-inline void logging_disable_category(LogCategory category)
-{
-    btck_logging_disable_category(static_cast<btck_LogCategory>(category));
-}
+    std::string_view Message() const { return {m_entry->message, m_entry->message_len}; }
+    std::string_view ThreadName() const { return {m_entry->thread_name, m_entry->thread_name_len}; }
+    std::chrono::sys_time<std::chrono::nanoseconds> Timestamp() const
+    {
+        return std::chrono::sys_time<std::chrono::nanoseconds>{std::chrono::nanoseconds{m_entry->timestamp_ns}};
+    }
+    std::chrono::seconds MockTime() const { return std::chrono::seconds{m_entry->mocktime}; }
+    std::string_view FileName() const { return {m_entry->file_name, m_entry->file_name_len}; }
+    std::string_view FunctionName() const { return {m_entry->function_name, m_entry->function_name_len}; }
+    uint32_t Line() const { return m_entry->line; }
+    LogLevel Level() const { return static_cast<LogLevel>(m_entry->level); }
+    LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
+};
 
 template <typename T>
-concept Log = requires(T a, std::string_view message) {
-    { a.LogMessage(message) } -> std::same_as<void>;
+concept Log = requires(T a, const LogEntry& entry) {
+    { a.LogMessage(entry) } -> std::same_as<void>;
 };
 
 template <Log T>
@@ -954,7 +997,7 @@ class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_dest
 public:
     Logger(std::unique_ptr<T> log)
         : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
+              +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
