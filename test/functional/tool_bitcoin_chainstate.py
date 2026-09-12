@@ -12,6 +12,7 @@ snapshot and extend the snapshot chain with new blocks.
 """
 
 import subprocess
+from pathlib import Path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -51,7 +52,9 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         assert_equal(n0.getbestblockhash(), SNAPSHOT_BASE_BLOCK_HASH)
         return n0.dumptxoutset('utxos.dat', "latest")
 
-    def add_block(self, datadir, input, *, expected_stderr=None, expected_stdout=None):
+    def add_block(self, datadir, input, *, expected_stderr=None, expected_stdout=None, expected_log=None):
+        log_path = Path(datadir) / "bitcoin-chainstate.log"
+        previous_log = log_path.read_bytes() if log_path.exists() else b""
         proc = subprocess.Popen(
             self.get_binaries().chainstate_argv() + ["-regtest", datadir],
             stdin=subprocess.PIPE,
@@ -62,6 +65,17 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         stdout, stderr = proc.communicate(input=input + "\n", timeout=5 * self.options.timeout_factor)
         self.log.debug("STDOUT: {0}".format(stdout.strip("\n")))
         self.log.info("STDERR: {0}".format(stderr.strip("\n")))
+        assert_equal(proc.returncode, 0)
+        assert f"Logging to {log_path}" in stdout
+        assert "Enter the block you want to validate on the next line:" in stdout
+        assert log_path.is_file()
+        current_log = log_path.read_bytes()
+        assert current_log.startswith(previous_log)
+        new_log = current_log[len(previous_log):].decode("utf-8")
+        assert "SHA256 implementation" in new_log
+        assert "Loaded best chain:" in new_log
+        if expected_log is not None:
+            assert expected_log in new_log
 
         if expected_stderr is not None and expected_stderr not in stderr:
             raise AssertionError(f"Expected stderr output '{expected_stderr}' does not partially match stderr:\n{stderr}")
@@ -73,9 +87,10 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         n1 = self.nodes[1]
         datadir = n1.chain_path
         n1.stop_node()
-        block = n0.getblock(n0.getblockhash(START_HEIGHT+1), 0)
+        block_hash = n0.getblockhash(START_HEIGHT+1)
+        block = n0.getblock(block_hash, 0)
         self.log.info(f"Test bitcoin-chainstate {self.get_binaries().chainstate_argv()} with datadir: {datadir}")
-        self.add_block(datadir, block, expected_stderr="Block has not yet been rejected")
+        self.add_block(datadir, block, expected_stderr="Block has not yet been rejected", expected_stdout="Valid block", expected_log=f"new best={block_hash}")
         self.add_block(datadir, block, expected_stderr="duplicate")
         self.add_block(datadir, "00", expected_stderr="Block decode failed")
         self.add_block(datadir, "", expected_stderr="Empty line found")
@@ -95,9 +110,27 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         n1.stop_node()
         self.log.info(f"Test bitcoin-chainstate {self.get_binaries().chainstate_argv()} with an assumeutxo datadir: {datadir}")
         new_tip_hash = self.generate(n0, nblocks=1, sync_fun=self.no_op)[0]
-        self.add_block(datadir, n0.getblock(new_tip_hash, 0), expected_stdout="Block tip changed")
+        self.add_block(datadir, n0.getblock(new_tip_hash, 0), expected_stdout="Block tip changed", expected_log=f"new best={new_tip_hash}")
+
+    def logging_failure_test(self):
+        datadir = Path(self.options.tmpdir) / "logging_failure"
+        log_path = datadir / "bitcoin-chainstate.log"
+        log_path.mkdir(parents=True)
+        proc = subprocess.run(
+            self.get_binaries().chainstate_argv() + ["-regtest", str(datadir)],
+            input="",
+            capture_output=True,
+            text=True,
+            timeout=5 * self.options.timeout_factor,
+        )
+        assert_equal(proc.returncode, 1)
+        assert f"Failed to open log file {log_path}, exiting" in proc.stderr
+        assert "Enter the block" not in proc.stdout
+        assert not (datadir / "blocks").exists()
+        assert log_path.is_dir()
 
     def run_test(self):
+        self.logging_failure_test()
         dump_output = self.generate_snapshot_chain()
         self.basic_test()
         self.assumeutxo_test(dump_output['path'])

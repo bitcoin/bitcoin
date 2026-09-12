@@ -41,14 +41,15 @@ std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
     return bytes;
 }
 
-class KernelLog
+std::string path_to_string(const std::filesystem::path& path)
 {
-public:
-    void LogMessage(std::string_view message)
-    {
-        std::cout << "kernel: " << message;
-    }
-};
+#ifdef _WIN32
+    const auto utf8{path.u8string()};
+    return {utf8.begin(), utf8.end()};
+#else
+    return path.native();
+#endif
+}
 
 class TestValidationInterface : public ValidationInterface
 {
@@ -168,7 +169,15 @@ int main(int argc, char* argv[])
 
     logging_set_options(logging_options);
 
-    Logger logger{std::make_unique<KernelLog>()};
+    const auto log_path{path_to_string(abs_datadir / "bitcoin-chainstate.log")};
+    std::optional<Logger> logger;
+    try {
+        logger.emplace(log_path);
+    } catch (const std::exception&) {
+        std::cerr << "Failed to open log file " << log_path << ", exiting" << std::endl;
+        return 1;
+    }
+    std::cout << "Logging to " << log_path << std::endl;
 
     ContextOptions options{};
     ChainParams params{has_regtest_flag ? ChainType::REGTEST : ChainType::MAINNET};
@@ -179,7 +188,7 @@ int main(int argc, char* argv[])
 
     Context context{options};
 
-    ChainstateManagerOptions chainman_opts{context, abs_datadir.string(), (abs_datadir / "blocks").string()};
+    ChainstateManagerOptions chainman_opts{context, path_to_string(abs_datadir), path_to_string(abs_datadir / "blocks")};
     chainman_opts.SetWorkerThreads(4);
 
     std::unique_ptr<ChainMan> chainman;

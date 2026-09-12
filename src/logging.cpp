@@ -51,10 +51,21 @@ static int FileWriteStr(std::string_view str, FILE *fp)
     return fwrite(str.data(), 1, str.size(), fp);
 }
 
+static size_t MemUsage(const util::log::Entry& log)
+{
+    return memusage::DynamicUsage(log.message) +
+           memusage::DynamicUsage(log.thread_name) +
+           memusage::MallocUsage(sizeof(memusage::list_node<util::log::Entry>));
+}
+
 bool BCLog::Logger::StartLogging()
 {
     STDLOCK(m_cs);
+    return StartLogging_(SourceLocation{__func__});
+}
 
+bool BCLog::Logger::StartLogging_(const SourceLocation& source_loc)
+{
     assert(m_buffering);
     assert(m_fileout == nullptr);
 
@@ -79,13 +90,15 @@ bool BCLog::Logger::StartLogging()
             .category = BCLog::ALL,
             .level = Level::Info,
             .should_ratelimit = false,
-            .source_loc = SourceLocation{__func__},
+            .source_loc = source_loc,
             .message = strprintf("Early logging buffer overflowed, %d log lines discarded.", m_buffer_lines_discarded),
         });
+        m_buffer_lines_discarded = 0;
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
         std::string s{Format(buflog)};
+        m_cur_buffer_memusage -= MemUsage(buflog);
         m_msgs_before_open.pop_front();
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
@@ -100,12 +113,53 @@ bool BCLog::Logger::StartLogging()
     return true;
 }
 
+bool BCLog::Logger::StartFileLogging(fs::path file_path)
+{
+    assert(!file_path.empty() && file_path.is_absolute());
+    STDLOCK(m_cs);
+    if (!m_buffering || m_fileout || m_print_to_file || m_print_to_console || !m_file_path.empty()) return false;
+
+    m_file_path = std::move(file_path);
+    m_print_to_file = true;
+    m_reopen_file = false;
+    try {
+        if (StartLogging_(SourceLocation{__func__})) return true;
+    } catch (...) {
+        CloseFile();
+        m_buffering = true;
+        m_print_to_file = false;
+        m_file_path.clear();
+        m_reopen_file = false;
+        throw;
+    }
+    m_print_to_file = false;
+    m_file_path.clear();
+    m_reopen_file = false;
+    return false;
+}
+
+void BCLog::Logger::CloseFile() noexcept
+{
+    if (m_fileout != nullptr) fclose(m_fileout);
+    m_fileout = nullptr;
+}
+
+void BCLog::Logger::StopFileLogging() noexcept
+{
+    STDLOCK(m_cs);
+    assert(m_fileout != nullptr);
+    CloseFile();
+    m_print_to_file = false;
+    m_file_path.clear();
+    m_reopen_file = false;
+    m_buffering = !m_print_to_console && m_print_callbacks.empty();
+}
+
 void BCLog::Logger::DisconnectTestLogger()
 {
     STDLOCK(m_cs);
     m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
+    CloseFile();
     m_print_callbacks.clear();
     m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
     m_cur_buffer_memusage = 0;
@@ -372,13 +426,6 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 
     s += "] ";
     return s;
-}
-
-static size_t MemUsage(const util::log::Entry& log)
-{
-    return memusage::DynamicUsage(log.message) +
-           memusage::DynamicUsage(log.thread_name) +
-           memusage::MallocUsage(sizeof(memusage::list_node<util::log::Entry>));
 }
 
 BCLog::LogRateLimiter::LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window)

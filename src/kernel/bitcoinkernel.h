@@ -144,15 +144,19 @@ typedef struct btck_ScriptPubkey btck_ScriptPubkey;
 typedef struct btck_TransactionOutput btck_TransactionOutput;
 
 /**
- * Opaque data structure for holding a logging connection.
+ * Opaque data structure owning the shared global log file.
  *
- * The logging connection can be used to manually stop logging.
+ * At most one logging connection may exist. All kernel contexts contribute to
+ * its file, and destroying the connection closes that file.
  *
- * Messages that were logged before a connection is created are buffered in a
- * 1MB buffer. Logging can alternatively be permanently disabled by calling
- * @ref btck_logging_disable. Functions changing the logging settings are
- * global and change the settings for all existing btck_LoggingConnection
- * instances.
+ * Before creation and after closure, messages are retained in the existing
+ * bounded 1MB startup buffer when no other internal output is active. Older
+ * messages are discarded when the buffer fills. The retained messages are
+ * written when a connection is created. Logging can alternatively be
+ * permanently disabled by calling @ref btck_logging_disable.
+ *
+ * Logging settings are global. Configure formatting before starting concurrent
+ * kernel work.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -350,12 +354,6 @@ typedef uint8_t btck_Warning;
 #define btck_Warning_LARGE_WORK_INVALID_CHAIN ((btck_Warning)(1))
 
 /** Callback function types */
-
-/**
- * Function signature for the global logging callback. All bitcoin kernel
- * internal logs will pass through this callback.
- */
-typedef void (*btck_LogCallback)(void* user_data, const char* message, size_t message_len);
 
 /**
  * Function signature for freeing user data.
@@ -874,6 +872,7 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 /**
  * @brief This disables the global internal logger. No log messages will be
  * buffered internally anymore once this is called and the buffer is cleared.
+ * Subsequent logging connection creation will fail.
  * This function should only be called once and is not thread or re-entry safe.
  * Log messages will be buffered until this function is called, or a logging
  * connection is created. This must not be called while a logging connection
@@ -882,9 +881,8 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 BITCOINKERNEL_API void btck_logging_disable();
 
 /**
- * @brief Set some options for the global internal logger. This changes global
- * settings and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Set formatting options for the global internal logger. These settings
+ * affect messages from all contexts. Call before starting concurrent kernel work.
  *
  * @param[in] options Sets formatting options of the log messages.
  */
@@ -894,8 +892,7 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
  * @brief Set the log level of the global internal logger. This does not
  * enable the selected categories. Use @ref btck_logging_enable_category to
  * start logging from a specific, or all categories. This changes a global
- * setting and will override settings for all existing
- * @ref btck_LoggingConnection instances.
+ * setting affecting messages from all contexts.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, sets both the global fallback log level
  *                     used by all categories that don't have a specific level set, and also
@@ -909,8 +906,7 @@ BITCOINKERNEL_API void btck_logging_set_level_category(btck_LogCategory category
 
 /**
  * @brief Enable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * changes a global setting affecting messages from all contexts.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be enabled.
  */
@@ -918,33 +914,48 @@ BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
 
 /**
  * @brief Disable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * changes a global setting affecting messages from all contexts.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be disabled.
  */
 BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
 
 /**
- * @brief Start logging messages through the provided callback. Log messages
- * produced before this function is first called are buffered and on calling this
- * function are logged immediately.
+ * @brief Open the shared global log file in append mode and write retained
+ * startup messages before returning.
  *
- * @param[in] log_callback               Non-null, function through which messages will be logged.
- * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
- *                                       to the user through the callback. If the user_data_destroy_callback
- *                                       is also defined it is assumed that ownership of the user_data is passed
- *                                       to the created logging connection.
- * @param[in] user_data_destroy_callback Nullable, function for freeing the user data.
- * @return                               A new kernel logging connection, or null on error.
+ * The path is copied and relative paths are resolved against the current working
+ * directory during this call. Parent directories must already exist. Paths use
+ * native bytes on POSIX and UTF-8 on Windows, as in the other kernel file APIs.
+ *
+ * Creation fails if a connection already exists, logging was permanently
+ * disabled, or the shared logger is configured or running for another owner.
+ * Rejected creation does not open or modify the destination or existing output.
+ * An ordinary open failure retains buffered messages for a later retry. If an
+ * exception interrupts startup replay, the file is closed and messages not yet
+ * replayed remain buffered; bytes already appended are not rolled back.
+ *
+ * File writes are synchronous and may block kernel callers. Writes are
+ * best-effort: write errors after opening are not reported, and output is not
+ * guaranteed durable. This API provides no rotation or reopen operation.
+ * Creation and destruction are synchronized with ordinary log production.
+ *
+ * @param[in] file_path     Path bytes, which need not be NUL-terminated and may be
+ *                          released after this call. Null, empty paths, and embedded
+ *                          NUL bytes are rejected.
+ * @param[in] file_path_len Number of path bytes, excluding any terminating NUL.
+ * @return                 A new logging connection, or null if creation is rejected
+ *                          or initialization fails.
  */
 BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_connection_create(
-    btck_LogCallback log_callback,
-    void* user_data,
-    btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
+    const char* file_path,
+    size_t file_path_len);
 
 /**
- * Stop logging and destroy the logging connection.
+ * Finish any in-flight file write, close the file, and destroy the connection.
+ * Subsequent messages are buffered for the next connection if no other internal
+ * output remains active. Other internal outputs, if any, continue running.
+ * The connection must not be used after destruction. Passing null has no effect.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
 

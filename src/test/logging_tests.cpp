@@ -20,6 +20,7 @@
 #include <ios>
 #include <iostream>
 #include <source_location>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -38,14 +39,217 @@ static void ResetLogger()
     LogInstance().SetCategoryLogLevel({});
 }
 
-static std::vector<std::string> ReadDebugLogLines()
+static std::vector<std::string> ReadDebugLogLines(const fs::path& file_path = LogInstance().m_file_path)
 {
     std::vector<std::string> lines;
-    std::ifstream ifs{LogInstance().m_file_path.std_path()};
+    std::ifstream ifs{file_path.std_path()};
     for (std::string line; std::getline(ifs, line);) {
         lines.push_back(std::move(line));
     }
     return lines;
+}
+
+struct FileLogSetup : BasicTestingSetup {
+    BCLog::Logger logger;
+    const fs::path log_path{m_args.GetDataDirBase() / "file.log"};
+
+    FileLogSetup() { logger.m_log_timestamps = false; }
+    ~FileLogSetup() { logger.DisconnectTestLogger(); }
+
+    void Log(std::string message)
+    {
+        logger.LogPrint({.category = BCLog::ALL, .level = BCLog::Level::Info, .source_loc = SourceLocation{__func__}, .message = std::move(message)});
+    }
+
+    std::vector<std::string> Lines() const
+    {
+        auto lines{ReadDebugLogLines(log_path)};
+        std::erase(lines, std::string{}); // Ignore the session separators.
+        return lines;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(logging_file_lifecycle, FileLogSetup)
+{
+    {
+        std::ofstream file{log_path.std_path()};
+        file << "existing\n";
+    }
+    Log("before opening");
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    Log("while open");
+    logger.m_reopen_file = true;
+    logger.StopFileLogging();
+    BOOST_CHECK(!logger.m_print_to_file);
+    BOOST_CHECK(logger.m_file_path.empty());
+    BOOST_CHECK(!logger.m_reopen_file);
+    BOOST_CHECK(logger.Enabled());
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"existing", "before opening", "while open"}));
+
+    Log("after closing");
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"existing", "before opening", "while open"}));
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    Log("after reopening");
+    logger.StopFileLogging();
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"existing", "before opening", "while open", "after closing", "after reopening"}));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_open_failure, FileLogSetup)
+{
+    Log("retained after failure");
+    const auto missing_parent{m_args.GetDataDirBase() / "missing" / "file.log"};
+    BOOST_CHECK(!logger.StartFileLogging(missing_parent));
+    BOOST_CHECK(!fs::exists(missing_parent));
+    BOOST_CHECK(!logger.m_print_to_file);
+    BOOST_CHECK(logger.m_file_path.empty());
+    BOOST_CHECK(!logger.m_reopen_file);
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    Log("after retry");
+    logger.StopFileLogging();
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"retained after failure", "after retry"}));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_duplicate, FileLogSetup)
+{
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    const auto rejected_path{m_args.GetDataDirBase() / "rejected.log"};
+    logger.m_reopen_file = true;
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+    BOOST_CHECK(logger.m_reopen_file);
+    BOOST_CHECK(logger.m_file_path == log_path);
+    BOOST_CHECK(!fs::exists(rejected_path));
+    {
+        std::ofstream file{rejected_path.std_path()};
+        file << "unchanged\n";
+    }
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+    BOOST_CHECK(ReadDebugLogLines(rejected_path) == (std::vector<std::string>{"unchanged"}));
+    Log("original output still active");
+    logger.StopFileLogging();
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"original output still active"}));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_disabled, FileLogSetup)
+{
+    logger.DisableLogging();
+    BOOST_CHECK(!logger.Enabled());
+    BOOST_CHECK(!logger.StartFileLogging(log_path));
+    BOOST_CHECK(!logger.Enabled());
+    BOOST_CHECK(!fs::exists(log_path));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_existing_output, FileLogSetup)
+{
+    logger.m_print_to_file = true;
+    logger.m_file_path = log_path;
+    const auto rejected_path{m_args.GetDataDirBase() / "rejected.log"};
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+    BOOST_CHECK(logger.m_print_to_file);
+    BOOST_CHECK(logger.m_file_path == log_path);
+    BOOST_CHECK(!fs::exists(log_path));
+    BOOST_CHECK(!fs::exists(rejected_path));
+
+    BOOST_REQUIRE(logger.StartLogging());
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+    Log("node output still active");
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"node output still active"}));
+    BOOST_CHECK(!fs::exists(rejected_path));
+
+    BCLog::Logger console;
+    console.m_print_to_console = true;
+    BOOST_CHECK(!console.StartFileLogging(rejected_path));
+    BOOST_CHECK(console.m_print_to_console);
+
+    BCLog::Logger configured_path;
+    configured_path.m_file_path = log_path;
+    BOOST_CHECK(!configured_path.StartFileLogging(rejected_path));
+    BOOST_CHECK(configured_path.m_file_path == log_path);
+    BOOST_CHECK(!fs::exists(rejected_path));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_callbacks, FileLogSetup)
+{
+    std::vector<std::string> messages;
+    const auto connection{logger.PushBackCallback([&](const std::string& message) { messages.push_back(message); })};
+    Log("buffered");
+    BOOST_CHECK(messages.empty());
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    Log("both outputs");
+    logger.StopFileLogging();
+    BOOST_CHECK_EQUAL(logger.NumConnections(), 1);
+    Log("callback only");
+    BOOST_CHECK(messages == (std::vector<std::string>{"buffered\n", "both outputs\n", "callback only\n"}));
+    BOOST_CHECK(Lines() == (std::vector<std::string>{"buffered", "both outputs"}));
+    const auto rejected_path{m_args.GetDataDirBase() / "rejected.log"};
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+    BOOST_CHECK(!fs::exists(rejected_path));
+    logger.DeleteCallback(connection);
+    BOOST_CHECK_EQUAL(logger.NumConnections(), 0);
+    BOOST_CHECK(!logger.Enabled());
+    BOOST_CHECK(!logger.StartFileLogging(rejected_path));
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_console, FileLogSetup)
+{
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    logger.m_print_to_console = true;
+    logger.StopFileLogging();
+    BOOST_CHECK(logger.m_print_to_console);
+    std::string message;
+    const auto connection{logger.PushBackCallback([&](const std::string& value) { message = value; })};
+    Log("console output remains active");
+    BOOST_CHECK_EQUAL(message, "console output remains active\n");
+    BOOST_CHECK(Lines().empty());
+    logger.DeleteCallback(connection);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_file_replay_exception, FileLogSetup)
+{
+    // Discard an oversized entry, then retain two entries well within the buffer limit.
+    Log(std::string(2 * BCLog::DEFAULT_MAX_LOG_BUFFER, 'x'));
+    const std::string first(BCLog::DEFAULT_MAX_LOG_BUFFER / 3, 'a');
+    const std::string retained(BCLog::DEFAULT_MAX_LOG_BUFFER / 3, 'b');
+    Log(first);
+    Log(retained);
+    bool throw_once{true};
+    const auto connection{logger.PushBackCallback([&](const std::string& message) {
+        if (throw_once && message.starts_with("aaa")) {
+            throw_once = false;
+            throw std::runtime_error("startup replay interrupted");
+        }
+    })};
+    BOOST_CHECK_THROW(logger.StartFileLogging(log_path), std::runtime_error);
+    BOOST_CHECK(!logger.m_print_to_file);
+    BOOST_CHECK(logger.m_file_path.empty());
+    BOOST_CHECK(!logger.m_reopen_file);
+    BOOST_CHECK_EQUAL(logger.NumConnections(), 1);
+    const auto partial{Lines()};
+    BOOST_REQUIRE_EQUAL(partial.size(), 2);
+    BOOST_CHECK(partial.front().starts_with("Early logging buffer overflowed, "));
+    BOOST_CHECK_EQUAL(partial.back(), first);
+
+    // This fits beside the retained entry only if the consumed entry's memory
+    // has been removed from the accounting. The old discard notice must not recur.
+    const std::string after_failure(BCLog::DEFAULT_MAX_LOG_BUFFER / 2, 'c');
+    Log(after_failure);
+    BOOST_REQUIRE(logger.StartFileLogging(log_path));
+    logger.StopFileLogging();
+    BOOST_CHECK(Lines() == (std::vector<std::string>{partial.front(), first, retained, after_failure}));
+    logger.DeleteCallback(connection);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_startup_overflow, FileLogSetup)
+{
+    logger.m_file_path = log_path;
+    logger.m_print_to_file = true;
+    logger.m_log_sourcelocations = true;
+    Log(std::string(2 * BCLog::DEFAULT_MAX_LOG_BUFFER, 'x'));
+    Log("retained");
+    BOOST_REQUIRE(logger.StartLogging());
+    const auto lines{Lines()};
+    BOOST_REQUIRE_EQUAL(lines.size(), 2);
+    BOOST_CHECK(lines.front().find("[StartLogging] Early logging buffer overflowed, 1 log lines discarded.") != std::string::npos);
+    BOOST_CHECK(lines.back().ends_with("retained"));
 }
 
 struct LogSetup : public BasicTestingSetup {
