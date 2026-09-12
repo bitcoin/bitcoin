@@ -14,6 +14,7 @@ add_executable(fuzz
   base_encode_decode.cpp
   bech32.cpp
   bip324.cpp
+  bip54.cpp
   bitdeque.cpp
   bitset.cpp
   block.cpp
