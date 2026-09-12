@@ -3,7 +3,6 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 include_guard(GLOBAL)
-include(GNUInstallDirs)
 
 function(install_binary_component component)
   cmake_parse_arguments(PARSE_ARGV 1
