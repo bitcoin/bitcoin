@@ -84,9 +84,16 @@ FlatFilePos BlockFilePos(const ChainstateManager& chainman, uint32_t height)
 uint256 LookupTx(const TxIndex& txindex, const Txid& txid)
 {
     const auto result{txindex.FindTx(txid)};
-    BOOST_REQUIRE(result);
-    BOOST_CHECK(result->tx->GetHash() == txid);
-    return result->block_hash;
+    BOOST_REQUIRE(result.tx);
+    BOOST_CHECK(result.tx->GetHash() == txid);
+    return result.block_hash;
+}
+
+void CheckNotFound(const TxIndex& txindex, const Txid& txid)
+{
+    const auto result{txindex.FindTx(txid)};
+    BOOST_CHECK(!result.tx);
+    BOOST_CHECK(result.pruned_block_hashes.empty());
 }
 
 void InvalidateBlock(ChainstateManager& chainman, const uint256& block_hash)
@@ -136,11 +143,12 @@ BOOST_AUTO_TEST_CASE(txindex_hash_prefix)
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    BOOST_CHECK(txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
 
     // Transaction should not be found in the index before it is started.
     for (const auto& txn : m_coinbase_txns) {
-        BOOST_CHECK(!txindex.FindTx(txn->GetHash()));
+        CheckNotFound(txindex, txn->GetHash());
     }
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
@@ -151,7 +159,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
     for (const auto& txn : genesis_block.vtx) {
-        BOOST_CHECK(!txindex.FindTx(txn->GetHash()));
+        CheckNotFound(txindex, txn->GetHash());
     }
 
     // Check that txindex has all txs that were in the chain before it started.
@@ -221,7 +229,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     const CDiskTxPos fake_physical{BlockFilePos(*m_node.chainman, fake_pos.block_seq + 1), fake_pos.tx_offset_in_block - txindex::BLOCK_HEADER_SIZE};
     db.Erase(txindex::DBKey{fake_prefix, fake_pos});
     db.Write(txindex::LegacyTxKey(fake_txid), fake_physical);
-    BOOST_CHECK(!txindex.FindTx(fake_txid));
+    CheckNotFound(txindex, fake_txid);
 
     txindex.Stop();
 }
@@ -240,6 +248,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
     }
 
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    BOOST_CHECK(!txindex.AllowPrune());
     BOOST_REQUIRE(txindex.Init());
     txindex.Sync();
 
@@ -348,6 +357,30 @@ BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
     const auto reorg_bucket{BucketPositions(db, prefix)};
     BOOST_REQUIRE_EQUAL(reorg_bucket.size(), 2U);
     BOOST_CHECK(reorg_bucket.front() == original_bucket.front());
+
+    txindex.Stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(txindex_pruned_lookup, TestChain100Setup)
+{
+    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    BOOST_CHECK(txindex.AllowPrune());
+    BOOST_REQUIRE(txindex.Init());
+    txindex.Sync();
+
+    const Txid txid{m_coinbase_txns.front()->GetHash()};
+    const uint256 block_hash{LookupTx(txindex, txid)};
+
+    {
+        LOCK(cs_main);
+        CBlockIndex* block_index{Assert(m_node.chainman->m_blockman.LookupBlockIndex(block_hash))};
+        block_index->nStatus &= ~BLOCK_HAVE_DATA;
+    }
+
+    const auto result{txindex.FindTx(txid)};
+    BOOST_CHECK(!result.tx);
+    BOOST_CHECK_EQUAL(result.pruned_block_hashes.size(), 1U);
+    BOOST_CHECK(result.pruned_block_hashes.front() == block_hash);
 
     txindex.Stop();
 }

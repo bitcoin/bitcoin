@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_TRANSACTION_H
 
 #include <common/messages.h>
+#include <index/tx_lookup_result.h>
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -67,10 +68,10 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  mempool         If provided, check mempool for tx
  * @param[in]  hash            The txid
  * @param[in]  blockman        Used to access and read blocks from disk
- * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
- * @returns                    The tx if found, otherwise nullptr
+ * @returns                    The tx and containing block hash if found.
+ *                             If not found, the hashes of blocks that may contain the tx but were pruned are returned instead.
  */
-CTransactionRef GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
+TxLookupResult GetTransaction(const CBlockIndex* block_index, const CTxMemPool* mempool, const Txid& hash, const BlockManager& blockman);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H
