@@ -197,7 +197,8 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
         std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }, /*cooldown=*/false));
-        CHECK_NONFATAL(block_template);
+        // createNewBlock() returns nullptr only when the node is shutting down
+        if (!block_template) break;
 
         std::shared_ptr<const CBlock> block_out;
         if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
@@ -409,7 +410,8 @@ static RPCMethod generateblock()
         LOCK(chainman.GetMutex());
         {
             std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script}, /*cooldown=*/false)};
-            CHECK_NONFATAL(block_template);
+            // createNewBlock() returns nullptr only when the node is shutting down
+            if (!block_template) throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
 
             block = block_template->getBlock();
         }
@@ -907,7 +909,8 @@ static RPCMethod getblocktemplate()
         // long-lived IPC usage, where the overhead is paid only when creating
         // the initial template.
         block_template = miner.createNewBlock({}, /*cooldown=*/false);
-        CHECK_NONFATAL(block_template);
+        // createNewBlock() returns nullptr only when the node is shutting down
+        if (!block_template) throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
 
 
         // Need to update only after we know createNewBlock succeeded
