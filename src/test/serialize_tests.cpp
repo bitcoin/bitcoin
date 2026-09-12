@@ -448,7 +448,8 @@ BOOST_AUTO_TEST_CASE(with_params_multi)
 //! Test creating a ParamsStream that moves from a stream argument.
 BOOST_AUTO_TEST_CASE(with_params_move)
 {
-    UncopyableStream stream{MakeByteSpan(std::string_view{"abc"})};
+    constexpr std::string_view abc{"abc"};
+    UncopyableStream stream{MakeByteSpan(abc)};
     ParamsStream pstream{std::move(stream), RAW, HEX, RAW};
     BOOST_CHECK_EQUAL(pstream.GetStream().str(), "abc");
     pstream.GetStream().clear();
