@@ -9,6 +9,27 @@ import sys
 import tempfile
 import argparse
 
+
+def _read_config_header(header_path):
+    """Read the generated C++ config header file and return a set of defined macros."""
+    defined = set()
+    try:
+        with open(header_path) as header:
+            for line in header:
+                line = line.strip()
+                # Look for #define MACRO_NAME or #define MACRO_NAME 1
+                if line.startswith("#define "):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        macro_name = parts[1]
+                        # Only include if it's defined to 1 or just defined
+                        if len(parts) == 2 or parts[2] == "1":
+                            defined.add(macro_name)
+    except IOError:
+        pass
+    return defined
+
+
 BINARIES = [
 'bin/bitcoin',
 'bin/bitcoind',
@@ -44,6 +65,38 @@ if not topdir:
 # Get input and output directories.
 builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
+
+header_features = [
+    ("HAVE_SYSTEM", "system notifications (e.g. -alertnotify)", "ensure the build environment provides std::system (HAVE_SYSTEM=1)"),
+    ("ENABLE_WALLET", "wallet functionality", "configure CMake with -DENABLE_WALLET=ON"),
+    ("WITH_ZMQ", "ZMQ interface", "configure CMake with -DWITH_ZMQ=ON"),
+]
+
+config_header_path = os.path.join(builddir, 'src', 'bitcoin-build-config.h')
+
+if not os.path.exists(config_header_path):
+    print(f'ERROR: {config_header_path} not found. Run this script against a CMake build directory.', file=sys.stderr)
+    sys.exit(1)
+
+def _env_truthy(var_name):
+    value = os.getenv(var_name)
+    return value is not None and value.upper() in {"ON", "TRUE", "YES", "1"}
+
+if _env_truthy("SKIP_BUILD_OPTIONS_CHECK"):
+    print('WARNING: skipping build option checks; generated man pages may be incomplete.', file=sys.stderr)
+else:
+    missing_features = []
+    defined_macros = _read_config_header(config_header_path)
+    for macro_name, description, hint in header_features:
+        if macro_name not in defined_macros:
+            missing_features.append((macro_name, description, hint))
+
+    if missing_features:
+        print('ERROR: binaries were not built with all interfaces required for generating complete man pages.', file=sys.stderr)
+        for feature_name, description, hint in missing_features:
+            print(f'  - {feature_name}: enables {description}; {hint}.', file=sys.stderr)
+        print('Rebuild the project with the options above enabled, then rerun gen-manpages.py, or export SKIP_BUILD_OPTIONS_CHECK=1 to bypass this safeguard.', file=sys.stderr)
+        sys.exit(1)
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
