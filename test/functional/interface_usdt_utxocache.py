@@ -241,7 +241,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         # of the UTXO set (see CoinsTip() of CCoinsViewCache). However, in some cases
         # temporary clones of the active cache are made. For example, during mining with
         # the generate RPC call, the block is first tested in TestBlockValidity(). There,
-        # a clone of the active cache is modified during a test ConnectBlock() call.
+        # a clone of the active cache is modified during a TestConnectBlock() call.
         # These are implementation details we don't want to test here. Thus, after
         # mining, we invalidate the block, start the tracing, and then trace the cache
         # changes to the active utxo cache.
