@@ -1297,12 +1297,19 @@
 ["Some basic segwit checks"],
 [["00", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "EVAL_FALSE", "Invalid witness script"],
 [["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
+[["51", 0.00000000 ], "", "0 0x204ae81572f06e1b88fd5ced7a1a000945432e83e1551e6f721ee9c00b8cc33261", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch (last byte differs)"],
 [["00", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Invalid witness script without WITNESS"],
 [["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Witness script hash mismatch without WITNESS"],
 [["51", 0.00000000 ], "", "-1 0x021234", "P2SH,WITNESS", "WITNESS_UNEXPECTED", "OP_1NEGATE does not introduce a witness program"],
 [["51", 0.00000000 ], "00", "1 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_1 does introduce a witness program"],
 [["51", 0.00000000 ], "00", "16 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_16 does introduce a witness program"],
 [["51", 0.00000000 ], "", "NOP 0x021234", "P2SH,WITNESS", "WITNESS_UNEXPECTED", "NOP does not introduce a witness program"],
+[["6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616151", 0.00000000 ],
+"",
+"0 0x20 0x73a0a078cb5f8f39cffbaeac999da2572e65229ef9cf4510cfa765bfe1aa1854",
+"P2SH,WITNESS",
+"OP_COUNT",
+">201 opcodes executed in a P2WSH witness script."],
 
 ["Automatically generated test cases"],
 [
@@ -2739,6 +2746,32 @@
     "P2SH,WITNESS,TAPROOT",
     "OK",
     "TAPSCRIPT Test that DROP operations do not execute inside of a false IF conditional"
+],
+[
+    [
+        "00",
+        "#SCRIPT# IF 1 ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_MINIMALIF",
+    "TAPSCRIPT Test that OP_IF with 1-byte vector 0x00 must fail with TAPSCRIPT_MINIMALIF"
+],
+[
+    [
+        "00",
+        "#SCRIPT# NOTIF 1 ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_MINIMALIF",
+    "TAPSCRIPT Test that OP_NOTIF with 1-byte vector 0x00 must fail with TAPSCRIPT_MINIMALIF"
 ],
 [
     [
