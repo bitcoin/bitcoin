@@ -4,11 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
+import json
 
 from contextlib import ExitStack
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.ipc_util import (
+    assert_capnp_raises,
     load_capnp_modules,
     make_capnp_init_ctx,
     make_mining_ctx,
@@ -49,6 +51,21 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(s, result_eval)
             self.log.debug("Destroy the Echo object")
             echo.destroy(ctx)
+        asyncio.run(capnp.run(async_routine()))
+
+    def run_rpc_invalid_json_test(self):
+        self.log.info("Running RPC invalid JSON test")
+        async def async_routine():
+            ctx, init = await make_capnp_init_ctx(self)
+            self.log.debug("Create Rpc proxy object")
+            rpc = init.makeRpc(ctx).result
+            self.log.debug("Invalid JSON in an executeRpc request must be rejected")
+            await assert_capnp_raises(lambda: rpc.executeRpc(ctx, "invalid json", "/", ""),
+                                      "remote exception: std::exception: invalid JSON received over IPC")
+            self.log.debug("The connection still works after the failed call")
+            request = json.dumps({"method": "getblockcount", "params": [], "id": 1})
+            response = json.loads((await rpc.executeRpc(ctx, request, "/", "")).result)
+            assert_equal(response["result"], self.nodes[0].getblockcount())
         asyncio.run(capnp.run(async_routine()))
 
     def run_mining_test(self):
@@ -164,6 +181,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
     def run_test(self):
         self.run_echo_test()
+        self.run_rpc_invalid_json_test()
         self.run_mining_test()
         self.run_deprecated_mining_test()
         self.run_unclean_disconnect_test()
