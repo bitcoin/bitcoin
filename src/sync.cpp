@@ -11,9 +11,12 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <system_error>
 #include <thread>
 #include <type_traits>
@@ -31,6 +34,8 @@ void ContendedLock(std::string_view name, std::string_view file, int nLine, Lock
 }
 template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::mutex>& lock);
 template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::recursive_mutex>& lock);
+template void ContendedLock(std::string_view name, std::string_view file, int line, std::unique_lock<std::shared_mutex>& lock);
+template void ContendedLock(std::string_view name, std::string_view file, int line, std::shared_lock<std::shared_mutex>& lock);
 
 #endif
 
@@ -75,11 +80,12 @@ private:
     bool fTry;
     std::string mutexName;
     std::string sourceFile;
-    const std::string m_thread_name;
+    std::string m_thread_name;
     int sourceLine;
 };
 
 using LockStackItem = std::pair<void*, CLockLocation>;
+static_assert(std::is_move_assignable_v<LockStackItem>);
 using LockStack = std::vector<LockStackItem>;
 using LockStacks = std::unordered_map<std::thread::id, LockStack>;
 
@@ -204,13 +210,16 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
     }
 }
 
-static void pop_lock()
+static void pop_lock(void* mutex)
 {
     LockData& lockdata = GetLockData();
     STDLOCK(lockdata.dd_mutex);
 
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
-    lock_stack.pop_back();
+    // Shared locks may be released out of LIFO order, so erase the newest match.
+    const auto lock_it{std::ranges::find(lock_stack.rbegin(), lock_stack.rend(), mutex, &LockStackItem::first)};
+    assert(lock_it != lock_stack.rend());
+    lock_stack.erase(std::prev(lock_it.base()));
     if (lock_stack.empty()) {
         lockdata.m_lock_stacks.erase(std::this_thread::get_id());
     }
@@ -223,6 +232,7 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexTyp
 }
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::shared_mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
@@ -250,9 +260,9 @@ void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, c
     throw std::logic_error(strprintf("%s was not most recent critical section locked", guardname));
 }
 
-void LeaveCritical()
+void LeaveCritical(void* mutex)
 {
-    pop_lock();
+    pop_lock(mutex);
 }
 
 static std::string LocksHeld()
@@ -289,6 +299,7 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockHeldInternal(const char*, const char*, int, RecursiveMutex*);
+template void AssertLockHeldInternal(const char*, const char*, int, SharedMutex*);
 
 template <typename MutexType>
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs)
@@ -299,6 +310,7 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 }
 template void AssertLockNotHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockNotHeldInternal(const char*, const char*, int, RecursiveMutex*);
+template void AssertLockNotHeldInternal(const char*, const char*, int, SharedMutex*);
 
 void DeleteLock(void* cs)
 {
