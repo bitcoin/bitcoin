@@ -25,6 +25,28 @@ class KeyPoolTest(BitcoinTestFramework):
 
     def run_test(self):
         nodes = self.nodes
+
+        # A refill to INT32_MAX only overflows the range end once a descriptor has advanced
+        # past index 0, because at next_index 0 the sum is exactly INT32_MAX. Advance every
+        # descriptor by one first so that the addition in TopUpWithDB is 1 + INT32_MAX.
+        nodes[0].createwallet(wallet_name="keypool_overflow")
+        overflow_wallet = nodes[0].get_wallet_rpc("keypool_overflow")
+        for address_type in ["legacy", "p2sh-segwit", "bech32", "bech32m"]:
+            overflow_wallet.getnewaddress(address_type=address_type)
+            overflow_wallet.getrawchangeaddress(address_type=address_type)
+        descriptors_before = overflow_wallet.listdescriptors()["descriptors"]
+        assert_equal(sorted({desc["next_index"] for desc in descriptors_before}), [1])
+
+        # The refill cannot be satisfied, so it is reported as an error and the range is left
+        # as it was. Without the bound this addition is undefined behavior.
+        info_before = overflow_wallet.getwalletinfo()
+        assert_raises_rpc_error(-4, "Error refreshing keypool.", overflow_wallet.keypoolrefill, 2**31 - 1)
+        info_after = overflow_wallet.getwalletinfo()
+        assert_equal(info_after["keypoolsize"], info_before["keypoolsize"])
+        assert_equal(info_after["keypoolsize_hd_internal"], info_before["keypoolsize_hd_internal"])
+        assert_equal(overflow_wallet.listdescriptors()["descriptors"], descriptors_before)
+        overflow_wallet.unloadwallet()
+
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
 
