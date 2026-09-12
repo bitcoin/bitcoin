@@ -518,6 +518,38 @@ BOOST_FIXTURE_TEST_CASE(pending_block_source_cleanup_without_cs_main, PendingBlo
     BOOST_CHECK(Stats(source->GetId()).m_addr_relay_enabled);
 }
 
+BOOST_FIXTURE_TEST_CASE(pending_block_requests_without_cs_main, PendingBlockTestingSetup)
+{
+    FakeNodeClock clock{};
+    CNode* source;
+    {
+        LOCK(NetEventsInterface::g_msgproc_mutex);
+        source = &AddPeer(0);
+    }
+    const auto [block, index]{PrepareHeader()};
+    for (const bool optimistic_reconstruction : {false, true}) {
+        std::future<bool> completion;
+        {
+            LOCK(cs_main);
+            completion = std::async(std::launch::async, [&] {
+                if (!Peerman().FetchBlock(source->GetId(), *index)) return false;
+                LOCK(NetEventsInterface::g_msgproc_mutex);
+                std::promise<BlockProcessingResult> result;
+                Peerman().UnitTestBlockProcessing(source->GetId(), block->GetHash(), result.get_future(), /*via_compact_block=*/optimistic_reconstruction, optimistic_reconstruction);
+                result.set_value({.processing_success = true, .new_block = true});
+                ProcessBlockCompletions();
+                return true;
+            });
+            // Request registration and completion must not wait for chain validation.
+            // Release cs_main before joining even if the old lock dependency returns.
+            BOOST_CHECK(completion.wait_for(10s) == std::future_status::ready);
+        }
+        BOOST_REQUIRE(completion.get());
+        BOOST_CHECK(Stats(source->GetId()).vHeightInFlight.empty());
+        BOOST_CHECK(source->m_last_block_time.load() == GetTime<std::chrono::seconds>());
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(pending_block_punishes_before_resuming, PendingBlockTestingSetup)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
