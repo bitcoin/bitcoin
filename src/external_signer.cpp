@@ -8,10 +8,13 @@
 #include <common/run_command.h>
 #include <core_io.h>
 #include <psbt.h>
+#include <script/interpreter.h>
 #include <util/strencodings.h>
 #include <util/subprocess.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -77,6 +80,33 @@ UniValue ExternalSigner::GetDescriptors(const int account)
     return RunCommandParseJSON(Cat(m_command, Cat(Cat({"--fingerprint", m_fingerprint}, NetworkArg()), {"getdescriptors", "--account", strprintf("%d", account)})), "");
 }
 
+//! Find a sighash type used by the signer that doesn't commit to all outputs;
+//! a signature with SIGHASH_NONE or SIGHASH_SINGLE would let anyone alter
+//! them. SIGHASH_ANYONECANPAY is acceptable, since it only permits adding
+//! inputs, which does not affect us.
+static std::optional<int32_t> FindUnsafeSighashType(const PartiallySignedTransaction& psbtx)
+{
+    std::vector<int32_t> sighash_types;
+    for (const PSBTInput& input : psbtx.inputs) {
+        if (input.sighash_type) sighash_types.push_back(*input.sighash_type);
+        for (const auto& [_, sig] : input.partial_sigs) {
+            if (!sig.second.empty()) sighash_types.push_back(sig.second.back());
+        }
+        // A 64 byte taproot signature implies SIGHASH_DEFAULT, 65 bytes
+        // carries an explicit sighash type in the last byte
+        if (input.m_tap_key_sig.size() == 65) sighash_types.push_back(input.m_tap_key_sig.back());
+        for (const auto& [_, sig] : input.m_tap_script_sigs) {
+            if (sig.size() == 65) sighash_types.push_back(sig.back());
+        }
+    }
+
+    for (const int32_t sighash_type : sighash_types) {
+        const int32_t base_sighash_type{sighash_type & ~SIGHASH_ANYONECANPAY};
+        if (base_sighash_type != SIGHASH_DEFAULT && base_sighash_type != SIGHASH_ALL) return sighash_type;
+    }
+    return std::nullopt;
+}
+
 bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
 {
     // Serialize the PSBT
@@ -121,7 +151,16 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    psbtx = *signer_psbtx;
+    if (const std::optional<int32_t> sighash{FindUnsafeSighashType(*signer_psbtx)}) {
+        const std::string sighash_str{SighashToStr(*sighash)};
+        error = strprintf("Signer used an unsafe sighash type: %s", sighash_str.empty() ? "unknown" : sighash_str);
+        return false;
+    }
+
+    if (!psbtx.Merge(*signer_psbtx)) {
+        error = "Signer returned a PSBT for a different transaction";
+        return false;
+    }
 
     return true;
 }
