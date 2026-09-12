@@ -275,7 +275,7 @@ static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
 {
     AssertLockHeld(::cs_main);
     AssertLockHeld(pool.cs);
-    int expired = pool.Expire(GetTime<std::chrono::seconds>() - pool.m_opts.expiry);
+    int expired = pool.Expire(pool.Now() - pool.m_opts.expiry);
     if (expired != 0) {
         LogDebug(BCLog::MEMPOOL, "Expired %i transactions from the memory pool\n", expired);
     }
@@ -292,7 +292,7 @@ static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_L
     if (active_chainstate.m_chainman.IsInitialBlockDownload()) {
         return false;
     }
-    if (active_chainstate.m_chain.Tip()->GetBlockTime() < count_seconds(GetTime<std::chrono::seconds>() - MAX_FEE_ESTIMATION_TIP_AGE))
+    if (active_chainstate.m_chain.Tip()->Time() < active_chainstate.m_chainman.Now() - MAX_FEE_ESTIMATION_TIP_AGE)
         return false;
     if (active_chainstate.m_chain.Height() < active_chainstate.m_chainman.m_best_header->nHeight - 1) {
         return false;
@@ -320,7 +320,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         while (it != queuedTx.rend()) {
             // ignore validation errors in resurrected transactions
             if (!fAddToMempool || (*it)->IsCoinBase() ||
-                AcceptToMemoryPool(*this, *it, GetTime(),
+                AcceptToMemoryPool(*this, *it, m_mempool->Now(),
                     /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
                         MempoolAcceptResult::ResultType::VALID) {
                 // If the transaction doesn't make it in to the mempool, remove any
@@ -455,7 +455,7 @@ public:
     // We put the arguments we're handed into a struct, so we can pass them
     // around easier.
     struct ATMPArgs {
-        const int64_t m_accept_time;
+        const MempoolTime m_accept_time;
         const bool m_bypass_limits;
         /*
          * Return any outpoints which were not previously present in the coins
@@ -487,7 +487,7 @@ public:
         const std::optional<CFeeRate> m_client_maxfeerate;
 
         /** Parameters for single transaction mempool validation. */
-        static ATMPArgs SingleAccept(int64_t accept_time,
+        static ATMPArgs SingleAccept(MempoolTime accept_time,
                                      bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
                                      bool test_accept) {
             return ATMPArgs{/*accept_time=*/ accept_time,
@@ -503,7 +503,7 @@ public:
         }
 
         /** Parameters for test package mempool validation through testmempoolaccept. */
-        static ATMPArgs PackageTestAccept(int64_t accept_time,
+        static ATMPArgs PackageTestAccept(MempoolTime accept_time,
                                           std::vector<COutPoint>& coins_to_uncache) {
             return ATMPArgs{/*accept_time=*/ accept_time,
                             /*bypass_limits=*/ false,
@@ -518,7 +518,7 @@ public:
         }
 
         /** Parameters for child-with-parents package validation. */
-        static ATMPArgs PackageChildWithParents(int64_t accept_time,
+        static ATMPArgs PackageChildWithParents(MempoolTime accept_time,
                                                 std::vector<COutPoint>& coins_to_uncache, const std::optional<CFeeRate>& client_maxfeerate) {
             return ATMPArgs{/*accept_time=*/ accept_time,
                             /*bypass_limits=*/ false,
@@ -549,7 +549,7 @@ public:
     private:
         // Private ctor to avoid exposing details to clients and allowing the possibility of
         // mixing up the order of the arguments. Use static functions above instead.
-        ATMPArgs(int64_t accept_time,
+        ATMPArgs(MempoolTime accept_time,
                  bool bypass_limits,
                  std::vector<COutPoint>& coins_to_uncache,
                  bool test_accept,
@@ -785,7 +785,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const Txid& hash = ws.m_hash;
 
     // Copy/alias what we need out of args
-    const int64_t nAcceptTime = args.m_accept_time;
+    const MempoolTime nAcceptTime = args.m_accept_time;
     const bool bypass_limits = args.m_bypass_limits;
     std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
@@ -1221,7 +1221,7 @@ void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args)
                 it->GetTx().GetHash().data(),
                 it->GetTxSize(),
                 it->GetFee(),
-                std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count(),
+                TicksSinceEpoch<std::chrono::duration<std::uint64_t>>(it->GetTime()),
                 tx_or_package_hash.data(),
                 feerate.size,
                 feerate.fee,
@@ -1769,7 +1769,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 } // anon namespace
 
 MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
-                                       int64_t accept_time, bool bypass_limits, bool test_accept)
+                                       MempoolTime accept_time, bool bypass_limits, bool test_accept)
 {
     AssertLockHeld(::cs_main);
     assert(active_chainstate.GetMempool() != nullptr);
@@ -1810,10 +1810,10 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         AssertLockHeld(cs_main);
         if (test_accept) {
-            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(GetTime(), coins_to_uncache);
+            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(pool.Now(), coins_to_uncache);
             return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactionsAndCleanup(package, args);
         } else {
-            auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(GetTime(), coins_to_uncache, client_maxfeerate);
+            auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(pool.Now(), coins_to_uncache, client_maxfeerate);
             return MemPoolAccept(pool, active_chainstate).AcceptPackage(package, args);
         }
     }();
@@ -2756,7 +2756,7 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
         }
-        const auto nNow{NodeClock::now()};
+        const auto nNow{NodeClock::_now_nondet()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
         // The cache is over the limit, we have to write now.
@@ -2813,7 +2813,7 @@ bool Chainstate::FlushStateToDisk(
                 m_last_flushed_block = m_blockman.LookupBlockIndex(CoinsTip().GetBestBlock());
                 full_flush_completed = true;
                 TRACEPOINT(utxocache, flush,
-                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
+                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::_now_nondet() - nNow)},
                     (uint32_t)mode,
                     (uint64_t)coins_count,
                     (uint64_t)coins_mem_usage,
@@ -2823,7 +2823,7 @@ bool Chainstate::FlushStateToDisk(
 
         if (should_write || m_next_write == NodeClock::time_point::max()) {
             constexpr auto range{DATABASE_WRITE_INTERVAL_MAX - DATABASE_WRITE_INTERVAL_MIN};
-            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::now() + DATABASE_WRITE_INTERVAL_MIN, range);
+            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::_now_nondet() + DATABASE_WRITE_INTERVAL_MIN, range);
         }
     }
     if (full_flush_completed) {
@@ -3293,7 +3293,7 @@ void ChainstateManager::UpdateIBDStatus()
     AssertLockHeld(cs_main);
     if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return;
     if (m_blockman.LoadingBlocks()) return;
-    if (!CurrentChainstate().m_chain.IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return;
+    if (!CurrentChainstate().m_chain.IsTipRecent(MinimumChainWork(), m_options.max_tip_age, Now())) return;
     LogInfo("Leaving InitialBlockDownload (latching to false)");
     m_cached_is_ibd.store(false, std::memory_order_relaxed);
 }
@@ -4113,7 +4113,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     }
 
     // Check timestamp
-    if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
+    if (block.Time() > chainman.Now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 
@@ -4268,7 +4268,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
     if (NotifyHeaderTip()) {
         if (IsInitialBlockDownload() && ppindex && *ppindex) {
             const CBlockIndex& last_accepted{**ppindex};
-            int64_t blocks_left{(NodeClock::now() - last_accepted.Time()) / GetConsensus().PowTargetSpacing()};
+            int64_t blocks_left{(Now() - last_accepted.Time()) / GetConsensus().PowTargetSpacing()};
             blocks_left = std::max<int64_t>(0, blocks_left);
             const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
             LogInfo("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
@@ -4288,14 +4288,14 @@ void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
         if (m_best_header->nChainWork >= UintToArith256(GetConsensus().nMinimumChainWork)) return;
         // Rate limit headers presync updates to 4 per second, as these are not subject to DoS
         // protection.
-        auto now = MockableSteadyClock::now();
+        auto now = MockableSteadyClock::_now_nondet();
         if (now < m_last_presync_update + std::chrono::milliseconds{250}) return;
         m_last_presync_update = now;
     }
     bool initial_download = IsInitialBlockDownload();
     GetNotifications().headerTip(GetSynchronizationState(initial_download, m_blockman.m_blockfiles_indexed), height, timestamp, /*presync=*/true);
     if (initial_download) {
-        int64_t blocks_left{(NodeClock::now() - NodeSeconds{std::chrono::seconds{timestamp}}) / GetConsensus().PowTargetSpacing()};
+        int64_t blocks_left{(Now() - NodeSeconds{std::chrono::seconds{timestamp}}) / GetConsensus().PowTargetSpacing()};
         blocks_left = std::max<int64_t>(0, blocks_left);
         const double progress{100.0 * height / (height + blocks_left)};
         LogInfo("Pre-synchronizing blockheaders, height: %d (~%.2f%%)\n", height, progress);
@@ -4469,7 +4469,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
-    auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
+    auto result = AcceptToMemoryPool(active_chainstate, tx, active_chainstate.m_mempool->Now(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }
@@ -5518,25 +5518,25 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
         return 0.0;
     }
 
-    const int64_t nNow{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
-    const auto block_time{
-        (Assume(m_best_header) && std::abs(nNow - pindex->GetBlockTime()) <= Ticks<std::chrono::seconds>(2h) &&
+    const NodeClock::time_point now{Now()};
+    const NodeClock::time_point block_time{
+        (Assume(m_best_header) && std::chrono::abs(now - pindex->Time()) <= 2h &&
          Assume(m_best_header->nHeight >= pindex->nHeight)) ?
             // When the header is known to be recent, switch to a height-based
             // approach. This ensures the returned value is quantized when
             // close to "1.0", because some users expect it to be. This also
             // avoids relying too much on the exact miner-set timestamp, which
             // may be off.
-            nNow - (m_best_header->nHeight - pindex->nHeight) * GetConsensus().nPowTargetSpacing :
-            pindex->GetBlockTime(),
+            now - std::chrono::seconds((m_best_header->nHeight - pindex->nHeight) * GetConsensus().nPowTargetSpacing) :
+            pindex->Time(),
     };
 
     double fTxTotal;
 
     if (pindex->m_chain_tx_count <= data.tx_count) {
-        fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
+        fTxTotal = data.tx_count + (TicksSinceEpoch<std::chrono::seconds>(now) - data.nTime) * data.dTxRate;
     } else {
-        fTxTotal = pindex->m_chain_tx_count + (nNow - block_time) * data.dTxRate;
+        fTxTotal = pindex->m_chain_tx_count + Ticks<std::chrono::seconds>(now - block_time) * data.dTxRate;
     }
 
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
