@@ -21,6 +21,7 @@
 #include <script/script.h>
 #include <streams.h>
 #include <sync.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/byte_units.h>
 #include <util/check.h>
@@ -34,7 +35,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_AUTO_TEST_SUITE(txindex_tests)
 
@@ -113,7 +114,7 @@ BOOST_AUTO_TEST_CASE(txindex_position_encoding)
 
         txindex::BlockTxPosition decoded;
         BOOST_CHECK((DataStream{ParseHex(encoded)} >> decoded).empty());
-        BOOST_CHECK(decoded == position);
+        BOOST_CHECK_EQUAL(decoded, position);
     }
 
     // Pin the full key encodings, including the type prefixes.
@@ -207,8 +208,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     // number), then the forged false positive, which the descending scan tries first.
     const auto target_bucket{BucketPositions(db, target_prefix)};
     BOOST_REQUIRE_EQUAL(target_bucket.size(), 2U);
-    BOOST_CHECK(target_bucket[0] != fake_pos);
-    BOOST_CHECK(target_bucket[1] == fake_pos);
+    BOOST_CHECK_NE(target_bucket[0], fake_pos);
+    BOOST_CHECK_EQUAL(target_bucket[1], fake_pos);
 
     LookupTx(txindex, target_txid);
 
@@ -347,7 +348,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
     // Reconnecting the original block must not create duplicate entries.
     const auto reorg_bucket{BucketPositions(db, prefix)};
     BOOST_REQUIRE_EQUAL(reorg_bucket.size(), 2U);
-    BOOST_CHECK(reorg_bucket.front() == original_bucket.front());
+    BOOST_CHECK_EQUAL(reorg_bucket.front(), original_bucket.front());
 
     txindex.Stop();
 }
