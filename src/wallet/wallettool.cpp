@@ -12,6 +12,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+using util::TrimStringView;
+
 namespace wallet {
 namespace WalletTool {
 
@@ -113,7 +115,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     const fs::path& path = *path_res;
 
     if (command == "create") {
-        if (name.empty()) {
+        if (TrimStringView(name).empty()) {
             tfm::format(std::cerr, "Wallet name cannot be empty\n");
             return false;
         }
