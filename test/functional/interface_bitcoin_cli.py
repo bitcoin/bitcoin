@@ -42,13 +42,17 @@ WALLET_NOT_SPECIFIED = (
 def cli_get_info_string_to_dict(cli_get_info_string):
     """Helper method to convert human-readable -getinfo into a dictionary"""
     cli_get_info = {}
-    lines = cli_get_info_string.splitlines()
-    line_idx = 0
+    # Remove ansi colour codes
     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+    lines = ansi_escape.sub('', cli_get_info_string).splitlines()
+    line_idx = 0
     while line_idx < len(lines):
-        # Remove ansi colour code
-        line = ansi_escape.sub('', lines[line_idx])
-        if "Balances" in line:
+        line = lines[line_idx]
+        if line.startswith("Warnings: "):
+            # Warnings is the final section and can span multiple lines.
+            cli_get_info["Warnings"] = "\n".join(lines[line_idx:]).removeprefix("Warnings: ")
+            break
+        elif "Balances" in line:
             # When "Balances" appears in a line, all of the following lines contain "balance: wallet" until an empty line
             cli_get_info["Balances"] = {}
             while line_idx < len(lines) and not (lines[line_idx + 1] == ''):
@@ -240,12 +244,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(Decimal(cli_get_info['Difficulty']), blockchain_info['difficulty'])
         assert_equal(cli_get_info['Chain'], blockchain_info['chain'])
         expected_warnings = "\n".join(network_info['warnings']) or "(none)"
-        assert cli_get_info_string.endswith(f"Warnings: {expected_warnings}")
-
-        self.log.info("Test -getinfo with deprecated string warnings")
-        self.restart_node(0, extra_args=["-deprecatedrpc=warnings"])
-        expected_warnings = self.nodes[0].getnetworkinfo()['warnings'] or "(none)"
-        assert self.nodes[0].cli('-getinfo', '-color=never').send_cli().endswith(f"Warnings: {expected_warnings}")
+        assert_equal(cli_get_info['Warnings'], expected_warnings)
 
         self.log.info("Test -getinfo and bitcoin-cli return all proxies")
         self.restart_node(0, extra_args=["-proxy=127.0.0.1:9050", "-i2psam=127.0.0.1:7656"])
