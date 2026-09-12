@@ -465,6 +465,8 @@ if(MSVC)
   try_append_cxx_flags("/wd4267" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4715" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4805" TARGET warn_interface SKIP_LINK)
+  # C5283: lambda [[noreturn]] attribute before parameter list requires /std:c++23preview.
+  try_append_cxx_flags("/wd5283" TARGET warn_interface SKIP_LINK)
   target_compile_definitions(warn_interface INTERFACE
     _CRT_SECURE_NO_WARNINGS
   )
@@ -503,6 +505,18 @@ else()
   # set the -Wno-foo case if it works.
   try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
     IF_CHECK_PASSED "-Wno-unused-parameter"
+  )
+  # Lambda attributes (e.g. [[noreturn]]) before the parameter list are a C++23
+  # extension intentionally used in C++20 builds for compatibility with
+  # -Wmissing-noreturn. Suppress the extension warning rather than removing the
+  # attributes or working around them.
+  try_append_cxx_flags("-Wc++23-lambda-attributes" TARGET warn_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-c++23-lambda-attributes"
+  )
+  # Older clang versions (e.g. clang-17) do not recognize -Wc++23-lambda-attributes
+  # but emit the same diagnostic under the broader -Wc++23-extensions flag instead.
+  try_append_cxx_flags("-Wc++23-extensions" TARGET warn_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-c++23-extensions"
   )
 endif()
 

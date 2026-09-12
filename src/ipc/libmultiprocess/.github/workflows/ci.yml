@@ -17,10 +17,16 @@ jobs:
         # Test all supported releases.
         # See https://www.netbsd.org/releases/.
         include:
-          - release: 9.4
-            capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0 -DKJ_USE_KQUEUE=0"'
-          - release: 10.1
+          # Due to a bug in Cap'n Proto, GCC compilers older
+          # than 14.x require `-DKJ_NO_EXCEPTIONS=0` when
+          # processing `capnproto/c++/src/kj/common.h`.
+          # See https://github.com/capnproto/capnproto/pull/2756/changes/28fa1a6753514d8de56875ec2222fa0e1c3a04f7.
+          - release: '10.1'
             capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0"'
+            env_vars: 'CXXFLAGS="-DKJ_NO_EXCEPTIONS=0"'
+          - release: '11.0'
+            capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0"'
+            env_vars: 'CXXFLAGS="-DKJ_NO_EXCEPTIONS=0"'
     steps:
       - uses: actions/checkout@v6
 
@@ -44,9 +50,9 @@ jobs:
               pkgsrc/devel/libtool-base \
               pkgsrc/devel/pkgconf \
               pkgsrc/devel/zlib \
-              `# gcc15 is referenced here because the pkgsrc framework requires lang/gcc15/version.mk to exist` \
+              `# gcc16 is referenced here because the pkgsrc framework requires lang/gcc16/version.mk to exist` \
               `# during the "make install" step below, even though we compile our project with gcc14.` \
-              pkgsrc/lang/gcc15 \
+              pkgsrc/lang/gcc16 \
               pkgsrc/mk \
               pkgsrc/pkgtools \
               pkgsrc/security/openssl \
@@ -63,7 +69,7 @@ jobs:
       - name: Run CI script
         run: |
           cd ${{ github.workspace }}
-          CI_CONFIG="ci/configs/netbsd.bash" bash ci/scripts/ci.sh
+          CI_CONFIG="ci/configs/netbsd.bash" ${{ matrix.env_vars }} bash ci/scripts/ci.sh
 
   build-openbsd:
     runs-on: ubuntu-latest
@@ -100,7 +106,7 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           prepare: |
-            pkg install -y cmake ninja bash capnproto
+            pkg install -y cmake ninja bash capnproto git
           sync: 'rsync'
           copyback: false
 
@@ -131,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NIXPKGS_CHANNEL: nixos-25.05
+      NIXPKGS_CHANNEL: nixos-26.05
       NIX_EXTRA_CONFIG: |
         keep-env-derivations = true
         keep-outputs = true
@@ -142,7 +148,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [default, llvm, gnu32, sanitize, olddeps]
+        config: [default, llvm, gnu32, sanitize, olddeps, newdeps]
 
     name: build • ${{ matrix.config }}
 
