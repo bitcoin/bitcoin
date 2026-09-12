@@ -127,6 +127,47 @@ struct PayToAnchor : public WitnessUnknown
     };
 };
 
+struct SilentPaymentsDestination
+{
+private:
+    uint8_t m_version;
+    CPubKey m_scan_pubkey;
+    CPubKey m_spend_pubkey;
+    std::vector<unsigned char> m_extension_data;
+
+    SilentPaymentsDestination(
+        uint8_t version,
+        const CPubKey& scan_pubkey,
+        const CPubKey& spend_pubkey,
+        const std::span<unsigned char>& extension_data = {}
+    ) : m_version(version), m_scan_pubkey(scan_pubkey),
+        m_spend_pubkey(spend_pubkey),
+        m_extension_data(extension_data.begin(), extension_data.end()) {};
+public:
+    static std::optional<SilentPaymentsDestination> From(
+        const CPubKey& scan_pubkey,
+        const CPubKey& spend_pubkey,
+        uint8_t version = 0,
+        const std::span<unsigned char>& extension_data = {}
+    );
+
+    uint8_t GetVersion() const { return m_version; }
+    const CPubKey& GetScanPubKey() const { return m_scan_pubkey; }
+    const CPubKey& GetSpendPubKey() const { return m_spend_pubkey; }
+    std::span<const unsigned char> GetExtensionData() const { return m_extension_data; }
+
+    bool operator==(const SilentPaymentsDestination&) const = default;
+
+    friend bool operator<(const SilentPaymentsDestination& a, const SilentPaymentsDestination& b) {
+        if (a.m_version != b.m_version) return a.m_version < b.m_version;
+        if (a.m_scan_pubkey < b.m_scan_pubkey) return true;
+        if (a.m_scan_pubkey > b.m_scan_pubkey) return false;
+        if (a.m_spend_pubkey < b.m_spend_pubkey) return true;
+        if (a.m_spend_pubkey > b.m_spend_pubkey) return false;
+        return a.m_extension_data < b.m_extension_data;
+    }
+};
+
 /**
  * A txout script categorized into standard templates.
  *  * CNoDestination: Optionally a script, no corresponding address.
@@ -137,10 +178,11 @@ struct PayToAnchor : public WitnessUnknown
  *  * WitnessV0KeyHash: TxoutType::WITNESS_V0_KEYHASH destination (P2WPKH address)
  *  * WitnessV1Taproot: TxoutType::WITNESS_V1_TAPROOT destination (P2TR address)
  *  * PayToAnchor: TxoutType::ANCHOR destination (P2A address)
+ *  * SilentPaymentsDestination: No corresponding script (SP addresses)
  *  * WitnessUnknown: TxoutType::WITNESS_UNKNOWN destination (P2W??? address)
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, WitnessUnknown>;
+using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, ScriptHash, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessV1Taproot, PayToAnchor, SilentPaymentsDestination, WitnessUnknown>;
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);

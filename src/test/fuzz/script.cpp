@@ -147,9 +147,17 @@ FUZZ_TARGET(script, .init = initialize_script)
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
 
+        if (!std::get_if<SilentPaymentsDestination>(&tx_destination_1) && !std::get_if<PubKeyDestination>(&tx_destination_1)) {
+            // For silent payments destination, we skip this check because the address is valid but
+            // does not have a CScript.
+            //
+            // For PubKeyDestination, we skip this check because the destination is no longer valid for
+            // Bitcoin Core but does have a CScript.
+            Assert(dest.empty() != valid);
+        }
+
         if (!std::get_if<PubKeyDestination>(&tx_destination_1)) {
             // Only try to round trip non-pubkey destinations since PubKeyDestination has no encoding
-            Assert(dest.empty() != valid);
             Assert(tx_destination_1 == DecodeDestination(encoded_dest));
             Assert(valid == IsValidDestinationString(encoded_dest));
         }
