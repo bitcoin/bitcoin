@@ -5,6 +5,7 @@
 """Test block-relay-only anchors functionality"""
 
 import os
+import time
 
 from test_framework.p2p import P2PInterface, P2P_SERVICES
 from test_framework.socks5 import Socks5Configuration, Socks5Server
@@ -15,12 +16,24 @@ from test_framework.util import check_node_connections, assert_equal
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
 ONION_ADDR = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
+SEED_NODE = "127.0.0.1:1"
+SEED_ARGS = [f"-seednode={SEED_NODE}", f"-seednode={SEED_NODE}"]
+SEED_LOG = f"adding seednode ({SEED_NODE}) to addrfetch"
 
 
 class AnchorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.disable_autoconnect = False
+
+    def wait_for_open_connections_pass(self):
+        """Wait until ThreadOpenConnections has passed the anchor selection logic
+        at least once while the network is inactive. The seednode retry timer is
+        checked right before that logic and uses the mockable clock, so bumping
+        mocktime past ADD_NEXT_SEEDNODE (10s) queues the second seednode on the
+        next pass, which is logged at the top of the following iteration."""
+        with self.nodes[0].assert_debug_log([SEED_LOG], timeout=10):
+            self.nodes[0].setmocktime(int(time.time()) + 11)
 
     def run_test(self):
         node_anchors_path = self.nodes[0].chain_path / "anchors.dat"
@@ -56,6 +69,10 @@ class AnchorsTest(BitcoinTestFramework):
                 block_relay_nodes_port.append(hex(int(addr_split[1]))[2:])
             else:
                 inbound_nodes_port.append(hex(int(addr_split[1]))[2:])
+
+        self.log.info("Disabling network activity should not affect the anchors")
+        self.nodes[0].setnetworkactive(False)
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
 
         self.log.debug("Stop node")
         self.stop_node(0)
@@ -137,9 +154,35 @@ class AnchorsTest(BitcoinTestFramework):
             new_data_hash = hash256(new_data)
             file_handler.write(new_data + new_data_hash)
 
+        self.log.info("Check that starting with the network disabled preserves the anchors")
+        with self.nodes[0].assert_debug_log([SEED_LOG], unexpected_msgs=["block-relay-only anchors will be tried for connections"], timeout=10):
+            self.restart_node(0, extra_args=["-networkactive=0"] + SEED_ARGS)
+        self.wait_for_open_connections_pass()
+        self.stop_node(0)
+
         self.log.info("Restarting node attempts to reconnect to anchors")
         with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"], timeout=2):
             self.start_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
+
+        self.log.info("Check that anchors are tried once the network is re-enabled")
+        self.stop_node(0)
+        with open(node_anchors_path, "wb") as file_handler:
+            file_handler.write(new_data + new_data_hash)
+        with self.nodes[0].assert_debug_log([SEED_LOG], timeout=10):
+            self.start_node(0, extra_args=["-networkactive=0", f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"] + SEED_ARGS)
+        self.wait_for_open_connections_pass()
+        with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"], timeout=2):
+            self.nodes[0].setnetworkactive(True)
+
+        self.log.info("Unconsumed anchors are discarded at shutdown when the network is active")
+        self.stop_node(0)
+        with open(node_anchors_path, "wb") as file_handler:
+            file_handler.write(new_data + new_data_hash)
+        # -maxconnections=8 leaves no block-relay-only slots, so the anchor is loaded but never tried
+        with self.nodes[0].assert_debug_log(["1 block-relay-only anchors will be tried for connections"]):
+            self.start_node(0, extra_args=["-maxconnections=8"])
+        with self.nodes[0].assert_debug_log(["DumpAnchors: Flush 0 outbound block-relay-only peer addresses"]):
+            self.stop_node(0)
 
 
 if __name__ == "__main__":
