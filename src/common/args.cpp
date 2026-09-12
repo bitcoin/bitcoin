@@ -433,7 +433,7 @@ bool ArgsManager::IsArgSet(const std::string& strArg) const
     return !GetSetting(strArg).isNull();
 }
 
-bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp, bool backup) const
+bool ArgsManager::GetSettingsPath(fs::path* filepath, bool backup) const
 {
     fs::path settings = GetPathArg("-settings", BITCOIN_SETTINGS_FILENAME);
     if (settings.empty()) {
@@ -443,7 +443,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp, bool backup) co
         settings += ".bak";
     }
     if (filepath) {
-        *filepath = fsbridge::AbsPathJoin(GetDataDirNet(), temp ? settings + ".tmp" : settings);
+        *filepath = fsbridge::AbsPathJoin(GetDataDirNet(), settings);
     }
     return true;
 }
@@ -462,7 +462,7 @@ static void SaveErrors(const std::vector<std::string> errors, std::vector<std::s
 bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
 {
     fs::path path;
-    if (!GetSettingsPath(&path, /* temp= */ false)) {
+    if (!GetSettingsPath(&path)) {
         return true; // Do nothing if settings file disabled.
     }
 
@@ -484,19 +484,15 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
 
 bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors, bool backup) const
 {
-    fs::path path, path_tmp;
-    if (!GetSettingsPath(&path, /*temp=*/false, backup) || !GetSettingsPath(&path_tmp, /*temp=*/true, backup)) {
+    fs::path path;
+    if (!GetSettingsPath(&path, backup)) {
         throw std::logic_error("Attempt to write settings file when dynamic settings are disabled.");
     }
 
     LOCK(cs_args);
     std::vector<std::string> write_errors;
-    if (!common::WriteSettings(path_tmp, m_settings.rw_settings, write_errors)) {
+    if (!common::WriteSettings(path, m_settings.rw_settings, write_errors)) {
         SaveErrors(write_errors, errors);
-        return false;
-    }
-    if (!RenameOver(path_tmp, path)) {
-        SaveErrors({strprintf("Failed renaming settings file %s to %s\n", fs::PathToString(path_tmp), fs::PathToString(path))}, errors);
         return false;
     }
     return true;
