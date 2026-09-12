@@ -158,6 +158,13 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetNewDestination(type, label);
     }
+    util::Expected<std::pair<CExtPubKey, KeyOriginInfo>, WalletError> deriveHDKey(const std::vector<uint32_t>& path, const std::optional<CExtPubKey>& hdkey) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        auto res{m_wallet->DeriveHDKey(path, hdkey)};
+        if (!res) return util::Unexpected{res.error()};
+        return std::make_pair(res->first.Neuter(), res->second);
+    }
     bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
     {
         std::unique_ptr<SigningProvider> provider = m_wallet->GetSolvingProvider(script);
