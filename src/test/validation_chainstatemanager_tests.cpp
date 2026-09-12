@@ -444,7 +444,6 @@ struct SnapshotTestSetup : TestChain100Setup {
             const BlockManager::Options blockman_opts{
                 .chainparams = chainman_opts.chainparams,
                 .blocks_dir = m_args.GetBlocksDirPath(),
-                .notifications = chainman_opts.notifications,
                 .block_tree_db_params = DBParams{
                     .path = chainman.m_options.datadir / "blocks" / "index",
                     .cache_bytes = m_kernel_cache_sizes.block_tree_db,

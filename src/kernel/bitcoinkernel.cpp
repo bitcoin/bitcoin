@@ -468,7 +468,6 @@ struct ChainstateManagerOptions {
           m_blockman_options{node::BlockManager::Options{
               .chainparams = *context->m_chainparams,
               .blocks_dir = blocks_dir,
-              .notifications = *context->m_notifications,
               .block_tree_db_params = DBParams{
                   .path = data_dir / "blocks" / "index",
                   .cache_bytes = kernel::CacheSizes{DEFAULT_KERNEL_CACHE}.block_tree_db,

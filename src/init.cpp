@@ -1208,7 +1208,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         BlockManager::Options blockman_opts_dummy{
             .chainparams = chainman_opts_dummy.chainparams,
             .blocks_dir = args.GetBlocksDirPath(),
-            .notifications = chainman_opts_dummy.notifications,
             .block_tree_db_params = DBParams{
                 .path = args.GetDataDirNet() / "blocks" / "index",
                 .cache_bytes = 0,
@@ -1413,7 +1412,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
     BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = args.GetBlocksDirPath(),
-        .notifications = chainman_opts.notifications,
         .block_tree_db_params = DBParams{
             .path = args.GetDataDirNet() / "blocks" / "index",
             .cache_bytes = cache_sizes.block_tree_db,
