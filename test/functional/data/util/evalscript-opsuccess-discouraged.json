@@ -1,0 +1,18 @@
+{
+  "script": {
+    "asm": "OP_UNKNOWN",
+    "hex": "bb",
+    "type": "nonstandard"
+  },
+  "sigversion": "tapscript",
+  "script_flags": [
+    "DISCOURAGE_OP_SUCCESS"
+  ],
+  "dummy_sig_checker": true,
+  "opsuccess_found": true,
+  "stack_after": [
+  ],
+  "sigop_cost": 0,
+  "success": false,
+  "error": "OP_SUCCESSx reserved for soft-fork upgrades"
+}

@@ -1,0 +1,17 @@
+{
+  "script": {
+    "asm": "1",
+    "hex": "51",
+    "type": "nonstandard"
+  },
+  "sigversion": "base",
+  "script_flags": [
+  ],
+  "dummy_sig_checker": true,
+  "stack_after": [
+    "01",
+    "01"
+  ],
+  "sigop_cost": 0,
+  "success": true
+}

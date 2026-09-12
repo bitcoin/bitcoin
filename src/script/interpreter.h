@@ -386,4 +386,15 @@ const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum();
 
 std::vector<std::string> GetScriptFlagNames(script_verify_flags flags);
 
+bool CastToBool(const std::vector<unsigned char>& vch);
+
+/** Parses the script for OP_SUCCESS opcodes.
+ *  On parse failure, returns false and sets serror.
+ *  If an OP_SUCCESS opcode is found, then either:
+ *    returns false and sets serror if flags contain DISCOURAGE_OP_SUCCESS
+ *    returns true
+ *  Otherwise returns std::nullopt.
+ */
+std::optional<bool> CheckTapscriptOpSuccess(const CScript& exec_script, script_verify_flags flags, ScriptError* serror);
+
 #endif // BITCOIN_SCRIPT_INTERPRETER_H
