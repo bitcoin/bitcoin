@@ -121,12 +121,7 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 
 #### Test Suite Dependencies
 
-There is an included test suite that is useful for testing code changes when developing.
-To run the test suite (recommended), you will need to have Python 3 installed:
-
-``` bash
-brew install python
-```
+See [`test/README.md`](/test/README.md#dependencies-and-prerequisites).
 
 ---
 
