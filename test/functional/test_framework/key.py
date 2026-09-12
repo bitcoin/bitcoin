@@ -65,11 +65,11 @@ class ECPubKey:
 
         # Extract r and s from the DER formatted signature. Return false for
         # any DER encoding errors.
-        if (sig[1] + 2 != len(sig)):
-            return False
         if (len(sig) < 4):
             return False
         if (sig[0] != 0x30):
+            return False
+        if (sig[1] + 2 != len(sig)):
             return False
         if (sig[2] != 0x02):
             return False
@@ -311,6 +311,15 @@ class TestFrameworkKey(unittest.TestCase):
                         sig_schnorr = random_bitflip(sig_schnorr)
                     self.assertFalse(verify_pubkey.verify_ecdsa(sig_ecdsa, msg))
                     self.assertFalse(verify_schnorr(verify_xonly_pubkey, sig_schnorr, msg))
+
+    def test_verify_ecdsa_rejects_short_sig(self):
+        """A signature too short to hold a DER header returns False, not IndexError."""
+        privkey = ECKey()
+        privkey.set(generate_privkey(), compressed=True)
+        pubkey = privkey.get_pubkey()
+        msg = bytes(32)
+        for sig in [b'', b'\x30', b'\x30\x00', b'\x30\x01\x02']:
+            self.assertFalse(pubkey.verify_ecdsa(sig, msg))
 
     def test_schnorr_testvectors(self):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
