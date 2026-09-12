@@ -10,6 +10,8 @@
 #include <util/log.h>
 #include <util/overflow.h>
 
+#include <cstdlib>
+#include <iostream>
 #include <stdexcept>
 
 FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
@@ -38,7 +40,14 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
         return nullptr;
     }
     fs::path path = FileName(pos);
-    fs::create_directories(path.parent_path());
+    std::error_code ec;
+    fs::create_directories(path.parent_path(), ec);
+    if (ec) {
+        const auto msg{tfm::format("Unable to create directory %s: %s", fs::PathToString(path.parent_path()), ec.message())};
+        std::cerr << msg << std::endl;
+        LogError("%s", msg);
+        std::abort();
+    }
     FILE* file = fsbridge::fopen(path, read_only ? "rb": "rb+");
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");

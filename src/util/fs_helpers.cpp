@@ -6,6 +6,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <util/fs_helpers.h>
+
 #include <random.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -16,7 +17,9 @@
 #include <util/syserror.h>
 
 #include <cerrno>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <map>
 #include <memory>
@@ -94,7 +97,14 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 {
     constexpr uint64_t min_disk_space{50_MiB};
 
-    uint64_t free_bytes_available = fs::space(dir).available;
+    std::error_code ec;
+    const uint64_t free_bytes_available = fs::space(dir, ec).available;
+    if (ec) {
+        const auto msg{tfm::format("Unable to query disk space for %s: %s", fs::PathToString(dir), ec.message())};
+        std::cerr << msg << std::endl;
+        LogError("%s", msg);
+        std::abort();
+    }
     return free_bytes_available >= min_disk_space + additional_bytes;
 }
 
