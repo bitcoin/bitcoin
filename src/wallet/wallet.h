@@ -559,8 +559,10 @@ public:
         MEMPOOL,
         NONMEMPOOL,
     };
-    SpendType HowSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool IsSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    SpendType HowSpent(const COutPoint& outpoint, bool isSpent = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /** Outpoint is spent if any non-conflicted transaction spends it */
+    bool IsSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return HowSpent(outpoint, /*isSpent=*/true) != SpendType::UNSPENT; }
 
     // Whether this or any known scriptPubKey with the same single key has been spent.
     bool IsSpentKey(const CScript& scriptPubKey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
