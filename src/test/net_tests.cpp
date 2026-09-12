@@ -22,6 +22,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
@@ -29,11 +30,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <ios>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 
 using namespace std::literals;
 using namespace util::hex_literals;
@@ -1093,8 +1097,9 @@ public:
 
     /** Send/receive scheduled/available bytes and messages.
      *
-     * This is the only function that interacts with the transport being tested; everything else is
-     * scheduling things done by Interact(), or processing things learned by it.
+     * Aside from GetTransport(), this is the only function that interacts with the transport being
+     * tested; everything else is scheduling things done by Interact(), or processing things learned
+     * by it.
      */
     InteractResult Interact()
     {
@@ -1146,6 +1151,9 @@ public:
 
     /** Expose the cipher. */
     BIP324Cipher& GetCipher() { return m_cipher; }
+
+    /** Expose the transport being tested. */
+    Transport& GetTransport() { return m_transport; }
 
     /** Schedule bytes to be sent to the transport. */
     void Send(std::span<const uint8_t> data)
@@ -1374,10 +1382,57 @@ public:
     }
 };
 
+constexpr std::string_view MAX_MESSAGE_TYPE{"xxxxxxxxxxxx"};
+static_assert(MAX_MESSAGE_TYPE.size() == CMessageHeader::MESSAGE_TYPE_SIZE);
+
+CSerializedNetMsg MakeNetMessage(std::string_view type, size_t payload_size)
+{
+    auto msg{NetMsg::Make(std::string{type})};
+    msg.data.resize(payload_size, uint8_t{0x01});
+    return msg;
+}
+
 } // namespace
+
+BOOST_AUTO_TEST_CASE(outbound_message_limits)
+{
+    CNode node{/*id=*/0, /*sock=*/nullptr, /*addrIn=*/CAddress{}, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, /*addrBindIn=*/CAddress{}, /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+    auto& max_type_transport{*node.m_transport};
+    auto max_type_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1)};
+    BOOST_REQUIRE(max_type_transport.SetMessageToSend(max_type_msg));
+
+    auto [header, more, message_type]{max_type_transport.GetBytesToSend(/*have_next_message=*/false)};
+    BOOST_CHECK_EQUAL(header.size(), CMessageHeader::HEADER_SIZE);
+    BOOST_CHECK(more);
+    BOOST_CHECK_EQUAL(message_type, MAX_MESSAGE_TYPE);
+
+    V1Transport max_payload_transport{NodeId{0}};
+    auto max_payload_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)};
+
+    // The pending type-limit message keeps messages passed through PushMessage() in the queue
+    auto queued{0U};
+    for (auto& [msg, reject] : std::array{
+             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), true},
+             std::pair{max_payload_msg.Copy(), false}}) {
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
+        try {
+            m_node.connman->PushMessage(&node, std::move(msg));
+        } catch (const NonFatalCheckError&) {
+            BOOST_CHECK(reject);
+        }
+        queued += !reject;
+        LOCK(node.cs_vSend);
+        BOOST_CHECK_EQUAL(node.vSendMsg.size(), queued);
+    }
+    BOOST_REQUIRE(max_payload_transport.SetMessageToSend(max_payload_msg));
+}
 
 BOOST_AUTO_TEST_CASE(v2transport_test)
 {
+    auto max_type_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1)};
+    auto max_payload_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)};
+
     // A mostly normal scenario, testing a transport in initiator mode.
     for (int i = 0; i < 10; ++i) {
         V2TransportTester tester(m_rng, true);
@@ -1543,6 +1598,9 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK((*ret)[3]->m_type == "foobar");
         BOOST_CHECK((*ret)[3]->m_recv.empty());
         tester.ReceiveMessage("barfoo", {});
+        // Accepted messages occupy the send buffer, so use a separate ready transport for each case.
+        BOOST_REQUIRE(i != 0 || tester.GetTransport().SetMessageToSend(max_type_msg));
+        BOOST_REQUIRE(i != 1 || tester.GetTransport().SetMessageToSend(max_payload_msg));
     }
 
     // Too long garbage (initiator).
