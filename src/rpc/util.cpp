@@ -1387,7 +1387,7 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 std::vector<uint32_t> ParsePathBIP32(const std::string& path)
 {
     std::vector<uint32_t> out;
-    if (!ParseHDKeypath(path, out)) {
+    if (!ParseHDKeypathLegacy(path, out)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP32 keypath");
     }
     return out;
