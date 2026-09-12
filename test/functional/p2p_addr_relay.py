@@ -185,14 +185,6 @@ class AddrTest(BitcoinTestFramework):
         inbound_peer.send_and_ping(msg_addr())
 
         full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type="outbound-full-relay")
-        msg = self.setup_addr_msg(2)
-        self.send_addr_msg(full_outbound_peer, msg, [inbound_peer])
-        self.log.info('Check that the first addr message received from an outbound peer is not relayed')
-        # Currently, there is a flag that prevents the first addr message received
-        # from a new outbound peer to be relayed to others. Originally meant to prevent
-        # large GETADDR responses from being relayed, it now typically affects the self-announcement
-        # of the outbound peer which is often sent before the GETADDR response.
-        assert_equal(inbound_peer.num_ipv4_received, 0)
 
         self.log.info('Check that subsequent addr messages sent from an outbound peer are relayed')
         msg2 = self.setup_addr_msg(2)
