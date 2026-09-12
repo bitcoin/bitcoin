@@ -3,11 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <random.h>
 #include <test/util/common.h>
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -283,6 +286,22 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
 
     BOOST_CHECK_LT(ZeroL,
                    OneL);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_sorting)
+{
+    const std::array expected{
+        arith_uint256{1},
+        arith_uint256{2},
+        arith_uint256{arith_uint256{1} << 32},
+        arith_uint256{arith_uint256{1} << 33},
+    };
+
+    FastRandomContext rng{/*fDeterministic=*/false};
+    auto values{expected};
+    std::ranges::shuffle(values, rng);
+    std::ranges::sort(values);
+    BOOST_CHECK(values == expected);
 }
 
 BOOST_AUTO_TEST_CASE( plusMinus )
