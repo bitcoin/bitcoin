@@ -1417,8 +1417,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{_("Transaction too large")};
     }
 
-    if (current_fee > wallet.m_default_max_tx_fee) {
+    if (current_fee > wallet.m_max_tx_fee) {
         return util::Error{TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED)};
+    }
+
+    const int64_t tx_vsize{GetVirtualTransactionSize(*tx)};
+    if (current_fee > wallet.m_max_tx_fee_rate.GetFee(tx_vsize)) {
+        return util::Error{TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED)};
     }
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
