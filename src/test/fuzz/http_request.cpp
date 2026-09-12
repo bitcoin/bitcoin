@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/url.h>
 #include <httpserver.h>
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -64,4 +65,30 @@ FUZZ_TARGET(http_request)
         // Absent both framing headers there is no body.
         assert(body.empty());
     }
+}
+
+FUZZ_TARGET(http_query_parameter)
+{
+    using http_bitcoin::GetQueryParameterFromUri;
+
+    // GetQueryParameterFromUri() parses the query string of a request target
+    // supplied by a remote client. It is reached from the REST interface
+    // (see rest.cpp) for parameters such as "count", "offset" and "verbose".
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    const std::string uri{fuzzed_data_provider.ConsumeRandomLengthString(1024)};
+    const std::string key{fuzzed_data_provider.ConsumeRandomLengthString(64)};
+    const std::string value{fuzzed_data_provider.ConsumeRandomLengthString(1024)};
+    (void)GetQueryParameterFromUri(uri, key);
+
+    const std::string encoded_key{UrlEncode(key)};
+    const std::string encoded_value{UrlEncode(value)};
+    const std::string query_uri{"/endpoint?" + encoded_key + "=" + encoded_value};
+    assert(GetQueryParameterFromUri(query_uri, key) == value);
+    assert(GetQueryParameterFromUri("/endpoint?" + encoded_key, key) == "");
+    assert(GetQueryParameterFromUri(query_uri + "&" + encoded_key + "=ignored", key) == value);
+    assert(GetQueryParameterFromUri(query_uri + "#?" + encoded_key + "=ignored", key) == value);
+
+    // First '?' must precede '#', and this name must not be key.
+    const std::string dummy{key == "n" ? "m" : "n"};
+    assert(!GetQueryParameterFromUri("/endpoint?" + dummy + "=1#?" + encoded_key + "=" + encoded_value, key));
 }
