@@ -382,36 +382,6 @@ CPubKey EllSwiftPubKey::Decode() const
     return CPubKey{vch_bytes.begin(), vch_bytes.end()};
 }
 
-void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
-    code[0] = nDepth;
-    std::ranges::copy(fingerprint, code+1);
-    WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
-    assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
-    memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
-}
-
-void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
-    nDepth = code[0];
-    std::copy_n(code + 1, fingerprint.size(), fingerprint.begin());
-    nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
-    pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
-    if ((nDepth == 0 && (nChild != 0 || ReadLE32(fingerprint.data()) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
-}
-
-void CExtPubKey::EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const
-{
-    memcpy(code, version, 4);
-    Encode(&code[4]);
-}
-
-void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE])
-{
-    memcpy(version, code, 4);
-    Decode(&code[4]);
-}
-
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild, uint256* bip32_tweak_out) const {
     if (nDepth == std::numeric_limits<unsigned char>::max()) return false;
     out.nDepth = nDepth + 1;
