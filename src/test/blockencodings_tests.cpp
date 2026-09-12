@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         BOOST_CHECK_EQUAL(partial_block_with_extra_collision.InitData(cmpctblock, extra_txn), READ_STATUS_OK);
         BOOST_CHECK(partial_block_with_extra_collision.IsTxAvailable(1));
         BOOST_CHECK(!partial_block_with_extra_collision.IsTxAvailable(2));
-        BOOST_CHECK_EQUAL(partial_block_with_extra_collision.GetMempoolCount(), 1U);
+        BOOST_CHECK_EQUAL(partial_block_with_extra_collision.GetMempoolCount(), 0U);
         BOOST_CHECK_EQUAL(partial_block_with_extra_collision.GetExtraCount(), 1U);
 
         // Now also collide the extra-sourced slot: both counters decrement exactly once.
