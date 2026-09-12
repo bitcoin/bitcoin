@@ -84,12 +84,14 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey)
 
 class MuSig2SecNonceImpl
 {
+    friend std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+
 private:
     //! The actual secnonce itself
     secure_unique_ptr<secp256k1_musig_secnonce> m_nonce;
 
 public:
-    MuSig2SecNonceImpl() : m_nonce{make_secure_unique<secp256k1_musig_secnonce>()} {}
+    MuSig2SecNonceImpl() = default;
 
     // Delete copy constructors
     MuSig2SecNonceImpl(const MuSig2SecNonceImpl&) = delete;
@@ -97,7 +99,7 @@ public:
 
     secp256k1_musig_secnonce* Get() const { return m_nonce.get(); }
     void Invalidate() { m_nonce.reset(); }
-    bool IsValid() { return m_nonce != nullptr; }
+    bool IsValid() const { return m_nonce != nullptr; }
 };
 
 MuSig2SecNonce::MuSig2SecNonce() : m_impl{std::make_unique<MuSig2SecNonceImpl>()} {}
@@ -114,10 +116,10 @@ secp256k1_musig_secnonce* MuSig2SecNonce::Get() const
 
 void MuSig2SecNonce::Invalidate()
 {
-    return m_impl->Invalidate();
+    m_impl->Invalidate();
 }
 
-bool MuSig2SecNonce::IsValid()
+bool MuSig2SecNonce::IsValid() const
 {
     return m_impl->IsValid();
 }
@@ -147,8 +149,9 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
     GetStrongRandBytes(rand);
 
     // Generate nonce
+    secure_unique_ptr<secp256k1_musig_secnonce> generated_nonce = make_secure_unique<secp256k1_musig_secnonce>();
     secp256k1_musig_pubnonce pubnonce;
-    if (!secp256k1_musig_nonce_gen(GetSecp256k1SignContext(), secnonce.Get(), &pubnonce, rand.data(), UCharCast(our_seckey.begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+    if (!secp256k1_musig_nonce_gen(GetSecp256k1SignContext(), generated_nonce.get(), &pubnonce, rand.data(), UCharCast(our_seckey.begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
         return {};
     }
 
@@ -159,11 +162,16 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
         return {};
     }
 
+    secnonce.m_impl->m_nonce = std::move(generated_nonce);
     return out;
 }
 
 std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
 {
+    if (!secnonce.IsValid()) {
+        return std::nullopt;
+    }
+
     secp256k1_keypair keypair;
     if (!secp256k1_keypair_create(GetSecp256k1SignContext(), &keypair, UCharCast(our_seckey.begin()))) return std::nullopt;
 
