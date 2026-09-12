@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
 #include <flatfile.h>
+#include <kernel/fatal_error.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -13,6 +14,7 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <memory>
@@ -33,7 +35,7 @@ static void WriteBlockBench(benchmark::Bench& bench)
     bench.run([&] {
         LOCK(::cs_main);
         const auto pos{blockman.WriteBlock(block, 413'567)};
-        assert(!pos.IsNull());
+        assert(pos && !pos->IsNull());
     });
 }
 
@@ -43,7 +45,7 @@ static void ReadBlockBench(benchmark::Bench& bench)
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
     const auto& test_block{CreateTestBlock()};
     const auto& expected_hash{test_block.GetHash()};
-    const auto& pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, 413'567))};
+    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, 413'567)).value()};
     bench.run([&] {
         CBlock block;
         const auto success{blockman.ReadBlock(block, pos, expected_hash)};
@@ -55,7 +57,7 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(CreateTestBlock(), 413'567))};
+    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(CreateTestBlock(), 413'567)).value()};
     bench.run([&] {
         const auto res{blockman.ReadRawBlock(pos)};
         assert(res);
