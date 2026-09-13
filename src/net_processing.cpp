@@ -628,7 +628,7 @@ public:
         m_best_block_time = time;
     };
     void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
-    void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block, bool optimistic_reconstruction) override
+    void UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block) override
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_block_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
@@ -1080,7 +1080,6 @@ private:
         uint256 hash;
         std::future<BlockProcessingResult> future;
         bool via_compact_block;
-        bool optimistic_reconstruction;
         std::shared_ptr<std::atomic<bool>> callbacks_complete{};
     };
 
@@ -1090,7 +1089,7 @@ private:
     /** Whether a received block is still awaiting processing completion. */
     bool IsBlockBeingProcessed(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
-    void TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block, bool optimistic_reconstruction)
+    void TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     void ProcessBlock(NodeId peer_id, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool via_compact_block, bool optimistic_reconstruction)
@@ -1100,7 +1099,7 @@ private:
     bool IsBlockProcessingPending(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_block_mutex);
 
     /** Apply post-processing peer updates on the message-handler thread. */
-    void CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+    void CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_block_mutex);
 
     /** Process compact block txns  */
@@ -3749,22 +3748,22 @@ bool PeerManagerImpl::IsBlockBeingProcessed(const uint256& hash) const
     return std::ranges::any_of(m_pending_block_processing, [&hash](const auto& entry) { return entry.second.hash == hash; });
 }
 
-void PeerManagerImpl::TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block, bool optimistic_reconstruction)
+void PeerManagerImpl::TrackBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block)
 {
     AssertLockHeld(g_msgproc_mutex);
     assert(future.valid());
-    const auto [it, inserted]{m_pending_block_processing.emplace(peer_id, PendingBlockProcessing{hash, std::move(future), via_compact_block, optimistic_reconstruction})};
+    const auto [it, inserted]{m_pending_block_processing.emplace(peer_id, PendingBlockProcessing{hash, std::move(future), via_compact_block})};
     assert(inserted);
 }
 
-void PeerManagerImpl::UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block, bool optimistic_reconstruction)
+void PeerManagerImpl::UnitTestBlockProcessing(NodeId peer_id, const uint256& hash, std::future<BlockProcessingResult> future, bool via_compact_block)
 {
     Assert(GetPeerRef(peer_id));
     {
         LOCK(m_block_mutex);
         mapBlockSource.emplace(hash, std::make_pair(peer_id, !via_compact_block));
     }
-    TrackBlockProcessing(peer_id, hash, std::move(future), via_compact_block, optimistic_reconstruction);
+    TrackBlockProcessing(peer_id, hash, std::move(future), via_compact_block);
 }
 
 void PeerManagerImpl::ProcessBlock(NodeId peer_id, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool via_compact_block, bool optimistic_reconstruction)
@@ -3777,10 +3776,16 @@ void PeerManagerImpl::ProcessBlock(NodeId peer_id, const std::shared_ptr<const C
         // Attribute initial failures to this sender, even if another peer has
         // an admitted block with the same header hash awaiting validation.
         MaybePunishNodeForBlock(peer_id, state, via_compact_block);
-        CompleteBlockProcessing(peer_id, block->GetHash(), future.get(), optimistic_reconstruction);
+        CompleteBlockProcessing(peer_id, block->GetHash(), future.get());
         return;
     }
-    TrackBlockProcessing(peer_id, block->GetHash(), std::move(future), via_compact_block, optimistic_reconstruction);
+    TrackBlockProcessing(peer_id, block->GetHash(), std::move(future), via_compact_block);
+    if (optimistic_reconstruction) {
+        // Clear other peers' requests only after initial admission succeeds, so a
+        // malleated compact block cannot interfere with block relay. The pending
+        // entry prevents downloading this block again while processing completes.
+        WITH_LOCK(m_block_mutex, RemoveBlockRequest(block->GetHash(), std::nullopt));
+    }
 }
 
 bool PeerManagerImpl::IsBlockProcessingPending(NodeId peer_id)
@@ -3824,7 +3829,7 @@ bool PeerManagerImpl::IsBlockProcessingPending(NodeId peer_id)
         state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid");
         MaybePunishNodeForBlock(peer_id, state, pending.via_compact_block);
     }
-    CompleteBlockProcessing(peer_id, pending.hash, result, pending.optimistic_reconstruction);
+    CompleteBlockProcessing(peer_id, pending.hash, result);
     // SendMessages may consume a completion after ProcessMessages skipped this peer.
     m_connman.WakeMessageHandler();
     return false;
@@ -3841,7 +3846,7 @@ void PeerManagerImpl::ProcessPendingEvents()
     }
 }
 
-void PeerManagerImpl::CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result, bool optimistic_reconstruction)
+void PeerManagerImpl::CompleteBlockProcessing(NodeId peer_id, const uint256& hash, const BlockProcessingResult& result)
 {
     // new_block can be true even if processing failed, for example on a write error.
     if (result.new_block) {
@@ -3858,17 +3863,6 @@ void PeerManagerImpl::CompleteBlockProcessing(NodeId peer_id, const uint256& has
         // A newer submission from another peer may now own this source entry.
         const auto source{mapBlockSource.find(hash)};
         if (source != mapBlockSource.end() && source->second.first == peer_id) mapBlockSource.erase(source);
-    }
-
-    if (optimistic_reconstruction && !result.new_block) {
-        LOCK(cs_main);
-        const CBlockIndex* index{Assert(m_chainman.m_blockman.LookupBlockIndex(hash))};
-        if (index->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-            // Clear download state for this block, which is in process from
-            // some other peer. Do this after ProcessNewBlock so a malleated
-            // compact block cannot interfere with block relay.
-            WITH_LOCK(m_block_mutex, RemoveBlockRequest(hash, std::nullopt));
-        }
     }
 }
 
