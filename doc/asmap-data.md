@@ -40,7 +40,7 @@ a challenge if users don't want to trust a single creator of the used ASMap file
 To overcome this, multiple users can start the download process at the exact
 same time which leads to a high likelihood that their downloaded data will be
 similar enough that they receive the same output at the end of the process.
-This process is regularly coordinated at the [asmap-data](https://github.com/asmap/asmap-data)
+This process is regularly coordinated at the [asmap-data](https://github.com/bitcoin-core/asmap-data)
 project. If the result hash that was observed by the most participants is signed
 by 5 participants or more, the resulting ASMap file is added to the repository for
 public use. Files will not be merged to the repository
@@ -57,3 +57,15 @@ repository so that its data is embedded in the release. Ideally, there may be a 
 already created recently that can be selected for an upcoming release. Alternatively,
 a new creation process can be initiated with the goal of obtaining a fresh map
 for use in the upcoming release.
+
+## Verifying the ASMap in use
+
+The ASMap version is the SHA256 hash of the encoded data, so it matches the
+output of `sha256sum` on the file and the hash attested in the asmap-data
+repository. On startup, `bitcoind` logs the version of the ASMap it is using:
+
+```
+Using asmap version <hash> for IP bucketing
+```
+
+The same hash is returned as `asmap_version` by the `getnetworkinfo` RPC.
