@@ -525,6 +525,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]},
                               success=False, error_code=-8, error_message='End of range is too high')
 
+        # The wallet stores the exclusive range end as an int32_t, so an inclusive end of
+        # INT32_MAX is not importable even though the shared range parser accepts it.
+        # Use a descriptor the wallet can actually expand, so that the range is rejected
+        # before any keys are derived rather than by a later unrelated check.
+        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/0/*)"), "timestamp": "now",
+                              "range": [2**31 - 1, 2**31 - 1]},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [2, 1]},
                               success=False, error_code=-8, error_message='Range specified as [begin,end] must not have begin after end')
 

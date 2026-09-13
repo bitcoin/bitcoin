@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <limits>
 #include <tuple>
 #include <string>
 
@@ -183,6 +184,11 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 auto range = ParseDescriptorRange(data["range"]);
                 range_start = range.first;
                 range_end = range.second + 1; // Specified range end is inclusive, but we need range end as exclusive
+                // WalletDescriptor stores the exclusive end as an int32_t, so the
+                // largest importable inclusive end is one below its maximum.
+                if (range_end > std::numeric_limits<int32_t>::max()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "End of range is too high");
+                }
             } else {
                 warnings.push_back("Range not given, using default keypool range");
                 range_start = 0;
