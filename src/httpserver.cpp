@@ -654,7 +654,7 @@ void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> 
     m_req_busy = false;
 }
 
-CService HTTPRequest::GetPeer() const
+SocketAddr HTTPRequest::GetPeer() const
 {
     if (std::shared_ptr c{m_client.lock()}) {
         return c->GetPeer();
@@ -705,7 +705,7 @@ void HTTPRequest::WriteHeader(std::string&& hdr, std::string&& value)
     m_response_headers.Write(std::move(hdr), std::move(value));
 }
 
-util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CService& to)
+util::Expected<void, std::string> HTTPServer::BindAndStartListening(const SocketAddr& to)
 {
     // Create socket for listening for incoming connections
     sockaddr_storage storage;
@@ -817,7 +817,7 @@ void HTTPServer::JoinSocketsThreads()
     }
 }
 
-std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CService& addr)
+std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, SocketAddr& addr)
 {
     // Make sure we only operate on our own listening sockets
     Assume(std::ranges::any_of(m_listen, [&](const auto& sock) { return sock.get() == &listen_sock; }));
@@ -845,7 +845,7 @@ std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CSer
     }
 
     // Early address-based allow check
-    if (!ClientAllowed(addr)) {
+    if (!ClientAllowed(addr.GetCNetAddr())) {
         LogDebug(BCLog::HTTP, "Connection from %s rejected: Client network is not allowed HTTP access\n",
                  addr.ToStringAddrPort());
         // Socket destroyed, connection aborted
@@ -860,7 +860,7 @@ HTTPServer::Id HTTPServer::GetNewId()
     return m_next_id.fetch_add(1, std::memory_order_relaxed);
 }
 
-void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& addr)
+void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const SocketAddr& addr)
 {
     if (!sock->IsSelectable()) {
         LogDebug(BCLog::HTTP,
@@ -992,7 +992,7 @@ void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_so
             // Stop early if the kernel queue is empty (AcceptConnection returns null)
             // or if accepting the last connection brought us to the limit.
             while (GetConnectionsCount() < static_cast<size_t>(m_rpcmaxconnections)) {
-                CService addr_accepted;
+                SocketAddr addr_accepted;
                 auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
                 if (!sock_accepted) break;
                 NewSockAccepted(std::move(sock_accepted), addr_accepted);
@@ -1370,7 +1370,7 @@ bool InitHTTPServer()
             if (addr->IsBindAny()) {
                 LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
             }
-            auto result{g_http_server->BindAndStartListening(addr.value())};
+            auto result{g_http_server->BindAndStartListening(SocketAddr(addr.value()))};
             if (!result) {
                 LogWarning("Binding RPC on address %s failed: %s", addr->ToStringAddrPort(), result.error());
             } else {
