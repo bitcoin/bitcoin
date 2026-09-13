@@ -16,6 +16,7 @@
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -1117,8 +1118,9 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         target_size = m_keypool_size;
     }
 
-    // Calculate the new range_end
-    int32_t new_range_end = std::max(m_wallet_descriptor.GetNext() + (int32_t)target_size, m_wallet_descriptor.GetEnd());
+    // Calculate the new range_end. Saturate instead of overflowing int32_t when
+    // the next index is close to the maximum representable range end.
+    int32_t new_range_end = std::max(SaturatingAdd(m_wallet_descriptor.GetNext(), static_cast<int32_t>(target_size)), m_wallet_descriptor.GetEnd());
 
     // If the descriptor is not ranged, we actually just want to fill the first cache item
     if (!m_wallet_descriptor.descriptor->IsRange()) {
