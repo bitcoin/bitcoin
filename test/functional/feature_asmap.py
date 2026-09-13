@@ -45,6 +45,7 @@ class AsmapTest(BitcoinTestFramework):
         self.stop_node(0)
         with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
             self.start_node(0)
+        assert "asmap_version" not in self.node.getnetworkinfo()
 
     def test_noasmap_arg(self):
         self.log.info('Test bitcoind with -noasmap arg passed')
@@ -59,6 +60,7 @@ class AsmapTest(BitcoinTestFramework):
         shutil.copyfile(self.asmap_raw, filename)
         with self.node.assert_debug_log(expected_messages(filename)):
             self.start_node(0, [f'-asmap={filename}'])
+        assert_equal(self.node.getnetworkinfo()["asmap_version"], VERSION)
         os.remove(filename)
 
     def test_asmap_with_relative_path(self):
@@ -79,6 +81,7 @@ class AsmapTest(BitcoinTestFramework):
                 with self.node.assert_debug_log(["Opened asmap data", "from embedded byte array",
                                                  f"Using asmap version {EMBEDDED_VERSION} for IP bucketing"]):
                     self.start_node(0, [arg])
+                assert_equal(self.node.getnetworkinfo()["asmap_version"], EMBEDDED_VERSION)
         else:
             self.log.info('Test bitcoind -asmap (compiled without embedded map data)')
             for arg in ['-asmap', '-asmap=1']:

@@ -18,6 +18,7 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netgroup.h>
 #include <node/connection_types.h>
 #include <node/context.h>
 #include <node/protocol_version.h>
@@ -32,6 +33,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/check.h>
@@ -43,7 +45,6 @@
 #include <common/args.h>
 #include <node/data/ip_asn.dat.h>
 #include <streams.h>
-#include <uint256.h>
 #include <util/asmap.h>
 #include <util/fs.h>
 #endif
@@ -710,6 +711,7 @@ static RPCMethod getnetworkinfo()
                                 {RPCResult::Type::BOOL, "proxy_randomize_credentials", "Whether randomized credentials are used"},
                             }},
                         }},
+                        {RPCResult::Type::STR_HEX, "asmap_version", /*optional=*/true, "the SHA256 hash of the asmap data used for IP bucketing (only displayed if the -asmap config option is set)"},
                         {RPCResult::Type::STR_AMOUNT, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::STR_AMOUNT, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
@@ -767,6 +769,10 @@ static RPCMethod getnetworkinfo()
     obj.pushKV("connections_in", connman.GetNodeCount(ConnectionDirection::In));
     obj.pushKV("connections_out", connman.GetNodeCount(ConnectionDirection::Out));
     obj.pushKV("networks",      GetNetworksInfo());
+    const NetGroupManager& netgroupman{*CHECK_NONFATAL(node.netgroupman)};
+    if (netgroupman.UsingASMap()) {
+        obj.pushKV("asmap_version", HexStr(netgroupman.GetAsmapVersion()));
+    }
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
     obj.pushKV("relayfee", ValueFromAmount(mempool.m_opts.min_relay_feerate.GetFeePerK()));
