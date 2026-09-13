@@ -855,6 +855,83 @@ BOOST_FIXTURE_TEST_CASE(download_window_advance_does_not_start_stall, PendingBlo
     BOOST_CHECK_EQUAL(in_flight.front(), 1025);
 }
 
+BOOST_FIXTURE_TEST_CASE(compact_blocktxn_does_not_wait_for_cs_main, PendingBlockTestingSetup)
+{
+    auto& chainman{*m_node.chainman};
+    FakeNodeClock clock{chainman.GetParams().GenesisBlock().Time() + 1h};
+    const auto funding_blocks{CreateBlockChain(COINBASE_MATURITY, chainman.GetParams())};
+    for (const auto& block : funding_blocks) {
+        BlockValidationState state;
+        BOOST_REQUIRE(chainman.ProcessNewBlock(block, state, true, true).get().new_block);
+    }
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+
+    // Leave one transaction missing so the compact block requests a BLOCKTXN response.
+    CMutableTransaction spend;
+    spend.vin.emplace_back(COutPoint{funding_blocks.front()->vtx[0]->GetHash(), 0});
+    spend.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    spend.vout.push_back(funding_blocks.front()->vtx[0]->vout[0]);
+    --spend.vout[0].nValue;
+    auto block{PrepareBlock(m_node, {})};
+    block->vtx.push_back(MakeTransactionRef(spend));
+    node::RegenerateCommitments(*block, chainman);
+    while (!CheckProofOfWork(block->GetHash(), block->nBits, chainman.GetConsensus())) ++block->nNonce;
+
+    CNode* source;
+    {
+        LOCK(NetEventsInterface::g_msgproc_mutex);
+        source = &AddPeer(0);
+        BOOST_REQUIRE(Connman().ReceiveMsgFrom(*source, NetMsg::Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION)));
+        Connman().ProcessMessagesOnce(*source);
+        source->m_bip152_highbandwidth_to = true;
+        const CBlockHeaderAndShortTxIDs compact{*block, /*nonce=*/0};
+        BOOST_REQUIRE(Connman().ReceiveMsgFrom(*source, NetMsg::Make(NetMsgType::CMPCTBLOCK, compact)));
+        Connman().ProcessMessagesOnce(*source);
+    }
+    auto has_message = [&](std::string_view msg_type) {
+        LOCK(source->cs_vSend);
+        const auto& [data, more, transport_msg_type]{source->m_transport->GetBytesToSend(!source->vSendMsg.empty())};
+        return (!data.empty() && transport_msg_type == msg_type) ||
+               std::ranges::any_of(source->vSendMsg, [&](const auto& msg) { return msg.m_type == msg_type; });
+    };
+    BOOST_REQUIRE(has_message(NetMsgType::GETBLOCKTXN));
+    BOOST_REQUIRE_EQUAL(Stats(source->GetId()).vHeightInFlight.size(), 1);
+    Connman().FlushSendBuffer(*source);
+    source->fPauseSend = false;
+
+    auto process_without_chain_lock = [&] {
+        std::future<void> processed;
+        {
+            LOCK(cs_main);
+            processed = std::async(std::launch::async, [&] {
+                LOCK(NetEventsInterface::g_msgproc_mutex);
+                Connman().ProcessMessagesOnce(*source);
+            });
+            // Release cs_main before joining, including when a regression fails this check.
+            BOOST_CHECK(processed.wait_for(10s) == std::future_status::ready);
+        }
+        processed.get();
+    };
+
+    // An unexpected response must be discarded without waiting for block validation.
+    BlockTransactions response;
+    BOOST_REQUIRE(Connman().ReceiveMsgFrom(*source, NetMsg::Make(NetMsgType::BLOCKTXN, response)));
+    process_without_chain_lock();
+    BOOST_CHECK(!source->fDisconnect);
+    BOOST_CHECK(!HasSendData(*source));
+    BOOST_CHECK_EQUAL(Stats(source->GetId()).vHeightInFlight.size(), 1);
+
+    // A reconstruction failure must also reach the full-block fallback without cs_main.
+    response.blockhash = block->GetHash();
+    --spend.vout[0].nValue;
+    response.txn.push_back(MakeTransactionRef(spend));
+    BOOST_REQUIRE(Connman().ReceiveMsgFrom(*source, NetMsg::Make(NetMsgType::BLOCKTXN, response)));
+    process_without_chain_lock();
+    BOOST_CHECK(!source->fDisconnect);
+    BOOST_CHECK(has_message(NetMsgType::GETDATA));
+    BOOST_CHECK_EQUAL(Stats(source->GetId()).vHeightInFlight.size(), 1);
+}
+
 BOOST_FIXTURE_TEST_CASE(worker_pending_compact_block_not_downloaded, PendingBlockTestingSetup)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
