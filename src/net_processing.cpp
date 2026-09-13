@@ -845,7 +845,7 @@ private:
     void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Send a single `sendheaders` message, after we have completed headers sync with a peer. */
-    void MaybeSendSendHeaders(CNode& node, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void MaybeSendSendHeaders(CNode& node, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /** Relay (gossip) an address to a few randomly chosen nodes.
      *
@@ -857,7 +857,7 @@ private:
     void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
     /** Send `feefilter` message. */
-    void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
@@ -3547,6 +3547,8 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
 bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
+    // Avoid waiting for validation when this peer has no orphan work.
+    if (!WITH_LOCK(m_tx_download_mutex, return m_txdownloadman.HaveMoreWork(peer.m_id))) return false;
     LOCK2(::cs_main, m_tx_download_mutex);
 
     while (CTransactionRef porphanTx = m_txdownloadman.GetTxToReconsider(peer.m_id)) {
@@ -5990,7 +5992,6 @@ void PeerManagerImpl::MaybeSendSendHeaders(CNode& node, Peer& peer)
     // new blocks while trying to sync their headers chain is problematic,
     // because of the state tracking done.
     if (!peer.m_sent_sendheaders && node.GetCommonVersion() >= SENDHEADERS_VERSION) {
-        LOCK(cs_main);
         CNodeState &state = *State(node.GetId());
         if (state.pindexBestKnownBlock != nullptr &&
                 state.pindexBestKnownBlock->nChainWork > m_chainman.MinimumChainWork()) {
@@ -6279,12 +6280,16 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
     MaybeSendAddr(node, peer, current_time);
 
-    MaybeSendSendHeaders(node, peer);
-
-    ProcessInvBacklog(now);
-
     {
-        LOCK2(cs_main, m_block_mutex);
+        // Keep the shared message handler available while validation holds cs_main.
+        // The next handler turn retries this work; block completion also wakes it.
+        TRY_LOCK(cs_main, lock_main);
+        if (!lock_main) return true;
+
+        MaybeSendSendHeaders(node, peer);
+        ProcessInvBacklog(now);
+
+        LOCK(m_block_mutex);
 
         CNodeState &state = *State(node.GetId());
         auto& download{BlockDownload(peer)};
@@ -6743,7 +6748,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
 
         if (!vGetData.empty())
             MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+
+        // Keep cs_main held so block validation cannot take the mempool lock
+        // before the fee-filter calculation.
+        MaybeSendFeefilter(node, peer, current_time);
     } // release cs_main
-    MaybeSendFeefilter(node, peer, current_time);
     return true;
 }

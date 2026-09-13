@@ -36,6 +36,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -44,6 +45,8 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -1029,6 +1032,93 @@ BOOST_FIXTURE_TEST_CASE(worker_queued_duplicate_rejection_punishes_each_sender, 
 BOOST_FIXTURE_TEST_CASE(worker_queued_valid_duplicate_resumes_both_senders, PendingBlockTestingSetup)
 {
     CheckQueuedDuplicateBlock(/*invalid=*/false);
+}
+
+BOOST_AUTO_TEST_CASE(sendmessages_does_not_wait_for_cs_main)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+    auto& peerman{*m_node.peerman};
+    std::array<std::unique_ptr<CNode>, 2> nodes;
+    for (size_t i{0}; i < nodes.size(); ++i) {
+        in_addr ipv4_addr{};
+        ipv4_addr.s_addr = htonl(0x7f000001 + static_cast<uint32_t>(i));
+        nodes[i] = std::make_unique<CNode>(/*id=*/static_cast<NodeId>(i),
+                                         /*sock=*/nullptr,
+                                         CAddress{CService{ipv4_addr, Params().GetDefaultPort()}, NODE_NONE},
+                                         /*nKeyedNetGroupIn=*/0,
+                                         /*nLocalHostNonceIn=*/0,
+                                         CAddress{},
+                                         /*addrNameIn=*/"",
+                                         ConnectionType::OUTBOUND_FULL_RELAY,
+                                         /*inbound_onion=*/false,
+                                         /*network_key=*/0);
+        auto& node{*nodes[i]};
+        connman.Handshake(node, /*successfully_connected=*/false,
+                          /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                          /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                          /*version=*/PROTOCOL_VERSION, /*relay_txs=*/true);
+        // Finish the handshake without running the first ordinary send turn.
+        BOOST_REQUIRE(connman.ReceiveMsgFrom(node, NetMsg::Make(NetMsgType::VERACK)));
+        node.fPauseSend = false;
+        connman.ProcessMessagesOnce(node);
+        BOOST_REQUIRE(node.fSuccessfullyConnected);
+        connman.FlushSendBuffer(node);
+        node.fPauseSend = false;
+    }
+
+    auto has_message = [](CNode& node, std::string_view msg_type) {
+        LOCK(node.cs_vSend);
+        const auto& [data, more, transport_msg_type]{node.m_transport->GetBytesToSend(!node.vSendMsg.empty())};
+        return (!data.empty() && transport_msg_type == msg_type) ||
+               std::ranges::any_of(node.vSendMsg, [&](const auto& msg) { return msg.m_type == msg_type; });
+    };
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(*nodes[1], NetMsg::Make(NetMsgType::PING, uint64_t{123})));
+
+    std::promise<void> locked;
+    std::promise<void> serviced;
+    auto locked_future{locked.get_future()};
+    auto serviced_future{serviced.get_future()};
+    bool serviced_while_locked{false};
+    std::thread validation{[&] {
+        LOCK(cs_main);
+        locked.set_value();
+        // Bound failure time so a blocking SendMessages regression does not hang the test.
+        serviced_while_locked = serviced_future.wait_for(std::chrono::seconds{10}) == std::future_status::ready;
+    }};
+    struct ThreadJoinGuard {
+        std::thread& thread;
+
+        ~ThreadJoinGuard()
+        {
+            if (thread.joinable()) thread.join();
+        }
+    } validation_guard{validation};
+    locked_future.get();
+
+    // Reproduce the shared handler's send turn followed by service to another peer.
+    const bool sent{peerman.SendMessages(*nodes[0])};
+    const bool ping_sent{has_message(*nodes[0], NetMsgType::PING)};
+    const bool headers_deferred{!has_message(*nodes[0], NetMsgType::GETHEADERS)};
+    connman.ProcessMessagesOnce(*nodes[1]);
+    const bool pong_sent{has_message(*nodes[1], NetMsgType::PONG)};
+    peerman.UnitTestMisbehaving(nodes[1]->GetId());
+    peerman.SendMessages(*nodes[1]);
+    const bool disconnected{nodes[1]->fDisconnect};
+    serviced.set_value();
+    validation.join();
+
+    BOOST_CHECK(serviced_while_locked);
+    BOOST_CHECK(sent);
+    BOOST_CHECK(ping_sent);
+    BOOST_CHECK(headers_deferred);
+    BOOST_CHECK(pong_sent);
+    BOOST_CHECK(disconnected);
+
+    // A later turn must still perform the deferred chainstate work.
+    BOOST_CHECK(peerman.SendMessages(*nodes[0]));
+    BOOST_CHECK(has_message(*nodes[0], NetMsgType::GETHEADERS));
+    for (const auto& node : nodes) peerman.FinalizeNode(*node);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
