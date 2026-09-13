@@ -41,9 +41,9 @@
 #include <validation.h>
 #ifdef ENABLE_EMBEDDED_ASMAP
 #include <common/args.h>
-#include <hash.h>
 #include <node/data/ip_asn.dat.h>
 #include <streams.h>
+#include <uint256.h>
 #include <util/asmap.h>
 #include <util/fs.h>
 #endif
@@ -1210,13 +1210,10 @@ static RPCMethod exportasmap()
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to close asmap file: %s", fs::PathToString(export_path)));
             }
 
-            HashWriter hasher;
-            hasher.write(node::data::ip_asn);
-
             UniValue result(UniValue::VOBJ);
             result.pushKV("path", export_path.utf8string());
             result.pushKV("bytes_written", node::data::ip_asn.size());
-            result.pushKV("file_hash", HexStr(hasher.GetSHA256()));
+            result.pushKV("file_hash", HexStr(AsmapVersion(node::data::ip_asn)));
             return result;
 #endif
         },
