@@ -385,6 +385,21 @@ BOOST_AUTO_TEST_CASE(coin_grinder_lightest_among_clones_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(coin_grinder_skip_tiny_inputs_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        utxo_pool.push_back(MakeCoin(1.8L * COIN, /*custom_spending_vsize=*/2500));
+        utxo_pool.push_back(MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000));
+        utxo_pool.push_back(MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000));
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(0.01 * COIN + j, /*custom_spending_vsize=*/110));
+        }
+        std::vector<OutputGroup> expected_inputs{MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000), MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000)};
+        TestCGSuccess("Skip tiny UTXOs that are too heavy", utxo_pool, /*selection_target=*/1.9L * COIN, expected_inputs, /*expected_attempts=*/7, /*max_selection_weight=*/40'000);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;

@@ -978,32 +978,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
 
     {
         // #################################################################################################################
-        // 7) Test that lots of tiny UTXOs can be skipped if they are too heavy while there are enough funds in lookahead
-        // #################################################################################################################
-        CAmount target =  1.9L * COIN;
-        int max_selection_weight = 40000; // WU
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            add_coin(available_coins, wallet, CAmount(1.8 * COIN), CFeeRate(5000), 144, false, 0, true, 2500);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
-            for (int j = 0; j < 100; ++j) {
-                // make a 100 unique coins only differing by one sat
-                add_coin(available_coins, wallet, CAmount(0.01 * COIN + j), CFeeRate(5000), 144, false, 0, true, 110);
-            }
-            return available_coins;
-        });
-        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
-        add_coin(1 * COIN, 1, expected_result);
-        add_coin(1 * COIN, 2, expected_result);
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-        // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 7;
-        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
-    }
-
-    {
-        // #################################################################################################################
         // 8) Test input set that has a solution will not find a solution before reaching the attempt limit
         // #################################################################################################################
         CAmount target = 8 * COIN;
