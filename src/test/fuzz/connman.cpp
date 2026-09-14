@@ -292,7 +292,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
         (void)pnode->ConnectionTypeAsString();
     });
     (void)connman.GetAddedNodeInfo(/*include_connected=*/false);
-    (void)connman.GetExtraFullOutboundCount();
+    (void)connman.GetExtraFullOutboundCounts();
     assert(connman.GetLocalServices() == local_services);
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
     const auto time_left_in_cycle{connman.GetMaxOutboundTimeLeftInCycle()};
