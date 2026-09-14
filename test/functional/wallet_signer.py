@@ -72,12 +72,12 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Private keys must be disabled when using an external signer", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=False, external_signer=True)
         self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, external_signer=True)
         hww = self.nodes[1].get_wallet_rpc('hww')
-        assert_equal(hww.getwalletinfo()["external_signer"], True)
+        assert_true(hww.getwalletinfo()["external_signer"])
 
         # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
-        assert_equal(not_hww.getwalletinfo()["external_signer"], False)
+        assert_false(not_hww.getwalletinfo()["external_signer"])
         assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
 
@@ -92,29 +92,29 @@ class WalletSignerTest(BitcoinTestFramework):
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
         address_info = hww.getaddressinfo(address1)
-        assert_equal(address_info['solvable'], True)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['solvable'])
+        assert_true(address_info['ismine'])
         assert_equal(address_info['hdkeypath'], "m/84h/1h/0h/0/0")
 
         address2 = hww.getnewaddress(address_type="p2sh-segwit")
         assert_equal(address2, "2N2gQKzjUe47gM8p1JZxaAkTcoHPXV6YyVp")
         address_info = hww.getaddressinfo(address2)
-        assert_equal(address_info['solvable'], True)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['solvable'])
+        assert_true(address_info['ismine'])
         assert_equal(address_info['hdkeypath'], "m/49h/1h/0h/0/0")
 
         address3 = hww.getnewaddress(address_type="legacy")
         assert_equal(address3, "n1LKejAadN6hg2FrBXoU1KrwX4uK16mco9")
         address_info = hww.getaddressinfo(address3)
-        assert_equal(address_info['solvable'], True)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['solvable'])
+        assert_true(address_info['ismine'])
         assert_equal(address_info['hdkeypath'], "m/44h/1h/0h/0/0")
 
         address4 = hww.getnewaddress(address_type="bech32m")
         assert_equal(address4, "bcrt1phw4cgpt6cd30kz9k4wkpwm872cdvhss29jga2xpmftelhqll62ms4e9sqj")
         address_info = hww.getaddressinfo(address4)
-        assert_equal(address_info['solvable'], True)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['solvable'])
+        assert_true(address_info['ismine'])
         assert_equal(address_info['hdkeypath'], "m/86h/1h/0h/0/0")
 
         self.log.info('Test walletdisplayaddress')
@@ -229,7 +229,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # First create a wallet with the signer connected
         self.nodes[1].createwallet(wallet_name='hww_disconnect', disable_private_keys=True, external_signer=True)
         hww = self.nodes[1].get_wallet_rpc('hww_disconnect')
-        assert_equal(hww.getwalletinfo()["external_signer"], True)
+        assert_true(hww.getwalletinfo()["external_signer"])
 
         # Fund wallet
         self.nodes[0].sendtoaddress(hww.getnewaddress(address_type="bech32m"), 1)

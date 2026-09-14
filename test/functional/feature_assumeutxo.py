@@ -573,7 +573,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, snapshot_hash)
         coinbase_output_descriptor = coinbase_tx['vout'][0]['scriptPubKey']['desc']
         scan_result = n1.scantxoutset('start', [coinbase_output_descriptor])
-        assert_equal(scan_result['success'], True)
+        assert_true(scan_result['success'])
         assert_equal(scan_result['txouts'], snapshot_num_coins)
         assert_equal(scan_result['height'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(scan_result['bestblock'], snapshot_hash)
@@ -623,10 +623,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         normal, snapshot = n1.getchainstates()["chainstates"]
         assert_equal(normal['blocks'], START_HEIGHT)
         assert_equal(normal.get('snapshot_blockhash'), None)
-        assert_equal(normal['validated'], True)
+        assert_true(normal['validated'])
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
-        assert_equal(snapshot['validated'], False)
+        assert_false(snapshot['validated'])
 
         assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -749,10 +749,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         normal, snapshot = n2.getchainstates()['chainstates']
         assert_equal(normal['blocks'], START_HEIGHT)
         assert_equal(normal.get('snapshot_blockhash'), None)
-        assert_equal(normal['validated'], True)
+        assert_true(normal['validated'])
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
-        assert_equal(snapshot['validated'], False)
+        assert_false(snapshot['validated'])
 
         self.log.info("Check that loading the snapshot again will fail because there is already an active snapshot.")
         msg = "Unable to load UTXO snapshot: Can't activate a snapshot-based chainstate more than once"

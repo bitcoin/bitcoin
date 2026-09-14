@@ -105,17 +105,17 @@ class AvoidReuseTest(BitcoinTestFramework):
         self.nodes[1].setwalletflag('avoid_reuse')
 
         # Flags should be node1.avoid_reuse=false, node2.avoid_reuse=true
-        assert_equal(self.nodes[0].getwalletinfo()["avoid_reuse"], False)
+        assert_false(self.nodes[0].getwalletinfo()["avoid_reuse"])
         assert_equal(sorted(self.nodes[0].getwalletinfo()["flags"]), sorted(["descriptor_wallet", "last_hardened_xpub_cached"]))
-        assert_equal(self.nodes[1].getwalletinfo()["avoid_reuse"], True)
+        assert_true(self.nodes[1].getwalletinfo()["avoid_reuse"])
         assert_equal(sorted(self.nodes[1].getwalletinfo()["flags"]), sorted(["descriptor_wallet", "last_hardened_xpub_cached", "avoid_reuse"]))
 
         self.restart_node(1)
         self.connect_nodes(0, 1)
 
         # Flags should still be node1.avoid_reuse=false, node2.avoid_reuse=true
-        assert_equal(self.nodes[0].getwalletinfo()["avoid_reuse"], False)
-        assert_equal(self.nodes[1].getwalletinfo()["avoid_reuse"], True)
+        assert_false(self.nodes[0].getwalletinfo()["avoid_reuse"])
+        assert_true(self.nodes[1].getwalletinfo()["avoid_reuse"])
 
         # Attempting to set flag to its current state should throw
         assert_raises_rpc_error(-8, "Wallet flag is already set to false", self.nodes[0].setwalletflag, 'avoid_reuse', False)
@@ -126,12 +126,12 @@ class AvoidReuseTest(BitcoinTestFramework):
         # Create a wallet with avoid reuse, and test that disabling it afterwards persists
         self.nodes[1].createwallet(wallet_name="avoid_reuse_persist", avoid_reuse=True)
         w = self.nodes[1].get_wallet_rpc("avoid_reuse_persist")
-        assert_equal(w.getwalletinfo()["avoid_reuse"], True)
+        assert_true(w.getwalletinfo()["avoid_reuse"])
         w.setwalletflag("avoid_reuse", False)
-        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        assert_false(w.getwalletinfo()["avoid_reuse"])
         w.unloadwallet()
         self.nodes[1].loadwallet("avoid_reuse_persist")
-        assert_equal(w.getwalletinfo()["avoid_reuse"], False)
+        assert_false(w.getwalletinfo()["avoid_reuse"])
         w.unloadwallet()
 
     def test_immutable(self):

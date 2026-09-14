@@ -437,7 +437,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(txout['scriptPubKey']['asm'], decoded_script['asm'])
         assert_equal(txout['scriptPubKey']['desc'], decoded_script['desc'])
         assert_equal(txout['scriptPubKey']['type'], decoded_script['type'])
-        assert_equal(txout['coinbase'], True)
+        assert_true(txout['coinbase'])
 
     def _test_getblockheader(self):
         self.log.info("Test getblockheader")
@@ -681,7 +681,7 @@ class BlockchainTest(BitcoinTestFramework):
             for vin in tx["vin"]:
                 assert "prevout" in vin
                 assert_equal(set(vin["prevout"].keys()), set(("value", "height", "generated", "scriptPubKey")))
-                assert_equal(vin["prevout"]["generated"], True)
+                assert_true(vin["prevout"]["generated"])
                 total_vin += vin["prevout"]["value"]
             for vout in tx["vout"]:
                 total_vout += vout["value"]

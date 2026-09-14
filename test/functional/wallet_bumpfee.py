@@ -247,8 +247,8 @@ class BumpFeeTest(BitcoinTestFramework):
 
         change_addr = rbf_node.getnewaddress()
         dest_addr = rbf_node.getnewaddress()
-        assert_equal(rbf_node.getaddressinfo(change_addr)["ischange"], False)
-        assert_equal(rbf_node.getaddressinfo(dest_addr)["ischange"], False)
+        assert_false(rbf_node.getaddressinfo(change_addr)["ischange"])
+        assert_false(rbf_node.getaddressinfo(dest_addr)["ischange"])
 
         send_res = rbf_node.send(outputs=[{dest_addr: 1}], options={"change_address": change_addr})
         assert send_res["complete"]
@@ -704,7 +704,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
 
     tx_bump_abandoned = rbf_node.gettransaction(bumpid)
     for tx in tx_bump_abandoned['details']:
-        assert_equal(tx['abandoned'], True)
+        assert_true(tx['abandoned'])
 
     assert bumpid not in rbf_node.getrawmempool()
     assert rbfid in rbf_node.getrawmempool()

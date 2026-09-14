@@ -68,7 +68,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         two_min = 2 * 60
         node.setmocktime(now + twelve_hrs - two_min)
         node.mockscheduler(60)  # Tell scheduler to call MaybeResendWalletTxs now
-        assert_equal(int(txid, 16) in peer_second.get_invs(), False)
+        assert_false(int(txid, 16) in peer_second.get_invs())
 
         self.log.info("Bump time & check that transaction is rebroadcast")
         # Transaction should be rebroadcast approximately 24 hours in the future,

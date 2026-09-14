@@ -736,7 +736,7 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
         "label": label,
     }]
     import_res = wallet_rpc.importdescriptors(req)
-    assert_equal(import_res[0]["success"], True)
+    assert_true(import_res[0]["success"])
 
 def is_dir_writable(dir_path: pathlib.Path) -> bool:
     """Return True if we can create a file in the directory, False otherwise"""

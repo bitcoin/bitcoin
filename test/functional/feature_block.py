@@ -558,7 +558,7 @@ class FullBlockTest(BitcoinTestFramework):
         b40 = self.next_block(40, spend=out[12])
         sigops = get_legacy_sigopcount_block(b40)
         numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
-        assert_equal(numTxes <= b39_outputs, True)
+        assert_true(numTxes <= b39_outputs)
 
         lastOutpoint = COutPoint(b40.vtx[1].txid_int, 0)
         new_txs = []

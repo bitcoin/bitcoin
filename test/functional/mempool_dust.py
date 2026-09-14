@@ -61,13 +61,13 @@ class DustRelayFeeTest(BitcoinTestFramework):
         tx.vout[0].nValue -= dust_threshold  # keep total output value constant
         tx_good_hex = tx.serialize().hex()
         res = node.testmempoolaccept([tx_good_hex])[0]
-        assert_equal(res['allowed'], True)
+        assert_true(res['allowed'])
 
         # amount just below the dust threshold should fail
         if dust_threshold > 0:
             tx.vout[1].nValue -= 1
             res = node.testmempoolaccept([tx.serialize().hex()])[0]
-            assert_equal(res['allowed'], False)
+            assert_false(res['allowed'])
             assert_equal(res['reject-reason'], 'dust')
 
         # finally send the transaction to avoid running out of MiniWallet UTXOs

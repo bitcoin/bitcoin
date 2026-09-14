@@ -83,7 +83,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
 
-        assert_equal(node.getmempoolinfo()['permitbaremultisig'], False)
+        assert_false(node.getmempoolinfo()['permitbaremultisig'])
 
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0

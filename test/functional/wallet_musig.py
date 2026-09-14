@@ -89,7 +89,7 @@ class WalletMuSigTest(BitcoinTestFramework):
 
             res = wallet.importdescriptors(import_descs)
             for r in res:
-                assert_equal(r["success"], True)
+                assert_true(r["success"])
 
     def setup_musig_scenario(self, pat):
         wallets, keys = self.create_wallets_and_keys_from_pattern(pat)
@@ -155,7 +155,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         # missing nonce.
         for wallet in wallets[:2]:
             proc = wallet.walletprocesspsbt(psbt=comb_nonce_psbt)
-            assert_equal(proc["complete"], False)
+            assert_false(proc["complete"])
             # No partial sigs are created
             dec = self.nodes[0].decodepsbt(proc["psbt"])
             # There are still only two nonces
@@ -177,7 +177,7 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         # Finalization fails due to missing partial sig
         finalized = self.nodes[0].finalizepsbt(comb_psig_psbt)
-        assert_equal(finalized["complete"], False)
+        assert_false(finalized["complete"])
 
         # Still only two partial sigs in combined PSBT
         dec = self.nodes[0].decodepsbt(comb_psig_psbt)
@@ -190,7 +190,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
 
         finalized = self.nodes[0].finalizepsbt(comb_nonce_psbt)
-        assert_equal(finalized["complete"], False)
+        assert_false(finalized["complete"])
 
         dec = self.nodes[0].decodepsbt(comb_nonce_psbt)
         assert "musig2_pubnonces" in dec["inputs"][0]
@@ -292,7 +292,7 @@ class WalletMuSigTest(BitcoinTestFramework):
                 continue
             for psbt_list in [nonce_psbts, nonce_psbts2]:
                 proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
-                assert_equal(proc["complete"], False)
+                assert_false(proc["complete"])
                 psbt_list.append(proc["psbt"])
 
         comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
@@ -313,7 +313,7 @@ class WalletMuSigTest(BitcoinTestFramework):
                 continue
             for psbt, psbt_list in [(comb_nonce_psbt, psig_psbts), (comb_nonce_psbt2, psig_psbts2)]:
                 proc = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash_type)
-                assert_equal(proc["complete"], False)
+                assert_false(proc["complete"])
                 psbt_list.append(proc["psbt"])
 
         comb_psig_psbt = self.nodes[0].combinepsbt(psig_psbts)

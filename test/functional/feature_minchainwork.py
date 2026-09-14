@@ -104,7 +104,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         # Verify that node2 is in fact still in IBD (otherwise this test may
         # not be exercising the logic we want!)
-        assert_equal(self.nodes[2].getblockchaininfo()['initialblockdownload'], True)
+        assert_true(self.nodes[2].getblockchaininfo()['initialblockdownload'])
 
         self.log.info("Test -minimumchainwork with a non-hex value")
         self.stop_node(0)

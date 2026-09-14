@@ -217,7 +217,7 @@ class ListTransactionsTest(BitcoinTestFramework):
             default_wallet.importdescriptors([{"desc": descriptor, "timestamp": "now"}])
 
             send_res = default_wallet.send(outputs=[{key.p2wpkh_addr: 1}, {wallet.getnewaddress(): 1}])
-            assert_equal(send_res["complete"], True)
+            assert_true(send_res["complete"])
             vout = find_vout_for_address(self.nodes[0], send_res["txid"], key.p2wpkh_addr)
             utxos = [{"txid": send_res["txid"], "vout": vout}]
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
@@ -225,12 +225,12 @@ class ListTransactionsTest(BitcoinTestFramework):
             # Send to the test wallet, ensuring that one input is for the descriptor we will import,
             # and that there are other inputs belonging to only the sending wallet
             send_res = default_wallet.send(outputs=[{wallet.getnewaddress(): 1.5}], inputs=utxos, add_inputs=True)
-            assert_equal(send_res["complete"], True)
+            assert_true(send_res["complete"])
             txid = send_res["txid"]
             self.nodes[0].syncwithvalidationinterfacequeue()
             tx_info = wallet.gettransaction(txid)
             assert "fee" not in tx_info
-            assert_equal(any(detail["category"] == "send" for detail in tx_info["details"]), False)
+            assert_false(any(detail["category"] == "send" for detail in tx_info["details"]))
 
             if confirm:
                 self.generate(self.nodes[0], 1, sync_fun=self.no_op)
@@ -239,13 +239,13 @@ class ListTransactionsTest(BitcoinTestFramework):
                 self.generate(self.nodes[0], 10, sync_fun=self.no_op)
 
             import_res = wallet.importdescriptors([{"desc": descriptor, "timestamp": "now"}])
-            assert_equal(import_res[0]["success"], True)
+            assert_true(import_res[0]["success"])
             # TODO: We should check that the fee matches, but since the transaction spends inputs
             # not known to the wallet, it is incorrectly calculating the fee.
             # assert_equal(wallet.gettransaction(txid)["fee"], fee)
             tx_info = wallet.gettransaction(txid)
             assert "fee" in tx_info
-            assert_equal(any(detail["category"] == "send" for detail in tx_info["details"]), True)
+            assert_true(any(detail["category"] == "send" for detail in tx_info["details"]))
 
     def check_tx_variants(self, wallet, txid, canonical_tx_hex, canonical_wtxid, alternate_wtxids):
         """Assert gettransaction and listtransactions report tx variants properly"""
@@ -283,7 +283,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         # Import a taproot descriptor with script paths
         desc = descsum_create(f"tr({xpubs[0].to_string()}/*,pk({xprvs[1].to_string()}/*))")
-        assert_equal(wallet.importdescriptors([{"desc": desc, "active": True, "timestamp": "now"}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{"desc": desc, "active": True, "timestamp": "now"}])[0]["success"])
         default_wallet.sendtoaddress(wallet.getnewaddress(address_type="bech32m"), 1)
         self.generate(self.nodes[0], 1)
         # Isolate node0 for later reorg coverage

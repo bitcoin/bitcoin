@@ -135,9 +135,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         listsinceblock = alice.listsinceblock()
         txAB1_listsinceblock = [d for d in listsinceblock['transactions'] if d['txid'] == txAB1 and d['category'] == 'send']
         for tx in txAB1_listsinceblock:
-            assert_equal(tx['abandoned'], True)
+            assert_true(tx['abandoned'])
             assert_equal(tx['confirmations'], 0)
-            assert_equal(tx['trusted'], False)
+            assert_false(tx['trusted'])
 
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         self.restart_node(0, extra_args=["-minrelaytxfee=0.00001"])
@@ -201,12 +201,12 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Test the properties of the conflicted transactions, i.e. with confirmations < 0.
         for tx in conflicted:
-            assert_equal(tx["abandoned"], False)
+            assert_false(tx["abandoned"])
             assert_equal(tx["confirmations"], -1)
-            assert_equal(tx["trusted"], False)
+            assert_false(tx["trusted"])
 
         # Test the properties of the double-spend transaction, i.e. having wallet conflicts and confirmations > 0.
-        assert_equal(double_spend["abandoned"], False)
+        assert_false(double_spend["abandoned"])
         assert_equal(double_spend["confirmations"], 1)
         assert "trusted" not in double_spend.keys()  # "trusted" only returned if tx has 0 or negative confirmations.
 

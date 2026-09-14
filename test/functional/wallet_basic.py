@@ -553,7 +553,7 @@ class WalletTest(BitcoinTestFramework):
             else:
                 assert "ischange" not in vout
         self.nodes[0].setlabel(change, 'foobar')
-        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
+        assert_false(self.nodes[0].getaddressinfo(change)['ischange'])
 
         # Test gettransaction response with different arguments.
         self.log.info("Testing gettransaction response with different arguments...")
@@ -683,7 +683,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet("watch_wallet", disable_private_keys=True)
         watch_wallet = self.nodes[0].get_wallet_rpc("watch_wallet")
         import_res = watch_wallet.importdescriptors([{"desc": self.wallet.get_descriptor(), "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
 
         # DEFAULT_ANCESTOR_LIMIT transactions off a confirmed tx should be fine
         chain = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_ANCESTOR_LIMIT)

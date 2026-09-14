@@ -213,14 +213,14 @@ class NetTest(BitcoinTestFramework):
     def test_getnetworkinfo(self):
         self.log.info("Test getnetworkinfo")
         info = self.nodes[0].getnetworkinfo()
-        assert_equal(info['networkactive'], True)
+        assert_true(info['networkactive'])
         assert_equal(info['connections'], 2)
         assert_equal(info['connections_in'], 1)
         assert_equal(info['connections_out'], 1)
 
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.nodes[0].setnetworkactive(state=False)
-        assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
+        assert_false(self.nodes[0].getnetworkinfo()['networkactive'])
         # Wait a bit for all sockets to close
         for n in self.nodes:
             self.wait_until(lambda: n.getnetworkinfo()['connections'] == 0, timeout=3)
@@ -232,7 +232,7 @@ class NetTest(BitcoinTestFramework):
         self.connect_nodes(1, 0)
 
         info = self.nodes[0].getnetworkinfo()
-        assert_equal(info['networkactive'], True)
+        assert_true(info['networkactive'])
         assert_equal(info['connections'], 2)
         assert_equal(info['connections_in'], 1)
         assert_equal(info['connections_out'], 1)

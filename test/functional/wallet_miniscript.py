@@ -244,7 +244,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         )
         utxo = self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])[0]
         assert_equal(utxo["txid"], txid)
-        assert_equal(utxo["solvable"], True)
+        assert_true(utxo["solvable"])
 
     def signing_test(
         self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
@@ -273,7 +273,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.funder.generatetoaddress(1, self.funder.getnewaddress())
         utxo = self.ms_sig_wallet.listunspent(addresses=[addr])[0]
         assert_equal(txid, utxo["txid"])
-        assert_equal(utxo["solvable"], True)
+        assert_true(utxo["solvable"])
 
         self.log.info("Creating a transaction spending these funds")
         dest_addr = self.funder.getnewaddress()
@@ -342,7 +342,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 }
             ]
         )[0]
-        assert_equal(res["success"], False)
+        assert_false(res["success"])
         assert "is not sane: witnesses without signature exist" in res["error"]["message"]
 
         # Sanity check we wouldn't let an unspendable Miniscript descriptor in
@@ -394,7 +394,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 }
             ]
         )[0]
-        assert_equal(res["success"], False)
+        assert_false(res["success"])
         assert "is not a valid descriptor function" in res["error"]["message"]
 
 

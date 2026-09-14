@@ -288,21 +288,21 @@ class ProxyTest(BitcoinTestFramework):
                 expected_randomize = True
             assert_equal(n0[net]['proxy'], expected_proxy)
             assert_equal(n0[net]['proxy_randomize_credentials'], expected_randomize)
-        assert_equal(n0['onion']['reachable'], True)
-        assert_equal(n0['i2p']['reachable'], False)
-        assert_equal(n0['cjdns']['reachable'], False)
+        assert_true(n0['onion']['reachable'])
+        assert_false(n0['i2p']['reachable'])
+        assert_false(n0['cjdns']['reachable'])
 
         n1 = networks_dict(nodes_network_info[1])
         assert_equal(NETWORKS, n1.keys())
         for net in ['ipv4', 'ipv6']:
             assert_equal(n1[net]['proxy'], f'{self.conf1.addr[0]}:{self.conf1.addr[1]}')
-            assert_equal(n1[net]['proxy_randomize_credentials'], False)
+            assert_false(n1[net]['proxy_randomize_credentials'])
         assert_equal(n1['onion']['proxy'], f'{self.conf2.addr[0]}:{self.conf2.addr[1]}')
-        assert_equal(n1['onion']['proxy_randomize_credentials'], False)
-        assert_equal(n1['onion']['reachable'], True)
+        assert_false(n1['onion']['proxy_randomize_credentials'])
+        assert_true(n1['onion']['reachable'])
         assert_equal(n1['i2p']['proxy'], f'{self.i2p_sam[0]}:{self.i2p_sam[1]}')
-        assert_equal(n1['i2p']['proxy_randomize_credentials'], False)
-        assert_equal(n1['i2p']['reachable'], True)
+        assert_false(n1['i2p']['proxy_randomize_credentials'])
+        assert_true(n1['i2p']['reachable'])
 
         n2 = networks_dict(nodes_network_info[2])
         assert_equal(NETWORKS, n2.keys())
@@ -316,9 +316,9 @@ class ProxyTest(BitcoinTestFramework):
                 expected_randomize = True
             assert_equal(n2[net]['proxy'], expected_proxy)
             assert_equal(n2[net]['proxy_randomize_credentials'], expected_randomize)
-        assert_equal(n2['onion']['reachable'], True)
-        assert_equal(n2['i2p']['reachable'], False)
-        assert_equal(n2['cjdns']['reachable'], False)
+        assert_true(n2['onion']['reachable'])
+        assert_false(n2['i2p']['reachable'])
+        assert_false(n2['cjdns']['reachable'])
 
         if self.have_ipv6:
             n3 = networks_dict(nodes_network_info[3])
@@ -327,10 +327,10 @@ class ProxyTest(BitcoinTestFramework):
             for net in NETWORKS:
                 expected_proxy = '' if net == NET_I2P or net == NET_ONION else proxy
                 assert_equal(n3[net]['proxy'], expected_proxy)
-                assert_equal(n3[net]['proxy_randomize_credentials'], False)
-            assert_equal(n3['onion']['reachable'], False)
-            assert_equal(n3['i2p']['reachable'], False)
-            assert_equal(n3['cjdns']['reachable'], False)
+                assert_false(n3[net]['proxy_randomize_credentials'])
+            assert_false(n3['onion']['reachable'])
+            assert_false(n3['i2p']['reachable'])
+            assert_false(n3['cjdns']['reachable'])
 
         n4 = networks_dict(nodes_network_info[4])
         assert_equal(NETWORKS, n4.keys())
@@ -343,9 +343,9 @@ class ProxyTest(BitcoinTestFramework):
                 expected_randomize = True
             assert_equal(n4[net]['proxy'], expected_proxy)
             assert_equal(n4[net]['proxy_randomize_credentials'], expected_randomize)
-        assert_equal(n4['onion']['reachable'], True)
-        assert_equal(n4['i2p']['reachable'], False)
-        assert_equal(n4['cjdns']['reachable'], True)
+        assert_true(n4['onion']['reachable'])
+        assert_false(n4['i2p']['reachable'])
+        assert_true(n4['cjdns']['reachable'])
 
         if self.have_unix_sockets:
             n5 = networks_dict(nodes_network_info[5])
@@ -359,9 +359,9 @@ class ProxyTest(BitcoinTestFramework):
                     expected_randomize = True
                 assert_equal(n5[net]['proxy'], expected_proxy)
                 assert_equal(n5[net]['proxy_randomize_credentials'], expected_randomize)
-            assert_equal(n5['onion']['reachable'], True)
-            assert_equal(n5['i2p']['reachable'], False)
-            assert_equal(n5['cjdns']['reachable'], False)
+            assert_true(n5['onion']['reachable'])
+            assert_false(n5['i2p']['reachable'])
+            assert_false(n5['cjdns']['reachable'])
 
             n6 = networks_dict(nodes_network_info[6])
             assert_equal(NETWORKS, n6.keys())
@@ -374,9 +374,9 @@ class ProxyTest(BitcoinTestFramework):
                     expected_randomize = True
                 assert_equal(n6[net]['proxy'], expected_proxy)
                 assert_equal(n6[net]['proxy_randomize_credentials'], expected_randomize)
-            assert_equal(n6['onion']['reachable'], True)
-            assert_equal(n6['i2p']['reachable'], False)
-            assert_equal(n6['cjdns']['reachable'], False)
+            assert_true(n6['onion']['reachable'])
+            assert_false(n6['i2p']['reachable'])
+            assert_false(n6['cjdns']['reachable'])
 
         self.stop_node(1)
 

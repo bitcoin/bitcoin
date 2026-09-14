@@ -155,10 +155,10 @@ class WalletSendTest(BitcoinTestFramework):
                 assert_greater_than_or_equal(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
 
         if expect_sign:
-            assert_equal(res["complete"], True)
+            assert_true(res["complete"])
             assert "txid" in res
         else:
-            assert_equal(res["complete"], False)
+            assert_false(res["complete"])
             assert "txid" not in res
             assert "psbt" in res
 
@@ -521,7 +521,7 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
         testres = self.nodes[0].testmempoolaccept([signed["hex"]])[0]
-        assert_equal(testres["allowed"], True)
+        assert_true(testres["allowed"])
         actual_fee_rate_sat_vb = Decimal(testres["fees"]["base"]) * Decimal(1e8) / Decimal(testres["vsize"])
         # Due to ECDSA signatures not always being the same length, the actual fee rate may be slightly different
         # but rounded to nearest integer, it should be the same as the target fee rate

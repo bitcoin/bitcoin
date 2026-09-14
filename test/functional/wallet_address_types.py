@@ -100,7 +100,7 @@ class AddressTypeTest(BitcoinTestFramework):
         """Run sanity checks on an address."""
         info = self.nodes[node].getaddressinfo(address)
         assert self.nodes[node].validateaddress(address)['isvalid']
-        assert_equal(info.get('solvable'), True)
+        assert_true(info.get('solvable'))
 
         if not multisig and typ == 'legacy':
             # P2PKH
@@ -264,7 +264,7 @@ class AddressTypeTest(BitcoinTestFramework):
                     pubkey2 = self.nodes[to_node].getaddressinfo(self.nodes[to_node].getnewaddress())["pubkey"]
                     ms = self.nodes[to_node].createmultisig(2, [pubkey1, pubkey2])
                     import_res = self.nodes[to_node].importdescriptors([{"desc": ms["descriptor"], "timestamp": 0}])
-                    assert_equal(import_res[0]["success"], True)
+                    assert_true(import_res[0]["success"])
 
                 # Do some sanity checking on the created address
                 if address_type is not None:

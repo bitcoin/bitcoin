@@ -63,7 +63,7 @@ class ReceivedByTest(BitcoinTestFramework):
         # No returned addy should be a change addr
         for node in self.nodes:
             for addr_obj in node.listreceivedbyaddress():
-                assert_equal(node.getaddressinfo(addr_obj["address"])["ischange"], False)
+                assert_false(node.getaddressinfo(addr_obj["address"])["ischange"])
 
         # Test Address filtering
         # Only on addr
@@ -107,7 +107,7 @@ class ReceivedByTest(BitcoinTestFramework):
         send_label = "external-address"
         external_addr = self.nodes[0].getnewaddress(send_label)
         self.nodes[1].setlabel(external_addr, send_label)
-        assert_equal(self.nodes[1].getaddressinfo(external_addr)["ismine"], False)
+        assert_false(self.nodes[1].getaddressinfo(external_addr)["ismine"])
         assert_array_result(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True),
                             {"address": external_addr}, {}, True)
         assert_array_result(self.nodes[1].listreceivedbylabel(minconf=0, include_empty=True),

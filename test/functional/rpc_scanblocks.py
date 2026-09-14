@@ -51,7 +51,7 @@ class ScanblocksTest(BitcoinTestFramework):
         assert blockhash in out['relevant_blocks']
         assert_equal(height, out['to_height'])
         assert_equal(0, out['from_height'])
-        assert_equal(True, out['completed'])
+        assert_true(out['completed'])
 
         # mine another block
         blockhash_new = self.generate(node, 1)[0]
@@ -131,7 +131,7 @@ class ScanblocksTest(BitcoinTestFramework):
         assert_equal(node.scanblocks("status"), None)
 
         # test aborting the current scan (there is no, must return false)
-        assert_equal(node.scanblocks("abort"), False)
+        assert_false(node.scanblocks("abort"))
 
         # test invalid command
         assert_raises_rpc_error(-8, "Invalid action 'foobar'", node.scanblocks, "foobar")

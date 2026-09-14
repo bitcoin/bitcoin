@@ -346,8 +346,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
         self.stop_node(0)
-        assert_equal(os.path.isfile(block_policy_fee_dat), True)
-        assert_equal(os.path.isfile(legacy_fee_dat), False)
+        assert_true(os.path.isfile(block_policy_fee_dat))
+        assert_false(os.path.isfile(legacy_fee_dat))
 
         # If both files exist, the new block policy estimator path is used and
         # the obsolete legacy file is removed.
@@ -356,7 +356,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
         self.stop_node(0)
-        assert_equal(os.path.isfile(legacy_fee_dat), False)
+        assert_false(os.path.isfile(legacy_fee_dat))
 
         # Stop the node and backdate the block policy estimator file more than MAX_FILE_AGE
         last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
@@ -377,9 +377,9 @@ class EstimateFeeTest(BitcoinTestFramework):
             os.rmdir(block_policy_fees_dat.parent)
 
         # Verify that estimator data files and their parent directory do not exist
-        assert_equal(os.path.isfile(block_policy_fees_dat), False)
-        assert_equal(os.path.isfile(mempool_policy_dat), False)
-        assert_equal(os.path.isdir(block_policy_fees_dat.parent), False)
+        assert_false(os.path.isfile(block_policy_fees_dat))
+        assert_false(os.path.isfile(mempool_policy_dat))
+        assert_false(os.path.isdir(block_policy_fees_dat.parent))
         # Verify if the string "Flushed fee estimates to block_policy_estimates.dat." is present in the debug log file.
         # If present, it indicates that fee estimator data has been successfully flushed to disk.
         block_policy_estimator_message = f"Flushed fee estimates to {block_policy_fees_dat}."
@@ -392,9 +392,9 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
         # Verify that estimator data was flushed and the estimator directory and files are created
-        assert_equal(os.path.isdir(block_policy_fees_dat.parent), True)
-        assert_equal(os.path.isfile(block_policy_fees_dat), True)
-        assert_equal(os.path.isfile(mempool_policy_dat), True)
+        assert_true(os.path.isdir(block_policy_fees_dat.parent))
+        assert_true(os.path.isfile(block_policy_fees_dat))
+        assert_true(os.path.isfile(mempool_policy_dat))
         # Verify that estimator data remains the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
         block_policy_fees_dat_initial_content = open(block_policy_fees_dat, "rb").read()
