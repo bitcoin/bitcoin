@@ -261,11 +261,12 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/9, high_feerate_params);
 }
 
-static void TestCGFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target)
+static void TestCGFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
 {
-    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, MAX_STANDARD_TX_WEIGHT)};
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
     BOOST_CHECK_MESSAGE(!result, "CoinGrinder-Fail: " + test_title);
-    BOOST_CHECK(util::ErrorString(result).empty());
+    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
 }
 
 BOOST_AUTO_TEST_CASE(coin_grinder_insufficient_funds_test)
@@ -278,6 +279,16 @@ BOOST_AUTO_TEST_CASE(coin_grinder_insufficient_funds_test)
         AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
         AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
         TestCGFail("Insufficient funds", utxo_pool, /*selection_target=*/49.5L * COIN);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_max_weight_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        TestCGFail("Exceed max weight", utxo_pool, /*selection_target=*/29.5L * COIN, /*max_selection_weight=*/1000, /*expect_max_weight_exceeded=*/true);
     }
 }
 

@@ -977,24 +977,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
-        // ###########################
-        // 2) Test max weight exceeded
-        // ###########################
-        CAmount target = 29.5L * COIN;
-        int max_selection_weight = 3000;
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 10; ++j) {
-                add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true);
-                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true);
-            }
-            return available_coins;
-        });
-        BOOST_CHECK(!res);
-        BOOST_CHECK(util::ErrorString(res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
-    }
-
-    {
         // ###############################################################################################################
         // 3) Test that the lowest-weight solution is found when some combinations would exceed the allowed weight
         // ################################################################################################################
