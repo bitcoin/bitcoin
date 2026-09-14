@@ -341,6 +341,23 @@ BOOST_AUTO_TEST_CASE(coin_grinder_prefer_lighter_inputs_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(coin_grinder_mixed_weights_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (int j = 0; j < 5; ++j) {
+            // Add heavy coins {3, 6, 9, 12, 15}
+            utxo_pool.push_back(MakeCoin((3 + 3 * j) * COIN, /*custom_spending_vsize=*/350));
+            // Add medium coins {2, 5, 8, 11, 14}
+            utxo_pool.push_back(MakeCoin((2 + 3 * j) * COIN, /*custom_spending_vsize=*/250));
+            // Add light coins {1, 4, 7, 10, 13}
+            utxo_pool.push_back(MakeCoin((1 + 3 * j) * COIN, /*custom_spending_vsize=*/150));
+        }
+        std::vector<OutputGroup> expected_inputs{MakeCoin(14 * COIN, /*custom_spending_vsize=*/250), MakeCoin(13 * COIN, /*custom_spending_vsize=*/150), MakeCoin(4 * COIN, /*custom_spending_vsize=*/150)};
+        TestCGSuccess("Find solution in pool with mixed weights", utxo_pool, /*selection_target=*/30 * COIN, expected_inputs, /*expected_attempts=*/92);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;

@@ -977,35 +977,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
-        // ###############################################################################################################
-        // 5) Test finding a solution in a UTXO pool with mixed weights
-        // ################################################################################################################
-        CAmount target = 30L * COIN;
-        int max_selection_weight = 400'000; // WU
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 5; ++j) {
-                // Add heavy coins {3, 6, 9, 12, 15}
-                add_coin(available_coins, wallet, CAmount((3 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 350);
-                // Add medium coins {2, 5, 8, 11, 14}
-                add_coin(available_coins, wallet, CAmount((2 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 250);
-                // Add light coins {1, 4, 7, 10, 13}
-                add_coin(available_coins, wallet, CAmount((1 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 150);
-            }
-            return available_coins;
-        });
-        BOOST_CHECK(res);
-        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
-        add_coin(14 * COIN, 1, expected_result);
-        add_coin(13 * COIN, 2, expected_result);
-        add_coin(4 * COIN, 3, expected_result);
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-        // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 92;
-        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
-    }
-
-    {
         // #################################################################################################################
         // 6) Test that the lightest solution among many clones is found
         // #################################################################################################################
