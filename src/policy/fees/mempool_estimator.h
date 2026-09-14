@@ -37,6 +37,8 @@ constexpr std::chrono::seconds CACHE_LIFE{7};
 // Constants for mempool sanity checks.
 constexpr size_t MEMPOOL_HEALTH_WINDOW_BLOCKS = 6;
 constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
+// On startup, a sparse mempool is treated as insufficient data for this many blocks.
+constexpr uint64_t MEMPOOL_WARMUP_BLOCKS{144};
 
 //! Why the mempool fee rate estimator fails to return a fee rate estimate.
 enum class MempoolEstimationFailure {
@@ -101,7 +103,8 @@ class MemPoolFeeRateEstimator
 public:
     MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
                             const CTxMemPool& mempool,
-                            ChainstateManager& chainman);
+                            ChainstateManager& chainman,
+                            uint64_t warmup_blocks = MEMPOOL_WARMUP_BLOCKS);
     ~MemPoolFeeRateEstimator() = default;
     /**
      * Calculate the 50th and 75th percentile fee rates from block template chunks,
@@ -131,6 +134,8 @@ public:
     //! Fail with INSUFFICIENT_DATA or LOW_COVERAGE if recent mined blocks fail the health check; otherwise succeed.
     util::Expected<void, MempoolEstimationFailure> CheckMempoolHealth() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void FlushMinedBlockStats() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Called when the mempool did not load; starts the warmup.
+    void MempoolLoadFailed() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Deserialize mined-block stats without taking ownership of file.
     bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Serialize mined-block stats without taking ownership of file.
@@ -141,9 +146,17 @@ private:
     void ReadFromDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! The block-template percentiles for the current tip, building and caching a template if needed.
     Percentiles GetOrBuildPercentiles() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Warm up for m_warmup_blocks blocks from start_height.
+    void StartWarmup(uint64_t start_height) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! True while the mempool is still warming up.
+    bool IsWarmingUp() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Tracks weight statistics for the last MEMPOOL_HEALTH_WINDOW_BLOCKS mined blocks.
     std::vector<MinedBlockStats> m_prev_mined_blocks GUARDED_BY(cs);
     uint256 m_mined_blocks_tip_hash GUARDED_BY(cs);
+    //! Warmup lasts until the latest mined block reaches this height; 0 before it starts.
+    uint64_t m_warmup_end_height GUARDED_BY(cs){0};
+    //! Warmup length in blocks (default MEMPOOL_WARMUP_BLOCKS; overridable for tests).
+    const uint64_t m_warmup_blocks;
 
     const CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;

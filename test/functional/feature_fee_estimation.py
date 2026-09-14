@@ -7,6 +7,7 @@ from copy import deepcopy
 from decimal import Decimal, ROUND_DOWN
 import os
 import random
+import shutil
 import time
 
 from test_framework.messages import (
@@ -34,6 +35,7 @@ MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
 MIN_BUCKET_FEERATE = Decimal(100) / Decimal(COIN)
 TXS_COUNT = 24
+MEMPOOL_WARMUP_BLOCKS = 144
 MEMPOOL_HEALTH_WINDOW = 6
 BLOCK_POLICY_ESTIMATOR_ERROR = "Insufficient data or no feerate found"
 BLOCK_POLICY_ESTIMATOR_FILE_PATH = "fees/block_policy_estimates.dat"
@@ -333,6 +335,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(est_feerate, high_feerate_kvb)
 
     def test_fallback_when_mempool_estimator_has_insufficient_data(self):
+        self.generate(self.nodes[0], MEMPOOL_WARMUP_BLOCKS, sync_fun=lambda: None)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
         self.stop_node(0)
         # Move the mempool estimator data aside so the mempool policy estimator has insufficient data.
@@ -387,6 +390,49 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
 
+    def test_fallback_to_block_policy_without_mempool_load(self):
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
+        mempool_dat = self.nodes[0].chain_path / "mempool.dat"
+        estimator_dat = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
+        estimator_bak = estimator_dat.with_suffix(".dat.bak")
+        mempool_bak = mempool_dat.with_suffix(".dat.bak")
+        self.stop_node(0)
+        shutil.copyfile(estimator_dat, estimator_bak)
+        shutil.copyfile(mempool_dat, mempool_bak)
+        def assert_falls_back(break_mempool_dat, **start_kwargs):
+            break_mempool_dat()
+            shutil.copyfile(estimator_bak, estimator_dat)
+            self.start_node(0, **start_kwargs)
+            self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
+            assert "errors" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+            assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "block_policy")
+            self.stop_node(0)
+
+        assert_falls_back(mempool_dat.unlink)
+        assert_falls_back(lambda: mempool_dat.write_bytes(b"not a valid mempool.dat"))
+        assert_falls_back(lambda: None, extra_args=["-persistmempool=0"])
+
+        shutil.copyfile(mempool_bak, mempool_dat)
+        shutil.copyfile(estimator_bak, estimator_dat)
+        mempool_bak.unlink()
+        estimator_bak.unlink()
+        self.start_node(0)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
+
+    def test_fee_estimator_starts_on_fresh_datadir(self):
+        node = self.nodes[0]
+        self.stop_node(0)
+        saved = ["blocks", "chainstate", "fees", "mempool.dat"]
+        for name in saved:
+            (node.chain_path / name).replace(node.chain_path / f"{name}.bak")
+        self.start_node(0)
+        assert_equal(node.getblockcount(), 0)
+        self.stop_node(0)
+        for name in saved:
+            path = node.chain_path / name
+            self.cleanup_folder(path) if path.is_dir() else path.unlink()
+            (node.chain_path / f"{name}.bak").replace(path)
+        self.start_node(0)
 
     def test_estimate_dat_is_flushed_periodically(self):
         block_policy_fees_dat = self.nodes[0].chain_path / BLOCK_POLICY_ESTIMATOR_FILE_PATH
@@ -701,6 +747,12 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Test fallback to block policy when the mempool estimator has insufficient data")
         self.test_fallback_when_mempool_estimator_has_insufficient_data()
+
+        self.log.info("Test fallback to block policy when the mempool does not load")
+        self.test_fallback_to_block_policy_without_mempool_load()
+
+        self.log.info("Test the fee estimator starts on a fresh datadir")
+        self.test_fee_estimator_starts_on_fresh_datadir()
 
         self.log.info("Test reading old block policy estimator file")
         self.test_old_fee_estimate_file()
