@@ -31,9 +31,9 @@
         ;; Build tools
         ninja
         ;; Packaging scripts
-        python-minimal ;; (3.11)
+        python-minimal ;; 3.12
         ;; Tests
-        python-lief-no-psutil-tests)
+        python-lief-no-psutil-tests) ;; 0.17.6
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list zip
