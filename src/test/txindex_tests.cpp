@@ -235,7 +235,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
     // the header and the 1-byte tx count.
     const CDiskTxPos legacy_pos{BlockFilePos(*m_node.chainman, 1), 1};
     {
-        CDBWrapper db{DBParams{.path = gArgs.GetDataDirNet() / "indexes" / "txindex", .cache_bytes = 1_MiB}};
+        CDBWrapper db{m_logger, DBParams{.path = gArgs.GetDataDirNet() / "indexes" / "txindex", .cache_bytes = 1_MiB}};
         db.Write(txindex::LegacyTxKey(legacy_txid), legacy_pos);
     }
 
@@ -265,7 +265,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_locator_upgrade, TestChain100Setup)
         new_hash = Assert(m_node.chainman->ActiveChain().Tip())->GetBlockHash();
     }
     CBlockLocator legacy_locator{{legacy_hash}}, new_locator{{new_hash}};
-    { CDBWrapper{DBParams{.path = gArgs.GetDataDirNet() / "indexes" / "txindex", .cache_bytes = 1_MiB}}.Write(uint8_t{'B'}, legacy_locator); }
+    { CDBWrapper{m_logger, DBParams{.path = gArgs.GetDataDirNet() / "indexes" / "txindex", .cache_bytes = 1_MiB}}.Write(uint8_t{'B'}, legacy_locator); }
 
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_CHECK(TxIndexTest::ReadBestBlock(txindex).vHave == legacy_locator.vHave);

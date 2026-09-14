@@ -14,6 +14,7 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <core_io.h>
+#include <logging.h>
 #include <streams.h>
 #include <univalue.h>
 #include <util/exception.h>
@@ -212,6 +213,7 @@ static int GetChainParams(const std::vector<std::string>& args, std::string& str
 MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
+    BCLog::Logger logger;
     SetupEnvironment();
 
     try {

@@ -58,7 +58,13 @@ static void setup_threadpool_test()
     LogInstance().DisableLogging();
 }
 
-FUZZ_TARGET(threadpool, .init = setup_threadpool_test)
+static void cleanup_threadpool_test()
+{
+    // Stop worker threads before logger is destroyed because they log when exiting.
+    g_pool.Stop();
+}
+
+FUZZ_TARGET(threadpool, .init = setup_threadpool_test, .cleanup = cleanup_threadpool_test)
 {
     // Because LibAFL calls fork() after calling the init setup function,
     // the child processes end up having one thread active and no workers.

@@ -13,6 +13,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 
 #include <cstddef>
@@ -192,6 +193,10 @@ struct LevelDBContext;
 class CDBWrapper
 {
     friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
+protected:
+    //! log object
+    util::log::Context m_log;
+
 private:
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
@@ -211,7 +216,7 @@ private:
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
-    CDBWrapper(const DBParams& params);
+    CDBWrapper(util::log::Logger& logger, const DBParams& params);
     ~CDBWrapper();
 
     CDBWrapper(const CDBWrapper&) = delete;
