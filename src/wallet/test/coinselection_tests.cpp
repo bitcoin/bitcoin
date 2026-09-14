@@ -261,6 +261,26 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/9, high_feerate_params);
 }
 
+static void TestCGFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target)
+{
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, MAX_STANDARD_TX_WEIGHT)};
+    BOOST_CHECK_MESSAGE(!result, "CoinGrinder-Fail: " + test_title);
+    BOOST_CHECK(util::ErrorString(result).empty());
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_insufficient_funds_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+
+        TestCGFail("Empty UTXO pool", utxo_pool, /*selection_target=*/1 * CENT);
+
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        TestCGFail("Insufficient funds", utxo_pool, /*selection_target=*/49.5L * COIN);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;

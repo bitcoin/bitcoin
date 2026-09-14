@@ -977,24 +977,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
-        // #########################################################
-        // 1) Insufficient funds, select all provided coins and fail
-        // #########################################################
-        CAmount target = 49.5L * COIN;
-        int max_selection_weight = 10'000; // high enough to not fail for this reason.
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 10; ++j) {
-                add_coin(available_coins, wallet, CAmount(1 * COIN));
-                add_coin(available_coins, wallet, CAmount(2 * COIN));
-            }
-            return available_coins;
-        });
-        BOOST_CHECK(!res);
-        BOOST_CHECK(util::ErrorString(res).empty()); // empty means "insufficient funds"
-    }
-
-    {
         // ###########################
         // 2) Test max weight exceeded
         // ###########################
