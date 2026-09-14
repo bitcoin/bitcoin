@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_not_equal,
+    assert_true,
 )
 
 PRIVKEY_RE = re.compile(r"^tr\((.+?)/.+\)#.{8}$")
@@ -327,7 +328,8 @@ class WalletMuSigTest(BitcoinTestFramework):
         # Non-participant aggregates partial sigs and send
         finalized = self.nodes[0].finalizepsbt(psbt=comb_psig_psbt, extract=False)
         finalized2 = self.nodes[0].finalizepsbt(psbt=comb_psig_psbt2, extract=False)
-        assert_equal(finalized["complete"], finalized2["complete"], True)
+        assert_true(finalized["complete"])
+        assert_true(finalized2["complete"])
         witness = self.nodes[0].decodepsbt(finalized["psbt"])["inputs"][0]["final_scriptwitness"]
         assert_not_equal(witness, self.nodes[0].decodepsbt(finalized2["psbt"])["inputs"][0]["final_scriptwitness"])
         if scriptpath:
