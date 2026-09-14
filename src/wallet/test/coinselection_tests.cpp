@@ -269,6 +269,24 @@ static void TestCGFail(std::string test_title, std::vector<OutputGroup>& utxo_po
     BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
 }
 
+static void TestCGSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<OutputGroup>& expected_inputs, size_t expected_attempts, int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
+{
+    SelectionResult expected_result{CAmount{0}, SelectionAlgorithm::CG};
+    CAmount expected_amount{0};
+    for (const auto& input : expected_inputs) {
+        expected_result.AddInput(input);
+        expected_amount += input.m_value;
+    }
+
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
+
+    BOOST_CHECK_MESSAGE(result, "Falsy result in CoinGrinder-Success: " + test_title);
+    BOOST_CHECK_MESSAGE(HaveEquivalentInputs(expected_result, *result), strprintf("Result mismatch in CoinGrinder-Success: %s. Expected %s, but got %s", test_title, InputAmountsToString(expected_result), InputAmountsToString(*result)));
+    BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf( "Selected amount mismatch in CoinGrinder-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
+    BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf( "Selected weight is higher than permitted in CoinGrinder-Success: %s. Expected at most %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
+    BOOST_CHECK_MESSAGE(result->GetSelectionsEvaluated() == expected_attempts, strprintf( "Unexpected number of attempts in CoinGrinder-Success: %s. Expected %i attempts, but got %i", test_title, expected_attempts, result->GetSelectionsEvaluated()));
+}
+
 BOOST_AUTO_TEST_CASE(coin_grinder_insufficient_funds_test)
 {
     {
@@ -289,6 +307,19 @@ BOOST_AUTO_TEST_CASE(coin_grinder_max_weight_test)
         AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
         AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
         TestCGFail("Exceed max weight", utxo_pool, /*selection_target=*/29.5L * COIN, /*max_selection_weight=*/1000, /*expect_max_weight_exceeded=*/true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_lowest_weight_below_limit_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        AddDuplicateCoins(utxo_pool, /*count=*/60, /*amount=*/0.33 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        std::vector<OutputGroup> expected_inputs;
+        AddDuplicateCoins(expected_inputs, /*count=*/10, /*amount=*/2 * COIN);
+        AddDuplicateCoins(expected_inputs, /*count=*/17, /*amount=*/0.33 * COIN);
+        TestCGSuccess("Select lowest-weight solution below max weight", utxo_pool, /*selection_target=*/25.33L * COIN, expected_inputs, /*expected_attempts=*/37, /*max_selection_weight=*/10'000);
     }
 }
 

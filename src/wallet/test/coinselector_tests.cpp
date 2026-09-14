@@ -977,35 +977,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
-        // ###############################################################################################################
-        // 3) Test that the lowest-weight solution is found when some combinations would exceed the allowed weight
-        // ################################################################################################################
-        CAmount target = 25.33L * COIN;
-        int max_selection_weight = 10'000; // WU
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 BTC total --> 60 × 272 WU = 16320 WU
-                add_coin(available_coins, wallet, CAmount(0.33 * COIN), CFeeRate(5000), 144, false, 0, true);
-            }
-            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 BTC total --> 10 × 272 WU = 2720 WU
-                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true);
-            }
-            return available_coins;
-        });
-        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
-        for (int i = 0; i < 10; ++i) {
-            add_coin(2 * COIN, i, expected_result);
-        }
-        for (int j = 0; j < 17; ++j) {
-            add_coin(0.33 * COIN, j + 10, expected_result);
-        }
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-        // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 37;
-        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
-    }
-
-    {
         // #################################################################################################################
         // 4) Test that two less valuable UTXOs with a combined lower weight are preferred over a more valuable heavier UTXO
         // #################################################################################################################
