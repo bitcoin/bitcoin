@@ -654,6 +654,11 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     //    he sees us as.
     // 2.1. For inbound connections we must override both the address and the port.
     // 2.2. For outbound connections we must override only the address.
+    // 3. If the connection to the peer is made through a proxy, then for outbound
+    //    connections the peer sees the proxy's address instead of ours, so it must not
+    //    be used. Inbound connections are unaffected.
+    // 3.1. An address specified with -externalip is still advertised, which is how a
+    //      reachable node behind a proxy self-advertises.
 
     // Pretend that we bound to this port.
     const uint16_t bind_port = 20001;
@@ -707,6 +712,30 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     BOOST_REQUIRE(chosen_local_addr);
     BOOST_CHECK(*chosen_local_addr == peer_us);
 
+    // Pretend that the connections to both peers are made through a proxy.
+    BOOST_REQUIRE(SetProxy(NET_IPV4, Proxy{LookupNumeric("127.0.0.1", 9050)}));
+
+    // For an outbound connection the peer's view of us would be the proxy's address, so it is
+    // discarded, and nothing is advertised.
+    BOOST_CHECK(!GetLocalAddrForPeer(peer_out));
+
+    // The inbound connection is unaffected, the peer does observe our own address.
+    chosen_local_addr = GetLocalAddrForPeer(peer_in);
+    BOOST_REQUIRE(chosen_local_addr);
+    BOOST_CHECK(*chosen_local_addr == peer_us);
+
+    // -externalip adds the address with LOCAL_MANUAL, which `GetLocalAddress()` then
+    // returns. It is advertised as-is, whether or not the peer's view is consulted.
+    in_addr external_in_addr;
+    external_in_addr.s_addr = htonl(0x09080706);
+    const CService external_addr{external_in_addr, bind_port};
+    BOOST_REQUIRE(AddLocal(external_addr, LOCAL_MANUAL));
+    chosen_local_addr = GetLocalAddrForPeer(peer_out);
+    BOOST_REQUIRE(chosen_local_addr);
+    BOOST_CHECK(*chosen_local_addr == external_addr);
+
+    RemoveLocal(external_addr);
+    ResetProxy(NET_IPV4);
     m_node.args->ForceSetArg("-bind", "");
 }
 
