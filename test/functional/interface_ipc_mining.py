@@ -37,7 +37,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 from test_framework.p2p import P2PInterface
 from test_framework.ipc_util import (
-    assert_capnp_failed,
+    assert_capnp_raises,
     assert_create_new_block_fails,
     destroying,
     load_capnp_modules,
@@ -523,11 +523,8 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(submitted, False)
 
                 self.log.debug("Submit solution that can't be deserialized")
-                try:
-                    await template.submitSolution(ctx, 0, 0, 0, b"\x00")
-                    raise AssertionError("submitSolution unexpectedly succeeded")
-                except capnp.lib.capnp.KjException as e:
-                    assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
+                await assert_capnp_raises(lambda: template.submitSolution(ctx, 0, 0, 0, b"\x00"),
+                                          "remote exception: std::exception: SpanReader::read(): end of data:")
 
                 self.log.debug("Submit a block with a bad version")
                 block.nVersion = 0
@@ -712,18 +709,12 @@ class IPCMiningTest(BitcoinTestFramework):
                 )
 
             self.log.debug("Submit a malformed complete block")
-            try:
-                await mining2.submitBlock(ctx2, block.serialize()[:-15])
-                raise AssertionError("submitBlock unexpectedly succeeded")
-            except capnp.lib.capnp.KjException as e:
-                assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
+            await assert_capnp_raises(lambda: mining2.submitBlock(ctx2, block.serialize()[:-15]),
+                                      "remote exception: std::exception: SpanReader::read(): end of data:")
 
             self.log.debug("Submit empty block data")
-            try:
-                await mining2.submitBlock(ctx2, b"")
-                raise AssertionError("submitBlock unexpectedly succeeded")
-            except capnp.lib.capnp.KjException as e:
-                assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
+            await assert_capnp_raises(lambda: mining2.submitBlock(ctx2, b""),
+                                      "remote exception: std::exception: SpanReader::read(): end of data:")
             assert_equal(self.nodes[2].is_node_stopped(), False)
 
         asyncio.run(capnp.run(async_routine()))
