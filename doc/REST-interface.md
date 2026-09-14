@@ -97,6 +97,7 @@ Responds with 404 if block not found.
 Given a block hash: returns a collection of spent transaction output lists,
 one per transaction in the block.
 Responds with 404 if the block doesn't exist or its undo data is not available.
+The JSON format matches the prevout objects of the `getblock` RPC with verbosity 3.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
