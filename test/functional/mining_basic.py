@@ -19,8 +19,8 @@ from test_framework.blocktools import (
     get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
-    REGTEST_N_BITS,
-    REGTEST_TARGET,
+    N_BITS,
+    TARGET,
     nbits_str,
     target_str,
 )
@@ -435,13 +435,13 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['chain'], self.chain)
         assert 'currentblocktx' not in mining_info
         assert 'currentblockweight' not in mining_info
-        assert_equal(mining_info['bits'], nbits_str(REGTEST_N_BITS))
-        assert_equal(mining_info['target'], target_str(REGTEST_TARGET))
+        assert_equal(mining_info['bits'], nbits_str(N_BITS))
+        assert_equal(mining_info['target'], target_str(TARGET))
         # We don't care about precision, round to avoid mismatch under Valgrind:
         assert_equal(round(mining_info['difficulty'], 10), Decimal('0.0000000005'))
         assert_equal(mining_info['next']['height'], 201)
-        assert_equal(mining_info['next']['target'], target_str(REGTEST_TARGET))
-        assert_equal(mining_info['next']['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(mining_info['next']['target'], target_str(TARGET))
+        assert_equal(mining_info['next']['bits'], nbits_str(N_BITS))
         assert_equal(round(mining_info['next']['difficulty'], 10), Decimal('0.0000000005'))
         assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00333'))
         assert_equal(mining_info['pooledtx'], 0)
