@@ -73,6 +73,12 @@ static OutputGroup MakeCoin(const CAmount& amount, CoinSelectionParams cs_params
     return group;
 }
 
+/** Make a coin with the default selection parameters and a custom input size. */
+static OutputGroup MakeCoin(const CAmount& amount, int custom_spending_vsize)
+{
+    return MakeCoin(amount, default_cs_params, custom_spending_vsize);
+}
+
 /** Make multiple OutputGroups with the given values as their effective value */
 static void AddCoins(std::vector<OutputGroup>& utxo_pool, std::vector<CAmount> coins, CoinSelectionParams cs_params = default_cs_params)
 {
@@ -252,8 +258,8 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, /*expected_attempts=*/5, high_feerate_params);
 
     // Add heavy inputs {6, 7} to existing {2, 3, 5, 10}
-    low_feerate_pool.push_back(MakeCoin(6 * CENT, default_cs_params, /*custom_spending_vsize=*/500));
-    low_feerate_pool.push_back(MakeCoin(7 * CENT, default_cs_params, /*custom_spending_vsize=*/500));
+    low_feerate_pool.push_back(MakeCoin(6 * CENT, /*custom_spending_vsize=*/500));
+    low_feerate_pool.push_back(MakeCoin(7 * CENT, /*custom_spending_vsize=*/500));
     TestBnBSuccess("Prefer two heavy inputs over two light inputs at low feerates", low_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{6 * CENT, 7 * CENT}, /*expected_attempts=*/18, default_cs_params, /*custom_spending_vsize=*/500);
 
     high_feerate_pool.push_back(MakeCoin(6 * CENT, high_feerate_params, /*custom_spending_vsize=*/500));
