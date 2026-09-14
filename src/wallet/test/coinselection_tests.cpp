@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <policy/policy.h>
 #include <wallet/coinselection.h>
 #include <wallet/test/wallet_test_fixture.h>
@@ -398,6 +399,40 @@ BOOST_AUTO_TEST_CASE(coin_grinder_skip_tiny_inputs_test)
         std::vector<OutputGroup> expected_inputs{MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000), MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000)};
         TestCGSuccess("Skip tiny UTXOs that are too heavy", utxo_pool, /*selection_target=*/1.9L * COIN, expected_inputs, /*expected_attempts=*/7, /*max_selection_weight=*/40'000);
     }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_attempt_limit_test)
+{
+    constexpr int expected_input_count{8};
+    constexpr int decoys_before_exhaustion{10};
+    constexpr int max_selection_weight{expected_input_count * P2WPKH_INPUT_VSIZE * WITNESS_SCALE_FACTOR};
+    // CoinGrinder adds the CENT change target, bringing the total target to expected_input_count * COIN.
+    const CAmount selection_target{expected_input_count * COIN - CENT};
+
+    std::vector<OutputGroup> utxo_pool;
+    SelectionResult expected_result{selection_target, SelectionAlgorithm::CG};
+    for (int i = 0; i < expected_input_count; ++i) {
+        utxo_pool.push_back(MakeCoin(COIN + i));
+        expected_result.AddInput(utxo_pool.back());
+    }
+    BOOST_CHECK_EQUAL(expected_result.GetWeight(), max_selection_weight);
+
+    // Distinct amounts prevent clone skipping. The larger, slightly heavier coins are tried first.
+    for (int i = expected_input_count; i < expected_input_count + decoys_before_exhaustion; ++i) {
+        utxo_pool.push_back(MakeCoin(COIN + i, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE + 1));
+    }
+
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
+    BOOST_REQUIRE(result);
+    BOOST_CHECK(HaveEquivalentInputs(expected_result, *result));
+    BOOST_CHECK_EQUAL(result->GetWeight(), max_selection_weight);
+    BOOST_CHECK(result->GetAlgoCompleted());
+    // Pin the search effort as well as the success/failure boundary.
+    BOOST_CHECK_EQUAL(result->GetSelectionsEvaluated(), 63'692U);
+
+    // One more decoy exhausts the search before it reaches the valid light-input selection.
+    utxo_pool.push_back(MakeCoin(COIN + expected_input_count + decoys_before_exhaustion, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE + 1));
+    TestCGFail("Exhaust before finding solution", utxo_pool, selection_target, max_selection_weight, /*expect_max_weight_exceeded=*/true);
 }
 
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
