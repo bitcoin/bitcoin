@@ -978,45 +978,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
 
     {
         // #################################################################################################################
-        // 6) Test that the lightest solution among many clones is found
-        // #################################################################################################################
-        CAmount target =  9.9L * COIN;
-        int max_selection_weight = 400'000; // WU
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            // Expected Result: 4 + 3 + 2 + 1 = 10 BTC at 400 vB
-            add_coin(available_coins, wallet, CAmount(4 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(3 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            // Distracting clones:
-            for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(8 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
-            }
-            for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(7 * COIN), CFeeRate(5000), 144, false, 0, true, 800);
-            }
-            for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(6 * COIN), CFeeRate(5000), 144, false, 0, true, 600);
-            }
-            for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(5 * COIN), CFeeRate(5000), 144, false, 0, true, 400);
-            }
-            return available_coins;
-        });
-        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
-        add_coin(4 * COIN, 0, expected_result);
-        add_coin(3 * COIN, 0, expected_result);
-        add_coin(2 * COIN, 0, expected_result);
-        add_coin(1 * COIN, 0, expected_result);
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-        // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 38;
-        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
-    }
-
-    {
-        // #################################################################################################################
         // 7) Test that lots of tiny UTXOs can be skipped if they are too heavy while there are enough funds in lookahead
         // #################################################################################################################
         CAmount target =  1.9L * COIN;

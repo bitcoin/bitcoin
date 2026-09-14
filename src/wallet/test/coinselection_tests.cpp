@@ -358,6 +358,33 @@ BOOST_AUTO_TEST_CASE(coin_grinder_mixed_weights_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(coin_grinder_lightest_among_clones_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (CAmount amount : {4 * COIN, 3 * COIN, 2 * COIN, 1 * COIN}) {
+            utxo_pool.push_back(MakeCoin(amount, /*custom_spending_vsize=*/100));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(8 * COIN, /*custom_spending_vsize=*/1000));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(7 * COIN, /*custom_spending_vsize=*/800));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(6 * COIN, /*custom_spending_vsize=*/600));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(5 * COIN, /*custom_spending_vsize=*/400));
+        }
+        std::vector<OutputGroup> expected_inputs;
+        for (CAmount amount : {4 * COIN, 3 * COIN, 2 * COIN, 1 * COIN}) {
+            expected_inputs.push_back(MakeCoin(amount, /*custom_spending_vsize=*/100));
+        }
+        TestCGSuccess("Find lightest solution among clones", utxo_pool, /*selection_target=*/9.9L * COIN, expected_inputs, /*expected_attempts=*/38);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;
