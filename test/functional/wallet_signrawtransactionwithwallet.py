@@ -97,6 +97,9 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         # Make sure decoderawtransaction throws if there is extra data
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
 
+        # Make sure signrawtransactionwithwallet throws if there is extra data
+        assert_raises_rpc_error(-22, "TX decode failed. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", self.nodes[0].signrawtransactionwithwallet, rawTx + "00")
+
         rawTxSigned = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, scripts)
 
         # 3) The transaction has no complete set of signatures

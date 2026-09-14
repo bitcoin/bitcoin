@@ -155,7 +155,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         if assert_mergeability:
             # Test boundary conditions
-            assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
+            assert_raises_rpc_error(-22, "TX decode failed for tx 1. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
             assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [])
             assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [rawtx2['hex']])
 

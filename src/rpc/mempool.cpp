@@ -383,12 +383,13 @@ static RPCMethod testmempoolaccept()
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
-            for (const auto& rawtx : raw_transactions.getValues()) {
+            for (size_t idx{0}; idx < raw_transactions.size(); ++idx) {
+                const UniValue& rawtx{raw_transactions.getValues()[idx]};
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
-                                       "TX decode failed: " + rawtx.get_str() + " Make sure the transaction is complete, correctly "
-                                       "serialized, hex-encoded, and has at least one input.");
+                                       strprintf("TX decode failed for tx %d. Make sure the transaction is complete, correctly "
+                                                 "serialized, hex-encoded, and has at least one input.", idx));
                 }
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
@@ -1455,12 +1456,13 @@ static RPCMethod submitpackage()
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
-            for (const auto& rawtx : raw_transactions.getValues()) {
+            for (size_t idx{0}; idx < raw_transactions.size(); ++idx) {
+                const UniValue& rawtx{raw_transactions.getValues()[idx]};
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
-                                       "TX decode failed: " + rawtx.get_str() + " Make sure the transaction is complete, correctly "
-                                       "serialized, hex-encoded, and has at least one input.");
+                                       strprintf("TX decode failed for tx %d. Make sure the transaction is complete, correctly "
+                                                 "serialized, hex-encoded, and has at least one input.", idx));
                 }
 
                 for (const auto& out : mtx.vout) {

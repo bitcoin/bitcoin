@@ -21,6 +21,7 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
+    JSONRPCException,
 )
 from test_framework.wallet import (
     COIN,
@@ -396,9 +397,18 @@ class RPCPackagesTest(BitcoinTestFramework):
         valid_tx_list = self.wallet.create_self_transfer_chain(chain_length=2)
         hex_list = [valid_tx_list[0]["hex"][:-1] + 'X', valid_tx_list[1]["hex"]]
         txid_list = [valid_tx_list[0]["txid"], valid_tx_list[1]["txid"]]
-        assert_raises_rpc_error(-22, "TX decode failed:", node.submitpackage, hex_list)
+        assert_raises_rpc_error(-22, "TX decode failed for tx 0. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", node.submitpackage, hex_list)
         assert txid_list[0] not in node.getrawmempool()
         assert txid_list[1] not in node.getrawmempool()
+
+        # A malformed element after a valid one reports its index, and the raw hex is not echoed back
+        hex_list = [valid_tx_list[0]["hex"], valid_tx_list[1]["hex"][:-1] + 'X']
+        try:
+            node.submitpackage(hex_list)
+            raise AssertionError("submitpackage should have failed")
+        except JSONRPCException as e:
+            assert "TX decode failed for tx 1." in e.error["message"]
+            assert hex_list[1] not in e.error["message"]
 
         self.log.info("Submitpackage valid packages with 1 child and some number of parents (or none)")
         for num_parents in [0, 1, 2, 24]:
