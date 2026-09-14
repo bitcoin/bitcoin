@@ -977,28 +977,6 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
-        // #################################################################################################################
-        // 4) Test that two less valuable UTXOs with a combined lower weight are preferred over a more valuable heavier UTXO
-        // #################################################################################################################
-        CAmount target =  1.9L * COIN;
-        int max_selection_weight = 400'000; // WU
-        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true, 148);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 68);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 68);
-            return available_coins;
-        });
-        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
-        add_coin(1 * COIN, 1, expected_result);
-        add_coin(1 * COIN, 2, expected_result);
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-        // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 3;
-        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
-    }
-
-    {
         // ###############################################################################################################
         // 5) Test finding a solution in a UTXO pool with mixed weights
         // ################################################################################################################

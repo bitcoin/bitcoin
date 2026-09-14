@@ -329,6 +329,18 @@ BOOST_AUTO_TEST_CASE(coin_grinder_lowest_weight_below_limit_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(coin_grinder_prefer_lighter_inputs_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        utxo_pool.push_back(MakeCoin(2 * COIN, /*custom_spending_vsize=*/148));
+        utxo_pool.push_back(MakeCoin(1 * COIN));
+        utxo_pool.push_back(MakeCoin(1 * COIN));
+        std::vector<OutputGroup> expected_inputs{MakeCoin(1 * COIN), MakeCoin(1 * COIN)};
+        TestCGSuccess("Prefer two lighter UTXOs over one heavier UTXO", utxo_pool, /*selection_target=*/1.9L * COIN, expected_inputs, /*expected_attempts=*/3);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;
