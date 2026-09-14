@@ -387,7 +387,8 @@ static RPCMethod testmempoolaccept()
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
-                                       "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
+                                       "TX decode failed: " + rawtx.get_str() + " Make sure the transaction is complete, correctly "
+                                       "serialized, hex-encoded, and has at least one input.");
                 }
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
@@ -1458,7 +1459,8 @@ static RPCMethod submitpackage()
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
-                                       "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
+                                       "TX decode failed: " + rawtx.get_str() + " Make sure the transaction is complete, correctly "
+                                       "serialized, hex-encoded, and has at least one input.");
                 }
 
                 for (const auto& out : mtx.vout) {

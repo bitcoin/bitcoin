@@ -642,7 +642,7 @@ static RPCMethod combinerawtransaction()
 
     for (unsigned int idx = 0; idx < txs.size(); idx++) {
         if (!DecodeHexTx(txVariants[idx], txs[idx].get_str())) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed for tx %d. Make sure the tx has at least one input.", idx));
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed for tx %d. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", idx));
         }
     }
 
@@ -783,7 +783,9 @@ static RPCMethod signrawtransactionwithkey()
 {
     CMutableTransaction mtx;
     if (!DecodeHexTx(mtx, request.params[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                           "TX decode failed. Make sure the transaction is complete, correctly serialized, "
+                           "hex-encoded, and has at least one input.");
     }
 
     FlatSigningProvider keystore;

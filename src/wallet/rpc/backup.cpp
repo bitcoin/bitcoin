@@ -56,7 +56,9 @@ RPCMethod importprunedfunds()
 
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                           "TX decode failed. Make sure the transaction is complete, correctly serialized, "
+                           "hex-encoded, and has at least one input.");
     }
 
     CMerkleBlock merkleBlock;

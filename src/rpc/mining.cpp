@@ -397,7 +397,7 @@ static RPCMethod generateblock()
             txs.push_back(MakeTransactionRef(std::move(mtx)));
 
         } else {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", str));
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", str));
         }
     }
 
