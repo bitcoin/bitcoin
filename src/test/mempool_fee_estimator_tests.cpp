@@ -2,6 +2,7 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <kernel/mempool_entry.h>
 #include <policy/fees/estimator_args.h>
 #include <policy/fees/mempool_estimator.h>
@@ -22,6 +23,12 @@
 #include <string>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_fee_estimator_tests, TestingSetup)
+
+static std::string InsufficientDataError()
+{
+    return strprintf("%s: Not enough recent block data for fee rate estimation",
+                     FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY));
+}
 
 static inline CTransactionRef MakeRandomTx()
 {
@@ -60,6 +67,23 @@ void AddRemovedBlock(MemPoolFeeRateEstimator& fee_est,
     }
     fee_est.MempoolTxsRemovedForBlock(block, removed_txs, height);
     height += 1;
+}
+
+static void MineBlocks(MemPoolFeeRateEstimator& fee_est, unsigned int& height, size_t count)
+{
+    constexpr int64_t weight{DEFAULT_BLOCK_MAX_WEIGHT / 2};
+    for (size_t i{0}; i < count; ++i)
+        AddRemovedBlock(fee_est, weight, weight, height);
+}
+
+static void MineUpTo(MemPoolFeeRateEstimator& fee_est, unsigned int& height, unsigned int target_height)
+{
+    MineBlocks(fee_est, height, target_height - height + 1);
+}
+
+static FeePerVSize RelayFloor(CTxMemPool& pool)
+{
+    return std::max(pool.m_opts.min_relay_feerate, pool.GetMinFee()).GetFeePerVSize();
 }
 
 BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
@@ -129,7 +153,8 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
 {
-    auto mempool_estimator = MemPoolFeeRateEstimator(MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman);
+    // warmup disabled (0) so a sparse mempool serves the floor rather than deferring.
+    auto mempool_estimator = MemPoolFeeRateEstimator(MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, /*warmup_blocks=*/0);
     BOOST_CHECK_EQUAL(mempool_estimator.MaximumTarget(), MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
     // Before the mempool has finished loading, no estimate is available.
     {
@@ -152,7 +177,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     }
     {
         MemPoolFeeRateEstimator custom_mempool_estimator{
-            MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman};
+            MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, /*warmup_blocks=*/0};
         unsigned int custom_height{100};
         for (size_t block_count{1}; block_count < MEMPOOL_HEALTH_WINDOW_BLOCKS; ++block_count) {
             AddRemovedBlock(custom_mempool_estimator,
@@ -337,6 +362,164 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/false).value().feerate == FeeFrac(med_fee, tx_vsize));
         BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/true).value().feerate == FeeFrac(high_fee, tx_vsize));
     }
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_defers_empty_mempool)
+{
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{100};
+    const unsigned int warmup_end_height{height + warmup_blocks};
+    MineBlocks(estimator, height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE(estimator.IsMempoolHealthy());
+    const auto warming{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(!warming.has_value());
+    BOOST_CHECK(warming.error().reason == InsufficientDataError());
+    MineUpTo(estimator, height, warmup_end_height);
+    const auto warmed{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(warmed.has_value());
+    BOOST_CHECK(warmed->feerate == RelayFloor(*m_node.mempool));
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_persists_across_restart)
+{
+    const auto path{MempoolPolicyEstimatorPath(*m_node.args)};
+    const int warmup_blocks{144};
+    const auto genesis{std::make_shared<const CBlock>(Params().GenesisBlock())};
+    {
+        MemPoolFeeRateEstimator estimator{path, *m_node.mempool, *m_node.chainman, warmup_blocks};
+        estimator.MempoolTxsRemovedForBlock(genesis, /*txs_removed_for_block=*/{}, /*block_height=*/0);
+        estimator.FlushMinedBlockStats();
+    }
+    MemPoolFeeRateEstimator restored{path, *m_node.mempool, *m_node.chainman, /*warmup_blocks=*/0};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{1};
+    MineBlocks(restored, height, MEMPOOL_HEALTH_WINDOW_BLOCKS - 1);
+    BOOST_REQUIRE(restored.IsMempoolHealthy());
+    const auto est{restored.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(!est.has_value());
+    BOOST_CHECK(est.error().reason == InsufficientDataError());
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_reorg_aware)
+{
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{1};
+    const unsigned int warmup_end_height{height + warmup_blocks};
+    MineUpTo(estimator, height, warmup_end_height);
+    const auto warmed{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(warmed.has_value());
+    BOOST_CHECK(warmed->feerate == RelayFloor(*m_node.mempool));
+    unsigned int reorg_height{2};
+    MineBlocks(estimator, reorg_height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE(estimator.IsMempoolHealthy());
+    const auto reorged{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(!reorged.has_value());
+    BOOST_CHECK(reorged.error().reason == InsufficientDataError());
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_survives_shallow_reorg)
+{
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{1};
+    MineUpTo(estimator, height, /*target_height=*/1 + warmup_blocks);
+    // A shallow reorg replaces the tip but leaves the window full, so the finished warmup is untouched.
+    unsigned int reorg_tip{height - 1};
+    MineBlocks(estimator, reorg_tip, 1);
+    const auto after{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(after.has_value());
+    BOOST_CHECK(after->feerate == RelayFloor(*m_node.mempool));
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_restarts_after_a_gap)
+{
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{1};
+    MineUpTo(estimator, height, /*target_height=*/1 + warmup_blocks);
+    MineBlocks(estimator, height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    const auto contiguous{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(contiguous.has_value());
+    BOOST_CHECK(contiguous->feerate == RelayFloor(*m_node.mempool));
+    unsigned int gapped_height{height + 1000};
+    MineBlocks(estimator, gapped_height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE(estimator.IsMempoolHealthy());
+    const auto after_gap{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(!after_gap.has_value());
+    BOOST_CHECK(after_gap.error().reason == InsufficientDataError());
+}
+
+BOOST_AUTO_TEST_CASE(mempool_warmup_serves_filled_defers_unfilled)
+{
+    // While warming, each percentile is gated on its own: when the mempool is too sparse to fill,
+    // it defers with INSUFFICIENT_DATA; a filled one is served its real feerate, not the floor.
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    unsigned int height{1};
+    MineBlocks(estimator, height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE(estimator.IsMempoolHealthy());
+    TestMemPoolEntryHelper entry;
+    const auto tx_vsize{entry.FromTx(MakeRandomTx()).GetTxSize()};
+    const CAmount fee{CENT / 100};
+    const auto fill_to = [&](int percent) {
+        LOCK2(cs_main, m_node.mempool->cs);
+        while ((m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <= (DEFAULT_BLOCK_MAX_WEIGHT * percent / 100)) {
+            TryAddToMempool(*m_node.mempool, entry.Fee(fee).FromTx(MakeRandomTx()));
+        }
+    };
+    const auto expire_cache = [] { SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1}); };
+    // Below p50 (~40% of a block): conservative has no p50 to serve -> defers.
+    fill_to(40);
+    const auto below_p50{estimator.EstimateFeeRate(/*conservative=*/true)};
+    BOOST_REQUIRE(!below_p50.has_value());
+    BOOST_CHECK(below_p50.error().reason == InsufficientDataError());
+    // Between p50 and p75 (~60%): conservative serves the real p50 feerate; economical (p75) defers.
+    expire_cache();
+    fill_to(60);
+    const auto conservative{estimator.EstimateFeeRate(/*conservative=*/true)};
+    const auto economical{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(conservative.has_value());
+    BOOST_CHECK(conservative->feerate == FeeFrac(fee, tx_vsize));
+    BOOST_REQUIRE(!economical.has_value());
+    BOOST_CHECK(economical.error().reason == InsufficientDataError());
+    // Past p75 (~75%): economical now serves its real feerate too, not the floor.
+    expire_cache();
+    fill_to(75);
+    const auto served{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(served.has_value());
+    BOOST_CHECK(served->feerate == FeeFrac(fee, tx_vsize));
+    BOOST_CHECK(served->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
+}
+
+BOOST_AUTO_TEST_CASE(mempool_load_failed_clears_stats)
+{
+    const int warmup_blocks{10};
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman, warmup_blocks};
+    m_node.mempool->SetLoadTried(true);
+    // Mined-block stats as if restored from a prior run.
+    unsigned int height{1};
+    MineBlocks(estimator, height, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE_EQUAL(estimator.GetPrevBlockData().size(), MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    // A failed mempool load discards the stale stats.
+    estimator.MempoolLoadFailed();
+    BOOST_REQUIRE(estimator.GetPrevBlockData().empty());
+    BOOST_CHECK(!estimator.IsMempoolHealthy());
+    BOOST_CHECK(estimator.GetMempoolHealth() == MemPoolFeeRateEstimator::MempoolHealth::INSUFFICIENT_DATA);
+    // Warmup restarts from the real tip on the next tracked block, not the stale prior height,
+    // so the empty mempool defers rather than serving the floor.
+    unsigned int tip{500};
+    MineBlocks(estimator, tip, MEMPOOL_HEALTH_WINDOW_BLOCKS);
+    BOOST_REQUIRE(estimator.IsMempoolHealthy());
+    const auto est{estimator.EstimateFeeRate(/*conservative=*/false)};
+    BOOST_REQUIRE(!est.has_value());
+    BOOST_CHECK(est.error().reason == InsufficientDataError());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

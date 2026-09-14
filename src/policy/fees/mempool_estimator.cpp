@@ -31,7 +31,7 @@
 #include <system_error>
 #include <utility>
 
-constexpr int CURRENT_MEMPOOL_ESTIMATOR_VERSION{1};
+constexpr int CURRENT_MEMPOOL_ESTIMATOR_VERSION{2};
 
 namespace {
 struct MinedBlockStatsFormatter {
@@ -47,10 +47,13 @@ struct MinedBlockStatsFormatter {
     }
 };
 
-void AddMinedBlockStats(std::vector<MinedBlockStats>& mined_blocks, MinedBlockStats stats)
+// Update the window for a newly connected block before its stats are appended: drop entries at or
+// above its height (replaced by a reorg), clear the window if the block is not contiguous with the
+// last entry (a height gap), and drop the oldest entry when the window is full.
+void UpdateMinedBlockWindow(std::vector<MinedBlockStats>& mined_blocks, uint64_t block_height)
 {
     const auto stale_begin{std::find_if(mined_blocks.begin(), mined_blocks.end(), [&](const MinedBlockStats& block) {
-        return block.m_height >= stats.m_height;
+        return block.m_height >= block_height;
     })};
     const auto stale_count{std::distance(stale_begin, mined_blocks.end())};
     if (stale_count > 0) {
@@ -58,25 +61,23 @@ void AddMinedBlockStats(std::vector<MinedBlockStats>& mined_blocks, MinedBlockSt
                  "%s: connected block height=%s discards tracked mined-block stats "
                  "from height=%s to height=%s; stale_stats=%s",
                  FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
-                 stats.m_height,
+                 block_height,
                  stale_begin->m_height,
                  mined_blocks.back().m_height,
                  stale_count);
     }
     mined_blocks.erase(stale_begin, mined_blocks.end());
-    if (!mined_blocks.empty() && mined_blocks.back().m_height + 1 != stats.m_height) {
+    if (!mined_blocks.empty() && mined_blocks.back().m_height + 1 != block_height) {
         LogDebug(BCLog::ESTIMATEFEE,
                  "%s: clearing mined-block stats after height gap; tracked_stats=%s "
                  "expected_height=%s received_height=%s",
                  FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
                  mined_blocks.size(),
                  mined_blocks.back().m_height + 1,
-                 stats.m_height);
+                 block_height);
         mined_blocks.clear();
     }
-
     if (mined_blocks.size() == MEMPOOL_HEALTH_WINDOW_BLOCKS) mined_blocks.erase(mined_blocks.begin());
-    mined_blocks.push_back(stats);
 }
 
 struct ActiveTip {
@@ -161,8 +162,10 @@ static std::optional<std::string_view> MempoolHealthError(MemPoolFeeRateEstimato
 
 MemPoolFeeRateEstimator::MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
                                                  const CTxMemPool& mempool,
-                                                 ChainstateManager& chainman)
-    : m_mempool(mempool),
+                                                 ChainstateManager& chainman,
+                                                 uint64_t warmup_blocks)
+    : m_warmup_blocks(warmup_blocks),
+      m_mempool(mempool),
       m_chainman(chainman),
       m_mempool_estimator_file_path(std::move(mempool_estimator_file_path))
 {
@@ -200,6 +203,8 @@ bool MemPoolFeeRateEstimator::Read(AutoFile& file)
         file >> Using<VectorFormatter<MinedBlockStatsFormatter>>(blocks);
         uint256 tip_hash;
         file >> tip_hash;
+        uint64_t warmup_end_height{0};
+        file >> warmup_end_height;
         if (blocks.size() > MEMPOOL_HEALTH_WINDOW_BLOCKS) {
             LogWarning("%s: Number of previously mined blocks read exceeds the maximum of %s; ignoring file",
                        FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
@@ -235,6 +240,7 @@ bool MemPoolFeeRateEstimator::Read(AutoFile& file)
         LOCK(cs);
         m_prev_mined_blocks = std::move(blocks);
         m_mined_blocks_tip_hash = tip_hash;
+        m_warmup_end_height = warmup_end_height;
         m_cache.Clear();
     } catch (const std::exception&) {
         LogWarning("%s: Unable to read mined-block stats from stream (non-fatal)",
@@ -251,6 +257,7 @@ bool MemPoolFeeRateEstimator::Write(AutoFile& file) const
         file << CURRENT_MEMPOOL_ESTIMATOR_VERSION;
         file << Using<VectorFormatter<MinedBlockStatsFormatter>>(m_prev_mined_blocks);
         file << m_mined_blocks_tip_hash;
+        file << m_warmup_end_height;
     } catch (const std::exception&) {
         return false;
     }
@@ -291,6 +298,28 @@ void MemPoolFeeRateEstimator::FlushMinedBlockStats()
              fs::PathToString(m_mempool_estimator_file_path));
 }
 
+void MemPoolFeeRateEstimator::StartWarmup(uint64_t start_height)
+{
+    AssertLockHeld(cs);
+    m_warmup_end_height = start_height + m_warmup_blocks;
+    LogDebug(BCLog::ESTIMATEFEE, "%s: warming up until block height %s",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY), m_warmup_end_height);
+}
+
+void MemPoolFeeRateEstimator::MempoolLoadFailed()
+{
+    LOCK(cs);
+    LogDebug(BCLog::ESTIMATEFEE, "%s: mempool did not load; clearing mined-block stats",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY));
+    m_prev_mined_blocks.clear();
+}
+
+bool MemPoolFeeRateEstimator::IsWarmingUp() const
+{
+    LOCK(cs);
+    return !m_prev_mined_blocks.empty() && m_prev_mined_blocks.back().m_height < m_warmup_end_height;
+}
+
 void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<const CBlock>& block,
                                                         const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                                         unsigned int block_height)
@@ -311,8 +340,14 @@ void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<co
         [&](uint64_t acc, const RemovedMempoolTransactionInfo& tx) {
             return acc + get_tx_weight(tx.info.m_tx);
         });
-    AddMinedBlockStats(m_prev_mined_blocks, {block_height, removed_weight, block_weight});
     m_mined_blocks_tip_hash = block->GetHash();
+    UpdateMinedBlockWindow(m_prev_mined_blocks, block_height);
+    // An empty window means no recent blocks to judge the mempool, so start warmup. It empties on a
+    // fresh or failed load, a gap, or a reorg deep enough to clear the whole window. A shallow reorg
+    // leaves a full window non-empty, so a finished warmup is untouched; a reorg that clears the
+    // window such a reorg is rare, so warming up again is okay.
+    if (m_prev_mined_blocks.empty()) StartWarmup(block_height);
+    m_prev_mined_blocks.push_back({block_height, removed_weight, block_weight});
     m_cache.Clear();
 }
 
@@ -397,10 +432,15 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     }
 
     const auto percentiles{GetOrBuildPercentiles()};
-    // Fall back to a relayable floor (the higher of the min relay fee and the current
-    // mempool min fee) for any percentile the mempool was too sparse to fill.
-    const FeePerVSize floor{std::max(m_mempool.m_opts.min_relay_feerate, m_mempool.GetMinFee()).GetFeePerVSize()};
-    const FeePerVSize p50{percentiles.p50.IsEmpty() ? floor : percentiles.p50};
-    const FeePerVSize p75{percentiles.p75.IsEmpty() ? floor : percentiles.p75};
-    return FeeRateEstimation{FeeRateEstimatorType::MEMPOOL_POLICY, conservative ? p50 : p75, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
+    const FeePerVSize percentile{conservative ? percentiles.p50 : percentiles.p75};
+    if (percentile.IsEmpty()) {
+        if (IsWarmingUp()) {
+            return EstimationError(strprintf("%s: Not enough recent block data for fee rate estimation", FeeRateEstimatorTypeToString(estimator_type)));
+        }
+        // Fall back to a relayable floor (the higher of the min relay fee and the current
+        // mempool min fee) for any percentile the mempool was too sparse to fill.
+        const FeePerVSize floor{std::max(m_mempool.m_opts.min_relay_feerate, m_mempool.GetMinFee()).GetFeePerVSize()};
+        return FeeRateEstimation{FeeRateEstimatorType::MEMPOOL_POLICY, floor, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
+    }
+    return FeeRateEstimation{FeeRateEstimatorType::MEMPOOL_POLICY, percentile, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
 }
