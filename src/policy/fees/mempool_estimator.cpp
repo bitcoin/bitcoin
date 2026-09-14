@@ -93,7 +93,7 @@ std::optional<ActiveTip> GetActiveTip(const ChainstateManager& chainman)
 }
 } // namespace
 
-MemPoolFeeRateEstimator::Percentiles MemPoolFeeRateEstimator::CalculateMaxWeightPercentiles(std::span<const FeePerVSize> chunk_feerates)
+Percentiles MemPoolFeeRateEstimator::CalculateMaxWeightPercentiles(std::span<const FeePerVSize> chunk_feerates)
 {
     Assume(std::is_sorted(chunk_feerates.begin(), chunk_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; }));
     constexpr int64_t total_weight{DEFAULT_BLOCK_MAX_WEIGHT};
@@ -116,26 +116,25 @@ MemPoolFeeRateEstimator::Percentiles MemPoolFeeRateEstimator::CalculateMaxWeight
 
 bool MemPoolFeeRateEstimatorCache::IsStale() const
 {
-    return !m_fee_rate_estimation || (m_last_updated + CACHE_LIFE) < NodeClock::now();
+    return !m_percentiles || (m_last_updated + CACHE_LIFE) < NodeClock::now();
 }
 
-std::optional<MemPoolFeeRateEstimatorCache::FeeRateEstimate>
-MemPoolFeeRateEstimatorCache::GetCachedEstimate(const uint256& tip_hash) const
+std::optional<Percentiles> MemPoolFeeRateEstimatorCache::GetCachedPercentiles(const uint256& tip_hash) const
 {
     if (IsStale() || tip_hash != m_tip_hash) return std::nullopt;
-    return m_fee_rate_estimation;
+    return m_percentiles;
 }
 
-void MemPoolFeeRateEstimatorCache::Update(FeePerVSize conservative, FeePerVSize economical, const uint256& tip_hash)
+void MemPoolFeeRateEstimatorCache::Update(const Percentiles& percentiles, const uint256& tip_hash)
 {
-    m_fee_rate_estimation = {conservative, economical};
+    m_percentiles = percentiles;
     m_tip_hash = tip_hash;
     m_last_updated = NodeClock::now();
 }
 
 void MemPoolFeeRateEstimatorCache::Clear()
 {
-    m_fee_rate_estimation.reset();
+    m_percentiles.reset();
     m_tip_hash.SetNull();
     m_last_updated = {};
 }
@@ -367,15 +366,8 @@ MemPoolFeeRateEstimator::MempoolHealth MemPoolFeeRateEstimator::GetMempoolHealth
     return representation_ratio >= MEMPOOL_REPRESENTATION_THRESHOLD ? MempoolHealth::HEALTHY : MempoolHealth::LOW_COVERAGE;
 }
 
-util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimator::EstimateFeeRate(bool conservative) const
+Percentiles MemPoolFeeRateEstimator::GetOrBuildPercentiles() const
 {
-    constexpr auto estimator_type{FeeRateEstimatorType::MEMPOOL_POLICY};
-    if (!m_mempool.GetLoadTried()) {
-        return EstimationError(strprintf("%s: Mempool not loaded yet, no fee rate estimate available", FeeRateEstimatorTypeToString(estimator_type)));
-    }
-    if (auto error{MempoolHealthError(GetMempoolHealth())}) {
-        return EstimationError(strprintf("%s: %s", FeeRateEstimatorTypeToString(estimator_type), *error));
-    }
     // The estimator lock is not held while building a block template, so
     // in a rare edge case concurrent callers may duplicate work.
     //
@@ -385,31 +377,39 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     // The fee rate estimate returned directly below may still reflect a tip that went
     // stale during the call; that is an accepted tradeoff of not holding
     // locks across block assembly.
-    {
-        const uint256 tip_hash{WITH_LOCK(::cs_main, return Assume(m_chainman.CurrentChainstate().m_chain.Tip())->GetBlockHash())};
-        LOCK(cs);
-        const auto cached_estimate = m_cache.GetCachedEstimate(tip_hash);
-        if (cached_estimate) {
-            const auto cached_feerate{
-                conservative ? cached_estimate->m_conservative : cached_estimate->m_economical};
-            return FeeRateEstimation{estimator_type, cached_feerate, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
-        }
-    }
+    const uint256 tip_hash{WITH_LOCK(::cs_main, return Assume(m_chainman.CurrentChainstate().m_chain.Tip())->GetBlockHash())};
+    if (const auto cached{WITH_LOCK(cs, return m_cache.GetCachedPercentiles(tip_hash))}) return *cached;
+
     node::BlockCreateOptions options;
     options.test_block_validity = false;
     const auto blocktemplate = WITH_LOCK(::cs_main, return (node::BlockAssembler{m_chainman.CurrentChainstate(), &m_mempool, options}).CreateNewBlock());
-    if (!blocktemplate) return EstimationError(strprintf("%s: Failed to create block template for fee rate estimation", FeeRateEstimatorTypeToString(estimator_type)));
+    Assume(blocktemplate);
     // Sort again because the rounding up when converting from weight to vsize may cause slight misorder.
     std::sort(blocktemplate->m_package_feerates.begin(), blocktemplate->m_package_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; });
     const auto percentiles = CalculateMaxWeightPercentiles(blocktemplate->m_package_feerates);
+    WITH_LOCK(cs, m_cache.Update(percentiles, blocktemplate->block.hashPrevBlock));
+    LogDebug(BCLog::ESTIMATEFEE, "%s: conservative/economical fee rate: %s/%s %s/kvB",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+             percentiles.p50.IsEmpty() ? 0 : CFeeRate(percentiles.p50).GetFeePerK(),
+             percentiles.p75.IsEmpty() ? 0 : CFeeRate(percentiles.p75).GetFeePerK(), CURRENCY_ATOM);
+    return percentiles;
+}
+
+util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimator::EstimateFeeRate(bool conservative) const
+{
+    constexpr auto estimator_type{FeeRateEstimatorType::MEMPOOL_POLICY};
+    if (!m_mempool.GetLoadTried()) {
+        return EstimationError(strprintf("%s: Mempool not loaded yet, no fee rate estimate available", FeeRateEstimatorTypeToString(estimator_type)));
+    }
+    if (auto error{MempoolHealthError(GetMempoolHealth())}) {
+        return EstimationError(strprintf("%s: %s", FeeRateEstimatorTypeToString(estimator_type), *error));
+    }
+
+    const auto percentiles{GetOrBuildPercentiles()};
     // Fall back to a relayable floor (the higher of the min relay fee and the current
     // mempool min fee) for any percentile the mempool was too sparse to fill.
     const FeePerVSize floor{std::max(m_mempool.m_opts.min_relay_feerate, m_mempool.GetMinFee()).GetFeePerVSize()};
     const FeePerVSize p50{percentiles.p50.IsEmpty() ? floor : percentiles.p50};
     const FeePerVSize p75{percentiles.p75.IsEmpty() ? floor : percentiles.p75};
-    WITH_LOCK(cs, m_cache.Update(p50, p75, blocktemplate->block.hashPrevBlock));
-    LogDebug(BCLog::ESTIMATEFEE, "%s: conservative/economical fee rate: %s/%s %s/kvB",
-             FeeRateEstimatorTypeToString(estimator_type), CFeeRate(p50).GetFeePerK(),
-             CFeeRate(p75).GetFeePerK(), CURRENCY_ATOM);
-    return FeeRateEstimation{estimator_type, conservative ? p50 : p75, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
+    return FeeRateEstimation{FeeRateEstimatorType::MEMPOOL_POLICY, conservative ? p50 : p75, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
 }

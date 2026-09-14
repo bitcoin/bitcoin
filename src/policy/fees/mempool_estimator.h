@@ -47,6 +47,11 @@ struct MinedBlockStats {
     uint64_t m_block_weight{0};
 };
 
+struct Percentiles {
+    FeePerVSize p50;
+    FeePerVSize p75;
+};
+
 /**
  * MemPoolFeeRateEstimatorCache holds a cache of recent fee rate estimates.
  * A cached fee rate is only provided while it is not older than CACHE_LIFE
@@ -60,19 +65,15 @@ public:
     MemPoolFeeRateEstimatorCache& operator=(const MemPoolFeeRateEstimatorCache&) = delete;
     /** Returns true if the cache is empty or older than CACHE_LIFE. */
     bool IsStale() const;
-    struct FeeRateEstimate {
-        FeePerVSize m_conservative;
-        FeePerVSize m_economical;
-    };
-    /** Returns cached estimates if not stale and computed on tip_hash, nullopt otherwise. */
-    std::optional<FeeRateEstimate> GetCachedEstimate(const uint256& tip_hash) const;
-    /** Update the cache with new estimates computed on tip_hash. */
-    void Update(FeePerVSize conservative, FeePerVSize economical, const uint256& tip_hash);
-    /** Clear cached fee rate estimates. */
+    /** Returns cached percentiles if not stale and computed on tip_hash, nullopt otherwise. */
+    std::optional<Percentiles> GetCachedPercentiles(const uint256& tip_hash) const;
+    /** Update the cache with percentiles computed on tip_hash. */
+    void Update(const Percentiles& percentiles, const uint256& tip_hash);
+    /** Clear cached percentiles. */
     void Clear();
 
 private:
-    std::optional<FeeRateEstimate> m_fee_rate_estimation;
+    std::optional<Percentiles> m_percentiles;
     uint256 m_tip_hash;
     NodeClock::time_point m_last_updated{};
 };
@@ -87,12 +88,6 @@ private:
 class MemPoolFeeRateEstimator
 {
 public:
-    // Block percentiles fee rate (in sat/vB).
-    struct Percentiles {
-        FeePerVSize p50;
-        FeePerVSize p75;
-    };
-
     MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
                             const CTxMemPool& mempool,
                             ChainstateManager& chainman);
@@ -144,6 +139,8 @@ public:
 
 private:
     void ReadFromDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! The block-template percentiles for the current tip, building and caching a template if needed.
+    Percentiles GetOrBuildPercentiles() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Tracks weight statistics for the last MEMPOOL_HEALTH_WINDOW_BLOCKS mined blocks.
     std::vector<MinedBlockStats> m_prev_mined_blocks GUARDED_BY(cs);
     uint256 m_mined_blocks_tip_hash GUARDED_BY(cs);
