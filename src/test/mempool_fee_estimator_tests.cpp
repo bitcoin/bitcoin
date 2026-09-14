@@ -109,23 +109,22 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     MemPoolFeeRateEstimatorCache cache;
     const uint256 tip_hash{uint256::ONE};
     const uint256 next_tip_hash{uint256{2}};
-    const FeePerVSize conservative{2, 1};
-    const FeePerVSize economical{1, 1};
+    const FeePerVSize p50{2, 1};
 
     BOOST_CHECK(cache.IsStale());
-    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+    BOOST_CHECK(!cache.GetCachedPercentiles(tip_hash));
 
-    cache.Update(conservative, economical, tip_hash);
+    cache.Update({p50, FeePerVSize{}}, tip_hash);
     BOOST_CHECK(!cache.IsStale());
-    const auto cached{cache.GetCachedEstimate(tip_hash)};
+    const auto cached{cache.GetCachedPercentiles(tip_hash)};
     BOOST_REQUIRE(cached);
-    BOOST_CHECK(cached->m_conservative == conservative);
-    BOOST_CHECK(cached->m_economical == economical);
-    BOOST_CHECK(!cache.GetCachedEstimate(next_tip_hash));
+    BOOST_CHECK(cached->p50 == p50);
+    BOOST_CHECK(cached->p75.IsEmpty());
+    BOOST_CHECK(!cache.GetCachedPercentiles(next_tip_hash));
 
     clock += CACHE_LIFE + std::chrono::seconds{1};
     BOOST_CHECK(cache.IsStale());
-    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+    BOOST_CHECK(!cache.GetCachedPercentiles(tip_hash));
 }
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
@@ -274,7 +273,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                 TryAddToMempool(*m_node.mempool, entry.Fee(high_fee).FromTx(MakeRandomTx()));
             }
         }
-        // Expire the cached floor estimate so the denser mempool is observed.
+        // Expire the cached percentiles so the denser mempool is observed.
         SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         BOOST_REQUIRE(result.has_value());
