@@ -48,6 +48,7 @@ from test_framework.script_util import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
     sync_txindex,
@@ -82,7 +83,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
 
-        assert_equal(node.getmempoolinfo()['permitbaremultisig'], False)
+        assert_false(node.getmempoolinfo()['permitbaremultisig'])
 
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0

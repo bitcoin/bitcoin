@@ -55,15 +55,17 @@ from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGH
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_approx,
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
+    bitflipper,
     find_vout_for_address,
     wallet_importprivkey,
-    bitflipper
 )
 from test_framework.wallet_util import (
     calculate_input_weight,
@@ -128,7 +130,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Check that the walletprocesspsbt call succeeds but also recognizes that the transaction is not complete
         signed_psbt_incomplete = wallet.walletprocesspsbt(psbt=signed_psbt_obj.to_base64(), finalize=False)
-        assert_equal(signed_psbt_incomplete["complete"], False)
+        assert_false(signed_psbt_incomplete["complete"])
 
     def test_utxo_conversion(self):
         self.log.info("Check that non-witness UTXOs are removed for segwit v1+ inputs")
@@ -149,7 +151,7 @@ class PSBTTest(BitcoinTestFramework):
         offline_addr = offline_node.getnewaddress(address_type="bech32m")
         online_addr = w2.getnewaddress(address_type="bech32m")
         import_res = wonline.importdescriptors([{"desc": offline_node.getaddressinfo(offline_addr)["desc"], "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
         mining_wallet = mining_node.get_wallet_rpc(self.default_wallet_name)
         mining_wallet.sendtoaddress(address=offline_addr, amount=1.0)
         self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
@@ -322,8 +324,8 @@ class PSBTTest(BitcoinTestFramework):
                 PSBT_IN_TAP_INTERNAL_KEY: script_pubkey,
                 bytes([PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS]) + aggregate_pubkey: [participant_pubkey],
             }).to_base64()
-            assert_equal(node.analyzepsbt(psbt)["inputs"][0]["is_final"], False)
-            assert_equal(node.finalizepsbt(psbt)["complete"], False)
+            assert_false(node.analyzepsbt(psbt)["inputs"][0]["is_final"])
+            assert_false(node.finalizepsbt(psbt)["complete"])
 
     def test_combinepsbt_preserves_proprietary_fields(self):
         self.log.info("Test that combining PSBTs preserves proprietary fields")
@@ -497,7 +499,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Matching sighash type succeeds
         proc = wallet.walletprocesspsbt(psbt, True, "ALL|ANYONECANPAY")
-        assert_equal(proc["complete"], True)
+        assert_true(proc["complete"])
 
         # Repeat with descriptorprocesspsbt
         # Mismatching sighash type fails, including when no type is specified
@@ -506,7 +508,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Matching sighash type succeeds
         proc = self.nodes[0].descriptorprocesspsbt(psbt, descs, "ALL|ANYONECANPAY")
-        assert_equal(proc["complete"], True)
+        assert_true(proc["complete"])
 
         wallet.unloadwallet()
 
@@ -540,9 +542,9 @@ class PSBTTest(BitcoinTestFramework):
 
             # Make sure we can still finalize the transaction
             fin_res = self.nodes[0].finalizepsbt(psbt)
-            assert_equal(fin_res["complete"], True)
+            assert_true(fin_res["complete"])
             fin_hex = fin_res["hex"]
-            assert_equal(self.nodes[0].testmempoolaccept([fin_hex])[0]["allowed"], True)
+            assert_true(self.nodes[0].testmempoolaccept([fin_hex])[0]["allowed"])
 
             # Change the sighash field to a different value and make sure we can no longer finalize
             mod_psbt = PSBT.from_base64(psbt)
@@ -550,7 +552,7 @@ class PSBTTest(BitcoinTestFramework):
             mod_psbt.i[1].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
             psbt = mod_psbt.to_base64()
             fin_res = self.nodes[0].finalizepsbt(psbt)
-            assert_equal(fin_res["complete"], False)
+            assert_false(fin_res["complete"])
 
         self.nodes[0].sendrawtransaction(fin_hex)
         self.generate(self.nodes[0], 1)
@@ -586,8 +588,8 @@ class PSBTTest(BitcoinTestFramework):
             combined = node.combinepsbt(psbts)
             assert_equal(node.decodepsbt(combined)["inputs"][0].get("sighash"), "ALL|ANYONECANPAY")
             fin_res = node.finalizepsbt(combined)
-            assert_equal(fin_res["complete"], True)
-            assert_equal(node.testmempoolaccept([fin_res["hex"]])[0]["allowed"], True)
+            assert_true(fin_res["complete"])
+            assert_true(node.testmempoolaccept([fin_res["hex"]])[0]["allowed"])
             finalized.append(fin_res["hex"])
         assert_equal(finalized[0], finalized[1])
 
@@ -697,8 +699,8 @@ class PSBTTest(BitcoinTestFramework):
         def_wallet.unloadwallet()
 
         result = self.nodes[0].descriptorprocesspsbt(psbt=unsigned_psbt, descriptors=descs, finalize=True)
-        assert_equal(result["complete"], True)
-        assert_equal("hex" in result, True)
+        assert_true(result["complete"])
+        assert_true("hex" in result)
 
         valid_sig_psbt = result["psbt"]
         flawed_psbt = PSBT.from_base64(valid_sig_psbt)
@@ -716,8 +718,8 @@ class PSBTTest(BitcoinTestFramework):
         invalid_sig_psbt = flawed_psbt.to_base64()
 
         result = self.nodes[0].descriptorprocesspsbt(psbt=invalid_sig_psbt, descriptors=descs, finalize=True)
-        assert_equal(result["complete"], False)
-        assert_equal("hex" in result, False)
+        assert_false(result["complete"])
+        assert_false("hex" in result)
 
         # Load the default wallet back for later test cases.
         self.nodes[0].loadwallet(self.default_wallet_name)
@@ -790,7 +792,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Node 0 should be able to process without signing though
         unsigned_tx = self.nodes[0].walletprocesspsbt(psbtx, False)
-        assert_equal(unsigned_tx['complete'], False)
+        assert_false(unsigned_tx['complete'])
 
         self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
 
@@ -841,7 +843,7 @@ class PSBTTest(BitcoinTestFramework):
                 {"desc": p2wsh_ms["descriptor"], "timestamp": "now"},
                 {"desc": p2sh_p2wsh_ms["descriptor"], "timestamp": "now"},
             ])
-        assert_equal(all([r["success"] for r in import_res]), True)
+        assert_true(all([r["success"] for r in import_res]))
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
         p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
@@ -887,7 +889,7 @@ class PSBTTest(BitcoinTestFramework):
         assert 'witness_utxo' in decoded['inputs'][0]
         # Check decodepsbt fee calculation (input values shall only be counted once per UTXO)
         assert_equal(decoded['fee'], created_psbt['fee'])
-        assert_equal(walletprocesspsbt_out['complete'], True)
+        assert_true(walletprocesspsbt_out['complete'])
         self.nodes[1].sendrawtransaction(walletprocesspsbt_out['hex'])
 
         self.log.info("Test walletcreatefundedpsbt fee rate of 10000 sat/vB and 0.1 BTC/kvB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
@@ -971,14 +973,14 @@ class PSBTTest(BitcoinTestFramework):
         psbtx = wmulti.walletcreatefundedpsbt(inputs=[{"txid":txid,"vout":p2wsh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2sh_p2wsh_pos}], outputs={self.nodes[1].getnewaddress():29.99}, changeAddress=self.nodes[1].getrawchangeaddress())['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(psbtx)
         psbtx = walletprocesspsbt_out['psbt']
-        assert_equal(walletprocesspsbt_out['complete'], False)
+        assert_false(walletprocesspsbt_out['complete'])
 
         # Unload wmulti, we don't need it anymore
         wmulti.unloadwallet()
 
         # partially sign with node 2. This should be complete and sendable
         walletprocesspsbt_out = self.nodes[2].walletprocesspsbt(psbtx)
-        assert_equal(walletprocesspsbt_out['complete'], True)
+        assert_true(walletprocesspsbt_out['complete'])
         self.nodes[2].sendrawtransaction(walletprocesspsbt_out['hex'])
 
         # check that walletprocesspsbt fails to decode a non-psbt
@@ -1323,16 +1325,16 @@ class PSBTTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 6)[0]
         psbt = self.nodes[1].createpsbt([utxo], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepsbt(psbt)
-        assert_equal(analyzed['inputs'][0]['has_utxo'], False)
-        assert_equal(analyzed['inputs'][0]['is_final'], False)
+        assert_false(analyzed['inputs'][0]['has_utxo'])
+        assert_false(analyzed['inputs'][0]['is_final'])
         assert_equal(analyzed['inputs'][0]['next'], 'updater')
         assert_equal(analyzed['next'], 'updater')
 
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
         analyzed = self.nodes[0].analyzepsbt(updated)
-        assert_equal(analyzed['inputs'][0]['has_utxo'], True)
-        assert_equal(analyzed['inputs'][0]['is_final'], False)
+        assert_true(analyzed['inputs'][0]['has_utxo'])
+        assert_false(analyzed['inputs'][0]['is_final'])
         assert_equal(analyzed['inputs'][0]['next'], 'signer')
         assert_equal(analyzed['next'], 'signer')
         assert_equal(analyzed['inputs'][0]['missing']['signatures'][0], addrinfo['embedded']['witness_program'])
@@ -1345,8 +1347,8 @@ class PSBTTest(BitcoinTestFramework):
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspsbt(updated)['psbt']
         analyzed = self.nodes[0].analyzepsbt(signed)
-        assert_equal(analyzed['inputs'][0]['has_utxo'], True)
-        assert_equal(analyzed['inputs'][0]['is_final'], True)
+        assert_true(analyzed['inputs'][0]['has_utxo'])
+        assert_true(analyzed['inputs'][0]['is_final'])
         assert_equal(analyzed['next'], 'extractor')
 
         self.log.info("PSBT spending unspendable outputs should have error message and Creator as next")
@@ -1381,7 +1383,7 @@ class PSBTTest(BitcoinTestFramework):
         # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
         desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
         res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert_equal(res[0]["success"], True)
+        assert_true(res[0]["success"])
         addr = self.nodes[0].deriveaddresses(desc)[0]
         addr_info = self.nodes[0].getaddressinfo(addr)
 
@@ -1396,15 +1398,15 @@ class PSBTTest(BitcoinTestFramework):
         # But funding should work when the solving data is provided
         psbt = wallet.walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
         signed = wallet.walletprocesspsbt(psbt['psbt'])
-        assert_equal(signed['complete'], False)
+        assert_false(signed['complete'])
         signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
-        assert_equal(signed['complete'], True)
+        assert_true(signed['complete'])
 
         psbt = wallet.walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {"add_inputs": True, "solving_data":{"descriptors": [desc]}})
         signed = wallet.walletprocesspsbt(psbt['psbt'])
-        assert_equal(signed['complete'], False)
+        assert_false(signed['complete'])
         signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
-        assert_equal(signed['complete'], True)
+        assert_true(signed['complete'])
         final = signed['hex']
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
@@ -1436,7 +1438,7 @@ class PSBTTest(BitcoinTestFramework):
         signed = wallet.walletprocesspsbt(psbt["psbt"])
         signed = self.nodes[0].walletprocesspsbt(signed["psbt"])
         final = signed["hex"]
-        assert_equal(self.nodes[0].testmempoolaccept([final])[0]["allowed"], True)
+        assert_true(self.nodes[0].testmempoolaccept([final])[0]["allowed"])
         # Reducing the weight should have a lower fee
         psbt2 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}],
@@ -1461,7 +1463,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Import the external utxo descriptor so that we can sign for it from the test wallet
         res = wallet.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert_equal(res[0]["success"], True)
+        assert_true(res[0]["success"])
         # The provided weight should override the calculated weight for a wallet input
         psbt3 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
@@ -1478,7 +1480,7 @@ class PSBTTest(BitcoinTestFramework):
 
         desc = descsum_create("wsh(pkh({}))".format(pubkey.hex()))
         res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert_equal(res[0]["success"], True)
+        assert_true(res[0]["success"])
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
@@ -1493,7 +1495,7 @@ class PSBTTest(BitcoinTestFramework):
 
         desc = descsum_create("tr({},pk({}))".format(H_POINT, pubkey.hex()))
         res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert_equal(res[0]["success"], True)
+        assert_true(res[0]["success"])
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
@@ -1644,7 +1646,7 @@ class PSBTTest(BitcoinTestFramework):
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'final_scriptwitness'])
 
         # Test psbt is complete
-        assert_equal(processed_psbt['complete'], True)
+        assert_true(processed_psbt['complete'])
 
         # Broadcast transaction
         self.nodes[2].sendrawtransaction(processed_psbt['hex'])

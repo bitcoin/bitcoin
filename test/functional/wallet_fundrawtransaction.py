@@ -19,13 +19,14 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_approx,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
     count_bytes,
     get_fee,
 )
@@ -196,7 +197,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         watchonly_address = self.nodes[0].getnewaddress()
         self.watchonly_amount = Decimal(200)
         import_res = wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(watchonly_address)["desc"], "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
         self.watchonly_utxo = self.create_outpoints(self.nodes[0], outputs=[{watchonly_address: self.watchonly_amount}])[0]
 
         # Lock UTXO so nodes[0] doesn't accidentally spend it
@@ -578,7 +579,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             ]
         )
         import_res = wmulti.importdescriptors([{"desc": mSigObj["descriptor"], "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
 
         # Send 1.2 BTC to msig addr.
         self.nodes[0].sendtoaddress(mSigObj["address"], 1.2, fee_rate=self.fee_rate_sats_per_vb)
@@ -1088,8 +1089,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}], fee_rate=2)
         signed_tx = wallet.signrawtransactionwithwallet(funded_tx["hex"])
         signed_tx = self.nodes[0].signrawtransactionwithwallet(signed_tx["hex"])
-        assert_equal(self.nodes[0].testmempoolaccept([signed_tx["hex"]])[0]["allowed"], True)
-        assert_equal(signed_tx["complete"], True)
+        assert_true(self.nodes[0].testmempoolaccept([signed_tx["hex"]])[0]["allowed"])
+        assert_true(signed_tx["complete"])
         # Reducing the weight should have a lower fee
         funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}], fee_rate=2)
         assert_greater_than(funded_tx["fee"], funded_tx2["fee"])
@@ -1530,7 +1531,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.nodes[0].createwallet(wallet_name="grind_watchonly", disable_private_keys=True)
         watchonly = self.nodes[0].get_wallet_rpc("grind_watchonly")
-        assert_equal(watchonly.importdescriptors(wallet.listdescriptors()["descriptors"])[0]["success"], True)
+        assert_true(watchonly.importdescriptors(wallet.listdescriptors()["descriptors"])[0]["success"])
 
         # Send to legacy address type so that we will have an ecdsa signature with a measurable effect on the feerate
         default_wallet.sendtoaddress(wallet.getnewaddress(address_type="legacy"), 10)
