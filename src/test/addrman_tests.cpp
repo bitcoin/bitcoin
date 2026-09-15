@@ -20,6 +20,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -96,6 +97,169 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman->Size() >= 1);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_add_empty_and_rejected)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    const CAddress unroutable{ResolveService("10.0.0.1", 8333), NODE_NONE};
+
+    BOOST_CHECK(!addrman->Add({}, source));
+    BOOST_CHECK(!addrman->Add({unroutable}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(), 0U);
+    BOOST_CHECK(addrman->GetAddr(0, 0, std::nullopt, false).empty());
+
+    const CAddress routable{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    BOOST_CHECK(addrman->Add({routable}, source));
+    BOOST_CHECK(!addrman->Add({unroutable, routable}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_mixed_batch)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    const CAddress unroutable{ResolveService("10.0.0.1", 8333), NODE_NONE};
+    const CAddress routable{ResolveService("250.1.1.1", 8333), NODE_NONE};
+
+    BOOST_CHECK(addrman->Add({unroutable, routable}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    const auto addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+    BOOST_CHECK(addresses[0] == routable);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_duplicate_batch)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    const CAddress addr{ResolveService("250.1.1.1", 8333), NODE_NONE};
+
+    BOOST_CHECK(addrman->Add({addr, addr, addr}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    BOOST_CHECK(!addrman->Add({addr, addr}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_penalty_clamps_time)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    CAddress addr{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    addr.nTime = NodeSeconds{1s};
+
+    BOOST_CHECK(addrman->Add({addr}, source, 2s));
+    const auto addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+    BOOST_CHECK(addresses[0].nTime == NodeSeconds{0s});
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_updates_timestamp_at_boundaries)
+{
+    FakeNodeClock clock{1'000'000s};
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+
+    CAddress online{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    const auto online_time = Now<NodeSeconds>() - 2h;
+    online.nTime = online_time;
+    BOOST_CHECK(addrman->Add({online}, source));
+
+    CAddress online_boundary{online};
+    online_boundary.nTime = online_time + 1h;
+    BOOST_CHECK(!addrman->Add({online_boundary}, source));
+    auto addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+    BOOST_CHECK(addresses[0].nTime == online_time);
+
+    online_boundary.nTime += 1s;
+    BOOST_CHECK(!addrman->Add({online_boundary}, source));
+    addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+    BOOST_CHECK(addresses[0].nTime == online_boundary.nTime);
+
+    CAddress offline{ResolveService("250.1.1.2", 8333), NODE_NONE};
+    const auto offline_time = Now<NodeSeconds>() - 50h;
+    offline.nTime = offline_time;
+    BOOST_CHECK(addrman->Add({offline}, source));
+
+    CAddress offline_boundary{offline};
+    offline_boundary.nTime = offline_time + 24h;
+    BOOST_CHECK(!addrman->Add({offline_boundary}, source));
+    addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 2U);
+    auto offline_it = std::find(addresses.begin(), addresses.end(), offline);
+    BOOST_REQUIRE(offline_it != addresses.end());
+    BOOST_CHECK(offline_it->nTime == offline_time);
+
+    offline_boundary.nTime += 1s;
+    BOOST_CHECK(!addrman->Add({offline_boundary}, source));
+    addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 2U);
+    const auto it = std::find(addresses.begin(), addresses.end(), offline);
+    BOOST_REQUIRE(it != addresses.end());
+    BOOST_CHECK(it->nTime == offline_boundary.nTime);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_does_not_remove_services)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    CAddress addr{ResolveService("250.1.1.1", 8333), NODE_NETWORK | NODE_P2P_V2};
+    addr.nTime = Now<NodeSeconds>() - 2h;
+
+    BOOST_CHECK(addrman->Add({addr}, source));
+
+    CAddress older_record{addr};
+    older_record.nTime -= 2h;
+    older_record.nServices = NODE_NONE;
+    BOOST_CHECK(!addrman->Add({older_record}, source));
+
+    const auto addresses = addrman->GetAddr(0, 0, std::nullopt, false);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+    BOOST_CHECK_EQUAL(addresses[0].nServices, NODE_NETWORK | NODE_P2P_V2);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_newer_timestamp_does_not_change_source_bucket)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CAddress addr{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    const CNetAddr source1 = ResolveIP("250.2.2.2");
+    const CNetAddr source2 = ResolveIP("251.3.3.3");
+
+    CAddress first{addr};
+    first.nTime = Now<NodeSeconds>() - 2h;
+    BOOST_CHECK(addrman->Add({first}, source1));
+    const auto initial_position = addrman->FindAddressEntry(first);
+    BOOST_REQUIRE(initial_position.has_value());
+
+    CAddress newer{first};
+    newer.nTime += 2h;
+    BOOST_CHECK(!addrman->Add({newer}, source2));
+    const auto updated_position = addrman->FindAddressEntry(newer);
+    BOOST_REQUIRE(updated_position.has_value());
+    BOOST_CHECK(*updated_position == *initial_position);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_add_newer_tried_record_stays_tried)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+    CAddress addr{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    addr.nTime = Now<NodeSeconds>() - 2h;
+
+    BOOST_CHECK(addrman->Add({addr}, source));
+    BOOST_CHECK(addrman->Good(addr));
+
+    CAddress newer{addr};
+    newer.nTime += 2h;
+    newer.nServices = NODE_P2P_V2;
+    BOOST_CHECK(!addrman->Add({newer}, source));
+    const auto position = addrman->FindAddressEntry(newer);
+    BOOST_REQUIRE(position.has_value());
+    BOOST_CHECK(position->tried);
+    BOOST_CHECK_EQUAL(addrman->Size(std::nullopt, true), 0U);
+    BOOST_CHECK_EQUAL(addrman->GetAddr(0, 0, std::nullopt, false).at(0).nServices, NODE_P2P_V2);
+}
 
 BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
 {
