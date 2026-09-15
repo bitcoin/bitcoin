@@ -21,9 +21,16 @@
 #include <utility>
 #include <vector>
 
+#ifdef WIN32
+#include <afunix.h>
+#define sock_errno WSAGetLastError()
+#else
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#define closesocket close
+#define sock_errno errno
+#endif
 
 using util::RemovePrefixView;
 
@@ -110,15 +117,29 @@ mp::SocketId ProcessImpl::connect(const fs::path& data_dir,
 
     mp::SocketId fd;
     if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
-        throw std::system_error(errno, std::system_category());
+        throw std::system_error(sock_errno, std::system_category());
     }
     if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int connect_error = errno;
-    if (::close(fd) != 0) {
-        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(errno));
+    int connect_error = sock_errno;
+    if (::closesocket(fd) != 0) {
+        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(sock_errno));
     }
+#ifdef WIN32
+    // On Windows, connect() to a Unix domain socket path that doesn't exist may
+    // return a WSA error that doesn't map to std::errc::no_such_file_or_directory
+    // via std::system_category(). Check if the path exists and throw the
+    // appropriate POSIX-compatible error if not.
+    // TODO: There may be a better way to map the WSA error directly to the
+    // right exception without needing to call fs::exists.
+    if (addr.sun_family == AF_UNIX) {
+        std::error_code ec;
+        if (!fs::exists(fs::PathFromString(addr.sun_path), ec) && !ec) {
+            throw std::system_error(std::make_error_code(std::errc::no_such_file_or_directory));
+        }
+    }
+#endif
     throw std::system_error(connect_error, std::system_category());
 }
 
@@ -133,22 +154,27 @@ mp::SocketId ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_
     if (addr.sun_family == AF_UNIX) {
         fs::path path = addr.sun_path;
         if (path.has_parent_path()) fs::create_directories(path.parent_path());
-        if (fs::symlink_status(path).type() == fs::file_type::socket) {
+        if (fs::symlink_status(path).type() == fs::file_type::socket
+#ifdef WIN32
+            // On windows, sockets show up as regular files with size 0
+            || (fs::is_regular_file(path) && fs::file_size(path) == 0)
+#endif
+        ) {
             fs::remove(path);
         }
     }
 
     mp::SocketId fd;
     if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
-        throw std::system_error(errno, std::system_category());
+        throw std::system_error(sock_errno, std::system_category());
     }
 
     if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int bind_error = errno;
-    if (::close(fd) != 0) {
-        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(errno));
+    int bind_error = sock_errno;
+    if (::closesocket(fd) != 0) {
+        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(sock_errno));
     }
     throw std::system_error(bind_error, std::system_category());
 }

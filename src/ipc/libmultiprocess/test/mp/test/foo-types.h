@@ -46,6 +46,7 @@ void CustomBuildField(TypeList<FooCustom>, Priority<1>, InvokeContext& invoke_co
 {
     BuildField(TypeList<std::string>(), invoke_context, output, value.v1);
     output.setV2(value.v2);
+    BuildField(TypeList<std::vector<int>>(), invoke_context, output, value.v3);
 }
 
 template <typename Input, typename ReadDest>
@@ -55,6 +56,7 @@ decltype(auto) CustomReadField(TypeList<FooCustom>, Priority<1>, InvokeContext& 
     return read_dest.update([&](FooCustom& value) {
         value.v1 = ReadField(TypeList<std::string>(), invoke_context, mp::Make<mp::ValueField>(custom.getV1()), ReadDestTemp<std::string>());
         value.v2 = custom.getV2();
+        value.v3 = ReadField(TypeList<std::vector<int>>(), invoke_context, mp::Make<mp::ValueField>(custom.getV3()), ReadDestTemp<std::vector<int>>());
     });
 }
 
