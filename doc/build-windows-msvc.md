@@ -32,15 +32,9 @@ This installs:
 After installation, the commands in this guide should be executed in "Developer PowerShell for VS" or "Developer Command Prompt for VS".
 The former is assumed hereinafter.
 
-#### Python
+#### Test Suite Dependencies
 
-Python is required for running the test suite.
-
-To install Python, run:
-
-```powershell
-winget install python3
-```
+See [`test/README.md`](/test/README.md#dependencies-and-prerequisites).
 
 ### 2. Clone Bitcoin Repository
 
