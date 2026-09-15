@@ -431,7 +431,7 @@ void TorController::ThreadControl()
     LogDebug(BCLog::TOR, "Exited Tor control thread");
 }
 
-void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlReply& reply)
+void TorController::get_socks_cb(TorControlConnection&, const TorControlReply& reply)
 {
     // NOTE: We can only get here if -onion is unset
     std::string socks_location;

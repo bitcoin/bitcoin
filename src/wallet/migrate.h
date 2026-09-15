@@ -81,10 +81,10 @@ private:
     bool ReadKey(DataStream&& key, DataStream& value) override;
     // WriteKey returns true since various automatic upgrades for older wallets will expect writing to not fail.
     // It is okay for this batch type to not actually write anything as those automatic upgrades will occur again after migration.
-    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return true; }
-    bool EraseKey(DataStream&& key) override { return false; }
+    bool WriteKey(DataStream&&, DataStream&&, bool = true) override { return true; }
+    bool EraseKey(DataStream&&) override { return false; }
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(std::span<const std::byte> prefix) override { return false; }
+    bool ErasePrefix(std::span<const std::byte>) override { return false; }
 
 public:
     explicit BerkeleyROBatch(const BerkeleyRODatabase& database) : m_database(database) {}

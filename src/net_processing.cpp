@@ -2172,7 +2172,7 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     }
 }
 
-void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
+void PeerManagerImpl::ActiveTipChange(const CBlockIndex& /*new_tip*/, bool is_ibd)
 {
     // Ensure mempool mutex was released, otherwise deadlock may occur if another thread holding
     // m_tx_download_mutex waits on the mempool mutex.
@@ -2197,7 +2197,7 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
 void PeerManagerImpl::BlockConnected(
     const ChainstateRole& role,
     const std::shared_ptr<const CBlock>& pblock,
-    const CBlockIndex* pindex)
+    const CBlockIndex* /*pindex*/)
 {
     // Update this for all chainstate roles so that we don't mistakenly see peers
     // helping us do background IBD as having a stale tip.
@@ -2222,7 +2222,7 @@ void PeerManagerImpl::BlockConnected(
     }
 }
 
-void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
+void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &/*block*/, const CBlockIndex* /*pindex*/)
 {
     LOCK(m_tx_download_mutex);
     m_txdownloadman.BlockDisconnected();

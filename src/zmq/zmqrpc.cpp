@@ -41,7 +41,7 @@ static RPCMethod getzmqnotifications()
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue
 {
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {
