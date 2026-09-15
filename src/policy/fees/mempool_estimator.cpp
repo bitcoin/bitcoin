@@ -30,6 +30,7 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 constexpr int CURRENT_MEMPOOL_ESTIMATOR_VERSION{1};
 
@@ -391,9 +392,14 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     options.test_block_validity = false;
     const auto blocktemplate = WITH_LOCK(::cs_main, return (node::BlockAssembler{m_chainman.CurrentChainstate(), &m_mempool, options}).CreateNewBlock());
     if (!blocktemplate) return EstimationError(strprintf("%s: Failed to create block template for fee rate estimation", FeeRateEstimatorTypeToString(estimator_type)));
+    std::vector<FeePerVSize> chunk_feerates;
+    chunk_feerates.reserve(blocktemplate->m_template_chunks.size());
+    for (const auto& chunk : blocktemplate->m_template_chunks) {
+        chunk_feerates.push_back(ToFeePerVSize(chunk.feerate));
+    }
     // Sort again because the rounding up when converting from weight to vsize may cause slight misorder.
-    std::sort(blocktemplate->m_package_feerates.begin(), blocktemplate->m_package_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; });
-    const auto percentiles = CalculateMaxWeightPercentiles(blocktemplate->m_package_feerates);
+    std::sort(chunk_feerates.begin(), chunk_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; });
+    const auto percentiles = CalculateMaxWeightPercentiles(chunk_feerates);
     // Fall back to a relayable floor (the higher of the min relay fee and the current
     // mempool min fee) for any percentile the mempool was too sparse to fill.
     const FeePerVSize floor{std::max(m_mempool.m_opts.min_relay_feerate, m_mempool.GetMinFee()).GetFeePerVSize()};

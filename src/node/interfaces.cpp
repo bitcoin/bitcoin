@@ -33,6 +33,7 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
@@ -40,7 +41,6 @@
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mini_miner.h>
-#include <node/mining_args.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
 #include <node/types.h>
@@ -97,7 +97,6 @@ using interfaces::Node;
 using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
@@ -882,11 +881,20 @@ class BlockTemplateImpl : public BlockTemplate
 public:
     explicit BlockTemplateImpl(BlockCreateOptions create_options,
                                std::unique_ptr<CBlockTemplate> block_template,
+                               uint64_t template_id,
                                const NodeContext& node) : m_create_options(std::move(create_options)),
                                                           m_block_template(std::move(block_template)),
+                                                          m_template_id(template_id),
                                                           m_node(node)
     {
         assert(m_block_template);
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        if (m_node.block_template_manager) {
+            m_node.block_template_manager->StopTrackingFeeInflow(m_template_id);
+        }
     }
 
     CBlockHeader getBlockHeader() override
@@ -923,34 +931,38 @@ public:
     {
         if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(),
-                                                  notifications(),
-                                                  m_node.mempool.get(),
-                                                  m_block_template,
-                                                  /*wait_options=*/options,
-                                                  /*create_options=*/m_create_options,
-                                                  /*interrupt_wait=*/m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
+        uint64_t new_template_id{0};
+        auto new_template = block_template_manager().WaitAndCreateNewBlock(
+            m_block_template->block.hashPrevBlock,
+            m_template_id,
+            options,
+            m_create_options,
+            m_interrupt_wait,
+            new_template_id);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), new_template_id, m_node);
         return nullptr;
     }
 
     void interruptWait() override
     {
-        InterruptWait(notifications(), m_interrupt_wait);
+        block_template_manager().InterruptWait(m_interrupt_wait);
     }
 
     const BlockCreateOptions m_create_options;
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
+    // Identifier of this template's fee-inflow tracking snapshot, or 0 when
+    // untracked. Owned here rather than on CBlockTemplate so the assembler's
+    // template struct stays free of tracking state.
+    const uint64_t m_template_id;
 
     bool m_interrupt_wait{false};
-    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
-    KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     const NodeContext& m_node;
 };
 
@@ -971,12 +983,12 @@ public:
 
     std::optional<BlockRef> getTip() override
     {
-        return GetTip(chainman());
+        return block_template_manager().GetTip();
     }
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
-        return WaitTipChanged(chainman(), notifications(), current_tip, timeout, m_interrupt_mining);
+        return block_template_manager().WaitTipChanged(current_tip, timeout, m_interrupt_mining);
     }
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
@@ -998,21 +1010,16 @@ public:
             }
 
             // Also wait during the final catch-up moments after IBD.
-            if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
+            if (!block_template_manager().CooldownIfHeadersAhead(*maybe_tip, m_interrupt_mining)) return {};
         }
-        const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
-        return std::make_unique<BlockTemplateImpl>(create_options,
-                                                   BlockAssembler{
-                                                       chainman().ActiveChainstate(),
-                                                       m_node.mempool.get(),
-                                                       create_options,
-                                                   }.CreateNewBlock(),
-                                                   m_node);
+        uint64_t template_id{0};
+        auto new_template = block_template_manager().CreateNewTemplate(options, &template_id);
+        return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), template_id, m_node);
     }
 
     void interrupt() override
     {
-        InterruptWait(notifications(), m_interrupt_mining);
+        block_template_manager().InterruptWait(m_interrupt_mining);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
@@ -1026,7 +1033,7 @@ public:
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
     {
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(block_in), reason, debug);
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
@@ -1058,6 +1065,7 @@ public:
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     // Treat as if guarded by notifications().m_tip_block_mutex
     bool m_interrupt_mining{false};
     const NodeContext& m_node;

@@ -106,6 +106,12 @@ struct ChainTestingSetup : public BasicTestingSetup {
     explicit ChainTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
 
+    //! Create the block template manager. Must be destroyed before resetting
+    //! any of its dependencies.
+    void CreateBlockTemplateManager();
+    //! Unregister the block template manager from validation signals and reset it.
+    void ResetBlockTemplateManager();
+
     // Supplies a chainstate, if one is needed
     void LoadVerifyActivateChainstate();
 };
