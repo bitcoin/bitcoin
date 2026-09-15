@@ -1031,7 +1031,7 @@ public:
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
     {
-        if (!m_node.mempool) return {};
+        if (!m_node.mempool) return std::vector<CTransactionRef>(txids.size());
 
         std::vector<CTransactionRef> results;
         results.reserve(txids.size());
@@ -1044,7 +1044,7 @@ public:
 
     std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) override
     {
-        if (!m_node.mempool) return {};
+        if (!m_node.mempool) return std::vector<CTransactionRef>(wtxids.size());
 
         std::vector<CTransactionRef> results;
         results.reserve(wtxids.size());
