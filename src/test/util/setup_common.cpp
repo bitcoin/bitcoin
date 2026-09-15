@@ -133,10 +133,10 @@ void SetupCommonTestArgs(ArgsManager& argsman)
 }
 
 /** Test setup failure */
-static void ExitFailure(std::string_view str_err)
+[[noreturn]] static void ExitFailure(std::string_view str_err)
 {
     std::cerr << str_err << std::endl;
-    exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 }
 
 BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)

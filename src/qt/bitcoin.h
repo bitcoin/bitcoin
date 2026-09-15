@@ -73,7 +73,7 @@ public Q_SLOTS:
     /// Request core shutdown
     void requestShutdown();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
-    void handleRunawayException(const QString &message);
+    [[noreturn]] void handleRunawayException(const QString &message);
 
     /**
      * A helper function that shows a message box
