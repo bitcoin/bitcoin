@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
+#include <node/block_template_manager.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_types.h>
 #include <primitives/block.h>
@@ -167,9 +168,11 @@ static void LoadCurrentChain()
 void ResetChainman(TestingSetup& setup)
 {
     SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    setup.m_node.block_template_manager.reset();
     setup.m_node.chainman.reset();
     setup.m_node.notifications->m_shutdown_on_fatal_error = false;
     setup.m_make_chainman();
+    setup.CreateBlockTemplateManager();
     setup.LoadVerifyActivateChainstate();
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
