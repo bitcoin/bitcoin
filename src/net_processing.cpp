@@ -2132,6 +2132,24 @@ std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrm
     return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, warnings, opts);
 }
 
+//! Compute the headers sync DoS-protection parameters for the given chain, using its age (genesis
+//! to now) and the height at which its minimum chain work was taken, and log the result.
+//!
+//! This is called whenever a headers sync is started, rather than once at startup, so that the
+//! commitment period is based on the same clock as the bound HeadersSyncState derives from it on
+//! how many commitments a peer may make us store. A node which starts up with a badly wrong clock
+//! and has it corrected afterwards would otherwise end up with a period sized for a much shorter
+//! chain than the one a peer can then feed it, inflating that bound (50x for a clock that starts
+//! out before genesis).
+static HeadersSyncParams MakeHeadersSyncParams(const CChainParams& chainparams)
+{
+    const auto params{ComputeHeadersSyncParams(Now<NodeSeconds>() - chainparams.GenesisBlock().Time(),
+                                               chainparams.GetConsensus().minchainwork_height)};
+    LogDebug(BCLog::NET, "Headers sync parameters: commitment period=%u, redownload buffer size=%u",
+             params.commitment_period, params.redownload_buffer_size);
+    return params;
+}
+
 PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, node::Warnings& warnings, Options opts)
@@ -3042,7 +3060,7 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             LOCK(peer.m_headers_sync_mutex);
             try {
                 peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
-                    m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
+                    MakeHeadersSyncParams(m_chainparams), chain_start_header, minimum_chain_work));
             } catch (const HeadersSyncState::SystemClockError& e) {
                 // The chain state loading logic performs an earlier check to
                 // verify that the tip of the locally stored chain is <=
