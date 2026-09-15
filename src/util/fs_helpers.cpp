@@ -114,7 +114,7 @@ bool FileCommit(FILE* file)
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     if (FlushFileBuffers(hFile) == 0) {
-        LogError("FlushFileBuffers failed: %s", Win32ErrorString(GetLastError()));
+        LogError("FlushFileBuffers failed: %s", SysErrorString(GetLastError()));
         return false;
     }
 #elif defined(__APPLE__) && defined(F_FULLFSYNC)
