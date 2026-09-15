@@ -86,7 +86,7 @@ CreateAndActivateUTXOSnapshot(
             chain.InitCoinsCache(1_MiB);
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.LoadChainTip();
-            node.chainman->MaybeRebalanceCaches();
+            Assert(node.chainman->MaybeRebalanceCaches());
 
             // Reset the HAVE_DATA flags below the snapshot height, simulating
             // never-having-downloaded them in the first place.
@@ -109,7 +109,8 @@ CreateAndActivateUTXOSnapshot(
             chain.PopulateBlockIndexCandidates();
         }
         BlockValidationState state;
-        if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {
+        auto activate_result{node.chainman->ActiveChainstate().ActivateBestChain(state)};
+        if (!activate_result) {
             throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
         }
         Assert(
