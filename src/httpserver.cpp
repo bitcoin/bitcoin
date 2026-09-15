@@ -605,8 +605,6 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
 
 void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive)
 {
-    m_keep_alive = keep_alive;
-
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
     const auto headers_bytes{std::as_bytes(std::span{headers})};
@@ -615,6 +613,14 @@ void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> 
     // Fill the send buffer with the complete serialized response headers + body
     {
         LOCK(m_send_mutex);
+        // Update the keep-alive flag in the same critical section that appends
+        // the response. The I/O thread decides whether to disconnect when it
+        // drains the buffer to empty, so the flag and the buffer contents must
+        // change together: if the flag were cleared before the lock is taken,
+        // the I/O thread could finish sending an earlier pipelined response in
+        // between, observe an empty buffer with keep_alive=false, and flag the
+        // client for disconnection before this response is even queued.
+        m_keep_alive = keep_alive;
         send_buffer_was_empty = m_send_buffer.empty();
         m_send_buffer.insert(m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
 
