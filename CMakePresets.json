@@ -2,15 +2,14 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "vs2026",
-      "displayName": "Build using 'Visual Studio 18 2026' generator and 'x64-windows' triplet",
+      "name": "windows",
+      "displayName": "Build using clang-cl and 'x64-windows' triplet",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "generator": "Visual Studio 18 2026",
-      "architecture": "x64",
+      "toolset": "ClangCL",
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows",
@@ -19,15 +18,14 @@
       }
     },
     {
-      "name": "vs2026-static",
-      "displayName": "Build using 'Visual Studio 18 2026' generator and 'x64-windows-static' triplet",
+      "name": "windows-static",
+      "displayName": "Build using clang-cl and 'x64-windows-static' triplet",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "generator": "Visual Studio 18 2026",
-      "architecture": "x64",
+      "toolset": "ClangCL",
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
