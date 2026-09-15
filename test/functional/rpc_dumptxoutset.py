@@ -30,7 +30,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         node.invalidateblock(invalid_block)
         # Reset mocktime to not regenerate the same blockhash
         node.setmocktime(0)
-        self.generate(node, 2)
+        stale_hash = self.generate(node, 2)[-1]
 
         # Move back on to actual main chain
         node.reconsiderblock(invalid_block)
@@ -47,6 +47,11 @@ class DumptxoutsetTest(BitcoinTestFramework):
         out_mem = node.dumptxoutset("txoutset_fork_mem.dat", "rollback", {"rollback": target_height, "in_memory": True})
         assert_equal(out_mem['base_height'], target_height)
         assert_equal(out_mem['base_hash'], target_hash)
+
+        # Rolling back to a hash on the stale branch is rejected before any work is done
+        assert_raises_rpc_error(
+            -8, "Block is not in main chain", node.dumptxoutset, "txoutset_stale.dat", "rollback", {"rollback": stale_hash})
+        assert not (node.chain_path / "txoutset_stale.dat.incomplete").exists()
 
 
     def run_test(self):

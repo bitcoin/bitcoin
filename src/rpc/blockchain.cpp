@@ -3147,6 +3147,9 @@ static RPCMethod dumptxoutset()
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid snapshot type \"%s\" specified with rollback option", snapshot_type));
         }
         target_index = ParseHashOrHeight(options["rollback"], *node.chainman);
+        if (!WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Contains(*target_index))) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+        }
     } else if (snapshot_type == "rollback") {
         auto snapshot_heights = node.chainman->GetParams().GetAvailableSnapshotHeights();
         CHECK_NONFATAL(snapshot_heights.size() > 0);
