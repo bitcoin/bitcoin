@@ -15,13 +15,13 @@
 #include <test/util/json.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
 #include <util/strencodings.h>
-
-#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 
-#include <univalue.h>
+#include <iostream>
+#include <type_traits>
 
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
@@ -295,6 +295,33 @@ BOOST_AUTO_TEST_CASE(sighash_caching)
             BOOST_CHECK(cache.Load(hash_type, scriptcode, dummy) || expect_one);
         }
     }
+}
+
+static_assert(!std::is_default_constructible_v<PrecomputedTransactionData>);
+
+BOOST_AUTO_TEST_CASE(precomputed_transaction_data_constructor)
+{
+    CMutableTransaction tx;
+    tx.vin.emplace_back(Txid::FromUint256(uint256::ONE), 0);
+    tx.vout.emplace_back(1, CScript{} << OP_TRUE);
+
+    auto check_ready{[](const PrecomputedTransactionData& txdata, bool bip143, bool bip341, bool spent_outputs) {
+        BOOST_CHECK_EQUAL(txdata.m_bip143_segwit_ready, bip143);
+        BOOST_CHECK_EQUAL(txdata.m_bip341_taproot_ready, bip341);
+        BOOST_CHECK_EQUAL(txdata.m_spent_outputs_ready, spent_outputs);
+    }};
+
+    PrecomputedTransactionData txdata_defaults{tx};
+    check_ready(txdata_defaults, /*bip143=*/false, /*bip341=*/false, /*spent_outputs=*/false);
+
+    PrecomputedTransactionData txdata_forced{tx, /*spent_outputs=*/{}, /*force=*/true};
+    check_ready(txdata_forced, /*bip143=*/true, /*bip341=*/false, /*spent_outputs=*/false);
+
+    PrecomputedTransactionData txdata_with_spent_outputs{tx, /*spent_outputs=*/{CTxOut{3, CScript{} << OP_TRUE}}};
+    check_ready(txdata_with_spent_outputs, /*bip143=*/false, /*bip341=*/false, /*spent_outputs=*/true);
+
+    PrecomputedTransactionData txdata_forced_with_spent_outputs{tx, /*spent_outputs=*/{CTxOut{3, CScript{} << OP_TRUE}}, /*force=*/true};
+    check_ready(txdata_forced_with_spent_outputs, /*bip143=*/true, /*bip341=*/true, /*spent_outputs=*/true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

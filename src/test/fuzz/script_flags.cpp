@@ -51,8 +51,7 @@ FUZZ_TARGET(script_flags)
             }
             spent_outputs.push_back(prevout);
         }
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::move(spent_outputs));
+        PrecomputedTransactionData txdata{tx, std::move(spent_outputs)};
 
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             const CTxOut& prevout = txdata.m_spent_outputs.at(i);
