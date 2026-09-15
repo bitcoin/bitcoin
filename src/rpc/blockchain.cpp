@@ -3281,6 +3281,10 @@ UniValue CreateRolledBackUTXOSnapshot(
         {
             LOCK(::cs_main);
             tip = chainstate.m_chain.Tip();
+            // The target may have left the active chain since the RPC was called
+            if (tip->GetAncestor(target->nHeight) != target) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+            }
             chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
             cursor = chainstate.CoinsDB().Cursor();
         }
