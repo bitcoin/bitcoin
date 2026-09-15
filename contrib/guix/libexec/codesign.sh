@@ -87,6 +87,11 @@ mkdir -p "$DISTSRC"
                                  -out "${WORKDIR}/${bin_base/-unsigned}" \
                                  -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
                                  -sigin codesignatures/win/"${bin_base}".pem
+                osslsigncode verify \
+                                 -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
+                                 -ignore-crl \
+                                 -ignore-cdp \
+                                 -in "${WORKDIR}/${bin_base/-unsigned}"
             done
 
             # Move installer to outdir
