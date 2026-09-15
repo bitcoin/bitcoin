@@ -101,7 +101,7 @@ public:
      * @param[in] key The field-name of the header to search for
      * @returns Views into all values matching the provided key (valid while this object is alive)
      */
-    std::vector<std::string_view> FindAll(std::string_view key) const;
+    std::vector<std::string_view> FindAll(std::string_view key) const LIFETIMEBOUND;
     void Write(std::string&& key, std::string&& value);
     /**
      * @param[in] key The field-name of the header to search for and delete
@@ -178,7 +178,7 @@ public:
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
 
-    const HTTPVersion& GetVersion() const { return m_version; }
+    const HTTPVersion& GetVersion() const LIFETIMEBOUND { return m_version; }
     std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client.lock(); }
 
     // These methods reimplement the API from http_libevent::HTTPRequest
@@ -499,8 +499,8 @@ public:
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
 
-    const std::string& GetOrigin() const { return m_origin; }
-    const CService& GetPeer() const { return m_addr; }
+    const std::string& GetOrigin() const LIFETIMEBOUND { return m_origin; }
+    const CService& GetPeer() const LIFETIMEBOUND { return m_addr; }
     std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
     bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
     bool ReceiveBufferEmpty() const { return m_recv_buffer.empty(); }
@@ -529,10 +529,10 @@ public:
      * @returns nullptr after a complete request is moved to a worker thread,
      *          but before reading any new data from m_recv_buffer.
      */
-    const HTTPRequest* GetRequest() const { return m_req.get(); }
+    const HTTPRequest* GetRequest() const LIFETIMEBOUND { return m_req.get(); }
 
     //! Used for tests.
-    const std::string& GetRecvBuffer() const { return m_recv_buffer; }
+    const std::string& GetRecvBuffer() const LIFETIMEBOUND { return m_recv_buffer; }
 
 protected:
     //! Used for tests.
