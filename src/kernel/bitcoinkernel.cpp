@@ -1470,6 +1470,11 @@ const btck_BlockHash* btck_block_header_get_prev_hash(const btck_BlockHeader* he
     return btck_BlockHash::ref(&btck_BlockHeader::get(header).hashPrevBlock);
 }
 
+void btck_block_header_get_merkle_root(const btck_BlockHeader* header, unsigned char output[32])
+{
+    std::memcpy(output, btck_BlockHeader::get(header).hashMerkleRoot.begin(), 32);
+}
+
 uint32_t btck_block_header_get_timestamp(const btck_BlockHeader* header)
 {
     return btck_BlockHeader::get(header).nTime;
