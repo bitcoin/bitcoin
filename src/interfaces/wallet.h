@@ -44,6 +44,8 @@ struct CExtKey;
 namespace wallet {
 class CCoinControl;
 class CWallet;
+struct ImportDescriptorRequest;
+struct ImportResult;
 struct CRecipient;
 struct WalletContext;
 } // namespace wallet
@@ -209,6 +211,9 @@ public:
         size_t* n_signed,
         PartiallySignedTransaction& psbtx,
         bool& complete) = 0;
+
+    //! Import descriptors
+    virtual std::vector<wallet::ImportResult> importDescriptors(std::vector<wallet::ImportDescriptorRequest>& requests) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
