@@ -196,9 +196,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
     {
         HTTPRequest req;
         LineReader reader(full_request, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.GetURI(), "/");
         BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
@@ -214,61 +212,61 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         // Malformed: no spaces between data
         HTTPRequest req;
         LineReader reader("GET/HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP request line too short"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP request line too short"});
     }
     {
         // Malformed: too many spaces
         HTTPRequest req;
         LineReader reader("GET / HTTP / 1.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP request line malformed"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP request line malformed"});
     }
     {
         // Malformed: slash missing before version
         HTTPRequest req;
         LineReader reader("GET / HTTP1.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP request line too short"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP request line too short"});
     }
     {
         // Malformed: no decimal in version
         HTTPRequest req;
         LineReader reader("GET / HTTP/11\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP request line too short"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP request line too short"});
     }
     {
         // Malformed: version is not a number
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.x\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP bad version"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP bad version"});
     }
     {
         // Malformed: version is out of range
         HTTPRequest req;
         LineReader reader("GET / HTTP/2.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP bad version"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP bad version"});
     }
     {
         // Malformed: version is out of range
         HTTPRequest req;
         LineReader reader("GET / HTTP/0.9\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP bad version"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP bad version"});
     }
     {
         // Malformed: version is out of range
         HTTPRequest req;
         LineReader reader("GET / HTTP/-1.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP bad version"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP bad version"});
     }
     {
         // Malformed: version is not exactly two integers and a dot
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.00\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"HTTP bad version"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP bad version"});
     }
     {
         // Malformed: contains NUL
         HTTPRequest req;
         LineReader reader{std::string_view{"GET /safe\0/etc/passwd HTTP/1.00\r\nHost: 127.0.0.1\r\n\r\n", 50}, MAX_HEADERS_SIZE};
-        BOOST_CHECK_EXCEPTION(req.LoadControlData(reader), std::runtime_error, HasReason{"Invalid request line contains NUL"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Invalid request line contains NUL"});
     }
     {
         // Malformed: differing Content-Length values, case insensitive
@@ -279,9 +277,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                                       "12345678";
         HTTPRequest req;
         util::LineReader reader{differing_length, /*max_line_length=*/MAX_HEADERS_SIZE};
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Differing Content-Length values"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Differing Content-Length values"});
     }
     {
         // Ok: multiple same Content-Length values
@@ -292,17 +288,13 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                                       "12345678";
         HTTPRequest req;
         util::LineReader reader{differing_length, /*max_line_length=*/MAX_HEADERS_SIZE};
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
     }
     {
         // Ok
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::GET);
         BOOST_CHECK_EQUAL(req.GetURI(), "/");
         BOOST_CHECK_EQUAL(req.GetVersion().major, 1);
@@ -315,8 +307,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         // Malformed: missing colon
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nHost=127.0.0.1\r\n\r\n", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadHeaders(reader), std::runtime_error, HasReason{"HTTP header missing colon (:)"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"HTTP header missing colon (:)"});
     }
     {
         // We might not have received enough data from the client which is not
@@ -324,16 +315,13 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         // buffer has more data.
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nHost: ", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(!req.LoadHeaders(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::NeedsHeaders);
     }
     {
         // No Content-Length: body is not read
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\n\r\n" R"({"method":"getblockcount"})", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
         // Don't try to read request body if Content-Length is missing
         BOOST_CHECK_EQUAL(req.ReadBody(), "");
     }
@@ -341,17 +329,13 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         // Malformed: Content-Length is not a number
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nContent-Length: eleven\r\n\r\n" R"({"method":"getblockcount"})", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Cannot parse Content-Length value"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Cannot parse Content-Length value"});
     }
     {
         // Malformed: Content-Length is negative
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nContent-Length: -8\r\n\r\n" R"({"method":"getblockcount"})", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Cannot parse Content-Length value"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Cannot parse Content-Length value"});
     }
     {
         // Content-Length exceeds limit
@@ -360,9 +344,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         const std::string request{"GET / HTTP/1.0\r\nContent-Length: " + util::ToString(excessive_size) + "\r\n\r\n" + std::move(huge_body)};
         HTTPRequest req;
         LineReader reader(request, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), ContentTooLargeError, HasReason{"Max body size exceeded"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), ContentTooLargeError, HasReason{"Max body size exceeded"});
     }
     {
         // Content-Length exactly on the limit
@@ -370,18 +352,14 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         const std::string request{"GET / HTTP/1.0\r\nContent-Length: " + util::ToString(MAX_BODY_SIZE) + "\r\n\r\n" + std::move(max_body)};
         HTTPRequest req;
         LineReader reader(request, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
     }
     {
         // Content-Length indicates more data than we have in the buffer.
         // Not an error; we wait for more data before completing the body.
         HTTPRequest req;
         LineReader reader("GET / HTTP/1.0\r\nContent-Length: 1024\r\n\r\n" R"({"method":"getblockcount"})", MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(!req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::NeedsBody);
     }
     {
         // Support "chunked" transfer. Chunk lengths are ascii-encoded hex integers, whitespace ignored
@@ -396,9 +374,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                       "0\n"
                                       "\n";
         LineReader reader(ok_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
     }
     {
@@ -414,9 +390,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                                 "0\n"
                                                 "\n";
         LineReader reader(excessive_chunk_size, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), ContentTooLargeError, HasReason{"Chunk will exceed max body size"});
     }
     {
         // Allow (but ignore) Chunk Extensions
@@ -432,9 +406,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                       "Expires: Wed, 21 Oct 2026 07:28:00 GMT\n"
                                       "\n";
         LineReader reader(ok_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
         BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
         // Chunk Trailer was parsed, but ignored
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
@@ -453,9 +425,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                            "0\n"
                                            "\n";
         LineReader reader(invalid_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Cannot parse chunk length value"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Cannot parse chunk length value"});
     }
     {
         // Invalid "chunked" transfer, missing chunk termination \n
@@ -470,9 +440,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
                                            "0\n"
                                            "\n";
         LineReader reader(invalid_chunked, MAX_HEADERS_SIZE);
-        BOOST_CHECK(req.LoadControlData(reader));
-        BOOST_CHECK(req.LoadHeaders(reader));
-        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Improperly terminated chunk"});
+        BOOST_CHECK_EXCEPTION(req.Load(reader), std::runtime_error, HasReason{"Improperly terminated chunk"});
     }
 }
 
@@ -492,22 +460,23 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
 
     {
         // Step through state machine
-        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
-        BOOST_CHECK(!client->GetRequest());
-
-        client->receive("POST / HTTP/1.0\n");
-        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsHeaders);
-
-        client->receive("Host: 127.0.0.1\n"
-                        "Content-Length: 10\n\n");
-        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
-        BOOST_CHECK_EQUAL(client->GetRequest()->GetState(), HTTPRequest::State::NeedsBody);
-
-        client->receive("I miss you\n");
-        auto req{HTTPRemoteClient::TryReadRequest(client)};
-        BOOST_REQUIRE(req);
-        BOOST_CHECK_EQUAL(req->GetState(), HTTPRequest::State::Complete);
+        HTTPRequest req;
+        BOOST_CHECK_EQUAL(req.GetState(), HTTPRequest::State::Init);
+        {
+            util::LineReader reader{"POST / HTTP/1.0\n", /*max_line_length=*/MAX_HEADERS_SIZE};
+            BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::NeedsHeaders);
+        }
+        {
+            util::LineReader reader{"Host: 127.0.0.1\n"
+                                    "Content-Length: 10\n\n",
+                                    /*max_line_length=*/MAX_HEADERS_SIZE};
+            BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::NeedsBody);
+        }
+        {
+            util::LineReader reader{"I miss you\n",
+                                    /*max_line_length=*/MAX_HEADERS_SIZE};
+            BOOST_CHECK_EQUAL(req.Load(reader), HTTPRequest::State::Complete);
+        }
     }
     {
         // Read body over multiple data pushes, multiple requests in same push
