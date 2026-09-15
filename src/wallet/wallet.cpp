@@ -601,6 +601,16 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
+
+                if (!m_last_decrypted_features || *m_last_decrypted_features != WALLET_CLIENT_FEATURES) {
+                    // Write the current wallet client features to LAST_DECRYPTED_FEATURES.
+                    // This must be done after all automatic upgrades so that those upgrades can be
+                    // performed in an upgrade-downgrade-upgrade scenario.
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteLastDecryptedFeatures();
+                    SetLastDecryptedFeatures(WALLET_CLIENT_FEATURES);
+                }
+
                 return true;
             }
         }
@@ -747,6 +757,7 @@ void CWallet::SyncMalleatedTxMetadata(WalletBatch& batch, const CWalletTx& wtx)
         if (copyTo == copyFrom) continue;
         metadata(*copyTo) = metadata(*copyFrom);
         (void)batch.WriteTxMetadata(*copyTo);
+        (void)batch.SQLUpdateFullTx(*copyTo);
     }
 }
 
@@ -918,6 +929,7 @@ DBErrors CWallet::ReorderTransactions()
 
             if (!batch.WriteTxMetadata(*pwtx))
                 return DBErrors::LOAD_FAIL;
+            if (!batch.SQLUpdateFullTx(*pwtx)) return DBErrors::LOAD_FAIL;
         }
         else
         {
@@ -936,6 +948,7 @@ DBErrors CWallet::ReorderTransactions()
             // Since we're changing the order, write it back
             if (!batch.WriteTxMetadata(*pwtx))
                 return DBErrors::LOAD_FAIL;
+            if (!batch.SQLUpdateFullTx(*pwtx)) return DBErrors::LOAD_FAIL;
         }
     }
     batch.WriteOrderPosNext(nOrderPosNext);
@@ -990,6 +1003,10 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
         WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
         success = false;
     }
+    if (!batch.SQLUpdateTxReplacedBy(wtx)) {
+        WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
+        success = false;
+    }
 
     // The new transaction also replaces any malleated variants of wtx,
     // so bumpfee refuses to bump them afterwards
@@ -1000,6 +1017,10 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
             WalletLogPrintf("%s: Updating variant tx %s failed\n", __func__, variant->GetHash().ToString());
             success = false;
         }
+        if (!batch.SQLUpdateTxReplacedBy(*variant)) {
+            WalletLogPrintf("%s: Updating variant tx %s failed\n", __func__, variant->GetHash().ToString());
+            success = false;
+        };
     }
 
     NotifyTransactionChanged(originalHash, CT_UPDATED);
@@ -1078,6 +1099,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         if (!batch.WriteFullTx(wtx)) {
             return nullptr;
         }
+        if (!batch.SQLWriteTx(wtx)) {
+            return nullptr;
+        }
     }
 
     if (!fInsertedNew)
@@ -1103,6 +1127,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTxMetadata(*desc_tx);
+            batch.SQLUpdateTxState(*desc_tx);
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1385,7 +1410,10 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTxMetadata(wtx);
+            if (batch) {
+                batch->WriteTxMetadata(wtx);
+                batch->SQLUpdateTxState(wtx);
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -2908,9 +2936,16 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     }
 
     // Initialize version key.
-    if(!WalletBatch(walletInstance->GetDatabase()).WriteVersion(CLIENT_VERSION)) {
-        error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
-        return nullptr;
+    {
+        WalletBatch batch(walletInstance->GetDatabase());
+        if(!batch.WriteLastOpenedVersion()) {
+            error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
+            return nullptr;
+        }
+        if(!batch.WriteLastOpenedFeatures()) {
+            error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
+            return nullptr;
+        }
     }
     {
         LOCK(walletInstance->cs_wallet);
@@ -3856,6 +3891,13 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // Set the client features
+    local_wallet_batch.WriteLastOpenedVersion();
+    local_wallet_batch.WriteLastOpenedFeatures();
+    if (HasEncryptionKeys()) {
+        local_wallet_batch.WriteLastDecryptedFeatures();
+    }
+
     // Get best block locator so that we can copy it to the watchonly and solvables
     // Note: The best block locator was introduced in #152 so ancient wallets do not have it
     CBlockLocator best_block_locator;
@@ -3906,6 +3948,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
                 watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
+                watchonly_batch->SQLWriteTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
@@ -3919,6 +3962,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
         local_wallet_batch.WriteTxMetadata(*wtx);
+        local_wallet_batch.SQLWriteTx(*wtx);
     }
 
     // Do the removes
@@ -4506,4 +4550,9 @@ void CWallet::DisconnectChainNotifications()
     }
 }
 
+void CWallet::SetLastDecryptedFeatures(uint64_t features)
+{
+    AssertLockHeld(cs_wallet);
+    m_last_decrypted_features = features;
+}
 } // namespace wallet

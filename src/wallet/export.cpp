@@ -166,6 +166,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                     return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
                 }
                 watchonly_batch.WriteFullTx(watchonly_wallet->mapWallet.at(txid));
+                watchonly_batch.SQLWriteTx(watchonly_wallet->mapWallet.at(txid));
             }
 
             // Copy address book
