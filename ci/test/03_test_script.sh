@@ -234,6 +234,13 @@ if [ "${RUN_TIDY}" = "true" ]; then
 fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
+  # Skip subtrees. They are maintained upstream, and IWYU output for them from
+  # this job's IWYU version and mapping files can disagree with upstream (e.g.
+  # libmultiprocess runs IWYU in its own CI and passes there).
+  SUBTREES=$(python3 -c 'import runpy, sys; print("|".join(runpy.run_path(sys.argv[1])["SHARED_EXCLUDED_SUBTREES"]))' "${BASE_ROOT_DIR}/test/lint/lint_ignore_dirs.py")
+  jq --arg patterns "$SUBTREES" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_no_subtrees.json"
+  mv "${BASE_BUILD_DIR}/compile_commands_no_subtrees.json" "${BASE_BUILD_DIR}/compile_commands.json"
+
   # TODO: Consider enforcing IWYU across the entire codebase.
   FILES_WITH_ENFORCED_IWYU='/src/((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|univalue/(lib|test)|util|zmq)/.*|node/(blockstorage|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue)|clientversion|core_io|rest|signet|init)\.cpp'
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
@@ -259,6 +266,10 @@ if [[ "${RUN_IWYU}" == true ]]; then
              2>&1 || true
     } | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+    # Undo edits to subtree headers. Subtree sources are filtered out of the
+    # compilation database above, but IWYU can still edit a subtree header it
+    # treats as associated with a source file outside the subtree (e.g.
+    # minisketch.h for test/fuzz/minisketch.cpp).
     python3 -c '
 import runpy
 import subprocess
