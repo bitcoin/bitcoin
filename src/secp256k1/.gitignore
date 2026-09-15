@@ -13,6 +13,7 @@ schnorr_example
 ellswift_example
 musig_example
 silentpayments_example
+batch_example
 *.exe
 *.so
 *.a
