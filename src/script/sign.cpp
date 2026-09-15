@@ -676,6 +676,9 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TxoutType::SCRIPTHASH: {
         uint160 h160{vSolutions[0]};
         if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
+            if (scriptRet.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+                return false;
+            }
             ret.emplace_back(scriptRet.begin(), scriptRet.end());
             return true;
         }
