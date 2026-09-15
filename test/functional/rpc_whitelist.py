@@ -119,7 +119,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         forged_log_line = "ERROR: ConnectTip: ConnectBlock 0000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef failed, bad-txns-inputs-missingorspent"
         for rejected_method in [f"getblock\n{forged_log_line}", "getblock&"]:
             for batch in [False, True]:
-                with self.nodes[0].assert_debug_log([f"not allowed to call method {rejected_method}"]):  # TODO: Rejected RPC input can forge a log line
+                with self.nodes[0].assert_debug_log([f"not allowed to call method {rejected_method}".replace("\n", "\\x0a")]):
                     assert_equal(403, rpccall(self.nodes[0], self.users[0], rejected_method, batch=batch).status)
 
     def test_users_permissions(self):

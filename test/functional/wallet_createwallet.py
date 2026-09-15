@@ -58,7 +58,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Wallet name cannot be empty", self.nodes[0].createwallet, "")
         if platform.system() != 'Windows':  # Windows disallows newlines in filenames
             wallet_name = "w0\ninvalid"
-            with node.assert_debug_log([f"[{wallet_name}]"]):  # TODO: Newlines in wallet names can forge log lines
+            with node.assert_debug_log([f"[{wallet_name}]".replace("\n", "\\x0a")]):
                 assert_equal(node.createwallet(wallet_name)["name"], wallet_name)
             node.unloadwallet(wallet_name)
 
