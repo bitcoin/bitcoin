@@ -50,6 +50,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    JSONRPCException,
     sync_txindex,
 )
 from test_framework.wallet import MiniWallet
@@ -98,7 +99,16 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, 'JSON value of type string is not of expected type array', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
         assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=['ff22']*26))
         assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=[]))
-        assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
+        assert_raises_rpc_error(-22, 'TX decode failed for tx 0. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
+
+        # A malformed element after a valid one reports its index, and the raw hex is not echoed back
+        valid_hex = self.wallet.create_self_transfer()['hex']
+        try:
+            node.testmempoolaccept(rawtxs=[valid_hex, 'ff00baar'])
+            raise AssertionError("testmempoolaccept should have failed")
+        except JSONRPCException as e:
+            assert "TX decode failed for tx 1." in e.error["message"]
+            assert 'ff00baar' not in e.error["message"]
 
         self.log.info('A transaction already in the blockchain')
         tx = self.wallet.create_self_transfer()['tx']  # Pick a random coin(base) to spend

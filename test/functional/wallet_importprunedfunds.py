@@ -120,7 +120,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert txnid3 not in [tx['txid'] for tx in w1.listtransactions()]
 
         # Check various RPC parameter validation errors
-        assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
+        assert_raises_rpc_error(-22, "TX decode failed. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
         assert_raises_rpc_error(-5, "Transaction given doesn't exist in proof", w1.importprunedfunds, rawtxn2, proof1)
 
         mb = from_hex(CMerkleBlock(), proof1)
