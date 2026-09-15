@@ -14,13 +14,15 @@ import copy
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    DIFFICULTY_ADJUSTMENT_INTERVAL,
+    MAX_FUTURE_BLOCK_TIME,
     create_block,
     create_coinbase,
     get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
-    REGTEST_N_BITS,
-    REGTEST_TARGET,
+    N_BITS,
+    TARGET,
     nbits_str,
     target_str,
 )
@@ -51,8 +53,6 @@ from test_framework.wallet import (
 )
 
 
-DIFFICULTY_ADJUSTMENT_INTERVAL = 144
-MAX_FUTURE_BLOCK_TIME = 2 * 3600
 MAX_TIMEWARP = 600
 VERSIONBITS_TOP_BITS = 0x20000000
 VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
@@ -267,6 +267,7 @@ class MiningTest(BitcoinTestFramework):
             self.generate(self.wallet, 1, sync_fun=self.no_op)
         node.setmocktime(t + MAX_FUTURE_BLOCK_TIME)
         self.generate(self.wallet, 1, sync_fun=self.no_op)
+        assert_equal(node.getblockchaininfo()['blocks'] % DIFFICULTY_ADJUSTMENT_INTERVAL, 0)
         first_block_time = node.getblock(node.getbestblockhash())['time']
         assert_equal(first_block_time, t + MAX_FUTURE_BLOCK_TIME)
 
@@ -277,6 +278,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("The template for the last block of the period is adjusted to its first block's time")
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(tmpl['height'] % DIFFICULTY_ADJUSTMENT_INTERVAL, DIFFICULTY_ADJUSTMENT_INTERVAL - 1)
         assert_equal(tmpl['mintime'], first_block_time)
         assert_equal(tmpl['curtime'], first_block_time)
 
@@ -436,13 +438,13 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['chain'], self.chain)
         assert 'currentblocktx' not in mining_info
         assert 'currentblockweight' not in mining_info
-        assert_equal(mining_info['bits'], nbits_str(REGTEST_N_BITS))
-        assert_equal(mining_info['target'], target_str(REGTEST_TARGET))
+        assert_equal(mining_info['bits'], nbits_str(N_BITS))
+        assert_equal(mining_info['target'], target_str(TARGET))
         # We don't care about precision, round to avoid mismatch under Valgrind:
         assert_equal(round(mining_info['difficulty'], 10), Decimal('0.0000000005'))
         assert_equal(mining_info['next']['height'], 201)
-        assert_equal(mining_info['next']['target'], target_str(REGTEST_TARGET))
-        assert_equal(mining_info['next']['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(mining_info['next']['target'], target_str(TARGET))
+        assert_equal(mining_info['next']['bits'], nbits_str(N_BITS))
         assert_equal(round(mining_info['next']['difficulty'], 10), Decimal('0.0000000005'))
         assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00333'))
         assert_equal(mining_info['pooledtx'], 0)
