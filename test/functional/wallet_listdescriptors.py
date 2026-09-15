@@ -56,6 +56,17 @@ class ListDescriptorsTest(BitcoinTestFramework):
         descriptor_strings = [descriptor['desc'] for descriptor in result['descriptors']]
         assert_equal(descriptor_strings, sorted(descriptor_strings))
 
+        self.log.info('Test the multipath field of a default descriptors wallet.')
+        for private in [False, True]:
+            multipaths = set()
+            for entry in node.get_wallet_rpc('w3').listdescriptors(private)['descriptors']:
+                assert '<0;1>' in entry['multipath']
+                assert 'tprv' not in entry['multipath']
+                multipaths.add(entry['multipath'])
+            # The receive and change descriptor of each output type share one
+            # multipath descriptor
+            assert_equal(len(multipaths), 4)
+
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
         extended_key = ExtendedPrivateKey.generate()
         xprv = extended_key.to_string()
