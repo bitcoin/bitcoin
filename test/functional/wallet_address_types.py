@@ -63,6 +63,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 class AddressTypeTest(BitcoinTestFramework):

@@ -21,8 +21,9 @@ from test_framework.p2p import P2PInterface, msg_getheaders
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    ensure_for,
     assert_not_equal,
+    assert_true,
+    ensure_for,
 )
 
 # 2 hashes required per regtest block (with no difficulty adjustment)

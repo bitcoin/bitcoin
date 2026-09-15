@@ -11,6 +11,7 @@ from test_framework.script import hash160
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_not_equal,
     assert_true,

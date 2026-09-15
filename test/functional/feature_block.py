@@ -56,6 +56,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import generate_keypair
 from data import invalid_txs

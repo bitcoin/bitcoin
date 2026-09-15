@@ -11,8 +11,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     dumb_sync_blocks,
     ensure_for,
 )

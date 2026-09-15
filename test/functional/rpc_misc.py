@@ -7,10 +7,12 @@ import xml.etree.ElementTree as ET
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises_rpc_error,
+    assert_true,
     JSONRPCException,
 )
 

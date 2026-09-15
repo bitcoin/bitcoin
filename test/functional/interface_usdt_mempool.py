@@ -22,6 +22,7 @@ from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_true,
     bpf_cflags,
 )
 from test_framework.wallet import MiniWallet

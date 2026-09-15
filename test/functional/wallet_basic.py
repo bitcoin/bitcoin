@@ -16,8 +16,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
     assert_equal,
+    assert_false,
     assert_fee_amount,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import test_address
 from test_framework.wallet import MiniWallet

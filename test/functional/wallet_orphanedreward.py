@@ -5,7 +5,7 @@
 """Test orphaned block rewards in the wallet."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 
 class OrphanedBlockRewardTest(BitcoinTestFramework):
     def set_test_params(self):

@@ -49,14 +49,15 @@ from test_framework.p2p import P2PInterface
 from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_is_hash_string,
+    assert_is_hex_string,
+    assert_not_equal,
     assert_raises,
     assert_raises_rpc_error,
-    assert_is_hex_string,
-    assert_is_hash_string,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 
