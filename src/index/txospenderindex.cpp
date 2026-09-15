@@ -41,8 +41,6 @@
 // LevelDB key prefix. We only have one key for now but it will make it easier to add others if needed.
 constexpr uint8_t DB_TXOSPENDERINDEX{'s'};
 
-std::unique_ptr<TxoSpenderIndex> g_txospenderindex;
-
 struct DBKey {
     uint64_t hash;
     CDiskTxPos pos;
