@@ -89,4 +89,7 @@ bool IsChildWithParentsTree(const Package& package);
  */
 uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions);
 
+/** Same as GetPackageHash(), but computed from the transactions' wtxids without needing the transactions. */
+uint256 GetPackageHashFromWtxids(std::vector<Wtxid> wtxids);
+
 #endif // BITCOIN_POLICY_PACKAGES_H
