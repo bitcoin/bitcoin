@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/ecc_init.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -24,7 +25,12 @@ static SpanReader& operator>>(SpanReader& ds, script_verify_flags& f)
     return ds;
 }
 
-FUZZ_TARGET(script_flags)
+void initialize_script_flags()
+{
+    static const auto ecc_context{MakeContextECC()};
+}
+
+FUZZ_TARGET(script_flags, .init = initialize_script_flags)
 {
     if (buffer.size() > 100'000) return;
     SpanReader ds{buffer};

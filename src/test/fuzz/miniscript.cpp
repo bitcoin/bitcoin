@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/ecc_init.h>
 #include <core_io.h>
 #include <hash.h>
 #include <key.h>
@@ -1196,7 +1197,7 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
 
 void FuzzInit()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     TEST_DATA.Init();
 }
 

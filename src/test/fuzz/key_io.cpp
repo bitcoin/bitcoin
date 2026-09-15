@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <key_io.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
@@ -14,7 +15,7 @@
 
 void initialize_key_io()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::MAIN);
 }
 
