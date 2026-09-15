@@ -159,7 +159,7 @@ class TxOrphanageImpl final : public TxOrphanage {
         * A peer having a DoS score > 1 does not necessarily mean that something is wrong, since we
         * do not trim unless the orphanage exceeds global limits, but it means that this peer will
         * be selected for trimming sooner. If the global latency score or global memory usage
-        * limits are exceeded, it must be that there is a peer whose DoS score > 1. */
+        * limits are exceeded, it must be that there is a peer whose DoS score >= 1. */
         FeeFrac GetDosScore(TxOrphanage::Count max_peer_latency_score, TxOrphanage::Usage max_peer_memory) const
         {
             Assert(max_peer_latency_score > 0);
@@ -207,10 +207,8 @@ public:
     TxOrphanage::Count TotalLatencyScore() const override;
     TxOrphanage::Usage ReservedPeerUsage() const override;
 
-    /** Maximum allowed (deduplicated) latency score for all transactions (see Announcement::GetLatencyScore()). Dynamic
-     * based on number of peers. Each peer has an equal amount, but the global maximum latency score stays constant. The
-     * number of peers times MaxPeerLatencyScore() (rounded) adds up to MaxGlobalLatencyScore().  As long as every peer's
-     * m_total_latency_score / MaxPeerLatencyScore() < 1, MaxGlobalLatencyScore() is not exceeded. */
+    /** Per-peer share of the maximum (deduplicated) latency score for all transactions (see Announcement::GetLatencyScore()).
+     * The share is rounded down and may be 0. LimitOrphans() floors it at 1 when selecting peers for trimming. */
     TxOrphanage::Count MaxPeerLatencyScore() const override;
 
     /** Maximum allowed (deduplicated) memory usage for all transactions (see Announcement::GetMemUsage()). Dynamic based
@@ -438,8 +436,8 @@ void TxOrphanageImpl::EraseForPeer(NodeId peer)
 /** If the data structure needs trimming, evicts announcements by selecting the DoSiest peer and evicting its oldest
  * announcement (sorting non-reconsiderable orphans first, to give reconsiderable orphans a greater chance of being
  * processed). Does nothing if no global limits are exceeded.  This eviction strategy effectively "reserves" an
- * amount of announcements and space for each peer. The reserved amount is protected from eviction even if there
- * are peers spamming the orphanage.
+ * amount of announcements and space for each peer. The reserved amount is protected while a peer stays strictly below
+ * its limits.
  */
 void TxOrphanageImpl::LimitOrphans()
 {
@@ -457,7 +455,8 @@ void TxOrphanageImpl::LimitOrphans()
     std::vector<std::pair<NodeId, FeeFrac>> heap_peer_dos;
     heap_peer_dos.reserve(m_peer_orphanage_info.size());
     for (const auto& [nodeid, entry] : m_peer_orphanage_info) {
-        // Performance optimization: only consider peers with a DoS score > 1.
+        // Performance optimization: only consider peers with a DoS score >= 1.
+        // See MaxPeerLatencyScore() for why equality is possible.
         const auto dos_score = entry.GetDosScore(max_lat, max_mem);
         if (ByRatio{dos_score} >= ByRatio{FeeFrac{1, 1}}) {
             heap_peer_dos.emplace_back(nodeid, dos_score);
@@ -488,7 +487,7 @@ void TxOrphanageImpl::LimitOrphans()
         const auto [worst_peer, dos_score] = std::move(heap_peer_dos.back());
         heap_peer_dos.pop_back();
 
-        // If needs trim, then at least one peer has a DoS score higher than 1.
+        // If needs trim, then at least one peer has a DoS score >= 1.
         Assume(ByRatio{dos_score} >= ByRatio{FeeFrac(1, 1)});
 
         auto it_worst_peer = m_peer_orphanage_info.find(worst_peer);
