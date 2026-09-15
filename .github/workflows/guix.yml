@@ -118,6 +118,19 @@ jobs:
         run: |
           ./.github/install-guix.sh
 
+      - name: Build codesign environment
+        if: matrix.host == 'arm64-apple-darwin' || matrix.host == 'x86_64-w64-mingw32'
+        env:
+          HOST: ${{ matrix.host }}
+        run: |
+          source contrib/guix/libexec/prelude.bash
+          JOBS="$(nproc)"
+          time-machine shell --manifest=contrib/guix/manifest_codesign.scm \
+                             --container --pure --no-cwd \
+                             --cores="$JOBS" --keep-failed --fallback \
+                             ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                             -- true
+
       - name: Build with Guix
         run: |
           set -o errexit -o pipefail
