@@ -76,15 +76,28 @@ class RpcMiscTest(BitcoinTestFramework):
         self.log.info("test logging rpc and help")
 
         # Test toggling a logging category on/off/on with the logging RPC.
-        assert_equal(node.logging()['qt'], True)
+        assert 'qt' in node.logging()['trace']
         node.logging(exclude=['qt'])
-        assert_equal(node.logging()['qt'], False)
+        assert 'qt' in node.logging()['excluded']
+        node.logging(debug=['qt'])
+        assert 'qt' in node.logging()['debug']
+        node.logging(trace=['qt'])
+        assert 'qt' in node.logging()['trace']
         node.logging(include=['qt'])
-        assert_equal(node.logging()['qt'], True)
+        assert 'qt' in node.logging()['debug']
 
         # Test logging RPC returns the logging categories in alphabetical order.
-        sorted_logging_categories = sorted(node.logging())
-        assert_equal(list(node.logging()), sorted_logging_categories)
+        logging = node.logging()
+        assert_equal(sorted(logging.keys()), ["debug", "excluded", "trace"])
+        for k in logging.keys():
+            assert_equal(sorted(logging[k]), logging[k])
+        sorted_logging_categories = sorted(sum(logging.values(), []))
+
+        # Quick test of deprecated logging functionality
+        self.restart_node(0, ["-deprecatedrpc=logging"])
+        logging = node.logging(include=["net"])
+        assert_equal(list(logging.keys()), sorted_logging_categories)
+        self.restart_node(0)
 
         # Test logging help returns the logging categories string in alphabetical order.
         categories = ', '.join(sorted_logging_categories)
@@ -122,8 +135,9 @@ class RpcMiscTest(BitcoinTestFramework):
 
         # Test a deprecated category
         all_result = node.logging(include=['all'])
-        assert_equal(True, all(enabled is True for category, enabled in all_result.items()))
-        assert_equal(True, 'libevent' not in all_result)
+        assert_equal(all_result["excluded"], [])
+        assert_equal(all_result["trace"], [])
+        assert_equal(True, 'libevent' not in all_result["debug"])
         assert_equal(all_result, node.logging())
         libevent_warning = "The logging category `libevent` is deprecated"
         with self.nodes[0].assert_debug_log([libevent_warning]):
@@ -132,7 +146,6 @@ class RpcMiscTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log([libevent_warning]):
             assert_equal(all_result, node.logging(exclude=['libevent']))
         assert_equal(all_result, node.logging())
-
 
 if __name__ == '__main__':
     RpcMiscTest(__file__).main()
