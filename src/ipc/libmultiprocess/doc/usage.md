@@ -12,6 +12,12 @@ The `*.capnp` data definition files are consumed by the _libmultiprocess_ code g
 
 The `ProxyServer` objects help translate IPC requests from a socket to method calls on a local object. The `ProxyServer` objects are just used internally by the `mp::ServeStream(loop, socket, wrapped_object)` and `mp::ListenConnections(loop, socket, wrapped_object[, max_connections])` functions, and aren't exposed externally. The `ProxyClient` classes are exposed, and returned from the `mp::ConnectStream(loop, socket)` function and meant to be used directly. The classes implement methods described in `.capnp` definitions, and whenever any method is called, a request with the method arguments is sent over the associated IPC connection, and the corresponding `wrapped_object` method on the other end of the connection is called, with the `ProxyClient` method blocking until it returns and forwarding back any return value to the `ProxyClient` method caller.
 
+## Event loop
+
+Making connections and IPC calls requires an `mp::EventLoop` instance running in its own dedicated thread. The event loop is reference-counted, and `EventLoop::loop()` returns when the last `mp::EventLoopRef` is released. Therefore, any code that needs to use the loop across multiple calls should maintain its own `EventLoopRef`. Connection objects and proxy objects automatically hold a reference for as long as they exist.
+
+For a typical setup, see [example.cpp](../example/example.cpp).
+
 ## Example
 
 A simple interface description can be found at [test/mp/test/foo.capnp](../test/mp/test/foo.capnp), implementation in [test/mp/test/foo.h](../test/mp/test/foo.h), and usage in [test/mp/test/test.cpp](../test/mp/test/test.cpp).
