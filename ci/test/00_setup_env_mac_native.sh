@@ -20,3 +20,5 @@ export BITCOIN_CONFIG="\
   -DCMAKE_EXE_LINKER_FLAGS='-Wl,-stack_size -Wl,0x80000' \
 "
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
+# Can't run tcpdump: tcpdump: en0: You don't have permission to capture on that device
+export CI_TCPDUMP_OK_TO_FAIL=1
