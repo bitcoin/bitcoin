@@ -416,12 +416,14 @@ std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
     // The returned span borrows from the current iterator entry and is only
     // valid until the iterator is advanced.
-    return MakeByteSpan(m_impl_iter->iter->key());
+    const leveldb::Slice key{m_impl_iter->iter->key()};
+    return std::as_bytes(std::span{key.data(), key.size()});
 }
 
 std::span<const std::byte> CDBIterator::GetValueImpl() const
 {
-    return MakeByteSpan(m_impl_iter->iter->value());
+    const leveldb::Slice value{m_impl_iter->iter->value()};
+    return std::as_bytes(std::span{value.data(), value.size()});
 }
 
 CDBIterator::~CDBIterator() = default;

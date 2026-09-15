@@ -1289,7 +1289,8 @@ public:
         size_t garblen;
         for (garblen = 0; garblen <= V2Transport::MAX_GARBAGE_LEN; ++garblen) {
             BOOST_REQUIRE(m_received.size() >= garblen + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
-            auto term_span = MakeByteSpan(std::span{m_received}.subspan(garblen, BIP324Cipher::GARBAGE_TERMINATOR_LEN));
+            const auto received_term{std::span{m_received}.subspan(garblen, BIP324Cipher::GARBAGE_TERMINATOR_LEN)};
+            auto term_span = MakeByteSpan(received_term);
             if (std::ranges::equal(term_span, m_cipher.GetReceiveGarbageTerminator())) break;
         }
         // Copy the garbage to a buffer.
@@ -1588,7 +1589,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         // Construct len_before + 16 + len_after random bytes.
         auto garbage = m_rng.randbytes<uint8_t>(len_before + 16 + len_after);
         // Replace the designed 16 bytes in the middle with the to-be-sent garbage terminator.
-        auto garb_term = MakeUCharSpan(tester.GetCipher().GetSendGarbageTerminator());
+        const auto send_garb_term{tester.GetCipher().GetSendGarbageTerminator()};
+        auto garb_term = MakeUCharSpan(send_garb_term);
         std::copy(garb_term.begin(), garb_term.begin() + 16, garbage.begin() + len_before);
         // Introduce a bit error in the last byte of that copied garbage terminator, making only
         // the first 15 of them match.
