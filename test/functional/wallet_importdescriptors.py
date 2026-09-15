@@ -171,6 +171,42 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             if not result["success"]:
                 assert_equal(result["error"]["message"], expected[i][1])
 
+    def test_range_start_is_respected(self):
+        self.log.info("Test that a ranged import only watches indexes from the range start onwards")
+        node = self.nodes[0]
+        w0 = node.get_wallet_rpc('w0')
+        xpub = ExtendedPrivateKey.generate().pubkey().to_string()
+        desc = descsum_create(f"wpkh({xpub}/0/*)")
+        below_start, first_in_range = node.deriveaddresses(desc, [999, 1000])
+
+        # Fund an address just below the range and the first one inside it before importing,
+        # so that the import-time rescan would pick up both if the range start were ignored.
+        w0.sendtoaddress(below_start, 1)
+        w0.sendtoaddress(first_in_range, 2)
+        self.generate(node, 1)
+
+        node.createwallet(wallet_name="range_start", blank=True, disable_private_keys=True)
+        wallet = node.get_wallet_rpc("range_start")
+        self.test_importdesc({"desc": desc, "timestamp": 0, "range": [1000, 1009], "active": True}, wallet=wallet, success=True)
+        imported = wallet.listdescriptors()['descriptors'][0]
+        assert_equal(imported['range'][0], 1000)
+        keypoolsize = wallet.getwalletinfo()['keypoolsize']
+
+        def check():
+            assert_equal(wallet.getaddressinfo(below_start)['ismine'], False)
+            assert_equal(wallet.getaddressinfo(first_in_range)['ismine'], True)
+            assert_equal(wallet.getbalances()['mine']['trusted'], 2)
+            assert_equal(wallet.listdescriptors()['descriptors'][0]['range'], imported['range'])
+            assert_equal(wallet.getwalletinfo()['keypoolsize'], keypoolsize)
+
+        check()
+        # The same must hold after the descriptor is loaded from disk, which only expands the
+        # stored range, and after the top up that happens when an active descriptor is loaded.
+        wallet.unloadwallet()
+        node.loadwallet("range_start")
+        check()
+        wallet.unloadwallet()
+
     def test_rescan_fails_import(self):
         xpriv = ExtendedPrivateKey.generate().to_string()
 
@@ -1132,6 +1168,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_import_unused_key_existing()
         self.test_import_unused_noprivs()
         self.test_per_item_errors_are_reported_in_order()
+        self.test_range_start_is_respected()
         self.test_rescan_fails_import()
 
 if __name__ == '__main__':
