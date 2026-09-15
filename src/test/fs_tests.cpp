@@ -14,6 +14,17 @@
 
 BOOST_FIXTURE_TEST_SUITE(fs_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(directory_commit)
+{
+    const auto directory{m_args.GetDataDirBase() / "commit"};
+    fs::create_directory(directory);
+    BOOST_CHECK(DirectoryCommit(directory));
+#ifndef WIN32
+    fs::remove(directory);
+    BOOST_CHECK(!DirectoryCommit(directory));
+#endif
+}
+
 BOOST_AUTO_TEST_CASE(fsbridge_pathtostring)
 {
     std::string u8_str = "fs_tests_₿_🏃";
