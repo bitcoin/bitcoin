@@ -36,6 +36,7 @@ from test_framework.wallet_util import (
     test_address,
 )
 
+BLOCK_TIME = 60 * 10
 MISSING_KEYS_WARNING = "Not all private keys provided. Some wallet functionality may return unexpected errors"
 
 class ImportDescriptorsTest(BitcoinTestFramework):
@@ -78,6 +79,251 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def test_verify_balance(self, node, miner_wallet):
+        self.node_time = max(int(time.time()), node.getblockheader(node.getbestblockhash())["time"])
+        self.advance_time(node, BLOCK_TIME)
+        receive_address = miner_wallet.getnewaddress()
+        desc = miner_wallet.getaddressinfo(receive_address)["desc"]
+
+        self.log.info("Send two payments to the address being imported")
+        txid_first = miner_wallet.sendtoaddress(receive_address, 2)
+        first_block = self.generate(node, 1, sync_fun=self.no_op)[0]
+        first_header = node.getblockheader(first_block)
+        first_utxo = miner_wallet.listunspent(addresses=[receive_address])[0]
+        first_outpoint = {"txid": txid_first, "vout": first_utxo["vout"]}
+        miner_wallet.lockunspent(False, [first_outpoint])
+        self.advance_time(node, BLOCK_TIME)
+
+        txid_second = miner_wallet.sendtoaddress(receive_address, 2)
+        self.generate(node, 1, sync_fun=self.no_op)
+
+        self.log.info("Move both payments outside the two-hour timestamp window")
+        for _ in range(20):
+            self.advance_time(node, BLOCK_TIME)
+            self.generate(node, 1, sync_fun=self.no_op)
+        tip = node.getblockheader(node.getbestblockhash())
+
+        node.createwallet(wallet_name="verify_disabled", disable_private_keys=True)
+        node.createwallet(wallet_name="verify_enabled", disable_private_keys=True)
+        wallet_no_verify = node.get_wallet_rpc("verify_disabled")
+        wallet_verify = node.get_wallet_rpc("verify_enabled")
+
+        self.log.info("Import with timestamp=now and verification disabled")
+        assert_equal(wallet_no_verify.importdescriptors([{"desc": desc, "timestamp": "now"}]), [{"success": True}])
+        assert_equal(wallet_no_verify.getbalance(), 0)
+        assert_equal(wallet_no_verify.listtransactions(), [])
+
+        future_timestamp = tip["time"] + 3 * 60 * 60
+        assert_equal(wallet_no_verify.importdescriptors([{"desc": desc, "timestamp": future_timestamp}], False), [{"success": True}])
+        assert_equal(wallet_no_verify.getbalance(), 0)
+        assert_equal(wallet_no_verify.listtransactions(), [])
+
+        self.log.info("Enable verification and recover both payments")
+        result = wallet_verify.importdescriptors([{"desc": desc, "timestamp": "now"}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"], {
+            "status": "matched after recovery",
+            "utxo_check": True,
+            "wallet_utxos": 2,
+            "chain_utxos": 2,
+            "snapshot_block": tip["hash"],
+            "snapshot_height": tip["height"],
+            "scan_start_height": first_header["height"],
+            "recovery_start_height": first_header["height"],
+            "scanned_blocks": tip["height"] - first_header["height"] + 1,
+        })
+        assert_equal(wallet_verify.getbalance(), 4)
+        assert_equal({utxo["txid"] for utxo in wallet_verify.listunspent()}, {txid_first, txid_second})
+        assert_equal(len(wallet_verify.listtransactions()), 2)
+
+        self.log.info("Import with the first payment's timestamp, with and without verification")
+        node.createwallet(wallet_name="verify_timestamp", disable_private_keys=True)
+        node.createwallet(wallet_name="verify_timestamp_enabled", disable_private_keys=True)
+        wallet_timestamp = node.get_wallet_rpc("verify_timestamp")
+        wallet_timestamp_verify = node.get_wallet_rpc("verify_timestamp_enabled")
+        request = [{"desc": desc, "timestamp": first_header["time"]}]
+        assert_equal(wallet_timestamp.importdescriptors(request), [{"success": True}])
+        result = wallet_timestamp_verify.importdescriptors(request, True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["utxo_check"], True)
+        assert_equal(result["info"]["status"], "matched")
+        assert "recovery_start_height" not in result["info"]
+        assert result["info"]["scan_start_height"] <= first_header["height"]
+        for wallet in [wallet_timestamp, wallet_timestamp_verify]:
+            assert_equal(wallet.getbalance(), 4)
+            assert_equal({utxo["txid"] for utxo in wallet.listunspent()}, {txid_first, txid_second})
+            assert_equal(len(wallet.listtransactions()), 2)
+            wallet.unloadwallet()
+
+        wallet_no_verify.unloadwallet()
+        wallet_verify.unloadwallet()
+        miner_wallet.lockunspent(True, [first_outpoint])
+
+    def test_verify_balance_unmatched(self, node, miner_wallet):
+        self.log.info("Create an old payment, spend it, then receive another payment")
+        receive_address = miner_wallet.getnewaddress()
+        desc = miner_wallet.getaddressinfo(receive_address)["desc"]
+        self.advance_time(node, BLOCK_TIME)
+        txid_old = miner_wallet.sendtoaddress(receive_address, 2)
+        old_block = self.generate(node, 1, sync_fun=self.no_op)[0]
+        old_header = node.getblockheader(old_block)
+        old_tx = miner_wallet.gettransaction(txid_old)["hex"]
+        old_proof = node.gettxoutproof([txid_old], old_block)
+        old_utxo = miner_wallet.listunspent(addresses=[receive_address])[0]
+
+        txid_spend = miner_wallet.sendall(
+            recipients=[miner_wallet.getnewaddress()],
+            inputs=[{"txid": txid_old, "vout": old_utxo["vout"]}],
+        )["txid"]
+        self.advance_time(node, BLOCK_TIME)
+        self.generate(node, 1, sync_fun=self.no_op)
+        txid_unspent = miner_wallet.sendtoaddress(receive_address, 2)
+        self.advance_time(node, BLOCK_TIME)
+        unspent_block = self.generate(node, 1, sync_fun=self.no_op)[0]
+        unspent_height = node.getblockheader(unspent_block)["height"]
+        for _ in range(20):
+            self.advance_time(node, BLOCK_TIME)
+            self.generate(node, 1, sync_fun=self.no_op)
+
+        self.log.info("Recover the unspent payment without recovering the older spent history")
+        node.createwallet(wallet_name="verify_history", disable_private_keys=True)
+        wallet_history = node.get_wallet_rpc("verify_history")
+        result = wallet_history.importdescriptors([{"desc": desc, "timestamp": "now"}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["status"], "matched after recovery")
+        assert_equal(result["info"]["recovery_start_height"], unspent_height)
+        assert_equal(wallet_history.getbalance(), 2)
+        assert_equal(len(wallet_history.listtransactions()), 1)
+        wallet_history.gettransaction(txid_unspent)
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet_history.gettransaction, txid_old)
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet_history.gettransaction, txid_spend)
+
+        self.log.info("Import the old payment without its spend to create a wallet mismatch")
+        node.createwallet(wallet_name="verify_unmatched", disable_private_keys=True)
+        wallet_unmatched = node.get_wallet_rpc("verify_unmatched")
+        assert_equal(wallet_unmatched.importdescriptors([{"desc": desc, "timestamp": "now"}]), [{"success": True}])
+        wallet_unmatched.importprunedfunds(old_tx, old_proof)
+        result = wallet_unmatched.importdescriptors([{"desc": desc, "timestamp": "now"}], True)[0]
+        assert_equal(result["success"], False)
+        assert_equal(result["error"]["code"], -4)
+        assert "UTXO verification did not succeed (unmatched)" in result["error"]["message"]
+        assert "different UTXO outpoints (wallet: 2, chainstate: 1)" in result["error"]["message"]
+        assert "Changes to relevant UTXOs during verification can cause this even if the wallet is up to date." in result["error"]["message"]
+        assert_equal(result["info"]["status"], "unmatched")
+        assert_equal(result["info"]["utxo_check"], False)
+        assert_equal(result["info"]["wallet_utxos"], 2)
+        assert_equal(result["info"]["chain_utxos"], 1)
+        assert_equal(result["info"]["scan_start_height"], unspent_height)
+        assert_equal(result["info"]["recovery_start_height"], unspent_height)
+        assert_equal(wallet_unmatched.getbalance(), 4)
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet_unmatched.gettransaction, txid_spend)
+
+        self.log.info("Rescan from the old payment and verify that the mismatch is gone")
+        wallet_unmatched.rescanblockchain(old_header["height"])
+        result = wallet_unmatched.importdescriptors([{"desc": desc, "timestamp": "now"}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["status"], "matched")
+        assert_equal(result["info"]["utxo_check"], True)
+        assert "recovery_start_height" not in result["info"]
+        assert_equal(wallet_unmatched.getbalance(), 2)
+
+        self.log.info("An earlier import timestamp still recovers history when the UTXOs are already known")
+        result = wallet_history.importdescriptors([{"desc": desc, "timestamp": 0}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["status"], "matched")
+        assert_equal(result["info"]["utxo_check"], True)
+        assert_equal(result["info"]["scan_start_height"], 0)
+        assert_equal(result["info"]["scanned_blocks"], node.getblockcount() + 1)
+        assert "recovery_start_height" not in result["info"]
+        for txid in [txid_old, txid_spend, txid_unspent]:
+            wallet_history.gettransaction(txid)
+        wallet_history.unloadwallet()
+        wallet_unmatched.unloadwallet()
+
+    def test_verify_balance_mempool(self, node, miner_wallet):
+        self.log.info("Discover a mempool payment even when the chainstate scan finds no UTXOs")
+        receive_address = miner_wallet.getnewaddress()
+        desc = miner_wallet.getaddressinfo(receive_address)["desc"]
+        txid = miner_wallet.sendtoaddress(receive_address, 2)
+        node.createwallet(wallet_name="verify_pending", disable_private_keys=True)
+        wallet_pending = node.get_wallet_rpc("verify_pending")
+        future_timestamp = node.getblockheader(node.getbestblockhash())["time"] + 3 * 60 * 60
+        result = wallet_pending.importdescriptors([{"desc": desc, "timestamp": future_timestamp}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["status"], "matched")
+        assert_equal(result["info"]["utxo_check"], True)
+        assert_equal(result["info"]["wallet_utxos"], 0)
+        assert_equal(result["info"]["chain_utxos"], 0)
+        assert_equal(wallet_pending.gettransaction(txid)["confirmations"], 0)
+        assert_equal(wallet_pending.getbalances()["mine"]["untrusted_pending"], 2)
+
+        self.log.info("Confirm the payment, then spend it without confirming the spend")
+        self.advance_time(node, BLOCK_TIME)
+        self.generate(node, 1, sync_fun=self.no_op)
+        utxo = miner_wallet.listunspent(addresses=[receive_address])[0]
+        txid_spend = miner_wallet.sendall(
+            recipients=[miner_wallet.getnewaddress()],
+            inputs=[{"txid": txid, "vout": utxo["vout"]}],
+        )["txid"]
+
+        self.log.info("The mempool spend should not remove the confirmed UTXO from the comparison")
+        node.createwallet(wallet_name="verify_pending_spend", disable_private_keys=True)
+        wallet_spend = node.get_wallet_rpc("verify_pending_spend")
+        result = wallet_spend.importdescriptors([{"desc": desc, "timestamp": 0}], True)[0]
+        assert_equal(result["success"], True)
+        assert_equal(result["info"]["utxo_check"], True)
+        assert_equal(result["info"]["wallet_utxos"], 1)
+        assert_equal(result["info"]["chain_utxos"], 1)
+        assert_equal(wallet_spend.gettransaction(txid_spend)["confirmations"], 0)
+        wallet_pending.unloadwallet()
+        wallet_spend.unloadwallet()
+
+    def test_verify_balance_pruned(self, node, miner_wallet):
+        self.log.info("Create a payment whose block will be pruned before import")
+        receive_address = miner_wallet.getnewaddress()
+        desc = miner_wallet.getaddressinfo(receive_address)["desc"]
+        txid = miner_wallet.sendtoaddress(receive_address, 2)
+        self.advance_time(node, BLOCK_TIME)
+        funding_block = self.generate(node, 1, sync_fun=self.no_op)[0]
+        funding_height = node.getblockheader(funding_block)["height"]
+
+        self.log.info("Restart in pruning mode and prune the payment's block")
+        self.restart_node(0, extra_args=self.extra_args[0] + ["-prune=1", "-fastprune", f"-mocktime={self.node_time}"])
+        # Pruning keeps at least 288 recent blocks.
+        self.advance_time(node, 350 * BLOCK_TIME)
+        self.generate(node, 350, sync_fun=self.no_op)
+        assert node.pruneblockchain(funding_height) >= funding_height
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", node.getblock, funding_block)
+        tip = node.getblockheader(node.getbestblockhash())
+
+        self.log.info("Verification should report unavailable blocks and keep the descriptor imported")
+        node.createwallet(wallet_name="verify_pruned", disable_private_keys=True)
+        wallet = node.get_wallet_rpc("verify_pruned")
+        with node.assert_debug_log([], unexpected_msgs=["[verify_pruned] Rescan started"]):
+            result = wallet.importdescriptors([{"desc": desc, "timestamp": "now"}], True)[0]
+        assert_equal(result["success"], False)
+        assert_equal(result["error"]["code"], -4)
+        assert "UTXO verification did not succeed (blocks unavailable)" in result["error"]["message"]
+        assert_equal(result["info"], {
+            "status": "blocks unavailable",
+            "wallet_utxos": 0,
+            "chain_utxos": 1,
+            "snapshot_block": tip["hash"],
+            "snapshot_height": tip["height"],
+            "scan_start_height": funding_height,
+            "recovery_start_height": funding_height,
+            "scanned_blocks": 0,
+        })
+        assert_equal(wallet.getaddressinfo(receive_address)["ismine"], True)
+        assert_equal(wallet.getbalance(), 0)
+        assert_equal(wallet.listtransactions(), [])
+        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet.gettransaction, txid)
+        wallet.unloadwallet()
+
+    def advance_time(self, node, seconds):
+        self.node_time += seconds
+        node.setmocktime(self.node_time)
 
     def test_import_unused_key(self):
         self.log.info("Test import of unused(KEY)")
@@ -1133,6 +1379,10 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_import_unused_noprivs()
         self.test_per_item_errors_are_reported_in_order()
         self.test_rescan_fails_import()
+        self.test_verify_balance(self.nodes[0], w0)
+        self.test_verify_balance_unmatched(self.nodes[0], w0)
+        self.test_verify_balance_mempool(self.nodes[0], w0)
+        self.test_verify_balance_pruned(self.nodes[0], w0)
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()

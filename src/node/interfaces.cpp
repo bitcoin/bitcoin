@@ -644,6 +644,10 @@ public:
                int{FillBlock(block2, block2_out, lock, active, chainman().m_blockman)};
     }
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
+    bool findCoinsByScript(const std::set<CScript>& output_scripts, std::map<COutPoint, Coin>& coins, uint256& best_block) override
+    {
+        return FindCoinsByScript(m_node, output_scripts, coins, best_block);
+    }
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(chainman().GetMutex());
