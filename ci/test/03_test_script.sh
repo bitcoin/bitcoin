@@ -258,6 +258,18 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --check_also='*/rpc/protocol\.h' \
              2>&1 || true
     } | tee /tmp/iwyu_ci.out
+    # iwyu_tool.py's non-zero exit is swallowed by "|| true" above, so a
+    # compiler "fatal error:" only ends up in the raw logs and never fails the
+    # job. IWYU cannot analyse a file that fails to compile, so treat any such
+    # error as a hard failure in both the enforced and non-enforced passes. A
+    # common cause is a generated header that was not built before IWYU ran.
+    # See https://github.com/bitcoin/bitcoin/issues/35361.
+    iwyu_fatal=$(grep -A1 "fatal error:" /tmp/iwyu_ci.out || true)
+    if [ -n "${iwyu_fatal}" ]; then
+      echo "${iwyu_fatal}"
+      echo "^^^ ⚠️ IWYU hit a compiler error and could not analyse the file above. If a generated header is missing, add its target to GOAL in ci/test/00_setup_env_native_iwyu.sh."
+      false
+    fi
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
     python3 -c '
 import runpy
