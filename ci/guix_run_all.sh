@@ -41,6 +41,20 @@ cp -R /built-cache/. "$BASE_CACHE/"
 cp -R /sdk-cache/. "$SDK_PATH/"
 cd /build
 git update-index --refresh
+source contrib/guix/libexec/prelude.bash
+
+case "$HOSTS" in
+    arm64-apple-darwin|x86_64-w64-mingw32)
+        export HOST="$HOSTS"
+        JOBS="$(nproc)"
+        time-machine shell --manifest=contrib/guix/manifest_codesign.scm \
+                           --container --pure --no-cwd \
+                           --cores="$JOBS" --keep-failed --fallback \
+                           ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                           -- true
+        ;;
+esac
+
 ./contrib/guix/guix-build
 EOF
 
