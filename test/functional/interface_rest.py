@@ -451,14 +451,12 @@ class RESTTest (BitcoinTestFramework):
 
             for i, tx in enumerate(block["tx"]):
                 prevouts = [txin["prevout"] for txin in tx["vin"] if "coinbase" not in txin]
-                # compare with `getblock` JSON output (coinbase tx has no prevouts)
+                # compare binary REST format with `getblock` JSON output (coinbase tx has no prevouts)
                 actual = [(txout.scriptPubKey.hex(), Decimal(txout.nValue) / COIN) for txout in spent[i]]
                 expected = [(p["scriptPubKey"]["hex"], p["value"]) for p in prevouts]
                 assert_equal(expected, actual)
-                # also compare JSON format
-                actual = [(prevout["scriptPubKey"], prevout["value"]) for prevout in spent_json[i]]
-                expected = [(p["scriptPubKey"], p["value"]) for p in prevouts]
-                assert_equal(expected, actual)
+                # also compare the JSON REST format to the getblock verbosity 3 RPC output
+                assert_equal(spent_json[i], prevouts)
 
         self.log.info("Test the /blockpart URI")
 

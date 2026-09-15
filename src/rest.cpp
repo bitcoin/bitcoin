@@ -325,6 +325,8 @@ static void BlockUndoToJSON(const CBlockUndo& block_undo, UniValue& result)
         UniValue tx_prevouts(UniValue::VARR);
         for (const Coin& coin : tx_undo.vprevout) {
             UniValue prevout(UniValue::VOBJ);
+            prevout.pushKV("generated", coin.IsCoinBase());
+            prevout.pushKV("height", coin.nHeight);
             prevout.pushKV("value", ValueFromAmount(coin.out.nValue));
 
             UniValue script_pub_key(UniValue::VOBJ);
