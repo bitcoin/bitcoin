@@ -334,6 +334,13 @@ typedef struct btck_PrecomputedTransactionData btck_PrecomputedTransactionData;
 typedef struct btck_Txid btck_Txid;
 
 /**
+ * Opaque data structure for holding a btck_Wtxid.
+ *
+ * This is a type-safe identifier for a transaction that commits to witness data.
+ */
+typedef struct btck_Wtxid btck_Wtxid;
+
+/**
  * Opaque data structure for holding a btck_BlockHeader.
  */
 typedef struct btck_BlockHeader btck_BlockHeader;
@@ -680,6 +687,25 @@ BITCOINKERNEL_API uint32_t btck_transaction_get_locktime(
  * @return                The txid.
  */
 BITCOINKERNEL_API const btck_Txid* btck_transaction_get_txid(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Check whether a transaction has witness data.
+ *
+ * @param[in] transaction Non-null.
+ * @return                1 if the transaction has witness data, 0 if not.
+ */
+BITCOINKERNEL_API int btck_transaction_has_witness(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the wtxid of a transaction. The returned wtxid is not owned and
+ * depends on the lifetime of the transaction.
+ *
+ * @param[in] transaction Non-null.
+ * @return                The wtxid.
+ */
+BITCOINKERNEL_API const btck_Wtxid* btck_transaction_get_wtxid(
     const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
@@ -1869,6 +1895,46 @@ BITCOINKERNEL_API void btck_txid_to_bytes(
  * Destroy the txid.
  */
 BITCOINKERNEL_API void btck_txid_destroy(btck_Txid* txid);
+
+///@}
+
+/** @name Wtxid
+ * Functions for working with wtxids.
+ */
+///@{
+
+/**
+ * @brief Copy a wtxid.
+ *
+ * @param[in] wtxid Non-null.
+ * @return          The copied wtxid.
+ */
+BITCOINKERNEL_API btck_Wtxid* BITCOINKERNEL_WARN_UNUSED_RESULT btck_wtxid_copy(
+    const btck_Wtxid* wtxid) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Check if two wtxids are equal.
+ *
+ * @param[in] wtxid1 Non-null.
+ * @param[in] wtxid2 Non-null.
+ * @return           0 if the wtxid is not equal.
+ */
+BITCOINKERNEL_API int btck_wtxid_equals(
+    const btck_Wtxid* wtxid1, const btck_Wtxid* wtxid2) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Serializes the wtxid to bytes.
+ *
+ * @param[in] wtxid    Non-null.
+ * @param[out] output  The serialized wtxid.
+ */
+BITCOINKERNEL_API void btck_wtxid_to_bytes(
+    const btck_Wtxid* wtxid, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * Destroy the wtxid.
+ */
+BITCOINKERNEL_API void btck_wtxid_destroy(btck_Wtxid* wtxid);
 
 ///@}
 
