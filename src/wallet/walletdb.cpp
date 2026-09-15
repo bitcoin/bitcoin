@@ -17,6 +17,7 @@
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
@@ -498,7 +499,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
         std::string error;
         DBErrors record_res = load_func(pwallet, ssKey, ssValue, error);
         if (record_res != DBErrors::LOAD_OK) {
-            pwallet->WalletLogPrintf("%s\n", error);
+            util::SplitLines(error, [&](auto line) { pwallet->WalletLogPrintf("%s", line); });
         }
         result.m_result = std::max(result.m_result, record_res);
         ++result.m_records;

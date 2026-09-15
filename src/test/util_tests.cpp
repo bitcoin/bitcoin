@@ -38,6 +38,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -1391,6 +1392,27 @@ BOOST_AUTO_TEST_CASE(test_SplitString)
         BOOST_TEST(SplitString("x\0a,b"s, '\0') == V({"x", "a,b"}));
         BOOST_TEST(SplitString("x\0a,b"s, "\0,"s) == V({"x", "a", "b"}));
         BOOST_TEST(SplitString("abcdefg", "bcd") == V({"a", "", "", "efg"}));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_SplitLines)
+{
+    const struct {
+        std::string_view input;
+        std::vector<std::string_view> output;
+    } cases[]{
+        {"", {""}},
+        {"one", {"one"}},
+        {"one\ntwo", {"one", "two"}},
+        {"one\ntwo\n", {"one", "two"}},
+        {"\none\n\n", {"", "one", ""}},
+        {"\n\n", {"", ""}},
+        {"one\r\nt\0wo"sv, {"one\r", "t\0wo"sv}},
+    };
+    for (const auto& [input, output] : cases) {
+        std::vector<std::string_view> lines;
+        util::SplitLines(input, [&](auto line) { lines.push_back(line); });
+        BOOST_TEST(lines == output);
     }
 }
 
