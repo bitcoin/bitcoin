@@ -15,7 +15,12 @@
 #include <util/time.h>
 #include <validation.h>
 
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
 #include <iterator>
+#include <limits>
 #include <vector>
 
 static void initialize_headers_sync_state_fuzz()
@@ -125,4 +130,58 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
             (void)headers_sync.NextHeadersRequestLocator();
         }
     }
+}
+
+/** Maximum timespan that the headers sync parameter computation can be asked about.
+ *  std::chrono::seconds is only guaranteed to be a signed integer type of at least 35 bits. */
+constexpr int64_t MAX_TIMESPAN = (int64_t{1} << 34) - 1;
+
+/** The largest max_headers value ComputeHeadersSyncParams can pass to the optimizer. */
+constexpr int64_t MAX_MAX_HEADERS = 6 * MAX_TIMESPAN;
+
+FUZZ_TARGET(headers_sync_params_inner)
+{
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+
+    // The number of headers in the minimum-chainwork chain is a block height, so any legal value
+    // fits in an int (see Consensus::Params::minchainwork_height).
+    auto minchainwork_headers = provider.ConsumeIntegralInRange<int64_t>(1, std::numeric_limits<int>::max());
+    // The optimizer requires max_headers > 2 * minchainwork_headers.
+    auto max_headers = provider.ConsumeIntegralInRange<int64_t>(2 * minchainwork_headers + 1, MAX_MAX_HEADERS);
+    // Any positive acceptable attack rate is legal. Parametrize it logarithmically, as the number
+    // of bits by which it is below one accepted header per attack, covering everything from
+    // absurdly permissive to far beyond any conceivable security target (any finite value works,
+    // but the computation loses meaning once the rate is below the smallest normal double).
+    auto bits = provider.ConsumeIntegralInRange<int>(-20000, 1000000) / 1000.0;
+    auto attack_headers{std::exp2(-bits)};
+
+    auto [period, bufsize] = ComputeHeadersSyncParamsInner(max_headers, minchainwork_headers, attack_headers);
+
+    // The commitment period is positive, and never exceeds the length of the minimum-chainwork
+    // chain (a larger period could fail to commit to that chain at all).
+    assert(period >= 1);
+    assert(period <= uint64_t(minchainwork_headers));
+    // The redownload buffer holds at least one header.
+    assert(bufsize >= 1);
+    // A header released from the redownload buffer with no verified commitment on top of it
+    // (possible when bufsize < period) gets accepted with probability >= 0.5 by an
+    // optimally-placed attack, so any acceptable rate below that requires bufsize >= period.
+    if (attack_headers < 0.5) assert(bufsize >= period);
+}
+
+FUZZ_TARGET(headers_sync_params)
+{
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+
+    std::chrono::seconds timespan{provider.ConsumeIntegralInRange<int64_t>(-MAX_TIMESPAN, MAX_TIMESPAN)};
+    auto minchainwork_headers = provider.ConsumeIntegralInRange<int64_t>(1, std::numeric_limits<int>::max());
+
+    auto [period, bufsize] = ComputeHeadersSyncParams(timespan, minchainwork_headers);
+
+    assert(period >= 1);
+    assert(period <= uint64_t(minchainwork_headers));
+    // The acceptable attack rate used internally is always far below 0.5 headers per attack, so
+    // every released header has at least one verified commitment on top of it (see the
+    // headers_sync_params_inner target).
+    assert(bufsize >= period);
 }
