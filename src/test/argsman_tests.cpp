@@ -1117,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
 
     // Test error logging, and remove previously written setting.
     {
-        ASSERT_DEBUG_LOG("Failed renaming settings file");
+        ASSERT_DEBUG_LOG("Failed renaming JSON file");
         fs::remove(args1.GetDataDirBase() / "settings.json");
         fs::create_directory(args1.GetDataDirBase() / "settings.json");
         args2.WriteSettingsFile();
