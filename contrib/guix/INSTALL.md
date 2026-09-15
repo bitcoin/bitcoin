@@ -777,6 +777,43 @@ This can be fixed by setting `merge.conflictstyle` to `diff3`:
 git config --global merge.conflictstyle diff3
 ```
 
+## Migrating from the Unprivileged Daemon to the Privileged Daemon
+
+If you are using a modern systemd-based Linux distribution (like Ubuntu) and installed Guix using the official shell installer script, your `guix-daemon` is likely running in **unprivileged mode**. This mode utilizes Linux unprivileged user namespaces which currently breaks the reproducible build environment for certain dependencies (like Python and Node.js), causing tests to fail.
+
+To fix these build failures, you will need to manually migrate your `guix-daemon` back to the traditional privileged (root) mode. Follow these steps:
+
+1. **Stop the daemon**:
+```bash
+sudo systemctl stop guix-daemon
+```
+
+2. **Recreate the build users**:
+```bash
+sudo groupadd --system guixbuild
+for i in $(seq -w 1 10); do
+  sudo useradd -g guixbuild -G guixbuild \
+               -d /var/empty -s $(which nologin) \
+               -c "Guix build user $i" --system \
+               guixbuilder$i
+done
+```
+
+3. **Restore root file ownership**:
+```bash
+sudo chown -R root:root /gnu /var/guix /etc/guix
+```
+
+4. **Update the systemd service**:
+Open `/etc/systemd/system/guix-daemon.service` (or `/lib/systemd/system/guix-daemon.service`) and change `User=guix-daemon` back to `User=root`.
+Ensure `--build-users-group=guixbuild` is included in the `ExecStart` line.
+
+5. **Restart the daemon**:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start guix-daemon
+```
+
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-bin-tarball]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-fanquake-container]: #option-3-using-fanquakes-container-image

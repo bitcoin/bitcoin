@@ -24,6 +24,26 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 check_tools cat mkdir make getent curl git guix
 
 ################
+# Warn if guix-daemon is running unprivileged (Issue #36239)
+################
+if pgrep -x guix-daemon > /dev/null; then
+    daemon_user=$(ps -C guix-daemon -o ruser= | head -n 1 | tr -d ' ')
+    if [ "$daemon_user" != "root" ]; then
+cat << EOF
+WARN: guix-daemon is running as an unprivileged user ($daemon_user) instead of root.
+      This modern unprivileged configuration uses Linux user namespaces which are
+      known to cause reproducible build failures in dependencies (like python-distlib
+      and node) when building locally without substitutes.
+
+      If your build fails with weird permission errors or UID/GID assertion errors,
+      you will need to migrate your guix-daemon back to running as root.
+
+      See contrib/guix/INSTALL.md for downgrade instructions.
+EOF
+    fi
+fi
+
+################
 # GUIX_BUILD_OPTIONS should be empty
 ################
 #
