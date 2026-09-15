@@ -391,42 +391,21 @@ void TorController::ThreadControl()
     LogDebug(BCLog::TOR, "Entering Tor control thread");
 
     while (!m_interrupt) {
-        // Try to connect if not connected already
-        if (!m_conn.IsConnected()) {
-            LogDebug(BCLog::TOR, "Attempting to connect to Tor control port %s", m_tor_control_center);
-
-            if (!m_conn.Connect(m_tor_control_center)) {
-                LogWarning("tor: Initiating connection to Tor control port %s failed", m_tor_control_center);
-                if (!m_reconnect) {
-                    break;
-                }
-                // Wait before retrying with exponential backoff
-                LogDebug(BCLog::TOR, "Retrying in %.1f seconds", m_reconnect_timeout.count());
-                if (!m_interrupt.sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(m_reconnect_timeout))) {
-                    break;
-                }
-                m_reconnect_timeout = std::min(m_reconnect_timeout * RECONNECT_TIMEOUT_EXP, RECONNECT_TIMEOUT_MAX);
-                continue;
-            }
-            // Successfully connected, reset timeout and trigger connected callback
-            m_reconnect_timeout = RECONNECT_TIMEOUT_START;
+        LogDebug(BCLog::TOR, "Attempting to connect to Tor control port %s", m_tor_control_center);
+        if (m_conn.Connect(m_tor_control_center)) {
             connected_cb(m_conn);
-        }
-        // Wait for data with a timeout
-        if (!m_conn.WaitForData(std::chrono::seconds(1))) {
-            // Check if still connected
-            if (!m_conn.IsConnected()) {
-                LogDebug(BCLog::TOR, "Lost connection to Tor control port");
-                disconnected_cb(m_conn);
-                continue;
+            while (!m_interrupt) {
+                if (!m_conn.WaitForData(std::chrono::seconds(1))) {
+                    if (m_conn.IsConnected()) continue;
+                    LogDebug(BCLog::TOR, "Lost connection to Tor control port");
+                    break;
+                }
+                if (!m_conn.ReceiveAndProcess()) break;
             }
-            // Just a timeout, continue waiting
-            continue;
+        } else {
+            LogWarning("tor: Initiating connection to Tor control port %s failed", m_tor_control_center);
         }
-        // Process incoming data
-        if (!m_conn.ReceiveAndProcess()) {
-            disconnected_cb(m_conn);
-        }
+        disconnected_cb(m_conn);
     }
     LogDebug(BCLog::TOR, "Exited Tor control thread");
 }
@@ -737,8 +716,12 @@ void TorController::disconnected_cb(TorControlConnection& _conn)
     if (!m_reconnect)
         return;
 
-    LogDebug(BCLog::TOR, "Not connected to Tor control port %s, will retry", m_tor_control_center);
+    LogDebug(BCLog::TOR, "Not connected to Tor control port %s, retrying in %.2f s",
+             m_tor_control_center, m_reconnect_timeout.count());
     _conn.Disconnect();
+
+    m_interrupt.sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(m_reconnect_timeout));
+    m_reconnect_timeout = std::min(m_reconnect_timeout * RECONNECT_TIMEOUT_EXP, RECONNECT_TIMEOUT_MAX);
 }
 
 fs::path TorController::GetPrivateKeyFile()
