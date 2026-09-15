@@ -1,6 +1,7 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
-             ((gnu packages cmake) #:select (cmake-minimal))
+             ((gnu packages base) #:select (glibc))
+             ((gnu packages cmake) #:select (cmake-minimal-4))
              (gnu packages commencement)
              ((gnu packages compression) #:select (gzip))
              (gnu packages cross-base)
@@ -28,14 +29,14 @@ FILE-NAME found in ./patches relative to the current file."
 (define (base-binutils target)
   (package
     (inherit (cross-binutils target)) ;; 2.44
-    (version "2.46.0")
+    (version "2.47")
     (source (origin
               (method url-fetch)
               (uri (string-append "mirror://gnu/binutils/binutils-"
                           version ".tar.bz2"))
               (sha256
                (base32
-                "04nd9vl7c1pxjbc9wh3ckddzhz5g82xyjqq9y9kf171a59im4c8g"))))
+                "0pcch8fsljhl6svh0w7iqkxfdadvmybdy2k529ckgsrw6qba9pmh"))))
     (arguments
       (substitute-keyword-arguments (package-arguments (cross-binutils target))
         ((#:configure-flags flags)
@@ -57,9 +58,19 @@ FILE-NAME found in ./patches relative to the current file."
   (let* ((xbinutils (base-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (cross-gcc target
-                                    #:xgcc base-gcc-for-libc
-                                    #:xbinutils xbinutils))
+         (xgcc-sans-libc-base
+          (cross-gcc target
+                     #:xgcc base-gcc-for-libc
+                     #:xbinutils xbinutils))
+         (xgcc-sans-libc
+          (package
+            (inherit xgcc-sans-libc-base)
+            (arguments
+             (substitute-keyword-arguments
+                 (package-arguments xgcc-sans-libc-base)
+               ((#:configure-flags flags)
+                #~(append #$flags
+                          (list "--disable-fixincludes")))))))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
@@ -270,7 +281,7 @@ chain for " target " development."))
         tar
         gzip
         ;; Build tools
-        cmake-minimal
+        cmake-minimal-4
         gnu-make
         ;; Git
         git-minimal)
