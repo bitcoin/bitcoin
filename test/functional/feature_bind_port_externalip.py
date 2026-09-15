@@ -6,6 +6,8 @@
 Test that the proper port is used for -externalip=
 """
 
+import os
+
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import (
     FailedToStartError,
@@ -24,7 +26,7 @@ from test_framework.util import assert_equal, p2p_port
 # FreeBSD and MacOS:
 # ifconfig INTERFACE_NAME 1.1.1.5/32 alias  # to set up
 # ifconfig INTERFACE_NAME 1.1.1.5 -alias  # to remove it, after the test
-ADDR = '1.1.1.5' # This is set in the CI environment, don't change it just here (keep them in sync).
+ADDR = os.getenv('BIND_TEST_ROUTABLE_IPV4', '1.1.1.5') # This is set in the CI environment, don't change it just here (keep them in sync).
 
 # array of tuples [arguments, expected port in localaddresses]
 EXPECTED = [
