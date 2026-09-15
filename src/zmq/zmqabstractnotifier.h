@@ -5,6 +5,8 @@
 #ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
+#include <util/result.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -40,7 +42,7 @@ public:
         }
     }
 
-    virtual bool Initialize(void *pcontext) = 0;
+    virtual util::Result<void> Initialize(void *pcontext) = 0;
     virtual void Shutdown() = 0;
 
     // Notifies of ConnectTip result, i.e., new active tip only
