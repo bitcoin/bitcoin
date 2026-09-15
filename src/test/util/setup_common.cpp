@@ -232,7 +232,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     gArgs.ForceSetArg("-natpmp", "0"); // NATPMP sends packets to the router.
 
     SelectParams(chainType);
-    InitLogging(*m_node.args);
+    InitLogging(*m_node.args, /* log_suffix= */ nullptr);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     m_node.warnings = std::make_unique<node::Warnings>();
