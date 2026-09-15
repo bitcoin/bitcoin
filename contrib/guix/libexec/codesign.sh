@@ -85,7 +85,6 @@ mkdir -p "$DISTSRC"
                 osslsigncode attach-signature \
                                  -in "${bin}" \
                                  -out "${WORKDIR}/${bin_base/-unsigned}" \
-                                 -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
                                  -sigin codesignatures/win/"${bin_base}".pem
             done
 
