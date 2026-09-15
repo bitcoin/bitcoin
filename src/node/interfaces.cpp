@@ -172,7 +172,7 @@ public:
         return ignored;
     }
     common::SettingsValue getPersistentSetting(const std::string& name) override { return args().GetPersistentSetting(name); }
-    void updateRwSetting(const std::string& name, const common::SettingsValue& value) override
+    bool updateRwSetting(const std::string& name, const common::SettingsValue& value) override
     {
         args().LockSettings([&](common::Settings& settings) {
             if (value.isNull()) {
@@ -181,7 +181,7 @@ public:
                 settings.rw_settings[name] = value;
             }
         });
-        args().WriteSettingsFile();
+        return args().GetSettingsPath() && args().WriteSettingsFile();
     }
     void forceSetting(const std::string& name, const common::SettingsValue& value) override
     {
@@ -195,11 +195,11 @@ public:
     }
     void resetSettings() override
     {
-        args().WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
+        if (args().GetSettingsPath()) args().WriteSettingsFile(/*errors=*/nullptr, /*backup=*/true);
         args().LockSettings([&](common::Settings& settings) {
             settings.rw_settings.clear();
         });
-        args().WriteSettingsFile();
+        if (args().GetSettingsPath()) args().WriteSettingsFile();
     }
     void mapPort(bool enable) override { StartMapPort(enable); }
     std::optional<Proxy> getProxy(Network net) override { return GetProxy(net); }
