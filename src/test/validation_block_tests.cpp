@@ -7,8 +7,9 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <interfaces/mining.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -80,12 +81,12 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     static int i = 0;
     static uint64_t time = Params().GenesisBlock().nTime;
 
-    auto mining{interfaces::MakeMining(m_node)};
-    auto block_template{mining->createNewBlock({
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    auto block_template{block_template_manager.CreateNewTemplate({
         .coinbase_output_script = CScript{} << i++ << OP_TRUE,
-    }, /*cooldown=*/false)};
+    })};
     BOOST_REQUIRE(block_template);
-    auto pblock = std::make_shared<CBlock>(block_template->getBlock());
+    auto pblock = std::make_shared<CBlock>(block_template->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
 
@@ -350,12 +351,12 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     LOCK(Assert(m_node.chainman)->GetMutex());
     CScript pubKey;
     pubKey << 1 << OP_TRUE;
-    auto mining{interfaces::MakeMining(m_node)};
-    auto block_template{mining->createNewBlock({
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    auto block_template{block_template_manager.CreateNewTemplate({
         .coinbase_output_script = pubKey,
-    }, /*cooldown=*/false)};
+    })};
     BOOST_REQUIRE(block_template);
-    CBlock pblock{block_template->getBlock()};
+    CBlock pblock{block_template->block};
 
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
