@@ -3226,6 +3226,8 @@ void CConnman::ThreadMessageHandler()
     {
         bool fMoreWork = false;
 
+        m_msgproc->ProcessPendingEvents();
+
         {
             // Randomize the order in which we process messages from/to our peers.
             // This prevents attacks in which an attacker exploits having multiple

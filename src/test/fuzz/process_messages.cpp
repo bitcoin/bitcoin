@@ -36,6 +36,7 @@
 
 namespace {
 TestingSetup* g_setup;
+FuzzTaskRunner* g_task_runner;
 
 } // namespace
 
@@ -51,7 +52,10 @@ void initialize_process_messages()
     };
     g_setup = testing_setup.get();
     // Replace validation_signals before creating chainman and mempool so they use it.
-    g_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
+    auto task_runner{std::make_unique<FuzzTaskRunner>()};
+    g_task_runner = task_runner.get();
+    g_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::move(task_runner));
+    FuzzTaskRunner::Scope callbacks{*g_task_runner};
     ResetChainmanAndMempool(*g_setup, init_clock);
 }
 
@@ -68,6 +72,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     const auto initial_sequence{WITH_LOCK(node.mempool->cs, return node.mempool->GetSequence())};
     FakeNodeClock node_clock{1610000000s}; // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
+    FuzzTaskRunner::Scope callbacks{*g_task_runner};
     chainman.ResetIbd();
     chainman.DisableNextWrite();
 
@@ -129,6 +134,11 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
                 more_work = connman.ProcessMessagesOnce(random_node);
             } catch (const std::ios_base::failure&) {
             }
+            // Block processing is inline in fuzz tests. Deliver its callbacks and
+            // completion marker before continuing with this peer.
+            node.peerman->ProcessPendingEvents();
+            node.validation_signals->SyncWithValidationInterfaceQueue();
+            node.peerman->ProcessPendingEvents();
             node.peerman->SendMessages(random_node);
         }
     }

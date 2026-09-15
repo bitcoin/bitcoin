@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
 #include <blockencodings.h>
+
+#include <bench/bench.h>
 #include <consensus/amount.h>
 #include <kernel/cs_main.h>
 #include <net_processing.h>
@@ -20,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <span>
@@ -46,7 +48,7 @@ private:
         block.nTime = 1231006505;
         block.nBits = 0x1d00ffff;
         block.nNonce = 2083236893;
-        block.fChecked = false;
+        block.m_validation_cache.m_checked.store(false);
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vout.resize(1);

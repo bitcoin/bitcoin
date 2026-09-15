@@ -14,6 +14,7 @@
 #include <uint256.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
