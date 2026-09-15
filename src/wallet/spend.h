@@ -187,9 +187,13 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 
 /**
  * Set a height-based locktime for new transactions (uses the height of the
- * current chain tip unless we are not synced with the current chain
+ * current chain tip unless we are not synced with the current chain).
+ * The locktime is occasionally backdated, but never below minimum_height.
+ * When minimum_height is 0, backdating is capped at 99 blocks from tip.
+ * When minimum_height is set (bumpfee), backdating is uniform on [minimum_height, tip].
+ * If minimum_height is above the local tip, locktime is 0.
  */
-void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height, uint32_t minimum_height = 0);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
