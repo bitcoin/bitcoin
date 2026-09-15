@@ -3669,6 +3669,13 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
         hdkey.SetSeed(seed_key);
     }
 
+    if (GetKey(hdkey.Neuter().pubkey.GetID())) {
+        return util::Unexpected{WalletError{
+            WalletErrorCode::GenericError,
+            _("HD key already exists")
+        }};
+    }
+
     std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
     FlatSigningProvider keys;
     std::string parse_error;
