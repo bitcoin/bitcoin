@@ -70,9 +70,11 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     const uint256 genesis_hash = genesis_header.GetHash();
     start_index.phashBlock = &genesis_hash;
 
+    // Roughly twice what the optimizer computes for mainnet today, hardcoded so that the covered
+    // input space does not depend on the chain parameters or on the current time.
     const HeadersSyncParams params{
-        .commitment_period = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, Params().HeadersSync().commitment_period * 2),
-        .redownload_buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, Params().HeadersSync().redownload_buffer_size * 2),
+        .commitment_period = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 2000),
+        .redownload_buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 40000),
     };
     arith_uint256 min_work{UintToArith256(ConsumeUInt256(fuzzed_data_provider))};
     FuzzedHeadersSyncState headers_sync(

@@ -15,9 +15,9 @@
 #include <util/hasher.h>
 
 #include <chrono>
+#include <cstddef>
 #include <deque>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 // A compressed CBlockHeader, which leaves out the prevhash
@@ -56,16 +56,23 @@ struct CompressedHeader {
     };
 };
 
+//! Configuration for headers sync memory usage.
+struct HeadersSyncParams {
+    //! Distance in blocks between header commitments.
+    size_t commitment_period{0};
+    //! Minimum number of validated headers to accumulate in the redownload
+    //! buffer before feeding them into the permanent block index.
+    size_t redownload_buffer_size{0};
+};
+
 /** Find a near-optimal (period, bufsize) headers synchronization configuration for:
  *
  * - A specified timespan between genesis and now.
  * - A specified number of headers in the minchainwork chain.
  *
  * See the constants in the implementation that control what attack success rate is acceptable.
- *
- * Returns {commitment period, redownload buffer size}.
  */
-std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers);
+HeadersSyncParams ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers);
 
 /** Find a near-optimal (period, bufsize) headers synchronization configuration for:
  *
@@ -77,7 +84,7 @@ std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan
  * This is the internal part of ComputeHeadersSyncParams that performs the actual optimization.
  * Test-only.
  */
-std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers);
+HeadersSyncParams ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers);
 
 /** HeadersSyncState:
  *

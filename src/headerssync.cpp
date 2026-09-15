@@ -391,7 +391,7 @@ CBlockLocator HeadersSyncState::NextHeadersRequestLocator() const
 //    alternate chain. This trade-off is ignored here, as it results in at most a small constant
 //    factor in attack rate.
 
-std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers)
+HeadersSyncParams ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers)
 {
     /** Headers in the redownload buffer are stored without prevhash, as a CompressedHeader. [bits] */
     constexpr int64_t COMPACT_HEADER_SIZE = sizeof(CompressedHeader) * 8;
@@ -570,12 +570,12 @@ std::pair<size_t, size_t> ComputeHeadersSyncParamsInner(int64_t max_headers, int
         make_config(period_below),
         make_config(period_above));
 
-    return {size_t(best_period), size_t(best_bufsize)};
+    return {.commitment_period = size_t(best_period), .redownload_buffer_size = size_t(best_bufsize)};
 }
 
 // Derive max_headers (the longest a valid chain could be by now) and the attack_headers budget from
 // the chain's age and minimum-chain-work header count, then optimize.
-std::pair<size_t, size_t> ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers)
+HeadersSyncParams ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers)
 {
     /** Expected block interval. [seconds] */
     constexpr double BLOCK_INTERVAL{600.0};
