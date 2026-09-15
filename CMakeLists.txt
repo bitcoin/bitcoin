@@ -636,6 +636,20 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
 endif()
 
+# Populate CMAKE_INSTALL_BINDIR, CMAKE_INSTALL_LIBEXECDIR, etc. before the
+# subdirectories below, which substitute these values into generated files
+# (test/config.ini and src/bitcoin-build-config.h).
+include(GNUInstallDirs)
+# GNUInstallDirs provides non-empty defaults; only explicit user overrides can
+# produce empty values, which would silently break the installed-layout lookup
+# in src/bitcoin.cpp. Catch that at configure time.
+if(NOT CMAKE_INSTALL_BINDIR)
+  message(FATAL_ERROR "CMAKE_INSTALL_BINDIR must not be empty")
+endif()
+if(NOT CMAKE_INSTALL_LIBEXECDIR)
+  message(FATAL_ERROR "CMAKE_INSTALL_LIBEXECDIR must not be empty")
+endif()
+
 add_subdirectory(test)
 add_subdirectory(doc)
 
