@@ -84,6 +84,7 @@ class NetTest(BitcoinTestFramework):
 
         self.test_connection_count()
         self.test_getpeerinfo()
+        self.test_min_relay_fee_policy()
         self.test_getnettotals()
         self.test_getnetworkinfo()
         self.test_addnode_getaddednodeinfo()
@@ -98,6 +99,21 @@ class NetTest(BitcoinTestFramework):
         self.log.info("Test getconnectioncount")
         # After using `connect_nodes` to connect nodes 0 and 1 to each other.
         assert_equal(self.nodes[0].getconnectioncount(), 2)
+
+    def test_min_relay_fee_policy(self):
+        self.log.info("Test that min relay fee policy is node-local")
+        high_fee_node, low_fee_node = self.nodes
+        tx = self.wallet.create_self_transfer(fee_rate=Decimal("0.00000600"))
+
+        assert_raises_rpc_error(
+            -26,
+            "min relay fee not met",
+            high_fee_node.sendrawtransaction,
+            hexstring=tx["hex"],
+        )
+        assert_equal(low_fee_node.sendrawtransaction(hexstring=tx["hex"]), tx["txid"])
+        assert tx["txid"] not in high_fee_node.getrawmempool()
+        assert tx["txid"] in low_fee_node.getrawmempool()
 
     def test_getpeerinfo(self):
         self.log.info("Test getpeerinfo")
