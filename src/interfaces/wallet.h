@@ -96,7 +96,7 @@ public:
     virtual util::Result<CTxDestination> getNewDestination(OutputType type, const std::string& label) = 0;
 
     //! Get public key.
-    virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
+    [[nodiscard]] virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
     //! Generate and add a new HD key to the wallet.
     //! Requires the wallet to be unlocked. Returns a `WalletError` with code
@@ -173,7 +173,7 @@ public:
         CMutableTransaction& mtx) = 0;
 
     //! Sign bump transaction.
-    virtual bool signBumpTransaction(CMutableTransaction& mtx) = 0;
+    [[nodiscard]] virtual bool signBumpTransaction(CMutableTransaction& mtx) = 0;
 
     //! Commit bump transaction.
     virtual bool commitBumpTransaction(const Txid& txid,
@@ -191,7 +191,7 @@ public:
     virtual std::set<WalletTx> getWalletTxs() = 0;
 
     //! Try to get updated status for a particular transaction, if possible without blocking.
-    virtual bool tryGetTxStatus(const Txid& txid,
+    [[nodiscard]] virtual bool tryGetTxStatus(const Txid& txid,
         WalletTxStatus& tx_status,
         int& num_blocks,
         int64_t& block_time) = 0;
@@ -214,7 +214,7 @@ public:
     virtual WalletBalances getBalances() = 0;
 
     //! Get balances if possible without blocking.
-    virtual bool tryGetBalances(WalletBalances& balances, uint256& block_hash) = 0;
+    [[nodiscard]] virtual bool tryGetBalances(WalletBalances& balances, uint256& block_hash) = 0;
 
     //! Get balance.
     virtual CAmount getBalance() = 0;
