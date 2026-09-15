@@ -27,10 +27,19 @@ class BitcoinAmountField: public QWidget
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
+    /** Continuation of #5117 to support implicit conversion to qint64 in generated code. */
+    class QAmount : public CAmount
+    {
+    public:
+        constexpr explicit QAmount(CAmount v) : CAmount{v} {}
+        constexpr operator qint64() const { return Int(); }
+    };
+
     explicit BitcoinAmountField(QWidget *parent = nullptr);
 
-    CAmount value(bool *value=nullptr) const;
+    QAmount value(bool *value=nullptr) const;
     void setValue(const CAmount& value);
+    inline void setValue(qint64 value) { setValue(CAmount{value}); }
 
     /** If allow empty is set to false the field will be set to the minimum allowed value if left empty. **/
     void SetAllowEmpty(bool allow);
