@@ -791,10 +791,16 @@ struct DefaultFormatter
     static void Unser(Stream& s, T& t) { Unserialize(s, t); }
 };
 
-/**
- * Limited vector formatter. Throws an error if a vector is oversized.
- */
+class LimitedVectorExceededError : public std::ios_base::failure
+{
+public:
+    explicit LimitedVectorExceededError(uint64_t size)
+        : std::ios_base::failure{"Vector length limit exceeded"}, m_size{size} {}
 
+    uint64_t m_size;
+};
+
+/** Limited vector formatter. Throws an error if a vector is oversized. */
 template<size_t Limit, class Formatter = DefaultFormatter>
 struct LimitedVectorFormatter
 {
@@ -803,11 +809,11 @@ struct LimitedVectorFormatter
     {
         Formatter formatter;
         v.clear();
-        size_t size = ReadCompactSize(s);
+        const uint64_t size{ReadCompactSize(s, /*range_check=*/false)};
         if (size > Limit) {
-            throw std::ios_base::failure("Vector length limit exceeded");
+            throw LimitedVectorExceededError{size};
         }
-        v.reserve(size);
+        v.reserve(static_cast<size_t>(size));
         for (size_t i = 0; i < size; ++i) {
             v.emplace_back();
             formatter.Unser(s, v.back());
