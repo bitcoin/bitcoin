@@ -401,25 +401,6 @@ CExtPubKey CExtKey::Neuter() const {
     return ret;
 }
 
-void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
-    code[0] = nDepth;
-    std::ranges::copy(fingerprint, code+1);
-    WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
-    code[41] = 0;
-    assert(key.size() == 32);
-    memcpy(code+42, key.begin(), 32);
-}
-
-void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
-    nDepth = code[0];
-    std::copy_n(code + 1, fingerprint.size(), fingerprint.begin());
-    nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
-    key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
-    if ((nDepth == 0 && (nChild != 0 || ReadLE32(fingerprint.data()) != 0)) || code[41] != 0) key = CKey();
-}
-
 KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
 {
     static_assert(std::tuple_size<KeyType>() == sizeof(secp256k1_keypair));

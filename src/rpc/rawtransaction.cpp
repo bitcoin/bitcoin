@@ -1147,8 +1147,7 @@ static RPCMethod decodepsbt()
     for (std::pair<KeyOriginInfo, std::set<CExtPubKey>> xpub_pair : psbtx.m_xpubs) {
         for (auto& xpub : xpub_pair.second) {
             std::vector<unsigned char> ser_xpub;
-            ser_xpub.assign(BIP32_EXTKEY_WITH_VERSION_SIZE, 0);
-            xpub.EncodeWithVersion(ser_xpub.data());
+            VectorWriter{ser_xpub, 0, xpub.version, xpub};
 
             UniValue keypath(UniValue::VOBJ);
             keypath.pushKV("xpub", EncodeBase58Check(ser_xpub));
