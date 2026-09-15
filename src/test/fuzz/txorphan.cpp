@@ -473,7 +473,7 @@ FUZZ_TARGET(txorphanage_sim)
     // 3. Initialize real orphanage
     //
 
-    auto max_global_latency_score = provider.ConsumeIntegralInRange<node::TxOrphanage::Count>(NUM_PEERS, MAX_ANN);
+    auto max_global_latency_score = provider.ConsumeIntegralInRange<node::TxOrphanage::Count>(1, MAX_ANN);
     auto reserved_peer_usage = provider.ConsumeIntegralInRange<node::TxOrphanage::Usage>(1, total_usage);
     auto real = node::MakeTxOrphanage(max_global_latency_score, reserved_peer_usage);
 
@@ -686,7 +686,7 @@ FUZZ_TARGET(txorphanage_sim)
             }
         }
         // Always trim after each command if needed.
-        const auto max_ann = max_global_latency_score / std::max<unsigned>(1, count_peers_fn());
+        const auto max_ann = std::max<unsigned>(1, max_global_latency_score / std::max<unsigned>(1, count_peers_fn()));
         const auto max_mem = reserved_peer_usage;
         while (true) {
             // Count global usage and number of peers.
@@ -715,7 +715,7 @@ FUZZ_TARGET(txorphanage_sim)
                 }
             }
             assert(worst_peer != unsigned(-1));
-            assert(ByRatio{worst_dos_score} > ByRatio{FeeFrac(1, 1)});
+            assert(ByRatio{worst_dos_score} >= ByRatio{FeeFrac(1, 1)});
             // Find oldest announcement from worst_peer, preferring non-reconsiderable ones.
             bool done{false};
             for (int reconsider = 0; reconsider < 2; ++reconsider) {

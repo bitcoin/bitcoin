@@ -31,8 +31,8 @@ inline constexpr unsigned int DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE{3000};
  * - Peers can exceed their individual limits (e.g. because they are very useful transaction relay peers) as long as the
  *   global limits are not exceeded.
  * - As long as the orphan has 1 announcer, it remains in the orphanage.
- * - No peer can trigger the eviction of another peer's orphans.
- * - Peers' orphans are effectively protected from eviction as long as they don't exceed their limits.
+ * - Peers' orphans are effectively protected from eviction while they stay strictly below their limits.
+ * - Peers at a limit may be selected for eviction when a global limit is exceeded.
  * Not thread-safe. Requires external synchronization.
  */
 class TxOrphanage {
