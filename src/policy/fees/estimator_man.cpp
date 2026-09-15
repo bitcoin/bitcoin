@@ -39,7 +39,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
         return block_policy_estimate;
     }
     auto mempool_estimate = m_mempool_estimator->EstimateFeeRate(conservative);
-    if (!mempool_estimate && mempool_estimate.error() != MempoolEstimationFailure::INSUFFICIENT_DATA) {
+    if (!mempool_estimate && mempool_estimate.error() == MempoolEstimationFailure::MEMPOOL_NOT_LOADED) {
         const auto mempool_error = EstimationError(mempool_estimate.error());
         LogDebug(BCLog::ESTIMATEFEE, "%s", mempool_error.error().reason);
         return mempool_error;

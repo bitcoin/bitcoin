@@ -15,6 +15,10 @@ from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     WITNESS_SCALE_FACTOR,
 )
+from test_framework.script import (
+    CScript,
+    OP_TRUE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -30,6 +34,7 @@ MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
 MIN_BUCKET_FEERATE = Decimal(100) / Decimal(COIN)
 TXS_COUNT = 24
+MEMPOOL_HEALTH_WINDOW = 6
 BLOCK_POLICY_ESTIMATOR_ERROR = "Insufficient data or no feerate found"
 BLOCK_POLICY_ESTIMATOR_FILE_PATH = "fees/block_policy_estimates.dat"
 
@@ -129,11 +134,12 @@ def check_estimates(node, fees_seen):
     check_smart_estimates(node, fees_seen)
 
 
-def make_tx(wallet, utxo, feerate):
+def make_tx(wallet, utxo, feerate, target_vsize=0):
     """Create a 1in-1out transaction with a specific input and feerate (sat/vb)."""
     return wallet.create_self_transfer(
         utxo_to_spend=utxo,
         fee_rate=Decimal(feerate * 1000) / COIN,
+        target_vsize=target_vsize,
     )
 
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
@@ -588,6 +594,34 @@ class EstimateFeeTest(BitcoinTestFramework):
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "mempool_policy")
 
+    def test_fallback_to_block_policy_on_low_coverage(self):
+        self.clear_estimates()
+        self.broadcast_and_maybe_mine(self.nodes[0], Decimal("0.004"), TXS_COUNT, MEMPOOL_HEALTH_WINDOW, self.nodes[1])
+        assert "feerate" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})["estimator"], "mempool_policy")
+        anyone_can_spend_script = CScript([OP_TRUE]).hex()
+        quarter_block_vsize = int(MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR / 4)
+        expected_stats = []
+        for _ in range(MEMPOOL_HEALTH_WINDOW):
+            unseen_txs = [make_tx(self.wallet, self.wallet.get_utxo(confirmed_only=True), 10, quarter_block_vsize) for _ in range(3)]
+            mempool_txs = [self.wallet.send_self_transfer(from_node=self.nodes[1]) for _ in range(3)]
+            self.sync_mempools([self.nodes[0], self.nodes[1]])
+            self.generateblock(self.nodes[1], output=f"raw({anyone_can_spend_script})",
+                               transactions=[tx["hex"] for tx in unseen_txs] + [tx["txid"] for tx in mempool_txs],
+                               sync_fun=lambda: self.sync_blocks([self.nodes[0], self.nodes[1]]))
+            expected_stats.append({
+                "block_height": self.nodes[0].getblockcount(),
+                "block_weight": sum(tx["tx"].get_weight() for tx in unseen_txs + mempool_txs),
+                "mempool_txs_weight": sum(tx["tx"].get_weight() for tx in mempool_txs),
+            })
+        combined = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "none", "verbosity": 2})
+        assert_equal(combined["estimator"], "block_policy")
+        assert_equal(combined["feerate"], self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"])
+        assert_equal(combined["mempool_health_statistics"], list(reversed(expected_stats)))
+        mempool_policy = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        assert_equal(mempool_policy["errors"], ["mempool_policy: Mempool is unreliable for fee rate estimation"])
+        self.restart_node(0)
+
     def test_stale_mempool_block_stats_are_rejected_on_load(self):
         # Persisted mempool block stats must be tied to the best block hash,
         # not just height, because a reorg can replace the tip without
@@ -687,6 +721,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test that estimatesmartfee returns mempool estimates when lower")
         self.clear_estimates()
         self.test_estimatesmartfee_return_mempool_estimates()
+
+        self.log.info("Test fallback to block policy when the mempool has low coverage")
+        self.test_fallback_to_block_policy_on_low_coverage()
 
         self.log.info("Test that stale mempool block stats are rejected on load")
         self.test_stale_mempool_block_stats_are_rejected_on_load()
