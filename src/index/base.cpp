@@ -45,6 +45,7 @@
 using kernel::ChainstateRole;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
+constexpr uint8_t DB_FIRST_BLOCK_HEIGHT{'F'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
@@ -122,8 +123,16 @@ bool BaseIndex::Init()
     LOCK(cs_main);
     CChain& index_chain = m_chainstate->m_chain;
 
+    int32_t first_block_height{0};
     if (locator.IsNull()) {
-        SetBestBlockIndex(nullptr);
+        const CBlockIndex* start{nullptr};
+        if (AllowPartialHistory() && m_chainstate->m_blockman.IsPruneMode() && index_chain.Tip()) {
+            const auto& first{m_chainstate->m_blockman.GetFirstBlock(*index_chain.Tip(), BLOCK_HAVE_DATA)};
+            start = first.pprev;
+            first_block_height = first.nHeight;
+            if (start) LogInfo("%s starting at height %d; earlier history will not be indexed", GetName(), first.nHeight);
+        }
+        SetBestBlockIndex(start);
     } else {
         // Setting the best block to the locator's top block. If it is not part of the
         // best chain, we will rewind to the fork point during index sync
@@ -132,7 +141,12 @@ bool BaseIndex::Init()
             return InitError(Untranslated(strprintf("best block of %s not found. Please rebuild the index.", GetName())));
         }
         SetBestBlockIndex(locator_index);
+        if (!GetDB().Read(DB_FIRST_BLOCK_HEIGHT, first_block_height) && GetDB().Exists(DB_FIRST_BLOCK_HEIGHT)) {
+            return InitError(Untranslated(strprintf("Cannot read first block height of %s", GetName())));
+        }
     }
+
+    m_first_block_height = first_block_height;
 
     // Child init
     const CBlockIndex* start_block = m_best_block_index.load();
@@ -295,6 +309,7 @@ void BaseIndex::Commit()
         ok = CustomCommit(batch);
         if (ok) {
             GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            batch.Write(DB_FIRST_BLOCK_HEIGHT, m_first_block_height.load());
             GetDB().WriteBatch(batch);
         }
     }
@@ -490,6 +505,7 @@ IndexSummary BaseIndex::GetSummary() const
     IndexSummary summary{};
     summary.name = GetName();
     summary.synced = m_synced;
+    summary.first_block_height = m_first_block_height;
     if (const auto& pindex = m_best_block_index.load()) {
         summary.best_block_height = pindex->nHeight;
         summary.best_block_hash = pindex->GetBlockHash();

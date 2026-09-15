@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -31,6 +32,7 @@ struct IndexSummary {
     std::string name;
     bool synced{false};
     int best_block_height{0};
+    int32_t first_block_height{0};
     uint256 best_block_hash;
 };
 namespace interfaces {
@@ -91,6 +93,9 @@ private:
     /// The last block in the chain that the index is in sync with.
     std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
 
+    /// The initial sync starting height. May be non-zero only if AllowPartialHistory is true.
+    std::atomic<int32_t> m_first_block_height{0};
+
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
@@ -145,6 +150,10 @@ public:
 
     /// Get the name of the index for display in logs.
     const std::string& GetName() const LIFETIMEBOUND { return m_name; }
+
+    /// Whether a new index can start from an already pruned node and only index
+    /// the existing blocks onward.
+    virtual bool AllowPartialHistory() const { return false; }
 
     /// Return custom notification options for index.
     [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }

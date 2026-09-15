@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/register.h> // IWYU pragma: associated
-
 #include <addresstype.h>
 #include <base58.h>
 #include <chain.h>
@@ -15,6 +13,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <kernel/chainparams.h>
 #include <key.h>
@@ -32,6 +31,7 @@
 #include <random.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -162,6 +162,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
     if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
     const NodeContext& node = EnsureAnyNodeContext(context);
+    ChainstateManager& chainman = EnsureChainman(node);
 
     // If we can't find the corresponding full transaction for all of our inputs,
     // this will be used to find just the utxos for the segwit inputs for which
@@ -174,18 +175,9 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // The `non_witness_utxo` is the whole previous transaction
         if (psbt_input.non_witness_utxo) continue;
 
-        CTransactionRef tx;
-
-        // Look in the txindex
-        if (g_txindex) {
-            if (auto result{g_txindex->FindTx(psbt_input.prev_txid)}) tx = result->tx;
-        }
-        // If we still don't have it look in the mempool
-        if (!tx) {
-            tx = node.mempool->get(psbt_input.prev_txid);
-        }
-        if (tx) {
-            psbt_input.non_witness_utxo = tx;
+        TxLookupResult result{GetTransaction(/*block_index=*/nullptr, node.mempool.get(), psbt_input.prev_txid, chainman.m_blockman)};
+        if (result.tx) {
+            psbt_input.non_witness_utxo = std::move(result.tx);
         } else {
             coins[psbt_input.GetOutPoint()]; // Create empty map entry keyed by prevout
         }
@@ -326,9 +318,11 @@ static RPCMethod getrawtransaction()
         f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
-    if (!tx) {
+    const TxLookupResult tx_result{GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman)};
+    if (!tx_result.tx) {
+        if (!tx_result.pruned_block_hashes.empty()) {
+            throw JSONRPCError(RPC_MISC_ERROR, PrunedBlocksErrorMessage(tx_result.pruned_block_hashes));
+        }
         std::string errmsg;
         if (blockindex) {
             const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
@@ -341,10 +335,12 @@ static RPCMethod getrawtransaction()
         } else if (!f_txindex_ready) {
             errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
         } else {
-            errmsg = "No such mempool or blockchain transaction";
+            errmsg = "No such mempool or blockchain transaction" + TxIndexMissErrorDetails(g_txindex->GetSummary());
         }
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
     }
+    const CTransactionRef& tx{tx_result.tx};
+    const uint256& hash_block{tx_result.block_hash};
 
     if (verbosity <= 0) {
         return EncodeHexTx(*tx);
@@ -377,7 +373,7 @@ static RPCMethod getrawtransaction()
     CBlockUndo blockUndo;
     CBlock block;
 
-    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return !(blockindex->nStatus & BLOCK_HAVE_MASK))) {
+    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return !(blockindex->nStatus & BLOCK_HAVE_UNDO))) {
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
     }
