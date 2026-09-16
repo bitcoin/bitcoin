@@ -1,6 +1,7 @@
 (use-modules ((gnu packages bash) #:select (bash-minimal))
              ((gnu packages compression) #:select (gzip zip))
              ((gnu packages crypto) #:select (osslsigncode))
+             ((gnu packages nss) #:select (nss-certs))
              ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto python-oscrypto))
              ((gnu packages tls) #:select (openssl))
@@ -158,6 +159,20 @@ specific moment in time, whitelisting and revocation checks.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
+(define-public osslsigncode-2.14
+  (package
+    (inherit osslsigncode)
+    (version "2.14")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/mtrojnar/osslsigncode")
+             (commit version)))
+       (file-name (git-file-name (package-name osslsigncode) version))
+       (sha256
+        (base32 "06ybcp9r8w0algxvvv0mz4h1cjw764b33s9b26n1dhvpl1dqc24c"))))))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -173,7 +188,7 @@ inspecting signatures in Mach-O binaries.")
         git-minimal)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list osslsigncode))
+           (list osslsigncode-2.14 nss-certs))
           ((string-contains target "darwin")
            (list python-signapple))
           (else '())))))
