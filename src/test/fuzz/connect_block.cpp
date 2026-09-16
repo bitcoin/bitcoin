@@ -464,13 +464,9 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
     new_index.phashBlock = &current_hash;
 
     // Try to connect the block.
-    BlockValidationState state;
-    bool connected = active_chainstate.ConnectBlock(block,
-                                                    state,
-                                                    &new_index,
-                                                    active_coins,
-                                                    /*fJustCheck=*/true);
-    Assert(connected == state.IsValid());
+    auto result{active_chainstate.ConnectBlock(block, &new_index, active_coins, /*fJustCheck=*/true)};
+    // Invalid blocks are expected, but fatal errors are not.
+    Assert(result.has_value());
 }
 
 } // namespace
