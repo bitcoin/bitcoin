@@ -987,7 +987,7 @@ HTTPResponse HTTPClient::ReadResponse()
     headers.Read(reader);
 
     // Determine body length
-    size_t content_length = 0;
+    std::optional<size_t> content_length;
     bool chunked = false;
 
     // RFC 9112 §6.3 says responses with both Transfer-Encoding and Content-Length
@@ -999,11 +999,10 @@ HTTPResponse HTTPClient::ReadResponse()
     } else {
         auto content_length_header = headers.FindFirst("content-length");
         if (content_length_header) {
-            auto maybe_len = ToIntegral<size_t>(*content_length_header);
-            if (!maybe_len) {
+            content_length = ToIntegral<size_t>(*content_length_header);
+            if (!content_length) {
                 throw HTTPError{"Invalid Content-Length"};
             }
-            content_length = *maybe_len;
         }
     }
 
@@ -1086,9 +1085,9 @@ HTTPResponse HTTPClient::ReadResponse()
         }
 
         response.body = std::move(body);
-    } else if (content_length > 0) {
+    } else if (content_length) {
         // Fixed content length
-        while (buffer.size() < content_length) {
+        while (buffer.size() < *content_length) {
             if (auto result{Recv(deadline)}) {
                 buffer.append(*result);
             } else {
@@ -1098,7 +1097,7 @@ HTTPResponse HTTPClient::ReadResponse()
 
         // Possibly shrink buffer in case we got a larger response than
         // originally specified.
-        buffer.resize(content_length);
+        buffer.resize(*content_length);
         response.body = std::move(buffer);
     } else {
         // No Content-Length and not chunked: read until the peer closes the

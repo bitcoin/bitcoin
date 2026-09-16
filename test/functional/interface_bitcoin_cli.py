@@ -6,7 +6,9 @@
 
 from decimal import Decimal
 import re
+import socket
 import subprocess
+import threading
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.netutil import test_ipv6_local
@@ -115,6 +117,28 @@ class TestBitcoinCli(BitcoinTestFramework):
         expected = [["data=test"], 42]
         assert_equal(result, expected)
 
+    def test_empty_response_body(self):
+        self.log.info("Test that a response with Content-Length: 0 does not wait for the peer to close")
+
+        # A real node closes the connection, so only a raw socket can keep it open
+        listener = socket.socket()
+        listener.bind(('127.0.0.1', 0))
+        listener.listen(1)
+
+        def serve():
+            conn, _ = listener.accept()
+            with conn:
+                conn.sendall(b'HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\n\r\n')
+                # Keep the connection open so the client cannot rely on EOF
+                while conn.recv(4096):
+                    pass
+
+        threading.Thread(target=serve, daemon=True).start()
+        with listener:
+            assert_raises_process_error(
+                1, 'Authorization failed',
+                self.nodes[0].cli(f'-rpcport={listener.getsockname()[1]}', '-rpcclienttimeout=10').echo)
+
     def run_test(self):
         """Main test logic"""
         self.test_echojson_positional_equals()
@@ -147,6 +171,8 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
+
+        self.test_empty_response_body()
 
         self.log.info("Test handling of invalid ports in rpcconnect")
         assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:notaport", self.nodes[0].cli("-rpcconnect=127.0.0.1:notaport").echo)
