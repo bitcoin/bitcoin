@@ -170,13 +170,22 @@ std::set<std::pair<CPubKey, KeyOriginInfo>> GetKeyOriginData(const FlatSigningPr
 
 void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int flags,
              const std::vector<std::vector<std::string>>& scripts, const std::optional<OutputType>& type, std::optional<uint256> op_compat_desc_hash = std::nullopt,
-             const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY, bool replace_apostrophe_with_h_in_prv=false,
+             const std::set<std::vector<uint32_t>>& paths_in = ONLY_EMPTY, bool replace_apostrophe_with_h_in_prv=false,
              bool replace_apostrophe_with_h_in_pub=false, uint32_t spender_nlocktime=0, uint32_t spender_nsequence=CTxIn::SEQUENCE_FINAL,
              std::map<std::vector<uint8_t>, std::vector<uint8_t>> preimages={},
              std::optional<std::string> expected_prv = std::nullopt, std::optional<std::string> expected_pub = std::nullopt, int desc_index = 0)
 {
+    std::set<KeyPath> paths;
+    for (const std::vector<uint32_t>& path : paths_in) {
+        KeyPath keypath;
+        for (uint32_t elem : path) {
+            keypath.emplace_back(elem);
+        }
+        paths.emplace(std::move(keypath));
+    }
+    std::set<KeyPath> left_paths = paths;
+
     FlatSigningProvider keys_priv, keys_pub;
-    std::set<std::vector<uint32_t>> left_paths = paths;
     std::string error;
 
     std::vector<std::unique_ptr<Descriptor>> parse_privs;

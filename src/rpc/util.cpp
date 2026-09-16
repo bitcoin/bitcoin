@@ -1378,13 +1378,13 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     return ret;
 }
 
-std::vector<uint32_t> ParsePathBIP32(const std::string& path)
+KeyPath ParsePathBIP32(const std::string& path)
 {
-    std::vector<uint32_t> out;
-    if (!ParseHDKeypath(path, out)) {
+    std::optional<KeyPath> parsed = ParseHDKeypath(path);
+    if (!parsed) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP32 keypath");
     }
-    return out;
+    return *parsed;
 }
 
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */
