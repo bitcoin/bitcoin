@@ -3079,8 +3079,7 @@ struct ConnectedBlock {
  *
  * The block is added to connected_blocks if connection succeeds.
  */
-bool Chainstate::ConnectTip(
-    BlockValidationState& state,
+util::Expected<BlockValidationState, kernel::FatalError> Chainstate::ConnectTip(
     CBlockIndex* pindexNew,
     std::shared_ptr<const CBlock> block_to_connect,
     std::vector<ConnectedBlock>& connected_blocks,
@@ -3088,6 +3087,7 @@ bool Chainstate::ConnectTip(
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
+    BlockValidationState state;
 
     assert(pindexNew->pprev == m_chain.Tip());
     // Read block from disk.
@@ -3095,7 +3095,7 @@ bool Chainstate::ConnectTip(
     if (!block_to_connect) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlock(*pblockNew, *pindexNew)) {
-            return FatalError(m_chainman.GetNotifications(), state, _("Failed to read block."));
+            return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Failed to read block."));
         }
         block_to_connect = std::move(pblockNew);
     } else {
@@ -3111,19 +3111,24 @@ bool Chainstate::ConnectTip(
     {
         CoinsViewOverlay& view{*m_coins_views->m_connect_block_view};
         const auto reset_guard{view.StartFetching(*block_to_connect)};
-        auto rv{ConnectBlock(*block_to_connect, pindexNew, view)};
-        if (rv) {
-            state = std::move(*rv);
-        } else {
-            state.Error(rv.error().message());
+        auto res{ConnectBlock(*block_to_connect, pindexNew, view)};
+        if (!res) {
+            // Keep signalling BlockChecked for fatal errors, as before.
+            state.Error(res.error().message());
+            if (m_chainman.m_options.signals) {
+                m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
+            }
+            LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
+            return util::Unexpected(std::move(res.error()));
         }
+        state = std::move(*res);
         if (m_chainman.m_options.signals) {
             m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
         }
         if (!state.IsValid()) {
             if (state.IsInvalid()) InvalidBlockFound(pindexNew, state);
             LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
-            return false;
+            return state;
         }
         time_3 = SteadyClock::now();
         m_chainman.time_connect_total += time_3 - time_2;
@@ -3142,8 +3147,7 @@ bool Chainstate::ConnectTip(
              Ticks<MillisecondsDouble>(m_chainman.time_flush) / m_chainman.num_blocks_total);
     // Write the chain state to disk, if necessary.
     if (auto res{FlushStateToDisk(FlushStateMode::IF_NEEDED)}; !res) {
-        state.Error(res.error().message());
-        return false;
+        return util::Unexpected(std::move(res.error()));
     }
     const auto time_5{SteadyClock::now()};
     m_chainman.time_chainstate += time_5 - time_4;
@@ -3191,7 +3195,7 @@ bool Chainstate::ConnectTip(
     m_chainman.MaybeValidateSnapshot(*this, current_cs);
 
     connected_blocks.emplace_back(pindexNew, std::move(block_to_connect));
-    return true;
+    return state;
 }
 
 /**
@@ -3316,30 +3320,32 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
-            if (!ConnectTip(state, pindexConnect, pindexConnect == &index_most_work ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)) {
-                if (state.IsInvalid()) {
-                    // The block violates a consensus rule.
-                    if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
-                        InvalidChainFound(vpindexToConnect.front());
-                    }
-                    state = BlockValidationState();
-                    fInvalidFound = true;
-                    fContinue = false;
-                    break;
-                } else {
-                    // A system error occurred (disk space, database error, ...).
-                    // Make the mempool consistent with the current tip, just in case
-                    // any observers try to use it before shutdown.
-                    MaybeUpdateMempoolForReorg(disconnectpool, false);
-                    return false;
+            auto res{ConnectTip(pindexConnect, pindexConnect == &index_most_work ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)};
+            if (!res) {
+                // A system error occurred (disk space, database error, ...).
+                // Make the mempool consistent with the current tip, just in case
+                // any observers try to use it before shutdown.
+                MaybeUpdateMempoolForReorg(disconnectpool, false);
+                state.Error(res.error().message());
+                return false;
+            }
+            state = *res;
+            if (state.IsInvalid()) {
+                // The block violates a consensus rule.
+                if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
+                    InvalidChainFound(vpindexToConnect.front());
                 }
-            } else {
-                PruneBlockIndexCandidates();
-                if (!pindexOldTip || m_chain.Tip()->nChainWork > pindexOldTip->nChainWork) {
-                    // We're in a better position than we were. Return temporarily to release the lock.
-                    fContinue = false;
-                    break;
-                }
+                state = BlockValidationState();
+                fInvalidFound = true;
+                fContinue = false;
+                break;
+            }
+            // Block connected successfully
+            PruneBlockIndexCandidates();
+            if (!pindexOldTip || m_chain.Tip()->nChainWork > pindexOldTip->nChainWork) {
+                // We're in a better position than we were. Return temporarily to release the lock.
+                fContinue = false;
+                break;
             }
         }
     }
