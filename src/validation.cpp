@@ -3193,9 +3193,9 @@ void Chainstate::PruneBlockIndexCandidates() {
  * Try to make some progress towards making index_most_work the active block.
  * pblock is either nullptr or a pointer to a CBlock corresponding to index_most_work.
  *
- * @returns true unless a system error occurred
+ * @returns Nothing on success, or a FatalError if a fatal system error occurred.
  */
-bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
+util::Expected<void, kernel::FatalError> Chainstate::ActivateBestChainStep(CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -3215,15 +3215,12 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
             // A fatal error raised by DisconnectTip has already fired the
             // notification and must only be propagated.
-            if (!res) {
-                state.Error(res.error().message());
-            }
+            if (!res) return util::Unexpected(std::move(res.error()));
 
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
             // rather than stay on a less work chain.
-            FatalError(m_chainman.GetNotifications(), state, _("Failed to disconnect block."));
-            return false;
+            return kernel::FatalError::Raise(m_chainman.GetNotifications(), _("Failed to disconnect block."));
         }
         fBlocksDisconnected = true;
     }
@@ -3253,15 +3250,14 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
                 // Make the mempool consistent with the current tip, just in case
                 // any observers try to use it before shutdown.
                 MaybeUpdateMempoolForReorg(disconnectpool, false);
-                return false;
+                return util::Unexpected(std::move(res.error()));
             }
-            state = *res;
+            const BlockValidationState& state{*res};
             if (state.IsInvalid()) {
                 // The block violates a consensus rule.
                 if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
                     InvalidChainFound(vpindexToConnect.front());
                 }
-                state = BlockValidationState();
                 fInvalidFound = true;
                 fContinue = false;
                 break;
@@ -3285,7 +3281,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
     CheckForkWarningConditions();
 
-    return true;
+    return {};
 }
 
 static SynchronizationState GetSynchronizationState(bool init, bool blockfiles_indexed)
@@ -3398,7 +3394,8 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 // in case snapshot validation is completed during ActivateBestChainStep, the
                 // result of GetRole() changes from BACKGROUND to NORMAL.
                const ChainstateRole chainstate_role{this->GetRole()};
-                if (!ActivateBestChainStep(state, *pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)) {
+                if (auto res{ActivateBestChainStep(*pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)}; !res) {
+                    state.Error(res.error().message());
                     // A system error occurred
                     return false;
                 }
