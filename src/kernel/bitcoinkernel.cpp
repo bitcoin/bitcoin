@@ -486,12 +486,45 @@ struct ChainMan {
         : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
 };
 
+//! Holds state for kernel logging: the single registered callback.
+class KernelLogger
+{
+    std::unique_ptr<LoggingConnection> m_connection;
+
+public:
+    //! Replace the current callback. Destroys any existing callback first, running its
+    //! user_data_destroy callback. Pass a null callback to unset without registering a new one.
+    bool SetCallback(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+    {
+        m_connection.reset();
+
+        if (!callback) {
+            assert(!user_data && !user_data_destroy_callback);
+            return true;
+        }
+
+        try {
+            m_connection = std::make_unique<LoggingConnection>(callback, user_data, user_data_destroy_callback);
+        } catch (...) {
+            return false;
+        }
+        return true;
+    }
+};
+
+//! The process-wide kernel logger. Intentionally leaked to avoid static destruction order issues,
+//! matching the node's LogInstance().
+KernelLogger& GetKernelLogger()
+{
+    static KernelLogger* logger{new KernelLogger};
+    return *logger;
+}
+
 } // namespace
 
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};
 struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
-struct btck_LoggingConnection : Handle<btck_LoggingConnection, LoggingConnection> {};
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
@@ -852,21 +885,13 @@ void btck_logging_disable_category(btck_LogCategory category)
 
 void btck_logging_disable()
 {
+    GetKernelLogger().SetCallback(nullptr, nullptr, nullptr);
     LogInstance().DisableLogging();
 }
 
-btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+int btck_logging_set_callback(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
 {
-    try {
-        return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
-    } catch (const std::exception&) {
-        return nullptr;
-    }
-}
-
-void btck_logging_connection_destroy(btck_LoggingConnection* connection)
-{
-    delete connection;
+    return GetKernelLogger().SetCallback(callback, user_data, user_data_destroy_callback) ? 0 : 1;
 }
 
 btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_type)
