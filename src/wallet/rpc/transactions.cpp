@@ -634,7 +634,7 @@ RPCMethod listsinceblock()
         target_confirms = request.params[1].getInt<int>();
 
         if (target_confirms < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, target_confirmations must be at least 1");
         }
     }
 
