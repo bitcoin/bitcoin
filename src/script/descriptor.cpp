@@ -1888,7 +1888,7 @@ enum class ParseScriptContext {
             error = parsed.error();
             return std::nullopt;
         }
-        if (parsed->is_hardened) {
+        if (parsed->IsHardened()) {
             has_hardened = true;
             apostrophe = elem.back() == '\'';
         }
