@@ -284,8 +284,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
     CBlockIndex* stale_block = WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Tip());
     const uint256 stale_hash{stale_block->GetBlockHash()};
     const int stale_height{stale_block->nHeight};
-    BlockValidationState state;
-    BOOST_REQUIRE(m_node.chainman->ActiveChainstate().InvalidateBlock(state, stale_block));
+    auto result{m_node.chainman->ActiveChainstate().InvalidateBlock(stale_block)};
+    BOOST_REQUIRE(result && *result);
     const CScript replacement_script{GetScriptForRawPubKey(GenerateRandomKey().GetPubKey())};
     CreateAndProcessBlock({}, replacement_script);
     CreateAndProcessBlock({}, replacement_script);

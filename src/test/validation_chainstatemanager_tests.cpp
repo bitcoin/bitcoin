@@ -653,8 +653,10 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block_and_reconsider_fork, TestChain100Setup)
     //                              <- block99' <- block100'
     // by temporarily invalidating block99. the chain tip now falls to block98,
     // mine 2 new blocks on top of block 98 (block99' and block100') and then restore block99 and block 100.
-    BlockValidationState state;
-    BOOST_REQUIRE(chainstate.InvalidateBlock(state, block99));
+    {
+        auto result{chainstate.InvalidateBlock(block99)};
+        BOOST_REQUIRE(result && *result);
+    }
     BOOST_REQUIRE(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()) == block98);
     CScript coinbase_script = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     for (int i = 0; i < 2; ++i) {
@@ -687,7 +689,10 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block_and_reconsider_fork, TestChain100Setup)
     }
 
     // Invalidate block98
-    BOOST_REQUIRE(chainstate.InvalidateBlock(state, block98));
+    {
+        auto result{chainstate.InvalidateBlock(block98)};
+        BOOST_REQUIRE(result && *result);
+    }
 
     {
         LOCK(chainman.GetMutex());
