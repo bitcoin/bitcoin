@@ -509,7 +509,7 @@ RPCMethod listtransactions()
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
 
     std::vector<UniValue> ret;
     {
