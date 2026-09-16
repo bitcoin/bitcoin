@@ -3,11 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
+#include <key.h>
 #include <script/script.h>
+#include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <cstdint>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -161,6 +164,49 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
         CScript uncompressed_script;
         bool success = DecompressScript(uncompressed_script, compression_id, compressed_script);
         BOOST_CHECK_EQUAL(success, false);
+
+        // The Unser path should throw an exception when it can't be decompressed. Otherwise,
+        // it will leave the script empty, which consensus-wise means anyone-can-spend,
+        // instead of being an unspendable off-curve P2PK script.
+        DataStream s = DataStream{} << VARINT(compression_id) << std::span{compressed_script};
+        CScript restored;
+        s >> Using<ScriptCompression>(restored); // TODO: throw instead of leaving script empty
+        BOOST_CHECK(restored.empty());
+    }
+
+    // Check off-curve script serialization round-trips properly
+    DataStream s = DataStream{} << Using<ScriptCompression>(script);
+    CScript restored;
+    s >> Using<ScriptCompression>(restored);
+    BOOST_CHECK(restored == script);
+}
+
+BOOST_AUTO_TEST_CASE(compress_p2pk_wrong_y)
+{
+    // An uncompressed pubkey with a wrong Y for its X isn't on the curve, so such
+    // a P2PK is unspendable.
+    // Ensure it is stored raw and never encoded as 0x04/0x05. That encoding keeps X
+    // and only Y's parity, so it would decompress to the correct Y and make the
+    // script spendable, which would be bad.
+    for (int i = 0; i < 1000; ++i) {
+        CKey key = GenerateRandomKey(/*compressed=*/false);
+        std::vector<unsigned char> pub = ToByteVector(key.GetPubKey());
+        pub[33] ^= 0x01; // corrupt Y without changing its parity
+        assert(!CPubKey(pub).IsFullyValid());
+        CScript script = CScript() << pub << OP_CHECKSIG;
+        BOOST_CHECK_EQUAL(script.size(), 67U);
+
+        CompressedScript out;
+        bool done = CompressScript(script, out);
+        BOOST_CHECK_EQUAL(done, false);
+
+        // Ensure serialize stores it raw (1-byte size prefix + 67, not 33 compressed)
+        // and unserialize gives it back unchanged
+        DataStream s = DataStream{} << Using<ScriptCompression>(script);
+        BOOST_CHECK_EQUAL(s.size(), 68U);
+        CScript restored;
+        s >> Using<ScriptCompression>(restored);
+        BOOST_CHECK(restored == script);
     }
 }
 
