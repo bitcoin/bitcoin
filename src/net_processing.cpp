@@ -824,6 +824,9 @@ private:
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
 
+    void ProcessVersion(CNode& pfrom, Peer& peer, const std::string& msg_type, DataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
     /** Send a ping message every PING_INTERVAL or if requested via RPC (peer.m_ping_queued is true).
      *  May mark the peer to be disconnected if a ping has timed out.
      *  We use mockable time for ping timeouts, so setmocktime may cause pings
@@ -1723,6 +1726,242 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
         pnode.AdvertisedVersion(), my_height,
         fLogIPs ? strprintf(", them=%s", your_addr.ToStringAddrPort()) : "",
         my_tx_relay, pnode.GetId());
+}
+
+void PeerManagerImpl::ProcessVersion(CNode& pfrom, Peer& peer, const std::string& msg_type, DataStream& vRecv)
+{
+    if (pfrom.nVersion != 0) {
+        LogDebug(BCLog::NET, "redundant version message from peer=%d\n", pfrom.GetId());
+        return;
+    }
+
+    int64_t nTime;
+    CService addrMe;
+    uint64_t nNonce = 1;
+    ServiceFlags nServices;
+    int nVersion;
+    std::string cleanSubVer;
+    int starting_height = -1;
+    bool fRelay = true;
+
+    vRecv >> nVersion >> Using<CustomUintFormatter<8>>(nServices) >> nTime;
+    if (nTime < 0) {
+        nTime = 0;
+    }
+    vRecv.ignore(8); // Ignore the addrMe service bits sent by the peer
+    vRecv >> CNetAddr::V1(addrMe);
+    if (!pfrom.IsInboundConn() && !pfrom.IsPrivateBroadcastConn())
+    {
+        // Overwrites potentially existing services. In contrast to this,
+        // unvalidated services received via gossip relay in ADDR/ADDRV2
+        // messages are only ever added but cannot replace existing ones.
+        m_addrman.SetServices(pfrom.addr, nServices);
+    }
+    if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
+    {
+        LogDebug(BCLog::NET, "peer does not offer the expected services (%08x offered, %08x expected), %s",
+                 nServices,
+                 GetDesirableServiceFlags(nServices),
+                 pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    if (nVersion < MIN_PEER_PROTO_VERSION) {
+        // disconnect from peers older than this proto version
+        LogDebug(BCLog::NET, "peer using obsolete version %i, %s", nVersion, pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    if (!vRecv.empty()) {
+        // The version message includes information about the sending node which we don't use:
+        //   - 8 bytes (service bits)
+        //   - 16 bytes (ipv6 address)
+        //   - 2 bytes (port)
+        vRecv.ignore(26);
+        vRecv >> nNonce;
+    }
+    if (!vRecv.empty()) {
+        std::string strSubVer;
+        vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
+        cleanSubVer = SanitizeString(strSubVer);
+    }
+    if (!vRecv.empty()) {
+        vRecv >> starting_height;
+    }
+    if (!vRecv.empty())
+        vRecv >> fRelay;
+    // Disconnect if we connected to ourself
+    if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
+    {
+        LogInfo("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    if (pfrom.IsInboundConn() && addrMe.IsRoutable())
+    {
+        SeenLocal(addrMe);
+    }
+
+    // Inbound peers send us their version message when they connect.
+    // We send our version message in response.
+    if (pfrom.IsInboundConn()) {
+        PushNodeVersion(pfrom, peer);
+    }
+
+    // Change version
+    const int greatest_common_version = std::min(nVersion, pfrom.AdvertisedVersion());
+    pfrom.SetCommonVersion(greatest_common_version);
+    pfrom.nVersion = nVersion;
+
+    pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
+    peer.m_their_services = nServices;
+    pfrom.SetAddrLocal(addrMe);
+    {
+        LOCK(pfrom.m_subver_mutex);
+        pfrom.cleanSubVer = cleanSubVer;
+    }
+
+    // Only initialize the Peer::TxRelay m_relay_txs data structure if:
+    // - this isn't an outbound block-relay-only connection, and
+    // - this isn't an outbound feeler connection, and
+    // - fRelay=true (the peer wishes to receive transaction announcements)
+    //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
+    //   the peer may turn on transaction relay later.
+    if (!pfrom.IsBlockOnlyConn() &&
+        !pfrom.IsFeelerConn() &&
+        (fRelay || (peer.m_our_services & NODE_BLOOM))) {
+        auto* const tx_relay = peer.SetTxRelay();
+        {
+            LOCK(tx_relay->m_bloom_filter_mutex);
+            tx_relay->m_relay_txs = fRelay; // set to true after we get the first filter* message
+        }
+        if (fRelay) pfrom.m_relays_txs = true;
+    }
+
+    const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
+    LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, %s%s",
+             cleanSubVer.empty() ? "<no user agent>" : cleanSubVer, pfrom.nVersion,
+             starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.LogPeer(),
+             (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+
+    if (pfrom.IsPrivateBroadcastConn()) {
+        if (fRelay) {
+            MakeAndPushMessage(pfrom, NetMsgType::VERACK);
+        } else {
+            LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: does not support transaction relay (connected in vain), %s",
+                     pfrom.LogPeer());
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    if (greatest_common_version >= WTXID_RELAY_VERSION) {
+        MakeAndPushMessage(pfrom, NetMsgType::WTXIDRELAY);
+    }
+
+    // Signal ADDRv2 support (BIP155).
+    if (greatest_common_version >= 70016) {
+        // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
+        // implementations reject messages they don't know. As a courtesy, don't send
+        // it to nodes with a version before 70016, as no software is known to support
+        // BIP155 that doesn't announce at least that protocol version number.
+        MakeAndPushMessage(pfrom, NetMsgType::SENDADDRV2);
+    }
+
+    if (greatest_common_version >= WTXID_RELAY_VERSION && m_txreconciliation) {
+        // Per BIP-330, we announce txreconciliation support if:
+        // - protocol version per the peer's VERSION message supports WTXID_RELAY;
+        // - transaction relay is supported per the peer's VERSION message
+        // - this is not a block-relay-only connection and not a feeler
+        // - this is not an addr fetch connection;
+        // - we are not in -blocksonly mode.
+        const auto* tx_relay = peer.GetTxRelay();
+        if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
+            !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
+            const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
+            MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
+                               TXRECONCILIATION_VERSION, recon_salt);
+        }
+    }
+
+    if (greatest_common_version >= FEATURE_VERSION) {
+        // announce supported features
+        // MakeAndPushFeature(pfrom, NetMsgFeature::FOO, uint32_t{1});
+    }
+
+    // If we have too many tx-relaying inbound peers, attempt to evict an existing one.
+    // Only if this fails, disconnect this peer.
+    if (MaybeDisconnectForTxRelayCapacity(pfrom, msg_type, /*protect_peer=*/pfrom.GetId())) return;
+    MakeAndPushMessage(pfrom, NetMsgType::VERACK);
+
+    // Potentially mark this peer as a preferred download peer.
+    {
+        LOCK(cs_main);
+        CNodeState* state = State(pfrom.GetId());
+        state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(peer);
+        m_num_preferred_download_peers += state->fPreferredDownload;
+    }
+
+    // Attempt to initialize address relay for outbound peers and use result
+    // to decide whether to send GETADDR, so that we don't send it to
+    // inbound, feelers, or outbound block-relay-only peers.
+    bool send_getaddr{false};
+    if (!pfrom.IsInboundConn()) {
+        send_getaddr = SetupAddressRelay(pfrom, peer);
+    }
+    if (send_getaddr) {
+        // Do a one-time address fetch to help populate/update our addrman.
+        // If we're starting up for the first time, our addrman may be pretty
+        // empty, so this mechanism is important to help us connect to the network.
+        // We skip this for block-relay-only peers. We want to avoid
+        // potentially leaking addr information and we do not want to
+        // indicate to the peer that we will participate in addr relay.
+        MakeAndPushMessage(pfrom, NetMsgType::GETADDR);
+        // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
+        // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
+        peer.m_addr_token_bucket += MAX_ADDR_TO_SEND;
+    }
+
+    if (!pfrom.IsInboundConn()) {
+        // For non-inbound connections, we update the addrman to record
+        // connection success so that addrman will have an up-to-date
+        // notion of which peers are online and available.
+        //
+        // While we strive to not leak information about block-relay-only
+        // connections via the addrman, not moving an address to the tried
+        // table is also potentially detrimental because new-table entries
+        // are subject to eviction in the event of addrman collisions.  We
+        // mitigate the information-leak by never calling
+        // AddrMan::Connected() on block-relay-only peers; see
+        // FinalizeNode().
+        //
+        // This moves an address from New to Tried table in Addrman,
+        // resolves tried-table collisions, etc.
+        m_addrman.Good(pfrom.addr);
+    }
+
+    peer.m_time_offset = NodeSeconds{std::chrono::seconds{nTime}} - Now<NodeSeconds>();
+    if (!pfrom.IsInboundConn()) {
+        // Don't use timedata samples from inbound peers to make it
+        // harder for others to create false warnings about our clock being out of sync.
+        m_outbound_time_offsets.Add(peer.m_time_offset);
+        m_outbound_time_offsets.WarnIfOutOfSync();
+    }
+
+    // If the peer is old enough to have the old alert system, send it the final alert.
+    if (greatest_common_version <= 70012) {
+        constexpr auto finalAlert{"60010000000000000000000000ffffff7f00000000ffffff7ffeffff7f01ffffff7f00000000ffffff7f00ffffff7f002f555247454e543a20416c657274206b657920636f6d70726f6d697365642c2075706772616465207265717569726564004630440220653febd6410f470f6bae11cad19c48413becb1ac2c17f908fd0fd53bdc3abd5202206d0e9c96fe88d4a0f01ed9dedae2b6f9e00da94cad0fecaae66ecf689bf71b50"_hex};
+        MakeAndPushMessage(pfrom, "alert", finalAlert);
+    }
+
+    // Feeler connections exist only to verify if address is online.
+    if (pfrom.IsFeelerConn()) {
+        LogDebug(BCLog::NET, "feeler connection completed, %s", pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+    }
 }
 
 void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, NodeClock::time_point time)
@@ -4495,238 +4734,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
 
     if (msg_type == NetMsgType::VERSION) {
-        if (pfrom.nVersion != 0) {
-            LogDebug(BCLog::NET, "redundant version message from peer=%d\n", pfrom.GetId());
-            return;
-        }
-
-        int64_t nTime;
-        CService addrMe;
-        uint64_t nNonce = 1;
-        ServiceFlags nServices;
-        int nVersion;
-        std::string cleanSubVer;
-        int starting_height = -1;
-        bool fRelay = true;
-
-        vRecv >> nVersion >> Using<CustomUintFormatter<8>>(nServices) >> nTime;
-        if (nTime < 0) {
-            nTime = 0;
-        }
-        vRecv.ignore(8); // Ignore the addrMe service bits sent by the peer
-        vRecv >> CNetAddr::V1(addrMe);
-        if (!pfrom.IsInboundConn() && !pfrom.IsPrivateBroadcastConn())
-        {
-            // Overwrites potentially existing services. In contrast to this,
-            // unvalidated services received via gossip relay in ADDR/ADDRV2
-            // messages are only ever added but cannot replace existing ones.
-            m_addrman.SetServices(pfrom.addr, nServices);
-        }
-        if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
-        {
-            LogDebug(BCLog::NET, "peer does not offer the expected services (%08x offered, %08x expected), %s",
-                     nServices,
-                     GetDesirableServiceFlags(nServices),
-                     pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        if (nVersion < MIN_PEER_PROTO_VERSION) {
-            // disconnect from peers older than this proto version
-            LogDebug(BCLog::NET, "peer using obsolete version %i, %s", nVersion, pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        if (!vRecv.empty()) {
-            // The version message includes information about the sending node which we don't use:
-            //   - 8 bytes (service bits)
-            //   - 16 bytes (ipv6 address)
-            //   - 2 bytes (port)
-            vRecv.ignore(26);
-            vRecv >> nNonce;
-        }
-        if (!vRecv.empty()) {
-            std::string strSubVer;
-            vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
-            cleanSubVer = SanitizeString(strSubVer);
-        }
-        if (!vRecv.empty()) {
-            vRecv >> starting_height;
-        }
-        if (!vRecv.empty())
-            vRecv >> fRelay;
-        // Disconnect if we connected to ourself
-        if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
-        {
-            LogInfo("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
-        if (pfrom.IsInboundConn() && addrMe.IsRoutable())
-        {
-            SeenLocal(addrMe);
-        }
-
-        // Inbound peers send us their version message when they connect.
-        // We send our version message in response.
-        if (pfrom.IsInboundConn()) {
-            PushNodeVersion(pfrom, peer);
-        }
-
-        // Change version
-        const int greatest_common_version = std::min(nVersion, pfrom.AdvertisedVersion());
-        pfrom.SetCommonVersion(greatest_common_version);
-        pfrom.nVersion = nVersion;
-
-        pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
-        peer.m_their_services = nServices;
-        pfrom.SetAddrLocal(addrMe);
-        {
-            LOCK(pfrom.m_subver_mutex);
-            pfrom.cleanSubVer = cleanSubVer;
-        }
-
-        // Only initialize the Peer::TxRelay m_relay_txs data structure if:
-        // - this isn't an outbound block-relay-only connection, and
-        // - this isn't an outbound feeler connection, and
-        // - fRelay=true (the peer wishes to receive transaction announcements)
-        //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
-        //   the peer may turn on transaction relay later.
-        if (!pfrom.IsBlockOnlyConn() &&
-            !pfrom.IsFeelerConn() &&
-            (fRelay || (peer.m_our_services & NODE_BLOOM))) {
-            auto* const tx_relay = peer.SetTxRelay();
-            {
-                LOCK(tx_relay->m_bloom_filter_mutex);
-                tx_relay->m_relay_txs = fRelay; // set to true after we get the first filter* message
-            }
-            if (fRelay) pfrom.m_relays_txs = true;
-        }
-
-        const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-        LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, %s%s",
-                  cleanSubVer.empty() ? "<no user agent>" : cleanSubVer, pfrom.nVersion,
-                  starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.LogPeer(),
-                  (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
-
-        if (pfrom.IsPrivateBroadcastConn()) {
-            if (fRelay) {
-                MakeAndPushMessage(pfrom, NetMsgType::VERACK);
-            } else {
-                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: does not support transaction relay (connected in vain), %s",
-                         pfrom.LogPeer());
-                pfrom.fDisconnect = true;
-            }
-            return;
-        }
-
-        if (greatest_common_version >= WTXID_RELAY_VERSION) {
-            MakeAndPushMessage(pfrom, NetMsgType::WTXIDRELAY);
-        }
-
-        // Signal ADDRv2 support (BIP155).
-        if (greatest_common_version >= 70016) {
-            // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
-            // implementations reject messages they don't know. As a courtesy, don't send
-            // it to nodes with a version before 70016, as no software is known to support
-            // BIP155 that doesn't announce at least that protocol version number.
-            MakeAndPushMessage(pfrom, NetMsgType::SENDADDRV2);
-        }
-
-        if (greatest_common_version >= WTXID_RELAY_VERSION && m_txreconciliation) {
-            // Per BIP-330, we announce txreconciliation support if:
-            // - protocol version per the peer's VERSION message supports WTXID_RELAY;
-            // - transaction relay is supported per the peer's VERSION message
-            // - this is not a block-relay-only connection and not a feeler
-            // - this is not an addr fetch connection;
-            // - we are not in -blocksonly mode.
-            const auto* tx_relay = peer.GetTxRelay();
-            if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
-                !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
-                const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
-                MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
-                                   TXRECONCILIATION_VERSION, recon_salt);
-            }
-        }
-
-        if (greatest_common_version >= FEATURE_VERSION) {
-            // announce supported features
-            // MakeAndPushFeature(pfrom, NetMsgFeature::FOO, uint32_t{1});
-        }
-
-        // If we have too many tx-relaying inbound peers, attempt to evict an existing one.
-        // Only if this fails, disconnect this peer.
-        if (MaybeDisconnectForTxRelayCapacity(pfrom, msg_type, /*protect_peer=*/pfrom.GetId())) return;
-        MakeAndPushMessage(pfrom, NetMsgType::VERACK);
-
-        // Potentially mark this peer as a preferred download peer.
-        {
-            LOCK(cs_main);
-            CNodeState* state = State(pfrom.GetId());
-            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(peer);
-            m_num_preferred_download_peers += state->fPreferredDownload;
-        }
-
-        // Attempt to initialize address relay for outbound peers and use result
-        // to decide whether to send GETADDR, so that we don't send it to
-        // inbound, feelers, or outbound block-relay-only peers.
-        bool send_getaddr{false};
-        if (!pfrom.IsInboundConn()) {
-            send_getaddr = SetupAddressRelay(pfrom, peer);
-        }
-        if (send_getaddr) {
-            // Do a one-time address fetch to help populate/update our addrman.
-            // If we're starting up for the first time, our addrman may be pretty
-            // empty, so this mechanism is important to help us connect to the network.
-            // We skip this for block-relay-only peers. We want to avoid
-            // potentially leaking addr information and we do not want to
-            // indicate to the peer that we will participate in addr relay.
-            MakeAndPushMessage(pfrom, NetMsgType::GETADDR);
-            // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
-            // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
-            peer.m_addr_token_bucket += MAX_ADDR_TO_SEND;
-        }
-
-        if (!pfrom.IsInboundConn()) {
-            // For non-inbound connections, we update the addrman to record
-            // connection success so that addrman will have an up-to-date
-            // notion of which peers are online and available.
-            //
-            // While we strive to not leak information about block-relay-only
-            // connections via the addrman, not moving an address to the tried
-            // table is also potentially detrimental because new-table entries
-            // are subject to eviction in the event of addrman collisions.  We
-            // mitigate the information-leak by never calling
-            // AddrMan::Connected() on block-relay-only peers; see
-            // FinalizeNode().
-            //
-            // This moves an address from New to Tried table in Addrman,
-            // resolves tried-table collisions, etc.
-            m_addrman.Good(pfrom.addr);
-        }
-
-        peer.m_time_offset = NodeSeconds{std::chrono::seconds{nTime}} - Now<NodeSeconds>();
-        if (!pfrom.IsInboundConn()) {
-            // Don't use timedata samples from inbound peers to make it
-            // harder for others to create false warnings about our clock being out of sync.
-            m_outbound_time_offsets.Add(peer.m_time_offset);
-            m_outbound_time_offsets.WarnIfOutOfSync();
-        }
-
-        // If the peer is old enough to have the old alert system, send it the final alert.
-        if (greatest_common_version <= 70012) {
-            constexpr auto finalAlert{"60010000000000000000000000ffffff7f00000000ffffff7ffeffff7f01ffffff7f00000000ffffff7f00ffffff7f002f555247454e543a20416c657274206b657920636f6d70726f6d697365642c2075706772616465207265717569726564004630440220653febd6410f470f6bae11cad19c48413becb1ac2c17f908fd0fd53bdc3abd5202206d0e9c96fe88d4a0f01ed9dedae2b6f9e00da94cad0fecaae66ecf689bf71b50"_hex};
-            MakeAndPushMessage(pfrom, "alert", finalAlert);
-        }
-
-        // Feeler connections exist only to verify if address is online.
-        if (pfrom.IsFeelerConn()) {
-            LogDebug(BCLog::NET, "feeler connection completed, %s", pfrom.DisconnectMsg());
-            pfrom.fDisconnect = true;
-        }
+        ProcessVersion(pfrom, peer, msg_type, vRecv);
         return;
     }
 
