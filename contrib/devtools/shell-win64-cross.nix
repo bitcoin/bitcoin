@@ -8,12 +8,7 @@
   }) {} }:
 
 let
-  host = builtins.getEnv "HOST";
-  baseCrossPkgs = if host == "x86_64-w64-mingw32ucrt"
-    then pkgs.pkgsCross.ucrt64
-    else if host == "x86_64-w64-mingw32"
-      then pkgs.pkgsCross.mingwW64
-      else throw "Unsupported HOST: ${host}";
+  baseCrossPkgs = pkgs.pkgsCross.ucrt64;
   crossPkgs = baseCrossPkgs.extend (_: _: {
     threads = {
       model = "posix";
