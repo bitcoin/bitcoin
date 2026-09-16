@@ -18,6 +18,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
+#include <kernel/notifications_interface.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -31,6 +32,7 @@
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/result.h>
@@ -742,10 +744,9 @@ public:
      * If FlushStateMode::NONE is used, then FlushStateToDisk(...) won't do anything
      * besides checking if we need to prune.
      *
-     * @returns true unless a system error occurred
+     * @returns a FatalError if a system error occurred
      */
-    bool FlushStateToDisk(
-        BlockValidationState& state,
+    [[nodiscard]] util::Expected<void, kernel::FatalError> FlushStateToDisk(
         FlushStateMode mode,
         int nManualPruneHeight = 0);
 
