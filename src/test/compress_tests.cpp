@@ -8,6 +8,7 @@
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/common.h>
 
 #include <cstdint>
 #include <vector>
@@ -170,8 +171,7 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
         // instead of being an unspendable off-curve P2PK script.
         DataStream s = DataStream{} << VARINT(compression_id) << std::span{compressed_script};
         CScript restored;
-        s >> Using<ScriptCompression>(restored); // TODO: throw instead of leaving script empty
-        BOOST_CHECK(restored.empty());
+        BOOST_CHECK_EXCEPTION(s >> Using<ScriptCompression>(restored), std::ios_base::failure, HasReason{"Non-decodable compressed script"});
     }
 
     // Check off-curve script serialization round-trips properly
