@@ -150,7 +150,7 @@ KeyOriginInfo DeserializeKeyOrigin(Stream& s, uint64_t length)
     for (unsigned int i = 4; i < length; i += sizeof(uint32_t)) {
         uint32_t index;
         s >> index;
-        hd_keypath.path.push_back(index);
+        hd_keypath.path.emplace_back(index);
     }
     return hd_keypath;
 }

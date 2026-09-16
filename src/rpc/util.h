@@ -14,6 +14,7 @@
 #include <script/script.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/bip32.h>
 #include <util/check.h>
 
 #include <cstddef>
@@ -153,7 +154,7 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, bool expand_priv = false);
 
 //! Parse BIP32 path
-std::vector<uint32_t> ParsePathBIP32(const std::string& path);
+KeyPath ParsePathBIP32(const std::string& path);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
