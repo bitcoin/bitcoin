@@ -1265,7 +1265,8 @@ public:
      * its BlockChecked method called whenever *any* block completes validation.
      *
      * Note that we guarantee that either the proof-of-work is valid on block, or
-     * (and possibly also) BlockChecked will have been called.
+     * (and possibly also) BlockChecked will have been called. BlockChecked is
+     * not called for a block whose validation was aborted by a fatal error.
      *
      * May not be called in a validationinterface callback.
      *
@@ -1277,9 +1278,12 @@ public:
      *                               block header is already present in block
      *                               index then this parameter has no effect)
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
+     * @returns     true if the block was processed, independently of block validity,
+     *              false if it was not, or a FatalError if a fatal system error
+     *              occurred. In the latter case the fatalError notification has
+     *              already fired.
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    [[nodiscard]] util::Expected<bool, kernel::FatalError> ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
@@ -1289,7 +1293,7 @@ public:
      *
      * @param[in]  headers The block headers themselves
      * @param[in]  min_pow_checked  True if proof-of-work anti-DoS checks have been done by caller for headers chain
-     * @param[out] state This may be set to an Error state if any error occurred processing them
+     * @param[out] state This will be set to an Invalid state if any header is invalid.
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      * @returns false if AcceptBlockHeader fails on any of the headers, true otherwise (including if headers were already known)
      */

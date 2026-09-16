@@ -50,6 +50,8 @@ public:
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
+     *  On a fatal node error, returns false with @p reason set to "inconclusive"
+     *  and the error message in @p debug.
      *  @return whether the block was accepted as a new valid block. */
     bool SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug);
 

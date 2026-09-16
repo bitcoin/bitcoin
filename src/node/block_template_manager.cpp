@@ -10,6 +10,7 @@
 #include <consensus/validation.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <kernel/notifications_interface.h>
 #include <node/block_validation_state_catcher.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
@@ -18,6 +19,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/signalinterrupt.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -63,16 +65,22 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
     auto sc = std::make_shared<BlockValidationStateCatcher>(block->GetHash());
     CHECK_NONFATAL(m_chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
-    bool accepted = m_chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    auto res{m_chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block)};
+    bool accepted = res.value_or(false);
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(m_chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
     if (!new_block && accepted) {
         reason = "duplicate";
+    } else if (!res) {
+        // A fatal node error is not a validation result. Keep reason within
+        // its existing values and report the error message as debug detail.
+        reason = "inconclusive";
+        debug = res.error().message();
     } else if (!accepted && (!sc->m_state || sc->m_state->IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example
-        // from an activation or system error. It can also fail after a valid
+        // from an interrupted activation. It can also fail after a valid
         // BlockChecked result. In these cases the validation result is
         // inconclusive.
         reason = "inconclusive";
