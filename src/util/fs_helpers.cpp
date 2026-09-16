@@ -136,14 +136,16 @@ bool FileCommit(FILE* file)
     return true;
 }
 
-void DirectoryCommit(const fs::path& dirname)
+bool DirectoryCommit(const fs::path& dirname)
 {
 #ifndef WIN32
-    FILE* file = fsbridge::fopen(dirname, "r");
-    if (file) {
-        fsync(fileno(file));
-        fclose(file);
+    if (FILE* file{fsbridge::fopen(dirname, "r")}) {
+        const bool success{!fsync(fileno(file))};
+        return !fclose(file) && success;
     }
+    return false;
+#else
+    return true;
 #endif
 }
 

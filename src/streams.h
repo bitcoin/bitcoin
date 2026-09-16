@@ -450,7 +450,7 @@ public:
     /** Continue with a different XOR key */
     void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
-    /** Implementation detail, only used internally. */
+    /** Read up to dst.size() bytes and return the number read, without throwing on short reads. */
     std::size_t detail_fread(std::span<std::byte> dst);
 
     /** Wrapper around fseek(). Will throw if seeking is not possible. */
