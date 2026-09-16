@@ -151,6 +151,30 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient, /*will_send_to_address=*/addr_nonexistent).has_value());
 }
 
+BOOST_AUTO_TEST_CASE(complete_all_initial_sends)
+{
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+
+    // Pick the first send, then receive the transaction back from the network.
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/1, address).value(), tx);
+    BOOST_REQUIRE(pb.MarkReceived(tx));
+    BOOST_CHECK(pb.GetBroadcastInfo().empty());
+
+    // Receipt must not prevent either of the two remaining initial sends.
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/3, address).value(), tx);
+
+    // Disconnecting after handshake does not allow another connection
+    pb.NodeDisconnected(/*nodeid=*/1);
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/4, address).has_value());
+}
+
 BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
 {
     FakeNodeClock clock{};
@@ -184,6 +208,9 @@ BOOST_AUTO_TEST_CASE(send_attempt_limit)
 
     NodeId node_id{0};
     for (size_t attempt{0}; attempt < max_attempts; ++attempt) {
+        if (attempt >= PrivateBroadcast::INITIAL_BROADCAST_COUNT) {
+            BOOST_REQUIRE(pb.TryGrantRetry(tx));
+        }
         BOOST_CHECK(pb.HavePendingTransactions());
         BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
     }
@@ -191,6 +218,7 @@ BOOST_AUTO_TEST_CASE(send_attempt_limit)
     // The transaction and its complete send history remain available, but no
     // further connections should be opened for it.
     BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.TryGrantRetry(tx));
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).has_value());
     const auto info{pb.GetBroadcastInfo()};
     BOOST_REQUIRE_EQUAL(info.size(), 1);
