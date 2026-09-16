@@ -862,8 +862,7 @@ public:
 
 protected:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
-    bool ConnectTip(
-        BlockValidationState& state,
+    [[nodiscard]] util::Expected<BlockValidationState, kernel::FatalError> ConnectTip(
         CBlockIndex* pindexNew,
         std::shared_ptr<const CBlock> block_to_connect,
         std::vector<ConnectedBlock>& connected_blocks,
