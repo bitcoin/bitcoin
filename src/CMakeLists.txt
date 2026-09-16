@@ -211,6 +211,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   kernel/cs_main.cpp
   kernel/disconnected_transactions.cpp
   kernel/mempool_removal_reason.cpp
+  kernel/notifications_interface.cpp
   mapport.cpp
   net.cpp
   net_processing.cpp
