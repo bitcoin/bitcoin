@@ -144,7 +144,10 @@ public:
     inline I constexpr Map(I a) const { return a; }
 };
 
+#if __cplusplus >= 201703L
+    inline
+#endif // __cplusplus >= 201703L
 /** A singleton for the identity transformation. */
-constexpr IdTrans ID_TRANS{};
+    constexpr IdTrans ID_TRANS{};
 
 #endif
