@@ -3498,7 +3498,7 @@ util::Expected<bool, kernel::FatalError> Chainstate::ActivateBestChain(std::shar
     return true;
 }
 
-bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+util::Expected<bool, kernel::FatalError> Chainstate::PreciousBlock(CBlockIndex* pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
@@ -3526,11 +3526,8 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
         }
     }
 
-    auto res{ActivateBestChain(std::shared_ptr<const CBlock>())};
-    if (!res) {
-        state.Error(res.error().message());
-    }
-    return res.value_or(false);
+    // No block data is supplied; ActivateBestChain will read it from disk.
+    return ActivateBestChain(/*pblock=*/nullptr);
 }
 
 util::Expected<bool, kernel::FatalError> Chainstate::InvalidateBlock(CBlockIndex* const pindex)
