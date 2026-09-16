@@ -49,6 +49,7 @@
 #include <cstddef>
 #include <functional>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -415,16 +416,19 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
-    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    auto res{chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block)};
+    bool accepted = res.value_or(false);
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
     if (!new_block && accepted) {
         reason = "duplicate";
+    } else if (!res) {
+        reason = res.error().message();
     } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example
-        // from an activation or system error. It can also fail after a valid
+        // from an interrupted activation. It can also fail after a valid
         // BlockChecked result. In these cases the validation result is
         // inconclusive.
         reason = "inconclusive";

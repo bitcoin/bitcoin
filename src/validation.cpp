@@ -4417,7 +4417,7 @@ util::Expected<BlockValidationState, kernel::FatalError> ChainstateManager::Acce
     return state;
 }
 
-bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+util::Expected<bool, kernel::FatalError> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
     AssertLockNotHeld(cs_main);
 
@@ -4435,22 +4435,23 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
         // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
         // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
-        bool ret = CheckBlock(*block, state, GetConsensus());
-        if (ret) {
+        bool accepted{CheckBlock(*block, state, GetConsensus())};
+        if (accepted) {
             // Store to disk
-            auto accept_ret{AcceptBlock(block, &pindex, force_processing, nullptr, new_block, min_pow_checked)};
-            if (!accept_ret) {
-                state.Error(accept_ret.error().message());
-            } else {
-                state = std::move(*accept_ret);
+            auto res{AcceptBlock(block, &pindex, force_processing, nullptr, new_block, min_pow_checked)};
+            if (!res) {
+                LogError("%s: AcceptBlock FAILED (%s)", __func__, res.error().message());
+                return util::Unexpected(std::move(res.error()));
             }
-            ret = state.IsValid();
+            state = std::move(*res);
+            accepted = state.IsValid();
         }
-        if (!ret) {
+
+        if (!accepted) {
             if (m_options.signals) {
                 m_options.signals->BlockChecked(block, state);
             }
-            LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
+            LogError("%s: CheckBlock or AcceptBlock FAILED (%s)", __func__, state.ToString());
             return false;
         }
     }
@@ -4459,14 +4460,14 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
 
     if (auto res{ActiveChainstate().ActivateBestChain(block)}; !res.value_or(false)) {
         LogError("%s: ActivateBestChain failed (%s)", __func__, res ? "" : res.error().message());
-        return false;
+        return res;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
     if (bg_chain) {
         if (auto res{bg_chain->ActivateBestChain(block)}; !res.value_or(false)) {
             LogError("%s: [background] ActivateBestChain failed (%s)", __func__, res ? "" : res.error().message());
-            return false;
+            return res;
         }
     }
 
