@@ -92,13 +92,9 @@ private:
      */
     const std::span<const std::byte> m_asmap;
     std::vector<std::byte> m_loaded_asmap;
+    const uint256 m_asmap_version;
 
-    explicit NetGroupManager(std::span<const std::byte> embedded_asmap, std::vector<std::byte>&& loaded_asmap)
-        : m_asmap{embedded_asmap},
-          m_loaded_asmap{std::move(loaded_asmap)}
-    {
-        assert(m_loaded_asmap.empty() || m_asmap.data() == m_loaded_asmap.data());
-    }
+    explicit NetGroupManager(std::span<const std::byte> embedded_asmap, std::vector<std::byte>&& loaded_asmap);
 };
 
 #endif // BITCOIN_NETGROUP_H
