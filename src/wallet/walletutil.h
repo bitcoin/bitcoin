@@ -96,29 +96,34 @@ public:
         range_end = end;
     }
 
-    void DeserializeDescriptor(const std::string& str)
+    template <typename Stream>
+    void Serialize(Stream& s) const
     {
+        std::string descriptor_str = descriptor->ToString();
+        s << descriptor_str << creation_time << next_index << range_start << range_end;
+    }
+
+    template <typename Stream>
+    static WalletDescriptor FromStream(deserialize_type, Stream& s)
+    {
+        std::string descriptor_str;
+        uint64_t creation_time;
+        int32_t next_index, range_start, range_end;
+        s >> descriptor_str >> creation_time >> next_index >> range_start >> range_end;
+
         std::string error;
         FlatSigningProvider keys;
-        auto descs = Parse(str, keys, error, true);
+        auto descs = Parse(descriptor_str, keys, error, true);
         if (descs.empty()) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }
         if (descs.size() > 1) {
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
-        descriptor = std::move(descs.at(0));
+        return WalletDescriptor(std::move(descs.at(0)), creation_time, range_start, range_end, next_index);
     }
 
-    SERIALIZE_METHODS(WalletDescriptor, obj)
-    {
-        std::string descriptor_str;
-        SER_WRITE(obj, descriptor_str = obj.descriptor->ToString());
-        READWRITE(descriptor_str, obj.creation_time, obj.next_index, obj.range_start, obj.range_end);
-        SER_READ(obj, obj.DeserializeDescriptor(descriptor_str));
-    }
-
-    WalletDescriptor() = default;
+    WalletDescriptor() = delete;
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index)
     : range_start(descriptor->IsRange() ? range_start : 0),
       next_index(next_index),
