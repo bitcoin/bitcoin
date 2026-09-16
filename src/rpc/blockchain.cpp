@@ -27,6 +27,7 @@
 #include <index/coinstatsindex.h>
 #include <interfaces/types.h>
 #include <kernel/coinstats.h>
+#include <kernel/notifications_interface.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
@@ -1740,11 +1741,8 @@ static RPCMethod preciousblock()
         }
     }
 
-    BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
-
-    if (!state.IsValid()) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
+    if (auto res{chainman.ActiveChainstate().PreciousBlock(pblockindex)}; !res) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, res.error().message());
     }
 
     return UniValue::VNULL;
