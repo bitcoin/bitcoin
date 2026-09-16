@@ -2632,7 +2632,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
-    if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
+    if (auto res{m_blockman.WriteBlockUndo(blockundo, *pindex)}; !res) {
+        state.Error(res.error().message());
         return false;
     }
 
@@ -4378,11 +4379,13 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             blockPos = *dbp;
             m_blockman.UpdateBlockInfo(block, pindex->nHeight, blockPos);
         } else {
-            blockPos = m_blockman.WriteBlock(block, pindex->nHeight);
-            if (blockPos.IsNull()) {
-                state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
+            auto res{m_blockman.WriteBlock(block, pindex->nHeight)};
+            if (!res) {
+                state.Error(strprintf("%s: Failed to find position to write new block to disk: %s", __func__, res.error().message()));
                 return false;
             }
+            assert(!res->IsNull());
+            blockPos = *res;
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
@@ -4957,13 +4960,13 @@ bool ChainstateManager::LoadGenesisBlock()
     }
 
     try {
-        FlatFilePos blockPos{m_blockman.WriteBlock(genesis_block, 0)};
-        if (blockPos.IsNull()) {
-            LogError("Writing genesis block to disk failed");
+        auto blockPos{m_blockman.WriteBlock(genesis_block, 0)};
+        if (!blockPos) {
+            LogError("Writing genesis block to disk failed (%s)", blockPos.error().message());
             return false;
         }
         CBlockIndex* pindex{m_blockman.AddToBlockIndex(genesis_block, m_best_header)};
-        ReceivedBlockTransactions(genesis_block, pindex, blockPos);
+        ReceivedBlockTransactions(genesis_block, pindex, *blockPos);
     } catch (const std::runtime_error& e) {
         LogError("Failed to write genesis block: %s", e.what());
         return false;
