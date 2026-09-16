@@ -227,7 +227,7 @@ chain for " target " development."))
                   "--disable-lto"
                   "--disable-nls"
                   "--disable-tm-clone-registry"
-                  #$@(if wchar_t? '() (list "--disable-wchar_t"))
+                  #$@(if wchar_t? '() (list "--disable-wchar_t" "--with-libstdcxx-zoneinfo=no"))
                   #$building-on)))
         ((#:phases phases)
           #~(modify-phases #$phases
