@@ -672,7 +672,8 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                     filtered_groups[filter].Push(group, type, positive_only, /*insert_mixed=*/!positive_only);
                     accepted = true;
                 }
-                if (!accepted) ret_discarded_groups.emplace_back(group);
+                // The positive-only groups are a subset of the mixed ones, don't record them twice
+                if (!accepted && !positive_only) ret_discarded_groups.emplace_back(group);
             }
         }
     };
