@@ -396,7 +396,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         valid_tx_list = self.wallet.create_self_transfer_chain(chain_length=2)
         hex_list = [valid_tx_list[0]["hex"][:-1] + 'X', valid_tx_list[1]["hex"]]
         txid_list = [valid_tx_list[0]["txid"], valid_tx_list[1]["txid"]]
-        assert_raises_rpc_error(-22, "TX decode failed:", node.submitpackage, hex_list)
+        assert_raises_rpc_error(-22, "TX decode failed for tx 0. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", node.submitpackage, hex_list)
         assert txid_list[0] not in node.getrawmempool()
         assert txid_list[1] not in node.getrawmempool()
 
