@@ -450,6 +450,7 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     };
 
     for (const auto& [is_valid, keypath_str, expected] : tests) {
+        BOOST_TEST_INFO_SCOPE(keypath_str);
         const std::optional<KeyPath> res1{ParseHDKeypath(keypath_str)};
         if (!is_valid) {
             BOOST_CHECK_EQUAL(res1.has_value(), false);
