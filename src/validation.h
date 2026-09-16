@@ -402,14 +402,13 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
  *                          is always checked
  * @param[in]   check_merkle_root check the merkle root
  *
- * @return Valid or Invalid state. This doesn't currently return an Error state,
- *         and shouldn't unless there is something wrong with the existing
- *         chainstate. (This is different from functions like AcceptBlock which
- *         can fail trying to save new data.)
+ * @return Valid or Invalid state, or FatalError if something is wrong
+ *         with the existing chainstate. (This is different from functions like
+ *         AcceptBlock which can fail trying to save new data.)
  *
  * For signets the challenge verification is skipped when check_pow is false.
  */
-BlockValidationState TestBlockValidity(
+[[nodiscard]] util::Expected<BlockValidationState, kernel::FatalError> TestBlockValidity(
     Chainstate& chainstate,
     const CBlock& block,
     bool check_pow,
