@@ -353,11 +353,18 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_equal(tx.version, version)
 
     def sendrawtransaction_tests(self):
+        self.log.info("Test sendrawtransaction with malformed transaction data")
+        decode_error = "TX decode failed. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input."
+        assert_raises_rpc_error(-22, decode_error, self.nodes[2].sendrawtransaction, "not-hex")
+
         self.log.info("Test sendrawtransaction with missing input")
         inputs = [{'txid': TXID, 'vout': 1}]  # won't exist
         address = getnewdestination()[2]
         outputs = {address: 4.998}
         rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+
+        assert_raises_rpc_error(-22, decode_error, self.nodes[2].sendrawtransaction, rawtx[:-2])  # valid hex, but decoding runs out of bytes
+        assert_raises_rpc_error(-22, decode_error, self.nodes[2].sendrawtransaction, rawtx + "00")  # valid hex, but superfluous data (invalid tx)
         assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[2].sendrawtransaction, rawtx)
 
         self.log.info("Test sendrawtransaction exceeding, falling short of, and equaling maxburnamount")
