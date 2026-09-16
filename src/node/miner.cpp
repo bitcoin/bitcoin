@@ -15,6 +15,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <interfaces/types.h>
+#include <kernel/notifications_interface.h>
 #include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_args.h>
@@ -31,6 +32,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/feefrac.h>
 #include <util/log.h>
 #include <util/result.h>
@@ -236,8 +238,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
-        if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
-            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
+        auto res{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)};
+        if (!res) {
+            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", res.error().message()));
+        }
+
+        if (!res->IsValid()) {
+            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", res->ToString()));
         }
     }
     const auto time_2{SteadyClock::now()};
