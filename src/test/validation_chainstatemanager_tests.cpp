@@ -741,10 +741,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     //
     // Note that this is not a realistic use of DisconnectTip().
     DisconnectedBlockTransactions unused_pool{MAX_DISCONNECTED_TX_POOL_BYTES};
-    BlockValidationState unused_state;
     {
         LOCK2(::cs_main, bg_chainstate.MempoolMutex());
-        BOOST_CHECK(bg_chainstate.DisconnectTip(unused_state, &unused_pool));
+        BOOST_CHECK(bg_chainstate.DisconnectTip(&unused_pool).has_value());
         unused_pool.clear();  // to avoid queuedTx assertion errors on teardown
     }
     BOOST_CHECK_EQUAL(bg_chainstate.m_chain.Height(), 109);
