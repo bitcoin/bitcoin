@@ -402,14 +402,15 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
  *                          is always checked
  * @param[in]   check_merkle_root check the merkle root
  *
- * @return Valid or Invalid state. This doesn't currently return an Error state,
- *         and shouldn't unless there is something wrong with the existing
- *         chainstate. (This is different from functions like AcceptBlock which
- *         can fail trying to save new data.)
+ * @return Valid or Invalid state. The FatalError alternative is currently
+ *         never returned: ConnectBlock() is called with fJustCheck=true, which
+ *         skips the merkle/witness checks that report a corrupt block and skips
+ *         writing undo data. The util::Expected return type is kept so that a
+ *         fatal error can be propagated should this change in the future.
  *
  * For signets the challenge verification is skipped when check_pow is false.
  */
-BlockValidationState TestBlockValidity(
+[[nodiscard]] util::Expected<BlockValidationState, kernel::FatalError> TestBlockValidity(
     Chainstate& chainstate,
     const CBlock& block,
     bool check_pow,
