@@ -3040,7 +3040,7 @@ util::Expected<BlockValidationState, kernel::FatalError> Chainstate::ConnectTip(
             m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
         }
         if (!state.IsValid()) {
-            if (state.IsInvalid()) InvalidBlockFound(pindexNew, state);
+            InvalidBlockFound(pindexNew, state);
             LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
             return state;
         }
