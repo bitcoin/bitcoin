@@ -865,11 +865,9 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::LoadFromSt
     return std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, id, descriptor, keypool_size, keys, ckeys));
 }
 
-std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
+std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, WalletDescriptor w_desc)
 {
-    WalletDescriptor desc = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
-
-    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, desc, keypool_size));
+    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, w_desc, keypool_size));
 
     LOCK(spkm->cs_desc_man);
     Assert(spkm->m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -1530,7 +1528,7 @@ bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc
 {
     LOCK(cs_desc_man);
     // Compare by using the canonical string to make the hardened indicators consistent for comparison
-    return m_wallet_descriptor.descriptor->ToCanonicalString() == desc.descriptor->ToCanonicalString();
+    return m_wallet_descriptor.Equals(desc);
 }
 
 void DescriptorScriptPubKeyMan::WriteDescriptor()

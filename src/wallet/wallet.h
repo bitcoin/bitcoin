@@ -424,6 +424,10 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    // Records tying together the descriptors that were expanded from a
+    // multipath descriptor, indexed by MultipathDescriptorRecord::GetID.
+    std::map<uint256, MultipathDescriptorRecord> m_multipath_descriptors GUARDED_BY(cs_wallet);
+
     // Appends spk managers into the main 'm_spk_managers'.
     // Must be the only method adding data to it.
     void AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man);
@@ -1002,8 +1006,16 @@ public:
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
     void DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
-    //! Create new DescriptorScriptPubKeyMan and add it to the wallet
-    DescriptorScriptPubKeyMan& SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Create the receive and change DescriptorScriptPubKeyMan if they don't
+    //! exist yet. A record of the multipath descriptor is stored by the call
+    //! that completes the pair.
+    //! @param[in] batch Batch to write the new descriptors with
+    //! @param[in] master_key Master key to derive the descriptors from
+    //! @param[in] output_type The OutputType of the descriptor pair
+    //! @param[in] receive Whether to create the receive descriptor
+    //! @param[in] change Whether to create the change descriptor
+    //! @return The public descriptor strings of the newly created descriptors
+    std::vector<std::string> SetupDescriptorScriptPubKeyManPair(WalletBatch& batch, const CExtKey& master_key, OutputType output_type, bool receive = true, bool change = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void SetupDescriptorScriptPubKeyMans() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1033,6 +1045,19 @@ public:
     //!            a new random HD key will be generated.
     //! @return The master xpub for the added HD key, or a `WalletError` on failure.
     util::Expected<CExtPubKey, WalletError> AddHDKey(const std::optional<CExtKey>& key);
+
+    //! Load a multipath descriptor record into memory (used by LoadWallet)
+    void LoadMultipathDescriptor(MultipathDescriptorRecord multipath_desc) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Add a multipath descriptor record to the wallet, and write it to the wallet database
+    [[nodiscard]] util::Result<void> AddMultipathDescriptor(WalletBatch& batch, MultipathDescriptorRecord multipath_desc) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Get all multipath descriptor records, by record ID
+    const std::map<uint256, MultipathDescriptorRecord>& GetMultipathDescriptors() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return m_multipath_descriptors; }
+
+    //! Get the multipath descriptor that the given wallet descriptor was
+    //! expanded from, if any
+    std::optional<std::string> GetMultipathDescriptor(const uint256& desc_id) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.

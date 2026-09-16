@@ -2682,9 +2682,9 @@ inline std::optional<Node<Key>> DecodeScript(I& in, I last, const Ctx& ctx)
 } // namespace internal
 
 template <typename Ctx>
-inline std::optional<Node<typename Ctx::Key>> FromString(const std::string& str, const Ctx& ctx)
+inline std::optional<Node<typename Ctx::Key>> FromString(std::string_view str, const Ctx& ctx)
 {
-    return internal::Parse<typename Ctx::Key>(str, ctx);
+    return internal::Parse<typename Ctx::Key>(std::span{str.data(), str.size()}, ctx);
 }
 
 template <typename Ctx>
