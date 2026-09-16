@@ -1882,68 +1882,32 @@ enum class ParseScriptContext {
  **/
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, std::string& error, bool allow_multipath, bool& has_hardened)
 {
-    auto parse_elem = [&](std::span<const char> elem) -> std::optional<KeyPathElement> {
-        const auto parsed{ParseKeyPathElement(elem)};
-        if (!parsed) {
-            error = parsed.error();
-            return std::nullopt;
-        }
-        if (parsed->IsHardened()) {
-            has_hardened = true;
-        }
-        return *parsed;
-    };
+    util::Expected<KeyPath, std::string> parsed_keypath = ParseHDKeypath(split, allow_multipath);
+    if (!parsed_keypath) {
+        error = parsed_keypath.error();
+        return false;
+    }
 
     KeyPath path;
     struct MultipathSubstitutes {
         size_t placeholder_index;
-        std::vector<KeyPathElement> values;
+        std::vector<SingleKeyPathElement> values;
     };
     std::optional<MultipathSubstitutes> substitutes;
     has_hardened = false;
 
-    for (size_t i = 1; i < split.size(); ++i) {
-        const std::span<const char>& elem = split[i];
-
-        // Check if element contains multipath specifier
-        if (!elem.empty() && elem.front() == '<' && elem.back() == '>') {
-            if (!allow_multipath) {
-                error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(elem.begin(), elem.end()));
-                return false;
-            }
-            if (substitutes) {
-                error = "Multiple multipath key path specifiers found";
-                return false;
-            }
-
-            // Parse each possible value
-            std::vector<std::span<const char>> nums = Split(std::span(elem.begin()+1, elem.end()-1), ";");
-            if (nums.size() < 2) {
-                error = "Multipath key path specifiers must have at least two items";
-                return false;
-            }
-
+    for (const KeyPathElement& elem : *parsed_keypath) {
+        if (elem.IsMultipath()) {
             substitutes.emplace();
-            std::unordered_set<uint32_t> seen_substitutes;
-            for (const auto& num : nums) {
-                const auto& op_num = parse_elem(num);
-                if (!op_num) return false;
-                auto [_, inserted] = seen_substitutes.insert(op_num->ChildNumber());
-                if (!inserted) {
-                    error = strprintf("Duplicated key path value %u in multipath specifier", op_num->ChildNumber());
-                    return false;
-                }
-                substitutes->values.emplace_back(*op_num);
-            }
-
+            substitutes->values = elem.Indexes();
+            substitutes->placeholder_index = path.size();
             path.emplace_back(0, std::nullopt); // Placeholder for multipath segment
-            substitutes->placeholder_index = path.size() - 1;
+            has_hardened = has_hardened || elem.HasHardened();
         } else {
-            const auto& op_num = parse_elem(elem);
-            if (!op_num) return false;
-            path.emplace_back(*op_num);
+            has_hardened = has_hardened || elem.IsHardened();
+            path.emplace_back(elem);
         }
-    }
+    };
 
     if (!substitutes) {
         out.emplace_back(std::move(path));
@@ -1967,6 +1931,9 @@ enum class ParseScriptContext {
 static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, char& hardened)
 {
     DeriveType type = DeriveType::NON_RANGED;
+    if (split.empty()) {
+        return type;
+    }
     if (std::ranges::equal(split.back(), std::span{"*"}.first(1))) {
         split.pop_back();
         type = DeriveType::UNHARDENED_RANGED;
@@ -2047,6 +2014,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
         error = strprintf("key '%s' is not valid", str);
         return {};
     }
+    split.erase(split.begin());
     std::vector<KeyPath> paths;
     char hardened{'h'};
     DeriveType type = ParseDeriveType(split, hardened);
@@ -2125,7 +2093,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         // Parse any derivation
         DeriveType deriv_type = DeriveType::NON_RANGED;
         std::vector<KeyPath> derivation_multipaths;
-        if (split.size() == 2 && Const("/", split.at(1), /*skip=*/false)) {
+        if (split.size() == 2 && Const("/", split.at(1), /*skip=*/true)) {
             if (!all_bip32) {
                 error = "musig(): derivation requires all participants to be xpubs or xprvs";
                 return {};
@@ -2240,6 +2208,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     static_assert(sizeof(info.fingerprint) == 4, "Fingerprint must be 4 bytes");
     assert(fpr_bytes.size() == 4);
     std::copy_n(fpr_bytes.begin(), info.fingerprint.size(), info.fingerprint.begin());
+    slash_split.erase(slash_split.begin());
     std::vector<KeyPath> path;
     if (!ParseKeyPath(slash_split, path, error, /*allow_multipath=*/false)) return {};
     info.path = path.at(0);
