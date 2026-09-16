@@ -336,8 +336,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
     }
     InvalidateBlock(chainman, branch_block_hash);
     {
-        BlockValidationState state;
-        BOOST_REQUIRE(chainman.ActiveChainstate().ActivateBestChain(state));
+        auto result{chainman.ActiveChainstate().ActivateBestChain()};
+        BOOST_REQUIRE(result && *result);
     }
     BOOST_REQUIRE(txindex.BlockUntilSyncedToCurrentChain());
     BOOST_CHECK(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->GetBlockHash()) == stale_block_hash);
