@@ -28,7 +28,9 @@ if(BUILD_TESTING AND TARGET CapnProto::kj-test)
     mp/test/foo.h
     mp/test/listen_tests.cpp
     mp/test/spawn_tests.cpp
+    mp/test/connect_tests.cpp
     mp/test/test.cpp
+    mp/test/util_tests.cpp
   )
   include(${PROJECT_SOURCE_DIR}/cmake/TargetCapnpSources.cmake)
   target_capnp_sources(mptest ${CMAKE_CURRENT_SOURCE_DIR} mp/test/foo.capnp)

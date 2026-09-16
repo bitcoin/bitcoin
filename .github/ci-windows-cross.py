@@ -104,7 +104,7 @@ def prepare_tests():
         str(workspace / "test" / "get_previous_releases.py"),
     ]
     run(cmd_download_prev_rel)
-    run([sys.executable, "-m", "pip", "install", "pyzmq"])
+    run([sys.executable, "-m", "pip", "install", "pyzmq", "pycapnp"])
 
     dest = workspace / "unit_test_data"
     download_script_assets(dest)

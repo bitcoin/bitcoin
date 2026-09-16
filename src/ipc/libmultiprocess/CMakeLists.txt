@@ -13,7 +13,7 @@ endif()
 include("cmake/compat_find.cmake")
 
 find_package(Threads REQUIRED)
-find_package(CapnProto 0.7 QUIET NO_MODULE)
+find_package(CapnProto 0.9 NO_MODULE)
  if(NOT CapnProto_FOUND)
    message(FATAL_ERROR
      "Cap'n Proto is required but was not found.\n"
@@ -35,9 +35,7 @@ set(CAPNPROTO_CLANG_INCOMPATIBLE FALSE)
 # https://github.com/capnproto/capnproto/blob/master/security-advisories/2022-11-30-0-pointer-list-bounds.md
 # https://capnproto.org/news/2022-11-30-CVE-2022-46149-security-advisory.html
 # https://dwrensha.github.io/capnproto-rust/2022/11/30/out_of_bounds_memory_access_bug.html
-if(CapnProto_VERSION STREQUAL "0.7.0"
-   OR CapnProto_VERSION STREQUAL "0.8.0"
-   OR CapnProto_VERSION STREQUAL "0.9.0"
+if(CapnProto_VERSION STREQUAL "0.9.0"
    OR CapnProto_VERSION STREQUAL "0.9.1"
    OR CapnProto_VERSION STREQUAL "0.10.0"
    OR CapnProto_VERSION STREQUAL "0.10.1"
@@ -193,6 +191,7 @@ target_link_libraries(multiprocess PUBLIC CapnProto::capnp)
 target_link_libraries(multiprocess PUBLIC CapnProto::capnp-rpc)
 target_link_libraries(multiprocess PUBLIC CapnProto::kj)
 target_link_libraries(multiprocess PUBLIC CapnProto::kj-async)
+target_link_libraries(multiprocess PUBLIC Threads::Threads)
 set_target_properties(multiprocess PROPERTIES
     PUBLIC_HEADER "${MP_PUBLIC_HEADERS}")
 install(TARGETS multiprocess EXPORT LibTargets
@@ -205,10 +204,20 @@ add_executable(Libmultiprocess::mpgen ALIAS mpgen)
 target_include_directories(mpgen PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
 target_include_directories(mpgen PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(mpgen PRIVATE CapnProto::capnp)
-target_link_libraries(mpgen PRIVATE CapnProto::capnp-rpc)
 target_link_libraries(mpgen PRIVATE CapnProto::capnpc)
 target_link_libraries(mpgen PRIVATE CapnProto::kj)
+target_link_libraries(mpgen PRIVATE CapnProto::kj-async)
 target_link_libraries(mpgen PRIVATE Threads::Threads)
+# Use CAPNP_EXECUTABLE/CAPNPC_CXX_EXECUTABLE cmake variables set by
+# CapnProtoConfig.cmake rather than reading the CapnProto::capnp_tool
+# IMPORTED_LOCATION directly. On Debian/Ubuntu, IMPORTED_LOCATION is broken
+# by a multiarch cmake packaging bug (see
+# https://github.com/bitcoin-core/libmultiprocess/issues/328), but
+# CapnProtoConfig.cmake works around it by hardcoding the correct paths. On
+# other platforms the variables hold generator expressions that
+# target_compile_definitions evaluates correctly at generation time.
+target_compile_definitions(mpgen PRIVATE CAPNP_EXECUTABLE=\"${CAPNP_EXECUTABLE}\")
+target_compile_definitions(mpgen PRIVATE CAPNPC_CXX_EXECUTABLE=\"${CAPNPC_CXX_EXECUTABLE}\")
 set_target_properties(mpgen PROPERTIES
     INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_target_properties(mpgen PROPERTIES
