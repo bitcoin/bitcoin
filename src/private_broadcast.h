@@ -20,6 +20,9 @@
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
  * - Remove a transaction
+ * - Mark a transaction as resolved, so no more retry send attempts are granted
+ * - Mark a connection finished
+ * - Grant an additional send attempt for an unresolved transaction
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
@@ -29,6 +32,9 @@
 class PrivateBroadcast
 {
 public:
+
+    /// Number of connections to make for initial broadcast.
+    static constexpr size_t INITIAL_COUNT{3};
 
     /// If a transaction is not sent to any peer for this duration,
     /// then we consider it stale / for rebroadcasting.
@@ -93,11 +99,37 @@ public:
     /**
      * Forget a transaction.
      * @param[in] tx Transaction to forget.
-     * @retval !nullopt The number of times the transaction was sent and confirmed
-     * by the recipient (if the transaction existed and was removed).
+     * @retval !nullopt The number of planned send attempts not yet picked
+     * (if the transaction existed and was removed).
      * @retval nullopt The transaction was not in the storage.
      */
     std::optional<size_t> Remove(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Mark a transaction as resolved because it was received back from the network
+     * or is no longer acceptable to the mempool.
+     * @param[in] tx Transaction to resolve.
+     * @return Whether the transaction was found in the storage.
+     */
+    bool MarkResolved(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Mark a connection finished.
+     * @param[in] nodeid Node whose connection has ended.
+     */
+    void NodeDisconnected(NodeId nodeid)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Grant one additional send attempt if the transaction is unresolved, all
+     * planned sends have been picked, and the attempt limit has not been reached.
+     * The caller schedules the connection separately.
+     * @param[in] tx Transaction to retry.
+     * @return Whether an additional send attempt was granted.
+     */
+    bool TryGrantRetry(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -169,6 +201,8 @@ private:
         const NodeClock::time_point picked;
         /// When was the transaction reception confirmed by the node (by PONG).
         std::optional<NodeClock::time_point> confirmed;
+        /// Whether the node has disconnected.
+        bool disconnected{false};
 
         SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
@@ -228,6 +262,10 @@ private:
     struct TxSendStatus {
         NodeClock::time_point time_added{NodeClock::now()};
         std::vector<SendStatus> send_statuses;
+        /// Total number of sends granted, including initial count.
+        size_t planned_sends{INITIAL_COUNT};
+        /// Whether the transaction no longer needs to be retried.
+        bool resolved{false};
     };
     bool IsPending(const TxSendStatus& status) const;
     /// Cap on the number of simultaneously tracked transactions (see Add()).
