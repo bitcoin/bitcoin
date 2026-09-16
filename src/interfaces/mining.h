@@ -174,7 +174,8 @@ public:
      * blocks may then be announced to peers through normal validation signals.
      *
      * @param[in]  block  the complete block to submit
-     * @param[out] reason failure reason (BIP22)
+     * @param[out] reason failure reason (BIP22), or the internal error message
+     *                    if validation could not complete due to a fatal error.
      * @param[out] debug  more detailed rejection reason
      * @returns           true if the block was accepted as a new block. Returns
      *                    false and sets reason if the block is a duplicate or
