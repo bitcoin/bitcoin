@@ -972,7 +972,7 @@ RPCMethod derivehdkey()
                 throw JSONRPCError(RPC_WALLET_ERROR, "derivehdkey is not available for watch-only wallets");
             }
 
-            std::vector<uint32_t> path = ParsePathBIP32(request.params[0].get_str());
+            KeyPath path = ParsePathBIP32(request.params[0].get_str());
             UniValue options{request.params[1].isNull() ? UniValue::VOBJ : request.params[1]};
             const bool priv{options.exists("private") ? options["private"].get_bool() : false};
             UniValue hdkey{options["hdkey"]};
