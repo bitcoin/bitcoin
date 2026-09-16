@@ -93,8 +93,8 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256& block_hash)
 {
     CBlockIndex* block_index{WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash))};
     BOOST_REQUIRE(block_index);
-    BlockValidationState state;
-    BOOST_REQUIRE(chainman.ActiveChainstate().InvalidateBlock(state, block_index));
+    auto result{chainman.ActiveChainstate().InvalidateBlock(block_index)};
+    BOOST_REQUIRE(result && *result);
 }
 
 } // namespace
