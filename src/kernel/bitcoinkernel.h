@@ -2079,6 +2079,15 @@ BITCOINKERNEL_API const btck_BlockHash* btck_block_header_get_prev_hash(
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get the Merkle root from btck_BlockHeader.
+ *
+ * @param[in] header Non-null btck_BlockHeader.
+ * @param[out] output The 32-byte Merkle root.
+ */
+BITCOINKERNEL_API void btck_block_header_get_merkle_root(
+    const btck_BlockHeader* header, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * @brief Get the timestamp from btck_BlockHeader.
  *
  * @param[in] header    Non-null btck_BlockHeader

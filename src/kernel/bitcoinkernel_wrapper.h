@@ -874,6 +874,13 @@ public:
         return BlockHashView{btck_block_header_get_prev_hash(impl())};
     }
 
+    std::array<std::byte, 32> MerkleRoot() const
+    {
+        std::array<std::byte, 32> merkle_root;
+        btck_block_header_get_merkle_root(impl(), reinterpret_cast<unsigned char*>(merkle_root.data()));
+        return merkle_root;
+    }
+
     uint32_t Timestamp() const
     {
         return btck_block_header_get_timestamp(impl());
