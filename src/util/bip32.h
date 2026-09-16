@@ -16,13 +16,19 @@ static constexpr uint32_t BIP32_UNHARDENED_FLAG = 0x0;
 /** BIP32 hardened derivation flag (2^31) */
 static constexpr uint32_t BIP32_HARDENED_FLAG = 0x80000000;
 
-struct KeyPathElement {
+class KeyPathElement {
+private:
     /** Derivation index, without the hardened flag */
-    uint32_t index;
-    bool is_hardened;
+    uint32_t m_index;
+    bool m_hardened;
+
+public:
+    KeyPathElement(uint32_t index, bool hardened) : m_index(index), m_hardened(hardened) {}
 
     /** Derivation index with the hardened flag applied */
-    uint32_t ChildNumber() const { return index | (is_hardened ? BIP32_HARDENED_FLAG : BIP32_UNHARDENED_FLAG); }
+    uint32_t ChildNumber() const { return m_index | (m_hardened ? BIP32_HARDENED_FLAG : BIP32_UNHARDENED_FLAG); }
+
+    bool IsHardened() const { return m_hardened; }
 };
 
 /** Parse a single key path element like "0", "0'", or "0h".
