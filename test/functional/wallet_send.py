@@ -196,6 +196,12 @@ class WalletSendTest(BitcoinTestFramework):
         return res
 
     def run_test(self):
+        self.log.info("Check send help metadata: include_watching is a bool with a bool default")
+        include_watching = [line for line in self.nodes[0].help("send").splitlines() if "include_watching" in line]
+        assert_equal(len(include_watching), 1)
+        assert "bool" in include_watching[0]
+        assert "default=false" in include_watching[0]
+
         self.log.info("Setup wallets...")
         # w0 is a wallet with coinbase rewards
         w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
