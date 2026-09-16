@@ -191,8 +191,6 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 // Internal representation                                                //
 ////////////////////////////////////////////////////////////////////////////
 
-typedef std::vector<uint32_t> KeyPath;
-
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider
 {
@@ -464,8 +462,8 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     {
         if (!GetExtKey(arg, xprv)) return false;
         for (auto entry : m_path) {
-            if (!xprv.Derive(xprv, entry)) return false;
-            if (entry >> 31) {
+            if (!xprv.Derive(xprv, entry.ChildNumber())) return false;
+            if (entry.IsHardened()) {
                 last_hardened = xprv;
             }
         }
@@ -488,8 +486,8 @@ public:
         KeyOriginInfo info;
         info.fingerprint = m_root_extkey.id_key_fingerprint();
         info.path = m_path;
-        if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | BIP32_HARDENED_FLAG);
+        if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.emplace_back((uint32_t)pos, false);
+        if (m_derive == DeriveType::HARDENED_RANGED) info.path.emplace_back(((uint32_t)pos), true);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -517,7 +515,7 @@ public:
             }
         } else {
             for (auto entry : m_path) {
-                if (!parent_extkey.Derive(parent_extkey, entry)) return std::nullopt;
+                if (!parent_extkey.Derive(parent_extkey, entry.ChildNumber())) return std::nullopt;
             }
             final_extkey = parent_extkey;
             if (m_derive == DeriveType::UNHARDENED_RANGED) der = parent_extkey.Derive(final_extkey, pos);
@@ -581,7 +579,7 @@ public:
         // Step backwards to find the last hardened step in the path
         int i = (int)m_path.size() - 1;
         for (; i >= 0; --i) {
-            if (m_path.at(i) >> 31) {
+            if (m_path.at(i).IsHardened()) {
                 break;
             }
         }
@@ -1882,7 +1880,7 @@ enum class ParseScriptContext {
  **/
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
 {
-    auto parse_elem = [&](std::span<const char> elem) -> std::optional<uint32_t> {
+    auto parse_elem = [&](std::span<const char> elem) -> std::optional<KeyPathElement> {
         const auto parsed{ParseKeyPathElement(elem)};
         if (!parsed) {
             error = parsed.error();
@@ -1892,13 +1890,13 @@ enum class ParseScriptContext {
             has_hardened = true;
             apostrophe = elem.back() == '\'';
         }
-        return parsed->ChildNumber();
+        return *parsed;
     };
 
     KeyPath path;
     struct MultipathSubstitutes {
         size_t placeholder_index;
-        std::vector<uint32_t> values;
+        std::vector<KeyPathElement> values;
     };
     std::optional<MultipathSubstitutes> substitutes;
     has_hardened = false;
@@ -1929,15 +1927,15 @@ enum class ParseScriptContext {
             for (const auto& num : nums) {
                 const auto& op_num = parse_elem(num);
                 if (!op_num) return false;
-                auto [_, inserted] = seen_substitutes.insert(*op_num);
+                auto [_, inserted] = seen_substitutes.insert(op_num->ChildNumber());
                 if (!inserted) {
-                    error = strprintf("Duplicated key path value %u in multipath specifier", *op_num);
+                    error = strprintf("Duplicated key path value %u in multipath specifier", op_num->ChildNumber());
                     return false;
                 }
                 substitutes->values.emplace_back(*op_num);
             }
 
-            path.emplace_back(); // Placeholder for multipath segment
+            path.emplace_back(0, false); // Placeholder for multipath segment
             substitutes->placeholder_index = path.size() - 1;
         } else {
             const auto& op_num = parse_elem(elem);
@@ -1950,7 +1948,7 @@ enum class ParseScriptContext {
         out.emplace_back(std::move(path));
     } else {
         // Replace the multipath placeholder with each value while generating paths
-        for (uint32_t substitute : substitutes->values) {
+        for (KeyPathElement substitute : substitutes->values) {
             KeyPath branch_path = path;
             branch_path[substitutes->placeholder_index] = substitute;
             out.emplace_back(std::move(branch_path));

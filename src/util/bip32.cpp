@@ -38,45 +38,52 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
     return KeyPathElement{*number, is_hardened};
 }
 
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
+std::optional<KeyPath> ParseHDKeypath(const std::string& keypath_str)
 {
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
+    KeyPath keypath;
     while (std::getline(ss, item, '/') || std::getline(ss, item, 'h')) {
         if (item.compare("m") == 0) {
             if (first) {
                 first = false;
                 continue;
             }
-            return false;
+            return std::nullopt;
         }
         const auto parsed{ParseKeyPathElement(std::span<const char>{item.data(), item.size()})};
-        if (!parsed) return false;
-        keypath.push_back(parsed->ChildNumber());
+        if (!parsed) return std::nullopt;
+        keypath.push_back(*parsed);
         first = false;
     }
-    return true;
+    return keypath;
 }
 
-std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe)
+std::string FormatHDKeypath(const KeyPath& path, bool apostrophe)
 {
     std::string ret;
     for (auto i : path) {
-        ret += strprintf("/%i", (i << 1) >> 1);
-        if (i >> 31) ret += apostrophe ? '\'' : 'h';
+        ret += i.ToString(apostrophe);
     }
     return ret;
 }
 
-std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe)
+std::string WriteHDKeypath(const KeyPath& keypath, bool apostrophe)
 {
     return "m" + FormatHDKeypath(keypath, apostrophe);
 }
 
-bool HasHardenedDerivation(std::span<const uint32_t> keypath)
+bool HasHardenedDerivation(const KeyPath& keypath)
 {
-    return std::any_of(keypath.begin(), keypath.end(), [](uint32_t index) {
-        return index >> 31;
+    return std::any_of(keypath.begin(), keypath.end(), [](KeyPathElement index) {
+        return index.IsHardened();
     });
+}
+
+std::string KeyPathElement::ToString(bool apostrophe) const
+{
+    std::string out = strprintf("/%i", m_index);
+    if (m_hardened) out += apostrophe ? '\'' : 'h';
+    return out;
 }
