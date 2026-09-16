@@ -854,7 +854,7 @@ private:
         : m_socket(std::move(socket)), m_host(host), m_timeout(timeout) {}
     bool SendRequest(std::string_view request);
     HTTPResponse ReadResponse();
-    std::optional<std::string> Recv(std::chrono::time_point<std::chrono::steady_clock> deadline);
+    std::optional<std::string> Recv();
 };
 
 HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout)
@@ -906,13 +906,9 @@ HTTPResponse HTTPClient::Post(const std::string& endpoint,
 
 bool HTTPClient::SendRequest(std::string_view request)
 {
-    const auto deadline{std::chrono::steady_clock::now() + m_timeout};
-
     while (!request.empty()) {
         Sock::Event event{0};
-        auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
-            deadline - std::chrono::steady_clock::now());
-        if (time_left.count() <= 0 || !m_socket->Wait(time_left, Sock::SendEvent, &event)) {
+        if (!m_socket->Wait(m_timeout, Sock::SendEvent, &event)) {
             return false;
         }
 
@@ -938,13 +934,12 @@ HTTPResponse HTTPClient::ReadResponse()
 {
     HTTPResponse response;
     std::string buffer;
-    const auto deadline{std::chrono::steady_clock::now() + m_timeout};
 
     // Read data until we have complete headers
     size_t headers_end = 0;
 
     while (headers_end == 0) {
-        if (auto result{Recv(deadline)}) {
+        if (auto result{Recv()}) {
             buffer.append(*result);
         } else {
             std::this_thread::yield();
@@ -1043,7 +1038,7 @@ HTTPResponse HTTPClient::ReadResponse()
                         size_t crlf_pos = buffer.find("\r\n");
                         if (crlf_pos == std::string::npos) {
                             // Need more data
-                            if (auto result{Recv(deadline)}) {
+                            if (auto result{Recv()}) {
                                 buffer.append(*result);
                             } else {
                                 std::this_thread::yield();
@@ -1075,7 +1070,7 @@ HTTPResponse HTTPClient::ReadResponse()
 
             // Need more data
             while (true) {
-                if (auto result{Recv(deadline)}) {
+                if (auto result{Recv()}) {
                     buffer.append(*result);
                     break;
                 } else {
@@ -1088,7 +1083,7 @@ HTTPResponse HTTPClient::ReadResponse()
     } else if (content_length) {
         // Fixed content length
         while (buffer.size() < *content_length) {
-            if (auto result{Recv(deadline)}) {
+            if (auto result{Recv()}) {
                 buffer.append(*result);
             } else {
                 std::this_thread::yield();
@@ -1104,7 +1099,7 @@ HTTPResponse HTTPClient::ReadResponse()
         // connection (RFC 9112 §6.3, HTTP/1.0 fallback).
         try {
             while (true) {
-                if (auto result{Recv(deadline)}) {
+                if (auto result{Recv()}) {
                     buffer.append(*result);
                 } else {
                     std::this_thread::yield();
@@ -1117,7 +1112,7 @@ HTTPResponse HTTPClient::ReadResponse()
     return response;
 }
 
-std::optional<std::string> HTTPClient::Recv(const std::chrono::time_point<std::chrono::steady_clock> deadline)
+std::optional<std::string> HTTPClient::Recv()
 {
     auto wait_for_readable{[this](std::chrono::milliseconds timeout) -> bool {
         Sock::Event event{0};
@@ -1127,9 +1122,7 @@ std::optional<std::string> HTTPClient::Recv(const std::chrono::time_point<std::c
         return (event & Sock::RecvEvent) != 0;
     }};
 
-    auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
-        deadline - std::chrono::steady_clock::now());
-    if (time_left.count() <= 0 || !wait_for_readable(time_left)) {
+    if (!wait_for_readable(m_timeout)) {
         throw CConnectionFailed{"timeout"};
     }
 
