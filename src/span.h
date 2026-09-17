@@ -7,9 +7,12 @@
 
 #include <cassert>
 #include <cstddef>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <utility>
+
+#include <attributes.h>
 
 /** A span is an object that can refer to a contiguous sequence of objects.
  *
@@ -81,7 +84,14 @@ T& SpanPopBack(std::span<T>& span)
 }
 
 template <typename V>
+    requires std::ranges::borrowed_range<V>
 auto MakeByteSpan(const V& v) noexcept
+{
+    return std::as_bytes(std::span{v});
+}
+template <typename V>
+    requires(!std::ranges::borrowed_range<V>)
+auto MakeByteSpan(const V& v LIFETIMEBOUND) noexcept
 {
     return std::as_bytes(std::span{v});
 }
@@ -108,7 +118,12 @@ concept BasicByte = requires { UCharCast(std::span<B>{}.data()); };
 template <typename T, size_t N> constexpr auto UCharSpanCast(std::span<T, N> s) { return std::span<std::remove_pointer_t<decltype(UCharCast(s.data()))>, N>{UCharCast(s.data()), s.size()}; }
 
 /** Like the std::span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
-template <typename V> constexpr auto MakeUCharSpan(const V& v) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
+template <typename V>
+    requires std::ranges::borrowed_range<V>
+constexpr auto MakeUCharSpan(const V& v) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
+template <typename V>
+    requires(!std::ranges::borrowed_range<V>)
+constexpr auto MakeUCharSpan(const V& v LIFETIMEBOUND) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
 template <typename V> constexpr auto MakeWritableUCharSpan(V&& v) -> decltype(UCharSpanCast(std::span{std::forward<V>(v)})) { return UCharSpanCast(std::span{std::forward<V>(v)}); }
 
 #endif // BITCOIN_SPAN_H
