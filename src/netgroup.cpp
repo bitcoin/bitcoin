@@ -9,11 +9,21 @@
 #include <util/asmap.h>
 #include <util/log.h>
 
+#include <cassert>
 #include <cstddef>
+#include <utility>
+
+NetGroupManager::NetGroupManager(std::span<const std::byte> embedded_asmap, std::vector<std::byte>&& loaded_asmap)
+    : m_asmap{embedded_asmap},
+      m_loaded_asmap{std::move(loaded_asmap)},
+      m_asmap_version{AsmapVersion(m_asmap)}
+{
+    assert(m_loaded_asmap.empty() || m_asmap.data() == m_loaded_asmap.data());
+}
 
 uint256 NetGroupManager::GetAsmapVersion() const
 {
-    return AsmapVersion(m_asmap);
+    return m_asmap_version;
 }
 
 std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
