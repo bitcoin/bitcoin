@@ -370,7 +370,10 @@ def verify_shasums_signature(
     good_trusted: list[SigData] = []
     good_untrusted: list[SigData] = []
     for sig in good:
-        (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        if sig.status != 'expired':
+            (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        else:
+            log.warning(f"INACTIVE SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
     log.info(f"got {num_trusted} good signatures")
 
@@ -393,9 +396,6 @@ def verify_shasums_signature(
 
     for sig in good_untrusted:
         log.info(f"GOOD SIGNATURE (untrusted): {sig}")
-
-    for sig in [sig for sig in good if sig.status == 'expired']:
-        log.warning(f"key {sig.key} for {sig.name} is expired")
 
     for sig in bad:
         log.warning(f"BAD SIGNATURE: {sig}")

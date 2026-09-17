@@ -84,8 +84,8 @@ def test_inactive_signature_quorum():
             assert getattr(args, 'allow_expired', False) is False  # TODO: Honor the flag and environment default
 
         result, good_trusted, good_untrusted, *_ = verify_fake_gpg(parser, options, expired)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Expired keys must not satisfy the quorum
-        assert [sig.key for sig in good_trusted] == ['1111222233334444']  # TODO: Expired keys must not be returned as good
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in
+        assert [sig.key for sig in good_trusted] == []
         assert good_untrusted == []
 
         result, *_ = verify_fake_gpg(parser, options, revoked)
@@ -93,14 +93,14 @@ def test_inactive_signature_quorum():
 
         result, good_trusted, good_untrusted, *_ = verify_fake_gpg(parser, options, active, expired, revoked)
         assert result == verify.ReturnCode.SUCCESS
-        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '1111222233334444', '5555666677778888']  # TODO: Inactive keys must not be returned as good
+        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '5555666677778888']  # TODO: Revoked keys must not be returned as good
         assert good_untrusted == []
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
         assert result == verify.ReturnCode.SUCCESS  # TODO: Inactive keys must not satisfy the quorum
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Inactive keys must not satisfy the quorum
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
 
     print("✓ 'Inactive signature quorum' passed")
 
