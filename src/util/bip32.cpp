@@ -21,11 +21,11 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
         return util::Unexpected{strprintf("Key path value '%s' is not valid", raw)};
     }
 
-    bool is_hardened = false;
-    const char last = elem.back();
+    std::optional<char> last = elem.back();
     if (last == '\'' || last == 'h') {
         elem = elem.first(elem.size() - 1);
-        is_hardened = true;
+    } else {
+        last = std::nullopt;
     }
 
     const auto number{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
@@ -35,7 +35,7 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
     if (*number >= BIP32_HARDENED_FLAG) {
         return util::Unexpected{strprintf("Key path value %u is out of range", *number)};
     }
-    return KeyPathElement{*number, is_hardened};
+    return KeyPathElement{*number, last};
 }
 
 std::optional<KeyPath> ParseHDKeypath(const std::string& keypath_str)
@@ -60,18 +60,18 @@ std::optional<KeyPath> ParseHDKeypath(const std::string& keypath_str)
     return keypath;
 }
 
-std::string FormatHDKeypath(const KeyPath& path, bool apostrophe)
+std::string FormatHDKeypath(const KeyPath& path, const std::optional<char>& hardened_char)
 {
     std::string ret;
     for (auto i : path) {
-        ret += i.ToString(apostrophe);
+        ret += i.ToString(hardened_char);
     }
     return ret;
 }
 
-std::string WriteHDKeypath(const KeyPath& keypath, bool apostrophe)
+std::string WriteHDKeypath(const KeyPath& keypath, const std::optional<char>& hardened_char)
 {
-    return "m" + FormatHDKeypath(keypath, apostrophe);
+    return "m" + FormatHDKeypath(keypath, hardened_char);
 }
 
 bool KeyPath::HasHardenedDerivation() const
@@ -81,9 +81,22 @@ bool KeyPath::HasHardenedDerivation() const
     });
 }
 
-std::string KeyPathElement::ToString(bool apostrophe) const
+void KeyPath::SetHardenedChar(char hardened)
+{
+    for (KeyPathElement& elem : *this) {
+        elem.SetHardenedChar(hardened);
+    }
+}
+
+std::string KeyPathElement::ToString(const std::optional<char>& hardened_char) const
 {
     std::string out = strprintf("/%i", m_index);
-    if (m_hardened) out += apostrophe ? '\'' : 'h';
+    if (m_hardened) {
+        if (hardened_char) {
+            out += hardened_char.value();
+        } else {
+            out += m_hardened.value();
+        }
+    }
     return out;
 }

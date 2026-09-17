@@ -266,23 +266,27 @@ public:
     virtual bool CanSelfExpand() const = 0;
 
 protected:
-    static bool DetermineApostropheUse(StringType type, bool normalized, bool public_apostrophe)
+    static std::optional<char> DetermineHardenedChar(StringType type, bool normalized)
     {
-        bool use_apostrophe{false};
+        std::optional<char> hardened;
         switch (type) {
         case StringType::COMPAT:
             // COMPAT always uses apostrophe to stay compatible with previous versions
-            use_apostrophe = true;
+            hardened = '\'';
             break;
         case StringType::CANONICAL:
             // CANONICAL always uses h
-            use_apostrophe = false;
+            hardened = 'h';
             break;
         case StringType::PUBLIC:
-            use_apostrophe = !normalized && public_apostrophe;
+            // Normalizing always uses h
+            if (normalized) {
+                hardened = 'h';
+            }
+            // Otherwise use whatever the original character was
             break;
         } // no default case, so the compiler can warn about missing cases
-        return use_apostrophe;
+        return hardened;
     }
 };
 
@@ -290,16 +294,14 @@ class OriginPubkeyProvider final : public PubkeyProvider
 {
     KeyOriginInfo m_origin;
     std::unique_ptr<PubkeyProvider> m_provider;
-    bool m_apostrophe;
 
     std::string OriginString(StringType type, bool normalized=false) const
     {
-        bool use_apostrophe{DetermineApostropheUse(type, normalized, m_apostrophe)};
-        return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, use_apostrophe);
+        return HexStr(m_origin.fingerprint) + FormatHDKeypath(m_origin.path, DetermineHardenedChar(type, normalized));
     }
 
 public:
-    OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider, bool apostrophe) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)), m_apostrophe(apostrophe) {}
+    OriginPubkeyProvider(uint32_t exp_index, KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : PubkeyProvider(exp_index), m_origin(std::move(info)), m_provider(std::move(provider)) {}
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
         // Derive into a temporary provider. Another key expression may have already put this
@@ -359,7 +361,7 @@ public:
     }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
-        return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
+        return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone());
     }
     bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
 };
@@ -442,8 +444,8 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     CExtPubKey m_root_extkey;
     KeyPath m_path;
     DeriveType m_derive;
-    // Whether ' or h is used in harded derivation
-    bool m_apostrophe;
+    // Character to use for ranged hardened derivation
+    char m_hardened{'h'};
 
     bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
     {
@@ -477,7 +479,8 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
 public:
-    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive, bool apostrophe) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive), m_apostrophe(apostrophe) {}
+    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
+    BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive, char hardened) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive), m_hardened(hardened) {}
     bool IsRange() const override { return m_derive != DeriveType::NON_RANGED; }
     size_t GetSize() const override { return 33; }
     bool IsBIP32() const override { return true; }
@@ -486,8 +489,8 @@ public:
         KeyOriginInfo info;
         info.fingerprint = m_root_extkey.id_key_fingerprint();
         info.path = m_path;
-        if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.emplace_back((uint32_t)pos, false);
-        if (m_derive == DeriveType::HARDENED_RANGED) info.path.emplace_back(((uint32_t)pos), true);
+        if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.emplace_back((uint32_t)pos, std::nullopt);
+        if (m_derive == DeriveType::HARDENED_RANGED) info.path.emplace_back(((uint32_t)pos), m_hardened);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -543,11 +546,11 @@ public:
     }
     std::string ToString(StringType type, bool normalized) const
     {
-        bool use_apostrophe{DetermineApostropheUse(type, normalized, m_apostrophe)};
-        std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
+        std::optional<char> hardened = DetermineHardenedChar(type, normalized);
+        std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, hardened);
         if (IsRange()) {
             ret += "/*";
-            if (m_derive == DeriveType::HARDENED_RANGED) ret += use_apostrophe ? '\'' : 'h';
+            if (m_derive == DeriveType::HARDENED_RANGED) ret += hardened ? *hardened : m_hardened;
         }
         return ret;
     }
@@ -562,10 +565,10 @@ public:
             out = ToString(StringType::PUBLIC);
             return false;
         }
-        out = EncodeExtKey(key) + FormatHDKeypath(m_path, /*apostrophe=*/m_apostrophe);
+        out = EncodeExtKey(key) + FormatHDKeypath(m_path, /*hardened_char*/std::nullopt);
         if (IsRange()) {
             out += "/*";
-            if (m_derive == DeriveType::HARDENED_RANGED) out += m_apostrophe ? '\'' : 'h';
+            if (m_derive == DeriveType::HARDENED_RANGED) out += m_hardened;
         }
         return true;
     }
@@ -617,8 +620,8 @@ public:
         assert(xpub.pubkey.IsValid());
 
         // Build the string
-        std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
-        out = "[" + origin_str + "]" + EncodeExtPubKey(xpub) + FormatHDKeypath(end_path);
+        std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path, 'h');
+        out = "[" + origin_str + "]" + EncodeExtPubKey(xpub) + FormatHDKeypath(end_path, 'h');
         if (IsRange()) {
             out += "/*";
             assert(m_derive == DeriveType::UNHARDENED_RANGED);
@@ -644,7 +647,7 @@ public:
     }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
-        return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
+        return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_hardened);
     }
     bool CanSelfExpand() const override { return !IsHardened(); }
 };
@@ -710,7 +713,7 @@ public:
             if (IsRangedDerivation() || !m_path.empty()) {
                 // Make the synthetic xpub and construct the BIP32PubkeyProvider
                 CExtPubKey extpub = CreateMuSig2SyntheticXpub(m_aggregate_pubkey.value());
-                m_aggregate_provider = std::make_unique<BIP32PubkeyProvider>(m_expr_index, extpub, m_path, m_derive, /*apostrophe=*/false);
+                m_aggregate_provider = std::make_unique<BIP32PubkeyProvider>(m_expr_index, extpub, m_path, m_derive);
             } else {
                 m_aggregate_provider = std::make_unique<ConstPubkeyProvider>(m_expr_index, m_aggregate_pubkey.value(), /*xonly=*/false);
             }
@@ -762,7 +765,7 @@ public:
             out += pubkey->ToString(type);
         }
         out += ")";
-        out += FormatHDKeypath(m_path);
+        out += FormatHDKeypath(m_path, 'h');
         if (IsRangedDerivation()) {
             out += "/*";
         }
@@ -782,7 +785,7 @@ public:
             out += tmp;
         }
         out += ")";
-        out += FormatHDKeypath(m_path);
+        out += FormatHDKeypath(m_path, 'h');
         if (IsRangedDerivation()) {
             out += "/*";
         }
@@ -801,7 +804,7 @@ public:
             out += tmp;
         }
         out += ")";
-        out += FormatHDKeypath(m_path);
+        out += FormatHDKeypath(m_path, 'h');
         if (IsRangedDerivation()) {
             out += "/*";
         }
@@ -1872,13 +1875,12 @@ enum class ParseScriptContext {
  *
  * @param[in] split BIP32 path string, using either ' or h for hardened derivation
  * @param[out] out Vector of parsed key paths
- * @param[out] apostrophe only updated if hardened derivation is found
  * @param[out] error parsing error message
  * @param[in] allow_multipath Allows the parsed path to use the multipath specifier
  * @param[out] has_hardened Records whether the path contains any hardened derivation
  * @returns false if parsing failed
  **/
-[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
+[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, std::string& error, bool allow_multipath, bool& has_hardened)
 {
     auto parse_elem = [&](std::span<const char> elem) -> std::optional<KeyPathElement> {
         const auto parsed{ParseKeyPathElement(elem)};
@@ -1888,7 +1890,6 @@ enum class ParseScriptContext {
         }
         if (parsed->IsHardened()) {
             has_hardened = true;
-            apostrophe = elem.back() == '\'';
         }
         return *parsed;
     };
@@ -1935,7 +1936,7 @@ enum class ParseScriptContext {
                 substitutes->values.emplace_back(*op_num);
             }
 
-            path.emplace_back(0, false); // Placeholder for multipath segment
+            path.emplace_back(0, std::nullopt); // Placeholder for multipath segment
             substitutes->placeholder_index = path.size() - 1;
         } else {
             const auto& op_num = parse_elem(elem);
@@ -1957,20 +1958,24 @@ enum class ParseScriptContext {
     return true;
 }
 
-[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath)
+[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, std::string& error, bool allow_multipath)
 {
     bool dummy;
-    return ParseKeyPath(split, out, apostrophe, error, allow_multipath, /*has_hardened=*/dummy);
+    return ParseKeyPath(split, out, error, allow_multipath, /*has_hardened=*/dummy);
 }
 
-static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, bool& apostrophe)
+static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, char& hardened)
 {
     DeriveType type = DeriveType::NON_RANGED;
     if (std::ranges::equal(split.back(), std::span{"*"}.first(1))) {
         split.pop_back();
         type = DeriveType::UNHARDENED_RANGED;
     } else if (std::ranges::equal(split.back(), std::span{"*'"}.first(2)) || std::ranges::equal(split.back(), std::span{"*h"}.first(2))) {
-        apostrophe = std::ranges::equal(split.back(), std::span{"*'"}.first(2));
+        if (std::ranges::equal(split.back(), std::span{"*'"}.first(2))) {
+            hardened = '\'';
+        } else {
+            hardened = 'h';
+        }
         split.pop_back();
         type = DeriveType::HARDENED_RANGED;
     }
@@ -1978,7 +1983,7 @@ static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, boo
 }
 
 /** Parse a public key that excludes origin information. */
-std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
@@ -2043,14 +2048,15 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
         return {};
     }
     std::vector<KeyPath> paths;
-    DeriveType type = ParseDeriveType(split, apostrophe);
-    if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return {};
+    char hardened{'h'};
+    DeriveType type = ParseDeriveType(split, hardened);
+    if (!ParseKeyPath(split, paths, error, /*allow_multipath=*/true)) return {};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
     for (auto& path : paths) {
-        ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, apostrophe));
+        ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, hardened));
     }
     ++key_exp_index;
     return ret;
@@ -2128,7 +2134,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
                 error = "musig(): Cannot have ranged participant keys if musig() also has derivation";
                 return {};
             }
-            bool dummy = false;
+            char dummy;
             auto deriv_split = Split(split.at(1), '/');
             deriv_type = ParseDeriveType(deriv_split, dummy);
             if (deriv_type == DeriveType::HARDENED_RANGED) {
@@ -2136,7 +2142,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
                 return {};
             }
             bool has_hardened = false;
-            if (!ParseKeyPath(deriv_split, derivation_multipaths, dummy, error, /*allow_multipath=*/true, has_hardened)) {
+            if (!ParseKeyPath(deriv_split, derivation_multipaths, error, /*allow_multipath=*/true, has_hardened)) {
                 error = "musig(): " + error;
                 return {};
             }
@@ -2211,9 +2217,8 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         return {};
     }
     // This is set if either the origin or path suffix contains a hardened derivation.
-    bool apostrophe = false;
     if (origin_split.size() == 1) {
-        return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, apostrophe, error);
+        return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, error);
     }
     if (origin_split[0].empty() || origin_split[0][0] != '[') {
         error = strprintf("Key origin start '[ character expected but not found, got '%c' instead",
@@ -2236,13 +2241,13 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     assert(fpr_bytes.size() == 4);
     std::copy_n(fpr_bytes.begin(), info.fingerprint.size(), info.fingerprint.begin());
     std::vector<KeyPath> path;
-    if (!ParseKeyPath(slash_split, path, apostrophe, error, /*allow_multipath=*/false)) return {};
+    if (!ParseKeyPath(slash_split, path, error, /*allow_multipath=*/false)) return {};
     info.path = path.at(0);
-    auto providers = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe, error);
+    auto providers = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, error);
     if (providers.empty()) return {};
     ret.reserve(providers.size());
     for (auto& prov : providers) {
-        ret.emplace_back(std::make_unique<OriginPubkeyProvider>(prov->m_expr_index, info, std::move(prov), apostrophe));
+        ret.emplace_back(std::make_unique<OriginPubkeyProvider>(prov->m_expr_index, info, std::move(prov)));
     }
     return ret;
 }
@@ -2260,7 +2265,9 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, false);
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider), /*apostrophe=*/false);
+        // Force origin paths to always use h
+        info.path.SetHardenedChar('h');
+        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
     }
     return key_provider;
 }
@@ -2271,7 +2278,9 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
     KeyOriginInfo info;
     if (provider.GetKeyOriginByXOnly(xkey, info)) {
-        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider), /*apostrophe=*/false);
+        // Force origin paths to always use h
+        info.path.SetHardenedChar('h');
+        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
     }
     return key_provider;
 }
