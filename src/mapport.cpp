@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
+#include <sync.h>
 #include <util/log.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
@@ -24,7 +25,8 @@
 #include <thread>
 
 static CThreadInterrupt g_mapport_interrupt;
-static std::thread g_mapport_thread;
+static GlobalMutex g_mapport_mutex;
+static std::thread g_mapport_thread GUARDED_BY(g_mapport_mutex);
 
 using namespace std::chrono_literals;
 static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
@@ -127,26 +129,24 @@ static void ThreadMapPort()
     } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
 }
 
-void StartThreadMapPort()
-{
-    if (!g_mapport_thread.joinable()) {
-        assert(!g_mapport_interrupt);
-        g_mapport_thread = std::thread(&util::TraceThread, "mapport", &ThreadMapPort);
-    }
-}
-
 void EnableMapPort(bool enable)
 {
+    LOCK(g_mapport_mutex);
     if (enable) {
-        StartThreadMapPort();
-    } else {
-        InterruptMapPort();
-        StopMapPort();
+        if (!g_mapport_thread.joinable()) {
+            assert(!g_mapport_interrupt);
+            g_mapport_thread = std::thread(&util::TraceThread, "mapport", &ThreadMapPort);
+        }
+    } else if (g_mapport_thread.joinable()) {
+        g_mapport_interrupt();
+        g_mapport_thread.join();
+        g_mapport_interrupt.reset();
     }
 }
 
 void InterruptMapPort()
 {
+    LOCK(g_mapport_mutex);
     if (g_mapport_thread.joinable()) {
         g_mapport_interrupt();
     }
@@ -154,8 +154,5 @@ void InterruptMapPort()
 
 void StopMapPort()
 {
-    if (g_mapport_thread.joinable()) {
-        g_mapport_thread.join();
-        g_mapport_interrupt.reset();
-    }
+    EnableMapPort(/*enable=*/false);
 }
