@@ -89,15 +89,15 @@ def test_inactive_signature_quorum():
         assert good_untrusted == []
 
         result, *_ = verify_fake_gpg(parser, options, revoked)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Revoked keys must not satisfy the quorum
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
 
         result, good_trusted, good_untrusted, *_ = verify_fake_gpg(parser, options, active, expired, revoked)
         assert result == verify.ReturnCode.SUCCESS
-        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '5555666677778888']  # TODO: Revoked keys must not be returned as good
+        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD']
         assert good_untrusted == []
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Inactive keys must not satisfy the quorum
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS

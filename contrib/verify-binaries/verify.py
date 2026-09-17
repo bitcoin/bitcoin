@@ -370,7 +370,7 @@ def verify_shasums_signature(
     good_trusted: list[SigData] = []
     good_untrusted: list[SigData] = []
     for sig in good:
-        if sig.status != 'expired':
+        if not sig.status:
             (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
         else:
             log.warning(f"INACTIVE SIGNATURE: {sig}")
