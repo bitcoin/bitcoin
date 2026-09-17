@@ -16,7 +16,7 @@ macOS comes with a built-in Terminal located in:
 ### 1. Xcode Command Line Tools
 
 The Xcode Command Line Tools are a collection of build tools for macOS.
-Version 16.2 (or higher) of these tools must be
+Version 26.3 (or higher) of these tools must be
 [installed](https://developer.apple.com/documentation/xcode/installing-the-command-line-tools)
 in order to build Bitcoin Core from source.
 
