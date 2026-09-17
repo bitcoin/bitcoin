@@ -185,11 +185,15 @@ def parse_gpg_result(
         elif line_begins_with(r"EXPKEYSIG(?:\s|$)", line):
             curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
             curr_sigs = good_sigs
-            curr_sigdata.status = "expired"
+            if curr_sigdata.status != "revoked":
+                curr_sigdata.status = "expired"
 
         elif line_begins_with(r"REVKEYSIG(?:\s|$)", line):
             curr_sigdata.key, curr_sigdata.name = line.split(maxsplit=3)[2:4]
             curr_sigs = good_sigs
+            curr_sigdata.status = "revoked"
+
+        elif line_begins_with(r"KEYREVOKED(?:\s|$)", line):
             curr_sigdata.status = "revoked"
 
         elif line_begins_with(r"BADSIG(?:\s|$)", line):
@@ -371,7 +375,10 @@ def verify_shasums_signature(
     good_untrusted: list[SigData] = []
     expired: list[SigData] = []
     for sig in good:
-        (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        if sig.status != 'revoked':
+            (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        else:
+            log.warning(f"INACTIVE SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
     log.info(f"got {num_trusted} good signatures")
 

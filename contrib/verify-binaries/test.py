@@ -61,7 +61,7 @@ def test_inactive_signature_quorum():
 
     # Revocation takes precedence regardless of the order GnuPG reports the statuses in
     for sig in (revoked_expired, f'KEYREVOKED\n[GNUPG:] {expired}'):
-        assert verify.parse_gpg_result(gpg_output(sig).splitlines())[0][0].status == 'expired'  # TODO: Revocation must take precedence over expiry
+        assert verify.parse_gpg_result(gpg_output(sig).splitlines())[0][0].status == 'revoked'
 
     def verify_fake_gpg(parser, options: list[str], *sigs: str, min_good_sigs: int = 1):
         # Every key is explicitly trusted, so only its inactive status can exclude it
@@ -92,16 +92,16 @@ def test_inactive_signature_quorum():
         assert [sig.key for sig in expired_sigs] == []  # TODO: Return expired signatures even when the quorum fails
 
         result, *_, expired_sigs = verify_fake_gpg(parser, options, revoked)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Revoked keys must not satisfy the quorum
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
         assert expired_sigs == []
 
         result, *_, expired_sigs = verify_fake_gpg(parser, options, revoked_expired)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: A revoked key must not satisfy the quorum after expiry
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
         assert expired_sigs == []
 
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, active, expired, revoked)
         assert result == verify.ReturnCode.SUCCESS
-        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '1111222233334444', '5555666677778888']  # TODO: Inactive keys must not be returned as good
+        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '1111222233334444']  # TODO: Inactive keys must not be returned as good
         assert good_untrusted == []
         assert [str(sig) for sig in expired_sigs] == []  # TODO: Return expired signatures in a separate group
 
@@ -109,7 +109,7 @@ def test_inactive_signature_quorum():
         assert result == verify.ReturnCode.SUCCESS  # TODO: Exclude revoked signatures and honor the expired-key opt-in
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Inactive keys must not satisfy the quorum
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
 
     print("✓ 'Inactive signature quorum' passed")
 
