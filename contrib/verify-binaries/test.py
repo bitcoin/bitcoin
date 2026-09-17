@@ -29,6 +29,7 @@ def main():
     expect_code(_220_x86_64_linux_gnu, 0, "22.0-x86_64-linux-gnu.tar.gz should succeed")
     v = result['verified_binaries']
     assert result['good_trusted_sigs']
+    assert isinstance(result['expired_sigs'], list)
     assert len(v) == 1
     assert v['bitcoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
 
@@ -86,10 +87,10 @@ def test_inactive_signature_quorum():
             parser = verify.build_parser()
 
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, expired)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Count expired signatures when allowed and exclude them otherwise
-        assert [sig.key for sig in good_trusted] == ['1111222233334444']  # TODO: Expired keys must not be returned as good
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Count expired signatures when allowed and exclude them otherwise
+        assert good_trusted == []
         assert good_untrusted == []
-        assert [sig.key for sig in expired_sigs] == []  # TODO: Return expired signatures even when the quorum fails
+        assert [sig.key for sig in expired_sigs] == ['1111222233334444']
 
         result, *_, expired_sigs = verify_fake_gpg(parser, options, revoked)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
@@ -101,12 +102,13 @@ def test_inactive_signature_quorum():
 
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, active, expired, revoked)
         assert result == verify.ReturnCode.SUCCESS
-        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD', '1111222233334444']  # TODO: Inactive keys must not be returned as good
+        assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD']
         assert good_untrusted == []
-        assert [str(sig) for sig in expired_sigs] == []  # TODO: Return expired signatures in a separate group
+        assert [str(sig) for sig in expired_sigs] == [
+            "SigData('1111222233334444', 'Expired Builder', trusted=False, status='expired')"]
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
-        assert result == verify.ReturnCode.SUCCESS  # TODO: Exclude revoked signatures and honor the expired-key opt-in
+        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Exclude revoked signatures and honor the expired-key opt-in
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS

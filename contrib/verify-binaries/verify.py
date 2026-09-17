@@ -375,10 +375,14 @@ def verify_shasums_signature(
     good_untrusted: list[SigData] = []
     expired: list[SigData] = []
     for sig in good:
-        if sig.status != 'revoked':
+        if not sig.status:
             (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        elif sig.status == 'revoked':
+            log.warning(f"REVOKED SIGNATURE: {sig}")
         else:
-            log.warning(f"INACTIVE SIGNATURE: {sig}")
+            assert sig.status == 'expired', sig
+            expired.append(sig)
+            log.warning(f"EXPIRED SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
     log.info(f"got {num_trusted} good signatures")
 
@@ -401,9 +405,6 @@ def verify_shasums_signature(
 
     for sig in good_untrusted:
         log.info(f"GOOD SIGNATURE (untrusted): {sig}")
-
-    for sig in [sig for sig in good if sig.status == 'expired']:
-        log.warning(f"key {sig.key} for {sig.name} is expired")
 
     for sig in bad:
         log.warning(f"BAD SIGNATURE: {sig}")
@@ -544,6 +545,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
         }
         print(json.dumps(output, indent=2))
@@ -608,6 +610,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
             "missing_binaries": missing_files,
         }
