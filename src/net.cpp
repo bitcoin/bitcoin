@@ -446,7 +446,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
     for (auto& target_addr : connect_to) {
-        if (RequiresV2Dest(target_addr, pszDest ? pszDest : "") && !use_v2transport) {
+        const std::string_view dest_name{pszDest ? pszDest : ""};
+        if (RequiresV2Dest(target_addr, dest_name) && !use_v2transport) {
+            LogDebug(BCLog::NET, "skipping v1 connection to %s (-v2onlyclearnet)\n",
+                     target_addr.IsValid() ? target_addr.ToStringAddrPort() : std::string{dest_name});
             continue;
         }
         if (target_addr.IsValid()) {
@@ -1977,7 +1980,9 @@ void CConnman::DisconnectNodes()
                 // the creation of a connection is a blocking operation (up to several seconds),
                 // and we don't want to hold up the socket handler thread for that long.
                 if (network_active && pnode->m_transport->ShouldReconnectV1()) {
-                    if (!RequiresV2Dest(pnode->addr, pnode->m_dest)) {
+                    if (RequiresV2Dest(pnode->addr, pnode->m_dest)) {
+                        LogDebug(BCLog::NET, "not retrying with v1 transport protocol for peer=%d (-v2onlyclearnet)\n", pnode->GetId());
+                    } else {
                         reconnections_to_add.push_back({
                             .proxy_override = pnode->m_proxy_override,
                             .addr_connect = pnode->addr,
