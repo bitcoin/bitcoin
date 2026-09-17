@@ -2579,6 +2579,14 @@ bool CConnman::RequiresV2Peer(Network net) const
     return m_v2only_clearnet && IsClearnet(net);
 }
 
+bool CConnman::RequiresV2Dest(const CNetAddr& addr, std::string_view dest_name) const
+{
+    // A name proxy resolves the destination for us, so we can't tell locally which
+    // network it belongs to. Assume clearnet, the worst case.
+    if (!addr.IsValid() && !dest_name.empty()) return m_v2only_clearnet;
+    return RequiresV2Peer(addr.GetNetClass());
+}
+
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 {
     AssertLockNotHeld(m_nodes_mutex);

@@ -1441,11 +1441,26 @@ public:
      * observers. Tor/I2P/CJDNS peers are already encrypted, and non-routable
      * (local/loopback) traffic never leaves the LAN, so both can be v1.
      *
-     * @param net network the peer is connected through.
+     * @param net network the peer is connected through. Use RequiresV2Dest()
+     * when opening one, since the destination network may not be known locally.
      */
     bool RequiresV2Peer(Network net) const;
 
 private:
+    /**
+     * Whether an outbound connection to this destination must be v2 only.
+     *
+     * Same as RequiresV2Peer(), except that when bitcoind delegates DNS to a
+     * name proxy (ex: Tor) the destination is left unresolved for the proxy to
+     * look up, so its network isn't known locally. Assume the worst case there
+     * and require v2, rather than send plaintext to what is most likely a
+     * clearnet peer.
+     *
+     * @param addr      target address, invalid if left for a name proxy to resolve
+     * @param dest_name destination string, empty if connecting by resolved address
+     */
+    bool RequiresV2Dest(const CNetAddr& addr, std::string_view dest_name) const;
+
     struct ListenSocket {
     public:
         std::shared_ptr<Sock> sock;
