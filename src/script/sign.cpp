@@ -115,7 +115,7 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     return true;
 }
 
-std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const
+std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* /*merkle_root*/, SigVersion sigversion, const SignatureData& sigdata) const
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
 
@@ -943,10 +943,10 @@ class DummySignatureChecker final : public BaseSignatureChecker
 {
 public:
     DummySignatureChecker() = default;
-    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return sig.size() != 0; }
-    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const override { return sig.size() != 0; }
-    bool CheckLockTime(const CScriptNum& nLockTime) const override { return true; }
-    bool CheckSequence(const CScriptNum& nSequence) const override { return true; }
+    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>&, const CScript&, SigVersion) const override { return sig.size() != 0; }
+    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char>, SigVersion, ScriptExecutionData&, ScriptError*) const override { return sig.size() != 0; }
+    bool CheckLockTime(const CScriptNum&) const override { return true; }
+    bool CheckSequence(const CScriptNum&) const override { return true; }
 };
 }
 
@@ -960,7 +960,7 @@ private:
 public:
     DummySignatureCreator(char r_len, char s_len) : m_r_len(r_len), m_s_len(s_len) {}
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER; }
-    bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override
+    bool CreateSig(const SigningProvider&, std::vector<unsigned char>& vchSig, const CKeyID&, const CScript&, SigVersion) const override
     {
         // Create a dummy signature that is a valid DER-encoding
         vchSig.assign(m_r_len + m_s_len + 7, '\000');
@@ -975,23 +975,23 @@ public:
         vchSig[6 + m_r_len + m_s_len] = SIGHASH_ALL;
         return true;
     }
-    bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* tweak, SigVersion sigversion) const override
+    bool CreateSchnorrSig(const SigningProvider&, std::vector<unsigned char>& sig, const XOnlyPubKey&, const uint256*, const uint256*, SigVersion) const override
     {
         sig.assign(64, '\000');
         return true;
     }
-    std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const override
+    std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider&, const CPubKey&, const CPubKey&, const CPubKey&, const uint256*, const uint256*, SigVersion, const SignatureData&) const override
     {
         std::vector<uint8_t> out;
         out.assign(MUSIG2_PUBNONCE_SIZE, '\000');
         return out;
     }
-    bool CreateMuSig2PartialSig(const SigningProvider& provider, uint256& partial_sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override
+    bool CreateMuSig2PartialSig(const SigningProvider&, uint256& partial_sig, const CPubKey&, const CPubKey&, const CPubKey&, const uint256*, const std::vector<std::pair<uint256, bool>>&, SigVersion, const SignatureData&) const override
     {
         partial_sig = uint256::ONE;
         return true;
     }
-    bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override
+    bool CreateMuSig2AggregateSig(const std::vector<CPubKey>&, std::vector<uint8_t>& sig, const CPubKey&, const CPubKey&, const uint256*, const std::vector<std::pair<uint256, bool>>&, SigVersion, const SignatureData&) const override
     {
         sig.assign(64, '\000');
         return true;

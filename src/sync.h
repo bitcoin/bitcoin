@@ -64,14 +64,14 @@ bool LockStackEmpty();
 extern bool g_debug_lockorder_abort;
 #else
 template <typename MutexType>
-inline void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false) {}
+inline void EnterCritical(const char*, const char*, int, MutexType*, bool = false) {}
 inline void LeaveCritical() {}
-inline void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line) {}
+inline void CheckLastCritical(void*, std::string&, const char*, const char*, int) {}
 template <typename MutexType>
-inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
+inline void AssertLockHeldInternal(const char*, const char*, int, [[maybe_unused]] MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
 template <typename MutexType>
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs) {}
-inline void DeleteLock(void* cs) {}
+void AssertLockNotHeldInternal(const char*, const char*, int, [[maybe_unused]] MutexType* cs) LOCKS_EXCLUDED(cs) {}
+inline void DeleteLock(void*) {}
 inline bool LockStackEmpty() { return true; }
 #endif
 

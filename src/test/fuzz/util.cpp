@@ -308,7 +308,7 @@ ssize_t FuzzedFileProvider::read(void* cookie, char* buf, size_t size)
     return random_bytes.size();
 }
 
-ssize_t FuzzedFileProvider::write(void* cookie, const char* buf, size_t size)
+ssize_t FuzzedFileProvider::write(void* cookie, const char* /*buf*/, size_t size)
 {
     FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
     SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);

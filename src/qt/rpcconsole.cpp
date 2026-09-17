@@ -109,7 +109,7 @@ public:
     explicit PeerIdViewDelegate(QObject* parent = nullptr)
         : QStyledItemDelegate(parent) {}
 
-    QString displayText(const QVariant& value, const QLocale& locale) const override
+    QString displayText(const QVariant& value, const QLocale&) const override
     {
         // Additional spaces should visually separate right-aligned content
         // from the next column to the right.
@@ -962,7 +962,7 @@ void RPCConsole::updateNetworkState()
     ui->localAddresses->setText(local_addresses);
 }
 
-void RPCConsole::setNumConnections(int count)
+void RPCConsole::setNumConnections(int /*count*/)
 {
     if (!clientModel)
         return;
@@ -970,12 +970,12 @@ void RPCConsole::setNumConnections(int count)
     updateNetworkState();
 }
 
-void RPCConsole::setNetworkActive(bool networkActive)
+void RPCConsole::setNetworkActive(bool /*networkActive*/)
 {
     updateNetworkState();
 }
 
-void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype)
+void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double /*nVerificationProgress*/, SyncType synctype)
 {
     if (synctype == SyncType::BLOCK_SYNC) {
         ui->numberOfBlocks->setText(QString::number(count));
