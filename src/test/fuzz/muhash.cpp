@@ -199,6 +199,9 @@ FUZZ_TARGET(muhash)
         },
         [&] {
             // Test that dividing a MuHash by itself brings it back to its initial state
+            // Insert only multiplies the numerator, so without the Remove the denominator
+            // is still 1 and the division is trivially correct
+            muhash.Remove(data);
             muhash /= muhash;
             muhash.Finalize(out);
             out2 = initial_state_hash;

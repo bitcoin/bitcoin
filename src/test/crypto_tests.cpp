@@ -1240,6 +1240,12 @@ BOOST_AUTO_TEST_CASE(muhash_tests)
         a.Finalize(out2);
 
         BOOST_CHECK_EQUAL(out, out2);
+
+        // Self-division must yield the empty set
+        y /= x; // x=X, y=Y*X/X
+        y /= y; // x=X, y=1
+        y.Finalize(out);
+        BOOST_CHECK_EQUAL(out, out2);
     }
 
     MuHash3072 acc = FromInt(0);
