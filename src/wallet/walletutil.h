@@ -67,7 +67,7 @@ private:
     int32_t next_index = 0; // Position of the next item to generate
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
 public:
-    std::shared_ptr<Descriptor> descriptor;
+    const std::shared_ptr<const Descriptor> descriptor;
     uint64_t creation_time = 0;
     DescriptorCache cache;
 
