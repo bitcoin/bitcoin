@@ -594,7 +594,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         // Maybe this doesn't matter because floating keys here shouldn't have origins
         KeyOriginInfo info;
         bool has_info = GetKeyOrigin(keyid, info);
-        std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path) + "]" : "";
+        std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path, 'h') + "]" : "";
 
         // Construct the combo descriptor
         std::string desc_str = "combo(" + origin_str + HexStr(key.GetPubKey()) + ")";
