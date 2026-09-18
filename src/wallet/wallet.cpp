@@ -3304,7 +3304,6 @@ std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& scrip
     std::vector<WalletDescriptor> descs;
     for (const auto spk_man: GetScriptPubKeyMans(script)) {
         if (const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man)) {
-            LOCK(desc_spk_man->cs_desc_man);
             descs.push_back(desc_spk_man->GetWalletDescriptor());
         }
     }
@@ -3575,7 +3574,6 @@ std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man)
         throw std::runtime_error(std::string(__func__) + ": unexpected ScriptPubKeyMan type.");
     }
 
-    LOCK(desc_spk_man->cs_desc_man);
     const auto& type = desc_spk_man->GetWalletDescriptor().descriptor->GetOutputType();
     assert(type.has_value());
 
@@ -3697,10 +3695,10 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
     }
 
     const DescriptorScriptPubKeyMan& desc_spkm = spkm->get();
-    LOCK(desc_spkm.cs_desc_man);
     std::set<CPubKey> pubkeys;
     std::set<CExtPubKey> extpubs;
-    desc_spkm.GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+    const auto wallet_descriptor{desc_spkm.GetWalletDescriptor()};
+    wallet_descriptor.descriptor->GetPubKeys(pubkeys, extpubs);
     Assume(pubkeys.empty());
     Assume(extpubs.size() == 1);
 
@@ -4413,7 +4411,6 @@ CWallet::HDPubKeyMap CWallet::GetHDPubKeys(HDKeyFilter filter) const
     HDPubKeyMap xpubs;
     for (const auto& spkm : filter == HDKeyFilter::Active ? GetActiveScriptPubKeyMans() : GetAllScriptPubKeyMans()) {
         auto* desc_spkm = Assert(dynamic_cast<DescriptorScriptPubKeyMan*>(spkm));
-        LOCK(desc_spkm->cs_desc_man);
         WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
         if (filter == HDKeyFilter::UnusedKey && w_desc.descriptor->HasScripts()) continue;
 
@@ -4434,7 +4431,6 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
     for (const auto& spkm : GetAllScriptPubKeyMans()) {
         const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
         assert(desc_spkm);
-        LOCK(desc_spkm->cs_desc_man);
         if (std::optional<CKey> key = desc_spkm->GetKey(keyid)) {
             return key;
         }
