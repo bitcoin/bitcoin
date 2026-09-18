@@ -77,10 +77,15 @@ BOOST_AUTO_TEST_CASE(reject_reason_matches_node_message)
 //! The only error whose fields the node expands beyond a plain substitution.
 BOOST_AUTO_TEST_CASE(snapshot_validation_failed_message)
 {
-    const kernel::SnapshotValidationFailed error{.height_from = 200, .height_to = 100, .rename_error = "rename failed"};
+    const kernel::SnapshotValidationFailed error{
+        .height_from = 200,
+        .height_to = 100,
+        .rename_error = kernel::CoinsDbRenameFailed{DIR, DIR / "invalid"},
+    };
     const std::string message{node::FatalErrorMessage(error).original};
     BOOST_CHECK_NE(message.find("from 200 to 100"), std::string::npos);
-    BOOST_CHECK_NE(message.find("\nrename failed"), std::string::npos);
+    BOOST_CHECK_NE(message.find("\nRename of "), std::string::npos);
+    BOOST_CHECK_NE(message.find(fs::PathToString(DIR / "invalid")), std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -44,10 +44,16 @@ struct SnapshotChainstateRenameFailed {
     fs::path old_path;
     fs::path new_path;
 };
+//! Renaming the snapshot coins db out of the way failed, reported as part of
+//! SnapshotValidationFailed.
+struct CoinsDbRenameFailed {
+    fs::path old_path;
+    fs::path new_path;
+};
 struct SnapshotValidationFailed {
     int height_from;
     int height_to;
-    std::optional<std::string> rename_error{}; //!< from InvalidateCoinsDBOnDisk(), if it failed too
+    std::optional<CoinsDbRenameFailed> rename_error{};
 };
 struct SystemErrorWhileFlushing {
     std::string what;

@@ -6029,10 +6029,7 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
 
         unvalidated_cs.m_assumeutxo = Assumeutxo::INVALID;
 
-        auto rename_result = unvalidated_cs.InvalidateCoinsDBOnDisk();
-        if (!rename_result) {
-            error.rename_error = util::ErrorString(rename_result).original;
-        }
+        error.rename_error = unvalidated_cs.InvalidateCoinsDBOnDisk();
 
         GetNotifications().fatalError(error);
     };
@@ -6218,7 +6215,7 @@ bool IsBIP30Unspendable(const uint256& block_hash, int block_height)
            (block_height==91812 && block_hash == uint256{"00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"});
 }
 
-util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
+std::optional<kernel::CoinsDbRenameFailed> Chainstate::InvalidateCoinsDBOnDisk()
 {
     // Should never be called on a non-snapshot chainstate.
     assert(m_from_snapshot_blockhash);
@@ -6240,14 +6237,9 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
     } catch (const fs::filesystem_error& e) {
         LogError("While invalidating the coins db: Error renaming file '%s' -> '%s': %s",
                  db_path_str, invalid_path_str, e.what());
-        return util::Error{strprintf(_(
-            "Rename of '%s' -> '%s' failed. "
-            "You should resolve this by manually moving or deleting the invalid "
-            "snapshot directory %s, otherwise you will encounter the same error again "
-            "on the next startup."),
-            db_path_str, invalid_path_str, db_path_str)};
+        return kernel::CoinsDbRenameFailed{db_path, invalid_path};
     }
-    return {};
+    return std::nullopt;
 }
 
 bool ChainstateManager::DeleteChainstate(Chainstate& chainstate)
