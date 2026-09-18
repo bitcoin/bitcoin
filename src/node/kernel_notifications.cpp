@@ -160,8 +160,13 @@ bilingual_str FatalErrorMessage(const kernel::FatalError& error)
 
 void KernelNotifications::fatalError(const kernel::FatalError& error)
 {
+    abort(FatalErrorMessage(error));
+}
+
+void KernelNotifications::abort(const bilingual_str& message)
+{
     node::AbortNode(m_shutdown_on_fatal_error ? m_shutdown_request : nullptr,
-                    m_exit_status, FatalErrorMessage(error), &m_warnings);
+                    m_exit_status, message, &m_warnings);
 }
 
 std::optional<uint256> KernelNotifications::TipBlock()

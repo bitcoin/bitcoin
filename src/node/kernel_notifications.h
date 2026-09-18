@@ -65,6 +65,9 @@ public:
 
     void fatalError(const kernel::FatalError& error) override;
 
+    //! Abort the node with a message that does not come from the kernel.
+    void abort(const bilingual_str& message);
+
     void setChainstateLoaded(bool chainstate_loaded) EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex) {
         LOCK(m_tip_block_mutex);
         if (!chainstate_loaded) m_state = {};
