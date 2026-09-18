@@ -7,6 +7,7 @@
 
 #include <rpc/register.h> // IWYU pragma: associated
 
+#include <chain.h>
 #include <chainparams.h>
 #include <index/base.h>
 #include <index/blockfilterindex.h>
@@ -19,6 +20,7 @@
 #include <interfaces/ipc.h>
 #include <kernel/cs_main.h>
 #include <logging.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
@@ -32,8 +34,10 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/time.h>
+#include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -357,7 +361,18 @@ static RPCMethod echoipc()
     };
 }
 
-static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_name)
+//! Fraction of the chain up to tip that the index covers, in cumulative transactions.
+static double IndexProgress(ChainstateManager& chainman, const CBlockIndex* tip, const IndexSummary& summary)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    AssertLockHeld(::cs_main);
+    const CBlockIndex* best{chainman.m_blockman.LookupBlockIndex(summary.best_block_hash)};
+    if (!best || !tip || best->m_chain_tx_count == 0 || tip->m_chain_tx_count == 0) return 0.0;
+    return std::min<double>(double(best->m_chain_tx_count) / double(tip->m_chain_tx_count), 1.0);
+}
+
+static UniValue SummaryToJSON(ChainstateManager& chainman, const CBlockIndex* tip, const IndexSummary&& summary, std::string index_name)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     UniValue ret_summary(UniValue::VOBJ);
     if (!index_name.empty() && index_name != summary.name) return ret_summary;
@@ -365,6 +380,7 @@ static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_na
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("synced", summary.synced);
     entry.pushKV("best_block_height", summary.best_block_height);
+    entry.pushKV("progress", IndexProgress(chainman, tip, summary));
     ret_summary.pushKV(summary.name, std::move(entry));
     return ret_summary;
 }
@@ -384,6 +400,7 @@ static RPCMethod getindexinfo()
                             {
                                 {RPCResult::Type::BOOL, "synced", "Whether the index is synced or not"},
                                 {RPCResult::Type::NUM, "best_block_height", "The block height to which the index is synced"},
+                                {RPCResult::Type::NUM, "progress", "Fraction of the validated chain the index covers [0..1]"},
                             }
                         },
                     },
@@ -399,20 +416,25 @@ static RPCMethod getindexinfo()
     UniValue result(UniValue::VOBJ);
     const std::string index_name{self.MaybeArg<std::string_view>("index_name").value_or("")};
 
+    // Resolve the tip once, so every index in the response is compared against it.
+    ChainstateManager& chainman{EnsureAnyChainman(request.context)};
+    LOCK(chainman.GetMutex());
+    const CBlockIndex* tip{chainman.ValidatedChainstate().m_chain.Tip()};
+
     if (g_txindex) {
-        result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));
+        result.pushKVs(SummaryToJSON(chainman, tip, g_txindex->GetSummary(), index_name));
     }
 
     if (g_coin_stats_index) {
-        result.pushKVs(SummaryToJSON(g_coin_stats_index->GetSummary(), index_name));
+        result.pushKVs(SummaryToJSON(chainman, tip, g_coin_stats_index->GetSummary(), index_name));
     }
 
     if (g_txospenderindex) {
-        result.pushKVs(SummaryToJSON(g_txospenderindex->GetSummary(), index_name));
+        result.pushKVs(SummaryToJSON(chainman, tip, g_txospenderindex->GetSummary(), index_name));
     }
 
-    ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {
-        result.pushKVs(SummaryToJSON(index.GetSummary(), index_name));
+    ForEachBlockFilterIndex([&result, &index_name, &chainman, tip](const BlockFilterIndex& index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        result.pushKVs(SummaryToJSON(chainman, tip, index.GetSummary(), index_name));
     });
 
     return result;

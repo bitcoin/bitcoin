@@ -103,7 +103,7 @@ class RpcMiscTest(BitcoinTestFramework):
         self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
 
         # Returns a list of all running indices by default
-        values = {"synced": True, "best_block_height": 200}
+        values = {"synced": True, "best_block_height": 200, "progress": 1}
         assert_equal(
             node.getindexinfo(),
             {

@@ -55,7 +55,7 @@ from test_framework.blocktools import (
 START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
 FINAL_HEIGHT = 399
-COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT}
+COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT, 'progress': 1}
 
 
 class AssumeutxoTest(BitcoinTestFramework):

@@ -56,12 +56,12 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
     def sync_index(self, height):
         expected_filter = {
-            'basic block filter index': {'synced': True, 'best_block_height': height},
+            'basic block filter index': {'synced': True, 'best_block_height': height, 'progress': 1},
         }
         self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
 
         expected_stats = {
-            'coinstatsindex': {'synced': True, 'best_block_height': height}
+            'coinstatsindex': {'synced': True, 'best_block_height': height, 'progress': 1}
         }
         self.wait_until(lambda: self.nodes[1].getindexinfo() == expected_stats, timeout=150)
 
