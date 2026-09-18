@@ -83,18 +83,21 @@ def test_inactive_signature_quorum():
             assert unknown_options == options  # TODO: Recognize the expired-key opt-in
             assert getattr(args, 'allow_expired', False) is False  # TODO: Honor the flag and environment default
 
-        result, good_trusted, good_untrusted, *_ = verify_fake_gpg(parser, options, expired)
+        result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, expired)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in
         assert [sig.key for sig in good_trusted] == []
         assert good_untrusted == []
+        assert [sig.key for sig in expired_sigs] == ['1111222233334444']
 
-        result, *_ = verify_fake_gpg(parser, options, revoked)
+        result, *_, expired_sigs = verify_fake_gpg(parser, options, revoked)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
+        assert expired_sigs == []
 
-        result, good_trusted, good_untrusted, *_ = verify_fake_gpg(parser, options, active, expired, revoked)
+        result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, active, expired, revoked)
         assert result == verify.ReturnCode.SUCCESS
         assert [sig.key for sig in good_trusted] == ['AAAABBBBCCCCDDDD']
         assert good_untrusted == []
+        assert [sig.key for sig in expired_sigs] == ['1111222233334444']
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in

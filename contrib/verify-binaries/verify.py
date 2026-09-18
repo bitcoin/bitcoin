@@ -341,7 +341,7 @@ def prompt_yn(prompt) -> bool:
 def verify_shasums_signature(
     signature_file_path: str, sums_file_path: str, args: argparse.Namespace
 ) -> tuple[
-   ReturnCode, list[SigData], list[SigData], list[SigData], list[SigData]
+   ReturnCode, list[SigData], list[SigData], list[SigData], list[SigData], list[SigData]
 ]:
     min_good_sigs = args.min_good_sigs
     gpg_allowed_codes = [0, 2]  # 2 is returned when untrusted signatures are present.
@@ -355,7 +355,7 @@ def verify_shasums_signature(
             log.critical(f"unexpected GPG exit code ({gpg_retval})")
 
         log.error(f"gpg output:\n{indent(gpg_output)}")
-        return (ReturnCode.INTEGRITY_FAILURE, [], [], [], [])
+        return (ReturnCode.INTEGRITY_FAILURE, [], [], [], [], [])
 
     # Decide which keys we trust, though not "trust" in the GPG sense, but rather
     # which pubkeys convince us that this sums file is legitimate. In other words,
@@ -369,11 +369,16 @@ def verify_shasums_signature(
     # our threshold.
     good_trusted: list[SigData] = []
     good_untrusted: list[SigData] = []
+    expired: list[SigData] = []
     for sig in good:
         if not sig.status:
             (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        elif sig.status == 'expired':
+            expired.append(sig)
+            log.warning(f"EXPIRED SIGNATURE: {sig}")
         else:
-            log.warning(f"INACTIVE SIGNATURE: {sig}")
+            assert sig.status == 'revoked', sig
+            log.warning(f"REVOKED SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
     log.info(f"got {num_trusted} good signatures")
 
@@ -389,7 +394,7 @@ def verify_shasums_signature(
             "not enough trusted sigs to meet threshold "
             f"({num_trusted} vs. {min_good_sigs})")
 
-        return (ReturnCode.NOT_ENOUGH_GOOD_SIGS, [], [], [], [])
+        return (ReturnCode.NOT_ENOUGH_GOOD_SIGS, [], [], [], [], expired)
 
     for sig in good_trusted:
         log.info(f"GOOD SIGNATURE: {sig}")
@@ -403,7 +408,7 @@ def verify_shasums_signature(
     for sig in unknown:
         log.warning(f"UNKNOWN SIGNATURE: {sig}")
 
-    return (ReturnCode.SUCCESS, good_trusted, good_untrusted, unknown, bad)
+    return (ReturnCode.SUCCESS, good_trusted, good_untrusted, unknown, bad, expired)
 
 
 def parse_sums_file(sums_file_path: str, filename_filter: list[str]) -> list[list[str]]:
@@ -482,7 +487,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
         return got_sums_status
 
     # Verify the signature on the SHA256SUMS file
-    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(SIGNATUREFILENAME, SUMS_FILENAME, args)
+    sigs_status, good_trusted, good_untrusted, unknown, bad, expired = verify_shasums_signature(SIGNATUREFILENAME, SUMS_FILENAME, args)
     if sigs_status != ReturnCode.SUCCESS:
         if sigs_status == ReturnCode.INTEGRITY_FAILURE:
             cleanup()
@@ -536,6 +541,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
         }
         print(json.dumps(output, indent=2))
@@ -559,7 +565,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
         sums_sig_path = Path(args.sums_file).with_suffix(".asc")
 
     # Verify the signature on the SHA256SUMS file
-    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
+    sigs_status, good_trusted, good_untrusted, unknown, bad, expired = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
     if sigs_status != ReturnCode.SUCCESS:
         return sigs_status
 
@@ -600,6 +606,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
             "missing_binaries": missing_files,
         }
