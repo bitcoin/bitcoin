@@ -7,6 +7,7 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <consensus/params.h>
+#include <consensus/validation.h>
 #include <crypto/hex_base.h>
 #include <dbwrapper.h>
 #include <flatfile.h>
@@ -969,7 +970,8 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     bool out_of_space;
     size_t bytes_allocated = m_undo_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        return FatalError(m_opts.notifications, state, _("Disk space is too low!"));
+        state = FatalError(m_opts.notifications, _("Disk space is too low!"));
+        return false;
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
@@ -997,7 +999,8 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         AutoFile file{OpenUndoFile(pos)};
         if (file.IsNull()) {
             LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
-            return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
+            state = FatalError(m_opts.notifications, _("Failed to write undo data."));
+            return false;
         }
         {
             BufferedWriter fileout{file};
@@ -1018,7 +1021,8 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         // Make sure that the file is closed before we call `FlushUndoFile`.
         if (file.fclose() != 0) {
             LogError("Failed to close block undo file %s: %s", pos.ToString(), SysErrorString(errno));
-            return FatalError(m_opts.notifications, state, _("Failed to close block undo file."));
+            state = FatalError(m_opts.notifications, _("Failed to close block undo file."));
+            return false;
         }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
