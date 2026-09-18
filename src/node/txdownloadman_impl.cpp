@@ -470,7 +470,15 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         } else {
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        // If this tx has no witness, its wtxid is also the txid by which orphan resolution requests
+        // the missing parent of an orphan. If this tx is such a parent, ForgetTxHash would cancel
+        // every other peer's request for it, leaving the orphan unresolvable when this peer never
+        // announced the child (so no package is tried here). Keep those requests: the witness may
+        // have been stripped by this peer, and another peer's version of the parent (or the same
+        // parent, with their child) may still be accepted as a package.
+        if (!(state.GetResult() == TxValidationResult::TX_RECONSIDERABLE && !ptx->HasWitness() && m_orphanage->HaveChildren(*ptx))) {
+            m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        }
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid

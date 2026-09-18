@@ -862,7 +862,9 @@ private:
      * Lock invariants:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_orphanage.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable.
+     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable,
+     *   except announcements of a witnessless (txid == wtxid) transaction that is the missing parent
+     *   of an orphan.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
      */
