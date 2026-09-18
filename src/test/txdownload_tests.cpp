@@ -337,4 +337,48 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(orphan_parent_request_survives_reject_from_other_peer, TestChain100Setup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    node::TxDownloadOptions DEFAULT_OPTS{.m_mempool = pool, .m_deterministic_txrequest = true};
+    constexpr NodeId honest{1}, other{2};
+    const std::chrono::microseconds now{GetTime<std::chrono::microseconds>()};
+    TxValidationState state_orphan, state_reconsiderable;
+    state_orphan.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+    state_reconsiderable.Invalid(TxValidationResult::TX_RECONSIDERABLE, "");
+
+    // A parent without witness data has wtxid == txid: either a nonsegwit tx or a segwit tx whose
+    // witness was stripped by the sender (indistinguishable here). Rejecting it must not cancel the
+    // orphan resolution requests (by txid) that other peers are candidates for. The witness-bearing
+    // parent is the control: its rejection never touched those requests.
+    for (const auto segwit_parent : {false, true}) {
+        node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
+        txdownload_impl.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+        txdownload_impl.ConnectedPeer(other, {/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+
+        const auto parent = CreatePlaceholderTx(segwit_parent);
+        const auto child = CreatePlaceholderTx(/*segwit=*/true);
+        BOOST_REQUIRE(child->vin[0].prevout.hash == parent->GetHash());
+
+        // Honest peer delivers the child. It is an orphan; the parent will be requested by txid.
+        BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, child).first);
+        txdownload_impl.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true);
+        BOOST_REQUIRE(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+
+        // Before that request is sent, another peer (not an announcer of the child) delivers the
+        // parent unsolicited and it fails for low feerate.
+        BOOST_REQUIRE(txdownload_impl.ReceivedTx(other, parent).first);
+        const auto ret = txdownload_impl.MempoolRejectedTx(parent, state_reconsiderable, other, /*first_time_failure=*/true);
+        BOOST_CHECK(!ret.m_package_to_validate.has_value());
+        BOOST_CHECK(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+
+        // The honest peer must still be asked for the parent: its version may carry a witness that
+        // makes the package acceptable.
+        const auto requests = txdownload_impl.GetRequestsToSend(honest, now + std::chrono::seconds{10});
+        BOOST_REQUIRE_EQUAL(requests.size(), 1);
+        BOOST_CHECK(!requests[0].IsWtxid());
+        BOOST_CHECK(requests[0].ToUint256() == parent->GetHash().ToUint256());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

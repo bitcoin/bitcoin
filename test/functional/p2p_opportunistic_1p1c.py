@@ -401,6 +401,49 @@ class PackageRelayTest(BitcoinTestFramework):
         assert high_fee_child["txid"] in node_mempool
 
     @cleanup
+    def test_parent_without_witness_from_other_peer(self, wallet):
+        node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+
+        low_fee_parent = self.create_tx_below_mempoolminfee(wallet)
+        high_fee_child = wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
+
+        # Version of the parent without witness data, so that wtxid == txid. For a nonsegwit parent
+        # this is the parent itself; for a segwit parent it is a witness-stripped copy that fails
+        # script checks, but is rejected for low feerate before getting there.
+        tx_parent_nowit = tx_from_hex(low_fee_parent["hex"])
+        tx_parent_nowit.wit.vtxinwit = []
+        assert_equal(tx_parent_nowit.wtxid_hex, low_fee_parent["txid"])
+
+        honest_peer = node.add_p2p_connection(P2PInterface())
+        other_peer = node.add_p2p_connection(P2PInterface())
+
+        # 1. Honest peer announces and delivers the child. It is an orphan.
+        child_wtxid_int = high_fee_child["tx"].wtxid_int
+        honest_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
+        honest_peer.wait_for_getdata([child_wtxid_int])
+        honest_peer.send_and_ping(msg_tx(high_fee_child["tx"]))
+        assert_equal([o["wtxid"] for o in node.getorphantxs(verbosity=1)], [high_fee_child["wtxid"]])
+
+        # 2. Before the node requests the parent from the honest peer, the other peer sends the
+        # witnessless parent, which is rejected for low feerate.
+        other_peer.send_and_ping(msg_tx(tx_parent_nowit))
+        assert low_fee_parent["txid"] not in node.getrawmempool()
+        assert_equal([o["wtxid"] for o in node.getorphantxs(verbosity=1)], [high_fee_child["wtxid"]])
+
+        # 3. The node must still request the parent by txid from the honest peer, whose version
+        # (with witness, if any) is accepted as a package with the child.
+        parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        honest_peer.wait_for_getdata([parent_txid_int], timeout=10)
+        honest_peer.send_and_ping(msg_tx(low_fee_parent["tx"]))
+
+        node_mempool = node.getrawmempool()
+        assert low_fee_parent["txid"] in node_mempool
+        assert high_fee_child["txid"] in node_mempool
+
+    @cleanup
     def test_multiple_parents(self):
         self.log.info("Check that node does not request more than 1 previously-rejected low feerate parent")
 
@@ -704,6 +747,10 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_parent_fee_failure_from_other_announcer(version=2, num_padding_items=2000)
         self.log.info("Check the same for a TRUC package, with the malleated parent within TRUC size limits")
         self.test_parent_fee_failure_from_other_announcer(version=3, num_padding_items=450)
+        self.log.info("Check that a witness-stripped parent from another peer does not cancel orphan resolution")
+        self.test_parent_without_witness_from_other_peer(self.wallet)
+        self.log.info("Check that a nonsegwit parent from another peer does not cancel orphan resolution")
+        self.test_parent_without_witness_from_other_peer(self.wallet_nonsegwit)
         self.test_multiple_parents()
         self.test_other_parent_in_mempool()
         self.test_1p1c_on_1p1c()
