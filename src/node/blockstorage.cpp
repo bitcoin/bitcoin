@@ -13,6 +13,7 @@
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
 #include <kernel/chainparams.h>
+#include <kernel/error.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/types.h>
@@ -751,7 +752,7 @@ bool BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!m_undo_file_seq.Flush(undo_pos_old, finalize)) {
-        m_opts.notifications.flushError(_("Flushing undo file to disk failed. This is likely the result of an I/O error."));
+        m_opts.notifications.flushError(kernel::FlushError::UNDO_FILE_FLUSH_FAILED);
         return false;
     }
     return true;
@@ -773,7 +774,7 @@ bool BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finali
 
     FlatFilePos block_pos_old(blockfile_num, m_blockfile_info[blockfile_num].nSize);
     if (!m_block_file_seq.Flush(block_pos_old, fFinalize)) {
-        m_opts.notifications.flushError(_("Flushing block file to disk failed. This is likely the result of an I/O error."));
+        m_opts.notifications.flushError(kernel::FlushError::BLOCK_FILE_FLUSH_FAILED);
         success = false;
     }
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,

@@ -21,6 +21,7 @@ struct bilingual_str;
 
 namespace kernel {
 enum class Warning;
+enum class FlushError;
 } // namespace kernel
 
 namespace node {
@@ -56,7 +57,7 @@ public:
 
     void warningUnset(kernel::Warning id) override;
 
-    void flushError(const bilingual_str& message) override;
+    void flushError(kernel::FlushError error) override;
 
     void fatalError(const bilingual_str& message) override;
 

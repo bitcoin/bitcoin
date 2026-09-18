@@ -10,6 +10,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <kernel/context.h>
+#include <kernel/error.h>
 #include <kernel/warning.h>
 #include <node/abort.h>
 #include <node/interface_ui.h>
@@ -21,6 +22,7 @@
 #include <util/string.h>
 #include <util/translation.h>
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <thread>
@@ -89,9 +91,22 @@ void KernelNotifications::warningUnset(kernel::Warning id)
     m_warnings.Unset(id);
 }
 
-void KernelNotifications::flushError(const bilingual_str& message)
+//! Translate a kernel flush error into a user-facing message. This is where
+//! translation happens, outside of the kernel.
+static bilingual_str FlushErrorMessage(kernel::FlushError error)
 {
-    AbortNode(m_shutdown_request, m_exit_status, message, &m_warnings);
+    switch (error) {
+    case kernel::FlushError::BLOCK_FILE_FLUSH_FAILED:
+        return _("Flushing block file to disk failed. This is likely the result of an I/O error.");
+    case kernel::FlushError::UNDO_FILE_FLUSH_FAILED:
+        return _("Flushing undo file to disk failed. This is likely the result of an I/O error.");
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+void KernelNotifications::flushError(kernel::FlushError error)
+{
+    AbortNode(m_shutdown_request, m_exit_status, FlushErrorMessage(error), &m_warnings);
 }
 
 void KernelNotifications::fatalError(const bilingual_str& message)
