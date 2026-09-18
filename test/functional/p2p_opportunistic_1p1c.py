@@ -15,6 +15,7 @@ from test_framework.mempool_util import (
     create_large_orphan,
     DEFAULT_MIN_RELAY_TX_FEE,
     fill_mempool,
+    TRUC_MAX_VSIZE,
 )
 from test_framework.messages import (
     CInv,
@@ -45,6 +46,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -79,14 +81,14 @@ class PackageRelayTest(BitcoinTestFramework):
             "-maxmempool=5","-inboundrelaypercent=100"
         ]]
 
-    def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None):
+    def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None, version=2):
         """Create a 1-input 0.1sat/vB transaction using a confirmed UTXO. Decrement and use
         self.sequence so that subsequent calls to this function result in unique transactions."""
 
         self.sequence -= 1
         assert_greater_than(self.nodes[0].getmempoolinfo()["mempoolminfee"], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
 
-        return wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN, sequence=self.sequence, utxo_to_spend=utxo_to_spend, confirmed_only=True)
+        return wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN, sequence=self.sequence, utxo_to_spend=utxo_to_spend, confirmed_only=True, version=version)
 
     @cleanup
     def test_basic_child_then_parent(self):
@@ -330,6 +332,69 @@ class PackageRelayTest(BitcoinTestFramework):
         node.bumpmocktime(NONPREF_PEER_TX_DELAY)
         package_sender.wait_for_getdata([parent_wtxid_int])
         package_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+
+        node_mempool = node.getrawmempool()
+        assert low_fee_parent["txid"] in node_mempool
+        assert high_fee_child["txid"] in node_mempool
+
+    @cleanup
+    def test_parent_fee_failure_from_other_announcer(self, version, num_padding_items):
+        node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+
+        low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet, version=version)
+        high_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB, version=version)
+
+        # Same txid as the parent, but with a witness padded with standard-size stack items that
+        # would fail script execution. Package feerate is checked before scripts.
+        tx_parent_padded = tx_from_hex(low_fee_parent["hex"])
+        padding = [b'\x01' * 80] * num_padding_items
+        tx_parent_padded.wit.vtxinwit[0].scriptWitness.stack = padding + tx_parent_padded.wit.vtxinwit[0].scriptWitness.stack
+        assert_equal(tx_parent_padded.txid_hex, low_fee_parent["txid"])
+        assert_not_equal(tx_parent_padded.wtxid_hex, low_fee_parent["wtxid"])
+        assert_greater_than(MAX_STANDARD_TX_WEIGHT, tx_parent_padded.get_weight())
+        if version == 3:
+            # Stay within TRUC limits so that the package fails on feerate, not TRUC checks.
+            assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_parent_padded.get_vsize())
+        # The honest pair is above mempoolminfee, the padded pair is below it.
+        package_fee = low_fee_parent["fee"] + high_fee_child["fee"]
+        mempoolminfee = node.getmempoolinfo()["mempoolminfee"]
+        honest_vsize = low_fee_parent["tx"].get_vsize() + high_fee_child["tx"].get_vsize()
+        padded_vsize = tx_parent_padded.get_vsize() + high_fee_child["tx"].get_vsize()
+        assert_greater_than(package_fee / honest_vsize * 1000, mempoolminfee)
+        assert_greater_than(mempoolminfee, package_fee / padded_vsize * 1000)
+
+        honest_peer = node.add_p2p_connection(P2PInterface())
+        attacker = node.add_p2p_connection(P2PInterface())
+
+        # 1. Honest peer announces and delivers the child. It is an orphan.
+        child_wtxid_int = high_fee_child["tx"].wtxid_int
+        honest_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
+        honest_peer.wait_for_getdata([child_wtxid_int])
+        honest_peer.send_and_ping(msg_tx(high_fee_child["tx"]))
+        assert_equal([o["wtxid"] for o in node.getorphantxs(verbosity=1)], [high_fee_child["wtxid"]])
+
+        # 2. Before the honest peer delivers the parent, the attacker announces the child's wtxid
+        # (becoming one of its announcers) and sends the padded parent. Padded parent + child are
+        # evaluated as a package and fail package feerate.
+        attacker.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
+        attacker.send_and_ping(msg_tx(tx_parent_padded))
+        assert low_fee_parent["txid"] not in node.getrawmempool()
+        assert high_fee_child["txid"] not in node.getrawmempool()
+
+        # 3. The child must not be erased from the orphanage, for either announcer: the failure was
+        # specific to the padded parent, not to the child.
+        orphans = node.getorphantxs(verbosity=1)
+        assert_equal([o["wtxid"] for o in orphans], [high_fee_child["wtxid"]])
+        assert_equal(len(orphans[0]["from"]), 2)
+
+        # 4. Node requests the missing parent by txid from the honest peer, which delivers it.
+        # The honest parent + child are evaluated as a package and accepted.
+        parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        honest_peer.wait_for_getdata([parent_txid_int])
+        honest_peer.send_and_ping(msg_tx(low_fee_parent["tx"]))
 
         node_mempool = node.getrawmempool()
         assert low_fee_parent["txid"] in node_mempool
@@ -635,6 +700,10 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.test_orphan_consensus_failure()
         self.test_parent_consensus_failure()
+        self.log.info("Check that a low feerate package with a malleated parent from another announcer does not erase the honest child")
+        self.test_parent_fee_failure_from_other_announcer(version=2, num_padding_items=2000)
+        self.log.info("Check the same for a TRUC package, with the malleated parent within TRUC size limits")
+        self.test_parent_fee_failure_from_other_announcer(version=3, num_padding_items=450)
         self.test_multiple_parents()
         self.test_other_parent_in_mempool()
         self.test_1p1c_on_1p1c()
