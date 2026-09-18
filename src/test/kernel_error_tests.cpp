@@ -27,7 +27,6 @@ const std::vector<kernel::FatalError> ALL_FATAL_ERRORS{
     kernel::BlockWriteFailed{},
     kernel::CorruptBlockFound{},
     kernel::DiskSpaceTooLow{},
-    kernel::FailedToStartIndexes{},
     kernel::SnapshotChainstateDirRemovalFailed{.dir = DIR},
     kernel::SnapshotChainstateRenameFailed{.old_path = DIR, .new_path = DIR / "invalid"},
     kernel::SnapshotValidationFailed{.height_from = 200, .height_to = 100},
