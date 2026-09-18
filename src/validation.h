@@ -18,6 +18,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
+#include <kernel/error.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -909,9 +910,10 @@ protected:
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
-     * that it can be examined for issue diagnosis.
+     * that it can be examined for issue diagnosis. Returns the failure, or
+     * std::nullopt on success.
      */
-    [[nodiscard]] util::Result<void> InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] std::optional<kernel::CoinsDbRenameFailed> InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     friend ChainstateManager;
 };

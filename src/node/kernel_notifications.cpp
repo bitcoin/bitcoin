@@ -146,7 +146,16 @@ bilingual_str FatalErrorMessage(const kernel::FatalError& error)
                 "The invalid snapshot chainstate will be left on disk in case it is "
                 "helpful in diagnosing the issue that caused this error."),
                 CLIENT_NAME, e.height_from, e.height_to, e.height_to, CLIENT_BUGREPORT);
-            if (e.rename_error) message += Untranslated("\n" + *e.rename_error);
+            if (e.rename_error) {
+                message += Untranslated("\n") + strprintf(_(
+                    "Rename of '%s' -> '%s' failed. "
+                    "You should resolve this by manually moving or deleting the invalid "
+                    "snapshot directory %s, otherwise you will encounter the same error again "
+                    "on the next startup."),
+                    fs::PathToString(e.rename_error->old_path),
+                    fs::PathToString(e.rename_error->new_path),
+                    fs::PathToString(e.rename_error->old_path));
+            }
             return message;
         },
         [](const kernel::SystemErrorWhileFlushing& e) { return strprintf(_("System error while flushing: %s"), e.what); },
