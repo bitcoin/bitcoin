@@ -3457,6 +3457,17 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
                 case MempoolAcceptResult::ResultType::INVALID:
                 case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
                 {
+                    // TX_RECONSIDERABLE here is a package feerate failure, a duplicate of this tx's
+                    // standalone rejection, or the child's own low feerate after the parent was
+                    // accepted by itself (it is then reconsidered via the parent's work set). The
+                    // first is a property of this wtxid pair (already cached by
+                    // MempoolRejectedPackage), not of the tx: don't erase or reject the child, as
+                    // another peer may have a version of the parent with a different witness that
+                    // makes the package acceptable.
+                    if (tx_result.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
+                        Assume(package_result.m_state.IsInvalid());
+                        break;
+                    }
                     // Don't add to vExtraTxnForCompact, as these transactions should have already been
                     // added there when added to the orphanage or rejected for TX_RECONSIDERABLE.
                     // This should be updated if package submission is ever used for transactions

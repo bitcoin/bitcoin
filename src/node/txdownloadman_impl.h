@@ -82,9 +82,10 @@ public:
      * Similar to m_lazy_recent_rejects, this filter is used to save bandwidth when e.g. all of our peers
      * have larger mempools and thus lower minimum feerates than us.
      *
-     * When a transaction's error is TxValidationResult::TX_RECONSIDERABLE (in a package or by
-     * itself), add its wtxid to this filter. When a package fails for any reason, add the combined
-     * hash to this filter.
+     * When a transaction's error is TxValidationResult::TX_RECONSIDERABLE when validated by itself,
+     * add its wtxid to this filter. When a package fails for any reason, add the combined hash to
+     * this filter; a TX_RECONSIDERABLE result within a package is attributed to the package, not
+     * to the individual transaction.
      *
      * Upon receiving an announcement for a transaction, if it exists in this filter, do not
      * download the txdata. When considering packages, if it exists in this filter, drop it.
