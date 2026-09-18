@@ -27,7 +27,12 @@ signature file `SHA256SUMS.asc` from https://bitcoincore.org and https://bitcoin
 
 It first checks if the checksum file is valid based upon a plurality of signatures, and
 then downloads the release files specified in the checksum file, and checks if the
-hashes of the release files are as expected.
+hashes of the release files are as expected. Signatures from keys that GPG reports as
+expired or revoked (`EXPKEYSIG`, `REVKEYSIG`) are reported as `EXPIRED SIGNATURE` or
+`REVOKED SIGNATURE` warnings and do not count toward that plurality by default, regardless of when
+the signature was made. For older releases, `--allow-expired` or `BINVERIFY_ALLOW_EXPIRED=1`
+also counts expired signatures; revoked ones never count. Successful JSON output lists
+expired signatures separately in `expired_sigs`.
 
 If we encounter pubkeys in the signature file that we do not recognize, the script
 can prompt the user as to whether they'd like to download the pubkeys. To enable
@@ -44,6 +49,12 @@ Validate releases with default settings:
 ```sh
 ./contrib/verify-binaries/verify.py pub 22.0
 ./contrib/verify-binaries/verify.py pub 22.0-rc3
+```
+
+Include expired keys when verifying an older release:
+
+```sh
+./contrib/verify-binaries/verify.py --allow-expired pub 22.0
 ```
 
 Get JSON output and don't prompt for user input (no auto key import):
