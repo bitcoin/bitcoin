@@ -145,6 +145,13 @@ public:
         (void)state.Invalid(result, reject_reason, debug_message);
         return state;
     }
+    //! Factory helper method to create an Error BlockValidationState
+    [[nodiscard]] static inline BlockValidationState MakeError(const std::string& reject_reason = {})
+    {
+        BlockValidationState state;
+        (void)state.Error(reject_reason);
+        return state;
+    }
 };
 
 // These implement the weight = (stripped_size * 4) + witness_size formula,

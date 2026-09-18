@@ -2124,10 +2124,10 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     return true;
 }
 
-bool FatalError(Notifications& notifications, BlockValidationState& state, const bilingual_str& message)
+BlockValidationState FatalError(Notifications& notifications, const bilingual_str& message)
 {
     notifications.fatalError(message);
-    return state.Error(message.original);
+    return BlockValidationState::MakeError(message.original);
 }
 
 /**
@@ -2396,7 +2396,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
             // problems.
-            return FatalError(m_chainman.GetNotifications(), state, _("Corrupt block found indicating potential hardware failure."));
+            LogError("%s: Consensus::CheckBlock: Corrupt block found: %s\n", __func__, state.ToString());
+            // Overwrite invalid state with error state
+            state = FatalError(m_chainman.GetNotifications(), _("Corrupt block found indicating potential hardware failure."));
+            return false;
         }
         LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
         return false;
@@ -2848,7 +2851,8 @@ bool Chainstate::FlushStateToDisk(
 
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                state = FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
+                return false;
             }
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
@@ -2880,7 +2884,8 @@ bool Chainstate::FlushStateToDisk(
                 // an overestimation, as most will delete an existing entry or
                 // overwrite one. Still, use a conservative safety factor of 2.
                 if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetDirtyCount())) {
-                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                    state = FatalError(m_chainman.GetNotifications(), _("Disk space is too low!"));
+                    return false;
                 }
                 // Flush the chainstate (which may refer to block index entries).
                 empty_cache ? CoinsTip().Flush() : CoinsTip().Sync();
@@ -2914,7 +2919,8 @@ bool Chainstate::FlushStateToDisk(
         }
     }
     } catch (const std::runtime_error& e) {
-        return FatalError(m_chainman.GetNotifications(), state, strprintf(_("System error while flushing: %s"), e.what()));
+        state = FatalError(m_chainman.GetNotifications(), strprintf(_("System error while flushing: %s"), e.what()));
+        return false;
     }
     return true;
 }
@@ -3099,7 +3105,8 @@ bool Chainstate::ConnectTip(
     if (!block_to_connect) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlock(*pblockNew, *pindexNew)) {
-            return FatalError(m_chainman.GetNotifications(), state, _("Failed to read block."));
+            state = FatalError(m_chainman.GetNotifications(), _("Failed to read block."));
+            return false;
         }
         block_to_connect = std::move(pblockNew);
     } else {
@@ -3290,7 +3297,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
             // rather than stay on a less work chain.
-            FatalError(m_chainman.GetNotifications(), state, _("Failed to disconnect block."));
+            state = FatalError(m_chainman.GetNotifications(), _("Failed to disconnect block."));
             return false;
         }
         fBlocksDisconnected = true;
@@ -4479,7 +4486,8 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        return FatalError(GetNotifications(), state, strprintf(_("System error while saving block to disk: %s"), e.what()));
+        state = FatalError(GetNotifications(), strprintf(_("System error while saving block to disk: %s"), e.what()));
+        return false;
     }
 
     // TODO: FlushStateToDisk() handles flushing of both block and chainstate
