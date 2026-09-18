@@ -367,8 +367,10 @@ def verify_shasums_signature(
 
     # Tally signatures and make sure we have enough goods to fulfill
     # our threshold.
-    good_trusted = [sig for sig in good if sig.trusted or sig.key in trusted_keys]
-    good_untrusted = [sig for sig in good if sig not in good_trusted]
+    good_trusted: list[SigData] = []
+    good_untrusted: list[SigData] = []
+    for sig in good:
+        (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
     num_trusted = len(good_trusted) + len(good_untrusted)
     log.info(f"got {num_trusted} good signatures")
 
@@ -611,7 +613,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
     return ReturnCode.SUCCESS
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         '-v', '--verbose', action='store_true',
@@ -679,7 +681,11 @@ def main():
         help="Path to a binary distribution file to verify. Can be specified multiple times for multiple files to verify."
     )
 
-    args = parser.parse_args()
+    return parser
+
+
+def main():
+    args = build_parser().parse_args()
     if args.quiet:
         log.setLevel(logging.WARNING)
 
