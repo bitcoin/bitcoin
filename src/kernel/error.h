@@ -37,7 +37,6 @@ struct BlockReadFailed {};
 struct BlockWriteFailed {};
 struct CorruptBlockFound {};
 struct DiskSpaceTooLow {};
-struct FailedToStartIndexes {};
 struct SnapshotChainstateDirRemovalFailed {
     fs::path dir;
 };
@@ -71,7 +70,6 @@ using FatalError = std::variant<
     BlockWriteFailed,
     CorruptBlockFound,
     DiskSpaceTooLow,
-    FailedToStartIndexes,
     SnapshotChainstateDirRemovalFailed,
     SnapshotChainstateRenameFailed,
     SnapshotValidationFailed,

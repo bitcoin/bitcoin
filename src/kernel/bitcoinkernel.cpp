@@ -248,7 +248,6 @@ btck_FatalError cast_btck_fatal_error(const kernel::FatalError& error)
         [](const kernel::BlockWriteFailed&) { return btck_FatalError_BLOCK_WRITE_FAILED; },
         [](const kernel::CorruptBlockFound&) { return btck_FatalError_CORRUPT_BLOCK_FOUND; },
         [](const kernel::DiskSpaceTooLow&) { return btck_FatalError_DISK_SPACE_TOO_LOW; },
-        [](const kernel::FailedToStartIndexes&) { return btck_FatalError_FAILED_TO_START_INDEXES; },
         [](const kernel::SnapshotChainstateDirRemovalFailed&) { return btck_FatalError_SNAPSHOT_CHAINSTATE_DIR_REMOVAL_FAILED; },
         [](const kernel::SnapshotChainstateRenameFailed&) { return btck_FatalError_SNAPSHOT_CHAINSTATE_RENAME_FAILED; },
         [](const kernel::SnapshotValidationFailed&) { return btck_FatalError_SNAPSHOT_VALIDATION_FAILED; },

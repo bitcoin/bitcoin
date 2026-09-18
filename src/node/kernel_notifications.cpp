@@ -123,7 +123,6 @@ bilingual_str FatalErrorMessage(const kernel::FatalError& error)
         [](const kernel::BlockWriteFailed&) -> bilingual_str { return _("Failed to write block."); },
         [](const kernel::CorruptBlockFound&) -> bilingual_str { return _("Corrupt block found indicating potential hardware failure."); },
         [](const kernel::DiskSpaceTooLow&) -> bilingual_str { return _("Disk space is too low!"); },
-        [](const kernel::FailedToStartIndexes&) -> bilingual_str { return _("Failed to start indexes, shutting down…"); },
         [](const kernel::SnapshotChainstateDirRemovalFailed& e) {
             return strprintf(_("Failed to remove snapshot chainstate dir (%s). "
                                "Manually remove it before restarting.\n"), fs::PathToString(e.dir));
