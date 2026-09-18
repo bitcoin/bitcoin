@@ -57,6 +57,7 @@ add_executable(test_bitcoin
   i2p_tests.cpp
   interfaces_tests.cpp
   key_io_tests.cpp
+  kernel_error_tests.cpp
   key_tests.cpp
   logging_tests.cpp
   mempool_tests.cpp

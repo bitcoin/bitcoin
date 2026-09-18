@@ -135,9 +135,9 @@ public:
         std::cout << "Flush error: " << static_cast<std::underlying_type_t<FlushError>>(error) << std::endl;
     }
 
-    void FatalErrorHandler(std::string_view error) override
+    void FatalErrorHandler(FatalError error) override
     {
-        std::cout << error << std::endl;
+        std::cout << "Fatal error: " << static_cast<std::underlying_type_t<FatalError>>(error) << std::endl;
     }
 };
 

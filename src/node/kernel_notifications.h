@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_KERNEL_NOTIFICATIONS_H
 #define BITCOIN_NODE_KERNEL_NOTIFICATIONS_H
 
+#include <kernel/error.h>
 #include <kernel/notifications_interface.h>
 
 #include <sync.h>
@@ -21,10 +22,13 @@ struct bilingual_str;
 
 namespace kernel {
 enum class Warning;
-enum class FlushError;
 } // namespace kernel
 
 namespace node {
+
+//! User-facing, translated message for a kernel error.
+bilingual_str FlushErrorMessage(kernel::FlushError error);
+bilingual_str FatalErrorMessage(const kernel::FatalError& error);
 
 class Warnings;
 inline constexpr int DEFAULT_STOPATHEIGHT{0};
@@ -59,7 +63,7 @@ public:
 
     void flushError(kernel::FlushError error) override;
 
-    void fatalError(const bilingual_str& message) override;
+    void fatalError(const kernel::FatalError& error) override;
 
     void setChainstateLoaded(bool chainstate_loaded) EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex) {
         LOCK(m_tip_block_mutex);

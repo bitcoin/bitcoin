@@ -62,6 +62,26 @@ enum class Warning : btck_Warning {
     LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN
 };
 
+enum class FatalError : btck_FatalError {
+    ACTIVATE_BEST_CHAINS_FAILED = btck_FatalError_ACTIVATE_BEST_CHAINS_FAILED,
+    ASSUMEUTXO_DATA_NOT_FOUND = btck_FatalError_ASSUMEUTXO_DATA_NOT_FOUND,
+    BLOCK_DISCONNECT_FAILED = btck_FatalError_BLOCK_DISCONNECT_FAILED,
+    BLOCK_FILE_CLOSE_FAILED = btck_FatalError_BLOCK_FILE_CLOSE_FAILED,
+    BLOCK_READ_FAILED = btck_FatalError_BLOCK_READ_FAILED,
+    BLOCK_WRITE_FAILED = btck_FatalError_BLOCK_WRITE_FAILED,
+    CORRUPT_BLOCK_FOUND = btck_FatalError_CORRUPT_BLOCK_FOUND,
+    DISK_SPACE_TOO_LOW = btck_FatalError_DISK_SPACE_TOO_LOW,
+    FAILED_TO_START_INDEXES = btck_FatalError_FAILED_TO_START_INDEXES,
+    SNAPSHOT_CHAINSTATE_DIR_REMOVAL_FAILED = btck_FatalError_SNAPSHOT_CHAINSTATE_DIR_REMOVAL_FAILED,
+    SNAPSHOT_CHAINSTATE_RENAME_FAILED = btck_FatalError_SNAPSHOT_CHAINSTATE_RENAME_FAILED,
+    SNAPSHOT_VALIDATION_FAILED = btck_FatalError_SNAPSHOT_VALIDATION_FAILED,
+    SYSTEM_ERROR_WHILE_FLUSHING = btck_FatalError_SYSTEM_ERROR_WHILE_FLUSHING,
+    SYSTEM_ERROR_WHILE_LOADING_EXTERNAL_BLOCK_FILE = btck_FatalError_SYSTEM_ERROR_WHILE_LOADING_EXTERNAL_BLOCK_FILE,
+    SYSTEM_ERROR_WHILE_SAVING_BLOCK = btck_FatalError_SYSTEM_ERROR_WHILE_SAVING_BLOCK,
+    UNDO_DATA_WRITE_FAILED = btck_FatalError_UNDO_DATA_WRITE_FAILED,
+    UNDO_FILE_CLOSE_FAILED = btck_FatalError_UNDO_FILE_CLOSE_FAILED
+};
+
 enum class FlushError : btck_FlushError {
     BLOCK_FILE_FLUSH_FAILED = btck_FlushError_BLOCK_FILE_FLUSH_FAILED,
     UNDO_FILE_FLUSH_FAILED = btck_FlushError_UNDO_FILE_FLUSH_FAILED
@@ -1086,7 +1106,7 @@ public:
 
     virtual void FlushErrorHandler(FlushError error) {}
 
-    virtual void FatalErrorHandler(std::string_view error) {}
+    virtual void FatalErrorHandler(FatalError error) {}
 };
 
 template <typename Derived>
@@ -1214,7 +1234,7 @@ public:
                 .warning_set = +[](void* user_data, btck_Warning warning, const char* message, size_t message_len) { (*static_cast<user_type>(user_data))->WarningSetHandler(static_cast<Warning>(warning), {message, message_len}); },
                 .warning_unset = +[](void* user_data, btck_Warning warning) { (*static_cast<user_type>(user_data))->WarningUnsetHandler(static_cast<Warning>(warning)); },
                 .flush_error = +[](void* user_data, btck_FlushError error) { (*static_cast<user_type>(user_data))->FlushErrorHandler(static_cast<FlushError>(error)); },
-                .fatal_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FatalErrorHandler({error, error_len}); },
+                .fatal_error = +[](void* user_data, btck_FatalError error) { (*static_cast<user_type>(user_data))->FatalErrorHandler(static_cast<FatalError>(error)); },
             });
     }
 

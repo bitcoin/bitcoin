@@ -39,7 +39,6 @@
 #include <util/strencodings.h>
 #include <util/syserror.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
 
 #include <cerrno>
@@ -448,7 +447,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     if (snapshot_blockhash) {
         const std::optional<AssumeutxoData> maybe_au_data = GetParams().AssumeutxoForBlockhash(*snapshot_blockhash);
         if (!maybe_au_data) {
-            m_opts.notifications.fatalError(strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString()));
+            m_opts.notifications.fatalError(kernel::AssumeutxoDataNotFound{*snapshot_blockhash});
             return false;
         }
         const AssumeutxoData& au_data = *Assert(maybe_au_data);
@@ -926,7 +925,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
     bool out_of_space;
     size_t bytes_allocated = m_block_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        m_opts.notifications.fatalError(_("Disk space is too low!"));
+        m_opts.notifications.fatalError(kernel::DiskSpaceTooLow{});
         return {};
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
@@ -970,7 +969,7 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     bool out_of_space;
     size_t bytes_allocated = m_undo_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        return FatalError(m_opts.notifications, state, _("Disk space is too low!"));
+        return FatalError(m_opts.notifications, state, kernel::DiskSpaceTooLow{});
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
@@ -998,7 +997,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         AutoFile file{OpenUndoFile(pos)};
         if (file.IsNull()) {
             LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
-            return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
+            return FatalError(m_opts.notifications, state, kernel::UndoDataWriteFailed{});
         }
         {
             BufferedWriter fileout{file};
@@ -1019,7 +1018,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         // Make sure that the file is closed before we call `FlushUndoFile`.
         if (file.fclose() != 0) {
             LogError("Failed to close block undo file %s: %s", pos.ToString(), SysErrorString(errno));
-            return FatalError(m_opts.notifications, state, _("Failed to close block undo file."));
+            return FatalError(m_opts.notifications, state, kernel::UndoFileCloseFailed{});
         }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
@@ -1158,7 +1157,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     AutoFile file{OpenBlockFile(pos, /*fReadOnly=*/false)};
     if (file.IsNull()) {
         LogError("OpenBlockFile failed for %s while writing block", pos.ToString());
-        m_opts.notifications.fatalError(_("Failed to write block."));
+        m_opts.notifications.fatalError(kernel::BlockWriteFailed{});
         return FlatFilePos();
     }
     {
@@ -1173,7 +1172,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 
     if (file.fclose() != 0) {
         LogError("Failed to close block file %s: %s", pos.ToString(), SysErrorString(errno));
-        m_opts.notifications.fatalError(_("Failed to close file when writing block."));
+        m_opts.notifications.fatalError(kernel::BlockFileCloseFailed{});
         return FlatFilePos();
     }
 
@@ -1320,7 +1319,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     if (auto result = chainman.ActivateBestChains(); !result) {
-        chainman.GetNotifications().fatalError(util::ErrorString(result));
+        chainman.GetNotifications().fatalError(kernel::ActivateBestChainsFailed{util::ErrorString(result).original});
     }
     // End scope of ImportingNow
 }

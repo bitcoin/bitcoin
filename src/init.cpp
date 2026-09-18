@@ -41,6 +41,7 @@
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/error.h>
 #include <kernel/notifications_interface.h>
 #include <key.h>
 #include <logging.h>
@@ -2118,8 +2119,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
-            bilingual_str err_str = _("Failed to start indexes, shutting down…");
-            chainman.GetNotifications().fatalError(err_str);
+            chainman.GetNotifications().fatalError(kernel::FailedToStartIndexes{});
             return;
         }
         // Load mempool from disk

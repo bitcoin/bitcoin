@@ -33,6 +33,7 @@
 #include <undo.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/overloaded.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/task_runner.h>
@@ -236,6 +237,29 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
     assert(false);
 }
 
+btck_FatalError cast_btck_fatal_error(const kernel::FatalError& error)
+{
+    return std::visit(util::Overloaded{
+        [](const kernel::ActivateBestChainsFailed&) { return btck_FatalError_ACTIVATE_BEST_CHAINS_FAILED; },
+        [](const kernel::AssumeutxoDataNotFound&) { return btck_FatalError_ASSUMEUTXO_DATA_NOT_FOUND; },
+        [](const kernel::BlockDisconnectFailed&) { return btck_FatalError_BLOCK_DISCONNECT_FAILED; },
+        [](const kernel::BlockFileCloseFailed&) { return btck_FatalError_BLOCK_FILE_CLOSE_FAILED; },
+        [](const kernel::BlockReadFailed&) { return btck_FatalError_BLOCK_READ_FAILED; },
+        [](const kernel::BlockWriteFailed&) { return btck_FatalError_BLOCK_WRITE_FAILED; },
+        [](const kernel::CorruptBlockFound&) { return btck_FatalError_CORRUPT_BLOCK_FOUND; },
+        [](const kernel::DiskSpaceTooLow&) { return btck_FatalError_DISK_SPACE_TOO_LOW; },
+        [](const kernel::FailedToStartIndexes&) { return btck_FatalError_FAILED_TO_START_INDEXES; },
+        [](const kernel::SnapshotChainstateDirRemovalFailed&) { return btck_FatalError_SNAPSHOT_CHAINSTATE_DIR_REMOVAL_FAILED; },
+        [](const kernel::SnapshotChainstateRenameFailed&) { return btck_FatalError_SNAPSHOT_CHAINSTATE_RENAME_FAILED; },
+        [](const kernel::SnapshotValidationFailed&) { return btck_FatalError_SNAPSHOT_VALIDATION_FAILED; },
+        [](const kernel::SystemErrorWhileFlushing&) { return btck_FatalError_SYSTEM_ERROR_WHILE_FLUSHING; },
+        [](const kernel::SystemErrorWhileLoadingExternalBlockFile&) { return btck_FatalError_SYSTEM_ERROR_WHILE_LOADING_EXTERNAL_BLOCK_FILE; },
+        [](const kernel::SystemErrorWhileSavingBlock&) { return btck_FatalError_SYSTEM_ERROR_WHILE_SAVING_BLOCK; },
+        [](const kernel::UndoDataWriteFailed&) { return btck_FatalError_UNDO_DATA_WRITE_FAILED; },
+        [](const kernel::UndoFileCloseFailed&) { return btck_FatalError_UNDO_FILE_CLOSE_FAILED; },
+    }, error);
+}
+
 btck_FlushError cast_btck_flush_error(kernel::FlushError error)
 {
     switch (error) {
@@ -340,9 +364,9 @@ public:
     {
         if (m_cbs.flush_error) m_cbs.flush_error(m_cbs.user_data, cast_btck_flush_error(error));
     }
-    void fatalError(const bilingual_str& message) override
+    void fatalError(const kernel::FatalError& error) override
     {
-        if (m_cbs.fatal_error) m_cbs.fatal_error(m_cbs.user_data, message.original.c_str(), message.original.length());
+        if (m_cbs.fatal_error) m_cbs.fatal_error(m_cbs.user_data, cast_btck_fatal_error(error));
     }
 };
 

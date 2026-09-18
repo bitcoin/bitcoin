@@ -104,7 +104,14 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
-bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
+//! Reject reason for the errors reported through BlockValidationState::Error(),
+//! which submitblock and submitheader surface. Empty for the errors that are
+//! only reported through Notifications::fatalError(). This is not a user-facing
+//! message: building and translating that is the application's job, see
+//! node/kernel_notifications.cpp.
+std::string FatalErrorString(const kernel::FatalError& error);
+
+bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const kernel::FatalError& error);
 
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight);
