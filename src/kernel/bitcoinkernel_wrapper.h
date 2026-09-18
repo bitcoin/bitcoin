@@ -62,6 +62,11 @@ enum class Warning : btck_Warning {
     LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN
 };
 
+enum class FlushError : btck_FlushError {
+    BLOCK_FILE_FLUSH_FAILED = btck_FlushError_BLOCK_FILE_FLUSH_FAILED,
+    UNDO_FILE_FLUSH_FAILED = btck_FlushError_UNDO_FILE_FLUSH_FAILED
+};
+
 enum class ValidationMode : btck_ValidationMode {
     VALID = btck_ValidationMode_VALID,
     INVALID = btck_ValidationMode_INVALID,
@@ -1079,7 +1084,7 @@ public:
 
     virtual void WarningUnsetHandler(Warning warning) {}
 
-    virtual void FlushErrorHandler(std::string_view error) {}
+    virtual void FlushErrorHandler(FlushError error) {}
 
     virtual void FatalErrorHandler(std::string_view error) {}
 };
@@ -1208,7 +1213,7 @@ public:
                 .progress = +[](void* user_data, const char* title, size_t title_len, int progress_percent, int resume_possible) { (*static_cast<user_type>(user_data))->ProgressHandler({title, title_len}, progress_percent, resume_possible == 1); },
                 .warning_set = +[](void* user_data, btck_Warning warning, const char* message, size_t message_len) { (*static_cast<user_type>(user_data))->WarningSetHandler(static_cast<Warning>(warning), {message, message_len}); },
                 .warning_unset = +[](void* user_data, btck_Warning warning) { (*static_cast<user_type>(user_data))->WarningUnsetHandler(static_cast<Warning>(warning)); },
-                .flush_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FlushErrorHandler({error, error_len}); },
+                .flush_error = +[](void* user_data, btck_FlushError error) { (*static_cast<user_type>(user_data))->FlushErrorHandler(static_cast<FlushError>(error)); },
                 .fatal_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FatalErrorHandler({error, error_len}); },
             });
     }

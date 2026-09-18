@@ -15,6 +15,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/error.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/warning.h>
 #include <logging.h>
@@ -235,6 +236,17 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
     assert(false);
 }
 
+btck_FlushError cast_btck_flush_error(kernel::FlushError error)
+{
+    switch (error) {
+    case kernel::FlushError::BLOCK_FILE_FLUSH_FAILED:
+        return btck_FlushError_BLOCK_FILE_FLUSH_FAILED;
+    case kernel::FlushError::UNDO_FILE_FLUSH_FAILED:
+        return btck_FlushError_UNDO_FILE_FLUSH_FAILED;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 struct LoggingConnection {
     std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
     void* m_user_data;
@@ -324,9 +336,9 @@ public:
     {
         if (m_cbs.warning_unset) m_cbs.warning_unset(m_cbs.user_data, cast_btck_warning(id));
     }
-    void flushError(const bilingual_str& message) override
+    void flushError(kernel::FlushError error) override
     {
-        if (m_cbs.flush_error) m_cbs.flush_error(m_cbs.user_data, message.original.c_str(), message.original.length());
+        if (m_cbs.flush_error) m_cbs.flush_error(m_cbs.user_data, cast_btck_flush_error(error));
     }
     void fatalError(const bilingual_str& message) override
     {

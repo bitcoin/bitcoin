@@ -130,9 +130,9 @@ public:
         std::cout << "Warning unset: " << static_cast<std::underlying_type_t<Warning>>(warning) << std::endl;
     }
 
-    void FlushErrorHandler(std::string_view error) override
+    void FlushErrorHandler(FlushError error) override
     {
-        std::cout << error << std::endl;
+        std::cout << "Flush error: " << static_cast<std::underlying_type_t<FlushError>>(error) << std::endl;
     }
 
     void FatalErrorHandler(std::string_view error) override

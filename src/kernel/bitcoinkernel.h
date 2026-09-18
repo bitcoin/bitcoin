@@ -356,6 +356,15 @@ typedef uint8_t btck_Warning;
 #define btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED ((btck_Warning)(0))
 #define btck_Warning_LARGE_WORK_INVALID_CHAIN ((btck_Warning)(1))
 
+/**
+ * Possible flush error types issued by the kernel library. The numeric values
+ * are part of the API: new errors are appended, never inserted, so that
+ * existing values keep their meaning.
+ */
+typedef uint8_t btck_FlushError;
+#define btck_FlushError_BLOCK_FILE_FLUSH_FAILED ((btck_FlushError)(0))
+#define btck_FlushError_UNDO_FILE_FLUSH_FAILED ((btck_FlushError)(1))
+
 /** Callback function types */
 
 /**
@@ -377,7 +386,7 @@ typedef void (*btck_NotifyHeaderTip)(void* user_data, btck_SynchronizationState 
 typedef void (*btck_NotifyProgress)(void* user_data, const char* title, size_t title_len, int progress_percent, int resume_possible);
 typedef void (*btck_NotifyWarningSet)(void* user_data, btck_Warning warning, const char* message, size_t message_len);
 typedef void (*btck_NotifyWarningUnset)(void* user_data, btck_Warning warning);
-typedef void (*btck_NotifyFlushError)(void* user_data, const char* message, size_t message_len);
+typedef void (*btck_NotifyFlushError)(void* user_data, btck_FlushError error);
 typedef void (*btck_NotifyFatalError)(void* user_data, const char* message, size_t message_len);
 
 /**
@@ -478,7 +487,8 @@ typedef struct {
     btck_NotifyProgress progress;           //!< Reports on current block synchronization progress.
     btck_NotifyWarningSet warning_set;      //!< A warning issued by the kernel library during validation.
     btck_NotifyWarningUnset warning_unset;  //!< A previous condition leading to the issuance of a warning is no longer given.
-    btck_NotifyFlushError flush_error;      //!< An error encountered when flushing data to disk.
+    btck_NotifyFlushError flush_error;      //!< An error encountered when flushing data to disk. The library reports the
+                                            //!< error type only; rendering it as a message is up to the user.
     btck_NotifyFatalError fatal_error;      //!< An unrecoverable system error encountered by the library.
 } btck_NotificationInterfaceCallbacks;
 

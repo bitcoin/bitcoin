@@ -124,9 +124,9 @@ public:
         BOOST_CHECK_GT(timestamp, 0);
     }
 
-    void FlushErrorHandler(std::string_view error) override
+    void FlushErrorHandler(FlushError error) override
     {
-        std::cout << error << std::endl;
+        std::cout << "Flush error: " << static_cast<std::underlying_type_t<FlushError>>(error) << std::endl;
     }
 
     void FatalErrorHandler(std::string_view error) override

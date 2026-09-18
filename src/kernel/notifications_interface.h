@@ -17,6 +17,7 @@ namespace kernel {
 //! Result type for use with std::variant to indicate that an operation should be interrupted.
 struct Interrupted{};
 enum class Warning;
+enum class FlushError;
 
 
 //! Simple result type for functions that need to propagate an interrupt status and don't have other return values.
@@ -49,7 +50,7 @@ public:
     //! perform. Applications can choose to handle the flush error notification
     //! by logging the error, or notifying the user, or triggering an early
     //! shutdown as a precaution against causing more errors.
-    virtual void flushError(const bilingual_str& message) {}
+    virtual void flushError(FlushError error) {}
 
     //! The fatal error notification is sent to notify the user when an error
     //! occurs in kernel code that can't be recovered from. After this
