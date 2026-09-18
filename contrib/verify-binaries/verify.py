@@ -380,6 +380,8 @@ def verify_shasums_signature(
             assert sig.status == 'revoked', sig
             log.warning(f"REVOKED SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
+    if args.allow_expired:
+        num_trusted += len(expired)
     log.info(f"got {num_trusted} good signatures")
 
     if num_trusted < min_good_sigs:
@@ -640,6 +642,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=int(os.environ.get('BINVERIFY_MIN_GOOD_SIGS', 3)),
         help=(
             'The minimum number of good signatures to require successful termination.'),
+    )
+    parser.add_argument(
+        '--allow-expired', action='store_true',
+        default=bool_from_env('BINVERIFY_ALLOW_EXPIRED'),
+        help='Count signatures from expired keys toward the threshold when verifying older releases; revoked keys remain excluded',
     )
     parser.add_argument(
         '--keyserver', action='store', nargs='?',

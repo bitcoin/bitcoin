@@ -80,11 +80,11 @@ def test_inactive_signature_quorum():
             parser = verify.build_parser()
         for command in (['pub', '22.0'], ['bin', verify.SUMS_FILENAME]):
             args, unknown_options = parser.parse_known_args([*options, *command])
-            assert unknown_options == options  # TODO: Recognize the expired-key opt-in
-            assert getattr(args, 'allow_expired', False) is False  # TODO: Honor the flag and environment default
+            assert unknown_options == []
+            assert getattr(args, 'allow_expired', False) == allow_expired
 
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, expired)
-        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in
+        assert result == (verify.ReturnCode.SUCCESS if allow_expired else verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS)
         assert [sig.key for sig in good_trusted] == []
         assert good_untrusted == []
         assert [sig.key for sig in expired_sigs] == ['1111222233334444']
@@ -100,7 +100,7 @@ def test_inactive_signature_quorum():
         assert [sig.key for sig in expired_sigs] == ['1111222233334444']
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
-        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Honor the explicit expired-key opt-in
+        assert result == (verify.ReturnCode.SUCCESS if allow_expired else verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS)
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
