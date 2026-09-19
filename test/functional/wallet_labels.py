@@ -14,7 +14,7 @@ from collections import defaultdict
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_false, assert_raises_rpc_error, assert_true
 from test_framework.wallet_util import test_address
 
 
@@ -43,7 +43,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             'timestamp': 'now',
         }])
 
-        assert_equal(response[0]['success'], False)
+        assert_false(response[0]['success'])
         assert_equal(response[0]['error']['code'], -11)
         assert_equal(response[0]['error']['message'], "Invalid label name")
 
@@ -198,14 +198,14 @@ class WalletLabelsTest(BitcoinTestFramework):
         for l in BECH32_VALID:
             ad = BECH32_VALID[l]
             import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
-            assert_equal(import_res[0]["success"], True)
+            assert_true(import_res[0]["success"])
             self.generatetoaddress(node, 1, ad)
             assert_equal(wallet_watch_only.getaddressesbylabel(label=l), {ad: {'purpose': 'receive'}})
             assert_equal(wallet_watch_only.getreceivedbylabel(label=l), 0)
         for l in BECH32_INVALID:
             ad = BECH32_INVALID[l]
             import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
-            assert_equal(import_res[0]["success"], False)
+            assert_false(import_res[0]["success"])
             assert_equal(import_res[0]["error"]["code"], -5)
             assert_equal(import_res[0]["error"]["message"], "Address is not valid")
 
@@ -222,7 +222,7 @@ class Label:
         self.purpose = defaultdict(lambda: "receive")
 
     def add_address(self, address):
-        assert_equal(address not in self.addresses, True)
+        assert_true(address not in self.addresses)
         self.addresses.append(address)
 
     def add_receive_address(self, address):
@@ -239,7 +239,7 @@ class Label:
             {address: {"purpose": self.purpose[address]} for address in self.addresses})
 
 def change_label(node, address, old_label, new_label):
-    assert_equal(address in old_label.addresses, True)
+    assert_true(address in old_label.addresses)
     node.setlabel(address, new_label.name)
 
     old_label.addresses.remove(address)

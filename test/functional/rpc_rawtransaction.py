@@ -34,8 +34,10 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     sync_txindex,
 )
 from test_framework.wallet import (
@@ -148,7 +150,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             # We should be able to get the raw transaction by providing the correct block
             gottx = node.getrawtransaction(txid=tx, verbose=True, blockhash=block1)
             assert_equal(gottx['txid'], tx)
-            assert_equal(gottx['in_active_chain'], True)
+            assert_true(gottx['in_active_chain'])
             if txindex_enabled:
                 self.log.info("Test getrawtransaction with -txindex, without blockhash: 'in_active_chain' should be absent")
                 for v in [1,2]:
@@ -171,7 +173,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             # Undo the blocks and verify that "in_active_chain" is false.
             node.invalidateblock(block1)
             gottx = node.getrawtransaction(txid=tx, verbose=True, blockhash=block1)
-            assert_equal(gottx['in_active_chain'], False)
+            assert_false(gottx['in_active_chain'])
             self.log.info(f"Test getrawtransaction {'with' if txindex_enabled else 'without'} -txindex on a stale block, without blockhash")
             if txindex_enabled:
                 gottx = node.getrawtransaction(txid=stale_coinbase, verbose=True)
@@ -420,13 +422,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx = self.wallet.create_self_transfer(fee_rate=Decimal('0.00100000'))
         # Thus, testmempoolaccept should reject
         testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000)[0]
-        assert_equal(testres['allowed'], False)
+        assert_false(testres['allowed'])
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'], 0.00001000)
         # and the following calls should both succeed
         testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']])[0]
-        assert_equal(testres['allowed'], True)
+        assert_true(testres['allowed'])
         self.nodes[2].sendrawtransaction(hexstring=tx['hex'])
 
         # Test a transaction with a large fee.
@@ -434,20 +436,20 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx = self.wallet.create_self_transfer(fee_rate=Decimal("0.20000000"))
         # Thus, testmempoolaccept should reject
         testres = self.nodes[2].testmempoolaccept([tx['hex']])[0]
-        assert_equal(testres['allowed'], False)
+        assert_false(testres['allowed'])
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'])
         # and the following calls should both succeed
         testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']], maxfeerate='0.20000000')[0]
-        assert_equal(testres['allowed'], True)
+        assert_true(testres['allowed'])
         self.nodes[2].sendrawtransaction(hexstring=tx['hex'], maxfeerate='0.20000000')
 
         self.log.info("Test sendrawtransaction/testmempoolaccept with tx outputs already in the utxo set")
         self.generate(self.nodes[2], 1)
         for node in self.nodes:
             testres = node.testmempoolaccept([tx['hex']])[0]
-            assert_equal(testres['allowed'], False)
+            assert_false(testres['allowed'])
             assert_equal(testres['reject-reason'], 'txn-already-known')
             assert_raises_rpc_error(-27, 'Transaction outputs already in utxo set', node.sendrawtransaction, tx['hex'])
 

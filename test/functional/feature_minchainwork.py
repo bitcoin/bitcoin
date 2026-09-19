@@ -21,8 +21,9 @@ from test_framework.p2p import P2PInterface, msg_getheaders
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    ensure_for,
     assert_not_equal,
+    assert_true,
+    ensure_for,
 )
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
@@ -103,7 +104,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         # Verify that node2 is in fact still in IBD (otherwise this test may
         # not be exercising the logic we want!)
-        assert_equal(self.nodes[2].getblockchaininfo()['initialblockdownload'], True)
+        assert_true(self.nodes[2].getblockchaininfo()['initialblockdownload'])
 
         self.log.info("Test -minimumchainwork with a non-hex value")
         self.stop_node(0)

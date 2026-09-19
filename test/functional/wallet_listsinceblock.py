@@ -12,7 +12,9 @@ from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair
@@ -397,8 +399,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 original_found = True
             if tx['txid'] == double_tx['txid']:
                 double_found = True
-        assert_equal(original_found, True)
-        assert_equal(double_found, True)
+        assert_true(original_found)
+        assert_true(double_found)
 
         lastblockhash = self.generate(spending_node, 1)[0]
 
@@ -411,8 +413,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 original_found = True
             if tx['txid'] == double_tx['txid']:
                 double_found = True
-        assert_equal(original_found, False)
-        assert_equal(double_found, False)
+        assert_false(original_found)
+        assert_false(double_found)
 
     def test_desc(self):
         """Make sure we can track coins by descriptor."""
