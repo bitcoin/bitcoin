@@ -23,11 +23,18 @@ using util::ToString;
 namespace wallet {
 namespace {
 const TestingSetup* g_setup;
+FuzzedWallet* g_wallet;
 
 void initialize_setup()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
+    static FuzzedWallet fuzzed_wallet{
+        *g_setup->m_node.chain,
+        "fuzzed_wallet_a",
+        "tprv8ZgxMBicQKsPd1QwsGgzfu2pcPYbBosZhJknqreRHgsWx32nNEhMjGQX2cgFL8n6wz9xdDYwLcs78N4nsCo32cxEX8RBtwGsEGgybLiQJfk",
+    };
+    g_wallet = &fuzzed_wallet;
 }
 
 FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
@@ -39,11 +46,8 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
     ArgsManager& args = *node.args;
     args.ForceSetArg("-dustrelayfee", ToString(fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY)));
-    FuzzedWallet fuzzed_wallet{
-        *g_setup->m_node.chain,
-        "fuzzed_wallet_a",
-        "tprv8ZgxMBicQKsPd1QwsGgzfu2pcPYbBosZhJknqreRHgsWx32nNEhMjGQX2cgFL8n6wz9xdDYwLcs78N4nsCo32cxEX8RBtwGsEGgybLiQJfk",
-    };
+    FuzzedWallet& fuzzed_wallet{*g_wallet};
+    fuzzed_wallet.Reset();
 
     CCoinControl coin_control;
     if (fuzzed_data_provider.ConsumeBool()) coin_control.m_version = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
