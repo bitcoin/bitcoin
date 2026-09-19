@@ -119,6 +119,10 @@ public:
     void setRestartRequired(bool fRequired);
     bool isRestartRequired() const;
 
+    /* Whether a settings write failed since the last clearWriteFailed(). */
+    bool writeFailed() const { return m_write_failed; }
+    void clearWriteFailed() { m_write_failed = false; }
+
     interfaces::Node& node() const { return m_node; }
 
 private:
@@ -135,6 +139,9 @@ private:
     bool m_sub_fee_from_amount;
     bool m_enable_psbt_controls;
     bool m_mask_values;
+
+    /* set when a settings write did not reach disk */
+    bool m_write_failed{false};
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
