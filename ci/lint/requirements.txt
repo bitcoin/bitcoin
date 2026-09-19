@@ -1,4 +1,4 @@
 # lief version should match the version used in Guix
-lief==0.17.5
+lief==0.17.6
 mypy==2.3.1
 pyzmq==27.2.0
