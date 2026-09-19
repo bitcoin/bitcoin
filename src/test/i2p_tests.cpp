@@ -19,27 +19,27 @@
 #include <memory>
 #include <string>
 
-/// Save the log level and the value of CreateSock and restore them when the test ends.
+/// Save the category log levels and the value of CreateSock and restore them when the test ends.
 class EnvTestingSetup : public BasicTestingSetup
 {
 public:
     explicit EnvTestingSetup(const ChainType chainType = ChainType::MAIN,
                              TestOpts opts = {})
         : BasicTestingSetup{chainType, opts},
-          m_prev_log_level{LogInstance().LogLevel()},
+          m_prev_levels{LogInstance().GetLogLevels()},
           m_create_sock_orig{CreateSock}
     {
-        LogInstance().SetLogLevel(BCLog::Level::Trace);
+        LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Trace);
     }
 
     ~EnvTestingSetup()
     {
         CreateSock = m_create_sock_orig;
-        LogInstance().SetLogLevel(m_prev_log_level);
+        LogInstance().SetLogLevels(m_prev_levels);
     }
 
 private:
-    const BCLog::Level m_prev_log_level;
+    const BCLog::Logger::LogLevels m_prev_levels;
     const decltype(CreateSock) m_create_sock_orig;
 };
 
