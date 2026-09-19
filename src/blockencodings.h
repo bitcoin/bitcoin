@@ -111,8 +111,10 @@ public:
 
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key
+     * @param[in]  prefill_candidates  A set of transaction candidate indexes that should be prefilled for compact block annoucements
+
      */
-    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce, const std::set<uint32_t>& prefill_candidates);
 
     uint64_t GetShortID(const Wtxid& wtxid) const;
 
@@ -133,8 +135,25 @@ public:
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
+
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
+    size_t prefilled_size = 0, mempool_size = 0, extra_size = 0;
+
+    // Either it was already present in our mempool...
+    size_t redundant_prefilled_mp_count = 0, redundant_prefilled_mp_size = 0;
+    // or maybe it was present in our extrapool...
+    size_t redundant_prefilled_ep_count = 0, redundant_prefilled_ep_size = 0;
+
+
     const CTxMemPool* pool;
+    // Keep track of the block position of transactions that we didn't have in
+    // our mempool while reconstructing this compact block. We can use these to
+    // predictively prefill transactions in our compact block annoucements.
+    // This includes transactions that:
+    // - were prefilled by the cmpctblock announcer and were not in our mempool
+    // - transactions we found in our extra_pool (but not mempool)
+    // - transactions we had to request from the announcer
+    std::set<uint32_t> prefill_candidates{ /*coinbase=*/0 };
 public:
     CBlockHeader header;
 
@@ -147,6 +166,7 @@ public:
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
+    std::set<uint32_t> PrefillCandidates() const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);
 };
