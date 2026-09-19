@@ -1404,6 +1404,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         comp_wsh_pkh_script = script_to_p2wsh_script(comp_pkh_script).hex()
         comp_sh_wsh_pkh_script = script_to_p2sh_script(comp_wsh_pkh_script).hex()
         comp_wsh_pkh_addr = script_to_p2wsh(comp_pkh_script)
+        comp_sh_wsh_pkh_addr = script_to_p2sh(comp_wsh_pkh_script)
 
         uncomp_wif, uncomp_pubkey = generate_keypair(compressed=False, wif=True)
         uncomp_pkh_script = key_to_p2pkh_script(uncomp_pubkey).hex()
@@ -1483,11 +1484,11 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(wallet.getbalances()["mine"]["trusted"], 1)
 
-        # After migration, the wsh(pkh()) with a compressed key is still valid and the descriptor wallet will have
-        # information about the witnessScript
-        comp_wsh_pkh_addr_info = wallet.getaddressinfo(comp_wsh_pkh_addr)
-        assert_equal(comp_wsh_pkh_addr_info["ismine"], True)
-        assert "embedded" in comp_wsh_pkh_addr_info
+        # The migrated wallet should own both forms of the compressed-key output and report their embedded scripts.
+        for addr in [comp_wsh_pkh_addr, comp_sh_wsh_pkh_addr]:
+            addr_info = wallet.getaddressinfo(addr)
+            assert_equal(addr_info["ismine"], True)
+            assert "embedded" in addr_info
 
         # After migration, the invalid addresses should still not be detected as ismine and not watchonly.
         # The descriptor wallet should not have migrated these at all, so there should additionally be no
