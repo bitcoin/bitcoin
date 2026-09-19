@@ -12,6 +12,7 @@ import configparser
 import logging
 import os
 import random
+import tempfile
 import subprocess
 import sys
 
@@ -65,6 +66,11 @@ def main():
         help='How many targets to merge or execute in parallel.',
     )
     parser.add_argument(
+        '--corpus-shards',
+        type=int,
+        help='How many shards to split each target corpus into (default: --par).',
+    )
+    parser.add_argument(
         'corpus_dir',
         help='The corpus to run on (must contain subfolders for each fuzz target).',
     )
@@ -88,6 +94,8 @@ def main():
     )
 
     args = parser.parse_args()
+    if args.corpus_shards is None:
+        args.corpus_shards = args.par
     args.corpus_dir = Path(args.corpus_dir)
 
     # Set up logging
@@ -198,6 +206,7 @@ def main():
             using_libfuzzer=using_libfuzzer,
             use_valgrind=args.valgrind,
             empty_min_time=args.empty_min_time,
+            corpus_shards=args.corpus_shards,
         )
 
 
@@ -327,40 +336,58 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs)
         future.result()
 
 
-def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer, use_valgrind, empty_min_time):
+def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer, use_valgrind, empty_min_time, corpus_shards):
     jobs = []
     for t in test_list:
         corpus_path = corpus / t
         os.makedirs(corpus_path, exist_ok=True)
-        args = [
-            fuzz_bin,
-        ]
-        empty_dir = not any(corpus_path.iterdir())
-        if using_libfuzzer:
-            if empty_min_time and empty_dir:
-                args += [f"-max_total_time={empty_min_time}"]
-            else:
-                args += [
-                    "-runs=1",
-                    corpus_path,
-                ]
+        corpus_files = sorted(path for path in corpus_path.iterdir() if path.is_file())
+        empty_dir = not corpus_files
+
+        if corpus_shards > 1 and len(corpus_files) > 1:
+            shard_count = min(corpus_shards, len(corpus_files))
+            shard_files = [[] for _ in range(shard_count)]
+            for index, corpus_file in enumerate(corpus_files):
+                shard_files[index % shard_count].append(corpus_file)
         else:
-            args += [corpus_path]
-        if use_valgrind:
-            args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
+            shard_count = 1
+            shard_files = [corpus_files]
 
-        def job(t, args):
-            output = 'Run {} with args {}'.format(t, args)
-            result = subprocess.run(
-                args,
-                env=get_fuzz_env(target=t, source_dir=src_dir),
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            output += result.stderr
-            return output, result, t
+        for shard_index, files in enumerate(shard_files):
+            def job(t, corpus_path, empty_dir, files, shard_index, materialize):
+                def run(shard_path):
+                    args = [fuzz_bin]
+                    if using_libfuzzer:
+                        if empty_min_time and empty_dir:
+                            args += [f"-max_total_time={empty_min_time}"]
+                        else:
+                            args += ["-runs=1", shard_path]
+                    else:
+                        args += [shard_path]
+                    if use_valgrind:
+                        args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
 
-        jobs.append(fuzz_pool.submit(job, t, args))
+                    output = 'Run {} with args {}'.format(t, args)
+                    result = subprocess.run(
+                        args,
+                        env=get_fuzz_env(target=t, source_dir=src_dir),
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
+                    output += result.stderr
+                    return output, result, t
+
+                if materialize:
+                    shard_parent = corpus.parent / "tmp_shards" / t
+                    shard_parent.mkdir(parents=True, exist_ok=True)
+                    with tempfile.TemporaryDirectory(dir=shard_parent, prefix=f"{shard_index}-") as shard_dir:
+                        shard_path = Path(shard_dir)
+                        for corpus_file in files:
+                            os.link(corpus_file, shard_path / corpus_file.name)
+                        return run(shard_path)
+                return run(corpus_path)
+
+            jobs.append(fuzz_pool.submit(job, t, corpus_path, empty_dir, files, shard_index, shard_count > 1))
 
     stats = []
     for future in as_completed(jobs):
