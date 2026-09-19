@@ -38,6 +38,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -1394,12 +1395,33 @@ BOOST_AUTO_TEST_CASE(test_SplitString)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_SplitLines)
+{
+    const struct {
+        std::string_view input;
+        std::vector<std::string_view> output;
+    } cases[]{
+        {"", {""}},
+        {"one", {"one"}},
+        {"one\ntwo", {"one", "two"}},
+        {"one\ntwo\n", {"one", "two"}},
+        {"\none\n\n", {"", "one", ""}},
+        {"\n\n", {"", ""}},
+        {"one\r\nt\0wo"sv, {"one\r", "t\0wo"sv}},
+    };
+    for (const auto& [input, output] : cases) {
+        std::vector<std::string_view> lines;
+        util::SplitLines(input, [&](auto line) { lines.push_back(line); });
+        BOOST_TEST(lines == output);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
 {
     // ASCII and UTF-8 must pass through unaltered.
     BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("Valid log message貓"), "Valid log message貓");
-    // Newlines must pass through unaltered.
-    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("Message\n with newlines\n"), "Message\n with newlines\n");
+    // Newlines are escaped too, so a message can't forge log lines.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("Message\n with newlines\n"), R"(Message\x0a with newlines\x0a)");
     // Other control characters are escaped in C syntax.
     BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("\x01\x7f Corrupted log message\x0d"), R"(\x01\x7f Corrupted log message\x0d)");
     // Embedded NULL characters are escaped too.
