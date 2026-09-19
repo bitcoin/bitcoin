@@ -1303,17 +1303,17 @@ static RPCMethod getorphantxs()
              RPCArgOptions{.skip_type_check = true}},
         },
         {
-            RPCResult{"for verbose = 0",
+            RPCResult{"for verbosity = 0",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                 }},
-            RPCResult{"for verbose = 1",
+            RPCResult{"for verbosity = 1",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::OBJ, "", "", OrphanDescription()},
                 }},
-            RPCResult{"for verbose = 2",
+            RPCResult{"for verbosity = 2",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::OBJ, "", "",
