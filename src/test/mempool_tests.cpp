@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     clock += HALFLIFE;
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... we should keep the same min fee until we get a block
-    pool.removeForBlock(vtx);
+    pool.removeForBlock(vtx, /*nBlockHeight=*/1);
     clock += HALFLIFE;
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/2.0));
     // ... then feerate should drop 1/2 each halflife

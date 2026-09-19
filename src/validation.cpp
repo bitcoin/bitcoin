@@ -3079,7 +3079,7 @@ bool Chainstate::ConnectTip(
     // Remove conflicting transactions from the mempool.
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     if (m_mempool) {
-        txs_removed_for_block = m_mempool->removeForBlock(block_to_connect->vtx);
+        txs_removed_for_block = m_mempool->removeForBlock(block_to_connect->vtx, pindexNew->nHeight);
         disconnectpool.removeForBlock(block_to_connect->vtx);
     }
     // Update m_chain & related variables.

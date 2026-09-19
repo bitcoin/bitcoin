@@ -72,7 +72,6 @@ void initialize_tx_pool()
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
     SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
-
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
         COutPoint prevout{MineBlock(g_setup->m_node, {
             .coinbase_output_script = P2WSH_OP_TRUE,
@@ -156,7 +155,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
 
         // Try updating the mempool for this block, as though it were mined.
         LOCK2(::cs_main, tx_pool.cs);
-        tx_pool.removeForBlock(block_template->block.vtx);
+        tx_pool.removeForBlock(block_template->block.vtx, chainstate.m_chain.Height() + 1);
 
         // Now try to add those transactions back, as though a reorg happened.
         std::vector<Txid> hashes_to_update;
