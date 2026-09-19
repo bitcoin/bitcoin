@@ -16,6 +16,7 @@ Other options may work, but are not officially tested:
 The instructions below may work on Ubuntu/Debian, but using guix or nix-shell is recommended and checked by CI.
 Make sure the distribution's `g++-mingw-w64-ucrt64`
 package meets the minimum required GCC version specified in [dependencies.md](dependencies.md).
+At least Mingw-w64 version 12.0 is required.
 If compiling with the GUI (default in depends), at least GCC version 13 is required.
 
 Installing Windows Subsystem for Linux
