@@ -31,10 +31,7 @@
       ]
     },
     "tests": {
-      "description": "Build test_bitcoin.exe executable",
-      "dependencies": [
-        "boost-test"
-      ]
+      "description": "Build test_bitcoin.exe executable"
     },
     "wallet": {
       "description": "Enable wallet (SQLite)",

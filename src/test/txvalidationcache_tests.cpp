@@ -13,7 +13,7 @@
 #include <util/chaintype.h>
 #include <validation.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
@@ -334,7 +334,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         std::map<int, bilingual_str> input_errors;
         BOOST_REQUIRE(SignTransaction(tr_tx, &tr_keystore, coins, {.sighash_type = SIGHASH_DEFAULT}, input_errors));
         auto& witness_stack = tr_tx.vin[0].scriptWitness.stack;
-        BOOST_REQUIRE(witness_stack.size() == 1 && witness_stack[0].size() == 64);
+        BOOST_REQUIRE((witness_stack.size() == 1 && witness_stack[0].size() == 64));
 
         // Invalidate signature; an invalid Taproot key-path spend is only invalid if SCRIPT_VERIFY_TAPROOT is set
         witness_stack[0][63] ^= 0x01; // damage signature

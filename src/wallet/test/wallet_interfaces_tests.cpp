@@ -9,10 +9,15 @@
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <optional>
 
 namespace wallet {
+
+std::ostream& operator<<(std::ostream& os, const WalletError& e)
+{
+    return os << "WalletError(code=" << static_cast<int>(e.code) << ", message=" << e.message.original << ")";
+}
 
 BOOST_FIXTURE_TEST_SUITE(wallet_interfaces_tests, BasicTestingSetup)
 
