@@ -56,18 +56,91 @@ def displayaddress(args):
 
     return sys.stdout.write(json.dumps({"address": expected_desc[args.desc]}))
 
+def _signtx_rogue(psbt_b64, mode):
+    """Corrupt a PSBT according to `mode` and return it, simulating a rogue signer."""
+    import struct
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+    from test_framework.messages import CTransaction, from_binary
+    from test_framework.psbt import (
+        PSBT,
+        PSBT_GLOBAL_UNSIGNED_TX,
+        PSBT_IN_PARTIAL_SIG,
+        PSBT_IN_SIGHASH_TYPE,
+        PSBT_IN_TAP_KEY_SIG,
+        PSBT_IN_TAP_SCRIPT_SIG,
+        PSBT_OUT_AMOUNT,
+        PSBT_OUT_SCRIPT,
+    )
+
+    psbt = PSBT.from_base64(psbt_b64)
+    # 65-byte fake sig: 64 zero bytes + SIGHASH_NONE (0x02) — only length and
+    # last byte are inspected by the invariant check, not signature validity.
+    fake_tap_sig_unsafe_sighash = bytes(64) + bytes([0x02])
+
+    if mode == "change_amount":
+        if PSBT_GLOBAL_UNSIGNED_TX in psbt.g.map:   # PSBTv0
+            tx = from_binary(CTransaction, psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX])
+            tx.vout[0].nValue += 1
+            psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX] = tx.serialize_without_witness()
+        else:                                         # PSBTv2
+            amount = struct.unpack("<q", psbt.o[0].map[PSBT_OUT_AMOUNT])[0]
+            psbt.o[0].map[PSBT_OUT_AMOUNT] = struct.pack("<q", amount + 1)
+    elif mode == "change_script":
+        if PSBT_GLOBAL_UNSIGNED_TX in psbt.g.map:
+            tx = from_binary(CTransaction, psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX])
+            tx.vout[0].scriptPubKey = bytes([0x51])  # OP_TRUE
+            psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX] = tx.serialize_without_witness()
+        else:
+            psbt.o[0].map[PSBT_OUT_SCRIPT] = bytes([0x51])
+    elif mode == "remove_output":
+        # Drop the last output so the reply has fewer outputs than the original.
+        if PSBT_GLOBAL_UNSIGNED_TX in psbt.g.map:   # PSBTv0
+            tx = from_binary(CTransaction, psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX])
+            tx.vout.pop()
+            psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX] = tx.serialize_without_witness()
+        psbt.o.pop()                                  # PSBTv2 count is recomputed on serialize
+    elif mode == "sighash_none":
+        # Inject SIGHASH_NONE (2) via the per-input sighash_type field (BIP-174 key 0x03).
+        psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = struct.pack("<I", 2)
+    elif mode == "tap_key_sig_unsafe":
+        # 65-byte taproot keypath sig whose explicit sighash byte is SIGHASH_NONE.
+        psbt.i[0].map[PSBT_IN_TAP_KEY_SIG] = fake_tap_sig_unsafe_sighash
+    elif mode == "tap_script_sig_unsafe":
+        # PSBT_IN_TAP_SCRIPT_SIG key is <type><xonly(32)><leaf_hash(32)>.
+        # Zero-filled placeholders are fine; the check only looks at sig length and last byte.
+        key = bytes([PSBT_IN_TAP_SCRIPT_SIG]) + bytes(32) + bytes(32)
+        psbt.i[0].map[key] = fake_tap_sig_unsafe_sighash
+    elif mode == "ecdsa_partial_sig_unsafe":
+        # Minimal valid strict-DER ECDSA sig (r=1, s=1) trailed by SIGHASH_NONE (0x02)
+        # so the PSBT deserializer's CheckSignatureEncoding passes and the
+        # invariant check sees the unsafe sighash byte. Pubkey is the secp256k1
+        # generator G — a fully-valid compressed pubkey.
+        pubkey = bytes.fromhex("0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798")
+        key = bytes([PSBT_IN_PARTIAL_SIG]) + pubkey
+        psbt.i[0].map[key] = bytes.fromhex("3006020101020101") + bytes([0x02])
+    else:
+        sys.stdout.write(json.dumps({"error": f"Unknown rogue mode: {mode}"}))
+        return
+
+    sys.stdout.write(json.dumps({"psbt": psbt.to_base64(), "complete": True}))
+
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
+    rogue_mode_path = os.path.join(os.getcwd(), "mock_rogue_mode")
+    if os.path.isfile(rogue_mode_path):
+        with open(rogue_mode_path) as f:
+            mode = f.read().strip()
+        _signtx_rogue(args.psbt, mode)
+        return
+
     with open(os.path.join(os.getcwd(), "mock_psbt"), "r") as f:
         mock_psbt = f.read()
 
-    if args.fingerprint == "00000001" :
-        sys.stdout.write(json.dumps({
-            "psbt": mock_psbt,
-            "complete": True
-        }))
+    if args.fingerprint == "00000001":
+        sys.stdout.write(json.dumps({"psbt": mock_psbt, "complete": True}))
     else:
         sys.stdout.write(json.dumps({"psbt": args.psbt}))
 
