@@ -1447,6 +1447,13 @@ public:
         return BlockValidationState{state};
     }
 
+    void SetClockTime(std::optional<std::chrono::seconds> now)
+    {
+        if (btck_chainstate_manager_set_clock_time(get(), now ? now->count() : 0) != 0) {
+            throw std::runtime_error("timestamp out of range");
+        }
+    }
+
     ChainView GetChain() const
     {
         return ChainView{btck_chainstate_manager_get_active_chain(get())};
