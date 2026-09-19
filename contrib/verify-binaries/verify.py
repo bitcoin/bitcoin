@@ -341,7 +341,7 @@ def prompt_yn(prompt) -> bool:
 def verify_shasums_signature(
     signature_file_path: str, sums_file_path: str, args: argparse.Namespace
 ) -> tuple[
-   ReturnCode, list[SigData], list[SigData], list[SigData], list[SigData]
+   ReturnCode, list[SigData], list[SigData], list[SigData], list[SigData], list[SigData]
 ]:
     min_good_sigs = args.min_good_sigs
     gpg_allowed_codes = [0, 2]  # 2 is returned when untrusted signatures are present.
@@ -355,7 +355,7 @@ def verify_shasums_signature(
             log.critical(f"unexpected GPG exit code ({gpg_retval})")
 
         log.error(f"gpg output:\n{indent(gpg_output)}")
-        return (ReturnCode.INTEGRITY_FAILURE, [], [], [], [])
+        return (ReturnCode.INTEGRITY_FAILURE, [], [], [], [], [])
 
     # Decide which keys we trust, though not "trust" in the GPG sense, but rather
     # which pubkeys convince us that this sums file is legitimate. In other words,
@@ -367,9 +367,21 @@ def verify_shasums_signature(
 
     # Tally signatures and make sure we have enough goods to fulfill
     # our threshold.
-    good_trusted = [sig for sig in good if sig.trusted or sig.key in trusted_keys]
-    good_untrusted = [sig for sig in good if sig not in good_trusted]
+    good_trusted: list[SigData] = []
+    good_untrusted: list[SigData] = []
+    expired: list[SigData] = []
+    for sig in good:
+        if not sig.status:
+            (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+        elif sig.status == 'expired':
+            expired.append(sig)
+            log.warning(f"EXPIRED SIGNATURE: {sig}")
+        else:
+            assert sig.status == 'revoked', sig
+            log.warning(f"REVOKED SIGNATURE: {sig}")
     num_trusted = len(good_trusted) + len(good_untrusted)
+    if args.allow_expired:
+        num_trusted += len(expired)
     log.info(f"got {num_trusted} good signatures")
 
     if num_trusted < min_good_sigs:
@@ -384,7 +396,7 @@ def verify_shasums_signature(
             "not enough trusted sigs to meet threshold "
             f"({num_trusted} vs. {min_good_sigs})")
 
-        return (ReturnCode.NOT_ENOUGH_GOOD_SIGS, [], [], [], [])
+        return (ReturnCode.NOT_ENOUGH_GOOD_SIGS, [], [], [], [], expired)
 
     for sig in good_trusted:
         log.info(f"GOOD SIGNATURE: {sig}")
@@ -392,16 +404,13 @@ def verify_shasums_signature(
     for sig in good_untrusted:
         log.info(f"GOOD SIGNATURE (untrusted): {sig}")
 
-    for sig in [sig for sig in good if sig.status == 'expired']:
-        log.warning(f"key {sig.key} for {sig.name} is expired")
-
     for sig in bad:
         log.warning(f"BAD SIGNATURE: {sig}")
 
     for sig in unknown:
         log.warning(f"UNKNOWN SIGNATURE: {sig}")
 
-    return (ReturnCode.SUCCESS, good_trusted, good_untrusted, unknown, bad)
+    return (ReturnCode.SUCCESS, good_trusted, good_untrusted, unknown, bad, expired)
 
 
 def parse_sums_file(sums_file_path: str, filename_filter: list[str]) -> list[list[str]]:
@@ -480,7 +489,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
         return got_sums_status
 
     # Verify the signature on the SHA256SUMS file
-    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(SIGNATUREFILENAME, SUMS_FILENAME, args)
+    sigs_status, good_trusted, good_untrusted, unknown, bad, expired = verify_shasums_signature(SIGNATUREFILENAME, SUMS_FILENAME, args)
     if sigs_status != ReturnCode.SUCCESS:
         if sigs_status == ReturnCode.INTEGRITY_FAILURE:
             cleanup()
@@ -534,6 +543,7 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
         }
         print(json.dumps(output, indent=2))
@@ -557,7 +567,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
         sums_sig_path = Path(args.sums_file).with_suffix(".asc")
 
     # Verify the signature on the SHA256SUMS file
-    sigs_status, good_trusted, good_untrusted, unknown, bad = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
+    sigs_status, good_trusted, good_untrusted, unknown, bad, expired = verify_shasums_signature(str(sums_sig_path), args.sums_file, args)
     if sigs_status != ReturnCode.SUCCESS:
         return sigs_status
 
@@ -598,6 +608,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
             'good_untrusted_sigs': [str(s) for s in good_untrusted],
             'unknown_sigs': [str(s) for s in unknown],
             'bad_sigs': [str(s) for s in bad],
+            'expired_sigs': [str(s) for s in expired],
             'verified_binaries': files_to_hashes,
             "missing_binaries": missing_files,
         }
@@ -611,7 +622,7 @@ def verify_binaries_handler(args: argparse.Namespace) -> ReturnCode:
     return ReturnCode.SUCCESS
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         '-v', '--verbose', action='store_true',
@@ -631,6 +642,11 @@ def main():
         default=int(os.environ.get('BINVERIFY_MIN_GOOD_SIGS', 3)),
         help=(
             'The minimum number of good signatures to require successful termination.'),
+    )
+    parser.add_argument(
+        '--allow-expired', action='store_true',
+        default=bool_from_env('BINVERIFY_ALLOW_EXPIRED'),
+        help='Count signatures from expired keys toward the threshold when verifying older releases; revoked keys remain excluded',
     )
     parser.add_argument(
         '--keyserver', action='store', nargs='?',
@@ -679,7 +695,11 @@ def main():
         help="Path to a binary distribution file to verify. Can be specified multiple times for multiple files to verify."
     )
 
-    args = parser.parse_args()
+    return parser
+
+
+def main():
+    args = build_parser().parse_args()
     if args.quiet:
         log.setLevel(logging.WARNING)
 
