@@ -16,6 +16,7 @@ from test_framework.wallet import MiniWallet
 
 import concurrent.futures
 import http.client
+import select
 import socket
 import threading
 import time
@@ -764,30 +765,40 @@ class HTTPBasicsTest (BitcoinTestFramework):
         stuck_since = None
         start = time.monotonic()
         while True:
-            try:
-                sent += conn.conn.sock.send(flood[sent % len(flood):])
-                # Progress: the server is still reading
-                stuck_since = None
-                self.log.debug(f"sent: {sent}")
-                assert sent <= len(flood) * 10, (
-                    f"Server accepted {sent} bytes of pipelined data while a "
-                    "request was still in flight: the receive buffer is not throttled")
-            except BlockingIOError:
-                # The kernel send buffer is full (EAGAIN).
-                # That's good, but we still need to determine if we are
-                # feeling backpressure from the server or the client-side buffer.
+            # Use select() to test writability before calling send(). On macOS,
+            # when the TCP receive window reaches zero the kernel can block inside
+            # send() doing zero-window probing even on a non-blocking socket,
+            # preventing BlockingIOError from ever being raised. select() always
+            # honors its timeout regardless of TCP window state.
+            _, writable, _ = select.select([], [conn.conn.sock], [], 0.05)
+            if not writable:
+                # Socket not writable within timeout: kernel send buffer is full.
                 if stuck_since is None:
                     stuck_since = time.monotonic()
                 elif time.monotonic() - stuck_since > STALL_TIMEOUT:
                     # No progress: the server has stopped reading.
                     break
+            else:
+                try:
+                    sent += conn.conn.sock.send(flood[sent % len(flood):])
+                    # Progress: the server is still reading.
+                    stuck_since = None
+                    self.log.debug(f"sent: {sent}")
+                    assert sent <= len(flood) * 10, (
+                        f"Server accepted {sent} bytes of pipelined data while a "
+                        "request was still in flight: the receive buffer is not throttled")
+                except BlockingIOError:
+                    # Rare race between select() and send(); treat as not writable.
+                    if stuck_since is None:
+                        stuck_since = time.monotonic()
+                    elif time.monotonic() - stuck_since > STALL_TIMEOUT:
+                        break
             if stuck_since is None and time.monotonic() - start > PROGRESS_TIMEOUT:
                 # Continuous progress: the server is still draining the
                 # receive buffer while a request is in flight.
                 raise AssertionError(
                     f"Server kept reading pipelined data ({sent} bytes) while a "
                     f"request was still in flight for {PROGRESS_TIMEOUT}s.")
-            time.sleep(0.05)
 
         self.log.info(f"Pipelined flood stalled after {sent} bytes; no progress for {STALL_TIMEOUT}s.")
 

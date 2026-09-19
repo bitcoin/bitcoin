@@ -531,6 +531,9 @@ public:
      */
     const HTTPRequest* GetRequest() const { return m_req.get(); }
 
+    //! True while a request from this client is being processed by a worker thread.
+    bool IsRequestBusy() const { return m_req_busy.load(); }
+
     //! Used for tests.
     const std::string& GetRecvBuffer() const { return m_recv_buffer; }
 

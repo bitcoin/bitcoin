@@ -1017,8 +1017,15 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         //      full, TryReadRequest() holds a completed request back from a
         //      worker, so nothing new is read until send has drained.
         //   2. Else, m_req is incomplete and needs more data, or there is no
-        //      m_req at all and the recv buffer is empty -> Recv
-        //   3. Else (no parse in progress, leftover bytes in m_recv_buffer) -> 0
+        //      m_req at all and the recv buffer is empty, AND no request is
+        //      currently in-flight (m_req_busy=false) -> Recv.
+        //      While a request is in-flight the kernel recv buffer must stay
+        //      full: that is what creates TCP backpressure and prevents the
+        //      client from sending pipelined data we cannot yet process.
+        //      Draining the kernel recv buffer (even once) would re-open the
+        //      TCP window and allow the client to send more.
+        //   3. Else (no parse in progress, leftover bytes in m_recv_buffer,
+        //      OR a request is in-flight) -> 0.
         //      Stay in the I/O map so TryReadRequest() drains the buffer first.
         //      Extra pipelined data waits in the kernel socket buffer
         //      (TCP backpressure), not in m_recv_buffer.
@@ -1033,8 +1040,10 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
         Sock::Event event{0};
         if (http_client->ReadyToSend()) {
             event = Sock::SendEvent;
-        } else if (http_client->GetRequest() != nullptr || http_client->ReceiveBufferEmpty()) {
-            // Mid-parse (need more bytes) or buffer empty.
+        } else if (!http_client->IsRequestBusy() &&
+                   (http_client->GetRequest() != nullptr || http_client->ReceiveBufferEmpty())) {
+            // Mid-parse (need more bytes) or buffer empty — but only when no
+            // request is currently in-flight.
             event = Sock::RecvEvent;
         }
 
