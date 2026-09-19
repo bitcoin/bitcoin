@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <util/check.h>
 #include <validation.h>
 
@@ -27,6 +28,7 @@ BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
 BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 {
     CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1_MiB, true};
+    IndexTestGuard guard{coin_stats_index, *m_node.validation_signals};
     BOOST_REQUIRE(coin_stats_index.Init());
 
     const CBlockIndex* block_index;

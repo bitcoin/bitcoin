@@ -16,20 +16,26 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/logging.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <span>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -168,6 +174,264 @@ void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsign
     }
 }
 
+BOOST_AUTO_TEST_CASE(processnewblock_initial_state)
+{
+    struct StateCatcher final : CValidationInterface {
+        int m_calls{0};
+        BlockValidationState m_state;
+
+        void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState& state) override
+        {
+            ++m_calls;
+            m_state = state;
+        }
+    };
+
+    auto& chainman{*Assert(m_node.chainman)};
+    const auto block{GoodBlock(Params().GenesisBlock().GetHash())};
+    auto sub{std::make_shared<StateCatcher>()};
+    // Observe only test submissions, not queued notifications from fixture setup.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->RegisterSharedValidationInterface(sub);
+
+    // Initial rejection and admission no-ops return ready futures.
+    const auto GetReadyResult = [](std::future<BlockProcessingResult> future) {
+        BOOST_REQUIRE(future.valid());
+        BOOST_REQUIRE(future.wait_for(std::chrono::seconds{0}) == std::future_status::ready);
+        return future.get();
+    };
+    const auto GetResult = [&](std::future<BlockProcessingResult> future) {
+        BOOST_REQUIRE(future.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+        const auto result{future.get()};
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        return result;
+    };
+
+    // CheckBlock failures are returned directly without a validation callback.
+    {
+        auto mutated{std::make_shared<CBlock>(*block)};
+        mutated->m_validation_cache = {};
+        CMutableTransaction coinbase{*mutated->vtx[0]};
+        ++coinbase.vout[0].nValue;
+        mutated->vtx[0] = MakeTransactionRef(std::move(coinbase));
+        BlockValidationState state;
+        const auto result{GetReadyResult(chainman.ProcessNewBlock(mutated, state, true, true))};
+        BOOST_CHECK(!result.processing_success);
+        BOOST_CHECK(!result.new_block);
+        BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_MUTATED);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txnmrklroot");
+        BOOST_CHECK_EQUAL(sub->m_calls, 0);
+    }
+
+    // The valid version remains acceptable; its duplicate needs no storage or notification.
+    {
+        BlockValidationState state;
+        const auto result{GetResult(chainman.ProcessNewBlock(block, state, true, true))};
+        BOOST_CHECK(result.processing_success);
+        BOOST_CHECK(result.new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 1);
+        BOOST_CHECK(sub->m_state.IsValid());
+    }
+    {
+        BlockValidationState state;
+        const auto result{GetReadyResult(chainman.ProcessNewBlock(block, state, true, true))};
+        BOOST_CHECK(result.processing_success);
+        BOOST_CHECK(!result.new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 1);
+    }
+
+    // Contextual admission failures are exposed through the initial state too.
+    {
+        auto bad_height{Block(block->GetHash())};
+        bad_height->m_validation_cache = {};
+        CMutableTransaction coinbase{*bad_height->vtx[0]};
+        coinbase.vin[0].scriptSig = CScript{} << OP_0 << OP_0;
+        bad_height->vtx[0] = MakeTransactionRef(std::move(coinbase));
+        bad_height = FinalizeBlock(bad_height);
+        BlockValidationState state;
+        const auto result{GetReadyResult(chainman.ProcessNewBlock(bad_height, state, true, true))};
+        BOOST_CHECK(!result.processing_success);
+        BOOST_CHECK(!result.new_block);
+        BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_CONSENSUS);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-cb-height");
+        BOOST_CHECK_EQUAL(sub->m_calls, 1);
+    }
+
+    // A block can pass admission and be stored, but fail validation when connected.
+    {
+        const auto invalid{BadBlock(block->GetHash())};
+        BlockValidationState state;
+        const auto result{GetResult(chainman.ProcessNewBlock(invalid, state, true, true))};
+        BOOST_CHECK(result.processing_success);
+        BOOST_CHECK(result.new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 2);
+        BOOST_CHECK(!result.cached_invalid);
+        BOOST_CHECK(sub->m_state.IsInvalid());
+        BOOST_CHECK(sub->m_state.GetResult() == BlockValidationResult::BLOCK_CONSENSUS);
+        BOOST_CHECK_EQUAL(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->GetBlockHash()), block->GetHash());
+    }
+
+    // A write failure preserves new_block, which is set before storage is attempted.
+    {
+        const auto unwritten{GoodBlock(block->GetHash())};
+        const auto block_file{WITH_LOCK(cs_main, return chainman.m_blockman.GetBlockPosFilename(chainman.ActiveChain().Tip()->GetBlockPos()))};
+        const auto backup_file{block_file + ".backup"};
+        // A directory in place of the block file makes opening it for writing fail.
+        fs::rename(block_file, backup_file);
+        fs::create_directory(block_file);
+        BlockValidationState state;
+        ASSERT_DEBUG_LOG("Failed to write block.");
+        const auto result{GetResult(chainman.ProcessNewBlock(unwritten, state, true, true))};
+        fs::remove(block_file);
+        fs::rename(backup_file, block_file);
+
+        BOOST_CHECK(!result.processing_success);
+        BOOST_CHECK(result.new_block);
+        BOOST_CHECK(state.IsValid());
+        BOOST_CHECK_EQUAL(sub->m_calls, 3);
+        BOOST_CHECK(sub->m_state.IsError());
+        BOOST_CHECK(!sub->m_state.ToString().empty());
+        BOOST_CHECK_EQUAL(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->GetBlockHash()), block->GetHash());
+    }
+
+    m_node.validation_signals->UnregisterSharedValidationInterface(sub);
+}
+
+BOOST_AUTO_TEST_CASE(processnewblock_after_worker_gate)
+{
+    auto& chainman{*Assert(m_node.chainman)};
+    {
+        BlockWorkerGate gate{chainman};
+        gate.Wait();
+    }
+
+    // Releasing a temporary gate must leave the worker available for new blocks.
+    BlockValidationState state;
+    const auto block{GoodBlock(Params().GenesisBlock().GetHash())};
+    auto completion{chainman.ProcessNewBlock(block, state, true, true)};
+    BOOST_REQUIRE(completion.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+    const auto result{completion.get()};
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK(result.processing_success && result.new_block);
+}
+
+BOOST_AUTO_TEST_CASE(processnewblock_completes_before_callbacks)
+{
+    struct Subscriber final : CValidationInterface {
+        std::promise<void> checked;
+
+        void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) override
+        {
+            checked.set_value();
+        }
+    };
+    auto sub{std::make_shared<Subscriber>()};
+    auto checked{sub->checked.get_future()};
+    auto& signals{*m_node.validation_signals};
+    // Observe only this submission, not queued notifications from fixture setup.
+    signals.SyncWithValidationInterfaceQueue();
+    signals.RegisterSharedValidationInterface(sub);
+    ValidationCallbackGate gate{signals};
+    gate.Wait();
+
+    BlockValidationState state;
+    auto result{m_node.chainman->ProcessNewBlock(GoodBlock(Params().GenesisBlock().GetHash()), state, true, true)};
+    BOOST_REQUIRE(result.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+    BOOST_CHECK(result.get().new_block);
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK(checked.wait_for(std::chrono::seconds{0}) == std::future_status::timeout);
+
+    gate.Open();
+    signals.SyncWithValidationInterfaceQueue();
+    BOOST_CHECK(checked.wait_for(std::chrono::seconds{0}) == std::future_status::ready);
+    signals.UnregisterSharedValidationInterface(sub);
+}
+
+BOOST_AUTO_TEST_CASE(processnewblock_queued_child_invalidated)
+{
+    struct Subscriber final : CValidationInterface {
+        const uint256 m_child_hash;
+        int m_child_checked{0};
+        BlockValidationState m_child_state;
+
+        explicit Subscriber(const uint256& child_hash) : m_child_hash{child_hash} {}
+
+        void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
+        {
+            if (block->GetHash() != m_child_hash) return;
+            ++m_child_checked;
+            m_child_state = state;
+        }
+    };
+
+    auto& chainman{*Assert(m_node.chainman)};
+    auto& signals{*Assert(m_node.validation_signals)};
+    const auto primer{GoodBlock(Params().GenesisBlock().GetHash())};
+    const auto parent{BadBlock(primer->GetHash())};
+    const auto child{GoodBlock(parent->GetHash())};
+    auto sub{std::make_shared<Subscriber>(child->GetHash())};
+    BlockValidationState parent_state, child_state;
+    std::future<BlockProcessingResult> parent_future, child_future;
+    signals.RegisterSharedValidationInterface(sub);
+    BlockValidationState primer_state;
+    BOOST_REQUIRE(chainman.ProcessNewBlock(primer, primer_state, true, true).get().processing_success);
+    {
+        // Block an otherwise idle worker so both jobs can be admitted before either runs.
+        BlockWorkerGate gate{chainman};
+        gate.Wait();
+
+        parent_future = chainman.ProcessNewBlock(parent, parent_state, true, true);
+        child_future = chainman.ProcessNewBlock(child, child_state, true, true);
+        BOOST_REQUIRE(parent_state.IsValid());
+        BOOST_REQUIRE(child_state.IsValid());
+        BOOST_REQUIRE(parent_future.wait_for(std::chrono::seconds{0}) == std::future_status::timeout);
+        BOOST_REQUIRE(child_future.wait_for(std::chrono::seconds{0}) == std::future_status::timeout);
+        {
+            LOCK(cs_main);
+            const CBlockIndex* index{Assert(chainman.m_blockman.LookupBlockIndex(child->GetHash()))};
+            BOOST_CHECK(!(index->nStatus & BLOCK_FAILED_VALID));
+            BOOST_CHECK(!(index->nStatus & BLOCK_HAVE_DATA));
+            BOOST_CHECK_EQUAL(index->nTx, 0U);
+            BOOST_CHECK_EQUAL(index->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE);
+        }
+    }
+
+    // The parent fails during connection, invalidating the child before its job runs.
+    BOOST_REQUIRE(parent_future.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+    const auto parent_result{parent_future.get()};
+    BOOST_CHECK(parent_result.processing_success);
+    BOOST_CHECK(parent_result.new_block);
+    BOOST_REQUIRE(child_future.wait_for(std::chrono::seconds{30}) == std::future_status::ready);
+    const auto child_result{child_future.get()};
+    signals.SyncWithValidationInterfaceQueue();
+    signals.UnregisterSharedValidationInterface(sub);
+    signals.SyncWithValidationInterfaceQueue();
+
+    BOOST_CHECK(!child_result.processing_success);
+    BOOST_CHECK(!child_result.new_block);
+    BOOST_CHECK(child_result.cached_invalid);
+    BOOST_CHECK(child_state.IsValid());
+    BOOST_CHECK_EQUAL(sub->m_child_checked, 1);
+    BOOST_CHECK(sub->m_child_state.GetResult() == BlockValidationResult::BLOCK_CACHED_INVALID);
+    BOOST_CHECK_EQUAL(sub->m_child_state.GetRejectReason(), "duplicate-invalid");
+
+    // Reject the cached-invalid child without storing it or advancing its transaction validity.
+    {
+        LOCK(cs_main);
+        const CBlockIndex* index{Assert(chainman.m_blockman.LookupBlockIndex(child->GetHash()))};
+        BOOST_CHECK(index->pprev->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(index->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(!(index->nStatus & BLOCK_HAVE_DATA));
+        BOOST_CHECK_EQUAL(index->nTx, 0U);
+        BOOST_CHECK_EQUAL(index->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE);
+        BOOST_CHECK_EQUAL(chainman.ActiveChain().Tip()->GetBlockHash(), primer->GetHash());
+    }
+    chainman.CheckBlockIndex();
+}
+
 BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 {
     // build a large-ish chain that's likely to have some forks
@@ -177,9 +441,9 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
-    bool ignored;
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), true, true, &ignored));
+    BlockValidationState state;
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), state, true, true).get().processing_success);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -198,17 +462,18 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     threads.reserve(10);
     for (int i = 0; i < 10; i++) {
         threads.emplace_back([&]() {
-            bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 const auto& block = blocks[insecure.randrange(blocks.size() - 1)];
-                Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                BlockValidationState state;
+                (void)Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).get();
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                    BlockValidationState state;
+                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).get().processing_success;
                     assert(processed);
                 }
             }
@@ -245,9 +510,9 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
  */
 BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
-    bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&ignored);
+        BlockValidationState state;
+        return Assert(m_node.chainman)->ProcessNewBlock(block, state, /*force_processing=*/true, /*min_pow_checked=*/true).get().processing_success;
     };
 
     // Process all mined blocks
