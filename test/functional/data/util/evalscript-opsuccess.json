@@ -1,0 +1,23 @@
+{
+  "script": {
+    "asm": "OP_UNKNOWN",
+    "hex": "bb",
+    "type": "nonstandard"
+  },
+  "sigversion": "tapscript",
+  "script_flags": [
+    "CHECKLOCKTIMEVERIFY",
+    "CHECKSEQUENCEVERIFY",
+    "DERSIG",
+    "NULLDUMMY",
+    "P2SH",
+    "TAPROOT",
+    "WITNESS"
+  ],
+  "dummy_sig_checker": true,
+  "opsuccess_found": true,
+  "stack_after": [
+  ],
+  "sigop_cost": 0,
+  "success": true
+}
