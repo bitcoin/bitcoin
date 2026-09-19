@@ -77,7 +77,6 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
 
     // Sign spending transaction, precompute transaction data
-    PrecomputedTransactionData txdata;
     {
         const std::map<COutPoint, Coin> coins{
             {txSpend.vin[0].prevout, Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false)}
@@ -87,8 +86,8 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         assert(complete);
         // Weak sanity check on witness data to ensure we produced the intended spending type
         assert(txSpend.vin[0].scriptWitness.stack.size() == ExpectedWitnessStackSize(script_type));
-        txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
+    PrecomputedTransactionData txdata{txSpend, /*spent_outputs=*/{txCredit.vout[0]}};
 
     // Benchmark.
     bench.unit("script").run([&] {
