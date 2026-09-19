@@ -1031,7 +1031,8 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         try {
             CWalletTx wtx{deserialize, value, ReadWtxVariants(batch, hash)};
             if (wtx.GetHash() != hash) {
-                result = std::max(result, DBErrors::NEED_RESCAN);
+                err = strprintf("Error: Corrupt transaction. Stored hash of %s but an actual hash of %s", wtx.GetHash().ToString(), hash.ToString());
+                return DBErrors::CORRUPT;
             }
 
             if (wtx.nOrderPos == -1) {
@@ -1039,7 +1040,7 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
             }
 
             if (!pwallet->LoadToWallet(std::move(wtx))) {
-                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
+                err = "Error: Corrupt transaction found";
                 return DBErrors::CORRUPT;
             }
         } catch (const std::exception& e) {
