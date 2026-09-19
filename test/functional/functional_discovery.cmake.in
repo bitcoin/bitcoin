@@ -1,0 +1,96 @@
+# This is a compatibility implementation of CMake 4.4 discover_tests().
+# Keep the discovery records aligned with DISCOVERY_MATCH so this can be
+# replaced directly once CMake 4.4 is the minimum version.
+
+set(functional_discovery_command
+  "@Python3_EXECUTABLE@"
+  "@FUNCTIONAL_TEST_RUNNER@"
+  "--dump-ctest"
+)
+if("@FUNCTIONAL_DISCOVERY_EXTENDED_ARG@" STREQUAL "--extended")
+  list(APPEND functional_discovery_command "--extended")
+endif()
+
+execute_process(
+  COMMAND ${functional_discovery_command}
+  TIMEOUT 5
+  RESULT_VARIABLE functional_discovery_result
+  OUTPUT_VARIABLE functional_discovery_output
+  ERROR_VARIABLE functional_discovery_error
+)
+if(NOT functional_discovery_result EQUAL 0)
+  # test_runner.py reports some failures (e.g. an unregistered script) on
+  # stdout, so surface both streams.
+  message(FATAL_ERROR
+    "Functional test discovery failed (${functional_discovery_result}):\n"
+    "${functional_discovery_error}"
+    "${functional_discovery_output}"
+  )
+endif()
+
+set(functional_test_names)
+string(REPLACE "\n" ";" functional_discovery_lines "${functional_discovery_output}")
+foreach(functional_discovery_line IN LISTS functional_discovery_lines)
+  string(REGEX REPLACE "\r$" "" functional_discovery_line
+    "${functional_discovery_line}")
+  if(functional_discovery_line STREQUAL "")
+    continue()
+  endif()
+
+  string(REGEX MATCH
+    "^([^\t]+)\t([^\t]+)\t([0-9]+)\t([^\t]*)\t([^\t]*)\t([0-9]+)$"
+    functional_record_match
+    "${functional_discovery_line}"
+  )
+  if(NOT functional_record_match)
+    message(FATAL_ERROR
+      "Functional test discovery returned malformed record:\n"
+      "${functional_discovery_line}"
+    )
+  endif()
+
+  set(functional_test_name "${CMAKE_MATCH_1}")
+  set(functional_test_script "${CMAKE_MATCH_2}")
+  set(functional_test_portseed "${CMAKE_MATCH_3}")
+  set(functional_test_extended_label "${CMAKE_MATCH_4}")
+  set(functional_test_arg "${CMAKE_MATCH_5}")
+  set(functional_test_cost "${CMAKE_MATCH_6}")
+
+  list(FIND functional_test_names "${functional_test_name}" functional_duplicate_index)
+  if(NOT functional_duplicate_index EQUAL -1)
+    message(FATAL_ERROR "Duplicate functional CTest name: ${functional_test_name}")
+  endif()
+  list(APPEND functional_test_names "${functional_test_name}")
+
+  set(functional_test_labels functional)
+  if(NOT functional_test_extended_label STREQUAL "")
+    list(APPEND functional_test_labels "${functional_test_extended_label}")
+  endif()
+
+  set(functional_test_command
+    "@Python3_EXECUTABLE@"
+    "@FUNCTIONAL_TEST_RUNNER@"
+    "--ctest-direct"
+    "${functional_test_script}"
+    "--"
+  )
+  if(NOT functional_test_arg STREQUAL "")
+    list(APPEND functional_test_command "${functional_test_arg}")
+  endif()
+  list(APPEND functional_test_command
+    "--cachedir=@FUNCTIONAL_TEST_CACHE_DIR@"
+    "--portseed=${functional_test_portseed}"
+    "--tmpdir=@FUNCTIONAL_TEST_TMP_DIR@/${functional_test_name}"
+  )
+
+  # CTest's test-time script context supports the legacy add_test signature.
+  add_test("${functional_test_name}" ${functional_test_command})
+  set_tests_properties("${functional_test_name}" PROPERTIES
+    ENVIRONMENT "PYTHON_GIL=1"
+    FIXTURES_REQUIRED functional_cache
+    LABELS "${functional_test_labels}"
+    COST "${functional_test_cost}"
+    SKIP_RETURN_CODE 77
+    WORKING_DIRECTORY "@CMAKE_CURRENT_BINARY_DIR@"
+  )
+endforeach()

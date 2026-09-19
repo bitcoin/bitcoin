@@ -128,6 +128,64 @@ how many jobs to run, append `--jobs=n`
 The individual tests and the test_runner harness have many command-line
 options. Run `build/test/functional/test_runner.py -h` to see them all.
 
+#### CTest functional tests
+
+CTest registration is disabled by default, so the legacy runner remains the default local workflow. The macOS native CI job uses CTest; other CI jobs continue to use the legacy runner.
+To enable the CTest workflow:
+
+```sh
+cmake -B build -DBUILD_FUNCTIONAL_TESTS=ON
+cmake --build build --parallel
+```
+
+When functional registration is enabled, an unfiltered `ctest` runs the unit tests and base functional tests together.
+
+```sh
+ctest --test-dir build --parallel --output-on-failure
+```
+
+Enabling the extended option adds the extended tests as well:
+
+```sh
+cmake -B build -DBUILD_FUNCTIONAL_TESTS=ON -DBUILD_EXTENDED_FUNCTIONAL_TESTS=ON
+ctest --test-dir build --parallel --output-on-failure
+```
+
+A test in CTest can have a name and a label. The `functional` label is added to functional tests, but unit tests currently lack a label.
+You can use CTest name and label filters to select individual scripts or variants, CTest uses 3 main options to do this:
+
+```
+-L  → --label-regex
+-LE → --label-exclude
+-R  → --tests-regex
+```
+
+```sh
+# Run only functional tests
+ctest --test-dir build -L '^functional' --parallel --output-on-failure
+
+# Run only wallet functional tests
+ctest --test-dir build -R '^functional\.wallet_' --output-on-failure
+
+# Run only an ipv6 variant of rpc_bind
+ctest --test-dir build -R '^functional\.rpc_bind\.ipv6$' --output-on-failure
+
+# Run only the base tests from an extended-enabled build tree:
+ctest --test-dir build -L '^functional$' -LE '^extended$' --parallel --output-on-failure
+```
+
+Do not run concurrent CTest suites in the same build tree; they share the fixture cache and deterministic port-seed space.
+
+CTest displays each failed test's standard output and error by default.
+To also include the combined framework and node logs, set `CTEST_FUNCTIONAL_COMBINED_LOGS_LEN` to the number of final log lines to show:
+
+```sh
+CTEST_FUNCTIONAL_COMBINED_LOGS_LEN=99999999 ctest --test-dir build -L '^functional$' --output-on-failure
+```
+
+The inventory is discovered from `test_runner.py` at CTest time, so every `ctest` invocation in an enabled build tree first regenerates it.
+This includes unit-only runs filtered with `-LE '^functional$'`. Discovery reuses the runner's script-list checks, so an untracked `*.py` under `test/functional/` (or, when benchmarks are built, a missing `bench_bitcoin`) fails any `ctest` invocation until it is resolved.
+
 #### Speed up test runs with a RAM disk
 
 If you have available RAM on your system you can create a RAM disk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
