@@ -209,7 +209,7 @@ class BlockDataCopier:
                     return
 
             inhdr = self.read_xored(self.inF, 8)
-            if (not inhdr or (inhdr[0] == "\0")):
+            if (not inhdr or (inhdr[0] == 0)):
                 self.inF.close()
                 self.inF = None
                 self.inFn = self.inFn + 1
