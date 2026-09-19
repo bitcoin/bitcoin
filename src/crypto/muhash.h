@@ -59,7 +59,7 @@ public:
     void SetToOne();
     void ToBytes(unsigned char (&out)[BYTE_SIZE]);
 
-    Num3072() { this->SetToOne(); };
+    Num3072() { this->SetToOne(); }
     Num3072(const unsigned char (&data)[BYTE_SIZE]);
 
     SERIALIZE_METHODS(Num3072, obj)

@@ -30,7 +30,7 @@ constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
     TransactionError::MEMPOOL_ERROR,
     TransactionError::MAX_FEE_EXCEEDED,
 };
-}; // namespace
+} // namespace
 
 // The fuzzing kitchen sink: Fuzzing harness for functions that need to be
 // fuzzed but a.) don't belong in any existing fuzzing harness file, and

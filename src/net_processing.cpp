@@ -332,12 +332,12 @@ struct Peer {
         Assume(!m_tx_relay);
         m_tx_relay = std::make_unique<Peer::TxRelay>();
         return m_tx_relay.get();
-    };
+    }
 
     TxRelay* GetTxRelay() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_relay_mutex)
     {
         return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
-    };
+    }
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -615,8 +615,8 @@ public:
     {
         m_best_height = height;
         m_best_block_time = time;
-    };
-    void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
+    }
+    void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); }
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
