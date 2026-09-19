@@ -121,6 +121,15 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                           const std::vector<SelectionFilter>& filters);
 
 /**
+ * Group coins by the provided filters, groups that pass no filter are appended to `ret_discarded_groups`.
+ */
+FilteredOutputGroups GroupOutputs(const CWallet& wallet,
+                                  const CoinsResult& coins,
+                                  const CoinSelectionParams& coin_sel_params,
+                                  const std::vector<SelectionFilter>& filters,
+                                  std::vector<OutputGroup>& ret_discarded_groups);
+
+/**
  * Attempt to find a valid input set that preserves privacy by not mixing OutputTypes.
  * `ChooseSelectionResult()` will be called on each OutputType individually and the best
  * the solution (according to the waste metric) will be chosen. If a valid input cannot be found from any
