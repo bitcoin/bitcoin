@@ -545,6 +545,11 @@ const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transactio
     return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
 }
 
+uint32_t btck_transaction_get_version(const btck_Transaction* transaction)
+{
+    return btck_Transaction::get(transaction)->version;
+}
+
 uint32_t btck_transaction_get_locktime(const btck_Transaction* transaction)
 {
     return btck_Transaction::get(transaction)->nLockTime;

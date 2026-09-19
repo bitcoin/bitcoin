@@ -671,6 +671,15 @@ BITCOINKERNEL_API size_t btck_transaction_count_inputs(
     const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get a transaction's version.
+ *
+ * @param[in] transaction Non-null.
+ * @return                The version.
+ */
+BITCOINKERNEL_API uint32_t btck_transaction_get_version(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Get a transaction's nLockTime value.
  *
  * @param[in] transaction Non-null.

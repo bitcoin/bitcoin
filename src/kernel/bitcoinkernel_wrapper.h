@@ -728,6 +728,11 @@ public:
         return TransactionInputView{btck_transaction_get_input_at(impl(), index)};
     }
 
+    uint32_t GetVersion() const
+    {
+        return btck_transaction_get_version(impl());
+    }
+
     uint32_t GetLocktime() const
     {
         return btck_transaction_get_locktime(impl());

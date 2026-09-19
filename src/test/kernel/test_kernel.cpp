@@ -15,6 +15,7 @@
 #include <test/kernel/block_data.h>
 #include <test/util/common.h>
 
+#include <algorithm>
 #include <charconv>
 #include <concepts>
 #include <cstdint>
@@ -409,6 +410,14 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     BOOST_CHECK_EQUAL(tx.CountOutputs(), 2);
     BOOST_CHECK_EQUAL(tx.CountInputs(), 1);
     BOOST_CHECK_EQUAL(tx.GetLocktime(), 510826);
+
+    BOOST_CHECK_EQUAL(tx.GetVersion(), 2);
+    for (const auto& [version_hex, version] : {std::pair{"00000000", 0u}, {"ffffffff", 0xffffffffu}}) {
+        auto versioned_tx_data{tx_data};
+        std::ranges::copy(hex_string_to_byte_vec(version_hex), versioned_tx_data.begin());
+        BOOST_CHECK_EQUAL(Transaction{versioned_tx_data}.GetVersion(), version);
+    }
+
     auto broken_tx_data{std::span<std::byte>{tx_data.begin(), tx_data.begin() + 10}};
     BOOST_CHECK_THROW(Transaction{broken_tx_data}, std::runtime_error);
     auto input{tx.GetInput(0)};
