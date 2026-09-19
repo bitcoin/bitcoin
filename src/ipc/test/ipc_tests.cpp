@@ -18,6 +18,7 @@
 #include <validation.h>
 
 #include <future>
+#include <optional>
 #include <thread>
 #include <kj/common.h>
 #include <kj/memory.h>
@@ -228,6 +229,46 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
                   "unix:" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
                   "Unix address path \"" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
     check_address("invalid", "invalid", "Unrecognized address 'invalid'");
+}
+
+// Test command line parsing in ipc::Process::checkSpawned().
+BOOST_AUTO_TEST_CASE(check_spawned_test)
+{
+    std::unique_ptr<ipc::Process> process{ipc::MakeProcess()};
+    char arg0[]{"bitcoin-node"};
+    char arg_spawn[]{"-ipcchild"};
+    char arg_invalid[]{"invalid"};
+    char arg_other[]{"-ipcbind=unix"};
+
+    // no -ipcchild arg.
+    {
+        char* argv[]{arg0};
+        BOOST_CHECK(!process->checkSpawned(1, argv));
+    }
+    {
+        char* argv[]{arg0, arg_other};
+        BOOST_CHECK(!process->checkSpawned(2, argv));
+    }
+    {
+        char* argv[]{arg0, arg_other, arg_invalid};
+        BOOST_CHECK(!process->checkSpawned(3, argv));
+    }
+    // -ipcchild without a value.
+    {
+        char* argv[]{arg0, arg_spawn};
+        BOOST_CHECK(!process->checkSpawned(2, argv));
+    }
+    // -ipcchild combined with other arguments.
+    {
+        char* argv[]{arg0, arg_spawn, arg_invalid, arg_other};
+        BOOST_CHECK(!process->checkSpawned(4, argv));
+    }
+    // -ipcchild with a value that is not a valid way of connecting to the
+    // parent process.
+    {
+        char* argv[]{arg0, arg_spawn, arg_invalid};
+        BOOST_CHECK_THROW(process->checkSpawned(3, argv), std::runtime_error);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
