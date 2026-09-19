@@ -40,6 +40,12 @@
 #include <wallet/types.h>
 #include <wallet/walletutil.h>
 
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/indexed_by.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index_container.hpp>
+
 #include <atomic>
 #include <cassert>
 #include <cstddef>
@@ -305,6 +311,40 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+struct cwallettx_txid
+{
+    using result_type = Txid;
+    result_type operator() (const CWalletTx& wtx) const
+    {
+        return wtx.GetHash();
+    }
+};
+
+struct cwallettx_pos
+{
+    using result_type = int64_t;
+    result_type operator() (const CWalletTx& wtx) const
+    {
+        return wtx.nOrderPos;
+    }
+};
+
+struct index_by_txid {};
+struct index_by_pos {};
+
+using WalletTxs = boost::multi_index_container<
+    CWalletTx,
+    boost::multi_index::indexed_by<
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<index_by_txid>,
+            cwallettx_txid, SaltedTxidHasher
+        >,
+        boost::multi_index::ordered_non_unique<
+            boost::multi_index::tag<index_by_pos>,
+            cwallettx_pos
+        >
+    >
+>;
 
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -373,7 +413,7 @@ private:
 
     /** Collects all wallet txs that differ from wtx only in their scriptSigs (i.e. different tx id malleated variants)
      *  plus wtx itself. Sorted by the order in which they were inserted in the wallet (CWalletTx::nOrderPos) */
-    std::set<CWalletTx*, WalletTxOrderComparator> GetMalleatedVariants(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::vector<Txid> GetMalleatedVariants(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     void SyncMalleatedTxMetadata(WalletBatch& batch, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -486,12 +526,14 @@ public:
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
 
-    /** Map from txid to CWalletTx for all transactions this wallet is
-     * interested in, including received and sent transactions. */
-    std::unordered_map<Txid, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
-
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
-    TxItems wtxOrdered;
+    /** Container for all transactions this wallet is interested in, including
+     *  received and sent transactions.
+     *  Indexed by txid and nOrderPos
+     *  Use the explicit indexed by references m_txs_by_txid and m_txs_by_pos rather than the actual m_txs
+     */
+    WalletTxs m_txs GUARDED_BY(cs_wallet);
+    WalletTxs::index<index_by_txid>::type& m_txs_by_txid;
+    WalletTxs::index<index_by_pos>::type& m_txs_by_pos;
 
     int64_t nOrderPosNext GUARDED_BY(cs_wallet) = 0;
 
@@ -604,9 +646,9 @@ public:
 
     void MarkDirty();
 
-    //! Callback for updating transaction metadata in mapWallet.
+    //! Callback for updating transaction metadata in m_txs.
     //!
-    //! @param wtx - reference to mapWallet transaction to update
+    //! @param wtx - reference to m_txs transaction to update
     //! @param new_tx - true if wtx is newly inserted, false if it previously existed
     //!
     //! @return true if wtx is changed and needs to be saved to disk, otherwise false
@@ -614,9 +656,9 @@ public:
 
     /**
      * Add the transaction to the wallet, wrapping it up inside a CWalletTx
-     * @return the recently added wtx pointer or nullptr if there was a db write error.
+     * @return iterator to the recently added wtx pointer or nullopt if there was a db write error.
      */
-    CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false);
+    std::optional<WalletTxs::iterator> AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false);
     bool LoadToWallet(CWalletTx&& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
@@ -841,7 +883,6 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const Txid& hashTx);
-    bool AbandonTransaction(CWalletTx& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction as replaced by another transaction. */
     bool MarkReplaced(const Txid& originalHash, const Txid& newHash);
@@ -922,7 +963,7 @@ public:
     {
         AssertLockHeld(cs_wallet);
         WalletLogPrintf("setKeyPool.size() = %u\n",      GetKeyPoolSize());
-        WalletLogPrintf("mapWallet.size() = %u\n",       mapWallet.size());
+        WalletLogPrintf("m_txs.size() = %u\n",           m_txs.size());
         WalletLogPrintf("m_address_book.size() = %u\n",  m_address_book.size());
     };
 
