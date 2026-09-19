@@ -20,6 +20,7 @@
 
 struct secp256k1_context_struct;
 typedef struct secp256k1_context_struct secp256k1_context;
+struct secp256k1_keypair;
 
 /**
  * CPrivKey is a serialized private key, with all parameters included
@@ -300,6 +301,12 @@ public:
 
     friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
     [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
+
+    //! Pass this KeyPair to a libsecp256k1 function expecting a `secp256k1_keypair`.
+    const secp256k1_keypair* AsSecpKeypair() const
+    {
+        return IsValid() ? reinterpret_cast<const secp256k1_keypair*>(m_keypair->data()) : nullptr;
+    }
 
     //! Check whether this keypair is valid.
     bool IsValid() const { return !!m_keypair; }
