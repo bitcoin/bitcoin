@@ -324,6 +324,13 @@ for host in $HOSTS; do
         # for the particular $HOST we're building for
         export HOST="$host"
 
+        # Make local modules available
+        package_path="${VERSION_BASE}/guix-package-path"
+        mkdir -p "$package_path"
+        ln -sfn "${PWD}/contrib/guix/toolchains.scm" "${package_path}/toolchains.scm"
+        ln -sfn "${PWD}/contrib/guix/patches" "${package_path}/patches"
+        export GUIX_PACKAGE_PATH="$package_path"
+
 cat << EOF
 INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
@@ -443,7 +450,8 @@ EOF
 
         case "$HOST" in
             *linux*)
-            time-machine shell --root="$(profiledir_for_host "${HOST}")" \
+            time-machine shell --manifest="${PWD}/contrib/guix/linux_static.scm" \
+                                    --root="$(profiledir_for_host "${HOST}")" \
                                     "${shell_opts[@]}" \
                                     bash -c "cd /bitcoin && bash contrib/guix/libexec/build_linux.sh"
 
