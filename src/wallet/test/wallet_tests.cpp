@@ -102,6 +102,7 @@ BOOST_AUTO_TEST_CASE(reject_invalid_descriptor_ranges)
 
     const std::array invalid_ranges{
         std::pair{std::pair<int64_t, int64_t>{2, 1}, "Range specified as [begin,end] must not have begin after end"},
+        std::pair{std::pair<int64_t, int64_t>{std::numeric_limits<int64_t>::max(), 0}, "Range specified as [begin,end] must not have begin after end"},
         std::pair{std::pair<int64_t, int64_t>{-1, 10}, "Range should be greater or equal than 0"},
         std::pair{std::pair<int64_t, int64_t>{0, 1'000'000}, "Range is too large"},
         std::pair{std::pair<int64_t, int64_t>{0, std::numeric_limits<int64_t>::max()}, "End of range is too high"},

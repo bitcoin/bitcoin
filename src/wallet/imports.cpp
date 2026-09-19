@@ -6,6 +6,9 @@
 #include <wallet/imports.h>
 #include <wallet/scan.h>
 
+#include <cstdint>
+#include <limits>
+
 namespace wallet {
 
 ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -53,6 +56,11 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
             warnings.emplace_back("Range not given, using default keypool range");
             range_start = 0;
             range_end = wallet.m_keypool_size;
+        }
+        // WalletDescriptor stores the range as int32_t with an exclusive end, so an
+        // end past the maximum index would be truncated to a negative range.
+        if (range_end > std::numeric_limits<int32_t>::max()) {
+            return ImportResult(WalletErrorCode::InvalidParameter, "End of range is too high", warnings);
         }
         next_index = request.next_index.value_or(range_start);
         is_ranged = true;
