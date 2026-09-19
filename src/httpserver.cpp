@@ -1083,55 +1083,71 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
         client->m_req = std::make_unique<HTTPRequest>(client);
     }
 
+    return client->TryReadRequestInternal();
+}
+
+std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequestInternal()
+{
+    if (m_recv_buffer.empty()) return nullptr;
+    LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
+
+    HTTPRequest::State req_state{HTTPRequest::State::Error};
     try {
         // Read data from the buffer into the current request
-        client->ReadRequest(*client->m_req);
+        req_state = m_req->Load(reader);
+
+        // Remove the bytes read out of the buffer.
+        m_recv_buffer.erase(
+            m_recv_buffer.begin(),
+            m_recv_buffer.begin() + reader.Consumed());
     } catch (const ContentTooLargeError& e) {
         LogDebug(
             BCLog::HTTP,
             "HTTP request body too large from client %s (id=%llu): %s",
-            client->m_origin,
-            client->m_id,
+            m_origin,
+            m_id,
             e.what());
 
-        WriteNoStoreErrorReply(*client->m_req, HTTP_CONTENT_TOO_LARGE);
-        client->m_disconnect = true;
+        WriteNoStoreErrorReply(*m_req, HTTP_CONTENT_TOO_LARGE);
+        m_recv_buffer.clear();
+        m_disconnect = true;
         return nullptr;
     } catch (const std::runtime_error& e) {
         LogDebug(
             BCLog::HTTP,
             "Error reading HTTP request from client %s (id=%llu): %s",
-            client->m_origin,
-            client->m_id,
+            m_origin,
+            m_id,
             e.what());
 
         // We failed to read a complete request from the buffer
-        WriteNoStoreErrorReply(*client->m_req, HTTP_BAD_REQUEST);
-        client->m_disconnect = true;
+        WriteNoStoreErrorReply(*m_req, HTTP_BAD_REQUEST);
+        m_recv_buffer.clear();
+        m_disconnect = true;
         return nullptr;
     }
 
     // If the request is ready, hand it to a worker.
-    if (client->m_req->GetState() == HTTPRequest::State::Complete) {
+    if (req_state == HTTPRequest::State::Complete) {
         // Unless this client's send buffer is full: in that case hold the
         // parsed request here instead of moving it to a worker. This prevents
         // the server from reading any more data from this client until they
         // drain their end of the socket, and prevents the server from packing
         // more responses into the send buffer.
         const size_t buffer_used{WITH_LOCK(
-            client->m_send_mutex,
-            return client->m_send_buffer.size();)};
+            m_send_mutex,
+            return m_send_buffer.size();)};
         if (buffer_used > MAX_BODY_SIZE) return nullptr;
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%llu)",
-            RequestMethodString(client->m_req->GetRequestMethod()),
-            client->m_req->GetURI(),
-            client->m_origin,
-            client->m_id);
+            RequestMethodString(m_req->GetRequestMethod()),
+            m_req->GetURI(),
+            m_origin,
+            m_id);
 
-        client->m_req_busy = true;
-        return std::move(client->m_req);
+        m_req_busy = true;
+        return std::move(m_req);
     }
 
     return nullptr;
@@ -1209,47 +1225,35 @@ void HTTPServer::ClearConnectedClients()
     m_connected.clear();
 }
 
-void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
+HTTPRequest::State HTTPRequest::Load(util::LineReader& reader)
 {
-    if (m_recv_buffer.empty()) return;
-
-    LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
-
     try {
-        switch (req.GetState()) {
+        switch (m_state) {
         case HTTPRequest::State::Init:
-            if (!req.LoadControlData(reader)) break;
-            req.SetState(HTTPRequest::State::NeedsHeaders);
+            if (!LoadControlData(reader)) break;
+            m_state = HTTPRequest::State::NeedsHeaders;
             [[fallthrough]];
 
         case HTTPRequest::State::NeedsHeaders:
-            if (!req.LoadHeaders(reader)) break;
-            req.SetState(HTTPRequest::State::NeedsBody);
+            if (!LoadHeaders(reader)) break;
+            m_state = HTTPRequest::State::NeedsBody;
             [[fallthrough]];
 
         case HTTPRequest::State::NeedsBody:
-            if (!req.LoadBody(reader)) break;
-            req.SetState(HTTPRequest::State::Complete);
+            if (!LoadBody(reader)) break;
+            m_state = HTTPRequest::State::Complete;
             [[fallthrough]];
 
         case HTTPRequest::State::Complete:
-            break;
-
         case HTTPRequest::State::Error:
             break;
-        }
+        } // no default case, so the compiler can warn about missing cases
     } catch (...) {
         // Don't try to read any more data for this request
-        req.SetState(HTTPRequest::State::Error);
-        // Clear the memory allocated to this client, caller must disconnect
-        m_recv_buffer.clear();
+        m_state = HTTPRequest::State::Error;
         throw;
     }
-
-    // Remove the bytes read out of the buffer.
-    m_recv_buffer.erase(
-        m_recv_buffer.begin(),
-        m_recv_buffer.begin() + reader.Consumed());
+    return m_state;
 }
 
 bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
