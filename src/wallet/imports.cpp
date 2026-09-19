@@ -4,7 +4,11 @@
 
 #include <chain.h>
 #include <wallet/imports.h>
+#include <wallet/receive.h>
 #include <wallet/scan.h>
+
+#include <algorithm>
+#include <set>
 
 namespace wallet {
 
@@ -219,8 +223,94 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
     return result;
 }
 
+static std::set<COutPoint> GetWalletChainUTXOs(const CWallet& wallet, const std::set<CScript>& scripts)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    std::set<COutPoint> outpoints;
+    for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
+        const CWalletTx& wtx{txo.GetWalletTx()};
+        if (!wtx.isConfirmed() || wallet.IsTxImmatureCoinBase(wtx)) continue;
+        if (!scripts.contains(txo.GetTxOut().scriptPubKey)) continue;
+        // Mempool spends do not remove outputs from the confirmed UTXO set.
+        if (wallet.HowSpent(outpoint) != CWallet::SpendType::CONFIRMED) outpoints.emplace(outpoint);
+    }
+    return outpoints;
+}
+
+static UTXOVerificationResult VerifyAndRescanWalletUTXOs(CWallet& wallet, WalletRescanReserver& reserver, int64_t start_time)
+{
+    UTXOVerificationResult result;
+    wallet.WalletLogPrintf("Scanning chainstate for wallet UTXOs before rescan.\n");
+    auto scan{ScanWalletUTXOSet(wallet)};
+    if (wallet.Scanner().IsAborting() || wallet.chain().shutdownRequested()) {
+        result.status = "aborted";
+        return result;
+    }
+    if (!scan) {
+        result.status = "utxo scan failed";
+        return result;
+    }
+    result.snapshot_height = scan->best_block_height;
+    result.snapshot_block = scan->best_block;
+    result.chain_utxos = scan->coins.size();
+
+    wallet.BlockUntilSyncedToCurrentChain();
+    auto wallet_utxos{WITH_LOCK(wallet.cs_wallet, return GetWalletChainUTXOs(wallet, scan->scripts))};
+    result.wallet_utxos = wallet_utxos.size();
+
+    std::set<COutPoint> chain_utxos;
+    std::optional<int> earliest_missing_height;
+    for (const auto& [outpoint, coin] : scan->coins) {
+        chain_utxos.emplace(outpoint);
+        if (!wallet_utxos.contains(outpoint)) {
+            const int height{static_cast<int>(coin.nHeight)};
+            earliest_missing_height = std::min(earliest_missing_height.value_or(height), height);
+        }
+    }
+
+    int start_height{scan->best_block_height + 1};
+    wallet.chain().findFirstBlockWithTimeAndHeight(start_time - TIMESTAMP_WINDOW, 0, interfaces::FoundBlock().height(start_height));
+    if (earliest_missing_height && *earliest_missing_height < start_height) {
+        result.recovery_start_height = *earliest_missing_height;
+        start_height = *earliest_missing_height;
+    }
+
+    ScanResult rescan;
+    if (start_height <= scan->best_block_height) {
+        uint256 start_block;
+        result.scan_start_height = start_height;
+        if (!wallet.chain().hasBlocks(scan->best_block, start_height, scan->best_block_height) ||
+            !wallet.chain().findAncestorByHeight(scan->best_block, start_height, interfaces::FoundBlock().hash(start_block))) {
+            result.status = "blocks unavailable";
+            return result;
+        }
+        rescan = wallet.Scanner().Scan(start_block, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        if (rescan.last_scanned_height) result.blocks_scanned = std::max(0, *rescan.last_scanned_height - start_height + 1);
+    }
+    if (rescan.status == ScanResult::USER_ABORT || wallet.Scanner().IsAborting()) {
+        result.status = "aborted";
+        return result;
+    }
+    if (rescan.status == ScanResult::FAILURE) {
+        result.status = "rescan failed";
+        return result;
+    }
+
+    // Discover pending payments even when no blocks needed scanning.
+    if (start_height > scan->best_block_height) {
+        WITH_LOCK(wallet.cs_wallet, wallet.chain().requestMempoolTransactions(wallet));
+    }
+    wallet.BlockUntilSyncedToCurrentChain();
+    wallet_utxos = WITH_LOCK(wallet.cs_wallet, return GetWalletChainUTXOs(wallet, scan->scripts));
+    result.wallet_utxos = wallet_utxos.size();
+    result.matched = wallet_utxos == chain_utxos;
+    result.status = *result.matched ? (result.recovery_start_height ? "matched after recovery" : "matched") : "unmatched";
+    return result;
+}
+
 std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
-    std::vector<ImportDescriptorRequest>& requests)
+    std::vector<ImportDescriptorRequest>& requests, bool verify_balance)
 {
     std::vector<ImportResult> response;
 
@@ -275,54 +365,68 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
     }
 
     if (rescan) {
-        const int64_t scanned_time = wallet.Scanner().ScanFromTime(lowest_timestamp, reserver);
-        wallet.ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
+        if (verify_balance) {
+            const UTXOVerificationResult verification{VerifyAndRescanWalletUTXOs(wallet, reserver, lowest_timestamp)};
+            if (verification.status == "aborted") {
+                return {ImportResult{
+                    WalletErrorCode::MiscError,
+                    "Rescan aborted by user.",
+                    /*warnings=*/{},
+                    /*general_error=*/true
+                }};
+            }
+            for (ImportResult& result : response) {
+                if (!result.has_error()) result.verification = verification;
+            }
+        } else {
+            const int64_t scanned_time = wallet.Scanner().ScanFromTime(lowest_timestamp, reserver);
+            if (wallet.Scanner().IsAborting()) {
+                return {ImportResult{
+                    WalletErrorCode::MiscError,
+                    "Rescan aborted by user.",
+                    /*warnings=*/{},
+                    /*general_error=*/true
+                }};
+            }
 
-        if (wallet.Scanner().IsAborting()) {
-            return {ImportResult{
-                WalletErrorCode::MiscError,
-                "Rescan aborted by user.",
-                /*warnings=*/{},
-                /*general_error=*/true
-            }};
-        }
+            if (scanned_time > lowest_timestamp) {
+                // Compose the response
+                for (size_t i = 0; i < requests.size(); ++i) {
+                    ImportResult& result = response.at(i);
 
-        if (scanned_time > lowest_timestamp) {
-            // Compose the response
-            for (size_t i = 0; i < requests.size(); ++i) {
-                ImportResult& result = response.at(i);
-
-                // If the descriptor timestamp is within the successfully scanned
-                // range, or if the import result already has an error set, let
-                // the result stand unmodified. Otherwise replace the result
-                // with an error message.
-                const int64_t timestamp{requests.at(i).timestamp.value()};
-                if (scanned_time > timestamp && !result.has_error()) {
-                    std::string error_msg = strprintf("Rescan failed for descriptor with timestamp %d. There "
-                        "was an error reading a block from time %d, which is after or within %d seconds "
-                        "of key creation, and could contain transactions pertaining to the desc. As a "
-                        "result, transactions and coins using this desc may not appear in the wallet.",
-                        timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
-                    if (wallet.chain().havePruned()) {
-                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
-                            "(see bitcoind log for details) and could be dealt with by downloading and "
-                            "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
-                    } else if (wallet.chain().hasAssumedValidChain()) {
-                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
-                            "background sync. Check logs or getchainstates RPC for assumeutxo background "
-                            "sync progress and try again later.");
-                    } else {
-                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
-                            "the issue persists you may want to reindex (see -reindex option).");
+                    // If the descriptor timestamp is within the successfully scanned
+                    // range, or if the import result already has an error set, let
+                    // the result stand unmodified. Otherwise replace the result
+                    // with an error message.
+                    const int64_t timestamp{requests.at(i).timestamp.value()};
+                    if (scanned_time > timestamp && !result.has_error()) {
+                        std::string error_msg = strprintf("Rescan failed for descriptor with timestamp %d. There "
+                            "was an error reading a block from time %d, which is after or within %d seconds "
+                            "of key creation, and could contain transactions pertaining to the desc. As a "
+                            "result, transactions and coins using this desc may not appear in the wallet.",
+                            timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
+                        if (wallet.chain().havePruned()) {
+                            error_msg += strprintf(" This error could be caused by pruning or data corruption "
+                                "(see bitcoind log for details) and could be dealt with by downloading and "
+                                "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
+                        } else if (wallet.chain().hasAssumedValidChain()) {
+                            error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
+                                "background sync. Check logs or getchainstates RPC for assumeutxo background "
+                                "sync progress and try again later.");
+                        } else {
+                            error_msg += strprintf(" This error could potentially caused by data corruption. If "
+                                "the issue persists you may want to reindex (see -reindex option).");
+                        }
+                        result.error = ImportError{
+                            WalletErrorCode::MiscError,
+                            Untranslated(error_msg),
+                            /*is_wallet_error=*/false
+                        };
                     }
-                    result.error = ImportError{
-                        WalletErrorCode::MiscError,
-                        Untranslated(error_msg),
-                        /*is_wallet_error=*/false
-                    };
                 }
             }
         }
+        wallet.ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
     }
     return response;
 }
