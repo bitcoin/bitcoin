@@ -239,7 +239,7 @@ CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<b
 
 bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
 {
-    for (const CTxIn& tx_in : tx.vin) {
+    for (const CTxIn& tx_in : tx.GetInputs()) {
         const Coin& coin = inputs.AccessCoin(tx_in.prevout);
         if (coin.IsSpent()) {
             return true;
