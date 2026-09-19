@@ -49,7 +49,7 @@ private:
 
     [[nodiscard]] bool RevertBlock(const interfaces::BlockInfo& block);
 
-    bool AllowPrune() const override { return true; }
+    IndexPrunePolicy GetPrunePolicy() const override { return IndexPrunePolicy::FullHistory; }
 
 protected:
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;

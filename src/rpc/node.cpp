@@ -365,6 +365,7 @@ static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_na
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("synced", summary.synced);
     entry.pushKV("best_block_height", summary.best_block_height);
+    entry.pushKV("first_block_height", summary.first_block_height);
     ret_summary.pushKV(summary.name, std::move(entry));
     return ret_summary;
 }
@@ -384,6 +385,7 @@ static RPCMethod getindexinfo()
                             {
                                 {RPCResult::Type::BOOL, "synced", "Whether the index is synced or not"},
                                 {RPCResult::Type::NUM, "best_block_height", "The block height to which the index is synced"},
+                                {RPCResult::Type::NUM, "first_block_height", "The block height from which the index is synced. Only non-zero if indexing started when already pruned."},
                             }
                         },
                     },

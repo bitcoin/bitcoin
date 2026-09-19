@@ -177,7 +177,7 @@ public:
         m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
     }
 
-    bool AllowPrune() const override { return false; }
+    IndexPrunePolicy GetPrunePolicy() const override { return IndexPrunePolicy::Disallowed; }
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
     bool CustomAppend(const interfaces::BlockInfo& block) override
