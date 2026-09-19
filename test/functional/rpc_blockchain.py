@@ -28,6 +28,7 @@ import os
 import subprocess
 import textwrap
 
+from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
     TIME_GENESIS_BLOCK,
@@ -39,6 +40,7 @@ from test_framework.blocktools import (
     nbits_str,
     target_str,
 )
+from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     CBlockHeader,
     COIN,
@@ -58,7 +60,8 @@ from test_framework.util import (
     assert_is_hex_string,
     assert_is_hash_string,
 )
-from test_framework.wallet import MiniWallet
+from test_framework.wallet import MiniWallet, getnewdestination
+from test_framework.wallet_util import generate_keypair
 
 
 HEIGHT = 200  # blocks mined
@@ -100,6 +103,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_waitforblock() # also tests waitfornewblock
         self._test_waitforblockheight()
         self._test_getblock()
+        self._test_getblock_redeem_witness_scripts()
         self._test_getdeploymentinfo()
         self._test_verificationprogress()
         self._test_y2106()
@@ -764,6 +768,73 @@ class BlockchainTest(BitcoinTestFramework):
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
         assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
         move_block_file('blk00000.dat.bak', 'blk00000.dat')
+
+    def _test_getblock_redeem_witness_scripts(self):
+        node = self.nodes[0]
+        self.log.info("Test that getblock verbosity 2 and 3 shows redeem and witness scripts")
+
+        # Generate three keypairs for a 2-of-3 multisig
+        pub_keys, priv_keys = [], []
+        for _ in range(3):
+            privkey, pubkey = generate_keypair(wif=True)
+            pub_keys.append(pubkey.hex())
+            priv_keys.append(privkey)
+
+        nsigs = 2
+        multisig_desc = 'multi({},{})'.format(nsigs, ','.join(pub_keys))
+        value = Decimal("0.00004000")
+
+        # addr_type: (descriptor wrapper, has_redeem, has_witness)
+        addr_types = {
+            'legacy': ('sh({})', True, False),
+            'bech32': ('wsh({})', False, True),
+            'p2sh-segwit': ('sh(wsh({}))', True, True),
+        }
+
+        # Create multisig addresses and fund them
+        funds, prevtxs = {}, {}
+        witness_script = None
+        for addr_type, (desc_wrapper, has_redeem, has_witness) in addr_types.items():
+            msig = node.createmultisig(nsigs, pub_keys, addr_type)
+            assert 'warnings' not in msig
+            assert_equal(descsum_create(desc_wrapper.format(multisig_desc)), msig['descriptor'])
+            if has_witness and witness_script is None:
+                # The witness script is the raw multisig script, returned as redeemScript by createmultisig('bech32')
+                witness_script = msig["redeemScript"]
+            spk = address_to_scriptpubkey(msig["address"])
+            fund = self.wallet.send_to(from_node=node, scriptPubKey=spk, amount=int(value * COIN))
+            funds[addr_type] = fund
+            prevtx = {"txid": fund["txid"], "vout": fund["sent_vout"], "scriptPubKey": spk.hex(), "amount": value}
+            if has_redeem:
+                prevtx["redeemScript"] = msig["redeemScript"]
+            if has_witness:
+                prevtx["witnessScript"] = witness_script
+            prevtxs[addr_type] = prevtx
+
+        self.generate(node, 1)
+
+        # Spend from each multisig address
+        outval = value - Decimal("0.00002000")
+        out_addr = getnewdestination('bech32')[2]
+        txids = {}
+        for addr_type in addr_types:
+            fund = funds[addr_type]
+            rawtx = node.createrawtransaction([{"txid": fund["txid"], "vout": fund["sent_vout"]}], [{out_addr: outval}])
+            rawtx = node.signrawtransactionwithkey(rawtx, priv_keys, [prevtxs[addr_type]])['hex']
+            txids[addr_type] = node.sendrawtransaction(rawtx, 0)
+
+        blk = self.generate(node, 1)[0]
+        for txid in txids.values():
+            assert txid in node.getblock(blk)["tx"]
+
+        # Check that getblock verbosity 2 and 3 show redeem and witness scripts
+        for verbosity in [2, 3]:
+            block = node.getblock(blk, verbosity)
+            block_txs = {tx['txid']: tx for tx in block['tx']}
+            for addr_type, (_, has_redeem, has_witness) in addr_types.items():
+                tx_data = block_txs[txids[addr_type]]
+                assert ('redeemScript' in tx_data['vin'][0]) == has_redeem
+                assert ('witnessScript' in tx_data['vin'][0]) == has_witness
 
 
 if __name__ == '__main__':
