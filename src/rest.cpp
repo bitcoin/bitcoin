@@ -17,6 +17,7 @@
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/transaction.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -54,6 +55,7 @@
 #include <vector>
 
 using node::GetTransaction;
+using node::GetBlockFilterIndex;
 using node::NodeContext;
 using util::SplitString;
 
@@ -573,7 +575,9 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    NodeContext* node = GetNodeContext(context, req);
+    if (!node) return false;
+    BlockFilterIndex* index = GetBlockFilterIndex(*node, filtertype);
     if (!index) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
     }
@@ -681,7 +685,9 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
     }
 
-    BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
+    NodeContext* node = GetNodeContext(context, req);
+    if (!node) return false;
+    BlockFilterIndex* index = GetBlockFilterIndex(*node, filtertype);
     if (!index) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
     }
@@ -893,14 +899,13 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     }
 
-    if (g_txindex) {
-        g_txindex->BlockUntilSyncedToCurrentChain();
-    }
-
     const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
+    if (node->txindex) {
+        node->txindex->BlockUntilSyncedToCurrentChain();
+    }
     uint256 hashBlock = uint256();
-    const CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), *hash,  node->chainman->m_blockman, hashBlock)};
+    const CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), node->txindex.get(), *hash,  node->chainman->m_blockman, hashBlock)};
     if (!tx) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
