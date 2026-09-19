@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <common/ecc_init.h>
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
@@ -15,7 +16,7 @@
 
 static void EllSwiftCreate(benchmark::Bench& bench)
 {
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     CKey key = GenerateRandomKey();
     uint256 entropy = GetRandHash();

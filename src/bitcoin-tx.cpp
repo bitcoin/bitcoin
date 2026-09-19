@@ -8,6 +8,7 @@
 #include <clientversion.h>
 #include <coins.h>
 #include <common/args.h>
+#include <common/ecc_init.h>
 #include <common/license_info.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -696,7 +697,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 static void MutateTx(CMutableTransaction& tx, const std::string& command,
                      const std::string& commandVal)
 {
-    std::unique_ptr<ECC_Context> ecc;
 
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
@@ -716,10 +716,10 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
     else if (command == "outaddr")
         MutateTxAddOutAddr(tx, commandVal);
     else if (command == "outpubkey") {
-        ecc.reset(new ECC_Context());
+        const auto ecc{MakeContextECC()};
         MutateTxAddOutPubKey(tx, commandVal);
     } else if (command == "outmultisig") {
-        ecc.reset(new ECC_Context());
+        const auto ecc{MakeContextECC()};
         MutateTxAddOutMultiSig(tx, commandVal);
     } else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
@@ -727,7 +727,7 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxAddOutData(tx, commandVal);
 
     else if (command == "sign") {
-        ecc.reset(new ECC_Context());
+        const auto ecc{MakeContextECC()};
         MutateTxSign(tx, commandVal);
     }
 
