@@ -115,6 +115,13 @@ static const size_t TOTAL_TRIES = 100000;
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
                                              int max_selection_weight)
 {
+    // Guard against callers passing an empty pool or a non-positive target. The search below
+    // indexes utxo_pool unconditionally (e.g. utxo_pool.at(0)) and would be undefined for an
+    // empty pool, and a non-positive target can bypass the insufficient-funds check.
+    if (utxo_pool.empty() || selection_target <= 0) {
+        return util::Error();
+    }
+
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
     std::vector<CAmount> lookahead(utxo_pool.size());
