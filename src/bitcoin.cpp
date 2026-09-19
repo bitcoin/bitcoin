@@ -201,8 +201,23 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
         std::string exe_path_str{fs::PathToString(exe_path)};
         exec_args[0] = exe_path_str.c_str();
         if (util::ExecVp(exec_args[0], (char*const*)exec_args.data()) == -1) {
+#if defined(WIN32) && !defined(_UCRT)
+            // Also treat EINVAL as "not found" on msvcrt. msvcrt's _spawnvp
+            // returns EINVAL rather than ENOENT when the file name has a
+            // directory component and the file does not exist, while _execvp
+            // and ucrt's _spawnvp return ENOENT. The EINVAL comes from msvcrt
+            // continuing into a PATH search after the direct lookup fails,
+            // prepending each PATH entry to the full path: the resulting
+            // ERROR_INVALID_NAME is mapped to EINVAL and overwrites the
+            // ENOENT. (With an empty PATH it returns ENOENT.)
+            if (allow_notfound && (errno == ENOENT || errno == EINVAL)) return false;
+#else
             if (allow_notfound && errno == ENOENT) return false;
-            throw std::system_error(errno, std::system_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
+#endif
+            // Throw an exception with the errno value from ExecVp. Use
+            // generic_category because it expects a POSIX errno on all
+            // platforms.
+            throw std::system_error(errno, std::generic_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
         }
         throw std::runtime_error("execvp returned unexpectedly");
     };
