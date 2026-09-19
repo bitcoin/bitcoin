@@ -4,3 +4,6 @@
 
 target_sources(fuzz PRIVATE ${PROJECT_SOURCE_DIR}/src/ipc/test/fuzz/ipc.cpp)
 target_link_libraries(fuzz bitcoin_ipc_fuzz Libmultiprocess::multiprocess)
+if(NOT WITH_EXTERNAL_LIBMULTIPROCESS)
+  target_compile_definitions(fuzz PRIVATE KJ_NO_EXCEPTIONS=0)
+endif()
