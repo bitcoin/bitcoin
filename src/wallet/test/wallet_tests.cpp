@@ -1046,8 +1046,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
     vw << int32_t{1};
 
     SpanReader vr{malformed_record};
-    WalletDescriptor w_desc;
-    BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
+    std::optional<WalletDescriptor> w_desc;
+    BOOST_CHECK_EXCEPTION(w_desc.emplace(WalletDescriptor::FromStream(deserialize, vr)), std::ios_base::failure, malformed_descriptor);
 }
 
 //! Test CWallet::CreateNew() and its behavior handling potential race
