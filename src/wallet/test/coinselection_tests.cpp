@@ -220,6 +220,26 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(bnb_invalid_input_test)
+{
+    // SelectCoinsBnB must reject an empty pool and non-positive targets defensively,
+    // regardless of caller behavior. Regression test for the out-of-bounds access on
+    // utxo_pool.at(0) when the pool is empty (found by the coinselection fuzz target).
+    std::vector<OutputGroup> empty_pool;
+
+    // Empty pool with a positive target.
+    TestBnBFail("Empty pool, positive target", empty_pool, /*selection_target=*/1 * CENT, default_cs_params);
+
+    // Empty pool with a zero target: previously bypassed the insufficient-funds check.
+    TestBnBFail("Empty pool, zero target", empty_pool, /*selection_target=*/0, default_cs_params);
+
+    // Non-empty pool with non-positive targets.
+    std::vector<OutputGroup> pool;
+    AddCoins(pool, {1 * CENT, 3 * CENT}, default_cs_params);
+    TestBnBFail("Zero target", pool, /*selection_target=*/0, default_cs_params);
+    TestBnBFail("Negative target", pool, /*selection_target=*/-1, default_cs_params);
+}
+
 BOOST_AUTO_TEST_CASE(bnb_exhaustion_with_solution_test)
 {
     std::vector<OutputGroup> utxo_pool;
