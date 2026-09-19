@@ -92,16 +92,19 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_restore_wallet_pruneheight(self, n3):
         self.log.info("Ensuring wallet can't be restored from a backup that was created before the pruneheight (pruned node)")
         self.complete_background_validation(n3)
-        # After background sync, pruneheight is reset to 0, so mine 200 blocks
-        # and prune the chain again
+        # After background sync, pruneheight is reset to 0. Mine more blocks
+        # and prune again while keeping the snapshot base block available for
+        # the wallet backup created at that height.
         self.generate(n3, nblocks=200, sync_fun=self.no_op)
-        assert_equal(n3.pruneblockchain(FINAL_HEIGHT), 298)  # 298 is the height of the last block pruned (pruneheight 299)
+        last_pruned = n3.pruneblockchain(SNAPSHOT_BASE_HEIGHT - 1)
+        assert_greater_than(last_pruned, START_HEIGHT)
+        assert_greater_than(SNAPSHOT_BASE_HEIGHT, last_pruned)
         error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
-        # This backup (backup_w2.dat) was created at height 199, so it can't be restored in a node with a pruneheight of 299
+        # This backup (backup_w2.dat) was created at START_HEIGHT, which is in the pruned range.
         assert_raises_rpc_error(-4, error_message, n3.restorewallet, "w2_pruneheight", "backup_w2.dat")
 
-        self.log.info("Ensuring wallet can be restored from a backup that was created at the pruneheight (pruned node)")
-        # This backup (backup_w.dat) was created at height 299, so it can be restored in a node with a pruneheight of 299
+        self.log.info("Ensuring wallet can be restored from a backup created after the pruned range (pruned node)")
+        # This backup (backup_w.dat) was created at SNAPSHOT_BASE_HEIGHT, which remains available.
         n3.restorewallet("w_alt", "backup_w.dat")
         # Check balance of w_alt wallet
         w_alt = n3.get_wallet_rpc("w_alt")
