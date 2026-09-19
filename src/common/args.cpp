@@ -188,20 +188,28 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key.starts_with("-psn_")) continue;
 #endif
 
-        if (key == "-") break; //bitcoin-tx using stdin
+        bool options_ended{false};
+        if (key == "--") {
+            options_ended = true;
+            if (++i >= argc) break;
+            key = argv[i];
+        }
+        if (!options_ended && key == "-") break; //bitcoin-tx using stdin
         std::optional<std::string> val;
-        size_t is_index = key.find('=');
-        if (is_index != std::string::npos) {
-            val = key.substr(is_index + 1);
-            key.erase(is_index);
+        if (!options_ended) {
+            size_t is_index = key.find('=');
+            if (is_index != std::string::npos) {
+                val = key.substr(is_index + 1);
+                key.erase(is_index);
+            }
         }
 #ifdef WIN32
         key = ToLower(key);
-        if (key[0] == '/')
+        if (!options_ended && key[0] == '/')
             key[0] = '-';
 #endif
 
-        if (key[0] != '-') {
+        if (options_ended || key[0] != '-') {
             if (!m_accept_any_command && m_command.empty()) {
                 // The first non-dash arg is a registered command
                 std::optional<unsigned int> flags = GetArgFlags_(key);
@@ -210,10 +218,60 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
                     return false;
                 }
             }
-            m_command.push_back(key);
+            // Preserve unregistered commands verbatim; key may have been normalized above.
+            m_command.push_back(m_accept_any_command ? std::string{argv[i]} : key);
+            if (options_ended) {
+                while (++i < argc) m_command.emplace_back(argv[i]);
+                break;
+            }
             while (++i < argc) {
-                // The remaining args are command args
-                m_command.emplace_back(argv[i]);
+                std::string cmd_arg(argv[i]);
+                // "--" ends option processing; all subsequent args are positional
+                if (cmd_arg == "--") {
+                    while (++i < argc) m_command.emplace_back(argv[i]);
+                    break;
+                }
+                // cmd_key is used only for option-name matching; cmd_arg preserves
+                // the original case so positional args are not corrupted on Windows.
+                std::string cmd_key = cmd_arg;
+#ifdef WIN32
+                cmd_key = ToLower(cmd_key);
+                // Unlike pre-command args (options only), post-command args can be
+                // file paths. Only check the option name for embedded slashes, as
+                // the option value itself may be a path. This distinguishes Windows
+                // options (/rpcwallet=dir/wallet) from paths (/bad/./path). Bare '/'
+                // is excluded by the size > 1 check.
+                const auto option_name{cmd_key.substr(0, cmd_key.find('='))};
+                if (option_name.size() > 1 && option_name[0] == '/' && option_name.find('/', 1) == std::string::npos)
+                    cmd_key[0] = '-';
+#endif
+                // Negative integers (e.g. -10, -3) are positional args, not options.
+                bool is_number = cmd_key.size() > 1 && cmd_key[1] != '-' &&
+                                 std::all_of(cmd_key.begin() + 1, cmd_key.end(), IsDigit);
+                bool is_option = cmd_key.size() > 1 && cmd_key[0] == '-' && !is_number;
+                if (is_option) {
+                    // Options after a command are parsed the same way as options
+                    // before a command — unrecognized options are always errors.
+                    std::optional<std::string> cmd_val;
+                    size_t eq = cmd_key.find('=');
+                    if (eq != std::string::npos) {
+                        cmd_val = cmd_arg.substr(eq + 1);
+                        cmd_key.erase(eq);
+                    }
+                    if (cmd_key.length() > 1 && cmd_key[1] == '-') cmd_key.erase(0, 1);
+                    cmd_key.erase(0, 1);
+                    KeyInfo keyinfo = InterpretKey(cmd_key);
+                    std::optional<unsigned int> flags = GetArgFlags_('-' + keyinfo.name);
+                    if (!flags || !keyinfo.section.empty()) {
+                        error = strprintf("Invalid parameter %s", argv[i]);
+                        return false;
+                    }
+                    std::optional<common::SettingsValue> value = InterpretValue(keyinfo, cmd_val ? &*cmd_val : nullptr, *flags, error);
+                    if (!value) return false;
+                    m_settings.command_line_options[keyinfo.name].push_back(*value);
+                } else {
+                    m_command.emplace_back(cmd_arg);
+                }
             }
             break;
         }
