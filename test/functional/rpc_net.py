@@ -446,10 +446,15 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that empty msg is allowed")
         node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FF")
 
-        self.log.debug("Test that oversized messages are allowed, but get us disconnected")
-        zero_byte_string = b'\x00' * 4000001
-        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg=zero_byte_string.hex())
-        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)
+        self.log.debug("Test that a msg at the size limit is relayed without disconnecting")
+        max_msg = b'\x00' * test_framework.messages.MAX_PROTOCOL_MESSAGE_LENGTH
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"received: unknown ({len(max_msg)} bytes)"], timeout=10):
+            node.sendmsgtopeer(peer_id=0, msg_type="unknown", msg=max_msg.hex())
+        assert_equal(len(node.getpeerinfo()), 1)
+
+        self.log.debug("Test oversized message handling")
+        oversized_msg = b'\x00' * (test_framework.messages.MAX_PROTOCOL_MESSAGE_LENGTH + 1)
+        assert_raises_rpc_error(-8, "Error: msg too large", node.sendmsgtopeer, peer_id=0, msg_type="addr", msg=oversized_msg.hex())
 
     def test_getaddrmaninfo(self):
         self.log.info("Test getaddrmaninfo")
