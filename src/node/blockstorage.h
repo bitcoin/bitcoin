@@ -105,6 +105,12 @@ public:
     bool ReadLastBlockFile(int& nFile);
     void WriteReindexing(bool fReindexing);
     void ReadReindexing(bool& fReindexing);
+    void WriteReindexProgress(int last_file, const std::multimap<uint256, FlatFilePos>& orphans);
+    bool ReadReindexProgress(int& last_file, std::multimap<uint256, FlatFilePos>& orphans);
+    //! Atomically clear all reindex state (reindex flag + progress checkpoint) with a sync
+    //! write, so that a power failure after this returns can never leave the node thinking
+    //! a block-file scan is still required.
+    void WriteReindexingComplete();
     void WriteFlag(const std::string& name, bool fValue);
     bool ReadFlag(const std::string& name, bool& fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
