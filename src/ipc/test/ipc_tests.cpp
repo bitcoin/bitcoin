@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <interfaces/init.h>
+#include <interfaces/types.h>
 #include <ipc/capnp/mining.capnp.h>
 #include <ipc/capnp/protocol.h>
 #include <ipc/process.h>
@@ -11,6 +12,7 @@
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
 #include <mp/proxy-types.h>
+#include <mp/util.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
@@ -120,6 +122,22 @@ void IpcPipeTest()
     auto script1{CScript() << OP_11};
     auto script2{foo->passScript(script1)};
     BOOST_CHECK_EQUAL(HexStr(script1), HexStr(script2));
+
+    // Test: a method taking a `CancelArg` extra parameter can be canceled from
+    // another thread. The client call throws `mp::InterruptException`.
+    {
+        std::promise<interfaces::CancelFn> cancel_promise;
+        std::thread canceler{[&] {
+            interfaces::CancelFn cancel{cancel_promise.get_future().get()};
+            cancel();
+        }};
+        interfaces::CancelArg cancel_arg = [&](interfaces::CancelFn fn) {
+            cancel_promise.set_value(std::move(fn));
+            return interfaces::CancelGuard{};
+        };
+        BOOST_CHECK_THROW(foo->waitCancel(cancel_arg), mp::InterruptException);
+        canceler.join();
+    }
 
     // Test cleanup: disconnect and join thread
     foo.reset();
