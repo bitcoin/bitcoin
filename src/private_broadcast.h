@@ -20,6 +20,7 @@
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
  * - Remove a transaction
+ * - Record that a transaction was received back from the network
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
@@ -39,7 +40,8 @@ public:
     static constexpr auto STALE_DURATION{1min};
 
     /// Maximum number of transactions tracked simultaneously.
-    /// Additions that would exceed this are rejected (see Add()).
+    /// Additions that would exceed this evict the oldest transaction that is no
+    /// longer pending, or are rejected if there is none (see Add()).
     static constexpr size_t MAX_TRANSACTIONS{10'000};
 
     /// Maximum number of send attempts for a transaction. Once this limit is
@@ -61,31 +63,43 @@ public:
         std::optional<NodeClock::time_point> received;
     };
 
+    struct Received {
+        CService from;
+        NodeClock::time_point when;
+    };
+
     struct TxBroadcastInfo {
         CTransactionRef tx;
         NodeClock::time_point time_added;
-        /// Number of additional send attempts allowed for this transaction (0 if exhausted).
+        /// Number of additional send attempts allowed for this transaction (0 if
+        /// exhausted or already received back from the network).
         size_t attempts_remaining;
         std::vector<PeerSendInfo> peers;
+        std::optional<Received> received_by_us;
     };
 
     /// Outcome of Add().
     enum class AddResult {
-        //! The transaction was newly added or reset after exhausting its send attempts.
+        //! The transaction was newly added or reset after exhausting its send
+        //! attempts or being received back from the network.
         Added,
-        //! The transaction was already present with send attempts remaining; no change.
+        //! The transaction was already present and still pending; no change.
         AlreadyPresent,
-        //! Rejected: the queue is already at MAX_TRANSACTIONS.
+        //! Rejected: the queue is at MAX_TRANSACTIONS and every transaction in
+        //! it is still pending, so there is nothing that can be evicted.
         QueueFull,
     };
 
     /**
-     * Add a transaction to the storage, or reset an exhausted transaction so it
-     * can be broadcast again.
+     * Add a transaction to the storage, or reset an exhausted or received
+     * transaction so it can be broadcast again.
+     * If the queue is at MAX_TRANSACTIONS, the oldest transaction that is no
+     * longer pending is evicted to make room. Pending transactions are never
+     * evicted.
      * @param[in] tx The transaction to add.
      * @return Whether the transaction was newly added or reset, was already
-     * present with send attempts remaining, or was rejected because the queue is
-     * full (see AddResult).
+     * present and still pending, or was rejected because the queue is full
+     * (see AddResult).
      */
     [[nodiscard]] AddResult Add(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -94,10 +108,23 @@ public:
      * Forget a transaction.
      * @param[in] tx Transaction to forget.
      * @retval !nullopt The number of times the transaction was sent and confirmed
-     * by the recipient (if the transaction existed and was removed).
+     * by a recipient (if the transaction existed and was removed).
      * @retval nullopt The transaction was not in the storage.
      */
     std::optional<size_t> Remove(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Record that a transaction was received back from the network.
+     * The transaction remains in storage but will not be picked for sending
+     * again unless it is re-added via Add().
+     * @param[in] tx Transaction received from the network.
+     * @param[in] received_from Peer address we received the transaction from.
+     * @retval !nullopt The number of times the transaction was sent and confirmed
+     * by a recipient (if the transaction was found and marked as received).
+     * @retval nullopt The transaction was not in the storage or was already marked received.
+     */
+    std::optional<size_t> MarkReceived(const CTransactionRef& tx, const CService& received_from)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -109,8 +136,8 @@ public:
      * transaction to one node would be a privacy leak.
      * @param[in] will_send_to_address Address of the peer to which this transaction
      * will be sent.
-     * @return Most urgent transaction or nullopt if there are no transactions
-     * with send attempts remaining.
+     * @return Most urgent transaction or nullopt if there are no pending
+     * transactions.
      */
     std::optional<CTransactionRef> PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -140,14 +167,14 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Check if there are transactions with send attempts remaining.
+     * Check if there are transactions that still need to be broadcast.
      */
     bool HavePendingTransactions()
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Get the transactions that have not been broadcast recently and have send
-     * attempts remaining.
+     * Get the transactions that have not been broadcast recently and are still
+     * pending (not yet received back, with send attempts remaining).
      */
     std::vector<CTransactionRef> GetStale() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -228,6 +255,7 @@ private:
     struct TxSendStatus {
         NodeClock::time_point time_added{NodeClock::now()};
         std::vector<SendStatus> send_statuses;
+        std::optional<Received> received_by_us;
     };
     bool IsPending(const TxSendStatus& status) const;
     /// Cap on the number of simultaneously tracked transactions (see Add()).
