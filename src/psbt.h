@@ -1285,11 +1285,9 @@ public:
         // Write xpubs
         for (const auto& xpub_pair : m_xpubs) {
             for (const auto& xpub : xpub_pair.second) {
-                unsigned char ser_xpub[BIP32_EXTKEY_WITH_VERSION_SIZE];
-                xpub.EncodeWithVersion(ser_xpub);
                 // Note that the serialization swaps the key and value
                 // The xpub is the key (for uniqueness) while the path is the value
-                SerializeToVector(s, PSBT_GLOBAL_XPUB, ser_xpub);
+                SerializeToVector(s, PSBT_GLOBAL_XPUB, xpub.version, xpub);
                 SerializeHDKeypath(s, xpub_pair.first);
             }
         }
@@ -1456,7 +1454,7 @@ public:
                     ExpectedKeySize("Global XPUB", key, BIP32_EXTKEY_WITH_VERSION_SIZE + 1);
                     // Read in the xpub from key
                     CExtPubKey xpub;
-                    xpub.DecodeWithVersion(&key.data()[1]);
+                    SpanReader{std::span{key}.subspan(1)} >> xpub.version >> xpub;
                     if (!xpub.pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
