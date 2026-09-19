@@ -10,14 +10,17 @@
 #include <netbase.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <tinyformat.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/translation.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>
 
+#include <cerrno>
 #include <map>
 #include <string>
 #include <utility>
@@ -41,7 +44,9 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
+std::list<std::unique_ptr<CZMQAbstractNotifier>> CZMQNotificationInterface::GetNotifiers(
+    const ArgsManager& args,
+    std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
@@ -57,7 +62,7 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
     {
         std::string arg("-zmq" + entry.first);
         const auto& factory = entry.second;
-        for (std::string& address : gArgs.GetArgs(arg)) {
+        for (std::string& address : args.GetArgs(arg)) {
             // libzmq uses prefix "ipc://" for UNIX domain sockets
             if (address.starts_with(ADDR_PREFIX_UNIX)) {
                 address.replace(0, ADDR_PREFIX_UNIX.length(), ADDR_PREFIX_IPC);
@@ -66,26 +71,29 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
             std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
-            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(args.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
             notifiers.push_back(std::move(notifier));
         }
     }
+    return notifiers;
+}
 
-    if (!notifiers.empty())
-    {
-        std::unique_ptr<CZMQNotificationInterface> notificationInterface(new CZMQNotificationInterface());
-        notificationInterface->notifiers = std::move(notifiers);
+util::Result<std::unique_ptr<CZMQNotificationInterface>> CZMQNotificationInterface::Create(
+    std::list<std::unique_ptr<CZMQAbstractNotifier>>&& notifiers)
+{
+    if (notifiers.empty()) return util::Error{Untranslated("No ZMQ notifiers provided")};
 
-        if (notificationInterface->Initialize()) {
-            return notificationInterface;
-        }
+    std::unique_ptr<CZMQNotificationInterface> notificationInterface(new CZMQNotificationInterface());
+    notificationInterface->notifiers = std::move(notifiers);
+
+    if (auto result{notificationInterface->Initialize()}; !result) {
+        return util::Error{util::ErrorString(result)};
     }
-
-    return nullptr;
+    return notificationInterface;
 }
 
 // Called at startup to conditionally set up ZMQ socket(s)
-bool CZMQNotificationInterface::Initialize()
+util::Result<void> CZMQNotificationInterface::Initialize()
 {
     int major = 0, minor = 0, patch = 0;
     zmq_version(&major, &minor, &patch);
@@ -98,20 +106,19 @@ bool CZMQNotificationInterface::Initialize()
 
     if (!pcontext)
     {
-        zmqError("Unable to initialize context");
-        return false;
+        return util::Error{Untranslated(strprintf("Unable to initialize ZMQ context: %s", zmq_strerror(errno)))};
     }
 
     for (auto& notifier : notifiers) {
-        if (notifier->Initialize(pcontext)) {
+        if (auto result{notifier->Initialize(pcontext)}) {
             LogDebug(BCLog::ZMQ, "Notifier %s ready (address = %s)\n", notifier->GetType(), notifier->GetAddress());
         } else {
             LogDebug(BCLog::ZMQ, "Notifier %s failed (address = %s)\n", notifier->GetType(), notifier->GetAddress());
-            return false;
+            return util::Error{util::ErrorString(result)};
         }
     }
 
-    return true;
+    return {};
 }
 
 // Called during shutdown sequence
