@@ -14,6 +14,7 @@
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/obfuscation.h>
+#include <util/pointers.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -194,7 +195,7 @@ class CDBWrapper
     friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
 private:
     //! holds all leveldb-specific fields of this class
-    std::unique_ptr<LevelDBContext> m_db_context;
+    util::NotNullUniquePtr<LevelDBContext> m_db_context;
 
     //! the name of this database
     std::string m_name;
@@ -208,7 +209,7 @@ private:
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
     bool ExistsImpl(std::span<const std::byte> key) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
-    auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
+    auto& DBContext() const LIFETIMEBOUND { return *m_db_context; }
 
 public:
     CDBWrapper(const DBParams& params);
