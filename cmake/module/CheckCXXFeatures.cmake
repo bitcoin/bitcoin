@@ -13,25 +13,20 @@ function(check_cxx_features)
 
   message(STATUS "Checking for required C++ features")
 
-  # Checks for Class Template Argument Deduction for aggregate types - used in src/util/overloaded.h
+  # Checks for Class Template Argument Deduction for alias templates.
   check_cxx_source_compiles("
-    #include <variant>
-
-    template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+    template<class T> struct Template { Template(T) {} };
+    template<class T> using Alias = Template<T>;
 
     int main() {
-      std::variant<int, double> v = 42;
-      return std::visit(Overloaded{
-        [](int) { return 0; },
-        [](double) { return 1; }
-      }, v);
+      Alias value{42};
+      return sizeof(value);
     }
-  " HAVE_CTAD_FOR_AGGREGATES)
+  " HAVE_CTAD_FOR_ALIAS_TEMPLATES)
 
-  if(NOT HAVE_CTAD_FOR_AGGREGATES)
+  if(NOT HAVE_CTAD_FOR_ALIAS_TEMPLATES)
     message(FATAL_ERROR
-      "Compiler lacks Class Template Argument Deduction (CTAD) for aggregates.\n"
-      "This C++ feature is required for src/util/overloaded.h.\n"
+      "Compiler lacks Class Template Argument Deduction (CTAD) for alias templates.\n"
       "You are probably using an old compiler version\n"
       "The recommended compiler versions can be checked in\n"
       "doc/dependencies.md#compiler.\n"
