@@ -138,7 +138,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Invalid private key", self.nodes[0].signrawtransactionwithkey, tx, privkeys)
         self.log.info("Test signing transaction with an invalid tx hex")
         privkeys = [self.nodes[0].get_deterministic_priv_key().key]
-        assert_raises_rpc_error(-22, "TX decode failed. Make sure the tx has at least one input.", self.nodes[0].signrawtransactionwithkey, tx + "00", privkeys)
+        assert_raises_rpc_error(-22, "TX decode failed. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.", self.nodes[0].signrawtransactionwithkey, tx + "00", privkeys)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

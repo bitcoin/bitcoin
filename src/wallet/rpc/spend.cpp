@@ -906,7 +906,7 @@ RPCMethod signrawtransactionwithwallet()
 
     CMutableTransaction mtx;
     if (!DecodeHexTx(mtx, request.params[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. " + std::string{TX_DECODE_ERROR_HINT});
     }
 
     // Sign the transaction
