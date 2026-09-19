@@ -48,6 +48,7 @@ FUZZ_TARGET(private_broadcast)
     // Random transaction that the test generated and passed to Add(). Trimmed when Remove() is called.
     // The values are the number of times a transaction was picked for sending.
     std::unordered_map<CTransactionRef, size_t, CTransactionRefHash, CTransactionRefComp> transactions;
+    std::unordered_map<CTransactionRef, size_t, CTransactionRefHash, CTransactionRefComp> send_limit;
 
     // Transactions passed to PickTxForSend(), indexed by node id. Trimmed when
     // Remove() is called or a transaction is reset by Add().
@@ -59,8 +60,8 @@ FUZZ_TARGET(private_broadcast)
 
     NodeId next_nodeid{0}; // Generate unique node ids.
 
-    const auto is_pending{[max_send_attempts](const auto& entry) {
-        return entry.second < max_send_attempts;
+    const auto is_pending{[&](const auto& entry) {
+        return entry.second < std::min(send_limit.at(entry.first), max_send_attempts);
     }};
 
     const auto ExistentOrNewNodeId = [&next_nodeid, &fdp](){
@@ -86,11 +87,12 @@ FUZZ_TARGET(private_broadcast)
                 if (present_before) {
                     auto tx_it{transactions.find(tx)};
                     Assert(tx_it != transactions.end());
-                    if (is_pending(*tx_it)) {
+                    if (tx_it->second < max_send_attempts) {
                         Assert(res == PrivateBroadcast::AddResult::AlreadyPresent);
                     } else {
                         Assert(res == PrivateBroadcast::AddResult::Added);
                         tx_it->second = 0;
+                        send_limit[tx] = PrivateBroadcast::INITIAL_BROADCAST_COUNT;
                         for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
                             if (CTransactionRefComp{}(it->second, tx)) {
                                 nodes_that_confirmed_reception.erase(it->first);
@@ -105,6 +107,7 @@ FUZZ_TARGET(private_broadcast)
                 } else {
                     Assert(res == PrivateBroadcast::AddResult::Added);
                     transactions.emplace(tx, 0);
+                    send_limit.emplace(tx, PrivateBroadcast::INITIAL_BROADCAST_COUNT);
                 }
             },
             [&] { // Remove()
@@ -134,6 +137,7 @@ FUZZ_TARGET(private_broadcast)
                 Assert(opt_num_confirmed.has_value());
                 Assert(opt_num_confirmed.value() == num_nodes_that_confirmed_tx);
                 Assert(!pb.Remove(tx).has_value());
+                send_limit.erase(tx);
                 transactions.erase(transactions_it);
             },
             [&] { // PickTxForSend()
@@ -207,6 +211,13 @@ FUZZ_TARGET(private_broadcast)
                     Assert(!pb.HavePendingTransactions());
                 }
             },
+            [&] { // TryGrantRetry()
+                if (transactions.empty()) return;
+                const auto& tx{PickIterator(fdp, transactions)->first};
+                auto& count{send_limit.at(tx)};
+                Assert(pb.TryGrantRetry(tx) == (count < max_send_attempts));
+                if (count < max_send_attempts) ++count;
+            },
             [&] { // GetStale()
                 const auto stale{pb.GetStale()};
 
@@ -215,7 +226,7 @@ FUZZ_TARGET(private_broadcast)
                 for (const auto& stale_tx : stale) {
                     const auto it{transactions.find(stale_tx)};
                     Assert(it != transactions.end());
-                    Assert(is_pending(*it));
+                    Assert(send_limit.at(stale_tx) < max_send_attempts);
                 }
             },
             [&] { // GetBroadcastInfo()

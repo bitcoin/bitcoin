@@ -30,6 +30,9 @@ class PrivateBroadcast
 {
 public:
 
+    /// Number of connections to make for initial broadcast.
+    static constexpr size_t INITIAL_BROADCAST_COUNT{3};
+
     /// If a transaction is not sent to any peer for this duration,
     /// then we consider it stale / for rebroadcasting.
     static constexpr auto INITIAL_STALE_DURATION{5min};
@@ -101,6 +104,30 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
+     * Mark a transaction as being received back from the network.
+     * @param[in] tx Transaction received from the network.
+     * @return Whether the transaction was found in the storage.
+     */
+    bool MarkReceived(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Mark a connection finished.
+     * @param[in] nodeid Node whose connection has ended.
+     */
+    void NodeDisconnected(NodeId nodeid)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Grant one additional send attempt if the transaction is still unreceived and
+     * below the attempt limit. The caller schedules the connection separately.
+     * @param[in] tx Transaction to retry.
+     * @return Whether an additional send attempt was granted.
+     */
+    bool TryGrantRetry(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
      * Pick the transaction with the fewest send attempts, and confirmations,
      * and oldest send/confirm times.
      * @param[in] will_send_to_nodeid Will remember that the returned transaction
@@ -169,6 +196,8 @@ private:
         const NodeClock::time_point picked;
         /// When was the transaction reception confirmed by the node (by PONG).
         std::optional<NodeClock::time_point> confirmed;
+        /// Whether the connection has ended.
+        bool disconnected{false};
 
         SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
@@ -228,6 +257,10 @@ private:
     struct TxSendStatus {
         NodeClock::time_point time_added{NodeClock::now()};
         std::vector<SendStatus> send_statuses;
+        /// Total number of sends granted, including initial count.
+        size_t send_limit{INITIAL_BROADCAST_COUNT};
+        /// Whether the transaction was received back from the network.
+        bool received{false};
     };
     bool IsPending(const TxSendStatus& status) const;
     /// Cap on the number of simultaneously tracked transactions (see Add()).
