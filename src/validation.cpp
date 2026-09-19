@@ -29,6 +29,7 @@
 #include <kernel/types.h>
 #include <kernel/warning.h>
 #include <logging/timer.h>
+#include <node/blockfetcher.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <policy/ephemeral_policy.h>
@@ -1864,11 +1865,16 @@ Chainstate::Chainstate(
     BlockManager& blockman,
     ChainstateManager& chainman,
     std::optional<uint256> from_snapshot_blockhash)
-    : m_mempool(mempool),
+    : m_block_fetcher{std::make_unique<node::BlockFetcher>([blockman = &blockman](CBlock& block, const FlatFilePos& pos, const uint256& hash) {
+          return blockman->ReadBlock(block, pos, hash);
+      })},
+      m_mempool(mempool),
       m_blockman(blockman),
       m_chainman(chainman),
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
+
+Chainstate::~Chainstate() = default;
 
 fs::path Chainstate::StoragePath() const
 {
@@ -3192,17 +3198,22 @@ void Chainstate::PruneBlockIndexCandidates() {
 
 /**
  * Try to make some progress towards making index_most_work the active block.
- * pblock is either nullptr or a pointer to a CBlock corresponding to index_most_work.
+ * provided_block is either nullptr or points to the CBlock corresponding to index_most_work.
  *
  * @returns true unless a system error occurred
  */
-bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
+bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& provided_block, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     const CBlockIndex* pindexOldTip = m_chain.Tip();
     const CBlockIndex* pindexFork = m_chain.FindFork(index_most_work);
+    const CBlockIndex* read_ahead_tip{provided_block ? index_most_work.pprev : &index_most_work}; // Avoid rereading the provided block
+    if (pindexFork && pindexFork != pindexOldTip) {
+        m_block_fetcher->Clear();
+        if (read_ahead_tip) m_block_fetcher->FillQueue(*read_ahead_tip, pindexFork->nHeight + 1);
+    }
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;
@@ -3241,7 +3252,9 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
-            if (!ConnectTip(state, pindexConnect, pindexConnect == &index_most_work ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)) {
+            auto block_to_connect{provided_block && pindexConnect == &index_most_work ? provided_block : m_block_fetcher->Load(pindexConnect->GetBlockHash())};
+            if (read_ahead_tip) m_block_fetcher->FillQueue(*read_ahead_tip, pindexConnect->nHeight + 1);
+            if (!ConnectTip(state, pindexConnect, std::move(block_to_connect), connected_blocks, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -3387,11 +3400,12 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
                 bool fInvalidFound = false;
                 std::shared_ptr<const CBlock> nullBlockPtr;
+                auto block_to_connect{pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr};
                 // BlockConnected signals must be sent for the original role;
                 // in case snapshot validation is completed during ActivateBestChainStep, the
                 // result of GetRole() changes from BACKGROUND to NORMAL.
                const ChainstateRole chainstate_role{this->GetRole()};
-                if (!ActivateBestChainStep(state, *pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)) {
+                if (!ActivateBestChainStep(state, *pindexMostWork, block_to_connect, fInvalidFound, connected_blocks)) {
                     // A system error occurred
                     return false;
                 }
