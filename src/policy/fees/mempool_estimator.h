@@ -36,6 +36,8 @@ constexpr std::chrono::seconds CACHE_LIFE{7};
 // Constants for mempool sanity checks.
 constexpr size_t MEMPOOL_HEALTH_WINDOW_BLOCKS = 6;
 constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
+// On startup, a sparse mempool is treated as insufficient data for this many blocks.
+constexpr uint64_t MEMPOOL_WARMUP_BLOCKS{144};
 
 //! Weight statistics for a recently mined block, used to assess mempool coverage.
 struct MinedBlockStats {
@@ -45,6 +47,11 @@ struct MinedBlockStats {
     uint64_t m_removed_block_txs_weight{0};
     //! Total non-coinbase transaction weight in the block.
     uint64_t m_block_weight{0};
+};
+
+struct Percentiles {
+    FeePerVSize p50;
+    FeePerVSize p75;
 };
 
 /**
@@ -60,19 +67,15 @@ public:
     MemPoolFeeRateEstimatorCache& operator=(const MemPoolFeeRateEstimatorCache&) = delete;
     /** Returns true if the cache is empty or older than CACHE_LIFE. */
     bool IsStale() const;
-    struct FeeRateEstimate {
-        FeePerVSize m_conservative;
-        FeePerVSize m_economical;
-    };
-    /** Returns cached estimates if not stale and computed on tip_hash, nullopt otherwise. */
-    std::optional<FeeRateEstimate> GetCachedEstimate(const uint256& tip_hash) const;
-    /** Update the cache with new estimates computed on tip_hash. */
-    void Update(FeePerVSize conservative, FeePerVSize economical, const uint256& tip_hash);
-    /** Clear cached fee rate estimates. */
+    /** Returns cached percentiles if not stale and computed on tip_hash, nullopt otherwise. */
+    std::optional<Percentiles> GetCachedPercentiles(const uint256& tip_hash) const;
+    /** Update the cache with percentiles computed on tip_hash. */
+    void Update(const Percentiles& percentiles, const uint256& tip_hash);
+    /** Clear cached percentiles. */
     void Clear();
 
 private:
-    std::optional<FeeRateEstimate> m_fee_rate_estimation;
+    std::optional<Percentiles> m_percentiles;
     uint256 m_tip_hash;
     NodeClock::time_point m_last_updated{};
 };
@@ -87,15 +90,10 @@ private:
 class MemPoolFeeRateEstimator
 {
 public:
-    // Block percentiles fee rate (in sat/vB).
-    struct Percentiles {
-        FeePerVSize p50;
-        FeePerVSize p75;
-    };
-
     MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
                             const CTxMemPool& mempool,
-                            ChainstateManager& chainman);
+                            ChainstateManager& chainman,
+                            uint64_t warmup_blocks = MEMPOOL_WARMUP_BLOCKS);
     ~MemPoolFeeRateEstimator() = default;
     /**
      * Calculate the 50th and 75th percentile fee rates from block template chunks,
@@ -135,6 +133,8 @@ public:
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs) { return GetMempoolHealth() == MempoolHealth::HEALTHY; }
     void FlushMinedBlockStats() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Called when the mempool did not load; clears the mined-block window.
+    void MempoolLoadFailed() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Deserialize mined-block stats without taking ownership of file.
     bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Serialize mined-block stats without taking ownership of file.
@@ -143,9 +143,19 @@ public:
 
 private:
     void ReadFromDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! The block-template percentiles for the current tip, building and caching a template if needed.
+    Percentiles GetOrBuildPercentiles() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Start warmup for m_warmup_blocks blocks from start_height.
+    void StartWarmup(uint64_t start_height) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! True while the mempool is still warming up.
+    bool IsWarmingUp() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Tracks weight statistics for the last MEMPOOL_HEALTH_WINDOW_BLOCKS mined blocks.
     std::vector<MinedBlockStats> m_prev_mined_blocks GUARDED_BY(cs);
     uint256 m_mined_blocks_tip_hash GUARDED_BY(cs);
+    //! Warmup lasts until the latest mined block reaches this height; 0 before it starts.
+    uint64_t m_warmup_end_height GUARDED_BY(cs){0};
+    //! Warmup length in blocks (default MEMPOOL_WARMUP_BLOCKS; overridable for tests).
+    const uint64_t m_warmup_blocks;
 
     const CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
