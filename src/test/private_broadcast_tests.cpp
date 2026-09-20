@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetTxForNode(recipient2).value(), tx_for_recipient2);
 
     // Confirm none of the transactions' reception have been confirmed.
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient1));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(nonexistent_recipient));
+    for (const auto& info : pb.GetBroadcastInfo()) {
+        BOOST_CHECK(std::ranges::none_of(info.peers, [](const auto& peer) { return peer.received.has_value(); }));
+    }
 
     // 1. Freshly added transactions should NOT be stale yet.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
@@ -114,9 +114,6 @@ BOOST_AUTO_TEST_CASE(basic)
     // Confirm reception by recipient1.
     pb.NodeConfirmedReception(nonexistent_recipient); // Dummy call.
     pb.NodeConfirmedReception(recipient1);
-
-    BOOST_CHECK(pb.DidNodeConfirmReception(recipient1));
-    BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
 
     const auto infos{pb.GetBroadcastInfo()};
     BOOST_CHECK_EQUAL(infos.size(), 2);
@@ -264,7 +261,10 @@ BOOST_AUTO_TEST_CASE(reset_with_equivalent_transaction_reference)
     BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
     pb.NodeConfirmedReception(/*nodeid=*/0);
-    BOOST_CHECK(pb.DidNodeConfirmReception(/*nodeid=*/0));
+    const auto confirmed_info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(confirmed_info.size(), 1);
+    BOOST_REQUIRE_EQUAL(confirmed_info[0].peers.size(), 1);
+    BOOST_CHECK(confirmed_info[0].peers[0].received.has_value());
     BOOST_CHECK(!pb.HavePendingTransactions());
 
     // A distinct CTransactionRef with the same WTXID must reset the exhausted
@@ -272,7 +272,6 @@ BOOST_AUTO_TEST_CASE(reset_with_equivalent_transaction_reference)
     BOOST_REQUIRE_EQUAL(pb.Add(equivalent_tx), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK(pb.HavePendingTransactions());
     BOOST_CHECK(!pb.GetTxForNode(/*nodeid=*/0).has_value());
-    BOOST_CHECK(!pb.DidNodeConfirmReception(/*nodeid=*/0));
     const auto info{pb.GetBroadcastInfo()};
     BOOST_REQUIRE_EQUAL(info.size(), 1);
     BOOST_CHECK(info[0].tx->GetWitnessHash() == tx->GetWitnessHash());

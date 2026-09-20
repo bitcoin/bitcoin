@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <ranges>
 #include <unordered_map>
-#include <unordered_set>
 
 struct CTransactionRefHash {
     size_t operator()(const CTransactionRef& tx) const
@@ -54,10 +53,6 @@ FUZZ_TARGET(private_broadcast)
     // Transactions passed to PickTxForSend(), indexed by node id. Trimmed when
     // Remove() is called or a transaction is reset by Add().
     std::unordered_map<NodeId, CTransactionRef> nodes_sent_to;
-
-    // A subset of `nodes_sent_to`, node ids passed to NodeConfirmedReception().
-    // Trimmed when Remove() is called or a transaction is reset by Add().
-    std::unordered_set<NodeId> nodes_that_confirmed_reception;
 
     NodeId next_nodeid{0}; // Generate unique node ids.
 
@@ -96,7 +91,6 @@ FUZZ_TARGET(private_broadcast)
                         planned_sends[tx] = PrivateBroadcast::INITIAL_COUNT;
                         for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
                             if (CTransactionRefComp{}(it->second, tx)) {
-                                nodes_that_confirmed_reception.erase(it->first);
                                 it = nodes_sent_to.erase(it);
                             } else {
                                 ++it;
@@ -118,12 +112,10 @@ FUZZ_TARGET(private_broadcast)
                 const auto transactions_it{PickIterator(fdp, transactions)};
                 const CTransactionRef& tx{transactions_it->first};
 
-                // Remove relevant entries from nodes_sent_to[] and nodes_that_confirmed_reception[] if any.
+                // Remove relevant entries from nodes_sent_to[] if any.
                 for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                    const NodeId nodeid{it->first};
                     if (CTransactionRefComp{}(it->second, tx)) {
                         it = nodes_sent_to.erase(it);
-                        nodes_that_confirmed_reception.erase(nodeid);
                     } else {
                         ++it;
                     }
@@ -182,24 +174,6 @@ FUZZ_TARGET(private_broadcast)
                 const NodeId nodeid{ExistentOrNewNodeId()};
 
                 pb.NodeConfirmedReception(nodeid);
-
-                if (nodes_sent_to.contains(nodeid)) {
-                    // nodeid was previously passed to PickTxForSend(), so NodeConfirmedReception()
-                    // must have changed the internal state. Remember this to later check that
-                    // DidNodeConfirmReception() works correctly.
-                    nodes_that_confirmed_reception.emplace(nodeid);
-                }
-            },
-            [&] { // DidNodeConfirmReception()
-                const NodeId nodeid{ExistentOrNewNodeId()};
-
-                const bool confirmed{pb.DidNodeConfirmReception(nodeid)};
-
-                if (nodes_that_confirmed_reception.contains(nodeid)) {
-                    Assert(confirmed);
-                } else {
-                    Assert(!confirmed);
-                }
             },
             [&] { // HavePendingTransactions()
                 if (std::ranges::any_of(transactions, is_pending)) {

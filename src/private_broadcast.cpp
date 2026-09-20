@@ -125,17 +125,6 @@ void PrivateBroadcast::NodeConfirmedReception(const NodeId& nodeid)
     }
 }
 
-bool PrivateBroadcast::DidNodeConfirmReception(const NodeId& nodeid)
-    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-{
-    LOCK(m_mutex);
-    const auto tx_and_status{GetSendStatusByNode(nodeid)};
-    if (tx_and_status.has_value()) {
-        return tx_and_status.value().send_status.confirmed.has_value();
-    }
-    return false;
-}
-
 bool PrivateBroadcast::HavePendingTransactions()
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
