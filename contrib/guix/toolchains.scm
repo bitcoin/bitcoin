@@ -200,6 +200,7 @@ chain for " target " development."))
                   "--disable-gcov"
                   "--disable-libgomp"
                   "--disable-libsanitizer"
+                  "--disable-libstdcxx-filesystem-ts"
                   "--disable-lto"
                   "--disable-nls"
                   #$building-on)))))))
@@ -223,6 +224,7 @@ chain for " target " development."))
                   "--disable-libgomp"
                   "--disable-libquadmath"
                   "--disable-libsanitizer"
+                  "--disable-libstdcxx-filesystem-ts"
                   "--disable-lto"
                   "--disable-nls"
                   "--disable-tm-clone-registry"
