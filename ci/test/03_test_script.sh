@@ -181,12 +181,9 @@ if [ "$RUN_CHECK_DEPS" = "true" ]; then
   "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" "${BASE_BUILD_DIR}"
 fi
 
-if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
+if [[ "$RUN_MACOS_CODESIGN" == "true" ]]; then
   unzip "${BASE_BUILD_DIR}/bitcoin-macos-app.zip" -d "${BASE_BUILD_DIR}/deploy"
-  if ! ( codesign --verify --deep --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
-    echo "Codesigning failed."
-    false
-  fi
+  codesign --verify --deep --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app"
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
