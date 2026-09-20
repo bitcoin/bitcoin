@@ -118,8 +118,7 @@ FUZZ_TARGET(coinselection)
         }
     }
     {
-        auto p{positive_pool};
-        if (auto srd{SelectCoinsSRD(p, target, params.m_change_fee, rng, max_selection_weight)}) {
+        if (auto srd{SelectCoinsSRD(positive_pool, target, params.m_change_fee, rng, max_selection_weight)}) {
             Assert(srd->GetSelectedValue() >= target);
             Assert(srd->GetWeight() <= max_selection_weight);
         }

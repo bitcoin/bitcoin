@@ -30,7 +30,6 @@ add_executable(fuzz
   cmpctblock.cpp
   coins_view.cpp
   coinscache_sim.cpp
-  coinselection.cpp
   connect_block.cpp
   connman.cpp
   crypto.cpp

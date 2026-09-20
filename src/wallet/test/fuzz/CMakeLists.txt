@@ -6,6 +6,7 @@ target_sources(fuzz
   PRIVATE
     coincontrol.cpp
     coinselection.cpp
+    coinselection_solvers.cpp
     crypter.cpp
     fees.cpp
     scriptpubkeyman.cpp
