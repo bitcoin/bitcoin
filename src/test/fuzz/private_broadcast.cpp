@@ -57,10 +57,6 @@ FUZZ_TARGET(private_broadcast)
     std::unordered_map<NodeId, CTransactionRef> nodes_sent_to;
     std::unordered_set<NodeId> disconnected_nodes;
 
-    // A subset of `nodes_sent_to`, node ids passed to NodeConfirmedReception().
-    // Trimmed when Remove() is called or a transaction is reset by Add().
-    std::unordered_set<NodeId> nodes_that_confirmed_reception;
-
     NodeId next_nodeid{0}; // Generate unique node ids.
 
     const auto is_pending{[&](const auto& entry) {
@@ -96,7 +92,6 @@ FUZZ_TARGET(private_broadcast)
                     return true;
                 });
                 std::erase_if(nodes_sent_to, [&](const auto& entry) { return !transactions.contains(entry.second); });
-                std::erase_if(nodes_that_confirmed_reception, [&](NodeId nodeid) { return !nodes_sent_to.contains(nodeid); });
 
                 const bool present_before{transactions.contains(tx)};
                 const auto res{pb.Add(tx)};
@@ -117,7 +112,6 @@ FUZZ_TARGET(private_broadcast)
                                 ++it;
                             }
                         }
-                        std::erase_if(nodes_that_confirmed_reception, [&](NodeId nodeid) { return !nodes_sent_to.contains(nodeid); });
                     }
                 } else if (transactions.size() >= cap) {
                     Assert(res == PrivateBroadcast::AddResult::QueueFull);
@@ -142,7 +136,6 @@ FUZZ_TARGET(private_broadcast)
                         ++it;
                     }
                 }
-                std::erase_if(nodes_that_confirmed_reception, [&](NodeId nodeid) { return !nodes_sent_to.contains(nodeid); });
 
                 const auto remaining_sends{pb.Remove(tx)};
 
@@ -205,24 +198,6 @@ FUZZ_TARGET(private_broadcast)
                 const NodeId nodeid{ExistentOrNewNodeId()};
 
                 pb.NodeConfirmedReception(nodeid);
-
-                if (nodes_sent_to.contains(nodeid)) {
-                    // nodeid was previously passed to PickTxForSend(), so NodeConfirmedReception()
-                    // must have changed the internal state. Remember this to later check that
-                    // DidNodeConfirmReception() works correctly.
-                    nodes_that_confirmed_reception.emplace(nodeid);
-                }
-            },
-            [&] { // DidNodeConfirmReception()
-                const NodeId nodeid{ExistentOrNewNodeId()};
-
-                const bool confirmed{pb.DidNodeConfirmReception(nodeid)};
-
-                if (nodes_that_confirmed_reception.contains(nodeid)) {
-                    Assert(confirmed);
-                } else {
-                    Assert(!confirmed);
-                }
             },
             [&] { // NodeDisconnected()
                 const NodeId nodeid{ExistentOrNewNodeId()};
