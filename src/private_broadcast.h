@@ -26,7 +26,6 @@
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
- * - Query whether a given recipient node has confirmed reception
  * - Query whether any transactions that need sending are currently on the list
  */
 class PrivateBroadcast
@@ -161,14 +160,6 @@ public:
      * @param[in] nodeid Node that we sent a transaction to.
      */
     void NodeConfirmedReception(const NodeId& nodeid)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-
-    /**
-     * Check if the node has confirmed reception of the transaction.
-     * @retval true Node has confirmed, `NodeConfirmedReception()` has been called.
-     * @retval false Node has not confirmed, `NodeConfirmedReception()` has not been called.
-     */
-    bool DidNodeConfirmReception(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
