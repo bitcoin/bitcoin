@@ -28,6 +28,7 @@ from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
+    assert_array_result,
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
@@ -137,11 +138,15 @@ class WalletMigrationTest(BitcoinTestFramework):
             dst = os.path.abspath(self.master_node.wallets_path / wallet_name)
             if src != dst :
                 shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
-        # Check that the wallet shows up in listwalletdir with a warning about migration
-        wallets = self.master_node.listwalletdir()
-        for w in wallets["wallets"]:
-            if w["name"] == wallet_name:
-                assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
+        # listwalletdir only reports wallets under the wallet directory.
+        wallet_dir = self.master_node.wallets_path
+        wallet_path = Path(os.path.normpath(wallet_dir / wallet_name))
+        if wallet_path.is_relative_to(wallet_dir):
+            assert_array_result(
+                self.master_node.listwalletdir()["wallets"],
+                {"name": str(wallet_path.relative_to(wallet_dir)) if wallet_path != wallet_dir else ""},
+                {"warnings": ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"]},
+            )
 
         # migratewallet uses current time in naming the backup file, set a mock time
         # to check that this works correctly.
