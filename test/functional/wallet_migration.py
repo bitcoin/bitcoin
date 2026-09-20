@@ -173,7 +173,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         backup_filename = f"{backup_prefix}_{mocked_time}.legacy.bak"
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
-        assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+        assert backup_filename not in [w["name"] for w in self.master_node.listwalletdir()["wallets"]]
         self.assert_no_tmp_db(self.master_node.wallets_path)
 
         # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
