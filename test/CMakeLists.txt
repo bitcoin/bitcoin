@@ -32,6 +32,7 @@ function(create_test_config)
   set_configure_variable(BUILD_GUI BUILD_GUI)
 
   configure_file(config.ini.in config.ini USE_SOURCE_PERMISSIONS @ONLY)
+  configure_file(with_sanitizer_env.py.in with_sanitizer_env.py USE_SOURCE_PERMISSIONS @ONLY)
 endfunction()
 
 create_test_config()
