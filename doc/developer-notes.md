@@ -634,12 +634,6 @@ cmake -B build -DSANITIZERS=address,undefined
 cmake -B build -DSANITIZERS=thread
 ```
 
-If you are compiling with GCC you will typically need to install corresponding
-"san" libraries to actually compile with these flags, e.g. libasan for the
-address sanitizer, libtsan for the thread sanitizer, and libubsan for the
-undefined sanitizer. If you are missing required libraries, the build
-will fail with a linker error when testing the sanitizer flags.
-
 The test suite should pass cleanly with the `thread` and `undefined` sanitizers. You
 may need to use a suppressions file, see `test/sanitizer_suppressions`. They may be
 used as follows:
