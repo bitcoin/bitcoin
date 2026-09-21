@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -144,6 +145,27 @@ void KeyPath::SetHardenedChar(char hardened)
     for (KeyPathElement& elem : *this) {
         elem.SetHardenedChar(hardened);
     }
+}
+
+size_t KeyPath::MultipathLen() const
+{
+    size_t len = 0;
+    for (const auto& e : *this) {
+        len = std::max(len, e.MultipathLen());
+    }
+    return len;
+}
+
+KeyPath KeyPath::ChooseMultipath(size_t pos) const
+{
+    KeyPath new_path;
+    new_path.reserve(size());
+    std::transform(begin(), end(), std::back_inserter(new_path),
+                   [&pos](const KeyPathElement& e) {
+                       if (e.IsMultipath()) return e.ChildNumber(pos);
+                       return e.ChildNumber();
+                   });
+    return new_path;
 }
 
 std::string SingleKeyPathElement::ToString(const std::optional<char>& hardened_char) const
