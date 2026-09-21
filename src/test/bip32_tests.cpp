@@ -330,10 +330,10 @@ BOOST_AUTO_TEST_CASE(bip32_has_hardened_derivation)
     const KeyPath unhardened{0, 1, 2};
     const KeyPath hardened{BIP32_HARDENED_FLAG};
     const KeyPath mixed{0, BIP32_HARDENED_FLAG | 1, 2};
-    BOOST_CHECK(!HasHardenedDerivation(empty));
-    BOOST_CHECK(!HasHardenedDerivation(unhardened));
-    BOOST_CHECK(HasHardenedDerivation(hardened));
-    BOOST_CHECK(HasHardenedDerivation(mixed));
+    BOOST_CHECK(!empty.HasHardenedDerivation());
+    BOOST_CHECK(!unhardened.HasHardenedDerivation());
+    BOOST_CHECK(hardened.HasHardenedDerivation());
+    BOOST_CHECK(mixed.HasHardenedDerivation());
 }
 
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
