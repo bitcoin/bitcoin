@@ -473,7 +473,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     bool IsHardened() const
     {
         if (m_derive == DeriveType::HARDENED_RANGED) return true;
-        return HasHardenedDerivation(m_path);
+        return m_path.HasHardenedDerivation();
     }
 
 public:
