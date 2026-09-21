@@ -265,6 +265,10 @@ public:
     /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
     virtual bool CanSelfExpand() const = 0;
 
+    virtual size_t GetMultipathLen() const { return 0; }
+
+    virtual void ChooseMultipath(size_t pos) {}
+
 protected:
     static std::optional<char> DetermineHardenedChar(StringType type, bool normalized)
     {
@@ -650,6 +654,8 @@ public:
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_hardened);
     }
     bool CanSelfExpand() const override { return !IsHardened(); }
+    size_t GetMultipathLen() const override { return m_path.MultipathLen(); }
+    void ChooseMultipath(size_t pos) override { m_path = m_path.ChooseMultipath(pos); }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -659,7 +665,7 @@ private:
     //! PubkeyProvider for the participants
     const std::vector<std::unique_ptr<PubkeyProvider>> m_participants;
     //! Derivation path
-    const KeyPath m_path;
+    KeyPath m_path;
     //! PubkeyProvider for the aggregate pubkey if it can be cached (i.e. participants are not ranged)
     mutable std::unique_ptr<PubkeyProvider> m_aggregate_provider;
     mutable std::optional<CPubKey> m_aggregate_pubkey;
@@ -867,6 +873,8 @@ public:
         }
         return true;
     }
+    size_t GetMultipathLen() const override { return m_path.MultipathLen(); }
+    void ChooseMultipath(size_t pos) override { m_path = m_path.ChooseMultipath(pos); }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -1175,6 +1183,48 @@ public:
             if (!sub->CanSelfExpand()) return false;
         }
         return true;
+    }
+
+    std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const override
+    {
+        size_t multipath_len{0};
+        std::vector<const DescriptorImpl*> todo = {this};
+        while (!todo.empty()) {
+            const DescriptorImpl* desc = todo.back();
+            todo.pop_back();
+            for (const auto& p : desc->m_pubkey_args) {
+                multipath_len = p->GetMultipathLen();
+                if (multipath_len > 0) {
+                    break;
+                }
+            }
+            if (multipath_len > 0) {
+                break;
+            }
+            for (const auto& s : desc->m_subdescriptor_args) {
+                todo.push_back(s.get());
+            }
+        }
+
+        std::vector<std::unique_ptr<Descriptor>> out;
+        out.reserve(multipath_len);
+        for (size_t pos = 0; pos < multipath_len; ++pos) {
+            std::unique_ptr<DescriptorImpl> cloned = Clone();
+            todo.clear();
+            todo.push_back(cloned.get());
+            while (!todo.empty()) {
+                const DescriptorImpl* desc = todo.back();
+                todo.pop_back();
+                for (auto& p : desc->m_pubkey_args) {
+                    p->ChooseMultipath(pos);
+                }
+                for (const auto& s : desc->m_subdescriptor_args) {
+                    todo.push_back(s.get());
+                }
+            }
+            out.push_back(std::move(cloned));
+        }
+        return out;
     }
 };
 
