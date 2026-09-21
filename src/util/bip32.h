@@ -54,7 +54,14 @@ public:
     }
 };
 
-using KeyPath = std::vector<KeyPathElement>;
+class KeyPath : public std::vector<KeyPathElement>
+{
+    using vector::vector;
+
+public:
+    /** Whether a parsed HD keypath contains at least one hardened derivation step. */
+    bool HasHardenedDerivation() const;
+};
 
 /** Parse a single key path element like "0", "0'", or "0h".
  *  Returns the derivation index and hardened status, or an error message. */
@@ -66,8 +73,5 @@ std::optional<KeyPath> ParseHDKeypath(const std::string& keypath_str);
 /** Write HD keypaths as strings */
 std::string WriteHDKeypath(const KeyPath& keypath, bool apostrophe = false);
 std::string FormatHDKeypath(const KeyPath& path, bool apostrophe = false);
-
-/** Whether a parsed HD keypath contains at least one hardened derivation step. */
-bool HasHardenedDerivation(const KeyPath& keypath);
 
 #endif // BITCOIN_UTIL_BIP32_H

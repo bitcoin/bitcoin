@@ -976,7 +976,7 @@ RPCMethod derivehdkey()
             UniValue options{request.params[1].isNull() ? UniValue::VOBJ : request.params[1]};
             const bool priv{options.exists("private") ? options["private"].get_bool() : false};
             UniValue hdkey{options["hdkey"]};
-            if (!HasHardenedDerivation(path)) {
+            if (!path.HasHardenedDerivation()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Derivation path requires at least one hardened step");
             }
 
