@@ -202,8 +202,7 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  "${WITH_SANITIZER_ENV[@]}" \
-    "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
+  "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
     "${MAKEJOBS}" \
     --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
     --ansi \
