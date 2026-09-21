@@ -52,6 +52,7 @@ from test_framework.wallet import MiniWallet, COIN
 class MempoolPersistTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        self.noban_tx_relay = True
         self.extra_args = [[], ["-persistmempool=0"], []]
         self.uses_wallet = None
 
@@ -212,7 +213,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.mini_wallet.send_self_transfer(from_node=node0)
 
         # shutdown, then startup with wallet disabled
-        self.restart_node(0, extra_args=["-disablewallet"])
+        # Note: extra_args is inherited from self.extra_args[0] so that the
+        # immediate-tx-relay whitelist is not dropped by this restart.
+        self.restart_node(0, extra_args=self.extra_args[0] + ["-disablewallet"])
 
         # check that txn gets broadcast due to unbroadcast logic
         conn = node0.add_p2p_connection(P2PTxInvStore())
