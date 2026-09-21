@@ -91,6 +91,7 @@ static RPCMethod sendrawtransaction()
         "\nIf -privatebroadcast is enabled, then the transaction will be sent via\n"
         "dedicated, short-lived connections to Tor or I2P peers, or to IPv4/IPv6 peers\n"
         "via the Tor network. This provides best-effort concealment of the transaction's origin.\n"
+        "Private broadcast is experimental and may change in future releases.\n"
         "Submission does not itself add the transaction to the local mempool; normal\n"
         "mempool acceptance and relay apply when it is received back from the network.\n"
         "The private broadcast queue is bounded: when it is full, this RPC fails and\n"
