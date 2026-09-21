@@ -25,7 +25,7 @@ def sanitizer_env():
             f"suppressions={suppressions_dir / 'lsan'}:print_suppressions=0"
         ),
         "TSAN_OPTIONS": (
-            f"suppressions={suppressions_dir / 'tsan'}:halt_on_error=1:second_deadlock_stack=1"
+            f"suppressions={suppressions_dir / 'tsan'}:halt_on_error=1:second_deadlock_stack=1:enable_adaptive_delay=1"
         ),
         "UBSAN_OPTIONS": (
             f"suppressions={suppressions_dir / 'ubsan'}:print_stacktrace=1:halt_on_error=1:report_error_type=1"
