@@ -686,7 +686,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-privatebroadcast",
                    strprintf(
-                       "Broadcast transactions submitted via sendrawtransaction RPC using short-lived "
+                       "EXPERIMENTAL: Broadcast transactions submitted via sendrawtransaction RPC using short-lived "
                        "connections through the Tor or I2P networks, without putting them in the mempool first. "
                        "This provides best-effort concealment of the transaction's origin. "
                        "Transactions submitted through the wallet are not affected by this option "
