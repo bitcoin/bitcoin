@@ -204,6 +204,9 @@ struct Descriptor {
     /** Semantic/safety warnings (includes subdescriptors). */
     virtual std::vector<std::string> Warnings() const = 0;
 
+    /** Get the multipath descriptor expansion for this descriptor */
+    virtual std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const = 0;
+
     /** Get the maximum key expression index. Used only for tests */
     virtual uint32_t GetMaxKeyExpr() const = 0;
 
