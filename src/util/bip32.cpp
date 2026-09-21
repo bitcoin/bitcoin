@@ -74,9 +74,9 @@ std::string WriteHDKeypath(const KeyPath& keypath, bool apostrophe)
     return "m" + FormatHDKeypath(keypath, apostrophe);
 }
 
-bool HasHardenedDerivation(const KeyPath& keypath)
+bool KeyPath::HasHardenedDerivation() const
 {
-    return std::any_of(keypath.begin(), keypath.end(), [](KeyPathElement index) {
+    return std::any_of(begin(), end(), [](KeyPathElement index) {
         return index.IsHardened();
     });
 }
