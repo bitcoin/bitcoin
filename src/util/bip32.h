@@ -118,6 +118,11 @@ public:
     bool HasHardenedDerivation() const;
 
     void SetHardenedChar(char hardened);
+
+    size_t MultipathLen() const;
+
+    /** Get the KeyPath of single KeyPathElements for a give multipath position */
+    KeyPath ChooseMultipath(size_t pos) const;
 };
 
 /** Parse a single key path element like "0", "0'", or "0h".
