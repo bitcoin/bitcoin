@@ -148,7 +148,7 @@ void KeyPath::SetHardenedChar(char hardened)
 
 size_t KeyPath::MultipathLen() const
 {
-    size_t len = 0;
+    size_t len = 1;
     for (const auto& e : *this) {
         len = std::max(len, e.MultipathLen());
     }
@@ -159,12 +159,19 @@ KeyPath KeyPath::ChooseMultipath(size_t pos) const
 {
     KeyPath new_path;
     new_path.reserve(size());
-    std::transform(begin(), end(), std::back_inserter(new_path),
-                   [&pos](const KeyPathElement& e) {
-                       if (e.IsMultipath()) return e.ChildNumber(pos);
-                       return e.ChildNumber();
-                   });
+    for (const KeyPathElement& e : *this) {
+        if (e.IsMultipath()) {
+            new_path.push_back(e.Index(pos));
+        } else {
+            new_path.push_back(e);
+        }
+    }
     return new_path;
+}
+
+bool KeyPath::HasHardened() const
+{
+    return std::any_of(begin(), end(), [](const auto& e) { return e.HasHardened(); });
 }
 
 std::string SingleKeyPathElement::ToString(const std::optional<char>& hardened_char) const

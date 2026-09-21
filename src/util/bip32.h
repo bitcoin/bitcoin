@@ -123,6 +123,8 @@ public:
 
     /** Get the KeyPath of single KeyPathElements for a give multipath position */
     KeyPath ChooseMultipath(size_t pos) const;
+
+    bool HasHardened() const;
 };
 
 /** Parse a single key path element like "0", "0'", or "0h".
