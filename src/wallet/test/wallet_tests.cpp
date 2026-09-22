@@ -310,8 +310,7 @@ BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
         auto desc_str{"combo(" + EncodeSecret(key) + ")"};
         FlatSigningProvider provider;
         std::string error;
-        auto descs{Parse(desc_str, provider, error, /* require_checksum=*/ false)};
-        auto& desc{descs.at(0)};
+        auto desc{Parse(desc_str, provider, error, /* require_checksum=*/ false)};
         WalletDescriptor w_desc{std::move(desc), 0, 0, 0, 0};
         BOOST_CHECK(wallet.AddWalletDescriptor(w_desc, provider, "", false));
         // Wallet should update the non-range descriptor successfully
