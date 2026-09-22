@@ -135,21 +135,21 @@ public:
     /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
     virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const { return false; }
     /** Sign a message with the given script */
-    virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
+    virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; }
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
     virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const { return common::PSBTError::UNSUPPORTED; }
 
     virtual uint256 GetID() const { return uint256(); }
 
     /** Returns a set of all the scriptPubKeys that this ScriptPubKeyMan watches */
-    virtual std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; };
+    virtual std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; }
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
     {
         LogInfo("[%s] %s", m_storage.LogName(), tfm::format(wallet_fmt, params...));
-    };
+    }
 
     /** Keypool has new keys */
     btcsignals::signal<void ()> NotifyCanGetAddressesChanged;

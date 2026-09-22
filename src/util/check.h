@@ -52,8 +52,8 @@ inline bool EnableFuzzDeterminism()
 
 extern bool g_detail_test_only_CheckFailuresAreExceptionsNotAborts;
 struct test_only_CheckFailuresAreExceptionsNotAborts {
-    test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = true; };
-    ~test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = false; };
+    test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = true; }
+    ~test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = false; }
 };
 
 std::string StrFormatInternalBug(std::string_view msg, const std::source_location& loc);
