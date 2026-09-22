@@ -44,6 +44,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <future>
 #include <limits>
 #include <list>
 #include <memory>
@@ -350,7 +351,6 @@ public:
         m_cbs.user_data_destroy = nullptr;
     }
 
-protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
     {
         if (m_cbs.block_checked) {
@@ -360,6 +360,7 @@ protected:
         }
     }
 
+protected:
     void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block) override
     {
         if (m_cbs.pow_valid_block) {
@@ -479,11 +480,12 @@ struct ChainstateManagerOptions {
 };
 
 struct ChainMan {
-    std::unique_ptr<ChainstateManager> m_chainman;
+    // Keep notifications and callbacks alive while the manager joins its worker.
     std::shared_ptr<const Context> m_context;
+    std::unique_ptr<ChainstateManager> m_chainman;
 
     ChainMan(std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
-        : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+        : m_context(std::move(context)), m_chainman(std::move(chainman)) {}
 };
 
 } // namespace
@@ -1427,12 +1429,19 @@ int btck_chainstate_manager_process_block(
     const btck_Block* block,
     int* _new_block)
 {
-    bool new_block;
-    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
-    if (_new_block) {
-        *_new_block = new_block ? 1 : 0;
+    auto& manager{btck_ChainstateManager::get(chainman)};
+    BlockValidationState state;
+    const auto result{manager.m_chainman->ProcessNewBlock(btck_Block::get(block), state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
+    if (!state.IsValid() && manager.m_context->m_validation_interface) {
+        // Initial failures no longer emit a global validation signal. Preserve
+        // the kernel API's feedback and serialize it with processing-time BlockChecked.
+        LOCK(manager.m_chainman->GetMutex());
+        manager.m_context->m_validation_interface->BlockChecked(btck_Block::get(block), state);
     }
-    return result ? 0 : -1;
+    if (_new_block) {
+        *_new_block = result.new_block ? 1 : 0;
+    }
+    return result.processing_success ? 0 : -1;
 }
 
 btck_BlockValidationState* btck_chainstate_manager_process_block_header(

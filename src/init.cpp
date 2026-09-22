@@ -301,6 +301,7 @@ void Interrupt(NodeContext& node)
     InterruptMapPort();
     if (node.connman)
         node.connman->Interrupt();
+    if (node.chainman) node.chainman->InterruptBlockProcessing();
     for (auto* index : node.indexes) {
         index->Interrupt();
     }
@@ -346,6 +347,8 @@ void Shutdown(NodeContext& node)
     }
 
     if (node.background_init_thread.joinable()) node.background_init_thread.join();
+    // The worker may use networking, the mempool, and scheduled validation callbacks.
+    if (node.chainman) node.chainman->StopBlockProcessing();
     // After everything has been shut down, but before things get flushed, stop the
     // the scheduler. After this point, SyncWithValidationInterfaceQueue() should not be called anymore
     // as this would prevent the shutdown from completing.
@@ -1377,6 +1380,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     const ArgsManager& args)
 {
     // This function may be called twice, so any dirty state must be reset.
+    if (node.chainman) node.chainman->StopBlockProcessing();
     node.notifications->setChainstateLoaded(false); // Drop state, such as a cached tip block
     node.mempool.reset();
     node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
@@ -2095,6 +2099,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (const std::string& strFile : args.GetArgs("-loadblock")) {
         vImportFiles.push_back(fs::PathFromString(strFile));
     }
+
+    chainman.StartBlockProcessing();
 
     /// \anchor initload
     node.background_init_thread = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &kernel_notifications, &node] {

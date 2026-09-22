@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
+#include <consensus/validation.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
 #include <key.h>
@@ -16,6 +17,7 @@
 #include <test/util/common.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
@@ -26,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <future>
 #include <memory>
 #include <span>
 #include <string>
@@ -73,6 +76,7 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 {
     BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, true);
+    IndexTestGuard guard{filter_index, *m_node.validation_signals};
     BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;
@@ -131,7 +135,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     uint256 chainA_last_header = last_header;
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+        BlockValidationState state;
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).get().processing_success);
     }
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
@@ -149,7 +154,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     uint256 chainB_last_header = last_header;
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
-        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+        BlockValidationState state;
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).get().processing_success);
     }
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
@@ -180,7 +186,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     // Reorg back to chain A.
      for (size_t i = 2; i < 4; i++) {
          const auto& block = chainA[i];
-         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, true, true, nullptr));
+         BlockValidationState state;
+         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(block, state, true, true).get().processing_success);
      }
 
      // Check that chain A and B blocks can be retrieved.

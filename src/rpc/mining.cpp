@@ -66,6 +66,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <future>
 #include <limits>
 #include <map>
 #include <memory>
@@ -185,7 +186,8 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
 
     if (!process_new_block) return true;
 
-    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
+    BlockValidationState state;
+    if (!chainman.ProcessNewBlock(block_out, state, /*force_processing=*/true, /*min_pow_checked=*/true).get().processing_success) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -1072,15 +1074,18 @@ class submitblock_StateCatcher final : public CValidationInterface
 {
 public:
     uint256 hash;
-    bool found{false};
-    BlockValidationState state;
+    Mutex mutex;
+    bool found GUARDED_BY(mutex){false};
+    BlockValidationState state GUARDED_BY(mutex);
 
     explicit submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), state() {}
 
 protected:
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
+        EXCLUSIVE_LOCKS_REQUIRED(!mutex)
     {
         if (block->GetHash() != hash) return;
+        LOCK(mutex);
         found = true;
         state = stateIn;
     }
@@ -1123,12 +1128,15 @@ static RPCMethod submitblock()
         }
     }
 
-    bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    BlockValidationState state;
+    const auto result{chainman.ProcessNewBlock(blockptr, state, /*force_processing=*/true, /*min_pow_checked=*/true).get()};
+    CHECK_NONFATAL(chainman.m_options.signals)->SyncWithValidationInterfaceQueue();
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
-    if (!new_block && accepted) {
+    if (!state.IsValid()) return BIP22ValidationResult(state);
+    LOCK(sc->mutex);
+    if (!result.new_block && result.processing_success) {
         return "duplicate";
     }
     if (!sc->found) {

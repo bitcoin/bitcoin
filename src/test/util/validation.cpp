@@ -6,8 +6,10 @@
 
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <index/base.h>
 #include <node/blockstorage.h>
 #include <node/mining_types.h>
+#include <primitives/block.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
@@ -17,13 +19,113 @@
 #include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
+#include <validation_queue.h>
 #include <validationinterface.h>
 
+#include <chrono>
 #include <memory>
+#include <stdexcept>
+#include <thread>
 #include <utility>
 #include <vector>
 
 using kernel::ChainstateRole;
+
+IndexTestGuard::~IndexTestGuard()
+{
+    m_index.Interrupt();
+    m_index.Stop();
+    m_signals.SyncWithValidationInterfaceQueue();
+}
+
+BlockWorkerGate::BlockWorkerGate(ChainstateManager& chainman)
+{
+    auto submission{chainman.m_block_processing_queue.Submit(std::make_shared<const CBlock>(), [this](const auto&) {
+        m_entered.set_value();
+        m_released.wait();
+        return BlockProcessingResult{};
+    })};
+    Assert(submission.has_value());
+    m_completion = std::move(*submission);
+}
+
+BlockWorkerGate::~BlockWorkerGate()
+{
+    Open();
+    m_completion.wait();
+}
+
+void BlockWorkerGate::Wait()
+{
+    if (m_entered_future.wait_for(std::chrono::seconds{30}) != std::future_status::ready) {
+        throw std::runtime_error{"Timed out waiting for the block worker gate"};
+    }
+}
+
+void BlockWorkerGate::Open()
+{
+    if (!m_open) {
+        m_open = true;
+        m_release.set_value();
+    }
+}
+
+ValidationCallbackGate::ValidationCallbackGate(ValidationSignals& signals) : m_signals{signals}
+{
+    m_signals.CallFunctionInValidationInterfaceQueue([this] {
+        m_entered.set_value();
+        m_released.wait();
+    });
+}
+
+ValidationCallbackGate::~ValidationCallbackGate()
+{
+    Open();
+    m_signals.SyncWithValidationInterfaceQueue();
+}
+
+void ValidationCallbackGate::Wait()
+{
+    if (m_entered_future.wait_for(std::chrono::seconds{30}) != std::future_status::ready) {
+        throw std::runtime_error{"Timed out waiting for the validation callback gate"};
+    }
+}
+
+void ValidationCallbackGate::Open()
+{
+    if (!m_open) {
+        m_open = true;
+        m_release.set_value();
+    }
+}
+
+FuzzTaskRunner::Scope::Scope(FuzzTaskRunner& owner) : m_owner{owner}
+{
+    Assert(!m_owner.m_runner);
+    m_owner.m_runner = &m_runner;
+    m_scheduler.m_service_thread = std::thread([this] { m_scheduler.serviceQueue(); });
+}
+
+FuzzTaskRunner::Scope::~Scope()
+{
+    m_scheduler.StopWhenDrained();
+    m_owner.m_runner = nullptr;
+}
+
+void FuzzTaskRunner::insert(std::function<void()> func)
+{
+    Assert(m_runner)->insert(std::move(func));
+}
+
+void FuzzTaskRunner::flush()
+{
+    if (m_runner) m_runner->flush();
+}
+
+size_t FuzzTaskRunner::size()
+{
+    return m_runner ? m_runner->size() : 0;
+}
 
 void TestBlockManager::CleanupForFuzzing()
 {
@@ -107,6 +209,7 @@ void TestChainstateManager::ResetBestInvalid()
 
 std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock)
 {
+    setup.m_node.chainman->StopBlockProcessing();
     node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
 
     bilingual_str error{};
