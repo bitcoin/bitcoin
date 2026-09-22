@@ -1249,6 +1249,8 @@ public:
         }
         return out;
     }
+
+    bool IsMultipath() const override { return GetMultipathLen() > 1; }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -2864,18 +2866,14 @@ bool CheckChecksum(std::span<const char>& sp, bool require_checksum, std::string
     return true;
 }
 
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
+std::unique_ptr<Descriptor> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
 {
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     uint32_t key_exp_index = 0;
     auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
     if (sp.empty() && ret) {
-        std::vector<std::unique_ptr<Descriptor>> out = ret->GetMultipathExpansion();
-        if (out.empty()) {
-            out.push_back(std::move(ret));
-        }
-        return out;
+        return ret;
     }
     return {};
 }

@@ -93,7 +93,7 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
         const auto desc = Parse(*descriptor, signing_provider, error);
         std::optional<bool> is_ranged;
         std::optional<bool> is_solvable;
-        for (const auto& d : desc) {
+        for (const auto& d : desc->GetMultipathExpansion()) {
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
         }
@@ -111,7 +111,7 @@ FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
         const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
         std::optional<bool> is_ranged;
         std::optional<bool> is_solvable;
-        for (const auto& d : desc) {
+        for (const auto& d : desc->GetMultipathExpansion()) {
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
         }

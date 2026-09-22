@@ -233,18 +233,18 @@ struct PSBTOutputTest {
     FlatSigningProvider provider;
     CScript script_pubkey;
 
-    explicit PSBTOutputTest(std::string descriptor)
+    explicit PSBTOutputTest(std::string desc_str)
     {
         CKey key{GenerateRandomKey()};
         pubkey = key.GetPubKey();
         provider.keys.emplace(pubkey.GetID(), key);
 
-        util::ReplaceAll(descriptor, "<KEY>", HexStr(pubkey));
+        util::ReplaceAll(desc_str, "<KEY>", HexStr(pubkey));
         std::string error;
-        auto descriptors{Parse(descriptor, provider, error, /*require_checksum=*/false)};
-        BOOST_REQUIRE_MESSAGE(!descriptors.empty(), error);
+        auto descriptor{Parse(desc_str, provider, error, /*require_checksum=*/false)};
+        BOOST_REQUIRE_MESSAGE(descriptor, error);
         std::vector<CScript> output_scripts;
-        BOOST_REQUIRE(descriptors[0]->Expand(/*pos=*/0, provider, output_scripts, provider));
+        BOOST_REQUIRE(descriptor->Expand(/*pos=*/0, provider, output_scripts, provider));
         BOOST_REQUIRE_EQUAL(output_scripts.size(), 1);
         script_pubkey = output_scripts[0];
     }

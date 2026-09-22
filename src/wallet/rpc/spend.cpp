@@ -626,12 +626,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 FlatSigningProvider desc_out;
                 std::string error;
                 std::vector<CScript> scripts_temp;
-                auto descs = Parse(desc_str, desc_out, error, true);
-                if (descs.empty()) {
+                auto desc = Parse(desc_str, desc_out, error, true);
+                if (!desc) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
                 }
-                for (auto& desc : descs) {
-                    desc->Expand(0, desc_out, scripts_temp, desc_out);
+                for (auto& mpe : desc->GetMultipathExpansion()) {
+                    mpe->Expand(0, desc_out, scripts_temp, desc_out);
                 }
                 coinControl.m_external_provider.Merge(std::move(desc_out));
             }
