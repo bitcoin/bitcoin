@@ -14,7 +14,7 @@ class ArgsManager;
 
 namespace init {
 void AddLoggingArgs(ArgsManager& args);
-void SetLoggingOptions(const ArgsManager& args);
+void SetLoggingOptions(const ArgsManager& args, const char* log_suffix);
 [[nodiscard]] util::Result<void> SetLoggingCategories(const ArgsManager& args);
 [[nodiscard]] util::Result<void> SetLoggingLevel(const ArgsManager& args);
 bool StartLogging(const ArgsManager& args);
