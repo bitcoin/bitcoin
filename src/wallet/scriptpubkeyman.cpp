@@ -600,9 +600,10 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         std::string desc_str = "combo(" + origin_str + HexStr(key.GetPubKey()) + ")";
         FlatSigningProvider provider;
         std::string error;
-        std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, provider, error, false);
-        CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
-        WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+        std::unique_ptr<Descriptor> desc = Parse(desc_str, provider, error, false);
+        CHECK_NONFATAL(desc); // It shouldn't be possible to have an invalid
+        CHECK_NONFATAL(!desc->IsMultipath()); // or multipath descriptor
+        WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
         provider.keys.emplace(key.GetPubKey().GetID(), key);
@@ -656,10 +657,11 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = "combo(" + xpub + "/0h/" + ToString(i) + "h/*h)";
             FlatSigningProvider provider;
             std::string error;
-            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, provider, error, false);
-            CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
+            std::unique_ptr<Descriptor> desc = Parse(desc_str, provider, error, false);
+            CHECK_NONFATAL(desc); // It shouldn't be possible to have an invalid
+            CHECK_NONFATAL(!desc->IsMultipath()); // or multipath descriptor
             uint32_t chain_counter = std::max((i == 1 ? chain.nInternalChainCounter : chain.nExternalChainCounter), (uint32_t)0);
-            WalletDescriptor w_desc(std::move(descs.at(0)), 0, 0, chain_counter, 0);
+            WalletDescriptor w_desc(std::move(desc), 0, 0, chain_counter, 0);
 
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
             provider.keys.emplace(master_key.key.GetPubKey().GetID(), master_key.key);
@@ -705,8 +707,8 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = desc->ToString();
             FlatSigningProvider parsed_keys;
             std::string parse_error;
-            std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str, parsed_keys, parse_error);
-            if (parsed_descs.empty()) {
+            std::unique_ptr<Descriptor> parsed = Parse(desc_str, parsed_keys, parse_error);
+            if (!parsed) {
                 // Remove this scriptPubKey from the set
                 it = spks.erase(it);
                 continue;
@@ -805,8 +807,8 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = desc->ToString();
             FlatSigningProvider parsed_keys;
             std::string parse_error;
-            std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str, parsed_keys, parse_error, false);
-            if (parsed_descs.empty()) {
+            std::unique_ptr<Descriptor> parsed = Parse(desc_str, parsed_keys, parse_error, false);
+            if (!parsed) {
                 continue;
             }
         }

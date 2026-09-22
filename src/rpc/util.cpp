@@ -1354,17 +1354,17 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     }
 
     std::string error;
-    auto descs = Parse(desc_str, provider, error);
-    if (descs.empty()) {
+    auto desc = Parse(desc_str, provider, error);
+    if (!desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
-    if (!descs.at(0)->IsRange()) {
+    if (!desc->IsRange()) {
         range.first = 0;
         range.second = 0;
     }
     std::vector<CScript> ret;
     for (int64_t i = range.first; i <= range.second; ++i) {
-        for (const auto& desc : descs) {
+        for (const auto& desc : desc->GetMultipathExpansion()) {
             std::vector<CScript> scripts;
             if (!desc->Expand(i, provider, scripts, provider)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
