@@ -694,7 +694,8 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     const CTransaction& tx{*btck_Transaction::get(tx_to)};
     assert(input_index < tx.vin.size());
 
-    const PrecomputedTransactionData& txdata{precomputed_txdata ? btck_PrecomputedTransactionData::get(precomputed_txdata) : PrecomputedTransactionData(tx)};
+    std::optional<PrecomputedTransactionData> owned_txdata;
+    const PrecomputedTransactionData& txdata{precomputed_txdata ? btck_PrecomputedTransactionData::get(precomputed_txdata) : owned_txdata.emplace(tx)};
 
     if (flags & btck_ScriptVerificationFlags_TAPROOT && txdata.m_spent_outputs.empty()) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_SPENT_OUTPUTS_REQUIRED;
