@@ -1145,14 +1145,15 @@ static RPCMethod getaddrmaninfo()
     return RPCMethod{
         "getaddrmaninfo",
         "Provides information about the node's address manager by returning the number of "
-        "addresses in the `new` and `tried` tables and their sum for all networks.\n",
+        "unique addresses in the `new` and `tried` tables and their sum for all networks.\n",
         {},
         RPCResult{
             RPCResult::Type::OBJ_DYN, "", "json object with network type as keys", {
                 {RPCResult::Type::OBJ, "network", "the network (" + Join(GetNetworkNames(), ", ") + ", all_networks)", {
-                {RPCResult::Type::NUM, "new", "number of addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to."},
+                {RPCResult::Type::NUM, "new", "number of unique addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to. "
+                                       "An address can be stored in multiple new table buckets but is counted only once."},
                 {RPCResult::Type::NUM, "tried", "number of addresses in the tried table, which represent peers the node has successfully connected to in the past."},
-                {RPCResult::Type::NUM, "total", "total number of addresses in both new/tried tables"},
+                {RPCResult::Type::NUM, "total", "total number of unique addresses in both new/tried tables"},
             }},
         }},
         RPCExamples{HelpExampleCli("getaddrmaninfo", "") + HelpExampleRpc("getaddrmaninfo", "")},
