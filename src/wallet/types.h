@@ -54,6 +54,11 @@ struct CreatedTransactionResult
     FeeReason fee_reason;
     std::optional<unsigned int> change_pos;
 
+    // Default constructor needed because libmultiprocess IPC client currently
+    // requires return types to be default-constructible. This limitation would
+    // be good to remove before merging.
+    CreatedTransactionResult() = default;
+
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeReason _fee_reason)
         : tx(_tx), fee(_fee), fee_reason(_fee_reason), change_pos(_change_pos) {}
 };
