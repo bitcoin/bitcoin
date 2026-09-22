@@ -295,7 +295,7 @@ public:
     bool HasActiveTxn() { return m_batch->HasActiveTxn(); }
 
     //! Registers db txn callback functions
-    void RegisterTxnListener(const DbTxnListener& l);
+    void RegisterTxnListener(DbTxnListener l);
 
 private:
     std::unique_ptr<DatabaseBatch> m_batch;

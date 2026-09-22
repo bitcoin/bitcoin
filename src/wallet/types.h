@@ -72,6 +72,9 @@ enum class WalletErrorCode {
     //! Callers may ask the user to unlock the wallet and retry the operation.
     UnlockNeeded,
 
+    //! The passphrase does not decrypt the wallet. Callers may ask the user to enter it again.
+    PassphraseIncorrect,
+
     //! TODO Add correct descriptions to each error.
     //! At the moment only used by ImportDescriptors.
     InvalidDescriptor,
