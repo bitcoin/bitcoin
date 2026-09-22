@@ -157,6 +157,39 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node1.mockscheduler(60)
             peer.wait_for_broadcast([recv_wtxid])
 
+        self.log.info("With -privatebroadcast, the wallet never re-adds a transaction to the mempool")
+        node1.replace_in_config([("connect=0\n", "")])  # -privatebroadcast refuses -connect
+        privbcast_args = ["-privatebroadcast", "-onion=127.0.0.1:9", "-mempoolexpiry=1"]  # the proxy is never used here
+        self.restart_node(1, extra_args=privbcast_args + [f"-mocktime={node1.mocktime}"])
+        # Resending needs a recent tip (the restart put node1 back in IBD) and a block seen since startup
+        block = create_block(int(node1.getbestblockhash(), 16), height=node1.getblockcount() + 1, ntime=node1.mocktime)
+        block.solve()
+        node1.submitblock(block.serialize().hex())
+        node1.syncwithvalidationinterfacequeue()
+        # Expire the transaction so that a resubmit would visibly re-add it
+        node1.bumpmocktime(2 * 60 * 60)
+        node1.sendtoaddress(node1.getnewaddress(), 1)
+        assert recv_txid not in node1.getrawmempool()
+
+        self.log.info("The periodic resend does not re-add it")
+        peer = node1.add_p2p_connection(P2PTxInvStore())
+        with node1.assert_debug_log(expected_msgs=[], unexpected_msgs=['resubmit']):
+            node1.bumpmocktime(RESEND_TIMER_LIMIT)
+            node1.mockscheduler(60)
+            node1.syncwithvalidationinterfacequeue()  # runs on the scheduler thread, after the resend
+        assert recv_txid not in node1.getrawmempool()
+        node1.bumpmocktime(10 * 60)  # past the peer's announcement timer
+        peer.sync_with_ping()
+        assert int(recv_wtxid, 16) not in peer.get_invs()
+
+        self.log.info("Loading the wallet does not re-add it either")
+        self.restart_node(1, extra_args=privbcast_args + [f"-mocktime={node1.mocktime}"])
+        assert recv_txid not in node1.getrawmempool()
+
+        self.log.info("Without -privatebroadcast, loading the wallet re-adds it")
+        self.restart_node(1, extra_args=["-mempoolexpiry=1", f"-mocktime={node1.mocktime}"])
+        assert recv_txid in node1.getrawmempool()
+
 
 if __name__ == '__main__':
     ResendWalletTransactionsTest(__file__).main()
