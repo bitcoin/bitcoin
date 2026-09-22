@@ -46,6 +46,7 @@ public:
     size_t GetKeyCount() const override { return 0; }
     bool CanSelfExpand() const final { return false; }
     std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const override { return {}; }
+    bool IsMultipath() const override { return false; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
@@ -97,9 +98,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingS
     const std::string desc_str = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
     FlatSigningProvider keys;
     std::string parse_error;
-    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_error, /*require_checksum=*/true);
-    BOOST_REQUIRE_MESSAGE(descs.size() == 1, parse_error);
-    std::shared_ptr<Descriptor> descriptor = std::move(descs.at(0));
+    std::shared_ptr<Descriptor> descriptor = Parse(desc_str, keys, parse_error, /*require_checksum=*/true);
+    BOOST_REQUIRE_MESSAGE(descriptor, parse_error);
     const uint256 desc_id = CompatDescriptorHash(*descriptor);
 
     auto make_db_with_short_cache_xpub = [&](const std::string& cache_type) {
