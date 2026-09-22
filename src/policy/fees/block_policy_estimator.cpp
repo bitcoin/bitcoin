@@ -633,11 +633,11 @@ void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& 
     const CFeeRate feeRate(tx.info.m_fee, tx.info.m_virtual_transaction_size);
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
-    unsigned int bucketIndex = feeStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex = feeStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     mapMemPoolTxs[hash].bucketIndex = bucketIndex;
-    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     assert(bucketIndex == bucketIndex2);
-    unsigned int bucketIndex3 = longStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK()));
+    unsigned int bucketIndex3 = longStats->NewTx(txHeight, static_cast<double>(feeRate.GetFeePerK().Int()));
     assert(bucketIndex == bucketIndex3);
 }
 
@@ -663,9 +663,9 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const Remo
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(tx.info.m_fee, tx.info.m_virtual_transaction_size);
 
-    feeStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
-    shortStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
-    longStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK()));
+    feeStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
+    shortStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
+    longStats->Record(blocksToConfirm, static_cast<double>(feeRate.GetFeePerK().Int()));
     return true;
 }
 
@@ -722,7 +722,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 {
     // It's not possible to get reasonable estimates for confTarget of 1
     if (confTarget <= 1)
-        return CFeeRate(0);
+        return CFeeRate(0*sats);
 
     return estimateRawFee(confTarget, DOUBLE_SUCCESS_PCT, FeeEstimateHorizon::MED_HALFLIFE);
 }
@@ -751,16 +751,16 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     LOCK(m_cs_fee_estimator);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > stats->GetMaxConfirms())
-        return CFeeRate(0);
+        return CFeeRate(0*sats);
     if (successThreshold > 1)
-        return CFeeRate(0);
+        return CFeeRate(0*sats);
 
     double median = stats->EstimateMedianVal(confTarget, sufficientTxs, successThreshold, nBestSeenHeight, result);
 
     if (median < 0)
-        return CFeeRate(0);
+        return CFeeRate(0*sats);
 
-    return CFeeRate(llround(median));
+    return CFeeRate(CAmount{llround(median)});
 }
 
 unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
@@ -887,7 +887,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms()) {
-        return CFeeRate(0);  // error condition
+        return CFeeRate(0*sats);  // error condition
     }
 
     // It's not possible to get reasonable estimates for confTarget of 1
@@ -899,7 +899,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     }
     feeCalc->returnedTarget = confTarget;
 
-    if (confTarget <= 1) return CFeeRate(0); // error condition
+    if (confTarget <= 1) return CFeeRate(0*sats); // error condition
 
     assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
     /** true is passed to estimateCombined fee for target/2 and target so
@@ -946,7 +946,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
         }
     }
 
-    if (median < 0) return CFeeRate(0); // error condition
+    if (median < 0) return CFeeRate(0*sats); // error condition
 
     LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate: %g Tgt: %d (requested %d) Reason: \"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)",
              median, feeCalc->returnedTarget, feeCalc->desiredTarget, StringForBlockPolicyEstimateReason(feeCalc->reason), feeCalc->est.decay,
@@ -957,14 +957,14 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
              (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) > 0.0 ? 100 * feeCalc->est.fail.withinTarget / (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) : 0.0,
              feeCalc->est.fail.withinTarget, feeCalc->est.fail.totalConfirmed, feeCalc->est.fail.inMempool, feeCalc->est.fail.leftMempool);
 
-    return CFeeRate(llround(median));
+    return CFeeRate(CAmount{llround(median)});
 }
 
 util::Expected<FeeRateEstimation, FeeRateEstimationError> CBlockPolicyEstimator::EstimateFeeRate(int target, bool conservative) const
 {
     FeeCalculation fee_calc;
     CFeeRate feerate{estimateSmartFee(target, &fee_calc, conservative)};
-    if (feerate == CFeeRate(0)) {
+    if (feerate == CFeeRate(0*sats)) {
         return EstimationError(FeeRateEstimatorType::BLOCK_POLICY, fee_calc.returnedTarget, "Insufficient data or no feerate found");
     }
     return FeeRateEstimation{FeeRateEstimatorType::BLOCK_POLICY, feerate.GetFeePerVSize(), fee_calc.returnedTarget};
@@ -1119,10 +1119,9 @@ static std::set<double> MakeFeeSet(const CFeeRate& min_incremental_fee,
 
     const CAmount min_fee_limit{std::max(CAmount(1), min_incremental_fee.GetFeePerK() / 2)};
     fee_set.insert(0);
-    for (double bucket_boundary = min_fee_limit;
+    for (double bucket_boundary = min_fee_limit.Int();
          bucket_boundary <= max_filter_fee_rate;
          bucket_boundary *= fee_filter_spacing) {
-
         fee_set.insert(bucket_boundary);
     }
 
@@ -1138,11 +1137,11 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee, FastRandom
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
     AssertLockNotHeld(m_insecure_rand_mutex);
-    std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee);
+    std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee.Int());
     if (it == m_fee_set.end() ||
         (it != m_fee_set.begin() &&
          WITH_LOCK(m_insecure_rand_mutex, return insecure_rand.rand32()) % 3 != 0)) {
         --it;
     }
-    return static_cast<CAmount>(*it);
+    return CAmount{static_cast<int64_t>(*it)};
 }
