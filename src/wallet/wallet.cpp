@@ -3402,11 +3402,13 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                 const std::string& desc_str = desc_val.getValStr();
                 FlatSigningProvider keys;
                 std::string desc_error;
-                auto descs = Parse(desc_str, keys, desc_error, false);
-                if (descs.empty()) {
+                auto desc = Parse(desc_str, keys, desc_error, false);
+                if (!desc) {
                     throw std::runtime_error(std::string(__func__) + ": Invalid descriptor \"" + desc_str + "\" (" + desc_error + ")");
                 }
-                auto& desc = descs.at(0);
+                if (desc->IsMultipath()) {
+                    throw std::runtime_error(std::string(__func__) + ": Unable to import multipath descriptors from external signers");
+                }
                 if (!desc->GetOutputType()) {
                     continue;
                 }
@@ -3609,14 +3611,14 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
     std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
     FlatSigningProvider keys;
     std::string parse_error;
-    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_error, /*require_checksum=*/false);
-    if (descs.empty()) {
+    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_error, /*require_checksum=*/false);
+    if (!desc) {
         return util::Unexpected{WalletError{
             WalletErrorCode::GenericError,
             _("Invalid HD key")
         }};
     }
-    WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+    WalletDescriptor w_desc(std::move(desc), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
 
     if (GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
         return util::Unexpected{WalletError{
