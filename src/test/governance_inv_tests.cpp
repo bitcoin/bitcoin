@@ -2,10 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bls/bls.h>
 #include <common/bloom.h>
+#include <evo/deterministicmns.h>
+#include <evo/dmnstate.h>
+#include <evo/netinfo.h>
+#include <evo/providertx.h>
 #include <governance/governance.h>
 #include <governance/net_governance.h>
 #include <governance/object.h>
+#include <key.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -576,6 +582,38 @@ BOOST_AUTO_TEST_CASE(invalid_vote_is_scored_alike_with_and_without_a_parent_obje
     m_node.peerman->FinalizeNode(*orphan_peer);
     m_node.peerman->FinalizeNode(*known_parent_peer);
     chainstate.ResetIbd();
+}
+
+// A vote that fails validation must not leave a vote record behind: the masternode's own trigger
+// voting treats any record for its collateral as "already voted".
+BOOST_AUTO_TEST_CASE(rejected_vote_leaves_no_vote_record)
+{
+    CGovernanceObject govobj{MakeGovernanceObject(GetTime<std::chrono::seconds>().count(), uint256S("71"))};
+    // MakeGovernanceVote names this collateral and carries an all-zero signature.
+    const COutPoint collateral{uint256S("11"), 1};
+
+    CKey voting_key;
+    voting_key.MakeNewKey(true);
+    CBLSSecretKey operator_key;
+    operator_key.MakeNewKey();
+    auto state = std::make_shared<CDeterministicMNState>();
+    state->keyIDOwner = voting_key.GetPubKey().GetID();
+    state->keyIDVoting = voting_key.GetPubKey().GetID();
+    state->pubKeyOperator.Set(operator_key.GetPublicKey(), /*specificLegacyScheme=*/false);
+    state->netInfo = NetInfoInterface::MakeNetInfo(ProTxVersion::BasicBLS);
+    auto dmn = std::make_shared<CDeterministicMN>(/*_internalId=*/1, MnType::Regular);
+    dmn->proTxHash = uint256S("72");
+    dmn->collateralOutpoint = collateral;
+    dmn->pdmnState = state;
+    CDeterministicMNList mn_list;
+    mn_list.AddMN(dmn);
+
+    CGovernanceException exception;
+    BOOST_CHECK(!govobj.ProcessVote(*m_node.mn_metaman, *m_node.govman, mn_list, MakeGovernanceVote(govobj.GetHash()),
+                                    exception));
+    BOOST_CHECK_EQUAL(exception.GetNodePenalty(), 20);
+    vote_rec_t vote_record;
+    BOOST_CHECK(!govobj.GetCurrentMNVotes(collateral, vote_record));
 }
 
 
