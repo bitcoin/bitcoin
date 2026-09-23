@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/register.h> // IWYU pragma: associated
-
 #include <addresstype.h>
 #include <base58.h>
 #include <chain.h>
@@ -30,8 +28,10 @@
 #include <psbt.h>
 #include <pubkey.h>
 #include <random.h>
+#include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -69,6 +69,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -327,14 +328,16 @@ static RPCMethod getrawtransaction()
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    CTransactionRef tx;
+    try {
+        tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    } catch (const std::runtime_error&) {
+        if (blockindex) WITH_LOCK(::cs_main, CheckBlockDataAvailability(chainman.m_blockman, *blockindex, /*check_for_undo=*/false));
+        throw;
+    }
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
-            const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
-            if (!block_has_data) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
-            }
             errmsg = "No such transaction found in the provided block";
         } else if (!g_txindex) {
             errmsg = "No such mempool transaction. Use -txindex or provide a block hash to enable blockchain transaction queries";
