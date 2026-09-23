@@ -62,6 +62,10 @@ Notable changes
 
 - #61(bitcoin-core/leveldb): Disable seek compaction
 
+### Private Broadcast
+
+- #36309 private broadcast: clarify claims, mark as experimental
+
 ### P2P
 
 - #34873 net: fix premature stale flagging of unpicked private broadcast txs
