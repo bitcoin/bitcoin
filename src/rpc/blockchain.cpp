@@ -1739,7 +1739,10 @@ static RPCMethod preciousblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
+    // The RPC returns null on success regardless of whether the block is in the
+    // active chain, so it does not inspect the connected output.
+    bool connected{false};
+    chainman.ActiveChainstate().PreciousBlock(state, pblockindex, connected);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
