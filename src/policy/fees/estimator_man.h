@@ -73,6 +73,12 @@ public:
     void ShutdownFlush();
 
     /**
+     * Called when the mempool was not loaded from disk (the load failed, there was no
+     * mempool file, or -persistmempool=0), unless loading was interrupted by shutdown.
+     */
+    void MempoolLoadFailed();
+
+    /**
      * @brief Returns the maximum supported confirmation target from all fee rate estimators.
      */
     virtual unsigned int MaximumTarget() const;
