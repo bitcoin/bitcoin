@@ -1175,6 +1175,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether the GUI was compiled."""
         return self.config.getboolean("components", "BUILD_GUI")
 
+    def is_qt_vcpkg(self):
+        """Checks whether Qt was built with vcpkg (VCPKG_TARGET_TRIPLET is set)."""
+        return bool(self.config.get("components", "VCPKG_TARGET_TRIPLET"))
+
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
 

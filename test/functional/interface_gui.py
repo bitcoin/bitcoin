@@ -4,8 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that bitcoin-gui starts up and can be stopped via RPC."""
 
-import platform
-
 from test_framework.test_framework import (
     BitcoinTestFramework,
     SkipTest,
@@ -19,11 +17,12 @@ class GuiTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_gui()
-        # On Windows, bitcoin.exe exits immediately when launching bitcoin-gui.exe,
-        # causing the test framework's process monitor to see a premature node exit.
-        # This issue is likely fixable.
-        if platform.system() == "Windows":
-            raise SkipTest("bitcoin-gui test not supported on Windows")
+        if self.is_qt_vcpkg():
+            # vcpkg builds Qt with -opengl dynamic, making the "minimal"
+            # platform plugin unusable due to internal Qt bugs. This matches
+            # the VCPKG_TARGET_TRIPLET condition in src/qt/test/CMakeLists.txt
+            # that sets QT_QPA_PLATFORM=windows for test_bitcoin-qt.
+            raise SkipTest("minimal Qt platform plugin unusable with vcpkg Qt")
 
     def setup_nodes(self):
         self.extra_init = [{"use_gui": True}]
