@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(mempool_health_uses_mined_witness_weight)
             removed_txs.emplace_back(TestMemPoolEntryHelper().FromTx(mempool_tx));
         }
         estimator.MempoolTxsRemovedForBlock(block, removed_txs, height);
-        BOOST_CHECK_EQUAL(estimator.GetPrevBlockData().back().m_removed_block_txs_weight, mempool_weight); // TODO: Count the mined variant's weight.
+        BOOST_CHECK_EQUAL(estimator.GetPrevBlockData().back().m_removed_block_txs_weight, mined_weight);
         BOOST_CHECK_GT(mempool_weight, mined_weight);
     }
 
-    BOOST_CHECK(estimator.GetMempoolHealth() == MemPoolFeeRateEstimator::MempoolHealth::HEALTHY); // TODO: Actual mined coverage is below the threshold.
+    BOOST_CHECK(estimator.GetMempoolHealth() == MemPoolFeeRateEstimator::MempoolHealth::LOW_COVERAGE);
 }
 
 BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
