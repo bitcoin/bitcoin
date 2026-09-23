@@ -62,6 +62,10 @@ Notable changes
 
 - #61(bitcoin-core/leveldb): Disable seek compaction
 
+### Private Broadcast
+
+- #36309 private broadcast: clarify claims, mark as experimental
+
 ### P2P
 
 - #34873 net: fix premature stale flagging of unpicked private broadcast txs
@@ -72,6 +76,7 @@ Notable changes
 
 ### Net
 
+- #36177 net: fix startup failures from stale Tor examples
 - #36199 net: treat RFC 9637 new IPv6 documentation range as invalid
 - #36201 Update embedded asmap to 1788801420
 
@@ -80,6 +85,7 @@ Notable changes
 - #35914 test, fuzz: Remove unused variables
 - #35937 test: Append print_suppressions=0 to LSAN_OPTIONS, and suppress bitcoin-qt
 - #36045 test: avoid undersized Boost.Test signal stacks
+- #36599 test: Fix intermittent timeout waiting for ibd_wtxid getdata
 
 ### Fuzz
 
@@ -94,6 +100,8 @@ Notable changes
 
 - #35908 doc: Update NetBSD Build Guide
 - #35928 doc: mention -DWITH_ZMQ=ON in macOS build guide
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
+- #36441 doc: fix How to Upgrade section for bitcoin wrapper and libexec
 
 ### Misc
 
@@ -114,9 +122,12 @@ Thanks to everyone who directly contributed to this release:
 - hodlinator
 - jpk68
 - Lőrinc
+- MarcoFalke
 - Martin Zumsande
 - Mccalabrese
+- Sebastian Falbesoner
 - sipa
+- spidey279
 - stickies-v
 
 As well as to everyone that helped with translations on
