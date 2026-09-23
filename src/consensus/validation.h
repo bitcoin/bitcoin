@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -101,6 +102,7 @@ public:
         m_reject_reason = reject_reason;
         m_debug_message = debug_message;
         if (m_mode != ModeState::M_ERROR) m_mode = ModeState::M_INVALID;
+        Assume(m_result != Result{});
         return false;
     }
     bool Error(const std::string& reject_reason)
