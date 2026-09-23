@@ -7,6 +7,7 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
+#include <attributes.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <serialize.h>
@@ -24,6 +25,7 @@
 
 struct secp256k1_context_struct;
 typedef struct secp256k1_context_struct secp256k1_context;
+struct secp256k1_keypair;
 
 /**
  * CPrivKey is a serialized private key, with all parameters included
@@ -318,6 +320,12 @@ public:
 
     friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
     [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
+
+    //! Pointer to this KeyPair's internal `secp256k1_keypair` data or nullptr if invalid.
+    const secp256k1_keypair* GetSecpKeypair() const LIFETIMEBOUND
+    {
+        return IsValid() ? reinterpret_cast<const secp256k1_keypair*>(m_keypair->data()) : nullptr;
+    }
 
     //! Check whether this keypair is valid.
     bool IsValid() const { return !!m_keypair; }
