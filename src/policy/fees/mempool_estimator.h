@@ -135,6 +135,7 @@ public:
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs) { return GetMempoolHealth() == MempoolHealth::HEALTHY; }
     void FlushMinedBlockStats() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void MempoolLoadFailed() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Deserialize mined-block stats without taking ownership of file.
     bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Serialize mined-block stats without taking ownership of file.
