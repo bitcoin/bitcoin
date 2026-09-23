@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_fee_estimator_tests, TestingSetup)
 
@@ -101,6 +102,44 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
     BOOST_CHECK_EQUAL(percentiles.p75.fee, medium_fee_rate.fee);
     BOOST_CHECK_EQUAL(percentiles.p75.size, medium_fee_rate.size);
     BOOST_CHECK(ByRatio{percentiles.p50} > ByRatio{percentiles.p75});
+}
+
+BOOST_AUTO_TEST_CASE(mempool_health_uses_mined_witness_weight)
+{
+    MemPoolFeeRateEstimator estimator{MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman};
+
+    const auto make_witness_tx{[] {
+        CMutableTransaction tx{*MakeRandomTx()};
+        tx.vin[0].scriptWitness.stack.emplace_back(250'000, 0);
+        return MakeTransactionRef(std::move(tx));
+    }};
+
+    // Six blocks exceed the low-activity bypass: mined coverage is about 2/3, but local weight looks like 4/5.
+    for (uint32_t height{1}; height <= MEMPOOL_HEALTH_WINDOW_BLOCKS; ++height) {
+        auto block{std::make_shared<CBlock>()};
+        block->vtx.emplace_back(MakeRandomTx());    // Coinbase placeholder.
+        block->vtx.emplace_back(make_witness_tx()); // Not in the mempool.
+        std::vector<RemovedMempoolTransactionInfo> removed_txs;
+        uint64_t mined_weight{0};
+        uint64_t mempool_weight{0};
+
+        for (int i{0}; i < 2; ++i) {
+            const auto mined_tx{make_witness_tx()};
+            CMutableTransaction mempool{*mined_tx};
+            mempool.vin[0].scriptWitness.stack[0].resize(300'000);
+            const auto mempool_tx{MakeTransactionRef(std::move(mempool))};
+            BOOST_REQUIRE(mined_tx->GetHash() == mempool_tx->GetHash());
+            block->vtx.push_back(mined_tx);
+            mined_weight += GetTransactionWeight(*mined_tx);
+            mempool_weight += GetTransactionWeight(*mempool_tx);
+            removed_txs.emplace_back(TestMemPoolEntryHelper().FromTx(mempool_tx));
+        }
+        estimator.MempoolTxsRemovedForBlock(block, removed_txs, height);
+        BOOST_CHECK_EQUAL(estimator.GetPrevBlockData().back().m_removed_block_txs_weight, mempool_weight); // TODO: Count the mined variant's weight.
+        BOOST_CHECK_GT(mempool_weight, mined_weight);
+    }
+
+    BOOST_CHECK(estimator.GetMempoolHealth() == MemPoolFeeRateEstimator::MempoolHealth::HEALTHY); // TODO: Actual mined coverage is below the threshold.
 }
 
 BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
