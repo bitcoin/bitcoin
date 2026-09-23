@@ -382,7 +382,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
             // Check sigops in mempool + block template creation
             bool add_sigops{fuzzed_data_provider.ConsumeBool()};
 
-            const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1000, amount_in);
+            const CAmount amount_fee{ConsumeMoney(fuzzed_data_provider, -1000, amount_in)};
             const auto amount_out = (amount_in - amount_fee) / num_out;
             for (int i = 0; i < num_out; ++i) {
                 if (i == 0 && add_sigops) {
@@ -410,7 +410,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
                                    tx->GetHash() :
                                    PickValue(fuzzed_data_provider, outpoints_rbf).hash;
-            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            const CAmount delta{ConsumeMoney(fuzzed_data_provider, -50 * COIN, +50 * COIN)};
             tx_pool.PrioritiseTransaction(txid, delta);
         }
 
@@ -536,7 +536,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             const auto txid = fuzzed_data_provider.ConsumeBool() ?
                                    mut_tx.GetHash() :
                                    PickValue(fuzzed_data_provider, txids);
-            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            const CAmount delta{ConsumeMoney(fuzzed_data_provider, -50 * COIN, +50 * COIN)};
             tx_pool.PrioritiseTransaction(txid, delta);
         }
 
