@@ -337,7 +337,7 @@ CTransactionRef ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
     LIMITED_WHILE(tx.vout.empty() || fuzzed_data_provider.ConsumeBool(), 10) {
         auto& txout = tx.vout.emplace_back();
         // Read CAmount to spend.
-        txout.nValue = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-10, 50 * COIN + 10);
+        txout.nValue = ConsumeMoney(fuzzed_data_provider, -10, 50 * COIN + 10);
 
         // Read scriptPubKey type into one of the valid types.
         CallOneOf(
