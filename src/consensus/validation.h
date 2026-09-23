@@ -95,14 +95,14 @@ private:
 
 public:
     bool Invalid(Result result,
-                 const std::string& reject_reason = "",
-                 const std::string& debug_message = "")
+                 const std::string& reject_reason,
+                 const std::string& debug_message = {})
     {
         m_result = result;
         m_reject_reason = reject_reason;
         m_debug_message = debug_message;
         if (m_mode != ModeState::M_ERROR) m_mode = ModeState::M_INVALID;
-        Assume(m_result != Result{});
+        Assume(m_result != Result{} && !m_reject_reason.empty());
         return false;
     }
     bool Error(const std::string& reject_reason)

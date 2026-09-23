@@ -218,7 +218,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
             },
             [&] {
                 TxValidationState state;
-                state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
+                state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "dummy-reason");
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
                 node::RejectedTxTodo todo = txdownloadman.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
@@ -352,7 +352,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
             },
             [&] {
                 TxValidationState state;
-                state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
+                state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "dummy-reason");
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
                 bool reject_contains_wtxid{txdownload_impl.RecentRejectsFilter().contains(rand_tx->GetWitnessHash().ToUint256())};
@@ -418,7 +418,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     // orphanage longer. Later iterations might call MempoolAcceptedTx or
                     // MempoolRejectedTx with a different error.
                     TxValidationState state_missing_inputs;
-                    state_missing_inputs.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+                    state_missing_inputs.Invalid(TxValidationResult::TX_MISSING_INPUTS, "dummy-reason");
                     txdownload_impl.MempoolRejectedTx(ptx, state_missing_inputs, rand_peer, fuzzed_data_provider.ConsumeBool());
                 }
             });

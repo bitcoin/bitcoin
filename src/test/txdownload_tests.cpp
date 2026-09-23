@@ -135,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
                 txdownload_impl.ConnectedPeer(nodeid, connection_info);
                 // Parent failure
-                state.Invalid(result, "");
+                state.Invalid(result, "dummy-reason");
                 const auto& [keep, unique_txids, package_to_validate] = txdownload_impl.MempoolRejectedTx(ptx_parent, state, nodeid, /*first_time_failure=*/true);
 
                 // No distinction between txid and wtxid caching for nonsegwit transactions, so only test these specific
@@ -153,7 +153,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 actual_behavior.CheckEqual(expected_behavior, /*segwit=*/segwit_parent);
 
                 // Later, a child of this transaction fails for missing inputs
-                state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+                state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "dummy-reason");
                 txdownload_impl.MempoolRejectedTx(ptx_child, state, nodeid, /*first_time_failure=*/true);
 
                 // If parent (by txid) was rejected, child is too.
@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
     int test_chain_height{100};
 
     TxValidationState state_orphan;
-    state_orphan.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+    state_orphan.Invalid(TxValidationResult::TX_MISSING_INPUTS, "dummy-reason");
 
     // Transactions are not all submitted to mempool. Conserve the number of m_coinbase_txns we
     // consume, and only increment this index number when we would conflict with an existing
