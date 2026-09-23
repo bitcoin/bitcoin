@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -97,6 +98,7 @@ public:
                  const std::string& reject_reason = "",
                  const std::string& debug_message = "")
     {
+        Assume(result != Result{});
         m_result = result;
         m_reject_reason = reject_reason;
         m_debug_message = debug_message;
