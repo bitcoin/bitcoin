@@ -962,7 +962,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.stop_nodes()
             self.nodes = []
 
-            cache_path = cache_node_dir / self.chain
+            cache_path = cache_node.chain_path
 
             (cache_path / "wallets").rmdir()  # Do not cache empty wallets dir
             shutil.rmtree(cache_path / "fees")  # Do not cache fees dat files
