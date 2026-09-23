@@ -305,7 +305,7 @@ void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<co
         const auto tx_weight{GetTransactionWeight(*tx)};
         block_weight += tx_weight;
         if (removed_it != txs_removed_for_block.end() && tx->GetHash() == removed_it->info.m_tx->GetHash()) {
-            removed_weight += GetTransactionWeight(*removed_it->info.m_tx);
+            removed_weight += tx_weight;
             ++removed_it;
         }
     }
