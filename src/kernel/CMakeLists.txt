@@ -28,6 +28,7 @@ add_library(bitcoinkernel
   ../dbwrapper.cpp
   ../deploymentinfo.cpp
   ../deploymentstatus.cpp
+  ../ecc_context.cpp
   ../flatfile.cpp
   ../hash.cpp
   ../logging.cpp

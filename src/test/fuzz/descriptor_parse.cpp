@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
@@ -73,7 +74,7 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
 
 void initialize_descriptor_parse()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::MAIN);
 }
 
