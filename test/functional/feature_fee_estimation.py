@@ -7,6 +7,7 @@ from copy import deepcopy
 from decimal import Decimal, ROUND_DOWN
 import os
 import random
+import shutil
 import time
 
 from test_framework.messages import (
@@ -622,6 +623,39 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(mempool_policy["errors"], ["mempool_policy: Mempool is unreliable for fee rate estimation"])
         self.restart_node(0)
 
+    def test_mined_block_stats_cleared_on_failed_mempool_load(self):
+        assert_equal(len(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto", "verbosity": 2})["mempool_health_statistics"]), MEMPOOL_HEALTH_WINDOW)
+        estimator_dat = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
+        mempool_dat = self.nodes[0].chain_path / "mempool.dat"
+        estimator_bak = estimator_dat.with_name(estimator_dat.name + ".bak")
+        mempool_bak = mempool_dat.with_name(mempool_dat.name + ".bak")
+        self.stop_node(0)
+        shutil.copyfile(estimator_dat, estimator_bak)
+        shutil.copyfile(mempool_dat, mempool_bak)
+
+        def assert_failed_load_clears_window(break_mempool_load, **start_kwargs):
+            shutil.copyfile(estimator_bak, estimator_dat)
+            shutil.copyfile(mempool_bak, mempool_dat)
+            break_mempool_load()
+            self.start_node(0, **start_kwargs)
+            self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
+            after = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto", "verbosity": 2})
+            assert_equal(after["mempool_health_statistics"], [])
+            assert_equal(after["estimator"], "block_policy")
+            assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})["errors"],
+                         ["mempool_policy: Not enough recent block data for fee rate estimation"])
+            self.stop_node(0)
+
+        assert_failed_load_clears_window(mempool_dat.unlink)
+        assert_failed_load_clears_window(lambda: mempool_dat.write_bytes(b"not a valid mempool.dat"))
+        assert_failed_load_clears_window(lambda: None, extra_args=["-persistmempool=0"])
+
+        shutil.copyfile(estimator_bak, estimator_dat)
+        shutil.copyfile(mempool_bak, mempool_dat)
+        estimator_bak.unlink()
+        mempool_bak.unlink()
+        self.start_node(0)
+
     def test_stale_mempool_block_stats_are_rejected_on_load(self):
         # Persisted mempool block stats must be tied to the best block hash,
         # not just height, because a reorg can replace the tip without
@@ -724,6 +758,9 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Test fallback to block policy when the mempool has low coverage")
         self.test_fallback_to_block_policy_on_low_coverage()
+
+        self.log.info("Test mined-block stats are cleared when the mempool load fails")
+        self.test_mined_block_stats_cleared_on_failed_mempool_load()
 
         self.log.info("Test that stale mempool block stats are rejected on load")
         self.test_stale_mempool_block_stats_are_rejected_on_load()
