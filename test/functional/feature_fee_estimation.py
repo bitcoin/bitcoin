@@ -334,7 +334,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(est_feerate, high_feerate_kvb)
 
     def test_fallback_when_mempool_estimator_has_insufficient_data(self):
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})["errors"],
+                     ["mempool_policy: Insufficient mempool transaction data"])
         self.stop_node(0)
         # Move the mempool estimator data aside so the mempool policy estimator has insufficient data.
         original_path = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
@@ -342,7 +343,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         original_path.replace(temp_path)
         self.start_node(0)
         self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
-        assert "errors" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        mempool_policy = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        assert_equal(mempool_policy["errors"], ["mempool_policy: Not enough recent block data for fee rate estimation"])
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "block_policy")
 
         # Restore the mempool estimator data.
@@ -581,25 +583,24 @@ class EstimateFeeTest(BitcoinTestFramework):
         estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
         verify_estimate_response(estimate_post_restart, low_feerate, [])
 
-        self.log.info("Test estimatesmartfee returns the fee rate floor when the mempool is empty but healthy")
+        self.log.info("Test estimatesmartfee returns the block policy estimate when the mempool is empty")
         self.generate(node0, 1, sync_fun=lambda: None)
         assert_equal(node0.getmempoolinfo()['size'], 0)
         block_policy_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})
         assert "feerate" in block_policy_estimate
-        # With an empty but healthy mempool the mempool estimator has no percentile data,
-        # so it falls back to the fee rate floor: the max of minrelaytxfee and mempoolminfee.
-        # That floor is lower than the block policy estimate, so the combined estimator returns it.
-        mempool_info = node0.getmempoolinfo()
-        floor = max(mempool_info["minrelaytxfee"], mempool_info["mempoolminfee"])
+        # With an empty mempool the mempool estimator has no percentile data, so it errors.
+        assert "errors" in node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        # The combined estimator ignores that error and returns the block policy estimate.
         combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
-        verify_estimate_response(combined_estimate, floor, [])
-        assert_equal(combined_estimate["estimator"], "mempool_policy")
+        verify_estimate_response(combined_estimate, block_policy_estimate["feerate"], [])
+        assert_equal(combined_estimate["estimator"], "block_policy")
 
     def test_fallback_to_block_policy_on_low_coverage(self):
         self.clear_estimates()
         self.broadcast_and_maybe_mine(self.nodes[0], Decimal("0.004"), TXS_COUNT, MEMPOOL_HEALTH_WINDOW, self.nodes[1])
         assert "feerate" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})["errors"],
+                     ["mempool_policy: Insufficient mempool transaction data"])
         anyone_can_spend_script = CScript([OP_TRUE]).hex()
         quarter_block_vsize = int(MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR / 4)
         expected_stats = []

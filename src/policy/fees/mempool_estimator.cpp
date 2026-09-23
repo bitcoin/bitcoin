@@ -406,10 +406,8 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     }
 
     const auto percentiles{GetOrBuildPercentiles()};
-    // Fall back to a relayable floor (the higher of the min relay fee and the current
-    // mempool min fee) for any percentile the mempool was too sparse to fill.
-    const FeePerVSize floor{std::max(m_mempool.m_opts.min_relay_feerate, m_mempool.GetMinFee()).GetFeePerVSize()};
-    const FeePerVSize p50{percentiles.p50.IsEmpty() ? floor : percentiles.p50};
-    const FeePerVSize p75{percentiles.p75.IsEmpty() ? floor : percentiles.p75};
-    return FeeRateEstimation{FeeRateEstimatorType::MEMPOOL_POLICY, conservative ? p50 : p75, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
+    if (percentiles.p50.IsEmpty() || percentiles.p75.IsEmpty()) {
+        return EstimationError(strprintf("%s: Insufficient mempool transaction data", FeeRateEstimatorTypeToString(estimator_type)));
+    }
+    return FeeRateEstimation{estimator_type, conservative ? percentiles.p50 : percentiles.p75, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET};
 }
