@@ -104,13 +104,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         block.solve()
         node.submitheader(block.serialize()[:80].hex())
 
-        assert_raises_rpc_error(-1, "Block not available", node.getrawtransaction, txid="ff" * 32, blockhash=block.hash_hex)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", node.getrawtransaction, txid="a" * 64, blockhash=block.hash_hex)
 
         self.log.info("Test getrawtransaction when block data cannot be read")
         blk_dat = node.blocks_path / "blk00000.dat"
         blk_dat_moved = node.blocks_path / "blk00000.dat.moved"
         blk_dat.rename(blk_dat_moved)
-        assert_raises_rpc_error(-5, "No such transaction found in the provided block. Use gettransaction for wallet transactions.", node.getrawtransaction, txid="a" * 64, blockhash=node.getblockhash(1))
+        assert_raises_rpc_error(-1, "I/O error reading block data", node.getrawtransaction, txid="a" * 64, blockhash=node.getblockhash(1))
         blk_dat_moved.rename(blk_dat)
 
 
