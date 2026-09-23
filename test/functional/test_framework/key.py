@@ -7,6 +7,7 @@ WARNING: This code is slow, uses bad randomness, does not properly protect
 keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
 import csv
+import functools
 import hashlib
 import hmac
 import os
@@ -188,10 +189,14 @@ class ECKey:
         sb = s.to_bytes((s.bit_length() + 8) // 8, 'big')
         return b'\x30' + bytes([4 + len(rb) + len(sb), 2, len(rb)]) + rb + bytes([2, len(sb)]) + sb
 
+@functools.cache
 def compute_xonly_pubkey(key):
     """Compute an x-only (32 byte) public key from a (32 byte) private key.
 
     This also returns whether the resulting public key was negated.
+
+    The result is cached, so that repeatedly signing with the same key (as done in
+    e.g. feature_taproot.py) doesn't require recomputing the public key each time.
     """
 
     assert_equal(len(key), 32)
@@ -276,15 +281,15 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
     sec = int.from_bytes(key, 'big')
     if sec == 0 or sec >= ORDER:
         return None
-    P = sec * secp256k1.G
-    if P.y.is_even() == flip_p:
+    pubkey, negated = compute_xonly_pubkey(key)
+    if negated != flip_p:
         sec = ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
-    kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P.to_bytes_xonly() + msg), 'big') % ORDER
+    kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + pubkey + msg), 'big') % ORDER
     assert_not_equal(kp, 0)
     R = kp * secp256k1.G
     k = kp if R.y.is_even() != flip_r else ORDER - kp
-    e = int.from_bytes(TaggedHash("BIP0340/challenge", R.to_bytes_xonly() + P.to_bytes_xonly() + msg), 'big') % ORDER
+    e = int.from_bytes(TaggedHash("BIP0340/challenge", R.to_bytes_xonly() + pubkey + msg), 'big') % ORDER
     return R.to_bytes_xonly() + ((k + e * sec) % ORDER).to_bytes(32, 'big')
 
 
