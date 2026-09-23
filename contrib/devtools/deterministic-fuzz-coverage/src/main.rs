@@ -100,6 +100,23 @@ fn using_libfuzzer(fuzz_exe: &Path) -> Result<bool, AppError> {
     Ok(help_output.contains("libFuzzer"))
 }
 
+/// Compare two indexed profdata files byte-for-byte.
+///
+/// For a fixed binary, only the recorded counters vary between runs; the
+/// structural metadata (names, structural hashes, binary id) is constant and
+/// the summary is counter-derived. `llvm-profdata merge` is deterministic and
+/// timestamp-free, so equal counters yield byte-identical profdata, and equal
+/// files are a sufficient condition for deterministic coverage. This is a cheap
+/// fast path to skip the expensive llvm-cov rendering for the deterministic
+/// inputs; when the files differ the caller renders and diffs the llvm-cov
+/// reports to present the difference in a human-readable, source-located form.
+fn profdata_eq(a: &Path, b: &Path) -> Result<bool, AppError> {
+    let read = |p: &Path| {
+        std::fs::read(p).map_err(|e| format!("Failed to read profdata {} ({e})", p.display()))
+    };
+    Ok(read(a)? == read(b)?)
+}
+
 fn deterministic_coverage(
     build_dir: &Path,
     corpora_dir: &Path,
@@ -125,8 +142,10 @@ fn deterministic_coverage(
         .map(|entry| entry.expect("IO error"))
         .collect::<Vec<_>>();
     entries.sort_by_key(|entry| entry.file_name());
-    let run_single = |run_id: char, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
-        let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.{run_id}.txt"));
+    // Run the fuzz target once over `entry` (a single input file or the whole
+    // corpus directory) and merge the raw profile into an indexed profdata
+    // file. Returns the path to the profdata file.
+    let run_profile = |run_id: char, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
         let profraw_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profraw"));
         let profdata_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profdata"));
         {
@@ -162,35 +181,55 @@ fn deterministic_coverage(
         {
             Err(format!("{LLVM_PROFDATA} merge failed. This can be a sign of compiling without code coverage support."))?;
         }
-        let cov_file = File::create(&cov_txt_path)
-            .map_err(|e| format!("Failed to create coverage txt file ({e})"))?;
-        if !Command::new(LLVM_COV)
-            .args([
-                "show",
-                "--show-line-counts-or-regions",
-                "--show-branches=count",
-                "--show-expansions",
-                "--show-instantiation-summary",
-                "-Xdemangler=llvm-cxxfilt",
-                &format!("--instr-profile={}", profdata_file.display()),
-            ])
-            .arg(fuzz_exe)
-            .stdout(cov_file)
-            .spawn()
-            .map_err(|e| format!("{LLVM_COV} show failed with {e}"))?
-            .wait()
-            .map_err(|e| format!("{LLVM_COV} show failed with {e}"))?
-            .success()
-        {
-            Err(format!("{LLVM_COV} show failed"))?;
-        };
-        Ok(cov_txt_path)
+        Ok(profdata_file)
     };
-    let check_diff = |a: &Path, b: &Path, err: &str| -> AppResult {
+    // Render a human-readable coverage report from a profdata file. This is only
+    // needed to confirm and locate a difference once profdata_eq has flagged
+    // one; it is not part of the determinism decision itself.
+    let render_cov =
+        |profdata_file: &Path, run_id: char, thread_id: usize| -> Result<PathBuf, AppError> {
+            let cov_txt_path =
+                build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.{run_id}.txt"));
+            let cov_file = File::create(&cov_txt_path)
+                .map_err(|e| format!("Failed to create coverage txt file ({e})"))?;
+            if !Command::new(LLVM_COV)
+                .args([
+                    "show",
+                    "--show-line-counts-or-regions",
+                    "--show-branches=count",
+                    "--show-expansions",
+                    "--show-instantiation-summary",
+                    "-Xdemangler=llvm-cxxfilt",
+                    &format!("--instr-profile={}", profdata_file.display()),
+                ])
+                .arg(fuzz_exe)
+                .stdout(cov_file)
+                .spawn()
+                .map_err(|e| format!("{LLVM_COV} show failed with {e}"))?
+                .wait()
+                .map_err(|e| format!("{LLVM_COV} show failed with {e}"))?
+                .success()
+            {
+                Err(format!("{LLVM_COV} show failed"))?;
+            };
+            Ok(cov_txt_path)
+        };
+    let check_diff = |entry: &Path, thread_id: usize, err: &str| -> AppResult {
+        let profdata_base = run_profile('a', entry, thread_id)?;
+        let profdata_repeat = run_profile('b', entry, thread_id)?;
+        // Fast path: identical counters mean the coverage is deterministic, so
+        // skip the expensive llvm-cov rendering entirely.
+        if profdata_eq(&profdata_base, &profdata_repeat)? {
+            return Ok(());
+        }
+        // Slow path: the profiles differ, so render both into human-readable
+        // reports and diff them to confirm and locate the difference.
+        let cov_txt_base = render_cov(&profdata_base, 'a', thread_id)?;
+        let cov_txt_repeat = render_cov(&profdata_repeat, 'b', thread_id)?;
         let same = Command::new(GIT)
             .args(["--no-pager", "diff", "--no-index"])
-            .arg(a)
-            .arg(b)
+            .arg(&cov_txt_base)
+            .arg(&cov_txt_repeat)
             .status()
             .map_err(|e| format!("{GIT} diff failed with {e}"))?
             .success();
@@ -219,11 +258,9 @@ The coverage was not deterministic between runs.
         if !entry.is_file() {
             Err(format!("{} should be a file", entry.display()))?;
         }
-        let cov_txt_base = run_single('a', &entry, thread_id)?;
-        let cov_txt_repeat = run_single('b', &entry, thread_id)?;
         check_diff(
-            &cov_txt_base,
-            &cov_txt_repeat,
+            &entry,
+            thread_id,
             &format!("The fuzz target input was {}.", entry.display()),
         )?;
         Ok(())
@@ -258,11 +295,9 @@ The coverage was not deterministic between runs.
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
         }
-        let cov_txt_base = run_single('a', &corpus_dir, 0)?;
-        let cov_txt_repeat = run_single('b', &corpus_dir, 0)?;
         check_diff(
-            &cov_txt_base,
-            &cov_txt_repeat,
+            &corpus_dir,
+            0,
             &format!("All fuzz inputs in {} were used.", corpus_dir.display()),
         )?;
     }
