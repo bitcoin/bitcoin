@@ -588,6 +588,8 @@ class TestNode():
 
     @property
     def chain_dir(self) -> str:
+        if self.chain == "main":
+            return ""
         if self.chain != "signet":
             return self.chain
         for arg in self.extra_args:
