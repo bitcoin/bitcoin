@@ -30,6 +30,7 @@
 #include <psbt.h>
 #include <pubkey.h>
 #include <random.h>
+#include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/request.h>
@@ -319,6 +320,8 @@ static RPCMethod getrawtransaction()
         if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
+        CheckBlockDataAvailability(chainman.m_blockman, *blockindex, /*check_for_undo=*/false);
+        // The data could be pruned after this check, causing GetTransaction to throw an I/O error.
     }
 
     bool f_txindex_ready = false;
@@ -331,10 +334,6 @@ static RPCMethod getrawtransaction()
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
-            const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
-            if (!block_has_data) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
-            }
             errmsg = "No such transaction found in the provided block";
         } else if (!g_txindex) {
             errmsg = "No such mempool transaction. Use -txindex or provide a block hash to enable blockchain transaction queries";
