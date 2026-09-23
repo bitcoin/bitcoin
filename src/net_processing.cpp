@@ -1750,15 +1750,13 @@ void PeerManagerImpl::ProcessVersion(CNode& pfrom, Peer& peer, const std::string
     }
     vRecv.ignore(8); // Ignore the addrMe service bits sent by the peer
     vRecv >> CNetAddr::V1(addrMe);
-    if (!pfrom.IsInboundConn() && !pfrom.IsPrivateBroadcastConn())
-    {
+    if (!pfrom.IsInboundConn() && !pfrom.IsPrivateBroadcastConn()) {
         // Overwrites potentially existing services. In contrast to this,
         // unvalidated services received via gossip relay in ADDR/ADDRV2
         // messages are only ever added but cannot replace existing ones.
         m_addrman.SetServices(pfrom.addr, nServices);
     }
-    if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
-    {
+    if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices)) {
         LogDebug(BCLog::NET, "peer does not offer the expected services (%08x offered, %08x expected), %s",
                  nServices,
                  GetDesirableServiceFlags(nServices),
@@ -1790,18 +1788,15 @@ void PeerManagerImpl::ProcessVersion(CNode& pfrom, Peer& peer, const std::string
     if (!vRecv.empty()) {
         vRecv >> starting_height;
     }
-    if (!vRecv.empty())
-        vRecv >> fRelay;
+    if (!vRecv.empty()) vRecv >> fRelay;
     // Disconnect if we connected to ourself
-    if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
-    {
+    if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce)) {
         LogInfo("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
         pfrom.fDisconnect = true;
         return;
     }
 
-    if (pfrom.IsInboundConn() && addrMe.IsRoutable())
-    {
+    if (pfrom.IsInboundConn() && addrMe.IsRoutable()) {
         SeenLocal(addrMe);
     }
 
@@ -1908,11 +1903,7 @@ void PeerManagerImpl::ProcessVersion(CNode& pfrom, Peer& peer, const std::string
     // Attempt to initialize address relay for outbound peers and use result
     // to decide whether to send GETADDR, so that we don't send it to
     // inbound, feelers, or outbound block-relay-only peers.
-    bool send_getaddr{false};
-    if (!pfrom.IsInboundConn()) {
-        send_getaddr = SetupAddressRelay(pfrom, peer);
-    }
-    if (send_getaddr) {
+    if (!pfrom.IsInboundConn() && SetupAddressRelay(pfrom, peer)) {
         // Do a one-time address fetch to help populate/update our addrman.
         // If we're starting up for the first time, our addrman may be pretty
         // empty, so this mechanism is important to help us connect to the network.
@@ -3039,14 +3030,11 @@ void PeerManagerImpl::ProcessGetBlocks(CNode& pfrom, Peer& peer, DataStream& vRe
     const CBlockIndex* pindex = m_chainman.ActiveChainstate().FindForkInGlobalIndex(locator);
 
     // Send the rest of the chain
-    if (pindex)
-        pindex = m_chainman.ActiveChain().Next(*pindex);
+    if (pindex) pindex = m_chainman.ActiveChain().Next(*pindex);
     int nLimit = 500;
     LogDebug(BCLog::NET, "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), nLimit, pfrom.GetId());
-    for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
-    {
-        if (pindex->GetBlockHash() == hashStop)
-        {
+    for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex)) {
+        if (pindex->GetBlockHash() == hashStop) {
             LogDebug(BCLog::NET, " getblocks stopping at %d %s", pindex->nHeight, pindex->GetBlockHash().ToString());
             break;
         }
@@ -3167,8 +3155,7 @@ void PeerManagerImpl::ProcessGetDataMessage(CNode& pfrom, Peer& peer, DataStream
 {
     std::vector<CInv> vInv;
     vRecv >> vInv;
-    if (vInv.size() > MAX_INV_SZ)
-    {
+    if (vInv.size() > MAX_INV_SZ) {
         Misbehaving(peer, strprintf("getdata message size = %u", vInv.size()));
         return;
     }
@@ -3193,7 +3180,6 @@ void PeerManagerImpl::ProcessGetDataMessage(CNode& pfrom, Peer& peer, DataStream
         // The GETDATA request must contain exactly one inv and it must be for the transaction
         // that we INVed to the peer earlier.
         if (vInv.size() == 1 && vInv[0].IsMsgTx() && vInv[0].hash == pushed_tx->GetHash().ToUint256()) {
-
             MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
 
             peer.m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
@@ -3217,8 +3203,7 @@ void PeerManagerImpl::ProcessInv(CNode& pfrom, Peer& peer, DataStream& vRecv, co
 {
     std::vector<CInv> vInv;
     vRecv >> vInv;
-    if (vInv.size() > MAX_INV_SZ)
-    {
+    if (vInv.size() > MAX_INV_SZ) {
         Misbehaving(peer, strprintf("inv message size = %u", vInv.size()));
         return;
     }
@@ -3678,10 +3663,9 @@ void PeerManagerImpl::ProcessGetHeaders(CNode& pfrom, DataStream& vRecv)
         return;
     }
 
-    CNodeState *nodestate = State(pfrom.GetId());
+    CNodeState* nodestate = State(pfrom.GetId());
     const CBlockIndex* pindex = nullptr;
-    if (locator.IsNull())
-    {
+    if (locator.IsNull()) {
         // If locator is null, return the hashStop block
         pindex = m_chainman.m_blockman.LookupBlockIndex(hashStop);
         if (!pindex) {
@@ -3691,24 +3675,19 @@ void PeerManagerImpl::ProcessGetHeaders(CNode& pfrom, DataStream& vRecv)
             LogDebug(BCLog::NET, "%s: ignoring request from peer=%i for old block header that isn't in the main chain\n", __func__, pfrom.GetId());
             return;
         }
-    }
-    else
-    {
+    } else {
         // Find the last block the caller has in the main chain
         pindex = m_chainman.ActiveChainstate().FindForkInGlobalIndex(locator);
-        if (pindex)
-            pindex = m_chainman.ActiveChain().Next(*pindex);
+        if (pindex) pindex = m_chainman.ActiveChain().Next(*pindex);
     }
 
     // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
     std::vector<CBlock> vHeaders;
     int nLimit = m_opts.max_headers_result;
     LogDebug(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
-    for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
-    {
+    for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex)) {
         vHeaders.emplace_back(pindex->GetBlockHeader());
-        if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
-            break;
+        if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop) break;
     }
     // pindex can be nullptr either if we sent m_chainman.ActiveChain().Tip() OR
     // if our peer has m_chainman.ActiveChain().Tip() (and thus we are sending an empty
@@ -4342,7 +4321,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
 
     {
         LOCK(cs_main);
-        const CNodeState *nodestate = State(pfrom.GetId());
+        const CNodeState* nodestate = State(pfrom.GetId());
         if (!nodestate->m_provides_cmpctblocks) {
             LogDebug(BCLog::CMPCTBLOCK, "%s sent us a compact block despite never having sent us a SENDCMPCT!", pfrom.LogPeer());
             return;
@@ -4376,7 +4355,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
         }
     }
 
-    const CBlockIndex *pindex = nullptr;
+    const CBlockIndex* pindex = nullptr;
     BlockValidationState state;
     if (!m_chainman.ProcessNewBlockHeaders({{cmpctblock.header}}, /*min_pow_checked=*/true, state, &pindex)) {
         if (state.IsInvalid()) {
@@ -4406,7 +4385,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
         LOCK(cs_main);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
 
-        CNodeState *nodestate = State(pfrom.GetId());
+        CNodeState* nodestate = State(pfrom.GetId());
 
         // If this was a new header with more work than our tip, update the
         // peer's last block announcement time
@@ -4414,8 +4393,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
             nodestate->m_last_block_announcement = NodeClock::now();
         }
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
-            return;
+        if (pindex->nStatus & BLOCK_HAVE_DATA) return; // Nothing to do here
 
         auto range_flight = mapBlocksInFlight.equal_range(pindex->GetBlockHash());
         size_t already_in_flight = std::distance(range_flight.first, range_flight.second);
@@ -4461,9 +4439,9 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
                 requested_block_from_this_peer) {
                 std::list<QueuedBlock>::iterator* queuedBlockIt = nullptr;
                 if (!BlockRequested(pfrom.GetId(), *pindex, &queuedBlockIt)) {
-                    if (!(*queuedBlockIt)->partialBlock)
+                    if (!(*queuedBlockIt)->partialBlock) {
                         (*queuedBlockIt)->partialBlock.reset(new PartiallyDownloadedBlock(&m_mempool));
-                    else {
+                    } else {
                         // The block was already in flight using compact blocks from the same peer
                         LogDebug(BCLog::NET, "Peer sent us compact block we were already syncing!\n");
                         return;
@@ -4477,7 +4455,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
                     Misbehaving(peer, "invalid compact block");
                     return;
                 } else if (status == READ_STATUS_FAILED) {
-                    if (first_in_flight)  {
+                    if (first_in_flight) {
                         // Duplicate txindexes, the block is now in-flight, so just request it
                         std::vector<CInv> vInv(1);
                         vInv[0] = CInv(MSG_BLOCK | GetFetchFlags(peer), blockhash);
@@ -4491,8 +4469,7 @@ void PeerManagerImpl::ProcessCompactBlock(CNode& pfrom, Peer& peer, DataStream& 
 
                 BlockTransactionsRequest req;
                 for (size_t i = 0; i < cmpctblock.BlockTxCount(); i++) {
-                    if (!partialBlock.IsTxAvailable(i))
-                        req.indexes.push_back(i);
+                    if (!partialBlock.IsTxAvailable(i)) req.indexes.push_back(i);
                 }
                 if (req.indexes.empty()) {
                     fProcessBLOCKTXN = true;
@@ -5911,9 +5888,9 @@ void PeerManagerImpl::ProcessSendTxRcncl(CNode& pfrom, Peer& peer, DataStream& v
     switch (result) {
     case ReconciliationRegisterResult::NOT_FOUND:
         LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
-        break;
+        return;
     case ReconciliationRegisterResult::SUCCESS:
-        break;
+        return;
     case ReconciliationRegisterResult::ALREADY_REGISTERED:
         LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s", pfrom.DisconnectMsg());
         pfrom.fDisconnect = true;
@@ -6124,7 +6101,7 @@ void PeerManagerImpl::ProcessGetAddr(CNode& pfrom, Peer& peer)
     } else {
         vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
     }
-    for (const CAddress &addr : vAddr) {
+    for (const CAddress& addr : vAddr) {
         PushAddress(peer, addr);
     }
 }
