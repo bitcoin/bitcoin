@@ -10,23 +10,36 @@
 #include <util/hasher.h>
 
 #include <cstdint>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
+class ChainstateManager;
 class CTxMemPool;
+class uint256;
 
 namespace node {
+struct CBlockTemplate;
+
 /** Collects transactions in client-specified order for block template creation. */
 class TxCollection
 {
 public:
-    TxCollection(std::vector<Wtxid> wtxids, CTxMemPool& mempool);
+    TxCollection(std::vector<Wtxid> wtxids, ChainstateManager& chainman, CTxMemPool& mempool);
     /** Return zero-based positions for requested transactions that are still missing. */
     std::vector<uint32_t> UnknownTxPos() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /** Add transactions matching previously requested wtxids. Throws on null,
      *  unexpected, or duplicate transactions within the batch, in which case
      *  nothing is added. Transactions from earlier calls may be submitted again. */
     void AddMissingTxs(const std::vector<CTransactionRef>& txs) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /**
+     * Assemble and validate a block template from the collected transactions.
+     * A node-generated dummy coinbase is used for validation.
+     */
+    std::unique_ptr<CBlockTemplate> MakeTemplate(const uint256& prevhash,
+                                                 std::string& reason,
+                                                 std::string& debug) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
     /** Requested transaction order as provided by the client. */
@@ -36,6 +49,7 @@ private:
     mutable Mutex m_mutex;
     /** Collected transactions keyed by wtxid. */
     std::unordered_map<Wtxid, CTransactionRef, SaltedWtxidHasher> m_transactions GUARDED_BY(m_mutex);
+    ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
 };
 } // namespace node
