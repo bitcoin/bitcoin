@@ -2270,14 +2270,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    CService onion_service_target;
-    if (!connOptions.onion_binds.empty()) {
-        onion_service_target = connOptions.onion_binds.front();
-    } else if (!connOptions.vBinds.empty()) {
-        onion_service_target = connOptions.vBinds.front();
-    } else {
-        onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
-        connOptions.onion_binds.push_back(onion_service_target);
+    if (connOptions.onion_binds.empty() && connOptions.vBinds.empty()) {
+        connOptions.onion_binds.push_back(DefaultOnionServiceTarget(default_bind_port_onion));
     }
 
     if (listenonion) {
@@ -2287,6 +2281,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (std::ranges::any_of(connOptions.onion_binds, [](auto& b) { return b.IsBindAny(); })) {
             return InitError(_("The automatic Tor onion service cannot use a wildcard onion bind because incoming Tor connections would not be identified. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
         }
+        const CService& onion_service_target{connOptions.onion_binds[0]};
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
