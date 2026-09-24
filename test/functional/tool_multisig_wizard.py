@@ -38,6 +38,8 @@ class MultisigWizardTest(BitcoinTestFramework):
         self.test_create_encrypted()
         self.test_generate_key()
         self.test_generate_key_encrypted()
+        self.test_validate_key()
+        self.test_add_cosigner()
 
     def test_create_participant(self):
         self.log.info("Creating blank participant wallet with private keys")
@@ -98,6 +100,54 @@ class MultisigWizardTest(BitcoinTestFramework):
         with WalletUnlock(wallet, "secret"):
             key = self.wizard.generate_key(wallet)
         assert "/87h/1h/0h]" in key
+
+    def test_validate_key(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        key = self.keys[0]
+        assert_equal(self.wizard.validate_key(wallet, key), key)
+
+        origin, xpub = key.split("]")
+        assert_equal(self.wizard.validate_key(wallet, f"{origin.replace('h', chr(39))}]{xpub}"), key)
+
+        for bad in [key.replace("tpub", "tpuB"), key.replace("[", "").replace("]", "")]:
+            assert_raises_message(ValueError, "Invalid key", self.wizard.validate_key, wallet, bad)
+
+        assert_raises_message(ValueError, "must include key origin information", self.wizard.validate_key, wallet, key[key.index("]") + 1:])
+        assert_raises_message(ValueError, "must not specify a derivation path", self.wizard.validate_key, wallet, f"{key}/0")
+        assert_raises_message(ValueError, "must not specify a multipath derivation", self.wizard.validate_key, wallet, f"{key}/<0;1>/*")
+
+        master_xprv = wallet.gethdkeys(private=True)[0]["xprv"]
+        origin = key[:key.index("]") + 1]
+        assert_raises_message(ValueError, "contains private key", self.wizard.validate_key, wallet, f"{origin}{master_xprv}")
+
+        mainnet_xpub = "xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8"
+        assert_raises_message(ValueError, "Invalid key", self.wizard.validate_key, wallet, f"{origin}{mainnet_xpub}")
+
+        master_xpub = wallet.gethdkeys()[0]["xpub"]
+        other = wallet.derivehdkey("m/48h/1h/0h/2h", hdkey=master_xpub)
+        assert_raises_message(ValueError, "the wizard uses the BIP 87 path", self.wizard.validate_key, wallet, f"{other['origin']}{other['xpub']}")
+
+    def test_add_cosigner(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        setup = self.wizard.setup("Family Vault")
+
+        assert_equal(self.wizard.add_cosigner(wallet, setup, "Alice", self.keys[0]), [])
+        assert_equal(self.wizard.add_cosigner(wallet, setup, "Bob", self.keys[1]), [])
+        assert_equal(setup["cosigners"], [{"name": "Alice", "key": self.keys[0]}, {"name": "Bob", "key": self.keys[1]}])
+
+        # Raise if duplicate keys or cosigner names exist
+        assert_raises_message(ValueError, "Duplicate key", self.wizard.add_cosigner, wallet, setup, "Carol", self.keys[0])
+        origin, xpub = self.keys[0].split("]")
+        assert_raises_message(ValueError, "Duplicate key", self.wizard.add_cosigner, wallet, setup, "Carol", f"{origin.replace('h', chr(39))}]{xpub}")
+        assert_raises_message(ValueError, "already a cosigner called Bob", self.wizard.add_cosigner, wallet, setup, "Bob", self.keys[1])
+
+        # Warn if multiple keys have same fingerprint.
+        master_xpub = wallet.gethdkeys()[0]["xpub"]
+        second = wallet.derivehdkey("m/87h/1h/1h", hdkey=master_xpub)
+        warnings = self.wizard.add_cosigner(wallet, setup, "Alice spare", f"{second['origin']}{second['xpub']}", account=1)
+        assert_equal(len(warnings), 1)
+        assert "same fingerprint as Alice" in warnings[0]
+        assert_equal(len(setup["cosigners"]), 3)
 
 
 if __name__ == '__main__':
