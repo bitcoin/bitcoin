@@ -35,9 +35,11 @@ public:
     void AddMissingTxs(const std::vector<CTransactionRef>& txs) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /**
      * Assemble and validate a block template from the collected transactions.
-     * A node-generated dummy coinbase is used for validation.
+     * If @p coinbase is provided the block is validated with it, otherwise a
+     * node-generated dummy coinbase is used.
      */
     std::unique_ptr<CBlockTemplate> MakeTemplate(const uint256& prevhash,
+                                                 const CTransactionRef& coinbase,
                                                  std::string& reason,
                                                  std::string& debug) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 

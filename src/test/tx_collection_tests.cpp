@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/validation.h>
 #include <key.h>
 #include <node/block_template_manager.h>
 #include <node/miner.h>
@@ -130,23 +131,24 @@ BOOST_AUTO_TEST_CASE(add_missing_transactions)
     BOOST_CHECK(collection->UnknownTxPos().empty());
 }
 
-BOOST_AUTO_TEST_CASE(template_preconditions)
+struct TxCollectionTemplateSetup : RegTestingSetup {
+    const uint256 m_tip{WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveTip()->GetBlockHash())};
+    const std::unique_ptr<node::TxCollection> m_collection{m_node.block_template_manager->CreateTxCollection({})};
+};
+
+BOOST_FIXTURE_TEST_CASE(template_preconditions, TxCollectionTemplateSetup)
 {
-    auto& manager{*m_node.block_template_manager};
-    auto& chainman{*m_node.chainman};
-    const auto tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->GetBlockHash())};
     // Reuse the outputs across failure and success to check that errors clear.
     std::string reason{"old reason"};
     std::string debug{"old debug"};
-    auto collection{manager.CreateTxCollection({})};
-    BOOST_CHECK(!collection->MakeTemplate(uint256{1}, reason, debug));
+    BOOST_CHECK(!m_collection->MakeTemplate(uint256{1}, {}, reason, debug));
     BOOST_CHECK_EQUAL(reason, "inconclusive-not-best-prevblk");
     BOOST_CHECK(!debug.empty());
-    auto block_template{collection->MakeTemplate(tip, reason, debug)};
+    auto block_template{m_collection->MakeTemplate(m_tip, {}, reason, debug)};
     BOOST_REQUIRE(block_template);
     BOOST_CHECK(reason.empty());
     BOOST_CHECK(debug.empty());
-    BOOST_CHECK(block_template->block.hashPrevBlock == tip);
+    BOOST_CHECK(block_template->block.hashPrevBlock == m_tip);
     BOOST_REQUIRE_EQUAL(block_template->block.vtx.size(), 1);
     BOOST_CHECK(block_template->block.vtx[0]->IsCoinBase());
 }
@@ -166,12 +168,12 @@ BOOST_FIXTURE_TEST_CASE(template_transactions, TestChain100Setup)
     auto collection{manager.CreateTxCollection({parent_ref->GetWitnessHash(), child_ref->GetWitnessHash()})};
     std::string reason;
     std::string debug;
-    BOOST_CHECK(!collection->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK(!collection->MakeTemplate(tip, {}, reason, debug));
     BOOST_CHECK_EQUAL(reason, "missing-txs");
     BOOST_CHECK(!debug.empty());
 
     collection->AddMissingTxs({parent_ref, child_ref});
-    auto block_template{collection->MakeTemplate(tip, reason, debug)};
+    auto block_template{collection->MakeTemplate(tip, {}, reason, debug)};
     BOOST_REQUIRE(block_template);
     BOOST_REQUIRE_EQUAL(block_template->block.vtx.size(), 3);
     BOOST_CHECK(block_template->block.vtx[1] == parent_ref);
@@ -179,16 +181,41 @@ BOOST_FIXTURE_TEST_CASE(template_transactions, TestChain100Setup)
 
     auto reversed{manager.CreateTxCollection({child_ref->GetWitnessHash(), parent_ref->GetWitnessHash()})};
     reversed->AddMissingTxs({parent_ref, child_ref});
-    BOOST_CHECK(!reversed->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK(!reversed->MakeTemplate(tip, {}, reason, debug));
     BOOST_CHECK_EQUAL(reason, "bad-txns-inputs-missingorspent");
 
     const auto mined{CreateAndProcessBlock({parent, child}, CScript() << OP_TRUE)};
     const auto new_tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->GetBlockHash())};
     BOOST_REQUIRE(new_tip == mined.GetHash());
-    BOOST_CHECK(!collection->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK(!collection->MakeTemplate(tip, {}, reason, debug));
     BOOST_CHECK_EQUAL(reason, "inconclusive-not-best-prevblk");
-    BOOST_CHECK(!collection->MakeTemplate(new_tip, reason, debug));
+    BOOST_CHECK(!collection->MakeTemplate(new_tip, {}, reason, debug));
     BOOST_CHECK_EQUAL(reason, "bad-txns-BIP30");
+}
+
+BOOST_FIXTURE_TEST_CASE(supplied_coinbase, TxCollectionTemplateSetup)
+{
+    // Start with a valid coinbase, then break its amount and witness commitment.
+    std::string reason;
+    std::string debug;
+    auto original{m_collection->MakeTemplate(m_tip, {}, reason, debug)};
+    BOOST_REQUIRE(original);
+    const auto coinbase{original->block.vtx[0]};
+    auto supplied{m_collection->MakeTemplate(m_tip, coinbase, reason, debug)};
+    BOOST_REQUIRE(supplied);
+    BOOST_CHECK(supplied->block.vtx[0] == coinbase);
+
+    CMutableTransaction overpaying{*coinbase};
+    ++overpaying.vout[0].nValue;
+    BOOST_CHECK(!m_collection->MakeTemplate(m_tip, MakeTransactionRef(overpaying), reason, debug));
+    BOOST_CHECK_EQUAL(reason, "bad-cb-amount");
+
+    CMutableTransaction bad_commitment{*coinbase};
+    const int commitment_index{GetWitnessCommitmentIndex(original->block)};
+    BOOST_REQUIRE(commitment_index >= 0);
+    bad_commitment.vout[commitment_index].scriptPubKey[6] ^= 1;
+    BOOST_CHECK(!m_collection->MakeTemplate(m_tip, MakeTransactionRef(bad_commitment), reason, debug));
+    BOOST_CHECK_EQUAL(reason, "bad-witness-merkle-match");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
