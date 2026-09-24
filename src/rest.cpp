@@ -1013,10 +1013,9 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
                     return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
-                DataStream oss{MakeByteSpan(strRequestMutable)};
-                oss >> fCheckMemPool;
-                oss >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
-                if (oss.size()) return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+                SpanReader reader{MakeByteSpan(strRequestMutable)};
+                reader >> fCheckMemPool >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
+                if (reader.size()) return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
             }
         } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
