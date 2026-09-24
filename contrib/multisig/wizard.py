@@ -5,6 +5,8 @@
 import re
 
 KEY_EXPRESSION_RE = re.compile(r"^\[[0-9a-f]{8}(/\d+h?)*\][a-zA-Z0-9]+$")
+MAX_KEYS = {"bech32": 20, "bech32m": 999}
+MULTIPATH_SUFFIX = "/<0;1>/*"
 
 
 def setup(name):
@@ -103,3 +105,49 @@ def add_cosigner(rpc, setup, name, key, *, account=0):
 
     setup["cosigners"].append({"name": name, "key": canonical})
     return warnings
+
+def build_descriptor(keys, threshold, address_type):
+    """Build the descriptor string, without its checksum."""
+    paths = ",".join(f"{key}{MULTIPATH_SUFFIX}" for key in keys)
+    if address_type == "bech32":
+        return f"wsh(sortedmulti({threshold},{paths}))"
+    aggregate = f"musig({','.join(keys)})"
+    return f"tr({aggregate}{MULTIPATH_SUFFIX},sortedmulti_a({threshold},{paths}))"
+
+
+def assemble(rpc, setup, threshold, address_type="bech32"):
+    """Build the shared descriptor from the collected keys.
+
+    address_type is "bech32" for wsh(sortedmulti(...)) or
+    "bech32m" for a taproot descriptor tr(musig(), sortedmulti_a(...)).
+
+    The taproot key path is a MuSig2 aggregate of all n keys: it cannot bypass the
+    policy, since it needs every signer, and it avoids the fingerprinting problem
+    with using a fixed NUMS point.
+
+    Records and returns the descriptor with its checksum.
+    """
+    if address_type not in MAX_KEYS:
+        raise ValueError("Unsupported address type")
+    keys = [cosigner["key"] for cosigner in setup["cosigners"]]
+    n = len(keys)
+    if n < 2:
+        raise ValueError("A multisig requires at least 2 keys")
+    if n > MAX_KEYS[address_type]:
+        raise ValueError(f"A multisig cannot have more than {MAX_KEYS[address_type]} keys, {n} were provided")
+    if threshold < 1 or threshold > n:
+        raise ValueError(f"The threshold must be between 1 and {n}, {threshold} was provided")
+
+    descriptor = build_descriptor(keys, threshold, address_type)
+
+    try:
+        info = rpc.getdescriptorinfo(descriptor)
+    except Exception as e:
+        raise ValueError(f"Invalid descriptor: {e}") from e
+    if len(info.get("multipath_expansion", [])) != 2:
+        raise ValueError("Descriptor did not expand to a receive and a change path")
+
+    setup["threshold"] = threshold
+    setup["type"] = address_type
+    setup["descriptor"] = f"{descriptor}#{info['checksum']}"
+    return setup["descriptor"]

@@ -149,6 +149,52 @@ class MultisigWizardTest(BitcoinTestFramework):
         assert "same fingerprint as Alice" in warnings[0]
         assert_equal(len(setup["cosigners"]), 3)
 
+    def setup_cosigners(self, wallet, count=3):
+        """Build a setup whose cosigners each have a key from their own wallet."""
+        setup = self.wizard.setup("Family Vault")
+        for _ in range(count):
+            self.cosigners += 1
+            name = f"Cosigner {self.cosigners}"
+            cosigner_wallet = self.node.get_wallet_rpc(self.wizard.create_wallet(self.node, name))
+            self.wizard.add_cosigner(wallet, setup, name, self.wizard.generate_key(cosigner_wallet))
+        return setup
+
+    def test_assemble(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        setup = self.setup_cosigners(wallet)
+        keys = [cosigner["key"] for cosigner in setup["cosigners"]]
+
+        # Assembling WSH descriptor
+        descriptor = self.wizard.assemble(wallet, setup, threshold=2)
+        paths = ",".join(f"{key}/<0;1>/*" for key in keys)
+        expected = f"wsh(sortedmulti(2,{paths}))"
+        assert_equal(descriptor, f"{expected}#{wallet.getdescriptorinfo(expected)['checksum']}")
+        assert_equal(setup["threshold"], 2)
+        assert_equal(setup["type"], "bech32")
+
+        info = wallet.getdescriptorinfo(descriptor)
+        assert_equal(info["isrange"], True)
+        assert_equal(info["hasprivatekeys"], False)
+        assert_equal(len(info["multipath_expansion"]), 2)
+        assert "/0/*" in info["multipath_expansion"][0]
+        assert "/1/*" in info["multipath_expansion"][1]
+
+        # Assembling TR descriptor
+        taproot = self.wizard.assemble(wallet, setup, threshold=2, address_type="bech32m")
+        assert taproot.startswith(f"tr(musig({','.join(keys)})/<0;1>/*,")
+        assert f"sortedmulti_a(2,{paths})" in taproot
+        assert_equal(len(wallet.getdescriptorinfo(taproot)["multipath_expansion"]), 2)
+
+        for threshold in [1, len(keys)]:
+            assert self.wizard.assemble(wallet, setup, threshold)
+
+        # policy checks
+        assert_raises_message(ValueError, "Unsupported address type", self.wizard.assemble, wallet, setup, threshold=2, address_type="p2sh-segwit")
+        for threshold in [0, len(keys) + 1]:
+            assert_raises_message(ValueError, "The threshold must be between", self.wizard.assemble, wallet, setup, threshold)
+        too_few = self.setup_cosigners(wallet, count=1)
+        assert_raises_message(ValueError, "at least 2 keys", self.wizard.assemble, wallet, too_few, threshold=1)
+
 
 if __name__ == '__main__':
     MultisigWizardTest(__file__).main()
