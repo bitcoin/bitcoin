@@ -5,6 +5,7 @@
 """Test the IPC (multiprocess) Mining TxCollection interface."""
 import asyncio
 from contextlib import AsyncExitStack
+from copy import deepcopy
 from test_framework.messages import ser_uint256
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -152,6 +153,23 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 local_block = await mining_get_block(template, ctx0)
 
                 assert_equal([tx.wtxid_hex for tx in local_block.vtx[1:]], [tx.wtxid_hex for tx in remote_block.vtx[1:]])
+
+                self.log.debug("makeTemplate() validates a client-provided coinbase")
+                remote_coinbase = remote_block.vtx[0]
+                template_cb = await tx_collection_make_template(
+                    tx_collection, stack, ctx0, current_tip, coinbase=remote_coinbase.serialize()
+                )
+                block_cb = await mining_get_block(template_cb, ctx0)
+                assert_equal(block_cb.vtx[0].serialize(), remote_coinbase.serialize())
+
+                self.log.debug("makeTemplate() rejects an overpaying client-provided coinbase")
+                overpaying_coinbase = deepcopy(remote_coinbase)
+                overpaying_coinbase.vout[0].nValue += 1
+                await tx_collection_make_template(
+                    tx_collection, stack, ctx0, current_tip,
+                    coinbase=overpaying_coinbase.serialize(),
+                    reject_reason="bad-cb-amount",
+                )
 
                 self.log.debug("Solve the reconstructed block and submit the same solution to both templates")
                 # makeTemplate() leaves the merkle root unset (it validates with

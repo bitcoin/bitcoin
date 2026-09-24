@@ -34,8 +34,9 @@ public:
 
     virtual CBlockHeader getBlockHeader() = 0;
     /** Return the block currently stored in the template.
-     * Initially contains a node-generated dummy coinbase that should not be
-     * used for mining. For templates from Mining::createNewBlock(), the
+     * Initially contains the coinbase supplied to TxCollection::makeTemplate(),
+     * if any; otherwise contains a node-generated dummy coinbase that should
+     * not be used for mining. For templates from Mining::createNewBlock(), the
      * dummy may not match a transaction constructed from getCoinbaseTx().
      * A call to submitSolution() replaces the stored coinbase. */
     virtual CBlock getBlock() = 0;
@@ -151,7 +152,6 @@ public:
      * Requires all requested transactions to be present, and prevhash to
      * match the current tip.
      *
-     * A node-generated dummy coinbase is used for validation.
      * The resulting block is validated with the same final TestBlockValidity()
      * call used by checkBlock(), with the proof-of-work and merkle-root checks
      * disabled.
@@ -164,11 +164,15 @@ public:
      * - otherwise BIP-22 style
      *
      * @param[in] prevhash hash of the tip the template must build on top of
+     * @param[in] coinbase optional coinbase transaction to validate the block
+     *                     with. When null, a node-generated dummy
+     *                     coinbase is used.
      * @param[out] reason  failure reason; see above
      * @param[out] debug   more detailed rejection reason
      * @returns            block template on success, otherwise nullptr
      */
     virtual std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                        CTransactionRef coinbase,
                                                         std::string& reason,
                                                         std::string& debug) = 0;
 };
