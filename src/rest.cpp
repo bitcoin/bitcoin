@@ -1015,7 +1015,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 
                 DataStream oss{MakeByteSpan(strRequestMutable)};
                 oss >> fCheckMemPool;
-                oss >> vOutPoints;
+                oss >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
                 if (oss.size()) return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
             }
         } catch (const std::ios_base::failure&) {
