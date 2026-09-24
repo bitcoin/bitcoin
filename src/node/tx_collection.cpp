@@ -101,6 +101,7 @@ void TxCollection::AddMissingTxs(const std::vector<CTransactionRef>& txs)
 }
 
 std::unique_ptr<CBlockTemplate> TxCollection::MakeTemplate(const uint256& prevhash,
+                                                           const CTransactionRef& coinbase,
                                                            std::string& reason,
                                                            std::string& debug)
 {
@@ -153,15 +154,22 @@ std::unique_ptr<CBlockTemplate> TxCollection::MakeTemplate(const uint256& prevha
             block.vtx.push_back(tx);
         }
 
-        // Validate with a node-generated dummy coinbase. Checks involving the
-        // coinbase still pass, but say nothing about the coinbase the caller
-        // intends to use.
-        BlockAssembler{
-            chainman.ActiveChainstate(),
-            &m_mempool,
-            BlockCreateOptions{.use_mempool = false},
+        if (coinbase) {
+            // Validate the block with the caller-provided coinbase, which is
+            // expected to commit to the collected transactions (witness
+            // commitment) and the next block height (BIP34).
+            block.vtx[0] = coinbase;
+        } else {
+            // Validate with a node-generated dummy coinbase. Checks involving the
+            // coinbase still pass, but say nothing about the coinbase the caller
+            // intends to use.
+            BlockAssembler{
+                chainman.ActiveChainstate(),
+                &m_mempool,
+                BlockCreateOptions{.use_mempool = false},
+            }
+                .CreateCoinbaseTx(block, *prev_block, /*fees=*/0);
         }
-            .CreateCoinbaseTx(block, *prev_block, /*fees=*/0);
 
         UpdateTime(&block, chainman.GetParams().GetConsensus(), prev_block);
         block.nBits = GetNextWorkRequired(prev_block, &block, chainman.GetParams().GetConsensus());
