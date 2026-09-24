@@ -3,15 +3,19 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/system.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_args.h>
 #include <policy/policy.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/time.h>
+#include <validationinterface.h>
 
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+#include <utility>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
@@ -48,6 +52,43 @@ BOOST_AUTO_TEST_CASE(MempoolLookupTest)
 
     // Lookup by Wtxid
     BOOST_CHECK(pool.get(CTransaction(tx).GetWitnessHash()));
+}
+
+BOOST_AUTO_TEST_CASE(remove_for_block_witness_mismatch)
+{
+    struct RemovalSubscriber : CValidationInterface {
+        std::vector<std::pair<Wtxid, MemPoolRemovalReason>> removals;
+        void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t) override { removals.emplace_back(tx->GetWitnessHash(), reason); }
+    };
+
+    CMutableTransaction local;
+    local.vin.emplace_back();
+    CMutableTransaction mined{local};
+    mined.vin[0].scriptWitness.stack.emplace_back();
+    const auto local_tx{MakeTransactionRef(local)}, mined_tx{MakeTransactionRef(mined)};
+    BOOST_REQUIRE(local_tx->GetHash() == mined_tx->GetHash());
+    BOOST_REQUIRE(local_tx->GetWitnessHash() != mined_tx->GetWitnessHash());
+
+    auto& pool{*Assert(m_node.mempool)};
+    const auto entry{TestMemPoolEntryHelper().Height(0).Fee(1000).FromTx(local_tx)};
+    TryAddToMempool(pool, entry);
+    CBlockPolicyEstimator estimator{BlockPolicyFeeEstPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+    estimator.processTransaction(NewMempoolTransactionInfo{local_tx, entry.GetFee(), entry.GetTxSize(), entry.GetHeight(),
+                                                           /*mempool_limit_bypassed=*/false, /*submitted_in_package=*/false,
+                                                           /*chainstate_is_current=*/true, /*has_no_mempool_parents=*/true});
+    RemovalSubscriber subscriber;
+    m_node.validation_signals->RegisterValidationInterface(&subscriber);
+    const auto removed{WITH_LOCK(pool.cs, return pool.removeForBlock({mined_tx}))};
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->UnregisterValidationInterface(&subscriber);
+
+    BOOST_CHECK(!pool.exists(local_tx->GetHash()));
+    BOOST_CHECK(!removed.empty()); // TODO: A different witness variant was not mined.
+    BOOST_CHECK(subscriber.removals.empty()); // TODO: A non-mined local variant should trigger a conflict notification.
+    estimator.processBlock(removed, 1);
+    EstimationResult result;
+    estimator.estimateRawFee(1, 0.5, FeeEstimateHorizon::MED_HALFLIFE, &result);
+    BOOST_CHECK_EQUAL(result.fail.totalConfirmed, 1); // TODO: The local variant's feerate bucket was not confirmed.
 }
 
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
