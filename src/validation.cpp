@@ -1736,9 +1736,12 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             const auto& txresult = multi_submission_result.m_tx_results.at(wtxid);
             if (txresult.m_result_type == MempoolAcceptResult::ResultType::VALID && !m_pool.exists(wtxid)) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
                 TxValidationState mempool_full_state;
-                mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
-                results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
+                mempool_full_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
+                results_final.emplace(wtxid, MempoolAcceptResult::FeeFailure(mempool_full_state,
+                                                                             txresult.m_effective_feerate.value(),
+                                                                             txresult.m_wtxids_fee_calculations.value()));
             } else {
                 results_final.emplace(wtxid, txresult);
             }
