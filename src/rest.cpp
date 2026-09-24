@@ -1014,7 +1014,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 
                 DataStream oss{MakeByteSpan(strRequestMutable)};
                 oss >> fCheckMemPool;
-                oss >> vOutPoints;
+                oss >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
             }
         } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
