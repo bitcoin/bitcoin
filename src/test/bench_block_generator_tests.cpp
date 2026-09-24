@@ -6,9 +6,11 @@
 
 #include <bench/block_generator.h>
 
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <kernel/chainparams.h>
+#include <script/script.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
@@ -58,6 +60,39 @@ BOOST_AUTO_TEST_CASE(block_generator_multiple_seed_sanity)
         BOOST_CHECK(CheckBlock(block, validation_state, params->GetConsensus()));
         BOOST_CHECK(!IsBlockMutated(block, /*check_witness_root=*/true));
     }
+}
+
+BOOST_AUTO_TEST_CASE(block_generator_undo_matches_inputs)
+{
+    const auto params{CChainParams::RegTest()};
+    auto recipe{benchmark::WITNESS_RECIPE};
+    recipe.tx_count = 20;
+    const auto block{benchmark::GenerateBlock(*params, recipe)};
+    const auto undo{benchmark::GenerateBlockUndo(block)};
+    BOOST_REQUIRE_EQUAL(undo.vtxundo.size(), block.vtx.size() - 1);
+
+    for (size_t i{1}; i < block.vtx.size(); ++i) {
+        const auto& tx{*block.vtx[i]};
+        const auto& tx_undo{undo.vtxundo[i - 1]};
+        BOOST_REQUIRE_EQUAL(tx_undo.vprevout.size(), tx.vin.size());
+
+        CAmount input_total{};
+        for (const auto& coin : tx_undo.vprevout) {
+            BOOST_CHECK(!coin.out.scriptPubKey.IsUnspendable());
+            input_total += coin.out.nValue;
+        }
+        BOOST_CHECK_EQUAL(input_total - tx.GetValueOut(), 1000);
+    }
+
+    DataStream first;
+    first << undo;
+    DataStream second;
+    second << benchmark::GenerateBlockUndo(block);
+    BOOST_CHECK(first.str() == second.str());
+
+    CBlockUndo restored;
+    first >> restored;
+    BOOST_CHECK_EQUAL(restored.vtxundo.size(), undo.vtxundo.size());
 }
 
 BOOST_AUTO_TEST_CASE(block_generator_returns_unchecked_block)

@@ -6,13 +6,18 @@
 #include <bench/block_generator.h>
 #include <chain.h>
 #include <consensus/params.h>
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <kernel/chainparams.h>
+#include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <rpc/blockchain.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <undo.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <memory>
@@ -23,24 +28,19 @@ namespace {
 
 struct TestBlockAndIndex {
     const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
-    CBlock block{};
-    uint256 blockHash{};
-    CBlockIndex blockindex{};
+    const CBlock block{benchmark::GenerateBlock(testing_setup->m_node.chainman->GetParams())};
+    const CBlockIndex* blockindex{};
 
     TestBlockAndIndex()
     {
-        const auto& params{testing_setup->m_node.chainman->GetParams()};
-        block = benchmark::GenerateBlock(params);
-
-        blockHash = block.GetHash();
-        blockindex.phashBlock = &blockHash;
-        blockindex.nVersion = block.nVersion;
-        blockindex.hashMerkleRoot = block.hashMerkleRoot;
-        blockindex.nTime = block.nTime;
-        blockindex.nBits = block.nBits;
-        blockindex.nNonce = block.nNonce;
-        blockindex.nHeight = benchmark::GENERATED_BLOCK_HEIGHT;
-        blockindex.nTx = static_cast<unsigned int>(block.vtx.size());
+        auto& chainman{*testing_setup->m_node.chainman};
+        LOCK(::cs_main);
+        // The generated block's parent is the regtest genesis block loaded by the setup.
+        auto* pindex{chainman.m_blockman.AddToBlockIndex(block, chainman.m_best_header)};
+        pindex->nTx = static_cast<unsigned int>(block.vtx.size());
+        BlockValidationState state;
+        Assert(chainman.m_blockman.WriteBlockUndo(benchmark::GenerateBlockUndo(block), state, *pindex));
+        blockindex = pindex;
     }
 };
 
@@ -51,7 +51,7 @@ static void BlockToJson(benchmark::Bench& bench, TxVerbosity verbosity)
     TestBlockAndIndex data;
     const uint256 pow_limit{data.testing_setup->m_node.chainman->GetParams().GetConsensus().powLimit};
     bench.run([&] {
-        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, verbosity, pow_limit);
+        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, *data.blockindex, *data.blockindex, verbosity, pow_limit);
         ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
@@ -79,7 +79,11 @@ static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
     const uint256 pow_limit{data.testing_setup->m_node.chainman->GetParams().GetConsensus().powLimit};
-    auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT, pow_limit);
+    auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, *data.blockindex, *data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT, pow_limit);
+    const auto& txs{univalue["tx"].get_array()};
+    Assert(txs.size() == data.block.vtx.size() && txs.size() > 1);
+    Assert(txs[1].exists("fee"));
+    Assert(txs[1]["vin"][0].exists("prevout"));
     bench.run([&] {
         auto str = univalue.write();
         ankerl::nanobench::doNotOptimizeAway(str);
