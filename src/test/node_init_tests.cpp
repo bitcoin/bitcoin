@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(init_test)
     int version;
     unsigned int best_seen_height;
     estimates_file >> version >> best_seen_height;
-    BOOST_CHECK_NE(best_seen_height, queued_height); // TODO: The saved height must include the queued block update
+    BOOST_CHECK_EQUAL(best_seen_height, queued_height);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
