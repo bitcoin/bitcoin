@@ -173,16 +173,16 @@ class RESTTest (BitcoinTestFramework):
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
         assert_equal(chain_height, 201)  # chain height must be 201 (pre-mined chain [200] + generated block [1])
-        assert_not_equal(bin_response, bin_uri_response)  # TODO: GET and POST for the same outpoints should return the same response
+        assert_equal(bin_response, bin_uri_response)
 
         hex_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.HEX, body=bin_request.hex(), ret_type=RetType.BYTES)
-        assert_not_equal(bytes.fromhex(hex_response.decode()), bin_uri_response)  # TODO: GET and POST for the same outpoints should return the same response
+        assert_equal(bytes.fromhex(hex_response.decode()), bin_uri_response)
 
         for req_type, body in [(ReqType.BIN, bin_request + b'\x00'), (ReqType.HEX, (bin_request + b'\x00').hex())]:
-            self.test_rest_request("/getutxos", http_method='POST', req_type=req_type, body=body, status=200, ret_type=RetType.OBJ)  # TODO: A complete request should not allow trailing bytes
+            self.test_rest_request("/getutxos", http_method='POST', req_type=req_type, body=body, status=400, ret_type=RetType.OBJ)
 
         for body in [bin_request.hex() + '0', bin_request.hex() + 'zz']:
-            self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.HEX, body=body, status=200, ret_type=RetType.OBJ)  # TODO: Malformed hex should be rejected
+            self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.HEX, body=body, status=400, ret_type=RetType.OBJ)
 
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but
