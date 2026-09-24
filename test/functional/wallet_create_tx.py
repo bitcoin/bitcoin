@@ -35,6 +35,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.test_anti_fee_sniping()
         self.test_tx_size_too_large()
         self.test_create_too_long_mempool_chain()
+        self.test_too_long_mempool_chain_avoid_partial_spends()
         self.test_version3()
 
     def test_anti_fee_sniping(self):
@@ -109,6 +110,32 @@ class CreateTxWalletTest(BitcoinTestFramework):
                                 test_wallet.send, outputs=[{test_wallet.getnewaddress(): 0.3}], options=options)
 
         test_wallet.unloadwallet()
+
+    def test_too_long_mempool_chain_avoid_partial_spends(self):
+        self.log.info('Check that a discarded too-long-chain coin is not counted twice with avoidpartialspends')
+        df_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # avoid_reuse implies avoidpartialspends
+        self.nodes[0].createwallet(wallet_name="aps", avoid_reuse=True)
+        aps_wallet = self.nodes[0].get_wallet_rpc("aps")
+
+        df_wallet.sendtoaddress(aps_wallet.getnewaddress(), 0.3)
+        self.generate(self.nodes[0], 1)
+
+        # Spend the 0.3 coin to ourselves until it hits the ancestor limit. The chain is from us, so
+        # it is trusted and available for selection, but too long to be eligible, so it gets discarded.
+        for _ in range(25):
+            txid = aps_wallet.sendall([aps_wallet.getnewaddress()])['txid']
+        assert_equal(self.nodes[0].getmempoolentry(txid)['ancestorcount'], 25)
+
+        # Add a confirmed 0.7 coin at another address, leaving the chain in the mempool
+        txid = df_wallet.sendtoaddress(aps_wallet.getnewaddress(), 0.7)
+        self.generateblock(self.nodes[0], output=df_wallet.getnewaddress(), transactions=[txid])
+
+        # The confirmed 0.7 coin alone covers this payment
+        aps_wallet.sendtoaddress(df_wallet.getnewaddress(), 0.65)
+
+        aps_wallet.unloadwallet()
 
     def test_version3(self):
         self.log.info('Check wallet does not create transactions with version=3 yet')
