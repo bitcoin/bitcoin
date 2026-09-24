@@ -291,7 +291,10 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
         agg_info = misc_pk_it->second.second;
     }
 
-    for (const auto& [agg_pub, part_pks] : sigdata.musig2_pubkeys) {
+    std::map<CPubKey, std::vector<CPubKey>> agg_keys = provider.GetAllMuSig2ParticipantPubkeys();
+    agg_keys.insert(sigdata.musig2_pubkeys.begin(), sigdata.musig2_pubkeys.end());
+
+    for (const auto& [agg_pub, part_pks] : agg_keys) {
         if (part_pks.empty()) continue;
 
         // The pubkey in the script may not be the actual aggregate of the participants, but derived from it.
@@ -316,6 +319,9 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
             if (XOnlyPubKey(extpub.pubkey) != script_pubkey) continue;
             plain_pub = extpub.pubkey;
         }
+
+        // Aggregate is now relevant, add to sigdata
+        sigdata.musig2_pubkeys.emplace(agg_pub, part_pks);
 
         // Fill participant derivation path info
         for (const auto& part_pk : part_pks) {
@@ -567,10 +573,6 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
     if (provider.GetTaprootBuilder(output, builder)) {
         sigdata.tr_builder = builder;
     }
-    if (auto agg_keys = provider.GetAllMuSig2ParticipantPubkeys(); !agg_keys.empty()) {
-        sigdata.musig2_pubkeys.insert(agg_keys.begin(), agg_keys.end());
-    }
-
 
     // Try key path spending.
     {
