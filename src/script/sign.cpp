@@ -294,19 +294,6 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
     for (const auto& [agg_pub, part_pks] : sigdata.musig2_pubkeys) {
         if (part_pks.empty()) continue;
 
-        // Fill participant derivation path info
-        for (const auto& part_pk : part_pks) {
-            KeyOriginInfo part_info;
-            if (provider.GetKeyOrigin(part_pk.GetID(), part_info)) {
-                XOnlyPubKey xonly_part(part_pk);
-                auto it = sigdata.taproot_misc_pubkeys.find(xonly_part);
-                if (it == sigdata.taproot_misc_pubkeys.end()) {
-                    it = sigdata.taproot_misc_pubkeys.emplace(xonly_part, std::make_pair(std::set<uint256>(), part_info)).first;
-                }
-                if (leaf_hash) it->second.first.insert(*leaf_hash);
-            }
-        }
-
         // The pubkey in the script may not be the actual aggregate of the participants, but derived from it.
         // Check the derivation, and compute the BIP 32 derivation tweaks
         std::vector<std::pair<uint256, bool>> tweaks;
@@ -328,6 +315,19 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
             }
             if (XOnlyPubKey(extpub.pubkey) != script_pubkey) continue;
             plain_pub = extpub.pubkey;
+        }
+
+        // Fill participant derivation path info
+        for (const auto& part_pk : part_pks) {
+            KeyOriginInfo part_info;
+            if (provider.GetKeyOrigin(part_pk.GetID(), part_info)) {
+                XOnlyPubKey xonly_part(part_pk);
+                auto it = sigdata.taproot_misc_pubkeys.find(xonly_part);
+                if (it == sigdata.taproot_misc_pubkeys.end()) {
+                    it = sigdata.taproot_misc_pubkeys.emplace(xonly_part, std::make_pair(std::set<uint256>(), part_info)).first;
+                }
+                if (leaf_hash) it->second.first.insert(*leaf_hash);
+            }
         }
 
         // Add the merkle root tweak
