@@ -5,9 +5,14 @@
 import re
 
 KEY_EXPRESSION_RE = re.compile(r"^\[[0-9a-f]{8}(/\d+h?)*\][a-zA-Z0-9]+$")
+KEY_PATH_MUSIG = "musig"
+KEY_PATH_NUMS = "nums"
 MAX_KEYS = {"bech32": 20, "bech32m": 999}
 MULTIPATH_SUFFIX = "/<0;1>/*"
 
+# BIP 341's NUMS point. Kept so that descriptors from other software still verify here.
+NUMS_H = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
+NUMS_H_XPUB = "xpub661MyMwAqRbcEYS8w7XLSVeEsBXy79zSzH1J8vCdxAZningWLdN3zgtU6QgnecKFpJFPpdzxKrwoaZoV44qAJewsc4kX9vGaCaBExuvJH57"
 
 def setup(name):
     """init a new multisig wallet."""
@@ -121,9 +126,7 @@ def assemble(rpc, setup, threshold, address_type="bech32"):
     address_type is "bech32" for wsh(sortedmulti(...)) or
     "bech32m" for a taproot descriptor tr(musig(), sortedmulti_a(...)).
 
-    The taproot key path is a MuSig2 aggregate of all n keys: it cannot bypass the
-    policy, since it needs every signer, and it avoids the fingerprinting problem
-    with using a fixed NUMS point.
+    The taproot key path is a MuSig2 aggregate of all n keys.
 
     Records and returns the descriptor with its checksum.
     """
@@ -151,3 +154,159 @@ def assemble(rpc, setup, threshold, address_type="bech32"):
     setup["type"] = address_type
     setup["descriptor"] = f"{descriptor}#{info['checksum']}"
     return setup["descriptor"]
+
+def split_expressions(expression):
+    """Split a descriptor expression on its top level commas.
+
+    For tr(), the script tree is one sub_expressions.
+    """
+    sub_expressions = []
+    depth = 0
+    start = 0
+    for i, char in enumerate(expression):
+        if char in "({":
+            depth += 1
+        elif char in ")}":
+            depth -= 1
+        elif char == "," and depth == 0:
+            sub_expressions.append(expression[start:i])
+            start = i + 1
+    sub_expressions.append(expression[start:])
+    return sub_expressions
+
+
+def unwrap(expression, node):
+    """Return the expressions of node(...), or None if that is not it."""
+    prefix = f"{node}("
+    if expression.startswith(prefix) and expression.endswith(")"):
+        return split_expressions(expression[len(prefix):-1])
+    return None
+
+
+def parse_multi(expression, node):
+    """Parse a sortedmulti(k,key,...) or sortedmulti_a(k,key,...) node."""
+    sub_expressions = unwrap(expression, node)
+    if sub_expressions is None:
+        raise ValueError(f"Expected {node}(...), got: {expression}")
+    threshold, *keys = sub_expressions
+    if not threshold.isdigit():
+        raise ValueError(f"Threshold is not a number: {threshold}")
+    if len(keys) < 2:
+        raise ValueError("A multisig requires at least 2 keys")
+    stripped = []
+    for key in keys:
+        if not key.endswith(MULTIPATH_SUFFIX):
+            raise ValueError(f"Key '{key}' does not derive over {MULTIPATH_SUFFIX}")
+        stripped.append(key[:-len(MULTIPATH_SUFFIX)])
+    return int(threshold), stripped
+
+
+def analyze_descriptor(rpc, descriptor):
+    """Report what a multisig descriptor requires to spend.
+
+    Accepted shapes are wsh(sortedmulti(...)) and, for taproot,
+    tr(KEY,sortedmulti_a(...)) where KEY is either musig() of exactly the
+    keys in the leaf, so that spending by key path needs
+    every cosigner, or the NUMS point, which is provably unspendable.
+    Anything else is rejected.
+
+    Returns: address_type, threshold, keys, key_path (None for wsh, else
+    KEY_PATH_MUSIG or KEY_PATH_NUMS), and descriptor, the checksum-less body
+    with hardened markers normalised to h.
+    """
+    try:
+        info = rpc.getdescriptorinfo(descriptor)
+    except Exception as e:
+        raise ValueError(f"Invalid descriptor: {e}") from e
+    if len(info.get("multipath_expansion", [])) != 2:
+        raise ValueError("Descriptor does not expand to a receive and a change path")
+
+    body = descriptor.split("#")[0].replace("'", "h")
+    script = unwrap(body, "wsh")
+    if script is not None:
+        if len(script) != 1:
+            raise ValueError("wsh() takes a single script")
+        threshold, keys = parse_multi(script[0], "sortedmulti")
+        return {"address_type": "bech32", "threshold": threshold, "keys": keys, "key_path": None, "descriptor": body}
+
+    tree = unwrap(body, "tr")
+    if tree is None:
+        raise ValueError("Not a wsh() or tr() descriptor")
+    if len(tree) != 2:
+        raise ValueError("Taproot descriptor must be tr(KEY,sortedmulti_a(...))")
+    internal, leaf = tree
+    threshold, keys = parse_multi(leaf, "sortedmulti_a")
+    participants = None
+    if internal.endswith(MULTIPATH_SUFFIX):
+        participants = unwrap(internal[:-len(MULTIPATH_SUFFIX)], "musig")
+    if participants is not None and sorted(participants) == sorted(keys):
+        # MuSigPubkeyProvider sorts the participants before aggregating them
+        # (BIP 390), so the order they are written in does not matter.
+        key_path = KEY_PATH_MUSIG
+    elif internal in (NUMS_H, NUMS_H_XPUB):
+        key_path = KEY_PATH_NUMS
+    else:
+        raise ValueError("Taproot key path is neither musig() of exactly the keys in the leaf nor the NUMS point, so it may be spendable on its own")
+    return {"address_type": "bech32m", "threshold": threshold, "keys": keys, "key_path": key_path, "descriptor": body}
+
+
+def find_own_key(rpc, keys):
+    """Finds the keys owned by this wallet and the corresponding private key.
+
+    Use the origin information on the descriptor xpub to derive against unused(KEY )and compare,
+    and if that fails, compare the unused(KEY) directly against descriptor xpub.
+
+    Returns an empty list if none of them are ours, which is the expected answer for a
+    coordinator that does not contribute keys.
+
+    see #35377
+
+    """
+    found = []
+    for hdkey in rpc.gethdkeys():
+        if not any(d["desc"].startswith("unused(") for d in hdkey["descriptors"]):
+            continue
+        for candidate in keys:
+            xpub = candidate[candidate.index("]") + 1:] if candidate.startswith("[") else candidate
+            if xpub == hdkey["xpub"]:
+                # unused(KEY) at the same level as the descriptor uses it.
+                key = rpc.derivehdkey("m", hdkey=hdkey["xpub"], private=True)
+            elif candidate.startswith("["):
+                path = f"m/{candidate[10:candidate.index(']')]}"
+                key = rpc.derivehdkey(path, hdkey=hdkey["xpub"], private=True)
+                if f"{key['origin']}{key['xpub']}".replace("'", "h") != candidate:
+                    continue
+            else:
+                continue
+            found.append({"key": candidate,
+                          "private_key": f"{candidate[:candidate.index(']') + 1]}{key['xprv']}"
+                                         if candidate.startswith("[") else key["xprv"]})
+    return found
+
+
+def verify(rpc, setup):
+    """Check the descriptor we are about to import.
+
+    Reports what the descriptor requires to spend, which cosigner we are, and the first receive address,
+    which the participants compare with each other out of band.
+
+    Names are local, so any cosigner we have no name for is reported by
+    fingerprint.
+    """
+    if not setup["descriptor"]:
+        raise ValueError("There is no descriptor to verify yet")
+    policy = analyze_descriptor(rpc, setup["descriptor"])
+    ours = {own["key"] for own in find_own_key(rpc, policy["keys"])}
+    names = {cosigner["key"]: cosigner["name"] for cosigner in setup["cosigners"]}
+    receive, _change = rpc.deriveaddresses(setup["descriptor"], 0)
+
+    return {
+        "name": setup["name"],
+        "type": policy["address_type"],
+        "threshold": policy["threshold"],
+        "cosigners": [{"name": names.get(key), "fingerprint": key[1:9], "yours": key in ours}
+                      for key in policy["keys"]],
+        "holds_your_key": bool(ours),
+        "key_path": policy["key_path"],
+        "first_address": receive[0],
+    }

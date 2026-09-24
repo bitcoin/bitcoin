@@ -9,6 +9,7 @@ import os
 import sys
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_not_equal,
@@ -40,6 +41,9 @@ class MultisigWizardTest(BitcoinTestFramework):
         self.test_generate_key_encrypted()
         self.test_validate_key()
         self.test_add_cosigner()
+        self.test_assemble()
+        self.test_analyze_descriptor()
+        self.test_verify()
 
     def test_create_participant(self):
         self.log.info("Creating blank participant wallet with private keys")
@@ -194,6 +198,81 @@ class MultisigWizardTest(BitcoinTestFramework):
             assert_raises_message(ValueError, "The threshold must be between", self.wizard.assemble, wallet, setup, threshold)
         too_few = self.setup_cosigners(wallet, count=1)
         assert_raises_message(ValueError, "at least 2 keys", self.wizard.assemble, wallet, too_few, threshold=1)
+
+    def test_analyze_descriptor(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        setup = self.setup_cosigners(wallet)
+        keys = [cosigner["key"] for cosigner in setup["cosigners"]]
+        suffix = self.wizard.MULTIPATH_SUFFIX
+        paths = ",".join(f"{key}{suffix}" for key in keys)
+        taproot = self.wizard.assemble(wallet, setup, threshold=2, address_type="bech32m")
+        nums = f"tr({self.wizard.NUMS_H},sortedmulti_a(2,{paths}))"
+
+        assert_equal(self.wizard.analyze_descriptor(wallet, nums)["key_path"], self.wizard.KEY_PATH_NUMS)
+
+        # Warns when keypath does not have a valid NUMS nor is a K of K musig
+        outsider = self.node.get_wallet_rpc(self.wizard.create_wallet(self.node, "Outsider"))
+        stranger = self.wizard.generate_key(outsider)
+        for key_path in [f"{stranger}{suffix}",
+                         f"musig({','.join(keys[:2])}){suffix}"]:
+            assert_raises_message(ValueError, "may be spendable on its own", self.wizard.analyze_descriptor, wallet, f"tr({key_path},sortedmulti_a(2,{paths}))")
+
+        # TR descriptors generate same address regardless of key ordering
+        reordered = descsum_create(
+            f"tr(musig({','.join(reversed(keys))}){suffix},sortedmulti_a(2,{paths}))")
+        assert_equal(wallet.deriveaddresses(reordered, 0),
+                     wallet.deriveaddresses(taproot, 0))
+        assert_equal(self.wizard.analyze_descriptor(wallet, reordered)["key_path"],
+                     self.wizard.KEY_PATH_MUSIG)
+
+        # Invalid multisig descriptors
+        for bad, expected in [
+                (f"wpkh({keys[0]}{suffix})", "Not a wsh() or tr() descriptor"),
+                (f"wsh(multi(2,{paths}))", "Expected sortedmulti(...)"),
+                (f"tr(musig({','.join(keys)}){suffix},{{sortedmulti_a(2,{paths}),pk({keys[0]}{suffix})}})", "Expected sortedmulti_a(...)"),
+                (f"wsh(sortedmulti(2,{paths.replace('<0;1>', '0')}))", "does not expand to a receive and a change path")]:
+            assert_raises_message(ValueError, expected, self.wizard.analyze_descriptor, wallet, bad)
+
+        assert_raises_message(ValueError, "no descriptor to verify",
+                              self.wizard.verify, wallet, self.wizard.setup("Empty"))
+
+    def test_verify(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        setup = self.setup_cosigners(wallet)
+        descriptor = self.wizard.assemble(wallet, setup, threshold=2)
+        keys = [cosigner["key"] for cosigner in setup["cosigners"]]
+
+        summary = self.wizard.verify(wallet, setup)
+        assert_equal(summary["threshold"], 2)
+        assert_equal(summary["type"], "bech32")
+        assert_equal(summary["key_path"], None)
+        assert_equal([cosigner["fingerprint"] for cosigner in summary["cosigners"]],
+                     [key[1:9] for key in keys])
+
+        receive, change = wallet.deriveaddresses(descriptor, 0)
+        assert_equal(summary["first_address"], receive[0])
+        assert_not_equal(summary["first_address"], change[0])
+
+        for cosigner in setup["cosigners"]:
+            cosigner_summary = self.wizard.verify(self.node.get_wallet_rpc(cosigner["name"]), setup)
+            yours = [c for c in cosigner_summary["cosigners"] if c["yours"]]
+            assert_equal([c["name"] for c in yours], [cosigner["name"]])
+
+        coordinator_summary = self.wizard.verify(self.node.get_wallet_rpc("Coordinator"), setup)
+        assert_equal(coordinator_summary["holds_your_key"], False)
+        assert not any(c["yours"] for c in coordinator_summary["cosigners"])
+
+        received = self.wizard.setup("Family Vault")
+        received["descriptor"] = descriptor
+        bob = self.node.get_wallet_rpc(setup["cosigners"][1]["name"])
+        bare = self.wizard.verify(bob, received)
+        assert_equal(bare["threshold"], 2)
+        assert_equal(bare["holds_your_key"], True)
+        assert_equal(bare["cosigners"][1], {"name": None, "fingerprint": keys[1][1:9], "yours": True})
+
+        taproot = dict(setup)
+        self.wizard.assemble(wallet, taproot, threshold=2, address_type="bech32m")
+        assert_equal(self.wizard.verify(wallet, taproot)["key_path"], self.wizard.KEY_PATH_MUSIG)
 
 
 if __name__ == '__main__':
