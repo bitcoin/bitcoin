@@ -43,6 +43,7 @@
 #include <node/mini_miner.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
+#include <node/tx_collection.h>
 #include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
@@ -947,6 +948,18 @@ public:
     const NodeContext& m_node;
 };
 
+class TxCollectionImpl : public interfaces::TxCollection
+{
+public:
+    explicit TxCollectionImpl(std::unique_ptr<node::TxCollection> tx_collection)
+        : m_tx_collection(std::move(tx_collection))
+    {
+    }
+
+private:
+    std::unique_ptr<node::TxCollection> m_tx_collection;
+};
+
 class MinerImpl : public Mining
 {
 public:
@@ -1040,6 +1053,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    std::unique_ptr<interfaces::TxCollection> collectTxs(const std::vector<Wtxid>& wtxids) override
+    {
+        return std::make_unique<TxCollectionImpl>(block_template_manager().CreateTxCollection(wtxids));
     }
 
     const NodeContext* context() override { return &m_node; }
