@@ -41,7 +41,7 @@ constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
 struct MinedBlockStats {
     //! Block height.
     uint64_t m_height{0};
-    //! Weight of mempool transactions removed for this block (excluding coinbase).
+    //! Weight of block transactions whose wtxids matched mempool transactions (excluding coinbase).
     uint64_t m_removed_block_txs_weight{0};
     //! Total non-coinbase transaction weight in the block.
     uint64_t m_block_weight{0};

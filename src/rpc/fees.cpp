@@ -84,7 +84,7 @@ static RPCMethod estimatesmartfee()
                             {
                                 {RPCResult::Type::NUM, "block_height", "Block height"},
                                 {RPCResult::Type::NUM, "block_weight", "Total weight of non-coinbase transactions in the block"},
-                                {RPCResult::Type::NUM, "mempool_txs_weight", "Total weight of transactions removed from the mempool for this block"},
+                                {RPCResult::Type::NUM, "mempool_txs_weight", "Total weight of block transactions whose wtxids matched mempool transactions"},
                             }},
                     }},
         }},
