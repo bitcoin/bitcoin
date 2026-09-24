@@ -84,7 +84,7 @@ protected:
      * - EXPIRY (expired from mempool after -mempoolexpiry hours)
      * - SIZELIMIT (removed in size limiting if the mempool exceeds -maxmempool megabytes)
      * - REORG (removed during a reorg)
-     * - CONFLICT (removed because it conflicts with in-block transaction)
+     * - CONFLICT (removed because it conflicts with in-block transaction, including a same-txid witness variant)
      * - REPLACED (removed due to RBF replacement)
      *
      * This does not fire for transactions that are removed from the mempool
@@ -109,8 +109,7 @@ protected:
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
     /*
-     * Notifies listeners of transactions removed from the mempool as
-     * as a result of new block being connected.
+     * Notifies listeners of mempool transactions whose wtxids are in a newly connected block.
      * MempoolTransactionsRemovedForBlock will be fired before BlockConnected.
      *
      * Not fired while initial block download is active.
