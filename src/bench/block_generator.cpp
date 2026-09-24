@@ -5,10 +5,10 @@
 #include <bench/block_generator.h>
 
 #include <addresstype.h>
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
-#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
@@ -23,13 +23,13 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/util/script.h>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <validation.h>
 #include <versionbits.h>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -246,5 +246,36 @@ CBlock GenerateBlock(const CChainParams& params, const ScriptRecipe& rec, const 
     BlockValidationState state;
     Assert(CheckBlock(checked, state, params.GetConsensus()));
     return block;
+}
+
+CBlockUndo GenerateBlockUndo(const CBlock& block)
+{
+    assert(!block.vtx.empty());
+
+    std::vector<const CScript*> spendable_scripts;
+    for (const auto& tx : block.vtx) {
+        for (const auto& out : tx->vout) {
+            if (!out.scriptPubKey.IsUnspendable()) spendable_scripts.push_back(&out.scriptPubKey);
+        }
+    }
+    assert(!spendable_scripts.empty());
+
+    FastRandomContext rng{block.GetHash()};
+    CBlockUndo undo;
+    undo.vtxundo.reserve(block.vtx.size() - 1);
+    for (const auto& tx : block.vtx | std::views::drop(1)) {
+        assert(!tx->vin.empty());
+        const CAmount output_total{tx->GetValueOut()};
+        const CAmount input_total{output_total + std::min<CAmount>(1000, MAX_MONEY - output_total)};
+        const CAmount input_count{static_cast<CAmount>(tx->vin.size())};
+        auto& tx_undo{undo.vtxundo.emplace_back()};
+        tx_undo.vprevout.reserve(tx->vin.size());
+        for (size_t i{0}; i < tx->vin.size(); ++i) {
+            const CAmount value{input_total / input_count + (i == 0 ? input_total % input_count : 0)};
+            const auto& script{*spendable_scripts[rng.randrange<size_t>(spendable_scripts.size())]};
+            tx_undo.vprevout.emplace_back(CTxOut{value, script}, /*nHeight=*/1, /*fCoinBase=*/false);
+        }
+    }
+    return undo;
 }
 } // namespace benchmark
