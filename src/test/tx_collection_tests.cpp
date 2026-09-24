@@ -3,9 +3,14 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 #include <arith_uint256.h>
+#include <chain.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <node/block_template_manager.h>
+#include <node/miner.h>
 #include <node/tx_collection.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
@@ -15,6 +20,7 @@
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -122,6 +128,67 @@ BOOST_AUTO_TEST_CASE(add_missing_transactions)
     // Add tx_a at position 0 while resubmitting tx_b, which is already at position 1.
     collection->AddMissingTxs({tx_a, tx_b});
     BOOST_CHECK(collection->UnknownTxPos().empty());
+}
+
+BOOST_AUTO_TEST_CASE(template_preconditions)
+{
+    auto& manager{*m_node.block_template_manager};
+    auto& chainman{*m_node.chainman};
+    const auto tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->GetBlockHash())};
+    // Reuse the outputs across failure and success to check that errors clear.
+    std::string reason{"old reason"};
+    std::string debug{"old debug"};
+    auto collection{manager.CreateTxCollection({})};
+    BOOST_CHECK(!collection->MakeTemplate(uint256{1}, reason, debug));
+    BOOST_CHECK_EQUAL(reason, "inconclusive-not-best-prevblk");
+    BOOST_CHECK(!debug.empty());
+    auto block_template{collection->MakeTemplate(tip, reason, debug)};
+    BOOST_REQUIRE(block_template);
+    BOOST_CHECK(reason.empty());
+    BOOST_CHECK(debug.empty());
+    BOOST_CHECK(block_template->block.hashPrevBlock == tip);
+    BOOST_REQUIRE_EQUAL(block_template->block.vtx.size(), 1);
+    BOOST_CHECK(block_template->block.vtx[0]->IsCoinBase());
+}
+
+BOOST_FIXTURE_TEST_CASE(template_transactions, TestChain100Setup)
+{
+    // A valid parent and child make transaction order observable in validation.
+    const auto parent{CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 1, coinbaseKey,
+                                                    CScript() << OP_TRUE, 49 * COIN, /*submit=*/false)};
+    CMutableTransaction child;
+    child.vin.emplace_back(parent.GetHash(), 0);
+    child.vout.emplace_back(48 * COIN, CScript() << OP_TRUE);
+    const auto parent_ref{MakeTransactionRef(parent)}, child_ref{MakeTransactionRef(child)};
+    auto& manager{*m_node.block_template_manager};
+    auto& chainman{*m_node.chainman};
+    const auto tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->GetBlockHash())};
+    auto collection{manager.CreateTxCollection({parent_ref->GetWitnessHash(), child_ref->GetWitnessHash()})};
+    std::string reason;
+    std::string debug;
+    BOOST_CHECK(!collection->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK_EQUAL(reason, "missing-txs");
+    BOOST_CHECK(!debug.empty());
+
+    collection->AddMissingTxs({parent_ref, child_ref});
+    auto block_template{collection->MakeTemplate(tip, reason, debug)};
+    BOOST_REQUIRE(block_template);
+    BOOST_REQUIRE_EQUAL(block_template->block.vtx.size(), 3);
+    BOOST_CHECK(block_template->block.vtx[1] == parent_ref);
+    BOOST_CHECK(block_template->block.vtx[2] == child_ref);
+
+    auto reversed{manager.CreateTxCollection({child_ref->GetWitnessHash(), parent_ref->GetWitnessHash()})};
+    reversed->AddMissingTxs({parent_ref, child_ref});
+    BOOST_CHECK(!reversed->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK_EQUAL(reason, "bad-txns-inputs-missingorspent");
+
+    const auto mined{CreateAndProcessBlock({parent, child}, CScript() << OP_TRUE)};
+    const auto new_tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->GetBlockHash())};
+    BOOST_REQUIRE(new_tip == mined.GetHash());
+    BOOST_CHECK(!collection->MakeTemplate(tip, reason, debug));
+    BOOST_CHECK_EQUAL(reason, "inconclusive-not-best-prevblk");
+    BOOST_CHECK(!collection->MakeTemplate(new_tip, reason, debug));
+    BOOST_CHECK_EQUAL(reason, "bad-txns-BIP30");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
