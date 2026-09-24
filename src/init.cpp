@@ -363,15 +363,6 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, record fee estimations and unregister
-    // fee estimator from validation interface.
-    if (node.fee_estimator_man) {
-        node.fee_estimator_man->ShutdownFlush();
-        if (node.validation_signals) {
-            node.validation_signals->UnregisterValidationInterface(node.fee_estimator_man.get());
-        }
-    }
-
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         LOCK(cs_main);
@@ -386,6 +377,14 @@ void Shutdown(NodeContext& node)
     // CValidationInterface callbacks, flush them...
     if (node.validation_signals) node.validation_signals->FlushBackgroundCallbacks();
 
+    // Once callbacks drain, drop tracked transactions, save estimates, and unregister the estimator
+    if (node.fee_estimator_man) {
+        node.fee_estimator_man->ShutdownFlush();
+        if (node.validation_signals) {
+            node.validation_signals->UnregisterValidationInterface(node.fee_estimator_man.get());
+        }
+    }
+
     // Stop and delete all indexes only after flushing background callbacks.
     for (auto* index : node.indexes) index->Stop();
     if (g_txindex) g_txindex.reset();
@@ -394,12 +393,7 @@ void Shutdown(NodeContext& node)
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
 
-    // Any future callbacks will be dropped. This should absolutely be safe - if
-    // missing a callback results in an unrecoverable situation, unclean shutdown
-    // would too. The only reason to do the above flushes is to let the wallet catch
-    // up with our current chain to avoid any strange pruning edge cases and make
-    // next startup faster by avoiding rescan.
-
+    // Callbacks queued by this final chainstate flush will not run during shutdown
     if (node.chainman) {
         LOCK(cs_main);
         for (const auto& chainstate : node.chainman->m_chainstates) {
