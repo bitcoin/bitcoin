@@ -221,6 +221,7 @@ def analyze_descriptor(rpc, descriptor):
     if len(info.get("multipath_expansion", [])) != 2:
         raise ValueError("Descriptor does not expand to a receive and a change path")
 
+    # Normalise hardened markers so the key substitution in import_descriptor matches; see #35377.
     body = descriptor.split("#")[0].replace("'", "h")
     script = unwrap(body, "wsh")
     if script is not None:
@@ -310,3 +311,38 @@ def verify(rpc, setup):
         "key_path": policy["key_path"],
         "first_address": receive[0],
     }
+
+def import_descriptor(rpc, setup):
+    """Import the shared descriptor into this wallet.
+
+    Importdescriptors rejects a descriptor holding no
+    private keys when the wallet has private keys enabled, so a participant
+    swaps their own key expression for the private one before importing,
+    and the import then warns that the cosigners' keys are public. See
+    #35377, which does this substitution in the wallet instead.
+
+    The wallet stores the two paths separately, so
+    what listdescriptors reports afterwards is not the descriptor that was
+    shared and verified. See #36133.
+
+    A multipath import cannot carry a label, so the wallet
+    name and the cosigner names stay outside the wallet. See #36126.
+    """
+    if not setup["descriptor"]:
+        raise ValueError("There is no descriptor to import yet")
+    policy = analyze_descriptor(rpc, setup["descriptor"])
+    info = rpc.getwalletinfo()
+    if info.get("unlocked_until") == 0:
+        raise ValueError("This wallet is encrypted and locked; unlock it with walletpassphrase")
+    ours = find_own_key(rpc, policy["keys"])
+    if not ours and info["private_keys_enabled"]:
+        raise ValueError("This wallet holds none of the keys in the descriptor, so it cannot import it; a wallet that only watches the multisig needs disable_private_keys")
+
+    body = policy["descriptor"]
+    for own in ours:
+        body = body.replace(own["key"], own["private_key"])
+    descriptor = f"{body}#{rpc.getdescriptorinfo(body)['checksum']}"
+    result = rpc.importdescriptors([{"desc": descriptor, "active": True, "timestamp": "now"}])[0]
+    if not result["success"]:
+        raise ValueError(f"Import failed: {result['error']['message']}")
+    return result.get("warnings", [])

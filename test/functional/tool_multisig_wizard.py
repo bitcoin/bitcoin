@@ -44,6 +44,8 @@ class MultisigWizardTest(BitcoinTestFramework):
         self.test_assemble()
         self.test_analyze_descriptor()
         self.test_verify()
+        self.test_import()
+        self.test_import_second_multisig()
 
     def test_create_participant(self):
         self.log.info("Creating blank participant wallet with private keys")
@@ -273,6 +275,75 @@ class MultisigWizardTest(BitcoinTestFramework):
         taproot = dict(setup)
         self.wizard.assemble(wallet, taproot, threshold=2, address_type="bech32m")
         assert_equal(self.wizard.verify(wallet, taproot)["key_path"], self.wizard.KEY_PATH_MUSIG)
+
+    def test_import(self):
+        wallet = self.node.get_wallet_rpc("Alice")
+        setup = self.setup_cosigners(wallet)
+        descriptor = self.wizard.assemble(wallet, setup, threshold=2)
+        first_address = self.wizard.verify(wallet, setup)["first_address"]
+
+        participant = self.node.get_wallet_rpc(setup["cosigners"][0]["name"])
+        warnings = self.wizard.import_descriptor(participant, setup)
+        # `importdescriptors` warn that other cosigner keys are public
+        assert any("Not all private keys provided" in warning for warning in warnings), warnings
+
+        # verify participant address
+        receive, change = participant.deriveaddresses(descriptor, 0)
+        assert_equal(participant.getnewaddress(address_type="bech32"), receive[0])
+        assert_equal(participant.getrawchangeaddress(address_type="bech32"), change[0])
+
+        second, third = (self.node.get_wallet_rpc(c["name"]) for c in setup["cosigners"][1:])
+
+        # A watch-only coordinator imports without private keys
+        coordinator = self.node.get_wallet_rpc(
+            self.wizard.create_wallet(self.node, "Watcher", holds_key=False))
+        warnings = self.wizard.import_descriptor(coordinator, setup)
+        assert not any("private keys" in warning for warning in warnings), warnings
+        assert_equal(coordinator.getnewaddress(address_type="bech32"), first_address)
+
+        # sanity checks
+        outsider = self.node.get_wallet_rpc(self.wizard.create_wallet(self.node, "Bystander"))
+        self.wizard.generate_key(outsider)
+        assert_raises_message(ValueError, "holds none of the keys in the descriptor", self.wizard.import_descriptor, outsider, setup)
+
+        assert_raises_message(ValueError, "no descriptor to import yet", self.wizard.import_descriptor, wallet, self.wizard.setup("Empty"))
+
+        # taproot import
+        taproot_setup = self.setup_cosigners(wallet)
+        self.wizard.assemble(wallet, taproot_setup, threshold=2, address_type="bech32m")
+        expected = self.wizard.verify(wallet, taproot_setup)["first_address"]
+        taproot_wallet = self.node.get_wallet_rpc(taproot_setup["cosigners"][0]["name"])
+        self.wizard.import_descriptor(taproot_wallet, taproot_setup)
+        assert_equal(taproot_wallet.getnewaddress(address_type="bech32m"), expected)
+
+        # Wallet should remain manually managed.
+        assert_equal(participant.getwalletinfo()["blank"], True)
+        second_address = participant.deriveaddresses(descriptor, [1, 1])[0][0]
+        participant.encryptwallet("secret")
+        assert_equal(participant.getnewaddress(address_type="bech32"), second_address)
+
+    def test_import_second_multisig(self):
+        """A wallet that already holds a multisig can join another one."""
+        wallet = self.node.get_wallet_rpc("Alice")
+        first = self.setup_cosigners(wallet)
+        self.wizard.assemble(wallet, first, threshold=2)
+        wallets = [self.node.get_wallet_rpc(cosigner["name"]) for cosigner in first["cosigners"]]
+        for cosigner_wallet in wallets:
+            self.wizard.import_descriptor(cosigner_wallet, first)
+
+        assert self.wizard.verify(wallets[0], first)["holds_your_key"]
+
+        second = self.wizard.setup("Second Vault")
+        for cosigner, cosigner_wallet in zip(first["cosigners"], wallets):
+            key = self.wizard.generate_key(cosigner_wallet, account=1)
+            self.wizard.add_cosigner(wallet, second, cosigner["name"], key, account=1)
+        self.wizard.assemble(wallet, second, threshold=2)
+        expected = self.wizard.verify(wallets[0], second)["first_address"]
+        for cosigner_wallet in wallets:
+            self.wizard.import_descriptor(cosigner_wallet, second)
+            assert_equal(cosigner_wallet.deriveaddresses(second["descriptor"], 0)[0][0], expected)
+
+        assert_equal(wallets[0].getnewaddress(address_type="bech32"), expected)
 
 
 if __name__ == '__main__':
