@@ -107,11 +107,15 @@ public:
  *
  * Usage:
  * - Call Mining::collectTxs() with the requested wtxids in final block order.
+ * - Use unknownTxPos() to learn which transactions are still missing.
  */
 class TxCollection
 {
 public:
     virtual ~TxCollection() = default;
+
+    //! Return the zero-based positions of transactions that are still missing.
+    virtual std::vector<uint32_t> unknownTxPos() = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)

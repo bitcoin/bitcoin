@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <util/hasher.h>
 
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
@@ -19,6 +20,8 @@ class TxCollection
 {
 public:
     TxCollection(std::vector<Wtxid> wtxids, CTxMemPool& mempool);
+    /** Return zero-based positions for requested transactions that are still missing. */
+    std::vector<uint32_t> UnknownTxPos() const;
 
 private:
     /** Requested transaction order as provided by the client. */
