@@ -102,6 +102,18 @@ public:
     virtual void interruptWait() = 0;
 };
 
+/**
+ * Collect transactions in a client-specified order.
+ *
+ * Usage:
+ * - Call Mining::collectTxs() with the requested wtxids in final block order.
+ */
+class TxCollection
+{
+public:
+    virtual ~TxCollection() = default;
+};
+
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
 class Mining
@@ -203,6 +215,18 @@ public:
      *                     transaction if found, otherwise nullptr
      */
     virtual std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) = 0;
+
+    /**
+     * Look up transactions by witness id and keep references to any that are
+     * currently in the mempool.
+     *
+     * @param[in] wtxids transaction witness ids in the requested block order
+     * @returns          a collection holding the available transactions and
+     *                   tracking which requested transactions are missing
+     * @throws std::runtime_error if the same wtxid is requested more than once,
+     *         or the list exceeds MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT.
+     */
+    virtual std::unique_ptr<TxCollection> collectTxs(const std::vector<Wtxid>& wtxids) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
