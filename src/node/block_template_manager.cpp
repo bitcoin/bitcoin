@@ -52,7 +52,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
 
 std::unique_ptr<TxCollection> BlockTemplateManager::CreateTxCollection(std::vector<Wtxid> wtxids)
 {
-    return std::make_unique<TxCollection>(std::move(wtxids), m_mempool);
+    return std::make_unique<TxCollection>(std::move(wtxids), m_chainman, m_mempool);
 }
 
 bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
