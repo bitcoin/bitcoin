@@ -855,7 +855,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, tx_relay.m_tx_inventory_mutex);
 
     /** Kick off initial headers sync with a peer if not yet started. */
-    void MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeState& state,
+    void MaybeSendInitialGetHeaders(CNode& node, Peer& peer, CNodeState& state,
                                     bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
                                     const Consensus::Params& consensusParams)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
@@ -6188,9 +6188,7 @@ void PeerManagerImpl::MaybeSendMempoolResponse(Peer::TxRelay& tx_relay, Peer& pe
         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
             continue;
         }
-        if (tx_relay.m_bloom_filter) {
-            if (!tx_relay.m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-        }
+        if (tx_relay.m_bloom_filter && !tx_relay.m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
         tx_relay.m_tx_inventory_known_filter.insert(inv.hash);
         vInv.push_back(inv);
         if (vInv.size() == MAX_INV_SZ) {
@@ -6213,7 +6211,7 @@ void PeerManagerImpl::MaybeSendTxInventory(Peer::TxRelay& tx_relay, Peer& peer, 
         auto& invs = tx_relay.m_tx_inventory_to_send;
         std::vector<CTransactionRef> res;
 
-        if (invs.size() == 0) return res;
+        if (invs.empty()) return res;
 
         // if previous allocations were excessive, shrink to the current size
         if (invs.capacity() > 2 * invs.size()) invs.shrink_to_fit();
@@ -6256,7 +6254,7 @@ void PeerManagerImpl::MaybeSendTxInventory(Peer::TxRelay& tx_relay, Peer& peer, 
     }
 }
 
-void PeerManagerImpl::MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeState& state,
+void PeerManagerImpl::MaybeSendInitialGetHeaders(CNode& node, Peer& peer, CNodeState& state,
                                                  bool sync_blocks_and_headers_from_peer, std::chrono::microseconds current_time,
                                                  const Consensus::Params& consensusParams)
 {
@@ -6274,8 +6272,7 @@ void PeerManagerImpl::MaybeSendInitialGetheaders(CNode& node, Peer& peer, CNodeS
                the peer's known best block.  This wouldn't be possible
                if we requested starting at m_chainman.m_best_header and
                got back an empty response.  */
-            if (pindexStart->pprev)
-                pindexStart = pindexStart->pprev;
+            if (pindexStart->pprev) pindexStart = pindexStart->pprev;
             if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
                 LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
 
@@ -6390,7 +6387,7 @@ void PeerManagerImpl::MaybeSendBlockAnnouncements(CNode& node, Peer& peer, CNode
     bool fRevertToInv = ((!peer.m_prefers_headers &&
                           (!state.m_requested_hb_cmpctblocks || peer.m_blocks_for_headers_relay.size() > 1)) ||
                          peer.m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
-    const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
+    const CBlockIndex* pBestIndex = nullptr; // last header queued for delivery
     ProcessBlockAvailability(node.GetId()); // ensure pindexBestKnownBlock is up-to-date
 
     if (!fRevertToInv) {
@@ -6510,8 +6507,8 @@ bool PeerManagerImpl::CheckBlockFlightTimeout(CNode& node, CNodeState& state,
     // We compensate for other peers to prevent killing off peers due to our own downstream link
     // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
     // to unreasonably increase our timeout.
-    if (state.vBlocksInFlight.size() > 0) {
-        QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
+    if (!state.vBlocksInFlight.empty()) {
+        QueuedBlock& queuedBlock = state.vBlocksInFlight.front();
         int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
         if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
             LogInfo("Timeout downloading block %s, %s", queuedBlock.pindex->GetBlockHash().ToString(), node.DisconnectMsg());
@@ -6546,9 +6543,7 @@ bool PeerManagerImpl::CheckBlockSyncTimeouts(CNode& node, Peer& peer, CNodeState
         node.fDisconnect = true;
         return true;
     }
-    if (CheckHeadersSyncTimeout(node, peer, state, current_time)) return true;
-
-    return false;
+    return CheckHeadersSyncTimeout(node, peer, state, current_time);
 }
 
 bool PeerManagerImpl::CheckHeadersSyncTimeout(CNode& node, Peer& peer, CNodeState& state,
@@ -6622,18 +6617,16 @@ void PeerManagerImpl::QueueBlocksGetData(CNode& node, Peer& peer, CNodeState& st
                 get_inflight_budget(),
                 vToDownload, from_tip, historical_blocks->second);
         }
-        for (const CBlockIndex *pindex : vToDownload) {
+        for (const CBlockIndex* pindex : vToDownload) {
             uint32_t nFetchFlags = GetFetchFlags(peer);
             vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
             BlockRequested(node.GetId(), *pindex);
             LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                      pindex->nHeight, node.GetId());
         }
-        if (state.vBlocksInFlight.empty() && staller != -1) {
-            if (State(staller)->m_stalling_since == 0us) {
-                State(staller)->m_stalling_since = current_time;
-                LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
-            }
+        if (state.vBlocksInFlight.empty() && staller != -1 && State(staller)->m_stalling_since == 0us) {
+            State(staller)->m_stalling_since = current_time;
+            LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
         }
     }
 }
@@ -6673,8 +6666,7 @@ void PeerManagerImpl::MaybeSendGetData(CNode& node, Peer& peer, CNodeState& stat
     //
     QueueTxGetData(node, peer, current_time, vGetData);
 
-    if (!vGetData.empty())
-        MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
+    if (!vGetData.empty()) MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
 }
 
 void PeerManagerImpl::MaybeSendTxMessages(CNode& node, Peer& peer, std::vector<CInv>& vInv,
@@ -6685,13 +6677,13 @@ void PeerManagerImpl::MaybeSendTxMessages(CNode& node, Peer& peer, std::vector<C
 
     if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
         LOCK(tx_relay->m_tx_inventory_mutex);
-        const bool fSendTrickle{ScheduleTxRelayTrickle(*tx_relay, node, current_time)};
+        if (ScheduleTxRelayTrickle(*tx_relay, node, current_time)) {
+            // Respond to BIP35 mempool requests
+            MaybeSendMempoolResponse(*tx_relay, peer, node, vInv);
 
-        // Respond to BIP35 mempool requests
-        if (fSendTrickle) MaybeSendMempoolResponse(*tx_relay, peer, node, vInv);
-
-        // Determine transactions to relay
-        if (fSendTrickle) MaybeSendTxInventory(*tx_relay, peer, node, vInv);
+            // Determine transactions to relay
+            MaybeSendTxInventory(*tx_relay, peer, node, vInv);
+        }
     }
 }
 
@@ -6711,7 +6703,8 @@ bool PeerManagerImpl::ComputeSyncBlocksAndHeaders(const CNode& node, const Peer&
     // in IBD (once out of IBD, we sync from all peers).
     if (state.fPreferredDownload) {
         return true;
-    } else if (CanServeBlocks(peer) && !node.IsAddrFetchConn()) {
+    }
+    if (CanServeBlocks(peer) && !node.IsAddrFetchConn()) {
         // Typically this is an inbound peer. If we don't have any outbound
         // peers, or if we aren't downloading any blocks from such peers,
         // then allow block downloads from this peer, too.
@@ -6721,9 +6714,7 @@ bool PeerManagerImpl::ComputeSyncBlocksAndHeaders(const CNode& node, const Peer&
         // the latest blocks is from an inbound peer, we have to be sure to
         // eventually download it (and not just wait indefinitely for an
         // outbound peer to have it).
-        if (m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty()) {
-            return true;
-        }
+        return m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty();
     }
     return false;
 }
@@ -6749,8 +6740,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     }
 
     // Don't send anything until the version handshake is complete
-    if (!node.fSuccessfullyConnected || node.fDisconnect)
-        return true;
+    if (!node.fSuccessfullyConnected || node.fDisconnect) return true;
 
     const auto now{NodeClock::now()};
     const auto current_time{GetTime<std::chrono::microseconds>()};
@@ -6784,11 +6774,11 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     {
         LOCK(cs_main);
 
-        CNodeState &state = *State(node.GetId());
+        CNodeState& state = *State(node.GetId());
 
         const bool sync_blocks_and_headers_from_peer{ComputeSyncBlocksAndHeaders(node, peer, state)};
 
-        MaybeSendInitialGetheaders(node, peer, state, sync_blocks_and_headers_from_peer, current_time, consensusParams);
+        MaybeSendInitialGetHeaders(node, peer, state, sync_blocks_and_headers_from_peer, current_time, consensusParams);
 
         //
         // Try sending block announcements via headers
@@ -6802,8 +6792,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         MaybeSendBlockInv(node, peer, vInv);
 
         MaybeSendTxMessages(node, peer, vInv, current_time);
-        if (!vInv.empty())
-            MakeAndPushMessage(node, NetMsgType::INV, vInv);
+        if (!vInv.empty()) MakeAndPushMessage(node, NetMsgType::INV, vInv);
 
         if (CheckBlockSyncTimeouts(node, peer, state, current_time, now, consensusParams)) return true;
 
