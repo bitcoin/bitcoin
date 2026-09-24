@@ -9,6 +9,7 @@
 #include <primitives/block.h>
 #include <streams.h>
 #include <uint256.h>
+#include <undo.h>
 
 #include <cstddef>
 #include <memory>
@@ -86,6 +87,10 @@ CBlock GenerateBlock(
     const CChainParams& chain_params = *CChainParams::RegTest(CChainParams::RegTestOptions{}),
     const ScriptRecipe& = WITNESS_RECIPE,
     const uint256& seed = {});
+
+//! Generate synthetic undo coins for a benchmark block's non-coinbase inputs.
+//! The generated inputs refer to random outpoints, so this data is for benchmarks, not chain validation.
+CBlockUndo GenerateBlockUndo(const CBlock& block);
 } // namespace benchmark
 
 #endif // BITCOIN_BENCH_BLOCK_GENERATOR_H
