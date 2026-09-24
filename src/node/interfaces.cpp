@@ -956,6 +956,11 @@ public:
     {
     }
 
+    std::vector<uint32_t> unknownTxPos() override
+    {
+        return m_tx_collection->UnknownTxPos();
+    }
+
 private:
     std::unique_ptr<node::TxCollection> m_tx_collection;
 };
