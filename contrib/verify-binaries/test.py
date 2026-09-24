@@ -66,7 +66,7 @@ def test_inactive_signature_quorum():
 
     def verify_fake_gpg(parser, options: list[str], *sigs: str, min_good_sigs: int = 1):
         # Every key is explicitly trusted, so only its inactive status can exclude it
-        args, _ = parser.parse_known_args([
+        args = parser.parse_args([
             *options,
             '--min-good-sigs', str(min_good_sigs),
             '--trusted-keys', ','.join(sig.split()[1] for sig in (active, expired, revoked, revoked_expired)),
@@ -87,7 +87,7 @@ def test_inactive_signature_quorum():
             parser = verify.build_parser()
 
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, expired)
-        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Count expired signatures when allowed and exclude them otherwise
+        assert result == (verify.ReturnCode.SUCCESS if allow_expired else verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS)
         assert good_trusted == []
         assert good_untrusted == []
         assert [sig.key for sig in expired_sigs] == ['1111222233334444']
@@ -108,7 +108,7 @@ def test_inactive_signature_quorum():
             "SigData('1111222233334444', 'Expired Builder', trusted=False, status='expired')"]
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=2)
-        assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS  # TODO: Exclude revoked signatures and honor the expired-key opt-in
+        assert result == (verify.ReturnCode.SUCCESS if allow_expired else verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS)
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
