@@ -411,10 +411,10 @@ std::vector<RemovedMempoolTransactionInfo> CTxMemPool::removeForBlock(const std:
     if (mapTx.size() || mapNextTx.size() || mapDeltas.size()) {
         txs_removed_for_block.reserve(vtx.size());
         for (const auto& tx : vtx) {
-            txiter it = mapTx.find(tx->GetHash());
-            if (it != mapTx.end()) {
-                txs_removed_for_block.emplace_back(*it);
-                removeUnchecked(it, MemPoolRemovalReason::BLOCK);
+            if (const auto it{mapTx.find(tx->GetHash())}; it != mapTx.end()) {
+                const bool mined{it->GetTx().GetWitnessHash() == tx->GetWitnessHash()};
+                if (mined) txs_removed_for_block.emplace_back(*it);
+                removeUnchecked(it, mined ? MemPoolRemovalReason::BLOCK : MemPoolRemovalReason::CONFLICT);
             }
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());

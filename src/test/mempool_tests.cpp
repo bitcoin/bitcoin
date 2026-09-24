@@ -83,12 +83,12 @@ BOOST_AUTO_TEST_CASE(remove_for_block_witness_mismatch)
     m_node.validation_signals->UnregisterValidationInterface(&subscriber);
 
     BOOST_CHECK(!pool.exists(local_tx->GetHash()));
-    BOOST_CHECK(!removed.empty()); // TODO: A different witness variant was not mined.
-    BOOST_CHECK(subscriber.removals.empty()); // TODO: A non-mined local variant should trigger a conflict notification.
+    BOOST_CHECK(removed.empty());
+    BOOST_CHECK(subscriber.removals == std::vector{std::make_pair(local_tx->GetWitnessHash(), MemPoolRemovalReason::CONFLICT)});
     estimator.processBlock(removed, 1);
     EstimationResult result;
     estimator.estimateRawFee(1, 0.5, FeeEstimateHorizon::MED_HALFLIFE, &result);
-    BOOST_CHECK_EQUAL(result.fail.totalConfirmed, 1); // TODO: The local variant's feerate bucket was not confirmed.
+    BOOST_CHECK_EQUAL(result.fail.totalConfirmed, 0); // A witness mismatch must not record the local variant as confirmed.
 }
 
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
