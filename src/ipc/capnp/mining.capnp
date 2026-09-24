@@ -34,6 +34,7 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
 interface TxCollection $Proxy.wrap("interfaces::TxCollection") {
     destroy @0 (context :Proxy.Context) -> ();
     unknownTxPos @1 (context: Proxy.Context) -> (result: List(UInt32));
+    addMissingTxs @2 (context: Proxy.Context, txs: List(Data)) -> ();
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {

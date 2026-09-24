@@ -91,12 +91,27 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 assert_equal([tx.wtxid_hex for tx in remote_block.vtx[1:]], [shared_tx["wtxid"], missing_tx["wtxid"]])
 
                 requested_wtxids = [tx.wtxid for tx in remote_block.vtx[1:]]
+                raw_txs = [tx.serialize() for tx in remote_block.vtx[1:]]
                 tx_collection = await mining_collect_txs(mining0, stack, ctx0, requested_wtxids)
 
                 # The first transaction is already in node's mempool, but
                 # the child transaction only exists on the disconnected
                 # remote node.
                 assert_equal(await tx_collection_unknown_pos(tx_collection, ctx0), [1])
+
+                self.log.debug("Reject null transactions in addMissingTxs(), leaving the collection unchanged")
+                # An empty Data field deserializes to a null CTransactionRef.
+                try:
+                    await tx_collection.addMissingTxs(ctx0, [raw_txs[1], b""])
+                    raise AssertionError("addMissingTxs unexpectedly accepted a null transaction")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: unexpected null transaction")
+                    assert_equal(e.type, "FAILED")
+                assert_equal(await tx_collection_unknown_pos(tx_collection, ctx0), [1])
+
+                self.log.debug("Add the missing transaction")
+                await tx_collection.addMissingTxs(ctx0, [raw_txs[1]])
+                assert_equal(await tx_collection_unknown_pos(tx_collection, ctx0), [])
 
         asyncio.run(capnp.run(async_routine()))
 

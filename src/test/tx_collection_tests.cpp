@@ -81,4 +81,47 @@ BOOST_AUTO_TEST_CASE(unknown_tx_positions_ignore_mempool_changes)
     BOOST_CHECK(manager.CreateTxCollection({})->UnknownTxPos().empty());
 }
 
+BOOST_AUTO_TEST_CASE(add_missing_transactions)
+{
+    // Use different locktimes to give the transactions distinct txids and wtxids;
+    // locktime behavior itself is not being tested.
+    CMutableTransaction tx;
+    tx.nLockTime = 1;
+    const auto tx_a{MakeTransactionRef(tx)};
+    const auto wtxid_a{tx_a->GetWitnessHash()};
+    tx.nLockTime = 2;
+    const auto tx_b{MakeTransactionRef(tx)};
+    const auto wtxid_b{tx_b->GetWitnessHash()};
+    tx.nLockTime = 3;
+    const auto tx_c{MakeTransactionRef(tx)};
+    const auto wtxid_c{tx_c->GetWitnessHash()};
+    auto collection{m_node.block_template_manager->CreateTxCollection({wtxid_a, wtxid_b})};
+
+    // An empty submission leaves both positions missing.
+    collection->AddMissingTxs({});
+    BOOST_CHECK((collection->UnknownTxPos() == std::vector<uint32_t>{0, 1}));
+
+    // A rejected batch must also leave the collection unchanged: tx_a must still
+    // be missing, even though it is one of the requested transactions.
+    BOOST_CHECK_EXCEPTION(collection->AddMissingTxs({tx_a, tx_c}), std::runtime_error,
+                          HasReason{"unexpected wtxid " + wtxid_c.ToString()});
+    BOOST_CHECK((collection->UnknownTxPos() == std::vector<uint32_t>{0, 1}));
+    BOOST_CHECK_EXCEPTION(collection->AddMissingTxs({tx_a, nullptr}), std::runtime_error,
+                          HasReason{"unexpected null transaction"});
+    BOOST_CHECK((collection->UnknownTxPos() == std::vector<uint32_t>{0, 1}));
+    BOOST_CHECK_EXCEPTION(collection->AddMissingTxs({tx_a, tx_a}), std::runtime_error,
+                          HasReason{"duplicate wtxid " + wtxid_a.ToString()});
+    BOOST_CHECK((collection->UnknownTxPos() == std::vector<uint32_t>{0, 1}));
+    BOOST_CHECK_EXCEPTION(collection->AddMissingTxs({tx_a, tx_a, tx_a}), std::runtime_error,
+                          HasReason{"too many transactions (3 > 2)"});
+    BOOST_CHECK((collection->UnknownTxPos() == std::vector<uint32_t>{0, 1}));
+
+    // Submitting tx_b fills position 1, leaving only position 0 missing.
+    collection->AddMissingTxs({tx_b});
+    BOOST_CHECK(collection->UnknownTxPos() == std::vector<uint32_t>{0});
+    // Add tx_a at position 0 while resubmitting tx_b, which is already at position 1.
+    collection->AddMissingTxs({tx_a, tx_b});
+    BOOST_CHECK(collection->UnknownTxPos().empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
