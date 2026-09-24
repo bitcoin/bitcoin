@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 namespace node {
@@ -44,6 +45,7 @@ TxCollection::TxCollection(std::vector<Wtxid> wtxids, CTxMemPool& mempool)
 
 std::vector<uint32_t> TxCollection::UnknownTxPos() const
 {
+    LOCK(m_mutex);
     std::vector<uint32_t> result;
     for (size_t i{0}; i < m_wtxids.size(); ++i) {
         // Every requested wtxid is a key (added in the constructor), so at()
@@ -51,5 +53,34 @@ std::vector<uint32_t> TxCollection::UnknownTxPos() const
         if (!m_transactions.at(m_wtxids[i])) result.push_back(static_cast<uint32_t>(i));
     }
     return result;
+}
+
+void TxCollection::AddMissingTxs(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    // Reject a list with more transactions than the whole collection.
+    // Ideally the IPC layer would enforce a limit based on the maximum block
+    // size before deserializing the transactions, but it currently cannot.
+    if (txs.size() > m_transactions.size()) {
+        throw std::runtime_error(strprintf("too many transactions (%d > %d)", txs.size(), m_transactions.size()));
+    }
+    // Check for null entries and unexpected or duplicate wtxids before adding any
+    // transaction, so a failed call leaves the collection unchanged.
+    std::unordered_set<Wtxid, SaltedWtxidHasher> seen;
+    seen.reserve(txs.size());
+    for (const auto& tx : txs) {
+        if (!tx) throw std::runtime_error("unexpected null transaction");
+        const auto& wtxid{tx->GetWitnessHash()};
+        if (!m_transactions.contains(wtxid)) {
+            throw std::runtime_error(strprintf("unexpected wtxid %s", wtxid.ToString()));
+        }
+        if (!seen.insert(wtxid).second) {
+            throw std::runtime_error(strprintf("duplicate wtxid %s", wtxid.ToString()));
+        }
+    }
+    for (const auto& tx : txs) {
+        auto& entry{m_transactions.at(tx->GetWitnessHash())};
+        if (!entry) entry = tx;
+    }
 }
 } // namespace node
