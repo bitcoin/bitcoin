@@ -33,16 +33,22 @@ public:
     virtual ~BlockTemplate() = default;
 
     virtual CBlockHeader getBlockHeader() = 0;
-    // Block contains a dummy coinbase transaction that should not be used and
-    // it may not match a transaction constructed from getCoinbaseTx().
+    /** Return the block currently stored in the template.
+     * Initially contains a node-generated dummy coinbase that should not be
+     * used for mining. For templates from Mining::createNewBlock(), the
+     * dummy may not match a transaction constructed from getCoinbaseTx().
+     * A call to submitSolution() replaces the stored coinbase. */
     virtual CBlock getBlock() = 0;
 
-    // Fees per transaction, not including coinbase transaction.
+    // Fees per transaction, not including coinbase transaction. Throws for
+    // externally generated templates.
     virtual std::vector<CAmount> getTxFees() = 0;
-    // Sigop cost per transaction, not including coinbase transaction.
+    // Sigop cost per transaction, not including coinbase transaction. Throws
+    // for externally generated templates.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
-    /** Return fields needed to construct a coinbase transaction */
+    /** Return fields needed to construct a coinbase transaction.
+     * Throws for externally generated templates. */
     virtual node::CoinbaseTx getCoinbaseTx() = 0;
 
     /**
@@ -93,22 +99,29 @@ public:
      *
      * On testnet this will additionally return a template with difficulty 1 if
      * the tip is more than 20 minutes old.
+     *
+     * Throws for externally generated templates.
      */
     virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}) = 0;
 
     /**
      * Interrupts the current wait for the next block template.
-    */
+     *
+     * Throws for externally generated templates.
+     */
     virtual void interruptWait() = 0;
 };
 
 /**
- * Collect transactions in a client-specified order.
+ * Collect transactions in a client-specified order and later assemble and
+ * validate them as a block template.
  *
  * Usage:
  * - Call Mining::collectTxs() with the requested wtxids in final block order.
  * - Use unknownTxPos() to learn which transactions are still missing.
  * - Provide missing transactions with addMissingTxs().
+ * - Once all requested transactions are available, call makeTemplate() to
+ *   validate the requested prevhash and build a block template.
  */
 class TxCollection
 {
@@ -130,6 +143,34 @@ public:
      *         list with more transactions than the whole collection.
      */
     virtual void addMissingTxs(const std::vector<CTransactionRef>& txs) = 0;
+
+    /**
+     * Construct a block template using the collected transactions in their
+     * requested order.
+     *
+     * Requires all requested transactions to be present, and prevhash to
+     * match the current tip.
+     *
+     * A node-generated dummy coinbase is used for validation.
+     * The resulting block is validated with the same final TestBlockValidity()
+     * call used by checkBlock(), with the proof-of-work and merkle-root checks
+     * disabled.
+     *
+     * Possible @p reason values:
+     * - `missing-txs`: one or more requested transactions have not been
+     *   provided yet
+     * - `inconclusive-not-best-prevblk`: the requested prevhash does not
+     *   match the current tip
+     * - otherwise BIP-22 style
+     *
+     * @param[in] prevhash hash of the tip the template must build on top of
+     * @param[out] reason  failure reason; see above
+     * @param[out] debug   more detailed rejection reason
+     * @returns            block template on success, otherwise nullptr
+     */
+    virtual std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                        std::string& reason,
+                                                        std::string& debug) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
