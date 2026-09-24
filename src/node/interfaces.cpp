@@ -961,6 +961,11 @@ public:
         return m_tx_collection->UnknownTxPos();
     }
 
+    void addMissingTxs(const std::vector<CTransactionRef>& txs) override
+    {
+        m_tx_collection->AddMissingTxs(txs);
+    }
+
 private:
     std::unique_ptr<node::TxCollection> m_tx_collection;
 };
