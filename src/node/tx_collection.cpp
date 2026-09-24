@@ -13,6 +13,7 @@
 
 #include <boost/multi_index/detail/hash_index_iterator.hpp>
 
+#include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <utility>
@@ -39,5 +40,16 @@ TxCollection::TxCollection(std::vector<Wtxid> wtxids, CTxMemPool& mempool)
             tx = (*it)->GetSharedTx();
         }
     }
+}
+
+std::vector<uint32_t> TxCollection::UnknownTxPos() const
+{
+    std::vector<uint32_t> result;
+    for (size_t i{0}; i < m_wtxids.size(); ++i) {
+        // Every requested wtxid is a key (added in the constructor), so at()
+        // is safe; a null value means the transaction is still missing.
+        if (!m_transactions.at(m_wtxids[i])) result.push_back(static_cast<uint32_t>(i));
+    }
+    return result;
 }
 } // namespace node
