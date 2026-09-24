@@ -1644,6 +1644,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // Stores results from which we will create the returned PackageMempoolAcceptResult.
     // A result may be changed if a mempool transaction is evicted later due to LimitMempoolSize().
     std::map<Wtxid, MempoolAcceptResult> results_final;
+    // Feerates that deduplicated transactions would have been considered at, for their results if their
+    // mempool entries are evicted by LimitMempoolSize(). The entry has the same txid, so the same modified
+    // fee and, if the transaction's witness is valid, the same sigop cost; the weight is the transaction's own.
+    std::map<Wtxid, CFeeRate> deduplicated_feerates;
     // Results from individual validation which will be returned if no other result is available for
     // this transaction. "Nonfinal" because if a transaction fails by itself but succeeds later
     // (i.e. when evaluated with a fee-bumping child), the result in this map may be discarded.
@@ -1669,6 +1673,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
             const auto& entry{*Assert(m_pool.GetEntry(txid))};
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTx(entry.GetTxSize(), entry.GetFee()));
+            deduplicated_feerates.emplace(wtxid, CFeeRate(entry.GetModifiedFee(), GetVirtualTransactionSize(*tx, entry.GetSigOpCost(), ::nBytesPerSigOp)));
         } else if (m_pool.exists(txid)) {
             // Transaction with the same non-witness data but different witness (same txid,
             // different wtxid) already exists in the mempool.
@@ -1680,6 +1685,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             const auto& entry{*Assert(m_pool.GetEntry(txid))};
             // Provide the wtxid of the mempool tx so that the caller can look it up in the mempool.
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTxDifferentWitness(entry.GetTx().GetWitnessHash()));
+            deduplicated_feerates.emplace(wtxid, CFeeRate(entry.GetModifiedFee(), GetVirtualTransactionSize(*tx, entry.GetSigOpCost(), ::nBytesPerSigOp)));
         } else {
             // Transaction does not already exist in the mempool.
             // Try submitting the transaction on its own.
@@ -1746,18 +1752,26 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
                 results_final.emplace(wtxid, txresult);
             }
         } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
-            // Already-in-mempool transaction. Check to see if it's still there, as it could have
-            // been evicted when LimitMempoolSize() was called.
+            // In the mempool before LimitMempoolSize(): already there when the package was received
+            // (MEMPOOL_ENTRY or DIFFERENT_WITNESS), or accepted by itself above (VALID). Check to see if
+            // it's still there, as it could have been evicted.
             Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
             Assume(!individual_results_nonfinal.contains(wtxid));
             // Query by txid to include the same-txid-different-witness ones.
             if (!m_pool.exists(tx->GetHash())) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+                // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
+                // If it was accepted by itself above, report the fee information of that result. Otherwise
+                // report the feerate it would have been considered at.
+                const auto& result{it->second};
+                const bool accepted{result.m_result_type == MempoolAcceptResult::ResultType::VALID};
+                const CFeeRate effective_feerate{accepted ? result.m_effective_feerate.value() : deduplicated_feerates.at(wtxid)};
+                const std::vector<Wtxid> wtxids_fee_calculations{accepted ? result.m_wtxids_fee_calculations.value() : std::vector{wtxid}};
                 TxValidationState mempool_full_state;
-                mempool_full_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
+                mempool_full_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
                 // Replace the previous result.
                 results_final.erase(wtxid);
-                results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
+                results_final.emplace(wtxid, MempoolAcceptResult::FeeFailure(mempool_full_state, effective_feerate, wtxids_fee_calculations));
             }
         } else if (const auto it{individual_results_nonfinal.find(wtxid)}; it != individual_results_nonfinal.end()) {
             Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
