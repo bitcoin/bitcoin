@@ -16,6 +16,7 @@ from test_framework.ipc_util import (
     mining_collect_txs,
     mining_create_block_template,
     mining_get_block,
+    tx_collection_make_template,
     tx_collection_unknown_pos,
 )
 
@@ -59,9 +60,36 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 assert_equal(e.description, f"remote exception: std::exception: duplicate wtxid {ser_uint256(1)[::-1].hex()}")
                 assert_equal(e.type, "FAILED")
 
-            self.log.debug("Create and destroy an empty collection")
-            async with destroying((await mining0.collectTxs(ctx0, [])).result, ctx0):
-                pass
+            self.log.debug("An empty collection can immediately build a coinbase-only template")
+            async with AsyncExitStack() as stack:
+                tx_collection = await stack.enter_async_context(destroying((await mining0.collectTxs(ctx0, [])).result, ctx0))
+                tip = bytes((await mining0.getTip(ctx0)).result.hash)
+                response = await tx_collection.makeTemplate(ctx0, tip)
+                assert_equal(response.reason, "")
+                assert_equal(response.debug, "")
+                template = await stack.enter_async_context(destroying(response.result, ctx0))
+                block = await mining_get_block(template, ctx0)
+                assert_equal(len(block.vtx), 1)
+
+                self.log.debug("Externally generated templates should reject unavailable accessors")
+                for method_name, method in (
+                    ("getCoinbaseTx", template.getCoinbaseTx),
+                    ("getTxFees", template.getTxFees),
+                    ("getTxSigops", template.getTxSigops),
+                    ("waitNext", template.waitNext),
+                ):
+                    try:
+                        await method(ctx0)
+                        raise AssertionError(f"{method_name} unexpectedly succeeded on external template")
+                    except capnp.lib.capnp.KjException as e:
+                        assert_equal(e.description, f"remote exception: std::exception: {method_name} is unavailable for externally generated templates")
+                        assert_equal(e.type, "FAILED")
+                try:
+                    await template.interruptWait()
+                    raise AssertionError("interruptWait unexpectedly succeeded on external template")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: interruptWait is unavailable for externally generated templates")
+                    assert_equal(e.type, "FAILED")
 
             remote_wallet.rescan_utxos()
             self.log.debug("Run the TxCollection workflow")
@@ -72,6 +100,8 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 confirmed_only=True,
             )
             self.sync_mempools()
+            current_tip_info = await mining0.getTip(ctx0)
+            current_tip = bytes(current_tip_info.result.hash)
 
             # Keep the mempools separate for the rest of the test.
             self.disconnect_nodes(0, 1)
@@ -99,6 +129,11 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 # remote node.
                 assert_equal(await tx_collection_unknown_pos(tx_collection, ctx0), [1])
 
+                self.log.debug("makeTemplate() should fail while transactions are still missing")
+                await tx_collection_make_template(
+                    tx_collection, stack, ctx0, current_tip, reject_reason="missing-txs"
+                )
+
                 self.log.debug("Reject null transactions in addMissingTxs(), leaving the collection unchanged")
                 # An empty Data field deserializes to a null CTransactionRef.
                 try:
@@ -112,6 +147,29 @@ class IPCMiningTxCollectionTest(BitcoinTestFramework):
                 self.log.debug("Add the missing transaction")
                 await tx_collection.addMissingTxs(ctx0, [raw_txs[1]])
                 assert_equal(await tx_collection_unknown_pos(tx_collection, ctx0), [])
+
+                template = await tx_collection_make_template(tx_collection, stack, ctx0, current_tip)
+                local_block = await mining_get_block(template, ctx0)
+
+                assert_equal([tx.wtxid_hex for tx in local_block.vtx[1:]], [tx.wtxid_hex for tx in remote_block.vtx[1:]])
+
+                self.log.debug("Solve the reconstructed block and submit the same solution to both templates")
+                # makeTemplate() leaves the merkle root unset (it validates with
+                # check_merkle_root=false); submitSolution() fills it in. Set it
+                # here too so the solved proof-of-work matches the submitted block.
+                local_block.hashMerkleRoot = local_block.calc_merkle_root()
+                local_block.solve()
+                version = local_block.nVersion
+                time = local_block.nTime
+                nonce = local_block.nNonce
+                coinbase = local_block.vtx[0].serialize()
+
+                submitted_local = (await template.submitSolution(ctx0, version, time, nonce, coinbase)).result
+                assert_equal(submitted_local, True)
+
+                submitted_remote = (await remote_template.submitSolution(ctx1, version, time, nonce, coinbase)).result
+                assert_equal(submitted_remote, True)
+                assert_equal(node.getbestblockhash(), remote_node.getbestblockhash())
 
         asyncio.run(capnp.run(async_routine()))
 
