@@ -2225,67 +2225,6 @@ DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingu
     return nLoadWalletRet;
 }
 
-util::Result<void> CWallet::RemoveTxs(std::vector<Txid>& txs_to_remove)
-{
-    AssertLockHeld(cs_wallet);
-    bilingual_str str_err;  // future: make RunWithinTxn return a util::Result
-    bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        util::Result<void> result{RemoveTxs(batch, txs_to_remove)};
-        if (!result) str_err = util::ErrorString(result);
-        return result.has_value();
-    });
-    if (!str_err.empty()) return util::Error{str_err};
-    if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
-    return {}; // all good
-}
-
-util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove)
-{
-    AssertLockHeld(cs_wallet);
-    if (!batch.HasActiveTxn()) return util::Error{strprintf(_("The transactions removal process can only be executed within a db txn"))};
-
-    // Check for transaction existence and remove entries from disk
-    std::vector<decltype(mapWallet)::const_iterator> erased_txs;
-    bilingual_str str_err;
-    for (const Txid& hash : txs_to_remove) {
-        auto it_wtx = mapWallet.find(hash);
-        if (it_wtx == mapWallet.end()) {
-            return util::Error{strprintf(_("Transaction %s does not belong to this wallet"), hash.GetHex())};
-        }
-        if (!batch.EraseTx(hash)) {
-            return util::Error{strprintf(_("Failure removing transaction: %s"), hash.GetHex())};
-        }
-        erased_txs.emplace_back(it_wtx);
-    }
-
-    // Register callback to update the memory state only when the db txn is actually dumped to disk
-    batch.RegisterTxnListener({.on_commit=[&, erased_txs]() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        // Update the in-memory state and notify upper layers about the removals
-        for (const auto& it : erased_txs) {
-            const Txid hash{it->first};
-            wtxOrdered.erase(it->second.m_it_wtxOrdered);
-            for (const auto& txin : it->second.GetTx()->vin) {
-                auto range = mapTxSpends.equal_range(txin.prevout);
-                for (auto iter = range.first; iter != range.second; ++iter) {
-                    if (iter->second == hash) {
-                        mapTxSpends.erase(iter);
-                        break;
-                    }
-                }
-            }
-            for (unsigned int i = 0; i < it->second.GetTx()->vout.size(); ++i) {
-                m_txos.erase(COutPoint(hash, i));
-            }
-            mapWallet.erase(it);
-            NotifyTransactionChanged(hash, CT_DELETED);
-        }
-
-        MarkDirty();
-    }, .on_abort={}});
-
-    return {};
-}
-
 bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& new_purpose)
 {
     bool fUpdated = false;
@@ -3874,7 +3813,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
-    std::vector<Txid> txids_to_delete;
     std::unique_ptr<WalletBatch> watchonly_batch;
     if (data.watchonly_wallet) {
         watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
@@ -3915,7 +3853,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
-                    txids_to_delete.push_back(hash);
                     continue;
                 }
             }
@@ -3926,13 +3863,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
         local_wallet_batch.WriteTxMetadata(*wtx);
-    }
-
-    // Do the removes
-    if (txids_to_delete.size() > 0) {
-        if (auto res = RemoveTxs(local_wallet_batch, txids_to_delete); !res) {
-            return util::Error{_("Error: Could not delete watchonly transactions. ") + util::ErrorString(res)};
-        }
     }
 
     // Pair external wallets with their corresponding db handler

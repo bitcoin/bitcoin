@@ -106,13 +106,6 @@ bool WalletBatch::WriteFullTx(const CWalletTx& wtx)
     return WriteIC(std::make_pair(DBKeys::TX, txid), wtx);
 }
 
-bool WalletBatch::EraseTx(Txid hash)
-{
-    if (!EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()))) return false;
-    // Drop all witness variant records too, so none are left dangling
-    return m_batch->ErasePrefix(DataStream() << DBKeys::WTX_VARIANT << hash);
-}
-
 bool WalletBatch::WriteWtxVariant(const Txid& txid, const CTransactionRef& tx)
 {
     return WriteIC(std::make_pair(DBKeys::WTX_VARIANT, std::make_pair(txid, tx->GetWitnessHash())), TX_WITH_WITNESS(tx));
