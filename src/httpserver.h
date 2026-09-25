@@ -563,6 +563,9 @@ private:
      */
     std::string m_recv_buffer{};
 
+    //! Running total of bytes read from this client's socket.
+    uint64_t m_total_bytes_received{0};
+
     //! Requests from a client must be processed in the order in which
     //! they were received, blocking on a per-client basis. We read
     //! one request at a time from the socket buffer then pass it to a worker.
