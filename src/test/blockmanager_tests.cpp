@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(block_read_ahead_retry)
         if (++reads == 1) throw std::runtime_error("transient read failure");
         result = block;
         return true;
-    }};
+    }, /*thread_count=*/1};
 
     fetcher.FillQueue(&index, 0);
     BOOST_CHECK(!fetcher.Load(hash));
