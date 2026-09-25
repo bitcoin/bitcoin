@@ -212,7 +212,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         Assert(!dirty_chainman);
     }
     if (dirty_chainman) {
-        setup.m_node.block_template_manager.reset();
+        setup.ResetBlockTemplateManager();
         setup.m_node.chainman.reset();
         setup.m_make_chainman();
         setup.LoadVerifyActivateChainstate();

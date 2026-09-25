@@ -168,7 +168,7 @@ static void LoadCurrentChain()
 void ResetChainman(TestingSetup& setup)
 {
     SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
-    setup.m_node.block_template_manager.reset();
+    setup.ResetBlockTemplateManager();
     setup.m_node.chainman.reset();
     setup.m_node.notifications->m_shutdown_on_fatal_error = false;
     setup.m_make_chainman();

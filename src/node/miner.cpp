@@ -140,6 +140,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
+    pblocktemplate->m_height = nHeight;
 
     pblock->nVersion = m_chainstate.m_chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
     // -regtest only: allow overriding block.nVersion with
@@ -150,6 +151,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
     pblock->nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
     m_lock_time_cutoff = pindexPrev->GetMedianTimePast();
+    pblocktemplate->m_lock_time_cutoff = m_lock_time_cutoff;
 
     if (m_mempool) {
         LOCK(m_mempool->cs);
@@ -334,10 +336,15 @@ void BlockAssembler::addChunks()
 
             // This chunk will fit, so add it to the block.
             nConsecutiveFailed = 0;
+            std::vector<Wtxid> chunk_wtxids;
+            chunk_wtxids.reserve(selected_transactions.size());
+            int64_t chunk_weight{0};
             for (const auto& tx : selected_transactions) {
+                chunk_weight += tx.get().GetTxWeight();
                 AddToBlock(tx);
+                chunk_wtxids.emplace_back(tx.get().GetTx().GetWitnessHash());
             }
-            pblocktemplate->m_package_feerates.emplace_back(chunk_feerate_vsize);
+            pblocktemplate->m_template_chunks.push_back({chunk_feerate, std::move(chunk_wtxids), chunk_weight, chunk_sig_ops});
         }
 
         selected_transactions.clear();

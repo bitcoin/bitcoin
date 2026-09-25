@@ -109,6 +109,8 @@ struct ChainTestingSetup : public BasicTestingSetup {
     //! Create the block template manager. Must be destroyed before resetting
     //! any of its dependencies.
     void CreateBlockTemplateManager();
+    //! Unregister the block template manager from validation signals and reset it.
+    void ResetBlockTemplateManager();
 
     // Supplies a chainstate, if one is needed
     void LoadVerifyActivateChainstate();
