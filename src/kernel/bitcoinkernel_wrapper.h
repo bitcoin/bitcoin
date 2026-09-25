@@ -593,6 +593,12 @@ public:
     {
         return TxidView{btck_transaction_out_point_get_txid(impl())};
     }
+
+    template <typename Other>
+    bool operator==(const OutPointApi<Other>& other) const
+    {
+        return btck_transaction_out_point_equals(impl(), static_cast<const Other&>(other).get()) != 0;
+    }
 };
 
 class OutPointView : public View<btck_TransactionOutPoint>, public OutPointApi<OutPointView>
@@ -606,6 +612,11 @@ class OutPoint : public Handle<btck_TransactionOutPoint, btck_transaction_out_po
 public:
     OutPoint(const OutPointView& view)
         : Handle(view) {}
+
+    OutPoint(const TxidView& txid, uint32_t index)
+        : Handle{btck_transaction_out_point_create(txid.get(), index)}
+    {
+    }
 };
 
 template <typename Derived>
@@ -711,6 +722,11 @@ public:
     size_t CountOutputs() const
     {
         return btck_transaction_count_outputs(impl());
+    }
+
+    bool IsCoinbase() const
+    {
+        return btck_transaction_is_coinbase(impl()) != 0;
     }
 
     size_t CountInputs() const
@@ -1349,6 +1365,9 @@ public:
 class Coin : public Handle<btck_Coin, btck_coin_copy, btck_coin_destroy>, public CoinApi<Coin>
 {
 public:
+    Coin(const TransactionOutput& output, uint32_t confirmation_height, bool is_coinbase)
+        : Handle{btck_coin_create(output.get(), confirmation_height, is_coinbase)} {}
+
     Coin(btck_Coin* coin) : Handle{coin} {}
 
     Coin(const CoinView& view) : Handle{view} {}
@@ -1416,6 +1435,14 @@ public:
     MAKE_RANGE_METHOD(TxsSpentOutputs, BlockSpentOutputs, &BlockSpentOutputs::Count, &BlockSpentOutputs::GetTxSpentOutputs, *this)
 };
 
+class CoinFetcher
+{
+public:
+    virtual ~CoinFetcher() = default;
+
+    virtual std::optional<Coin> FetchCoin(OutPointView out_point) = 0;
+};
+
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
@@ -1450,6 +1477,21 @@ public:
     {
         auto state = btck_chainstate_manager_process_block_header(get(), header.get());
         return BlockValidationState{state};
+    }
+
+    bool ValidateBlock(const Block& block,
+                       const BlockTreeEntry& entry,
+                       CoinFetcher& fetcher,
+                       BlockValidationState& state)
+    {
+        return btck_chainstate_manager_validate_block(
+                   get(), block.get(), entry.get(),
+                   +[](void* user_data, const btck_TransactionOutPoint* out_point) -> btck_Coin* {
+                       auto coin{static_cast<CoinFetcher*>(user_data)->FetchCoin(OutPointView{out_point})};
+                       if (!coin) return nullptr;
+                       return btck_coin_copy(coin->get());
+                   },
+                   &fetcher, state.get()) == 0;
     }
 
     ChainView GetChain() const
