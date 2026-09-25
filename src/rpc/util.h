@@ -412,8 +412,25 @@ private:
 /// Merges into existing m_opts so that flags like skip_type_check are preserved.
 std::vector<RPCResult> ElideGroup(std::vector<RPCResult> fields, std::string summary = "");
 
+/// Maps a request parameter onto each OpenRPC oneOf result branch.
+struct RPCResultDiscriminator {
+    std::string m_param_name;
+    size_t m_param_index;
+    std::vector<UniValue> m_values;
+
+    RPCResultDiscriminator(std::string name, size_t index, std::vector<int> vals)
+        : m_param_name{std::move(name)}, m_param_index{index}
+    {
+        m_values.reserve(vals.size());
+        for (const int v : vals) {
+            m_values.emplace_back(v);
+        }
+    }
+};
+
 struct RPCResults {
     const std::vector<RPCResult> m_results;
+    const std::optional<RPCResultDiscriminator> m_discriminator{};
 
     RPCResults(RPCResult result)
         : m_results{{result}}
@@ -423,6 +440,12 @@ struct RPCResults {
     RPCResults(std::initializer_list<RPCResult> results)
         : m_results{results}
     {
+    }
+
+    RPCResults(std::initializer_list<RPCResult> results, RPCResultDiscriminator discriminator)
+        : m_results{results}, m_discriminator{std::move(discriminator)}
+    {
+        CHECK_NONFATAL(m_results.size() == m_discriminator->m_values.size());
     }
 
     /**
