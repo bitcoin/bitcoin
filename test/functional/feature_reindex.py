@@ -45,7 +45,7 @@ class ReindexTest(BitcoinTestFramework):
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex"]]
         log_start = self.nodes[0].debug_log_size(encoding='utf-8')
-        with self.nodes[0].assert_debug_log(expected_msgs=blockread_msgs(1)):
+        with self.nodes[0].assert_debug_log(expected_msgs=blockread_msgs(2)):
             self.start_nodes(extra_args)
         assert_equal(self.nodes[0].getblockcount(), blockcount)  # start_node is blocking on reindex
         assert_equal(cached_block_count(self.nodes[0], log_start), blockcount if justchainstate else blockcount - 1)
