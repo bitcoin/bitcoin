@@ -7,6 +7,7 @@
 
 #include <tinyformat.h>
 #include <util/log.h>
+#include <util/string.h>
 
 #include <exception>
 #include <iostream>
@@ -36,6 +37,6 @@ static std::string FormatException(const std::exception* pex, std::string_view t
 void PrintExceptionContinue(const std::exception* pex, std::string_view thread_name)
 {
     std::string message = FormatException(pex, thread_name);
-    LogWarning("\n\n************************\n%s", message);
+    util::SplitLines(message, [](auto line) { LogWarning("%s", line); });
     tfm::format(std::cerr, "\n\n************************\n%s\n", message);
 }

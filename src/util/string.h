@@ -183,6 +183,17 @@ std::vector<T> Split(std::span<const char> sp LIFETIMEBOUND, char sep, bool incl
     return str;
 }
 
+//! Visit each line without its newline, ignoring one trailing newline. Empty input yields one empty line.
+template <typename Fn>
+void SplitLines(std::string_view str, Fn&& fn)
+{
+    str = RemoveSuffixView(str, "\n");
+    for (size_t pos; (pos = str.find('\n')) != std::string_view::npos; str.remove_prefix(pos + 1)) {
+        fn(str.substr(0, pos));
+    }
+    fn(str);
+}
+
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str LIFETIMEBOUND, std::string_view prefix)
 {
     if (str.starts_with(prefix)) {

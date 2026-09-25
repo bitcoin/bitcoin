@@ -8,6 +8,7 @@
 #include <node/interface_ui.h>
 #include <util/btcsignals.h>
 #include <util/log.h>
+#include <util/string.h>
 #include <util/translation.h>
 
 #include <string>
@@ -26,18 +27,18 @@ void noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
-        if (!fSecure) LogError("%s\n", message.original);
+        if (!fSecure) util::SplitLines(message.original, [](auto line) { LogError("%s", line); });
         break;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
-        if (!fSecure) LogWarning("%s\n", message.original);
+        if (!fSecure) util::SplitLines(message.original, [](auto line) { LogWarning("%s", line); });
         break;
     case CClientUIInterface::MSG_INFORMATION:
         strCaption = "Information: ";
-        if (!fSecure) LogInfo("%s\n", message.original);
+        if (!fSecure) util::SplitLines(message.original, [](auto line) { LogInfo("%s", line); });
         break;
     default:
-        if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
+        if (!fSecure) util::SplitLines(message.original, [&](auto line) { LogInfo("%s%s", strCaption, line); });
     }
 
     tfm::format(std::cerr, "%s%s\n", strCaption, message.original);

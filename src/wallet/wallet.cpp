@@ -2134,7 +2134,8 @@ void CWallet::CommitTransaction(
 )
 {
     LOCK(cs_wallet);
-    WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
+    WalletLogPrintf("CommitTransaction:");
+    util::SplitLines(tx->ToString(), [&](auto line) { WalletLogPrintf("%s", line); });
 
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
