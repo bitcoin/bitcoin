@@ -10,10 +10,13 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/types.h>
+#include <tinyformat.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <node/transaction.h>
+
+#include <stdexcept>
 
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
@@ -158,12 +161,13 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     }
     if (block_index) {
         CBlock block;
-        if (blockman.ReadBlock(block, *block_index)) {
-            for (const auto& tx : block.vtx) {
-                if (tx->GetHash() == hash) {
-                    hashBlock = block_index->GetBlockHash();
-                    return tx;
-                }
+        if (!blockman.ReadBlock(block, *block_index)) {
+            throw std::runtime_error{strprintf("I/O error reading block data for block %s", block_index->GetBlockHash().ToString())};
+        }
+        for (const auto& tx : block.vtx) {
+            if (tx->GetHash() == hash) {
+                hashBlock = block_index->GetBlockHash();
+                return tx;
             }
         }
     }
