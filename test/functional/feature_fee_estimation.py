@@ -514,7 +514,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Ensure node0's mempool is empty at the start")
         assert_equal(node0.getmempoolinfo()['size'], 0)
         self.log.info("Test estimatesmartfee with empty mempool and no block policy estimator data")
-        estimate_after_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        estimate_after_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
         verify_estimate_response(estimate_after_restart, None, [BLOCK_POLICY_ESTIMATOR_ERROR])
         self.log.info("Populate block policy estimator with high-feerate history")
         # Generate high-feerate transactions and mine them over 6 blocks to give block policy data.
@@ -527,7 +527,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         insane_feerate = Decimal("0.01")
         self.send_transactions(utxos, insane_feerate, target_vsize)
-        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "none"})
+        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "auto"})
         assert_equal(len(estimate_after_spike["mempool_health_statistics"]), 6)
         current_height = node0.getchaintips()[0]['height']
         for block_stat in estimate_after_spike["mempool_health_statistics"]:
@@ -547,14 +547,14 @@ class EstimateFeeTest(BitcoinTestFramework):
         low_feerate = Decimal("0.00004")
         low_utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         self.send_transactions(low_utxos, low_feerate, target_vsize)
-        lower_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        lower_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
         verify_estimate_response(lower_estimate, low_feerate, [])
         # The mempool block stats are persisted across restarts, so the mempool
         # stays healthy and the lower mempool estimate is still returned after a
         # restart. Without persistence, the combined estimate would return a
         # mempool-policy error until enough new blocks are observed.
         self.restart_node(0)
-        estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
         verify_estimate_response(estimate_post_restart, low_feerate, [])
 
         self.log.info("Test estimatesmartfee returns the fee rate floor when the mempool is empty but healthy")
@@ -567,7 +567,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # That floor is lower than the block policy estimate, so the combined estimator returns it.
         mempool_info = node0.getmempoolinfo()
         floor = max(mempool_info["minrelaytxfee"], mempool_info["mempoolminfee"])
-        combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "mempool_policy")
 
@@ -587,7 +587,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         stale_stats = node0.estimatesmartfee(
             1,
             "economical",
-            {"verbosity": 2, "fee_rate_estimator": "none"},
+            {"verbosity": 2, "fee_rate_estimator": "auto"},
         )["mempool_health_statistics"]
         assert_equal(len(stale_stats), 6)
         stale_height = node0.getblockcount()
@@ -610,7 +610,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         stats_after_restart = node0.estimatesmartfee(
             1,
             "economical",
-            {"verbosity": 2, "fee_rate_estimator": "none"},
+            {"verbosity": 2, "fee_rate_estimator": "auto"},
         )["mempool_health_statistics"]
         assert_equal(stats_after_restart, [])
 
