@@ -139,6 +139,34 @@ jobs:
           set -o errexit -o pipefail
           ./contrib/guix/guix-build
 
+      - name: Prepare test package
+        run: |
+          set -o errexit -o pipefail
+          source contrib/guix/libexec/prelude.bash
+          case "${{ matrix.host }}" in
+            arm64-apple-darwin)
+              package="$(outdir_for_host '${{ matrix.host }}')/${DISTNAME}-${{ matrix.host }}-unsigned.tar.gz"
+              ;;
+            x86_64-linux-gnu)
+              package="$(outdir_for_host '${{ matrix.host }}')/${DISTNAME}-${{ matrix.host }}.tar.gz"
+              ;;
+            x86_64-w64-mingw32)
+              package="$(outdir_for_host '${{ matrix.host }}')/${DISTNAME}-win64-unsigned.zip"
+              ;;
+            *) exit 1 ;;
+          esac
+          mkdir -p guix-test-package
+          cp "$package" guix-test-package/
+          cp "$(distsrc_for_host '${{ matrix.host }}')/guix-test-config.ini" guix-test-package/config.ini
+
+      - name: Upload test package
+        uses: actions/upload-artifact@v7
+        with:
+          name: guix-${{ matrix.host }}-${{ github.run_id }}
+          path: guix-test-package/
+          compression-level: 0
+          if-no-files-found: error
+
       - name: Save Guix bootstrap cache
         if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.guix-bootstrap-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/cache/save/internal
@@ -172,3 +200,64 @@ jobs:
           provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
           path: ${{ env.BASE_CACHE }}
           key: ${{ steps.built-depends-cache.outputs.cache-primary-key }}
+
+  test:
+    name: Test Guix, ${{ matrix.host }}
+    needs: guix
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    env:
+      PYTHONUTF8: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: arm64-apple-darwin
+            runner: macos-15
+          - host: x86_64-linux-gnu
+            runner: ubuntu-24.04
+          - host: x86_64-w64-mingw32
+            runner: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download test package
+        uses: actions/download-artifact@v8
+        with:
+          name: guix-${{ matrix.host }}-${{ github.run_id }}
+          path: guix-test-package
+
+      - name: Restore previous releases cache
+        id: previous-releases-cache
+        uses: ./.github/actions/cache/restore/internal
+        with:
+          provider: gha
+          path: releases
+          key: guix-previous-releases-${{ matrix.host }}-${{ hashFiles('test/get_previous_releases.py') }}
+
+      - name: Test release binaries
+        shell: pwsh
+        run: |
+          $python = if ($IsWindows) { 'python' } else { 'python3' }
+          $venv = Join-Path $env:RUNNER_TEMP 'guix-test-venv'
+          & $python -m venv $venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $venvPython = if ($IsWindows) {
+            Join-Path $venv 'Scripts/python.exe'
+          } else {
+            Join-Path $venv 'bin/python'
+          }
+          & $venvPython -m pip install pyzmq
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $venvPython .github/ci-guix-test.py
+          exit $LASTEXITCODE
+
+      - name: Save previous releases cache
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && steps.previous-releases-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/cache/save/internal
+        with:
+          provider: gha
+          path: releases
+          key: ${{ steps.previous-releases-cache.outputs.cache-primary-key }}
