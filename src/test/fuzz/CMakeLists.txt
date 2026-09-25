@@ -11,6 +11,7 @@ add_executable(fuzz
   asmap_direct.cpp
   autofile.cpp
   banman.cpp
+  batchverify.cpp
   base_encode_decode.cpp
   bech32.cpp
   bip324.cpp
