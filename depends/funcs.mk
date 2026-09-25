@@ -106,6 +106,10 @@ $(1)_source_dir:=$(SOURCES_PATH)
 # If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
 # .tar file with a friendly filename named after the directory path.
 $(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
+# Include the absolute source path's hash so worktrees sharing SOURCES_PATH
+# use separate archives. Source changes are still detected using mtimes.
+$(if $($(1)_local_dir),$(eval $(1)_local_dir_hash:=$(shell (cd $($(1)_local_dir) && pwd) | $(build_SHA256SUM) | cut -c1-$(HASH_LENGTH))))
+$(if $($(1)_local_dir_hash),$(eval $(1)_file_name:=$(basename $($(1)_file_name))-$($(1)_local_dir_hash).tar))
 $(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
