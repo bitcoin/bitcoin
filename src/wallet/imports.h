@@ -30,9 +30,22 @@ struct ImportError {
     {};
 };
 
+struct UTXOVerificationResult {
+    std::string status;
+    std::optional<bool> matched;
+    int blocks_scanned{0};
+    std::optional<int> scan_start_height;
+    std::optional<int> snapshot_height;
+    std::optional<uint256> snapshot_block;
+    std::optional<int> recovery_start_height;
+    size_t wallet_utxos{0};
+    size_t chain_utxos{0};
+};
+
 struct ImportResult {
     std::vector<std::string> warnings;
     std::optional<ImportError> error;
+    std::optional<UTXOVerificationResult> verification;
 
     bool has_error() const {
         return error.has_value();
@@ -57,7 +70,7 @@ struct ImportDescriptorRequest {
 };
 
 std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
-    std::vector<ImportDescriptorRequest>& requests);
+    std::vector<ImportDescriptorRequest>& requests, bool verify_balance = false);
 
 } // namespace wallet
 
