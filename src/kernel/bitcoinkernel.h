@@ -109,8 +109,8 @@ extern "C" {
  * can be de-allocated by corresponding *_destroy(...) functions.
  *
  * A function that takes pointer arguments makes no assumptions on their
- * lifetime. Once the function returns the user can safely de-allocate the
- * passed in arguments.
+ * lifetime, unless its documentation says otherwise. Once the function returns
+ * the user can safely de-allocate the passed in arguments.
  *
  * Const pointers represent views, and do not transfer ownership. Lifetime
  * guarantees of these objects are described in the respective documentation.
@@ -146,10 +146,15 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
 /**
  * Opaque data structure for holding a logging connection.
  *
- * Log entries are delivered to the connection's callback for as long as the
- * connection exists. Entries logged before a connection is created are not
- * delivered. Functions changing the logging settings are global and change
- * the settings for all existing btck_LoggingConnection instances.
+ * A new connection receives no log entries. It receives entries from the
+ * operations of contexts created with it as their logger (see
+ * @ref btck_context_options_set_logger), at or above its own minimum level (see
+ * @ref btck_logging_set_min_level). It must outlive the context options and
+ * contexts it is set on.
+ *
+ * Currently, while a connection is attached to at least one context, it may
+ * also receive entries from other kernel operations in the process, including
+ * operations of other contexts. This will be narrowed in the future.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -932,18 +937,22 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 ///@{
 
 /**
- * @brief Set the minimum log level. Messages below this level are not delivered
- * to logging callbacks. Defaults to Info.
+ * @brief Set the minimum log level of a logging connection. Entries below this
+ * level are not delivered to the connection's callback. Defaults to Info.
  *
- * This changes a global setting and will affect all existing @ref
- * btck_LoggingConnection instances.
+ * Only this connection is affected. Other connections keep their own levels.
  *
- * @param[in] level Minimum log level.
+ * @param[in] logging_connection Non-null.
+ * @param[in] level              Minimum log level.
  */
-BITCOINKERNEL_API void btck_logging_set_min_level(btck_LogLevel level);
+BITCOINKERNEL_API void btck_logging_set_min_level(
+    btck_LoggingConnection* logging_connection,
+    btck_LogLevel level) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Start logging messages through the provided callback.
+ * @brief Create a logging connection that delivers log entries through the
+ * provided callback. The connection receives no entries until it is set as the
+ * logger of a context with @ref btck_context_options_set_logger.
  *
  * @param[in] log_callback               Non-null, function through which log entries will be delivered.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
@@ -1037,6 +1046,25 @@ BITCOINKERNEL_API btck_ContextOptions* BITCOINKERNEL_WARN_UNUSED_RESULT btck_con
 BITCOINKERNEL_API void btck_context_options_set_chainparams(
     btck_ContextOptions* context_options,
     const btck_ChainParameters* chain_parameters) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Set the logging connection for the context options. Log entries from
+ * operations of the context created with the options are delivered to this
+ * connection. Without a logging connection, the context's log entries are not
+ * delivered to any connection (currently, other connections attached to other
+ * contexts may still receive them).
+ *
+ * The logging connection must outlive the context options and every context
+ * created with them. A context also stays alive while chainstate managers
+ * created from it exist, so destroy those first. Destroying a logging
+ * connection while a context created with it still exists aborts the program.
+ *
+ * @param[in] context_options    Non-null, previously created by @ref btck_context_options_create.
+ * @param[in] logging_connection Non-null, must outlive the context options and contexts created with them.
+ */
+BITCOINKERNEL_API void btck_context_options_set_logger(
+    btck_ContextOptions* context_options,
+    btck_LoggingConnection* logging_connection) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * @brief Set the kernel notifications for the context options. The context

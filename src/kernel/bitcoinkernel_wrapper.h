@@ -1010,11 +1010,6 @@ public:
     }
 };
 
-inline void logging_set_min_level(LogLevel level)
-{
-    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
-}
-
 //! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
 //! logging callback, so a LogEntry (and any string_view obtained from it) must not be stored or
 //! used after the callback returns.
@@ -1049,12 +1044,20 @@ template <Log T>
 class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
+    using UniqueHandle::get;
+
     Logger(std::unique_ptr<T> log)
         : UniqueHandle{btck_logging_connection_create(
               +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
+    }
+
+    //! Set the minimum level of entries delivered to this logger. Defaults to INFO_LEVEL.
+    void SetMinLevel(LogLevel level)
+    {
+        btck_logging_set_min_level(get(), static_cast<btck_LogLevel>(level));
     }
 };
 
@@ -1226,6 +1229,14 @@ public:
     void SetChainParams(ChainParams& chain_params)
     {
         btck_context_options_set_chainparams(get(), chain_params.get());
+    }
+
+    //! Deliver log entries from the context created with these options to the logger. The logger
+    //! must outlive these options, and every Context and ChainMan created with them.
+    template <Log T>
+    void SetLogger(Logger<T>& logger)
+    {
+        btck_context_options_set_logger(get(), logger.get());
     }
 
     template <typename T>
