@@ -48,6 +48,12 @@ struct PSBTFillOptions {
      * Whether to fill in bip32 derivation information if available.
      */
     bool bip32_derivs{true};
+
+    /**
+     * Only add new Taproot key-path data, and only sign and finalize Taproot
+     * inputs using the key path. Existing script-path data is left intact.
+     */
+    bool taproot_keypath_only{false};
 };
 
 } // namespace common
