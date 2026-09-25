@@ -1113,9 +1113,12 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        std::function<void(bool)> m_mapport;
+        bool m_mapport_enabled = false;
+        std::function<void(bool)> m_tor_control;
     };
 
-    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
+    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex, !m_network_active_mutex)
     {
         AssertLockNotHeld(m_total_bytes_sent_mutex);
 
@@ -1152,6 +1155,12 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        {
+            LOCK(m_network_active_mutex);
+            m_mapport = connOptions.m_mapport;
+            m_mapport_enabled = connOptions.m_mapport_enabled;
+            m_tor_control = connOptions.m_tor_control;
+        }
     }
 
     // test only
@@ -1167,7 +1176,7 @@ public:
 
     ~CConnman();
 
-    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
+    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc, !m_network_active_mutex);
 
     void StopThreads();
     void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_reconnections_mutex);
@@ -1182,7 +1191,8 @@ public:
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
-    void SetNetworkActive(bool active);
+    void SetNetworkActive(bool active) EXCLUSIVE_LOCKS_REQUIRED(!m_network_active_mutex);
+    void SetMapPortEnabled(bool enable) EXCLUSIVE_LOCKS_REQUIRED(!m_network_active_mutex);
 
     /**
      * Open a new P2P connection and initialize it with the PeerManager at `m_msgproc`.
@@ -1649,6 +1659,11 @@ private:
 
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
+    // Serialize network state changes with their subsystem callbacks.
+    Mutex m_network_active_mutex;
+    std::function<void(bool)> m_mapport GUARDED_BY(m_network_active_mutex);
+    bool m_mapport_enabled GUARDED_BY(m_network_active_mutex){false};
+    std::function<void(bool)> m_tor_control GUARDED_BY(m_network_active_mutex);
     bool fAddressesInitialized{false};
     std::reference_wrapper<AddrMan> addrman;
     const NetGroupManager& m_netgroupman;

@@ -3456,14 +3456,33 @@ void CConnman::SetNetworkActive(bool active)
 {
     LogInfo("%s: %s\n", __func__, active);
 
-    if (fNetworkActive == active) {
-        return;
-    }
+    {
+        LOCK(m_network_active_mutex);
+        if (fNetworkActive == active) {
+            return;
+        }
 
-    fNetworkActive = active;
+        fNetworkActive = active;
+
+        if (m_mapport) {
+            m_mapport(m_mapport_enabled && active);
+        }
+        if (m_tor_control) {
+            m_tor_control(active);
+        }
+    }
 
     if (m_client_interface) {
         m_client_interface->NotifyNetworkActiveChanged(fNetworkActive);
+    }
+}
+
+void CConnman::SetMapPortEnabled(bool enable)
+{
+    LOCK(m_network_active_mutex);
+    m_mapport_enabled = enable;
+    if (m_mapport) {
+        m_mapport(enable && fNetworkActive);
     }
 }
 
@@ -3665,6 +3684,16 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (m_netgroupman.UsingASMap()) {
         ASMapHealthCheck();
         scheduler.scheduleEvery([this] { ASMapHealthCheck(); }, ASMAP_HEALTH_CHECK_INTERVAL);
+    }
+
+    {
+        LOCK(m_network_active_mutex);
+        if (m_mapport) {
+            m_mapport(m_mapport_enabled && fNetworkActive);
+        }
+        if (m_tor_control) {
+            m_tor_control(fNetworkActive);
+        }
     }
 
     return true;
