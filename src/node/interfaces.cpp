@@ -92,6 +92,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
@@ -882,6 +883,15 @@ public:
                                                           m_node(node)
     {
         assert(m_block_template);
+        // Track transaction references here because their memory footprint
+        // is tied to this template object's lifetime.
+        block_template_manager().TrackTemplateTransactions(m_block_template->block.vtx);
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        // Transaction references are held until this template object is released.
+        block_template_manager().StopTrackingTemplateTransactions(m_block_template->block.vtx);
     }
 
     CBlockHeader getBlockHeader() override
@@ -1036,6 +1046,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        return {.usage = block_template_manager().GetTemplateMemoryUsage()};
     }
 
     const NodeContext* context() override { return &m_node; }
