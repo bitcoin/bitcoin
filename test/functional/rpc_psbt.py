@@ -1729,7 +1729,9 @@ class PSBTTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1)
 
         # Disable the wallet for node 2 since `descriptorprocesspsbt` does not use the wallet
-        self.restart_node(2, extra_args=["-disablewallet"])
+        # Note: extra_args is inherited from self.extra_args[2] so that the
+        # immediate-tx-relay whitelist is not dropped by this restart.
+        self.restart_node(2, extra_args=self.extra_args[2] + ["-disablewallet"])
         self.connect_nodes(0, 2)
         self.connect_nodes(1, 2)
 
