@@ -32,7 +32,14 @@
 #include <cstdio>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <utility>
+
+// leveldb::Slice is a non-owning view into memory owned by the iterator, so a
+// temporary Slice does not leave the span below dangling. Opt it into
+// borrowed_range so that MakeByteSpan does not treat it as an owning container.
+template <>
+inline constexpr bool std::ranges::enable_borrowed_range<leveldb::Slice> = true;
 
 static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
 
