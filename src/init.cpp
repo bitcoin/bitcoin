@@ -565,7 +565,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                 #endif
                 ), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet3: 127.0.0.1:%u=onion, testnet4: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, testnet4ChainParams->GetDefaultPort() + 1, signetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet3: 127.0.0.1:%u=onion, testnet4: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion). "
+                                                      "The default onion bind is added only when no -bind is specified. When -listenonion is enabled and -bind is specified, a non-wildcard =onion bind is required, and wildcard =onion binds are rejected.", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, testnet4ChainParams->GetDefaultPort() + 1, signetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1053,6 +1054,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // if listen=0, then disallow listenonion=1
     if (!args.GetBoolArg("-listen", DEFAULT_LISTEN) && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
         return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
+    }
+
+    const auto binds{args.GetArgs("-bind")};
+    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION) && binds.size() && std::ranges::none_of(binds, [](auto& b) { return b.ends_with("=onion"); })) {
+        return InitError(_("The automatic Tor onion service requires a dedicated onion bind when -bind is set. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
     }
 
     // Make sure enough file descriptors are available. We need to reserve enough FDs to account for the bare minimum,
@@ -2256,17 +2262,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    CService onion_service_target;
-    if (!connOptions.onion_binds.empty()) {
-        onion_service_target = connOptions.onion_binds.front();
-    } else if (!connOptions.vBinds.empty()) {
-        onion_service_target = connOptions.vBinds.front();
-    } else {
-        onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
-        connOptions.onion_binds.push_back(onion_service_target);
+    if (connOptions.onion_binds.empty() && connOptions.vBinds.empty()) {
+        connOptions.onion_binds.push_back(DefaultOnionServiceTarget(default_bind_port_onion));
     }
 
     if (listenonion) {
+        if (connOptions.onion_binds.empty()) {
+            return InitError(_("The automatic Tor onion service requires a dedicated onion bind when -bind is set. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
+        }
+        if (std::ranges::any_of(connOptions.onion_binds, [](auto& b) { return b.IsBindAny(); })) {
+            return InitError(_("The automatic Tor onion service cannot use a wildcard onion bind because incoming Tor connections would not be identified. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
+        }
+        const CService& onion_service_target{connOptions.onion_binds[0]};
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),

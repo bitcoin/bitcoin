@@ -101,6 +101,9 @@ it requires a Tor connection to work. It can be explicitly disabled with
 `-listenonion=0`. If it is not disabled, it can be configured using the
 `-torcontrol` and `-torpassword` settings.
 
+When enabled with an explicit `-bind`, the automatic service requires a non-wildcard onion bind such as `-bind=127.0.0.1:<port>=onion`.
+Without `-bind`, Bitcoin Core adds the default onion bind.
+
 To see verbose Tor information in the bitcoind debug log, pass `-debug=tor`.
 
 ### Control Port
