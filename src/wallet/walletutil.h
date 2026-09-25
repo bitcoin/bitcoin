@@ -66,8 +66,13 @@ private:
     int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
     int32_t next_index = 0; // Position of the next item to generate
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
+
+    mutable std::optional<uint256> m_canonical_hash; // Hash of the canonical string, used as a shortcut for comparing canonical strings
+
+    uint256 GetCanonicalHash() const;
+
 public:
-    std::shared_ptr<Descriptor> descriptor;
+    const std::shared_ptr<const Descriptor> descriptor;
     uint64_t creation_time = 0;
     DescriptorCache cache;
 
@@ -96,37 +101,50 @@ public:
         range_end = end;
     }
 
-    void DeserializeDescriptor(const std::string& str)
+    template <typename Stream>
+    void Serialize(Stream& s) const
     {
+        std::string descriptor_str = descriptor->ToString();
+        s << descriptor_str << creation_time << next_index << range_start << range_end;
+    }
+
+    template <typename Stream>
+    static WalletDescriptor FromStream(deserialize_type, Stream& s)
+    {
+        std::string descriptor_str;
+        uint64_t creation_time;
+        int32_t next_index, range_start, range_end;
+        s >> descriptor_str >> creation_time >> next_index >> range_start >> range_end;
+
         std::string error;
         FlatSigningProvider keys;
-        auto descs = Parse(str, keys, error, true);
+        auto descs = Parse(descriptor_str, keys, error, true);
         if (descs.empty()) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }
         if (descs.size() > 1) {
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
-        descriptor = std::move(descs.at(0));
+        return WalletDescriptor(std::move(descs.at(0)), creation_time, range_start, range_end, next_index);
     }
 
-    SERIALIZE_METHODS(WalletDescriptor, obj)
-    {
-        std::string descriptor_str;
-        SER_WRITE(obj, descriptor_str = obj.descriptor->ToString());
-        READWRITE(descriptor_str, obj.creation_time, obj.next_index, obj.range_start, obj.range_end);
-        SER_READ(obj, obj.DeserializeDescriptor(descriptor_str));
-    }
-
-    WalletDescriptor() = default;
+    WalletDescriptor() = delete;
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index)
     : range_start(descriptor->IsRange() ? range_start : 0),
       next_index(next_index),
       range_end(descriptor->IsRange() ? range_end : 1),
       descriptor(descriptor),
-      creation_time(creation_time) {}
+      creation_time(creation_time)
+    {}
 
+    /** Replaces all metadata (range, start, end, creation time), and cache from another WalletDescriptor if it has the same canonical descriptor string.
+     *  The descriptor itself is not replaced to preserve existing serialization to maintain compatibility with previous software versions that expect
+     *  specific serialization.
+     */
     void UpdateFrom(const WalletDescriptor& other);
+
+    // Compare by using the canonical string to make the hardened indicators consistent for comparison
+    bool IsCanonicallyEquivalent(const WalletDescriptor& other) const;
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
