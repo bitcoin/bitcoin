@@ -34,6 +34,14 @@ struct FlatSigningProvider;
 struct bilingual_str;
 class CBlockIndex;
 
+/// The shared advice in every "TX decode failed" RPC error. DecodeHexTx()
+/// fails on invalid hex and incomplete or malformed serialization too, not
+/// only on the zero-input case it was written for (#19836); it never checks
+/// vin emptiness (an empty-input transaction that decodes is rejected later
+/// by CheckTransaction() as bad-txns-vin-empty).
+inline constexpr std::string_view TX_DECODE_ERROR_HINT{
+    "Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input."};
+
 namespace common {
 enum class PSBTError;
 } // namespace common
