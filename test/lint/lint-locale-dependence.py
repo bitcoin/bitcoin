@@ -48,7 +48,6 @@ KNOWN_VIOLATIONS = [
     "src/span.h:.*printf",
     "src/test/fuzz/locale.cpp:.*setlocale",
     "src/test/util_tests.cpp:.*strtoll",
-    "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
