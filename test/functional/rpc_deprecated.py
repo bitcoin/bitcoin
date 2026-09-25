@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
 
 
 class DeprecatedRpcTest(BitcoinTestFramework):
@@ -27,18 +26,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # functionality using the respective -deprecatedrpc flag.
 
         # Please don't delete nor modify this comment
-        self.log.info("Tests for deprecated RPC methods (if any)")
-        if self.is_wallet_compiled():
-            self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
-            self.nodes[0].createwallet("ancient_wallet")
-            wallet = self.nodes[0].get_wallet_rpc("ancient_wallet")
-
-            self.log.info("Test removeprunedfunds deprecation")
-            assert_raises_rpc_error(
-                -32, "Start bitcoind with the `-deprecatedrpc=removeprunedfunds`",
-                wallet.removeprunedfunds,
-                "fakeargument"
-            )
+        return
 
 
 if __name__ == '__main__':

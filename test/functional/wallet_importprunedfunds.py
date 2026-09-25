@@ -2,7 +2,7 @@
 # Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the importprunedfunds and removeprunedfunds RPCs."""
+"""Test the importprunedfunds RPC."""
 from decimal import Decimal
 
 from test_framework.address import key_to_p2wpkh
@@ -14,7 +14,6 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_not_equal,
     assert_raises_rpc_error,
     wallet_importprivkey,
 )
@@ -25,7 +24,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-deprecatedrpc=removeprunedfunds"]] * 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -109,16 +107,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         address_info = w1.getaddressinfo(address3)
         assert_equal(address_info['ismine'], True)
 
-        # Remove transactions
-        assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
-        assert txnid1 not in [tx['txid'] for tx in w1.listtransactions()]
-
-        wwatch.removeprunedfunds(txnid2)
-        assert txnid2 not in [tx['txid'] for tx in wwatch.listtransactions()]
-
-        w1.removeprunedfunds(txnid3)
-        assert txnid3 not in [tx['txid'] for tx in w1.listtransactions()]
-
         # Check various RPC parameter validation errors
         assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
         assert_raises_rpc_error(-5, "Transaction given doesn't exist in proof", w1.importprunedfunds, rawtxn2, proof1)
@@ -130,33 +118,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         mb = from_hex(CMerkleBlock(), proof1)
         mb.header.nTime += 1  # modify arbitrary block header field to change block hash
         assert_raises_rpc_error(-5, "Block not found in chain", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
-
-        self.log.info("Test removeprunedfunds with conflicting transactions")
-        node = self.nodes[0]
-
-        # Create a transaction
-        utxo = node.listunspent()[0]
-        addr = node.getnewaddress()
-        tx1_id = node.send(outputs=[{addr: 1}], inputs=[utxo])["txid"]
-        tx1_fee = node.gettransaction(tx1_id)["fee"]
-
-        # Create a conflicting tx with a larger fee (tx1_fee is negative)
-        output_value = utxo["amount"] + tx1_fee - Decimal("0.00001")
-        raw_tx2 = node.createrawtransaction(inputs=[utxo], outputs=[{addr: output_value}])
-        signed_tx2 = node.signrawtransactionwithwallet(raw_tx2)
-        tx2_id = node.sendrawtransaction(signed_tx2["hex"])
-        assert_not_equal(tx2_id, tx1_id)
-
-        # Both txs should be in the wallet, tx2 replaced tx1 in mempool
-        assert tx1_id in [tx["txid"] for tx in node.listtransactions()]
-        assert tx2_id in [tx["txid"] for tx in node.listtransactions()]
-
-        # Remove the replaced tx from wallet
-        node.removeprunedfunds(tx1_id)
-
-        # The UTXO should still be considered spent (by tx2)
-        available_utxos = [u["txid"] for u in node.listunspent(minconf=0)]
-        assert utxo["txid"] not in available_utxos, "UTXO should still be spent by conflicting tx"
 
 
 if __name__ == '__main__':
