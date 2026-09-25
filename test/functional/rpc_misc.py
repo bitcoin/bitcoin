@@ -7,10 +7,12 @@ import xml.etree.ElementTree as ET
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises_rpc_error,
+    assert_true,
     JSONRPCException,
 )
 
@@ -76,11 +78,11 @@ class RpcMiscTest(BitcoinTestFramework):
         self.log.info("test logging rpc and help")
 
         # Test toggling a logging category on/off/on with the logging RPC.
-        assert_equal(node.logging()['qt'], True)
+        assert_true(node.logging()['qt'])
         node.logging(exclude=['qt'])
-        assert_equal(node.logging()['qt'], False)
+        assert_false(node.logging()['qt'])
         node.logging(include=['qt'])
-        assert_equal(node.logging()['qt'], True)
+        assert_true(node.logging()['qt'])
 
         # Test logging RPC returns the logging categories in alphabetical order.
         sorted_logging_categories = sorted(node.logging())
@@ -122,8 +124,8 @@ class RpcMiscTest(BitcoinTestFramework):
 
         # Test a deprecated category
         all_result = node.logging(include=['all'])
-        assert_equal(True, all(enabled is True for category, enabled in all_result.items()))
-        assert_equal(True, 'libevent' not in all_result)
+        assert_true(all(enabled is True for category, enabled in all_result.items()))
+        assert_true('libevent' not in all_result)
         assert_equal(all_result, node.logging())
         libevent_warning = "The logging category `libevent` is deprecated"
         with self.nodes[0].assert_debug_log([libevent_warning]):

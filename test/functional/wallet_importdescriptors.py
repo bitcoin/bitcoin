@@ -28,7 +28,9 @@ from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     JSONRPCException,
 )
 from test_framework.wallet_util import (
@@ -222,7 +224,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         # After the rescan finishes, any importdescriptors should succeed.
         result = w_import.importdescriptors([{"desc": other_desc, "timestamp": "now"}])
-        assert_equal(result[0]['success'], True)
+        assert_true(result[0]['success'])
 
         self.log.info("Aborting an importdescriptors rescan should fail the RPC call")
         wallet_name = "abort_import_wallet"
@@ -243,7 +245,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             while not importing.done() and time.time() < abort_deadline:
                 abort_succeeded = abort_rpc.abortrescan() or abort_succeeded
 
-            assert_equal(abort_succeeded, True)
+            assert_true(abort_succeeded)
             try:
                 importing.result(timeout=30 * self.options.timeout_factor)
                 raise AssertionError("importdescriptors unexpectedly succeeded")
@@ -277,13 +279,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             },
         ])
 
-        assert_equal(res[0]["success"], True)
+        assert_true(res[0]["success"])
         assert "warnings" not in res[0]
-        assert_equal(res[1]["success"], True)
+        assert_true(res[1]["success"])
         assert_equal(res[1]["warnings"], [MISSING_KEYS_WARNING])
-        assert_equal(res[2]["success"], True)
+        assert_true(res[2]["success"])
         assert "warnings" not in res[2]
-        assert_equal(res[3]["success"], True)
+        assert_true(res[3]["success"])
         assert_equal(res[3]["warnings"], [MISSING_KEYS_WARNING])
 
     def run_test(self):
@@ -379,8 +381,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "internal": True},
                              success=True)
         info = w1.getaddressinfo(key.p2pkh_addr)
-        assert_equal(info["ismine"], True)
-        assert_equal(info["ischange"], True)
+        assert_true(info["ismine"])
+        assert_true(info["ischange"])
 
         self.log.info("Should not import a descriptor with an invalid public key due to whitespace")
         self.test_importdesc({"desc": descsum_create("pkh( " + key.pubkey + ")"),
@@ -854,9 +856,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "next_index": 0,
             "timestamp": "now"
         }])
-        assert_equal(res[0]['success'], True)
+        assert_true(res[0]['success'])
         assert_equal(res[0]['warnings'][0], MISSING_KEYS_WARNING)
-        assert_equal(res[1]['success'], True)
+        assert_true(res[1]['success'])
         assert_equal(res[1]['warnings'][0], MISSING_KEYS_WARNING)
 
         self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True)
@@ -877,16 +879,16 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "next_index": 0,
             "timestamp": "now"
         }])
-        assert_equal(res[0]['success'], True)
+        assert_true(res[0]['success'])
         assert_equal(res[0]['warnings'][0], MISSING_KEYS_WARNING)
-        assert_equal(res[1]['success'], True)
+        assert_true(res[1]['success'])
         assert_equal(res[1]['warnings'][0], MISSING_KEYS_WARNING)
 
         rawtx = self.nodes[1].createrawtransaction([utxo], {w0.getnewaddress(): 9.999})
         tx_signed_1 = wmulti_priv1.signrawtransactionwithwallet(rawtx)
-        assert_equal(tx_signed_1['complete'], False)
+        assert_false(tx_signed_1['complete'])
         tx_signed_2 = wmulti_priv2.signrawtransactionwithwallet(tx_signed_1['hex'])
-        assert_equal(tx_signed_2['complete'], True)
+        assert_true(tx_signed_2['complete'])
         self.nodes[1].sendrawtransaction(tx_signed_2['hex'])
 
         self.log.info("We can create and use a huge multisig under P2WSH")
@@ -911,8 +913,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "next_index": 0,
             "timestamp": "now"
         }])
-        assert_equal(res[0]['success'], True)
-        assert_equal(res[1]['success'], True)
+        assert_true(res[0]['success'])
+        assert_true(res[1]['success'])
 
         addr = wmulti_priv_big.getnewaddress()
         w0.sendtoaddress(addr, 10)
@@ -945,8 +947,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             "next_index": 0,
             "timestamp": "now"
         }])
-        assert_equal(res[0]['success'], True)
-        assert_equal(res[1]['success'], True)
+        assert_true(res[0]['success'])
+        assert_true(res[1]['success'])
 
         addr = multi_priv_big.getnewaddress("", "legacy")
         w0.sendtoaddress(addr, 10)
@@ -966,7 +968,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 "next_index": 0,
                 "timestamp": "now"
             }])
-        assert_equal(res[0]['success'], True)
+        assert_true(res[0]['success'])
         res = wmulti_priv3.importdescriptors([
             {
                 "desc": descsum_create(f"wsh(multi(2,{xprv1}/{derivation_path}/*,[{xprv2_fingerprint}/{derivation_path}]{acc_xprv2}/*,[{xprv3_fingerprint}/{derivation_path}]{acc_xpub3}/*))"),
@@ -975,11 +977,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 "next_index": 0,
                 "timestamp": "now"
             }])
-        assert_equal(res[0]['success'], True)
+        assert_true(res[0]['success'])
 
         rawtx = self.nodes[1].createrawtransaction([utxo2], {w0.getnewaddress(): 9.999})
         tx = wmulti_priv3.signrawtransactionwithwallet(rawtx)
-        assert_equal(tx['complete'], True)
+        assert_true(tx['complete'])
         self.nodes[1].sendrawtransaction(tx['hex'])
 
         self.log.info("Combo descriptors cannot be active")

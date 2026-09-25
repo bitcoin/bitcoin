@@ -28,9 +28,11 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     get_fee,
     find_vout_for_address,
 )
@@ -245,8 +247,8 @@ class BumpFeeTest(BitcoinTestFramework):
 
         change_addr = rbf_node.getnewaddress()
         dest_addr = rbf_node.getnewaddress()
-        assert_equal(rbf_node.getaddressinfo(change_addr)["ischange"], False)
-        assert_equal(rbf_node.getaddressinfo(dest_addr)["ischange"], False)
+        assert_false(rbf_node.getaddressinfo(change_addr)["ischange"])
+        assert_false(rbf_node.getaddressinfo(dest_addr)["ischange"])
 
         send_res = rbf_node.send(outputs=[{dest_addr: 1}], options={"change_address": change_addr})
         assert send_res["complete"]
@@ -702,7 +704,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
 
     tx_bump_abandoned = rbf_node.gettransaction(bumpid)
     for tx in tx_bump_abandoned['details']:
-        assert_equal(tx['abandoned'], True)
+        assert_true(tx['abandoned'])
 
     assert bumpid not in rbf_node.getrawmempool()
     assert rbfid in rbf_node.getrawmempool()

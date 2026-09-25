@@ -52,6 +52,7 @@ from test_framework.script_util import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
+    assert_true,
     get_fee,
 )
 from test_framework.wallet_util import (
@@ -134,7 +135,7 @@ class MiniWallet:
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
-        assert_equal(True, res['success'])
+        assert_true(res['success'])
         for utxo in res['unspents']:
             self._utxos.append(
                 self._create_utxo(txid=utxo["txid"],
