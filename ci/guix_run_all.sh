@@ -61,3 +61,6 @@ mkdir -p "$OUTDIR_BASE"
 docker cp "$container_id:/build/guix-build-$VERSION/output/." "$OUTDIR_BASE/"
 docker cp "$container_id:/build/.guix-cache/depends-sources/." "$SOURCES_PATH/"
 docker cp "$container_id:/build/.guix-cache/depends-built/." "$BASE_CACHE/"
+mkdir -p "$(distsrc_for_host "$HOSTS")"
+docker cp "$container_id:/build/guix-build-$VERSION/distsrc-$VERSION-$HOSTS/guix-test-config.ini" \
+    "$(distsrc_for_host "$HOSTS")/guix-test-config.ini"
