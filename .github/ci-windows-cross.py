@@ -76,6 +76,8 @@ def check_manifests():
 def prepare_tests():
     workspace = Path.cwd()
     config_path = workspace / "test" / "config.ini"
+    sanitizer_env_path = workspace / "test" / "with_sanitizer_env.py"
+    sanitizer_env_path.with_suffix(".py.in").rename(sanitizer_env_path)
     rpcauth_path = workspace / "share" / "rpcauth" / "rpcauth.py"
     replacements = {
         "SRCDIR=": f"SRCDIR={workspace}",
