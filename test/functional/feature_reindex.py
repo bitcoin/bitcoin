@@ -7,6 +7,7 @@
 - Start a single node and generate 3 blocks.
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
+- Verify that -blockreadahead=1 starts one reader and -blockreadahead=0 disables read-ahead.
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
 - Verify cache use while connecting a competing fork.
 """
@@ -102,6 +103,19 @@ class ReindexTest(BitcoinTestFramework):
         # All blocks should be accepted and processed.
         assert_equal(self.nodes[0].getblockcount(), 12)
 
+    def reindex_with_reader_settings(self):
+        node = self.nodes[0]
+        for readers, expected_msgs, unexpected_msgs in (
+            (1, blockread_msgs(1) + ["Using cached block"], blockread_msgs(2)[1:]),
+            (0, [], blockread_msgs(2) + ["Using cached block"]),
+        ):
+            self.log.info(f"Test reindex-chainstate with -blockreadahead={readers}")
+            blockcount = node.getblockcount()
+            self.stop_nodes()
+            with node.assert_debug_log(expected_msgs=expected_msgs, unexpected_msgs=unexpected_msgs):
+                self.start_nodes([["-reindex-chainstate", f"-blockreadahead={readers}"]])
+            assert_equal(node.getblockcount(), blockcount)
+
     def continue_reindex_after_shutdown(self):
         node = self.nodes[0]
         self.generate(node, 1500)
@@ -139,6 +153,7 @@ class ReindexTest(BitcoinTestFramework):
         self.reindex(False)
         self.reindex(True)
 
+        self.reindex_with_reader_settings()
         self.out_of_order()
         self.reorg()
         self.continue_reindex_after_shutdown()

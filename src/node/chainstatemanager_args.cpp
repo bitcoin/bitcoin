@@ -66,6 +66,12 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
         opts.prevoutfetch_threads_num = std::min(*value, MAX_PREVOUTFETCH_THREADS);
     }
+    if (auto value{args.GetArg<int32_t>("-blockreadahead")}) {
+        if (*value < 0) {
+            return util::Error{Untranslated(strprintf("-blockreadahead must be non-negative (got %d). Use 0 to disable block read-ahead.", *value))};
+        }
+        opts.block_fetch_threads_num = *value;
+    }
 
     if (auto max_size = args.GetIntArg("-maxsigcachesize")) {
         // 1. When supplied with a max_size of 0, both the signature cache and
