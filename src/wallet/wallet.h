@@ -323,6 +323,9 @@ private:
     /** Whether this wallet will submit newly created transactions to the node's mempool and
      * prompt rebroadcasts (see ResendWalletTransactions()). */
     bool fBroadcastTransactions = false;
+    /** Whether the node runs with -privatebroadcast. Then the wallet never re-adds a transaction to
+     * the mempool (see ResubmitWalletTransactions()). */
+    bool m_private_broadcast{false};
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
 

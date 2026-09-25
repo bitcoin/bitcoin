@@ -27,6 +27,7 @@
 #include <kernel/types.h>
 #include <key.h>
 #include <key_io.h>
+#include <net.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -1914,11 +1915,16 @@ NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext
 // broadcast_method=TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL force=false, while loading into
 // the mempool (on start, or after import) uses
 // broadcast_method=TxBroadcast::MEMPOOL_NO_BROADCAST force=true.
+//
+// With -privatebroadcast nothing is resubmitted at all: a transaction that the network has
+// dropped would otherwise be held, and served on request, by this node alone, marking it as
+// this node's own. Announcing it makes that worse but not announcing it does not hide it.
 void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, bool force)
 {
     // Don't attempt to resubmit if the wallet is configured to not broadcast,
     // even if forcing.
     if (!fBroadcastTransactions) return;
+    if (m_private_broadcast) return;
 
     int submitted_tx_count = 0;
 
@@ -2896,6 +2902,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     wallet->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
     wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
     wallet->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
+    wallet->m_private_broadcast = args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST);
 
     return true;
 }
