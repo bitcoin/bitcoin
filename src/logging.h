@@ -177,6 +177,9 @@ namespace BCLog {
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
+        Logger();
+        ~Logger();
+
         /** Send an entry to the log output */
         void LogPrint(const util::log::Options& options, util::log::Entry entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 

@@ -4,12 +4,13 @@
 
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <stdexcept>
 
-BOOST_AUTO_TEST_SUITE(reverselock_tests)
+BOOST_FIXTURE_TEST_SUITE(reverselock_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(reverselock_basics)
 {
