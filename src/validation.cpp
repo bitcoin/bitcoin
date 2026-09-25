@@ -3255,6 +3255,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
             if (read_ahead_tip) m_block_fetcher->FillQueue(*read_ahead_tip, pindexConnect->nHeight + 1);
             if (!ConnectTip(state, pindexConnect, std::move(block_to_connect), load_start, connected_blocks, disconnectpool)) {
                 if (state.IsInvalid()) {
+                    m_block_fetcher->Clear();
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
                         InvalidChainFound(vpindexToConnect.front());
@@ -3271,6 +3272,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
                     return false;
                 }
             } else {
+                if (is_provided_block) m_block_fetcher->Clear();
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || m_chain.Tip()->nChainWork > pindexOldTip->nChainWork) {
                     // We're in a better position than we were. Return temporarily to release the lock.
