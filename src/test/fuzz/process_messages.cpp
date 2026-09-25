@@ -52,7 +52,7 @@ void initialize_process_messages()
     g_setup = testing_setup.get();
     // Replace validation_signals before creating chainman and mempool so they use it.
     g_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
-    ResetChainmanAndMempool(*g_setup, init_clock);
+    ResetChainmanAndMempool(*g_setup, init_clock, {.init_block_filter_basic = true});
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
@@ -139,6 +139,6 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size()) || initial_sequence != end_sequence) {
         // Reuse the global chainman and mempool, but reset them when dirty.
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        ResetChainmanAndMempool(*g_setup, node_clock);
+        ResetChainmanAndMempool(*g_setup, node_clock, {.init_block_filter_basic = true});
     }
 }
