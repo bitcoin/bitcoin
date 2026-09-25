@@ -8,6 +8,7 @@
 #include <bech32.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <hash.h>
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -179,18 +180,36 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
     }
 
     if (type == TxoutType::PUBKEYHASH) {
-        std::vector<std::vector<unsigned char>> stack;
-        if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
-            return std::nullopt;
+        // For P2PKH public key extraction, BIP-352 states: "The receiver MUST parse the scriptSig
+        // for the public key, even if the scriptSig does not match the template specified. This is
+        // to address the third-party malleability of P2PKH scriptSigs."
+        //
+        // Find the preimage of the pubkey hash by iterating through the scriptSig data pushes and
+        // comparing the Hash160 of each 33-byte (compressed) push against the output script. In
+        // standard spends the pubkey is the last push, but due to malleability we can't rely on
+        // that (e.g. `<dummy> OP_DROP` inserted anywhere). Evaluating the scriptSig with a dummy
+        // signature checker isn't safe either, as a malleated scriptSig could then leave a
+        // different pubkey on top of the stack than real validation would.
+        const uint160 pubkey_hash{solutions[0]};
+        auto pc = txin.scriptSig.begin();
+        while (pc < txin.scriptSig.end()) {
+            opcodetype opcode;
+            std::vector<unsigned char> pubkey_candidate;
+            if (!txin.scriptSig.GetOp(pc, opcode, pubkey_candidate)) {
+                return std::nullopt;
+            }
+            if (pubkey_candidate.size() == 33 && Hash160(pubkey_candidate) == pubkey_hash) {
+                CPubKey key{pubkey_candidate};
+                if (key.IsCompressed() && key.IsFullyValid()) return PubKey{key};
+            }
         }
-        if (stack.empty()) return std::nullopt;
-        CPubKey key{stack.back()};
-        if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
-        return PubKey{key};
+        return std::nullopt;
     }
 
     if (type == TxoutType::SCRIPTHASH) {
-        // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH.
+        // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH. Unlike P2PKH above,
+        // evaluating is safe here, as consensus (BIP-141) requires the scriptSig to be a single
+        // push of the redeem script.
         std::vector<std::vector<unsigned char>> stack;
         if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
             return std::nullopt;

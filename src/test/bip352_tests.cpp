@@ -309,9 +309,7 @@ BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
 
     const auto extracted_pubkey = GetPubKeyFromInput(txin, spk);
     BOOST_REQUIRE(extracted_pubkey.has_value());
-    // BUG: the scriptSig is evaluated with a dummy signature checker that accepts any non-empty
-    // signature, so the OP_IF branch is taken and the wrong pubkey is extracted instead.
-    BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == wrong_pubkey);
+    BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == pubkey);
 }
 
 BOOST_AUTO_TEST_CASE(bip352_label_serialize_roundtrip)
