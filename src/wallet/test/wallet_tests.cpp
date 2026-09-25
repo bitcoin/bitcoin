@@ -516,7 +516,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         BOOST_CHECK_EQUAL(result.last_failed_block, stale_hash);
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
-        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.empty()));
+        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.empty()));
     }
 
     // Prune the stale block's file — the block is now not active AND unreadable.
@@ -544,7 +544,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         BOOST_CHECK_EQUAL(result.last_failed_block, stale_hash);
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
-        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.empty()));
+        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.empty()));
     }
 
     filter_index.Stop();
@@ -645,7 +645,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         BOOST_CHECK_EQUAL(result.last_scanned_block, max_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, max_height);
         // One coinbase per block from height 1 through max_height.
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), static_cast<size_t>(max_height));
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), static_cast<size_t>(max_height));
     }
 
     // A single-block range (start == max_height == tip) scans exactly that
@@ -665,7 +665,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), 1U);
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), 1U);
     }
 }
 
@@ -831,7 +831,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
         // One coinbase per block from height 1 through the tip.
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), static_cast<size_t>(tip_height));
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), static_cast<size_t>(tip_height));
     }
 
     filter_index.Stop();
@@ -877,7 +877,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_attach_chain, TestChain100S
         BOOST_CHECK_EQUAL(wallet->GetLastBlockHash(), tip_hash);
         // The extension's coinbases plus the one of the recorded best block:
         // the load rescan starts mid-chain, at that block inclusive.
-        BOOST_CHECK_EQUAL(wallet->mapWallet.size(), static_cast<size_t>(NEW_BLOCKS + 1));
+        BOOST_CHECK_EQUAL(wallet->m_txs.size(), static_cast<size_t>(NEW_BLOCKS + 1));
     }
     TestUnloadWallet(std::move(wallet));
 }
@@ -932,13 +932,13 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         block->phashBlock = &hash;
         state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
     }
-    return wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
+    return (*wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {
         // Assign wtx.m_state to simplify test and avoid the need to simulate
         // reorg events. Without this, AddToWallet asserts false when the same
         // transaction is confirmed in different blocks.
         wtx.m_state = state;
         return true;
-    })->nTimeSmart;
+    }))->nTimeSmart;
 }
 
 // Simple test to verify assignment of CWalletTx::nSmartTime value. Could be
@@ -1032,7 +1032,7 @@ public:
         wallet.reset();
     }
 
-    CWalletTx& AddTx(CRecipient recipient)
+    const CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
         CCoinControl dummy;
@@ -1045,17 +1045,16 @@ public:
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
-            blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).GetTx());
+            blocktx = CMutableTransaction(*wallet->GetWalletTx(tx->GetHash())->GetTx());
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
 
         LOCK(wallet->cs_wallet);
         LOCK(Assert(m_node.chainman)->GetMutex());
         wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
-        auto it = wallet->mapWallet.find(tx->GetHash());
-        BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
-        return it->second;
+        std::optional<WalletTxs::iterator> wtx = wallet->AddToWallet(tx, TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1});
+        BOOST_CHECK(wtx);
+        return **wtx;
     }
 
     std::unique_ptr<CWallet> wallet;
@@ -1123,7 +1122,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
 {
     LOCK(context.wallet->cs_wallet);
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
-    CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
+    const CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
@@ -1301,8 +1300,8 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     BOOST_CHECK_EQUAL(addtx_count, 3);
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK(wallet->mapWallet.contains(block_tx.GetHash()));
-        BOOST_CHECK(wallet->mapWallet.contains(mempool_tx.GetHash()));
+        BOOST_CHECK(wallet->GetWalletTx(block_tx.GetHash()));
+        BOOST_CHECK(wallet->GetWalletTx(mempool_tx.GetHash()));
     }
 
 
@@ -1340,8 +1339,8 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     BOOST_CHECK_EQUAL(addtx_count, 2 + 2);
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK(wallet->mapWallet.contains(block_tx.GetHash()));
-        BOOST_CHECK(wallet->mapWallet.contains(mempool_tx.GetHash()));
+        BOOST_CHECK(wallet->GetWalletTx(block_tx.GetHash()));
+        BOOST_CHECK(wallet->GetWalletTx(mempool_tx.GetHash()));
     }
 
 
@@ -1379,13 +1378,13 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
 
         LOCK(wallet->cs_wallet);
         BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
-        BOOST_CHECK(wallet->mapWallet.contains(block_hash));
+        BOOST_CHECK(wallet->GetWalletTx(block_hash));
 
         std::vector<Txid> vHashIn{ block_hash };
         BOOST_CHECK(wallet->RemoveTxs(vHashIn));
 
         BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
-        BOOST_CHECK(!wallet->mapWallet.contains(block_hash));
+        BOOST_CHECK(!wallet->GetWalletTx(block_hash));
     }
 
     TestUnloadWallet(std::move(wallet));
