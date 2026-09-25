@@ -44,9 +44,9 @@
         ;; Build tools
         ninja
         ;; Packaging scripts
-        python-minimal ;; (3.11)
+        python-minimal ;; 3.12
         ;; Tests
-        python-lief-no-riscv64-failing-tests)
+        python-lief-no-riscv64-failing-tests) ;; 0.17.6
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list nsis-x86_64-no-riscv64-failing-tests
