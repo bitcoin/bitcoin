@@ -5,6 +5,7 @@
 #include <banman.h>
 #include <net.h>
 #include <net_processing.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -82,6 +83,7 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
     std::vector<CTransactionRef> seeded_txs;
     for (int i = 0; i < num_txs; ++i) {
         auto tx{MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt))};
+        if (tx->ComputeTotalSize() > MAX_PROTOCOL_MESSAGE_LENGTH) continue;
         (void)node.peerman->InitiateTxBroadcastPrivate(tx);
         seeded_txs.push_back(tx);
     }
@@ -196,8 +198,9 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
                 net_msg->m_type = fuzzed_data_provider.ConsumeRandomLengthString(CMessageHeader::MESSAGE_TYPE_SIZE);
             },
             [&] {
-                (void)node.peerman->InitiateTxBroadcastPrivate(
-                    MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt)));
+                auto tx{MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt))};
+                if (tx->ComputeTotalSize() > MAX_PROTOCOL_MESSAGE_LENGTH) return;
+                (void)node.peerman->InitiateTxBroadcastPrivate(tx);
             },
             [&] {
                 // Construct a valid GETDATA for a seeded tx to exercise the TX send path.
@@ -232,10 +235,6 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
                 net_msg->data = ConsumeRandomLengthByteVector(fuzzed_data_provider, MAX_PROTOCOL_MESSAGE_LENGTH);
             }
             connman.FlushSendBuffer(p2p_node);
-
-            // ConsumeTransaction() can produce messages larger than the
-            // maximum payload accepted by the P2P transport.
-            if (net_msg->data.size() > MAX_PROTOCOL_MESSAGE_LENGTH) continue;
 
             (void)connman.ReceiveMsgFrom(p2p_node, std::move(*net_msg));
 
