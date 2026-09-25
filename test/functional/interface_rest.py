@@ -232,10 +232,23 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(self.test_rest_request(f"/headers/{UNKNOWN_PARAM}", query_params={"count": 1}), [])
         self.test_rest_request(f"/block/{UNKNOWN_PARAM}", status=404, ret_type=RetType.OBJ)
 
-        # Check result if block is not in the active chain
+        self.log.info("Check that result is blank if block is not in the active chain")
         self.nodes[0].invalidateblock(bb_hash)
         assert_equal(self.test_rest_request(f'/headers/{bb_hash}', query_params={'count': 1}), [])
+
+        # But the block request works
         self.test_rest_request(f'/block/{bb_hash}')
+
+        self.log.info("Check result has header block is not in the active chain but activechainonly=false")
+        response = self.test_rest_request(f'/headers/{bb_hash}', query_params={'count': 1, 'activechainonly': "false"})
+        assert_equal(len(response), 1)
+        assert_equal(response[0]['hash'], bb_hash)
+
+        self.log.info("Check for an error when using activechainonly=false with count != 1")
+        resp = self.test_rest_request(f'/headers/{bb_hash}', ret_type=RetType.OBJ, status=400, query_params={'count': 2, 'activechainonly': "false"})
+        assert_equal(resp.read().decode('utf-8').strip(), 'Header count must be set to 1 when activechainonly=false, it was set to 2')
+
+        # Undo our invalidateblock above
         self.nodes[0].reconsiderblock(bb_hash)
 
         # Check binary format
