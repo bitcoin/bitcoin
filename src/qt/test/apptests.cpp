@@ -12,6 +12,7 @@
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <QAction>
@@ -23,8 +24,8 @@
 #include <QTest>
 #include <QTextEdit>
 #include <QtGlobal>
-#include <QtTest/QtTestWidgets>
 #include <QtTest/QtTestGui>
+#include <QtTest/QtTestWidgets>
 
 namespace {
 //! Regex find a string group inside of the console output

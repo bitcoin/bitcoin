@@ -6,12 +6,12 @@
 #include <compat/compat.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
 #include <boost/test/unit_test.hpp>
 
-#include <cassert>
 #include <thread>
 
 using namespace std::chrono_literals;

@@ -10,12 +10,12 @@
 #include <node/utxo_snapshot.h>
 #include <rpc/blockchain.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <validation.h>
-
-#include <univalue.h>
 
 inline constexpr auto NoMalleation = [](AutoFile& file, node::SnapshotMetadata& meta){};
 

@@ -15,6 +15,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 
 #include <chrono>
 #include <optional>

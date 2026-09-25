@@ -3,7 +3,7 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <test/util/setup_common.h>
-
+#include <util/check.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
