@@ -308,6 +308,53 @@ class PSBTTest(BitcoinTestFramework):
         assert "participant_pubkeys" in out_participant_pks
         assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
 
+    def test_musig2_participant_leaf_hashes(self):
+        self.log.info("Test MuSig2 participant origins are retained without unrelated leaf hashes")
+        node = self.nodes[0]
+        part_a = get_generate_key().pubkey
+        part_b = get_generate_key().pubkey
+        leaf_key = get_generate_key().pubkey
+        musig_descriptor = descsum_create(
+            f"tr(musig([11111111]{part_a},[22222222]{part_b}),pk([33333333]{leaf_key}))"
+        )
+        # Also retain known origins when the aggregate matches neither the
+        # internal key nor the script key of the output being updated.
+        for i, descriptor in enumerate([
+            musig_descriptor,
+            descsum_create(f"tr([33333333]{leaf_key},pk([33333333]{leaf_key}))"),
+        ]):
+            descriptors = [musig_descriptor, descriptor]
+            address = node.deriveaddresses(descriptor)[0]
+            script = bytes.fromhex(node.validateaddress(address)["scriptPubKey"])
+
+            # A synthetic UTXO suffices to exercise metadata updates without signing.
+            psbt = PSBT.from_base64(node.createpsbt(
+                [{"txid": "11" * 32, "vout": 0}], [{address: 1}]
+            ))
+            psbt.i[0].map[PSBT_IN_WITNESS_UTXO] = CTxOut(nValue=100_000_000, scriptPubKey=script).serialize()
+            initial = psbt.to_base64()
+            for updated in (
+                node.utxoupdatepsbt(initial, descriptors),
+                node.descriptorprocesspsbt(initial, descriptors, finalize=False)["psbt"],
+            ):
+                decoded = node.decodepsbt(updated)
+                for scope in ("inputs", "outputs"):
+                    origins = {
+                        entry["pubkey"]: entry
+                        for entry in decoded[scope][0]["taproot_bip32_derivs"]
+                    }
+                    if i == 1:
+                        assert "musig_participant_pubkeys" not in decoded[scope][0]
+
+                    # Only the script key is involved in the leaf (BIP371/373).
+                    assert_equal(len(origins[leaf_key[2:]]["leaf_hashes"]), 1)
+
+                    if i == 0:
+                        for participant, fingerprint in ((part_a, "11111111"), (part_b, "22222222")):
+                            assert_equal(origins[participant[2:]]["leaf_hashes"], [])
+                            assert_equal(origins[participant[2:]]["master_fingerprint"], fingerprint)
+                            assert_equal(origins[participant[2:]]["path"], "m")
+
     def test_musig2_untrusted_derivation(self):
         self.log.info("Test MuSig2 aggregate derivation from untrusted PSBT fields")
         node = self.nodes[0]
@@ -1823,6 +1870,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_psbt_version()
         self.test_psbt_with_invalid_signature()
         self.test_musig2_untrusted_derivation()
+        self.test_musig2_participant_leaf_hashes()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
