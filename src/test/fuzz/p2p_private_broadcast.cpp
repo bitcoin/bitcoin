@@ -5,6 +5,7 @@
 #include <banman.h>
 #include <net.h>
 #include <net_processing.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -22,6 +23,7 @@
 #include <array>
 #include <ios>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -81,10 +83,14 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
     // the connected-in-vain disconnect in PushPrivateBroadcastTx().
     const int num_txs{fuzzed_data_provider.ConsumeIntegralInRange(0, 3)};
     std::vector<CTransactionRef> seeded_txs;
-    for (int i = 0; i < num_txs; ++i) {
+    auto broadcast_tx{[&]() -> CTransactionRef {
         auto tx{MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt))};
+        if (tx->ComputeTotalSize() > MAX_PROTOCOL_MESSAGE_LENGTH) return nullptr;
         (void)node.peerman->InitiateTxBroadcastPrivate(tx);
-        seeded_txs.push_back(tx);
+        return tx;
+    }};
+    for (int i = 0; i < num_txs; ++i) {
+        if (auto tx{broadcast_tx()}) seeded_txs.push_back(std::move(tx));
     }
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
@@ -196,10 +202,7 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
                 net_msg.emplace();
                 net_msg->m_type = fuzzed_data_provider.ConsumeRandomLengthString(CMessageHeader::MESSAGE_TYPE_SIZE);
             },
-            [&] {
-                (void)node.peerman->InitiateTxBroadcastPrivate(
-                    MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt)));
-            },
+            [&] { (void)broadcast_tx(); },
             [&] {
                 // Construct a valid GETDATA for a seeded tx to exercise the TX send path.
                 if (p2p_node.IsPrivateBroadcastConn() &&
@@ -233,10 +236,6 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
                 net_msg->data = ConsumeRandomLengthByteVector(fuzzed_data_provider, MAX_PROTOCOL_MESSAGE_LENGTH);
             }
             connman.FlushSendBuffer(p2p_node);
-
-            // ConsumeTransaction() can produce messages larger than the
-            // maximum payload accepted by the P2P transport.
-            if (net_msg->data.size() > MAX_PROTOCOL_MESSAGE_LENGTH) continue;
 
             (void)connman.ReceiveMsgFrom(p2p_node, std::move(*net_msg));
 
