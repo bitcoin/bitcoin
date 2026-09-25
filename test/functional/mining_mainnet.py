@@ -44,7 +44,7 @@ class MiningMainnetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.chain = "" # main
+        self.chain = "main"
 
     def add_options(self, parser):
         parser.add_argument(

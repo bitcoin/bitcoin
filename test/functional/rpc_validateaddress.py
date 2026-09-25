@@ -177,7 +177,7 @@ VALID_DATA = [
 class ValidateAddressMainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.chain = ""  # main
+        self.chain = "main"
         self.num_nodes = 1
         self.extra_args = [["-prune=899"]] * self.num_nodes
 
