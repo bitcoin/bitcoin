@@ -1011,6 +1011,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     BOOST_CHECK(!get_opts({"-prevoutfetchthreads=-1"}));
 
     BOOST_CHECK_EQUAL(get_valid_opts({}).block_read_ahead_threads_num, DEFAULT_BLOCK_READ_AHEAD_THREADS);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-blockfetchthreads=0"}).block_read_ahead_threads_num, 0);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-blockfetchthreads=3"}).block_read_ahead_threads_num, 3);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-blockfetchthreads=100"}).block_read_ahead_threads_num, MAX_BLOCK_READ_AHEAD_THREADS);
+    BOOST_CHECK(!get_opts({"-blockfetchthreads=-1"}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
