@@ -457,8 +457,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(node.getpeerinfo()), 1)
 
         self.log.debug("Test oversized message handling")
-        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="00" * (max_msg_len + 1))
-        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)  # TODO: Oversized payloads should be rejected before being sent
+        assert_raises_rpc_error(-8, f"Error: msg too large, max size is {max_msg_len} bytes", node.sendmsgtopeer, peer_id=0, msg_type="addr", msg="00" * (max_msg_len + 1))
 
     def test_getaddrmaninfo(self):
         self.log.info("Test getaddrmaninfo")
