@@ -26,6 +26,7 @@ namespace node {
 class BlockFetcher
 {
     using ReadBlockFn = std::function<bool(CBlock&, const FlatFilePos&, const uint256&)>;
+    using ReadTask = std::function<std::shared_ptr<const CBlock>()>;
 
     const ReadBlockFn m_read_block;
     const int32_t m_thread_count;
