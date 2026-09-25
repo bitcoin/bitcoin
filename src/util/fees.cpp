@@ -12,8 +12,8 @@
 std::string_view FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type)
 {
     switch (feerate_estimator_type) {
-    case FeeRateEstimatorType::NONE:
-        return "none";
+    case FeeRateEstimatorType::AUTO:
+        return "auto";
     case FeeRateEstimatorType::BLOCK_POLICY:
         return "block_policy";
     case FeeRateEstimatorType::MEMPOOL_POLICY:
@@ -28,5 +28,5 @@ FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_est
     const auto normalized{ToLower(feerate_estimator_type)};
     if (normalized == "block_policy") return FeeRateEstimatorType::BLOCK_POLICY;
     if (normalized == "mempool_policy") return FeeRateEstimatorType::MEMPOOL_POLICY;
-    return FeeRateEstimatorType::NONE;
+    return FeeRateEstimatorType::AUTO;
 }

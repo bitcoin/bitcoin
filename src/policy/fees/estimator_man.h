@@ -55,7 +55,7 @@ public:
 
     /**
      * Like GetFeeRateEstimate, but only consults the specified estimator type.
-     * @param[in] type The estimator to query. NONE returns the manager-selected combined estimate.
+     * @param[in] type The estimator to query. AUTO returns the manager-selected combined estimate.
      * @param[in] target The target within which the transaction should be confirmed.
      * @param[in] conservative Whether to select a more conservative, potentially higher, fee rate estimate.
      * @return Fee rate estimation from the specified estimator, or an error on failure.
