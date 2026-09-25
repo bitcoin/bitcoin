@@ -1102,6 +1102,9 @@ public:
         std::vector<NetWhitelistPermissions> vWhitelistedRangeOutgoing;
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
+        //! Source address for outgoing connections, one per address family.
+        std::optional<CNetAddr> outbound_bind_v4;
+        std::optional<CNetAddr> outbound_bind_v6;
         std::vector<CService> onion_binds;
         /// True if the user did not specify -bind= or -whitebind= and thus
         /// we should bind on `0.0.0.0` (IPv4) and `::` (IPv6).
@@ -1149,6 +1152,8 @@ public:
             }
         }
         m_onion_binds = connOptions.onion_binds;
+        m_outbound_bind_v4 = connOptions.outbound_bind_v4;
+        m_outbound_bind_v6 = connOptions.outbound_bind_v6;
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
@@ -1795,6 +1800,29 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * Addresses to bind outgoing connections to, per address family.
+     * Populated from -outboundbind (command line takes precedence over
+     * the config file). Applied only to outgoing clearnet (IPv4/IPv6)
+     * connections; Tor, I2P and CJDNS are unaffected.
+     */
+    std::optional<CNetAddr> m_outbound_bind_v4;
+    std::optional<CNetAddr> m_outbound_bind_v6;
+
+    /**
+     * Source address to bind for an outgoing connection to `target`: the
+     * configured address for its family, or nullopt for a non-clearnet target.
+     * CJDNS targets use this direct-connect path but are not IPv4/IPv6, so no
+     * source is bound (the tun device selects it); Tor and I2P use their own
+     * transports.
+     */
+    std::optional<CNetAddr> SelectOutboundBind(const CService& target) const
+    {
+        if (target.IsIPv4()) return m_outbound_bind_v4;
+        if (target.IsIPv6()) return m_outbound_bind_v6;
+        return std::nullopt;
+    }
 
     /**
      * flag for adding 'forcerelay' permission to whitelisted inbound
