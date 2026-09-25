@@ -34,7 +34,7 @@ enum class FeeReason {
  * Identifier for fee rate estimator.
  */
 enum class FeeRateEstimatorType {
-    NONE,
+    AUTO,
     BLOCK_POLICY,
     MEMPOOL_POLICY,
 };

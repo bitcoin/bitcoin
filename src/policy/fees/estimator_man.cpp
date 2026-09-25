@@ -46,7 +46,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
 util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const
 {
     switch (type) {
-    case FeeRateEstimatorType::NONE:
+    case FeeRateEstimatorType::AUTO:
         return GetFeeRateEstimate(target, conservative);
     case FeeRateEstimatorType::BLOCK_POLICY:
         return m_block_policy_estimator->EstimateFeeRate(target, conservative);

@@ -52,14 +52,14 @@ static RPCMethod estimatesmartfee()
               + FeeModesDetail(std::string("default mode will be used"))},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                 {
-                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
+                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"auto"},
                      "Selects which fee rate estimator to use.\n"
-                     "\"none\" returns the lower of the block policy and mempool estimates. If the mempool\n"
+                     "\"auto\" returns the lower of the block policy and mempool estimates. If the mempool\n"
                      "estimate is unavailable, it returns that error instead of falling back to the block\n"
                      "policy estimate; use \"block_policy\" in that case to get the block policy estimate.\n"
                      "\"block_policy\" uses only the block policy fee rate estimator.\n"
                      "\"mempool_policy\" uses only the mempool fee rate estimator.\n"
-                     "Unknown values are treated as \"none\"."},
+                     "Unknown values are treated as \"auto\"."},
                     {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1},
                      "1 returns feerate or errors. 2 also returns \"mempool_health_statistics\"."},
                 },
@@ -69,7 +69,7 @@ static RPCMethod estimatesmartfee()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
-                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"auto\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -112,7 +112,7 @@ static RPCMethod estimatesmartfee()
                                 {"verbosity", UniValueType(UniValue::VNUM)},
                             }, /*fAllowNull=*/true, /*fStrict=*/true);
             const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
-                options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
+                options["fee_rate_estimator"].isNull() ? "auto" : options["fee_rate_estimator"].get_str())};
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
             int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
             UniValue result(UniValue::VOBJ);
@@ -127,7 +127,7 @@ static RPCMethod estimatesmartfee()
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
             }
-            if (estimate && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+            if (estimate && fee_rate_estimator == FeeRateEstimatorType::AUTO) {
                 result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate->feerate_estimator));
             }
             const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
