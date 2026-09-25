@@ -44,7 +44,7 @@ $(package)_config_opts += -make tools
 $(package)_config_opts += -no-pkg-config
 $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-use-gold-linker
-$(package)_config_opts += -prefix $(host_prefix)
+$(package)_config_opts += -prefix /usr
 $(package)_config_opts += -static
 
 # Modules.

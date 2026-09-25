@@ -83,7 +83,7 @@ $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -no-zstd
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
-$(package)_config_opts += -prefix $(host_prefix)
+$(package)_config_opts += -prefix /usr
 $(package)_config_opts += -qt-doubleconversion
 $(package)_config_opts += -qt-harfbuzz
 ifneq ($(host),$(build))
